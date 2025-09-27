@@ -1261,3 +1261,5 @@
 2025-09-27 12:20:13:2013 [31merror[39m: [31mMongoDB connection failed: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.[39m
 2025-09-27 22:59:32:5932 [31merror[39m: [31mAuthentication error: jwt expired[39m
 2025-09-27 22:59:32:5932 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-27 23:29:24:2924 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-27 23:29:24:2924 [31merror[39m: [31mAuthentication error: jwt expired[39m

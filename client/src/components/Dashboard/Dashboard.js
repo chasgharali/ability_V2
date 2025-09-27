@@ -5,7 +5,7 @@ import { MdAccountCircle, MdEvent, MdPerson, MdSettings, MdHelp, MdLogout, MdRef
 import './Dashboard.css';
 
 const Dashboard = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, loading } = useAuth();
     const navigate = useNavigate();
     const [activeSection, setActiveSection] = useState('my-account');
     const [expandedSections, setExpandedSections] = useState({
@@ -14,6 +14,24 @@ const Dashboard = () => {
         'upcoming-events': true
     });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Handle loading state
+    if (loading) {
+        return (
+            <div className="dashboard-loading">
+                <div className="loading-spinner">
+                    <MdRefresh className="spinning" />
+                </div>
+                <p>Loading your dashboard...</p>
+            </div>
+        );
+    }
+
+    // Handle case where user is not authenticated
+    if (!user) {
+        navigate('/login');
+        return null;
+    }
 
     const handleLogout = () => {
         logout();
@@ -51,7 +69,7 @@ const Dashboard = () => {
     };
 
     const getDashboardContent = () => {
-        switch (user.role) {
+        switch (user?.role) {
             case 'JobSeeker':
                 return (
                     <div className="dashboard-content">
@@ -69,18 +87,18 @@ const Dashboard = () => {
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="firstName">First Name *</label>
-                                        <input type="text" id="firstName" defaultValue={user.name?.split(' ')[0] || ''} />
+                                        <input type="text" id="firstName" defaultValue={user?.name?.split(' ')[0] || ''} />
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="lastName">Last Name *</label>
-                                        <input type="text" id="lastName" defaultValue={user.name?.split(' ')[1] || ''} />
+                                        <input type="text" id="lastName" defaultValue={user?.name?.split(' ')[1] || ''} />
                                     </div>
                                 </div>
 
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="email">Email *</label>
-                                        <input type="email" id="email" defaultValue={user.email} />
+                                        <input type="email" id="email" defaultValue={user?.email || ''} />
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="phone">Phone</label>
@@ -424,7 +442,7 @@ const Dashboard = () => {
                         <h1>ABILITYJOBFAIR</h1>
                     </div>
                     <div className="user-info">
-                        <span className="user-name">{user.name} / {getRoleDisplayName(user.role)}</span>
+                        <span className="user-name">{user?.name || 'User'} / {getRoleDisplayName(user?.role || 'Guest')}</span>
                         <div className="connection-status">
                             <MdRefresh className="refresh-icon" />
                             <span className="connection-text">Connection: Active</span>
