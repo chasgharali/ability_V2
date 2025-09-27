@@ -53,8 +53,14 @@ router.post('/register', [
         .isIn(['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
         .withMessage('Invalid role specified'),
     body('phoneNumber')
-        .optional()
-        .isMobilePhone()
+        .optional({ nullable: true, checkFalsy: true })
+        .customSanitizer(v => typeof v === 'string' ? v.trim() : v)
+        .custom((value) => {
+            if (!value) return true; // allow empty after trim
+            // Accept common international patterns including E.164-like and formatted numbers
+            const pattern = /^\+?[0-9\-\s()]{7,20}$/;
+            return pattern.test(value);
+        })
         .withMessage('Please provide a valid phone number'),
     body('languages')
         .optional()
@@ -299,6 +305,21 @@ router.put('/profile', authenticateToken, [
         .optional()
         .isMobilePhone()
         .withMessage('Please provide a valid phone number'),
+    body('state')
+        .optional()
+        .isString()
+        .isLength({ max: 100 })
+        .withMessage('State must be a string up to 100 characters'),
+    body('city')
+        .optional()
+        .isString()
+        .isLength({ max: 100 })
+        .withMessage('City must be a string up to 100 characters'),
+    body('country')
+        .optional()
+        .isString()
+        .isLength({ min: 2, max: 2 })
+        .withMessage('Country must be a 2-letter code'),
     body('languages')
         .optional()
         .isArray()
@@ -307,6 +328,13 @@ router.put('/profile', authenticateToken, [
         .optional()
         .isBoolean()
         .withMessage('Availability must be a boolean value')
+    ,
+    body('usesScreenMagnifier').optional().isBoolean().withMessage('usesScreenMagnifier must be boolean').toBoolean(true),
+    body('usesScreenReader').optional().isBoolean().withMessage('usesScreenReader must be boolean').toBoolean(true),
+    body('needsASL').optional().isBoolean().withMessage('needsASL must be boolean').toBoolean(true),
+    body('needsCaptions').optional().isBoolean().withMessage('needsCaptions must be boolean').toBoolean(true),
+    body('needsOther').optional().isBoolean().withMessage('needsOther must be boolean').toBoolean(true),
+    body('subscribeAnnouncements').optional().isBoolean().withMessage('subscribeAnnouncements must be boolean').toBoolean(true)
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -319,18 +347,28 @@ router.put('/profile', authenticateToken, [
             });
         }
 
-        const { name, phoneNumber, languages, isAvailable } = req.body;
+        const { name, phoneNumber, state, city, country, languages, isAvailable,
+            usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, subscribeAnnouncements } = req.body;
         const { user } = req;
 
         // Update allowed fields
         if (name !== undefined) user.name = name;
         if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+        if (state !== undefined) user.state = state;
+        if (city !== undefined) user.city = city;
+        if (country !== undefined) user.country = country;
         if (languages !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(user.role)) {
             user.languages = languages;
         }
         if (isAvailable !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(user.role)) {
             user.isAvailable = isAvailable;
         }
+        if (usesScreenMagnifier !== undefined) user.usesScreenMagnifier = usesScreenMagnifier;
+        if (usesScreenReader !== undefined) user.usesScreenReader = usesScreenReader;
+        if (needsASL !== undefined) user.needsASL = needsASL;
+        if (needsCaptions !== undefined) user.needsCaptions = needsCaptions;
+        if (needsOther !== undefined) user.needsOther = needsOther;
+        if (subscribeAnnouncements !== undefined) user.subscribeAnnouncements = subscribeAnnouncements;
 
         await user.save();
 

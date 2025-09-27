@@ -42,6 +42,40 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Update current user's profile
+    const updateProfile = async (profileData) => {
+        try {
+            setError(null);
+            const token = localStorage.getItem('token');
+            const response = await axios.put('/api/auth/profile', profileData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Update local user with server's canonical data
+            setUser(response.data.user);
+            return { success: true, user: response.data.user };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Profile update failed';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        }
+    };
+
+    // Change password
+    const changePassword = async (currentPassword, newPassword) => {
+        try {
+            setError(null);
+            const token = localStorage.getItem('token');
+            const response = await axios.post('/api/auth/change-password', { currentPassword, newPassword }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return { success: true, message: response.data?.message || 'Password changed successfully' };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Password change failed';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        }
+    };
+
     const login = async (email, password) => {
         try {
             setError(null);
@@ -93,6 +127,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        updateProfile,
+        changePassword,
         isAuthenticated: !!user
     };
 

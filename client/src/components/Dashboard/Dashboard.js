@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { MdAccountCircle, MdEvent, MdPerson, MdSettings, MdHelp, MdLogout, MdRefresh, MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
 import './Dashboard.css';
 
 const Dashboard = () => {
-    const { user, logout, loading } = useAuth();
+    const { user, logout, loading, updateProfile } = useAuth();
     const navigate = useNavigate();
     const [activeSection, setActiveSection] = useState('my-account');
     const [expandedSections, setExpandedSections] = useState({
@@ -14,6 +14,163 @@ const Dashboard = () => {
         'upcoming-events': true
     });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    // Local form state for Account Information
+    const [formData, setFormData] = useState({
+        firstName: user?.name?.split(' ')[0] || '',
+        lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+        email: user?.email || '',
+        phone: user?.phoneNumber || '',
+        state: user?.state || '',
+        city: user?.city || '',
+        country: user?.country || 'US',
+        password: ''
+    });
+    const [saving, setSaving] = useState(false);
+    const [saveMessage, setSaveMessage] = useState('');
+    const [saveError, setSaveError] = useState('');
+    const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+    const [errors, setErrors] = useState({});
+    const [accessibility, setAccessibility] = useState({
+        usesScreenMagnifier: user?.usesScreenMagnifier || false,
+        usesScreenReader: user?.usesScreenReader || false,
+        needsASL: user?.needsASL || false,
+        needsCaptions: user?.needsCaptions || false,
+        needsOther: user?.needsOther || false,
+        subscribeAnnouncements: user?.subscribeAnnouncements || false
+    });
+
+    const handleAccessibilityToggle = async (key, value) => {
+        setAccessibility(prev => ({ ...prev, [key]: value }));
+        try {
+            const result = await updateProfile({ [key]: value });
+            if (result.success) {
+                showToast('Saved accessibility preference', 'success');
+            } else {
+                showToast(result.error || 'Failed to save preference', 'error');
+                // Revert if server failed
+                setAccessibility(prev => ({ ...prev, [key]: !value }));
+            }
+        } catch (e) {
+            showToast('Failed to save preference', 'error');
+            setAccessibility(prev => ({ ...prev, [key]: !value }));
+        }
+    };
+
+    useEffect(() => {
+        // When user loads/changes, sync form
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                firstName: (user?.name || '').split(' ')[0] || '',
+                lastName: (user?.name || '').split(' ').slice(1).join(' ') || '',
+                email: user?.email || '',
+                phone: user?.phoneNumber || '',
+                state: user?.state || '',
+                city: user?.city || '',
+                country: user?.country || 'US'
+            }));
+            setAccessibility({
+                usesScreenMagnifier: user?.usesScreenMagnifier || false,
+                usesScreenReader: user?.usesScreenReader || false,
+                needsASL: user?.needsASL || false,
+                needsCaptions: user?.needsCaptions || false,
+                needsOther: user?.needsOther || false,
+                subscribeAnnouncements: user?.subscribeAnnouncements || false
+            });
+        }
+    }, [user]);
+
+    const showToast = (message, type = 'success') => {
+        setToast({ visible: true, message, type });
+        setTimeout(() => setToast({ visible: false, message: '', type }), 2500);
+    };
+
+    const handleFieldChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        setErrors(prev => ({ ...prev, [name]: '' }));
+    };
+
+    const validate = () => {
+        const nextErrors = {};
+        if (!formData.firstName.trim()) nextErrors.firstName = 'First name is required';
+        if (!formData.lastName.trim()) nextErrors.lastName = 'Last name is required';
+        if (!formData.country) nextErrors.country = 'Country is required';
+        const phone = (formData.phone || '').trim();
+        if (phone) {
+            // Simple international phone validation: + and digits, 7-15 length
+            const phoneOk = /^\+?[0-9\-\s()]{7,20}$/.test(phone);
+            if (!phoneOk) nextErrors.phone = 'Enter a valid phone number';
+        }
+        setErrors(nextErrors);
+        return Object.keys(nextErrors).length === 0;
+    };
+
+    const handleUpdateSubmit = async (e) => {
+        e.preventDefault();
+        setSaveMessage('');
+        setSaveError('');
+        setSaving(true);
+        if (!validate()) {
+            setSaving(false);
+            showToast('Please fix the highlighted fields', 'error');
+            return;
+        }
+        const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+        try {
+            // Always send current values so backend persists accessibility reliably
+            const payload = {
+                name: fullName || user?.name || '',
+                state: formData.state || '',
+                city: formData.city || '',
+                country: formData.country || 'US',
+                usesScreenMagnifier: !!accessibility.usesScreenMagnifier,
+                usesScreenReader: !!accessibility.usesScreenReader,
+                needsASL: !!accessibility.needsASL,
+                needsCaptions: !!accessibility.needsCaptions,
+                needsOther: !!accessibility.needsOther,
+                subscribeAnnouncements: !!accessibility.subscribeAnnouncements
+            };
+            const phoneTrimmed = (formData.phone || '').trim();
+            if (phoneTrimmed) {
+                payload.phoneNumber = phoneTrimmed;
+            }
+
+            const result = await updateProfile(payload);
+            if (result.success) {
+                setSaveMessage('Account updated successfully.');
+                showToast('Account updated successfully', 'success');
+                // Sync form with latest user data from server
+                const updated = result.user;
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: (updated?.name || '').split(' ')[0] || '',
+                    lastName: (updated?.name || '').split(' ').slice(1).join(' ') || '',
+                    email: updated?.email || prev.email,
+                    phone: updated?.phoneNumber || '',
+                    state: updated?.state || '',
+                    city: updated?.city || '',
+                    country: updated?.country || 'US'
+                }));
+                setAccessibility({
+                    usesScreenMagnifier: updated?.usesScreenMagnifier || false,
+                    usesScreenReader: updated?.usesScreenReader || false,
+                    needsASL: updated?.needsASL || false,
+                    needsCaptions: updated?.needsCaptions || false,
+                    needsOther: updated?.needsOther || false,
+                    subscribeAnnouncements: updated?.subscribeAnnouncements || false
+                });
+            } else {
+                setSaveError(result.error || 'Failed to update account.');
+                showToast(result.error || 'Failed to update account', 'error');
+            }
+        } catch (err) {
+            setSaveError('Failed to update account.');
+            showToast('Failed to update account', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     // Handle loading state
     if (loading) {
@@ -79,47 +236,51 @@ const Dashboard = () => {
                             <p>• Welcome to your job seeker dashboard</p>
                         </div>
 
-                        <div className="account-section">
-                            <h3>Account Information</h3>
-                            <p className="section-note">An asterisk (*) indicates a required field.</p>
+                        <div className="account-grid">
+                            <div className="account-section">
+                                <h3>Account Information</h3>
+                                <p className="section-note">An asterisk (*) indicates a required field.</p>
 
-                            <form className="account-form">
+                                <form className="account-form" onSubmit={handleUpdateSubmit}>
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="firstName">First Name *</label>
-                                        <input type="text" id="firstName" defaultValue={user?.name?.split(' ')[0] || ''} />
+                                        <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleFieldChange} aria-invalid={!!errors.firstName} />
+                                        {errors.firstName && <span className="error-text">{errors.firstName}</span>}
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="lastName">Last Name *</label>
-                                        <input type="text" id="lastName" defaultValue={user?.name?.split(' ')[1] || ''} />
+                                        <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleFieldChange} aria-invalid={!!errors.lastName} />
+                                        {errors.lastName && <span className="error-text">{errors.lastName}</span>}
                                     </div>
                                 </div>
 
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="email">Email *</label>
-                                        <input type="email" id="email" defaultValue={user?.email || ''} />
+                                        <input type="email" id="email" name="email" value={formData.email} readOnly />
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="phone">Phone</label>
-                                        <input type="tel" id="phone" />
+                                        <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleFieldChange} aria-invalid={!!errors.phone} />
+                                        {errors.phone && <span className="error-text">{errors.phone}</span>}
                                     </div>
                                 </div>
 
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label htmlFor="state">State</label>
-                                        <input type="text" id="state" />
+                                        <input type="text" id="state" name="state" value={formData.state} onChange={handleFieldChange} />
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="city">City</label>
-                                        <input type="text" id="city" />
+                                        <input type="text" id="city" name="city" value={formData.city} onChange={handleFieldChange} />
                                     </div>
                                 </div>
 
                                 <div className="form-group">
                                     <label htmlFor="country">Country *</label>
-                                    <select id="country">
+                                    <select id="country" name="country" value={formData.country} onChange={handleFieldChange} aria-invalid={!!errors.country}>
                                         <option value="US">United States</option>
                                         <option value="CA">Canada</option>
                                         <option value="MX">Mexico</option>
@@ -331,42 +492,43 @@ const Dashboard = () => {
                                 </div>
 
                                 <button type="submit" className="update-button">Update Account</button>
-                            </form>
-                        </div>
+                                </form>
+                            </div>
 
-                        <div className="accessibility-section">
-                            <h3>Accessibility Options</h3>
-                            <p className="section-note">During the job fair, I will use the following</p>
+                            <div className="accessibility-section">
+                                <h3>Accessibility Options</h3>
+                                <p className="section-note">During the job fair, I will use the following</p>
 
                             <div className="checkbox-group">
                                 <label className="checkbox-label">
-                                    <input type="checkbox" />
+                                    <input type="checkbox" checked={accessibility.usesScreenMagnifier} onChange={(e) => handleAccessibilityToggle('usesScreenMagnifier', e.target.checked)} />
                                     <span>Screen Magnifier</span>
                                 </label>
                                 <label className="checkbox-label">
-                                    <input type="checkbox" />
+                                    <input type="checkbox" checked={accessibility.usesScreenReader} onChange={(e) => handleAccessibilityToggle('usesScreenReader', e.target.checked)} />
                                     <span>Screen Reader</span>
                                 </label>
                                 <label className="checkbox-label">
-                                    <input type="checkbox" />
+                                    <input type="checkbox" checked={accessibility.needsASL} onChange={(e) => handleAccessibilityToggle('needsASL', e.target.checked)} />
                                     <span>American Sign Language (ASL)</span>
                                 </label>
                                 <label className="checkbox-label">
-                                    <input type="checkbox" />
+                                    <input type="checkbox" checked={accessibility.needsCaptions} onChange={(e) => handleAccessibilityToggle('needsCaptions', e.target.checked)} />
                                     <span>Captions</span>
                                 </label>
                                 <label className="checkbox-label">
-                                    <input type="checkbox" />
+                                    <input type="checkbox" checked={accessibility.needsOther} onChange={(e) => handleAccessibilityToggle('needsOther', e.target.checked)} />
                                     <span>Others</span>
                                 </label>
                             </div>
 
                             <div className="checkbox-group">
                                 <label className="checkbox-label">
-                                    <input type="checkbox" />
+                                    <input type="checkbox" checked={accessibility.subscribeAnnouncements} onChange={(e) => handleAccessibilityToggle('subscribeAnnouncements', e.target.checked)} />
                                     <span>Subscribe to Job Seeker Announcements</span>
                                 </label>
                             </div>
+                        </div>
                         </div>
                     </div>
                 );
@@ -456,6 +618,9 @@ const Dashboard = () => {
             </header>
 
             <div className="dashboard-layout">
+                {toast.visible && (
+                    <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
+                )}
                 <nav className={`dashboard-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                     <div className="sidebar-section">
                         <button

@@ -51,6 +51,29 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // Basic location fields
+    state: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    city: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    country: {
+        type: String,
+        trim: true,
+        default: 'US'
+    },
+    // Accessibility preferences
+    usesScreenMagnifier: { type: Boolean, default: false },
+    usesScreenReader: { type: Boolean, default: false },
+    needsASL: { type: Boolean, default: false },
+    needsCaptions: { type: Boolean, default: false },
+    needsOther: { type: Boolean, default: false },
+    subscribeAnnouncements: { type: Boolean, default: false },
     // Interpreter specific fields
     languages: [{
         type: String,
@@ -119,6 +142,16 @@ userSchema.methods.getPublicProfile = function () {
         role: this.role,
         avatarUrl: this.avatarUrl,
         isActive: this.isActive,
+        phoneNumber: this.phoneNumber,
+        state: this.state,
+        city: this.city,
+        country: this.country,
+        usesScreenMagnifier: this.usesScreenMagnifier,
+        usesScreenReader: this.usesScreenReader,
+        needsASL: this.needsASL,
+        needsCaptions: this.needsCaptions,
+        needsOther: this.needsOther,
+        subscribeAnnouncements: this.subscribeAnnouncements,
         languages: this.languages,
         isAvailable: this.isAvailable,
         createdAt: this.createdAt

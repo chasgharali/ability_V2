@@ -1370,3 +1370,50 @@
 2025-09-27 23:29:24:2924 [31merror[39m: [31mAuthentication error: jwt expired[39m
 2025-09-27 23:29:24:2924 [31merror[39m: [31mAuthentication error: jwt expired[39m
 2025-09-27 23:38:12:3812 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-27 23:53:29:5329 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-27 23:53:29:5329 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-27 23:54:14:5414 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 00:03:49:349 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:04:38:438 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:05:43:543 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 00:10:54:1054 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:15:01:151 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 00:15:08:158 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 00:15:08:158 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 00:15:08:158 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 00:15:08:158 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 00:15:08:158 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 00:15:08:158 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 00:15:31:1531 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:16:15:1615 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 00:25:52:2552 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:26:07:267 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:26:23:2623 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:29:47:2947 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:30:15:3015 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:36:47:3647 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 00:36:53:3653 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 00:36:53:3653 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 00:36:53:3653 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 00:36:53:3653 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 00:36:53:3653 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 00:36:53:3653 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 00:36:57:3657 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 00:36:57:3657 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 00:37:21:3721 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 00:37:23:3723 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:37:24:3724 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:37:27:3727 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:37:29:3729 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:37:36:3736 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:37:38:3738 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:37:39:3739 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:37:40:3740 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:40:13:4013 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:40:14:4014 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:40:23:4023 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:40:35:4035 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:41:11:4111 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:41:17:4117 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:41:19:4119 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 00:41:20:4120 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
