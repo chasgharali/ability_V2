@@ -1,0 +1,27 @@
+{
+    "name": "ability-v2",
+    "version": "1.0.0",
+    "description": "Accessible video interview platform with real-time queue management",
+    "main": "server/index.js",
+    "scripts": {
+        "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+        "server:dev": "cd server && npm run dev",
+        "client:dev": "cd client && npm start",
+        "build": "cd client && npm run build",
+        "start": "cd server && npm start",
+        "test": "cd client && npm test && cd ../server && npm test",
+        "test:accessibility": "cd client && npm run test:accessibility",
+        "lint": "cd client && npm run lint && cd ../server && npm run lint"
+    },
+    "keywords": [
+        "accessibility",
+        "video-interview",
+        "real-time",
+        "queue-management"
+    ],
+    "author": "Ability Team",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}

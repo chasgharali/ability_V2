@@ -1,0 +1,149 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
+
+const SocketContext = createContext();
+
+export const useSocket = () => {
+    const context = useContext(SocketContext);
+    if (!context) {
+        throw new Error('useSocket must be used within a SocketProvider');
+    }
+    return context;
+};
+
+export const SocketProvider = ({ children }) => {
+    const [socket, setSocket] = useState(null);
+    const [connected, setConnected] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // Initialize socket connection
+        const newSocket = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:5001', {
+            transports: ['websocket', 'polling'],
+            timeout: 20000,
+            forceNew: true
+        });
+
+        // Connection event handlers
+        newSocket.on('connect', () => {
+            console.log('Socket connected:', newSocket.id);
+            setConnected(true);
+            setError(null);
+        });
+
+        newSocket.on('disconnect', (reason) => {
+            console.log('Socket disconnected:', reason);
+            setConnected(false);
+        });
+
+        newSocket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error);
+            setError('Connection failed');
+            setConnected(false);
+        });
+
+        newSocket.on('error', (error) => {
+            console.error('Socket error:', error);
+            setError(error.message || 'Socket error');
+        });
+
+        setSocket(newSocket);
+
+        // Cleanup on unmount
+        return () => {
+            newSocket.close();
+        };
+    }, []);
+
+    // Queue-related socket methods
+    const joinQueue = (boothId, eventId) => {
+        if (socket && connected) {
+            socket.emit('join-queue', { boothId, eventId });
+        }
+    };
+
+    const leaveQueue = (queueId, reason) => {
+        if (socket && connected) {
+            socket.emit('leave-queue', { queueId, reason });
+        }
+    };
+
+    const subscribeToQueueUpdates = (queueId, callback) => {
+        if (socket && connected) {
+            socket.on(`queue-update-${queueId}`, callback);
+        }
+    };
+
+    const unsubscribeFromQueueUpdates = (queueId, callback) => {
+        if (socket && connected) {
+            socket.off(`queue-update-${queueId}`, callback);
+        }
+    };
+
+    // Call-related socket methods
+    const joinCall = (roomId, userRole) => {
+        if (socket && connected) {
+            socket.emit('join-call', { roomId, userRole });
+        }
+    };
+
+    const leaveCall = (roomId) => {
+        if (socket && connected) {
+            socket.emit('leave-call', { roomId });
+        }
+    };
+
+    const requestInterpreter = (meetingId, interpreterType) => {
+        if (socket && connected) {
+            socket.emit('request-interpreter', { meetingId, interpreterType });
+        }
+    };
+
+    const acceptInterpreterRequest = (meetingId) => {
+        if (socket && connected) {
+            socket.emit('accept-interpreter-request', { meetingId });
+        }
+    };
+
+    // Chat-related socket methods
+    const sendMessage = (roomId, message, type = 'text') => {
+        if (socket && connected) {
+            socket.emit('send-message', { roomId, message, type });
+        }
+    };
+
+    const subscribeToMessages = (roomId, callback) => {
+        if (socket && connected) {
+            socket.on(`messages-${roomId}`, callback);
+        }
+    };
+
+    const unsubscribeFromMessages = (roomId, callback) => {
+        if (socket && connected) {
+            socket.off(`messages-${roomId}`, callback);
+        }
+    };
+
+    const value = {
+        socket,
+        connected,
+        error,
+        joinQueue,
+        leaveQueue,
+        subscribeToQueueUpdates,
+        unsubscribeFromQueueUpdates,
+        joinCall,
+        leaveCall,
+        requestInterpreter,
+        acceptInterpreterRequest,
+        sendMessage,
+        subscribeToMessages,
+        unsubscribeFromMessages
+    };
+
+    return (
+        <SocketContext.Provider value={value}>
+            {children}
+        </SocketContext.Provider>
+    );
+};
