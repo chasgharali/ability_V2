@@ -1580,3 +1580,20 @@
 2025-09-28 15:42:09:429 [32minfo[39m: [32mFile deleted by user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/5882a75b-c49b-49d9-94f6-2f2e798e9ec1.pdf[39m
 2025-09-28 15:42:14:4214 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/Receipt-2648-0066.pdf[39m
 2025-09-28 15:42:17:4217 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/Receipt-2648-0066.pdf[39m
+2025-09-28 16:01:50:150 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 16:01:50:150 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:01:50:150 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:01:50:150 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:01:50:150 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:01:50:150 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:02:33:233 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 16:05:48:548 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 16:05:55:555 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 16:05:55:555 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:05:55:555 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:05:55:555 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:05:55:555 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:05:55:555 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:08:40:840 [32minfo[39m: [32mUser self-deactivated: jobseeker@ability.com[39m
+2025-09-28 16:09:45:945 [32minfo[39m: [32mNew user registered: ali@gmail.com with role: JobSeeker[39m
+2025-09-28 16:10:00:100 [32minfo[39m: [32mUser logged in: ali@gmail.com[39m

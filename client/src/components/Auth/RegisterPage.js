@@ -112,10 +112,8 @@ const RegisterPage = () => {
                 email: formData.email,
                 password: formData.password,
                 role: 'JobSeeker',
-                metadata: {
-                    phone: formData.phone,
-                    announcements: formData.announcements
-                }
+                phoneNumber: (formData.phone || '').trim(),
+                // announcements is not part of /auth/register schema; we can persist it later via profile update
             };
 
             await register(userData);

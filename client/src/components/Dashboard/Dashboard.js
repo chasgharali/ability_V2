@@ -68,6 +68,8 @@ const Dashboard = () => {
             setActiveSection('edit-profile');
         } else if (location.pathname.endsWith('/view-profile')) {
             setActiveSection('view-profile');
+        } else if (location.pathname.endsWith('/delete-account')) {
+            setActiveSection('delete-account');
         } else {
             setActiveSection('my-account');
         }
@@ -253,6 +255,17 @@ const Dashboard = () => {
                 }
                 if (activeSection === 'view-profile') {
                     return <ViewProfile />;
+                }
+                if (activeSection === 'delete-account') {
+                    return (
+                        <div className="dashboard-content">
+                            <h2>Delete My Account</h2>
+                            <div className="alert-box" style={{ background: '#fff3cd', borderColor: '#ffeeba' }}>
+                                <p><strong>Warning:</strong> Deleting your account will deactivate your access. This action cannot be undone.</p>
+                            </div>
+                            <DeleteAccountPanel onDeleted={() => { logout(); navigate('/'); }} />
+                        </div>
+                    );
                 }
                 return (
                     <div className="dashboard-content">
@@ -696,6 +709,7 @@ const Dashboard = () => {
                                     className={`sidebar-item ${activeSection === 'delete-account' ? 'active' : ''}`}
                                     onClick={() => {
                                         setActiveSection('delete-account');
+                                        navigate('/dashboard/delete-account');
                                         closeMobileMenu();
                                     }}
                                 >
@@ -811,3 +825,54 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+// Inline component for delete confirmation
+function DeleteAccountPanel({ onDeleted }) {
+    const [confirm, setConfirm] = useState(false);
+    const [working, setWorking] = useState(false);
+    const [error, setError] = useState('');
+
+    const getToken = () => localStorage.getItem('token');
+
+    const handleDelete = async () => {
+        setWorking(true);
+        setError('');
+        try {
+            const res = await fetch('/api/users/me', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${getToken()}`
+                }
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Failed to delete account');
+            }
+            // Clear tokens client-side
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            if (typeof onDeleted === 'function') onDeleted();
+        } catch (e) {
+            setError(e.message || 'Failed to delete account');
+        } finally {
+            setWorking(false);
+        }
+    };
+
+    return (
+        <div className="account-section">
+            {error && <div className="alert-box" style={{ background: '#ffe8e8' }}>{error}</div>}
+            <p>Please confirm that you want to delete your account. This will deactivate your profile and sign you out.</p>
+            <label className="checkbox-label">
+                <input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} />
+                <span>I understand that this action cannot be undone.</span>
+            </label>
+            <div style={{ marginTop: '1rem' }}>
+                <button className="dashboard-button" disabled={!confirm || working} onClick={handleDelete}>
+                    {working ? 'Deleting…' : 'Delete My Account'}
+                </button>
+            </div>
+        </div>
+    );
+}

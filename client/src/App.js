@@ -105,6 +105,7 @@ function App() {
                                 <Route path="/dashboard/survey" element={<Dashboard />} />
                                 <Route path="/dashboard/edit-profile" element={<Dashboard />} />
                                 <Route path="/dashboard/view-profile" element={<Dashboard />} />
+                                <Route path="/dashboard/delete-account" element={<Dashboard />} />
                             </Routes>
                         </AppLayout>
                     </Router>

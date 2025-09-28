@@ -7,6 +7,36 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
+ * DELETE /api/users/me
+ * Deactivate current authenticated user's account
+ */
+router.delete('/me', authenticateToken, async (req, res) => {
+    try {
+        const { user } = req;
+        const User = require('../models/User');
+        const targetUser = await User.findById(user._id);
+        if (!targetUser) {
+            return res.status(404).json({
+                error: 'User not found',
+                message: 'The current user does not exist'
+            });
+        }
+
+        targetUser.isActive = false;
+        targetUser.refreshTokens = [];
+        await targetUser.save();
+
+        logger.info(`User self-deactivated: ${targetUser.email}`);
+        res.json({ message: 'Your account has been deactivated' });
+    } catch (error) {
+        logger.error('Self delete account error:', error);
+        res.status(500).json({
+            error: 'Failed to delete account',
+            message: 'An error occurred while deleting your account'
+        });
+    }
+});
+/**
  * GET /api/users/me
  * Get current authenticated user's profile
  */
