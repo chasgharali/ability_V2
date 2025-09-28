@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { useAuth } from './AuthContext';
 
 const SocketContext = createContext();
 
@@ -15,13 +16,17 @@ export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const [connected, setConnected] = useState(false);
     const [error, setError] = useState(null);
+    const { user } = useAuth();
 
     useEffect(() => {
-        // Initialize socket connection
+        // Initialize socket connection with auth token in handshake
+        const token = localStorage.getItem('token');
         const newSocket = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:5001', {
             transports: ['websocket', 'polling'],
             timeout: 20000,
-            forceNew: true
+            forceNew: true,
+            withCredentials: true,
+            auth: token ? { token: `Bearer ${token}` } : {}
         });
 
         // Connection event handlers
@@ -53,7 +58,8 @@ export const SocketProvider = ({ children }) => {
         return () => {
             newSocket.close();
         };
-    }, []);
+        // Recreate socket whenever auth state changes (login/logout)
+    }, [user]);
 
     // Queue-related socket methods
     const joinQueue = (boothId, eventId) => {

@@ -69,13 +69,16 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            const result = await login(formData.email, formData.password);
+            const loginType = userType === 'jobseeker' ? 'jobseeker' : 'company';
+            const result = await login(formData.email, formData.password, loginType);
             if (result.success) {
                 // Navigate to dashboard on successful login
                 navigate('/dashboard');
+            } else {
+                setError(result.error || 'Invalid email or password');
             }
         } catch (err) {
-            setError(err.message || 'Login failed. Please check your credentials.');
+            setError(err.message || 'Invalid email or password');
         } finally {
             setIsLoading(false);
         }

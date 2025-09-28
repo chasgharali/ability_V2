@@ -1674,3 +1674,100 @@
 2025-09-28 17:02:12:212 [32minfo[39m: [32mPresigned URL generated for user my-test-js2@maildrop.cc: avatar/avatar.jpg[39m
 2025-09-28 17:02:15:215 [32minfo[39m: [32mFile upload confirmed for user my-test-js2@maildrop.cc: avatar/68d91ec9123b4be761f24115/avatar.jpg[39m
 2025-09-28 17:03:01:31 [32minfo[39m: [32mSelf profile updated: my-test-js2@maildrop.cc[39m
+2025-09-28 17:16:33:1633 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 17:16:33:1633 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 17:16:34:1634 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:34:1634 [31merror[39m: [31mRedis connection failed: Failed to refresh slots cache.[39m
+2025-09-28 17:16:34:1634 [33mwarn[39m: [33mContinuing without Redis connection in development mode[39m
+2025-09-28 17:16:34:1634 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 17:16:34:1634 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 17:16:34:1634 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 17:16:35:1635 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:36:1636 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:37:1637 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:39:1639 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:40:1640 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:41:1641 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:42:1642 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:42:1642 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 17:19:06:196 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 17:19:06:196 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 17:19:07:197 [33mwarn[39m: [33mRedis cluster connection failed, falling back to single-node TLS:[39m
+2025-09-28 17:19:18:1918 [31merror[39m: [31mRedis connection failed: connect ETIMEDOUT[39m
+2025-09-28 17:19:18:1918 [33mwarn[39m: [33mContinuing without Redis connection in development mode[39m
+2025-09-28 17:19:18:1918 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 17:19:18:1918 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 17:19:18:1918 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 18:04:33:433 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 18:04:40:440 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 18:04:40:440 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 18:04:41:441 [33mwarn[39m: [33mRedis cluster connection failed, falling back to single-node TLS:[39m
+2025-09-28 18:04:42:442 [31merror[39m: [31mRedis connection failed: Hostname/IP does not match certificate's altnames: Host: localhost. is not in the cert's altnames: DNS:*.ability-mv2.33hzlo.use1.cache.amazonaws.com[39m
+2025-09-28 18:04:42:442 [33mwarn[39m: [33mContinuing without Redis connection in development mode[39m
+2025-09-28 18:04:42:442 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 18:04:42:442 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 18:04:42:442 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 18:07:59:759 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 18:08:06:86 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 18:08:06:86 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 18:08:06:86 [33mwarn[39m: [33mRedis cluster connection failed, falling back to single-node TLS:[39m
+2025-09-28 18:08:07:87 [31merror[39m: [31mRedis connection failed: Hostname/IP does not match certificate's altnames: Host: localhost. is not in the cert's altnames: DNS:*.ability-mv2.33hzlo.use1.cache.amazonaws.com[39m
+2025-09-28 18:08:07:87 [33mwarn[39m: [33mContinuing without Redis connection in development mode[39m
+2025-09-28 18:08:07:87 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 18:08:07:87 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 18:08:07:87 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 18:08:23:823 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 18:08:28:828 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 18:08:28:828 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 18:08:28:828 [33mwarn[39m: [33mRedis cluster connection failed, falling back to single-node TLS:[39m
+2025-09-28 18:08:28:828 [31merror[39m: [31mRedis connection failed: Port should be >= 0 and < 65536. Received type number (NaN).[39m
+2025-09-28 18:08:28:828 [33mwarn[39m: [33mContinuing without Redis connection in development mode[39m
+2025-09-28 18:08:28:828 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 18:08:28:828 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 18:08:28:828 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 18:09:27:927 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 18:09:27:927 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 18:09:28:928 [33mwarn[39m: [33mRedis cluster connection failed, falling back to single-node TLS:[39m
+2025-09-28 18:10:45:1045 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 18:10:51:1051 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 18:10:51:1051 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 18:10:52:1052 [33mwarn[39m: [33mRedis cluster connection failed, falling back to single-node TLS:[39m
+2025-09-28 18:13:00:130 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 18:13:00:130 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 18:13:01:131 [33mwarn[39m: [33mRedis cluster connection failed, falling back to single-node TLS:[39m
+2025-09-28 18:16:08:168 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 18:16:15:1615 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 18:16:15:1615 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 18:16:15:1615 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-28 18:16:15:1615 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 18:16:15:1615 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 18:16:15:1615 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-28 18:18:11:1811 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 18:23:46:2346 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 18:23:46:2346 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 20:24:08:248 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 20:24:08:248 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 20:24:20:2420 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 20:24:22:2422 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 21:17:19:1719 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 21:17:19:1719 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 21:25:20:2520 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 21:25:20:2520 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 22:25:26:2526 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 22:25:38:2538 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 22:25:38:2538 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 23:26:27:2627 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 23:49:35:4935 [32minfo[39m: [32mUser logged in: my-test-js2@maildrop.cc[39m
+2025-09-28 23:49:36:4936 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 23:50:31:5031 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-09-28 23:50:31:5031 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 23:52:16:5216 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 23:52:16:5216 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 23:52:16:5216 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-28 23:52:16:5216 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 23:52:16:5216 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 23:52:16:5216 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-28 23:55:28:5528 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-09-28 23:55:28:5528 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 23:58:30:5830 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-09-28 23:58:30:5830 [31merror[39m: [31mSocket authentication error: invalid token[39m

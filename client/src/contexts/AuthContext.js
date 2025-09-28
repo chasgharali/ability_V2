@@ -76,12 +76,13 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const login = async (email, password) => {
+    const login = async (email, password, loginType) => {
         try {
             setError(null);
             const response = await axios.post('/api/auth/login', {
                 email,
-                password
+                password,
+                loginType
             });
 
             const { tokens, user } = response.data;
@@ -90,7 +91,19 @@ export const AuthProvider = ({ children }) => {
             setUser(user);
             return { success: true };
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Login failed';
+            const status = error.response?.status;
+            const data = error.response?.data || {};
+            let errorMessage;
+
+            if (status === 401) {
+                errorMessage = 'Invalid email or password';
+            } else if (status === 403 && (data?.error === 'Role not allowed' || /Please use the (Company|Job) Seeker login/i.test(data?.message || ''))) {
+                errorMessage = data?.message || 'This account type is not allowed on the selected login. Try the other login tab.';
+            } else if (status === 403 || data?.error === 'Account deactivated' || /deactivated/i.test(data?.message || '')) {
+                errorMessage = 'Your account has been deactivated. Please contact support.';
+            } else {
+                errorMessage = data?.message || 'Login failed';
+            }
             setError(errorMessage);
             return { success: false, error: errorMessage };
         }

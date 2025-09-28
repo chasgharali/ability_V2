@@ -161,7 +161,11 @@ router.post('/login', [
         .withMessage('Please provide a valid email address'),
     body('password')
         .notEmpty()
-        .withMessage('Password is required')
+        .withMessage('Password is required'),
+    body('loginType')
+        .optional()
+        .isIn(['jobseeker', 'company'])
+        .withMessage('Invalid login type')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -174,7 +178,7 @@ router.post('/login', [
             });
         }
 
-        const { email, password } = req.body;
+        const { email, password, loginType } = req.body;
 
         // Find user by email
         const user = await User.findOne({ email });
@@ -199,6 +203,20 @@ router.post('/login', [
             return res.status(401).json({
                 error: 'Invalid credentials',
                 message: 'Email or password is incorrect'
+            });
+        }
+
+        // Role-based gate based on selected login tab
+        if (loginType === 'jobseeker' && user.role !== 'JobSeeker') {
+            return res.status(403).json({
+                error: 'Role not allowed',
+                message: 'Please use the Company & Staff login for this account.'
+            });
+        }
+        if (loginType === 'company' && user.role === 'JobSeeker') {
+            return res.status(403).json({
+                error: 'Role not allowed',
+                message: 'Please use the Job Seeker login for this account.'
             });
         }
 

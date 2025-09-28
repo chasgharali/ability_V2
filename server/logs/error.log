@@ -1296,3 +1296,23 @@
 2025-09-28 15:02:04:24 [31merror[39m: [31mRedis Client Error: Connection timeout[39m
 2025-09-28 15:02:09:29 [31merror[39m: [31mRedis Client Error: Connection timeout[39m
 2025-09-28 15:02:14:214 [31merror[39m: [31mRedis Client Error: Connection timeout[39m
+2025-09-28 17:16:34:1634 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:34:1634 [31merror[39m: [31mRedis connection failed: Failed to refresh slots cache.[39m
+2025-09-28 17:16:35:1635 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:36:1636 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:37:1637 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:39:1639 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:40:1640 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:41:1641 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:16:42:1642 [31merror[39m: [31mRedis Client Error: Failed to refresh slots cache.[39m
+2025-09-28 17:19:18:1918 [31merror[39m: [31mRedis connection failed: connect ETIMEDOUT[39m
+2025-09-28 18:04:42:442 [31merror[39m: [31mRedis connection failed: Hostname/IP does not match certificate's altnames: Host: localhost. is not in the cert's altnames: DNS:*.ability-mv2.33hzlo.use1.cache.amazonaws.com[39m
+2025-09-28 18:08:07:87 [31merror[39m: [31mRedis connection failed: Hostname/IP does not match certificate's altnames: Host: localhost. is not in the cert's altnames: DNS:*.ability-mv2.33hzlo.use1.cache.amazonaws.com[39m
+2025-09-28 18:08:28:828 [31merror[39m: [31mRedis connection failed: Port should be >= 0 and < 65536. Received type number (NaN).[39m
+2025-09-28 18:18:11:1811 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 18:23:46:2346 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 18:23:46:2346 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 23:49:36:4936 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 23:50:31:5031 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 23:55:28:5528 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-28 23:58:30:5830 [31merror[39m: [31mSocket authentication error: invalid token[39m
