@@ -7,6 +7,8 @@ import { AccessibilityAnnouncer } from './components/Accessibility/Accessibility
 import { FocusManager } from './components/Accessibility/FocusManager';
 import LoginPage from './components/Auth/LoginPage';
 import RegisterPage from './components/Auth/RegisterPage';
+import VerifyEmailSent from './components/Auth/VerifyEmailSent';
+import VerifyEmailSuccess from './components/Auth/VerifyEmailSuccess';
 import Dashboard from './components/Dashboard/Dashboard';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
@@ -100,6 +102,8 @@ function App() {
                                 <Route path="/" element={<LandingPage />} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
+                                <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
+                                <Route path="/email-verified" element={<VerifyEmailSuccess />} />
                                 <Route path="/dashboard" element={<Dashboard />} />
                                 <Route path="/dashboard/my-account" element={<Dashboard />} />
                                 <Route path="/dashboard/survey" element={<Dashboard />} />

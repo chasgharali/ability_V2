@@ -22,7 +22,8 @@
 }
 
 .register-card {
-    max-width: 32rem;
+    width: 60vw;
+    max-width: none;
 }
 
 /* Back Link */
@@ -511,6 +512,12 @@
     .auth-card {
         padding: 1.5rem;
         border-radius: 0.75rem;
+    }
+
+    /* On small screens, let it be full width */
+    .register-card {
+        width: 100%;
+        max-width: 100%;
     }
 
     .auth-title {

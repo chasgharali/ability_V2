@@ -1,9 +1,11 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { authenticateToken, validateRefreshToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const { sendVerificationEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
@@ -99,7 +101,24 @@ router.post('/register', [
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined
         });
 
+        // Generate email verification token (24h expiry)
+        const token = crypto.randomBytes(32).toString('hex');
+        user.emailVerificationToken = token;
+        user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
         await user.save();
+
+        // Send verification email (best-effort)
+        try {
+            const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+            const apiBase = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5001}`;
+            // Verification link points to API endpoint which will redirect to app
+            const verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+            const ok = await sendVerificationEmail(user.email, verifyLink);
+            if (!ok) logger.warn(`Failed to send verification email to ${user.email}`);
+        } catch (e) {
+            logger.warn('sendVerificationEmail error:', e);
+        }
 
         // Generate tokens
         const { accessToken, refreshToken } = generateTokens(user);
@@ -115,7 +134,7 @@ router.post('/register', [
         logger.info(`New user registered: ${email} with role: ${role}`);
 
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'User registered successfully. Check your email to verify your address.',
             user: user.getPublicProfile(),
             tokens: {
                 accessToken,
@@ -302,8 +321,13 @@ router.put('/profile', authenticateToken, [
         .isLength({ min: 2, max: 100 })
         .withMessage('Name must be between 2 and 100 characters'),
     body('phoneNumber')
-        .optional()
-        .isMobilePhone()
+        .optional({ nullable: true, checkFalsy: true })
+        .customSanitizer(v => typeof v === 'string' ? v.trim() : v)
+        .custom((value) => {
+            if (!value) return true; // allow empty after trim
+            const pattern = /^\+?[0-9\-\s()]{7,20}$/;
+            return pattern.test(value);
+        })
         .withMessage('Please provide a valid phone number'),
     body('state')
         .optional()
@@ -512,6 +536,37 @@ router.put('/survey', authenticateToken, [
     } catch (error) {
         logger.error('Update survey error:', error);
         res.status(500).json({ error: 'Failed to update survey' });
+    }
+});
+
+/**
+ * GET /api/auth/verify-email?token=...
+ * Confirms email verification and redirects to app login
+ */
+router.get('/verify-email', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token || typeof token !== 'string') {
+            return res.status(400).send('Invalid verification link');
+        }
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationExpires: { $gt: new Date() }
+        });
+        if (!user) {
+            return res.status(400).send('Verification link is invalid or has expired');
+        }
+        user.emailVerified = true;
+        user.emailVerificationToken = null;
+        user.emailVerificationExpires = null;
+        await user.save();
+
+        const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+        const redirectUrl = `${appBase}/email-verified`;
+        return res.redirect(302, redirectUrl);
+    } catch (error) {
+        logger.error('Verify email error:', error);
+        return res.status(500).send('Failed to verify email');
     }
 });
 

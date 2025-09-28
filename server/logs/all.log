@@ -1597,3 +1597,80 @@
 2025-09-28 16:08:40:840 [32minfo[39m: [32mUser self-deactivated: jobseeker@ability.com[39m
 2025-09-28 16:09:45:945 [32minfo[39m: [32mNew user registered: ali@gmail.com with role: JobSeeker[39m
 2025-09-28 16:10:00:100 [32minfo[39m: [32mUser logged in: ali@gmail.com[39m
+2025-09-28 16:16:55:1655 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 16:16:56:1656 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:16:56:1656 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:16:56:1656 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:16:56:1656 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:16:56:1656 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:17:31:1731 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 16:17:31:1731 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:17:31:1731 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:17:31:1731 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:17:31:1731 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:17:31:1731 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:18:04:184 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 16:18:04:184 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:18:04:184 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:18:04:184 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:18:04:184 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:18:04:184 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:18:30:1830 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 16:18:30:1830 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:18:30:1830 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:18:30:1830 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:18:30:1830 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:18:30:1830 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:23:01:231 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 16:23:22:2322 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 16:23:22:2322 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:23:22:2322 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:23:22:2322 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:23:22:2322 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:23:22:2322 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:30:05:305 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 16:30:05:305 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:30:05:305 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:30:05:305 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:30:05:305 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:30:05:305 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:33:10:3310 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 16:33:10:3310 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:33:10:3310 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:33:10:3310 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:33:10:3310 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:33:10:3310 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 16:35:00:350 [32minfo[39m: [32mSES verification email sent to my-test-js@maildrop.cc: 01000199901ad066-07fc9185-68b4-45e7-a1f3-c082f1824eeb-000000[39m
+2025-09-28 16:35:00:350 [32minfo[39m: [32mNew user registered: my-test-js@maildrop.cc with role: JobSeeker[39m
+2025-09-28 16:40:58:4058 [32minfo[39m: [32mSES verification email sent to my-test-js2@maildrop.cc: 0100019990204726-36e865b5-d036-448a-917a-d017a31620b5-000000[39m
+2025-09-28 16:40:58:4058 [32minfo[39m: [32mNew user registered: my-test-js2@maildrop.cc with role: JobSeeker[39m
+2025-09-28 16:44:26:4426 [32minfo[39m: [32mUser logged in: my-test-js2@maildrop.cc[39m
+2025-09-28 16:44:47:4447 [32minfo[39m: [32mUser profile updated: my-test-js2@maildrop.cc[39m
+2025-09-28 16:44:48:4448 [32minfo[39m: [32mUser profile updated: my-test-js2@maildrop.cc[39m
+2025-09-28 16:48:10:4810 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 16:48:10:4810 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 16:48:20:4820 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 16:48:21:4821 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 16:48:37:4837 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 16:48:37:4837 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 16:48:37:4837 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 16:48:37:4837 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 16:48:37:4837 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 16:48:37:4837 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 17:00:28:028 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 17:00:34:034 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 17:00:35:035 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 17:00:35:035 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 17:00:35:035 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 17:00:35:035 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 17:00:35:035 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 17:01:14:114 [32minfo[39m: [32mUser profile updated: my-test-js2@maildrop.cc[39m
+2025-09-28 17:01:18:118 [32minfo[39m: [32mUser profile updated: my-test-js2@maildrop.cc[39m
+2025-09-28 17:01:21:121 [32minfo[39m: [32mUser profile updated: my-test-js2@maildrop.cc[39m
+2025-09-28 17:01:43:143 [32minfo[39m: [32mSurvey updated for user: my-test-js2@maildrop.cc[39m
+2025-09-28 17:01:47:147 [32minfo[39m: [32mSurvey updated for user: my-test-js2@maildrop.cc[39m
+2025-09-28 17:02:01:21 [32minfo[39m: [32mPresigned URL generated for user my-test-js2@maildrop.cc: resume/Receipt-2648-0066.pdf[39m
+2025-09-28 17:02:04:24 [32minfo[39m: [32mFile upload confirmed for user my-test-js2@maildrop.cc: resume/68d91ec9123b4be761f24115/Receipt-2648-0066.pdf[39m
+2025-09-28 17:02:12:212 [32minfo[39m: [32mPresigned URL generated for user my-test-js2@maildrop.cc: avatar/avatar.jpg[39m
+2025-09-28 17:02:15:215 [32minfo[39m: [32mFile upload confirmed for user my-test-js2@maildrop.cc: avatar/68d91ec9123b4be761f24115/avatar.jpg[39m
+2025-09-28 17:03:01:31 [32minfo[39m: [32mSelf profile updated: my-test-js2@maildrop.cc[39m

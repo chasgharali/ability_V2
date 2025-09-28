@@ -19,6 +19,18 @@ const userSchema = new mongoose.Schema({
         trim: true,
         maxlength: [100, 'Name cannot exceed 100 characters']
     },
+    emailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: {
+        type: String,
+        default: null
+    },
+    emailVerificationExpires: {
+        type: Date,
+        default: null
+    },
     email: {
         type: String,
         required: [true, 'Email is required'],
@@ -154,6 +166,7 @@ userSchema.methods.getPublicProfile = function () {
         email: this.email,
         role: this.role,
         avatarUrl: this.avatarUrl,
+        emailVerified: this.emailVerified,
         resumeUrl: this.resumeUrl,
         isActive: this.isActive,
         phoneNumber: this.phoneNumber,

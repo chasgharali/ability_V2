@@ -117,12 +117,7 @@ const RegisterPage = () => {
             };
 
             await register(userData);
-            navigate('/login', {
-                state: {
-                    message: 'Registration successful! Please log in with your credentials.',
-                    email: formData.email
-                }
-            });
+            navigate('/verify-email-sent', { state: { email: formData.email } });
         } catch (err) {
             setError(err.message || 'Registration failed. Please try again.');
         } finally {
