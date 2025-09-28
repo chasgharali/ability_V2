@@ -341,6 +341,20 @@
     gap: 1rem;
 }
 
+/* 4-column layout for survey top row */
+.form-row-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+/* 3-column layout utility */
+.form-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;
@@ -353,8 +367,8 @@
     font-size: 0.9rem;
 }
 
-.form-group input,
-.form-group select {
+.form-group > input,
+.form-group > select {
     padding: 0.75rem;
     border: 1px solid #cccccc;
     border-radius: 0.25rem;
@@ -362,8 +376,54 @@
     transition: border-color 0.2s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+/* Make Syncfusion MultiSelect look like our inputs */
+.ajf-input.e-multiselect .e-multi-select-wrapper {
+    padding: 0.375rem 0.5rem;
+    min-height: 44px;
+    border: 1px solid #cccccc;
+    border-radius: 0.25rem;
+    width: 100%;
+    background: #ffffff;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center; /* vertically center contents */
+}
+.ajf-input.e-multiselect { width: 100%; }
+.ajf-input.e-multiselect.e-input-focus .e-multi-select-wrapper,
+.ajf-input.e-multiselect .e-multi-select-wrapper:focus-within {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+    border-color: #000000;
+}
+.ajf-input.e-multiselect .e-delim-values,
+.ajf-input.e-multiselect .e-searcher input {
+    font-size: 1rem;
+}
+.ajf-input.e-multiselect .e-searcher {
+    display: flex;
+    align-items: center; /* center placeholder/input */
+}
+.ajf-input.e-multiselect .e-searcher input {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent;
+    padding: 0; /* prevent extra inner padding pushing baseline down */
+    height: 1.5rem; /* stable height for alignment */
+}
+.ajf-input.e-multiselect .e-searcher input::placeholder { color: #888888; }
+.ajf-input.e-multiselect .e-clear-icon,
+.ajf-input.e-multiselect .e-input-group-icon.e-ddl-icon {
+    color: #666666;
+    align-self: center; /* center dropdown/caret vertically */
+}
+.ajf-input.e-multiselect .e-input-group-icon.e-ddl-icon { margin-left: 4px; }
+.ajf-input.e-multiselect .e-selectall,
+.ajf-input.e-multiselect .e-checkbox-wrapper .e-label {
+    font-size: 0.95rem;
+}
+
+.form-group > input:focus,
+.form-group > select:focus {
     outline: 2px solid #000000;
     outline-offset: 2px;
     border-color: #000000;
@@ -422,6 +482,31 @@
     flex-direction: column;
     gap: 0.75rem;
     margin-bottom: 1rem;
+}
+
+/* Disability Information grid */
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem 2rem; /* row, column gap for airy layout */
+    margin: 1rem 0 1.5rem 0;
+}
+.checkbox-grid .checkbox-label {
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* New grid for SurveyForm's disability columns */
+.checkbox-columns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem 2rem;
+    margin: 0.5rem 0 1.25rem 0;
+}
+.checkbox-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
 }
 
 .checkbox-label {
@@ -552,6 +637,9 @@
     .form-row {
         grid-template-columns: 1fr;
     }
+    .form-row-4 {
+        grid-template-columns: 1fr;
+    }
 
     .accessibility-section { padding-top: 0; }
 
@@ -560,8 +648,26 @@
         gap: 1rem;
     }
 
+    .checkbox-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem 1.25rem;
+    }
+    .checkbox-columns {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem 1.25rem;
+    }
+
     .dashboard-card {
         padding: 1.5rem;
+    }
+
+    .checkbox-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem 1rem;
+    }
+    .checkbox-columns {
+        grid-template-columns: 1fr;
+        gap: 0.75rem 1rem;
     }
 }
 

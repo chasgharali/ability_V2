@@ -1417,3 +1417,74 @@
 2025-09-28 00:41:17:4117 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
 2025-09-28 00:41:19:4119 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
 2025-09-28 00:41:20:4120 [32minfo[39m: [32mUser profile updated: jobseeker@ability.com[39m
+2025-09-28 01:04:26:426 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 01:15:24:1524 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 03:27:17:2717 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 03:27:17:2717 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 03:27:28:2728 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 03:27:28:2728 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 04:50:45:5045 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 04:50:45:5045 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 04:50:55:5055 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 04:50:55:5055 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 05:27:58:2758 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 05:27:58:2758 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 05:28:08:288 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 05:28:08:288 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 06:01:00:10 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 06:01:00:10 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 08:01:23:123 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 08:01:23:123 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 09:02:13:213 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 09:02:23:223 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 09:02:23:223 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 10:03:14:314 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 10:03:24:324 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 10:03:24:324 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 11:04:15:415 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 11:28:30:2830 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 11:28:30:2830 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 11:43:38:4338 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 11:43:38:4338 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 11:44:04:444 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 11:59:27:5927 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 11:59:27:5927 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:00:26:026 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 12:01:21:121 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 12:01:27:127 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 12:01:27:127 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 12:01:27:127 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 12:01:27:127 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 12:01:27:127 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 12:01:27:127 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 12:01:41:141 [32minfo[39m: [32mSurvey updated for user: jobseeker@ability.com[39m
+2025-09-28 12:01:43:143 [32minfo[39m: [32mSurvey updated for user: jobseeker@ability.com[39m
+2025-09-28 12:02:40:240 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 12:05:41:541 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 12:05:41:541 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 12:05:41:541 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 12:05:41:541 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 12:05:41:541 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 12:05:41:541 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 12:06:19:619 [32minfo[39m: [32mSurvey updated for user: jobseeker@ability.com[39m
+2025-09-28 12:11:37:1137 [32minfo[39m: [32mSurvey updated for user: jobseeker@ability.com[39m
+2025-09-28 12:11:51:1151 [32minfo[39m: [32mSurvey updated for user: jobseeker@ability.com[39m
+2025-09-28 12:15:33:1533 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:15:33:1533 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:33:39:3339 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:33:39:3339 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:35:45:3545 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:35:45:3545 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:36:08:368 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:36:08:368 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:38:45:3845 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:38:45:3845 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:38:48:3848 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:38:48:3848 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:38:59:3859 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:39:00:390 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:39:09:399 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:39:09:399 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:40:58:4058 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 12:40:59:4059 [32minfo[39m: [32mToken refreshed for user: jobseeker@ability.com[39m
+2025-09-28 12:41:57:4157 [32minfo[39m: [32mSurvey updated for user: jobseeker@ability.com[39m

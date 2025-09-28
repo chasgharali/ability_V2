@@ -52,6 +52,11 @@ app.use(helmet({
     },
 }));
 
+// If running behind a proxy (e.g., CRA dev server, reverse proxy, or load balancer),
+// let Express know so req.ip and rate limit can read X-Forwarded-For safely.
+// Use 1 hop in dev; can be made configurable via env.
+app.set('trust proxy', parseInt(process.env.TRUST_PROXY_HOPS || '1'));
+
 // Rate limiting
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes

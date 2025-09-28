@@ -446,4 +446,73 @@ router.post('/change-password', authenticateToken, [
     }
 });
 
+/**
+ * GET /api/auth/survey
+ * Get current user's job seeker survey
+ */
+router.get('/survey', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'JobSeeker') {
+            return res.status(403).json({
+                error: 'Forbidden',
+                message: 'Survey is only available for JobSeeker accounts'
+            });
+        }
+        return res.json({ survey: req.user.survey || {} });
+    } catch (error) {
+        logger.error('Get survey error:', error);
+        res.status(500).json({ error: 'Failed to retrieve survey' });
+    }
+});
+
+/**
+ * PUT /api/auth/survey
+ * Update current user's job seeker survey
+ */
+router.put('/survey', authenticateToken, [
+    body('race').optional().isArray().withMessage('Race must be an array of strings'),
+    body('genderIdentity').optional().isString().isLength({ max: 100 }).withMessage('Invalid gender identity'),
+    body('ageGroup').optional().isString().isLength({ max: 50 }).withMessage('Invalid age group'),
+    body('countryOfOrigin').optional().isString().isLength({ max: 100 }).withMessage('Invalid country of origin'),
+    body('disabilities').optional().isArray().withMessage('Disabilities must be an array of strings'),
+    body('otherDisability').optional().isString().isLength({ max: 200 }).withMessage('Other disability is too long')
+], async (req, res) => {
+    try {
+        if (req.user.role !== 'JobSeeker') {
+            return res.status(403).json({
+                error: 'Forbidden',
+                message: 'Survey is only available for JobSeeker accounts'
+            });
+        }
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: 'Please check your input data',
+                details: errors.array()
+            });
+        }
+
+        const { race, genderIdentity, ageGroup, countryOfOrigin, disabilities, otherDisability } = req.body;
+        const { user } = req;
+
+        user.survey = {
+            race: Array.isArray(race) ? race : user.survey?.race || [],
+            genderIdentity: genderIdentity !== undefined ? genderIdentity : (user.survey?.genderIdentity || ''),
+            ageGroup: ageGroup !== undefined ? ageGroup : (user.survey?.ageGroup || ''),
+            countryOfOrigin: countryOfOrigin !== undefined ? countryOfOrigin : (user.survey?.countryOfOrigin || ''),
+            disabilities: Array.isArray(disabilities) ? disabilities : user.survey?.disabilities || [],
+            otherDisability: otherDisability !== undefined ? otherDisability : (user.survey?.otherDisability || ''),
+            updatedAt: new Date()
+        };
+
+        await user.save();
+        logger.info(`Survey updated for user: ${user.email}`);
+        return res.json({ message: 'Survey updated successfully', survey: user.survey });
+    } catch (error) {
+        logger.error('Update survey error:', error);
+        res.status(500).json({ error: 'Failed to update survey' });
+    }
+});
+
 module.exports = router;

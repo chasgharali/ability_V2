@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MdAccountCircle, MdEvent, MdPerson, MdSettings, MdHelp, MdLogout, MdRefresh, MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
 import './Dashboard.css';
+import SurveyForm from './SurveyForm';
 
 const Dashboard = () => {
     const { user, logout, loading, updateProfile } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [activeSection, setActiveSection] = useState('my-account');
     const [expandedSections, setExpandedSections] = useState({
         'my-account': true,
@@ -55,6 +57,15 @@ const Dashboard = () => {
             setAccessibility(prev => ({ ...prev, [key]: !value }));
         }
     };
+
+    // Sync section based on URL path
+    useEffect(() => {
+        if (location.pathname.endsWith('/survey')) {
+            setActiveSection('survey');
+        } else {
+            setActiveSection('my-account');
+        }
+    }, [location.pathname]);
 
     useEffect(() => {
         // When user loads/changes, sync form
@@ -228,6 +239,9 @@ const Dashboard = () => {
     const getDashboardContent = () => {
         switch (user?.role) {
             case 'JobSeeker':
+                if (activeSection === 'survey') {
+                    return <SurveyForm />;
+                }
                 return (
                     <div className="dashboard-content">
                         <h2>My Account</h2>
@@ -591,6 +605,20 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard">
+            {/* Accessible Skip Link */}
+            <a
+                href="#dashboard-main"
+                className="skip-link"
+                onClick={(e) => {
+                    // Ensure focus moves to main content for screen readers/keyboard users
+                    const el = document.getElementById('dashboard-main');
+                    if (el) {
+                        el.focus();
+                    }
+                }}
+            >
+                Skip to main content
+            </a>
             <header className="dashboard-header">
                 <div className="dashboard-header-content">
                     <div className="header-left">
@@ -625,10 +653,20 @@ const Dashboard = () => {
                     <div className="sidebar-section">
                         <button
                             className="sidebar-header"
-                            onClick={() => toggleSection('my-account')}
+                            onClick={() => { setActiveSection('my-account'); navigate('/dashboard/my-account'); closeMobileMenu(); }}
+                            aria-label="Go to My Account"
                         >
                             <span>My Account</span>
-                            {expandedSections['my-account'] ? <MdExpandLess /> : <MdExpandMore />}
+                            <span
+                                className="icon-button"
+                                onClick={(e) => { e.stopPropagation(); toggleSection('my-account'); }}
+                                aria-label={expandedSections['my-account'] ? 'Collapse My Account menu' : 'Expand My Account menu'}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); e.stopPropagation(); toggleSection('my-account'); } }}
+                            >
+                                {expandedSections['my-account'] ? <MdExpandLess /> : <MdExpandMore />}
+                            </span>
                         </button>
                         {expandedSections['my-account'] && (
                             <div className="sidebar-items">
@@ -636,6 +674,7 @@ const Dashboard = () => {
                                     className={`sidebar-item ${activeSection === 'survey' ? 'active' : ''}`}
                                     onClick={() => {
                                         setActiveSection('survey');
+                                        navigate('/dashboard/survey');
                                         closeMobileMenu();
                                     }}
                                 >
@@ -740,7 +779,7 @@ const Dashboard = () => {
                     </div>
                 </nav>
 
-                <main className="dashboard-main">
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
                     {getDashboardContent()}
                 </main>
             </div>

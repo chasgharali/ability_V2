@@ -1,6 +1,17 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Sub-schema for JobSeeker survey
+const surveySchema = new mongoose.Schema({
+    race: [{ type: String, trim: true, default: undefined }],
+    genderIdentity: { type: String, trim: true, default: '' },
+    ageGroup: { type: String, trim: true, default: '' },
+    countryOfOrigin: { type: String, trim: true, default: '' },
+    disabilities: [{ type: String, trim: true, default: undefined }],
+    otherDisability: { type: String, trim: true, default: '' },
+    updatedAt: { type: Date, default: null }
+}, { _id: false, minimize: false });
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -74,6 +85,8 @@ const userSchema = new mongoose.Schema({
     needsCaptions: { type: Boolean, default: false },
     needsOther: { type: Boolean, default: false },
     subscribeAnnouncements: { type: Boolean, default: false },
+    // JobSeeker survey
+    survey: { type: surveySchema, default: () => ({ race: [], genderIdentity: '', ageGroup: '', countryOfOrigin: '', disabilities: [], otherDisability: '', updatedAt: null }) },
     // Interpreter specific fields
     languages: [{
         type: String,
@@ -152,6 +165,7 @@ userSchema.methods.getPublicProfile = function () {
         needsCaptions: this.needsCaptions,
         needsOther: this.needsOther,
         subscribeAnnouncements: this.subscribeAnnouncements,
+        survey: this.survey,
         languages: this.languages,
         isAvailable: this.isAvailable,
         createdAt: this.createdAt
