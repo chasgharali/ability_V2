@@ -18,6 +18,11 @@ const Dashboard = () => {
         'upcoming-events': true
     });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [brandingLogo, setBrandingLogo] = useState(() => {
+        try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
+    });
+    // Simple monochrome default icon (SVG data URL)
+    const DEFAULT_ICON = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="36" viewBox="0 0 180 36" fill="none"><path d="M18 2 L6 22 h8 l-4 12 16-24 h-8 l4-8 z" fill="%23000000"/><text x="34" y="24" fill="%23000000" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">ABILITYJOBFAIR</text></svg>';
     // Local form state for Account Information
     const [formData, setFormData] = useState({
         firstName: user?.name?.split(' ')[0] || '',
@@ -98,6 +103,36 @@ const Dashboard = () => {
             });
         }
     }, [user]);
+
+    // Admin: branding logo helpers
+    const saveBrandingLogo = (dataUrl) => {
+        try {
+            if (dataUrl) {
+                localStorage.setItem('ajf_branding_logo', dataUrl);
+            } else {
+                localStorage.removeItem('ajf_branding_logo');
+            }
+            setBrandingLogo(dataUrl || '');
+            showToast(dataUrl ? 'Header logo updated' : 'Header logo removed', 'success');
+        } catch (e) {
+            showToast('Failed to save header logo', 'error');
+        }
+    };
+
+    const onPickLogoFile = async (file) => {
+        if (!file) return;
+        if (!/^image\//.test(file.type)) {
+            showToast('Please select an image file', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            saveBrandingLogo(dataUrl);
+        };
+        reader.onerror = () => showToast('Failed to read file', 'error');
+        reader.readAsDataURL(file);
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ visible: true, message, type });
@@ -654,7 +689,7 @@ const Dashboard = () => {
                         >
                             {isMobileMenuOpen ? <MdClose /> : <MdMenu />}
                         </button>
-                        <h1>ABILITYJOBFAIR</h1>
+                        <img src={brandingLogo || DEFAULT_ICON} alt="Site logo" className="header-logo" />
                     </div>
                     <div className="user-info">
                         <span className="user-name">{user?.name || 'User'} / {getRoleDisplayName(user?.role || 'Guest')}</span>
@@ -675,140 +710,127 @@ const Dashboard = () => {
                     <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
                 )}
                 <nav className={`dashboard-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-                    <div className="sidebar-section">
-                        <button
-                            className="sidebar-header"
-                            onClick={() => { setActiveSection('my-account'); navigate('/dashboard/my-account'); closeMobileMenu(); }}
-                            aria-label="Go to My Account"
-                        >
-                            <span>My Account</span>
-                            <span
-                                className="icon-button"
-                                onClick={(e) => { e.stopPropagation(); toggleSection('my-account'); }}
-                                aria-label={expandedSections['my-account'] ? 'Collapse My Account menu' : 'Expand My Account menu'}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); e.stopPropagation(); toggleSection('my-account'); } }}
-                            >
-                                {expandedSections['my-account'] ? <MdExpandLess /> : <MdExpandMore />}
-                            </span>
-                        </button>
-                        {expandedSections['my-account'] && (
-                            <div className="sidebar-items">
+                    {user?.role === 'JobSeeker' ? (
+                        <>
+                            <div className="sidebar-section">
                                 <button
-                                    className={`sidebar-item ${activeSection === 'survey' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setActiveSection('survey');
-                                        navigate('/dashboard/survey');
-                                        closeMobileMenu();
-                                    }}
+                                    className="sidebar-header"
+                                    onClick={() => { setActiveSection('my-account'); navigate('/dashboard/my-account'); closeMobileMenu(); }}
+                                    aria-label="Go to My Account"
                                 >
-                                    Survey
+                                    <span>My Account</span>
+                                    <span
+                                        className="icon-button"
+                                        onClick={(e) => { e.stopPropagation(); toggleSection('my-account'); }}
+                                        aria-label={expandedSections['my-account'] ? 'Collapse My Account menu' : 'Expand My Account menu'}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); e.stopPropagation(); toggleSection('my-account'); } }}
+                                    >
+                                        {expandedSections['my-account'] ? <MdExpandLess /> : <MdExpandMore />}
+                                    </span>
                                 </button>
-                                <button
-                                    className={`sidebar-item ${activeSection === 'delete-account' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setActiveSection('delete-account');
-                                        navigate('/dashboard/delete-account');
-                                        closeMobileMenu();
-                                    }}
-                                >
-                                    Delete My Account
-                                </button>
-                                <button
-                                    className={`sidebar-item ${activeSection === 'edit-profile' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setActiveSection('edit-profile');
-                                        navigate('/dashboard/edit-profile');
-                                        closeMobileMenu();
-                                    }}
-                                >
-                                    Edit Profile & Resume
-                                </button>
-                                <button
-                                    className={`sidebar-item ${activeSection === 'view-profile' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setActiveSection('view-profile');
-                                        navigate('/dashboard/view-profile');
-                                        closeMobileMenu();
-                                    }}
-                                >
-                                    View My Profile
-                                </button>
+                                {expandedSections['my-account'] && (
+                                    <div className="sidebar-items">
+                                        <button className={`sidebar-item ${activeSection === 'survey' ? 'active' : ''}`}
+                                            onClick={() => { setActiveSection('survey'); navigate('/dashboard/survey'); closeMobileMenu(); }}>Survey</button>
+                                        <button className={`sidebar-item ${activeSection === 'delete-account' ? 'active' : ''}`}
+                                            onClick={() => { setActiveSection('delete-account'); navigate('/dashboard/delete-account'); closeMobileMenu(); }}>Delete My Account</button>
+                                        <button className={`sidebar-item ${activeSection === 'edit-profile' ? 'active' : ''}`}
+                                            onClick={() => { setActiveSection('edit-profile'); navigate('/dashboard/edit-profile'); closeMobileMenu(); }}>Edit Profile & Resume</button>
+                                        <button className={`sidebar-item ${activeSection === 'view-profile' ? 'active' : ''}`}
+                                            onClick={() => { setActiveSection('view-profile'); navigate('/dashboard/view-profile'); closeMobileMenu(); }}>View My Profile</button>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    <div className="sidebar-section">
-                        <button
-                            className="sidebar-header"
-                            onClick={() => toggleSection('registrations')}
-                        >
-                            <span>My Current Registrations</span>
-                            {expandedSections['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
-                        </button>
-                        {expandedSections['registrations'] && (
-                            <div className="sidebar-items">
-                                <button
-                                    className="sidebar-item"
-                                    onClick={closeMobileMenu}
-                                >
-                                    ABILITY Job Fair - Testing with Friends Event
+                            <div className="sidebar-section">
+                                <button className="sidebar-header" onClick={() => toggleSection('registrations')}>
+                                    <span>My Current Registrations</span>
+                                    {expandedSections['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
                                 </button>
-                                <button
-                                    className="sidebar-item"
-                                    onClick={closeMobileMenu}
-                                >
-                                    2 Test Event - ABILITY Job Fair
-                                </button>
+                                {expandedSections['registrations'] && (
+                                    <div className="sidebar-items">
+                                        <button className="sidebar-item" onClick={closeMobileMenu}>ABILITY Job Fair - Testing with Friends Event</button>
+                                        <button className="sidebar-item" onClick={closeMobileMenu}>2 Test Event - ABILITY Job Fair</button>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    <div className="sidebar-section">
-                        <button
-                            className="sidebar-header"
-                            onClick={() => toggleSection('upcoming-events')}
-                        >
-                            <span>Upcoming Events</span>
-                            {expandedSections['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
-                        </button>
-                        {expandedSections['upcoming-events'] && (
-                            <div className="sidebar-items">
-                                <button
-                                    className="sidebar-item"
-                                    onClick={closeMobileMenu}
-                                >
-                                    Event Demo test
+                            <div className="sidebar-section">
+                                <button className="sidebar-header" onClick={() => toggleSection('upcoming-events')}>
+                                    <span>Upcoming Events</span>
+                                    {expandedSections['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
                                 </button>
-                                <button
-                                    className="sidebar-item"
-                                    onClick={closeMobileMenu}
-                                >
-                                    Demonstration
-                                </button>
+                                {expandedSections['upcoming-events'] && (
+                                    <div className="sidebar-items">
+                                        <button className="sidebar-item" onClick={closeMobileMenu}>Event Demo test</button>
+                                        <button className="sidebar-item" onClick={closeMobileMenu}>Demonstration</button>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    <div className="sidebar-section">
-                        <button
-                            className="sidebar-item"
-                            onClick={closeMobileMenu}
-                        >
-                            Trouble Shooting
-                        </button>
-                        <button
-                            className="sidebar-item"
-                            onClick={closeMobileMenu}
-                        >
-                            Instructions
-                        </button>
-                    </div>
+                            <div className="sidebar-section">
+                                <button className="sidebar-item" onClick={closeMobileMenu}>Trouble Shooting</button>
+                                <button className="sidebar-item" onClick={closeMobileMenu}>Instructions</button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="sidebar-section">
+                                <button className="sidebar-header" onClick={() => { setActiveSection('admin'); closeMobileMenu(); }}>
+                                    <span>Administration</span>
+                                </button>
+                                <div className="sidebar-items">
+                                    <button className="sidebar-item" onClick={() => { setActiveSection('manage-events'); closeMobileMenu(); }}>Event Management</button>
+                                    <button className="sidebar-item" onClick={() => { setActiveSection('manage-booths'); closeMobileMenu(); }}>Booth Management</button>
+                                    <button className="sidebar-item" onClick={() => { setActiveSection('jobseekers'); closeMobileMenu(); }}>Job Seeker Management</button>
+                                    <button className="sidebar-item" onClick={() => { setActiveSection('branding'); closeMobileMenu(); }}>Branding – Header Logo</button>
+                                </div>
+                            </div>
+
+                            <div className="sidebar-section">
+                                <button className="sidebar-header" onClick={() => { setActiveSection('tools'); closeMobileMenu(); }}>
+                                    <span>Tools</span>
+                                </button>
+                                <div className="sidebar-items">
+                                    <button className="sidebar-item" onClick={() => { setActiveSection('users'); closeMobileMenu(); }}>User Management</button>
+                                    <button className="sidebar-item" onClick={() => { setActiveSection('analytics'); closeMobileMenu(); }}>Analytics</button>
+                                </div>
+                            </div>
+
+                            <div className="sidebar-section">
+                                <button className="sidebar-item" onClick={closeMobileMenu}>Trouble Shooting</button>
+                                <button className="sidebar-item" onClick={closeMobileMenu}>Instructions</button>
+                            </div>
+                        </>
+                    )}
                 </nav>
 
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
-                    {getDashboardContent()}
+                    {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
+                        <div className="dashboard-content">
+                            <h2>Branding – Header Logo</h2>
+                            <div className="alert-box" style={{background:'#f3f4f6', borderColor:'#e5e7eb', color:'#111827'}}>
+                                <p>Upload a PNG, SVG, or JPG. The logo displays in the top-left. Recommended height ~28-36px.</p>
+                            </div>
+                            <div className="upload-card" style={{maxWidth: 520}}>
+                                <h4>Current Logo</h4>
+                                <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
+                                    <img src={brandingLogo || DEFAULT_ICON} alt="Current header logo" style={{height:36, objectFit:'contain', border:'1px solid #e5e7eb', borderRadius:6, background:'#fff', padding:6}} />
+                                    <button className="dashboard-button" style={{width:'auto'}} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
+                                </div>
+                                <div className="upload-actions" style={{marginTop:'1rem'}}>
+                                    <label className="dashboard-button" style={{width:'auto', cursor:'pointer'}}>
+                                        Choose Image
+                                        <input type="file" accept="image/*" onChange={(e)=> onPickLogoFile(e.target.files?.[0])} style={{display:'none'}} />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        getDashboardContent()
+                    )}
                 </main>
             </div>
 

@@ -42,16 +42,16 @@
 }
 
 .dashboard-header {
-    background: #000000;
-    color: #ffffff;
+    background: #ffffff;
+    color: #111827;
     padding: 1rem 0;
-    border-bottom: 1px solid #333333;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .dashboard-header-content {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 2rem;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 1rem; /* bring logo closer to the left edge */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -60,7 +60,7 @@
 .header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .mobile-menu-toggle {
@@ -68,7 +68,7 @@
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: #ffffff;
+    color: #111827;
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 0.25rem;
@@ -77,16 +77,24 @@
 
 .mobile-menu-toggle:hover,
 .mobile-menu-toggle:focus {
-    background: #333333;
-    outline: 2px solid #ffffff;
+    background: #e5e7eb;
+    outline: 2px solid #000000;
     outline-offset: 2px;
 }
 
 .dashboard-header h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #111827;
     margin: 0;
+}
+
+/* Header uploaded logo */
+.header-logo {
+    height: 32px;
+    max-width: 220px;
+    object-fit: contain;
+    display: block;
 }
 
 .user-info {
@@ -97,7 +105,7 @@
 
 .user-name {
     font-weight: 500;
-    color: #ffffff;
+    color: #111827;
     font-size: 0.9rem;
 }
 
@@ -110,11 +118,11 @@
 
 .refresh-icon {
     font-size: 1rem;
-    color: #ffffff;
+    color: #111827;
 }
 
 .connection-text {
-    color: #ffffff;
+    color: #111827;
 }
 
 .connection-dot {
@@ -165,7 +173,7 @@
 
 .logout-button {
     background: none;
-    color: #ffffff;
+    color: #111827;
     border: none;
     padding: 0.5rem;
     cursor: pointer;
@@ -175,8 +183,8 @@
 
 .logout-button:hover,
 .logout-button:focus {
-    color: #ff6b6b;
-    outline: 2px solid #ffffff;
+    color: #b91c1c;
+    outline: 2px solid #000000;
     outline-offset: 2px;
 }
 

@@ -1771,3 +1771,17 @@
 2025-09-28 23:55:28:5528 [31merror[39m: [31mSocket authentication error: invalid token[39m
 2025-09-28 23:58:30:5830 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
 2025-09-28 23:58:30:5830 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-29 00:02:58:258 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-29 00:02:58:258 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-29 00:16:24:1624 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-29 00:16:24:1624 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-29 00:20:11:2011 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-29 00:20:17:2017 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-29 00:20:17:2017 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-29 00:20:17:2017 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-29 00:20:17:2017 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-29 00:20:17:2017 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-29 00:20:17:2017 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-29 00:22:12:2212 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-29 00:22:12:2212 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-29 00:22:12:2212 [31merror[39m: [31mSocket authentication error: invalid token[39m
