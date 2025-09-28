@@ -269,6 +269,27 @@
     overflow-y: auto;
 }
 
+/* Skip link for accessibility */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+.skip-link:focus {
+    left: 16px;
+    top: 16px;
+    width: auto;
+    height: auto;
+    background: #ffffff;
+    color: #000000;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid #000000;
+    z-index: 1001;
+}
+
 .dashboard-content h2 {
     font-size: 1.8rem;
     font-weight: 700;
@@ -402,21 +423,54 @@
 .ajf-input.e-multiselect .e-searcher {
     display: flex;
     align-items: center; /* center placeholder/input */
+    min-height: 24px; /* ensure enough height to center placeholder */
+    padding-left: 6px; /* nudge placeholder/chips from left edge */
 }
 .ajf-input.e-multiselect .e-searcher input {
     border: none !important;
     box-shadow: none !important;
     background: transparent;
     padding: 0; /* prevent extra inner padding pushing baseline down */
-    height: 1.5rem; /* stable height for alignment */
+    height: 1.25rem; /* stable height for alignment */
+    line-height: 1.25rem;
+    vertical-align: middle;
 }
 .ajf-input.e-multiselect .e-searcher input::placeholder { color: #888888; }
+
+/* When chips are shown, keep them vertically centered and padded from left */
+.ajf-input.e-multiselect .e-delim-values {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 6px;
+}
 .ajf-input.e-multiselect .e-clear-icon,
 .ajf-input.e-multiselect .e-input-group-icon.e-ddl-icon {
     color: #666666;
     align-self: center; /* center dropdown/caret vertically */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    width: 24px;
 }
 .ajf-input.e-multiselect .e-input-group-icon.e-ddl-icon { margin-left: 4px; }
+
+/* Ensure chips close (x) icon is centered within chip */
+.ajf-input.e-multiselect .e-chips .e-chips-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+}
+
+/* Normalize input group vertical alignment in wrapper */
+.ajf-input.e-multiselect .e-input-group {
+    display: flex;
+    align-items: center;
+}
 .ajf-input.e-multiselect .e-selectall,
 .ajf-input.e-multiselect .e-checkbox-wrapper .e-label {
     font-size: 0.95rem;
@@ -557,6 +611,48 @@
     color: #666666;
     line-height: 1.5;
     margin-bottom: 1.5rem;
+}
+
+/* Edit Profile & Resume styles */
+.info-banner {
+    background: #e8f1fb;
+    border: 1px solid #b6d0ff;
+    color: #0b3b8c;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.upload-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.upload-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #fafafa;
+}
+
+.upload-card h4 { margin: 0 0 0.5rem 0; }
+.muted { color: #666; font-size: 0.9rem; }
+
+.upload-actions { display: flex; gap: 0.75rem; margin: 0.5rem 0; }
+
+.avatar-preview {
+    margin-top: 0.75rem;
+    width: 96px;
+    height: 96px;
+    border-radius: 8px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"96\" height=\"96\"><rect width=\"96\" height=\"96\" fill=\"%23ddd\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-size=\"10\" fill=\"%23888\">Preview</text></svg>') center/cover no-repeat;
+    border: 1px solid #e0e0e0;
+}
+
+@media (max-width: 992px) {
+    .upload-row { grid-template-columns: 1fr; }
 }
 
 .dashboard-button {

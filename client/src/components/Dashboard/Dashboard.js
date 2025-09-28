@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { MdAccountCircle, MdEvent, MdPerson, MdSettings, MdHelp, MdLogout, MdRefresh, MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
 import './Dashboard.css';
 import SurveyForm from './SurveyForm';
+import EditProfileResume from './EditProfileResume';
 
 const Dashboard = () => {
     const { user, logout, loading, updateProfile } = useAuth();
@@ -62,6 +63,8 @@ const Dashboard = () => {
     useEffect(() => {
         if (location.pathname.endsWith('/survey')) {
             setActiveSection('survey');
+        } else if (location.pathname.endsWith('/edit-profile')) {
+            setActiveSection('edit-profile');
         } else {
             setActiveSection('my-account');
         }
@@ -241,6 +244,9 @@ const Dashboard = () => {
             case 'JobSeeker':
                 if (activeSection === 'survey') {
                     return <SurveyForm />;
+                }
+                if (activeSection === 'edit-profile') {
+                    return <EditProfileResume />;
                 }
                 return (
                     <div className="dashboard-content">
@@ -693,6 +699,7 @@ const Dashboard = () => {
                                     className={`sidebar-item ${activeSection === 'edit-profile' ? 'active' : ''}`}
                                     onClick={() => {
                                         setActiveSection('edit-profile');
+                                        navigate('/dashboard/edit-profile');
                                         closeMobileMenu();
                                     }}
                                 >

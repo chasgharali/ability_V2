@@ -1488,3 +1488,95 @@
 2025-09-28 12:40:58:4058 [31merror[39m: [31mAuthentication error: jwt expired[39m
 2025-09-28 12:40:59:4059 [32minfo[39m: [32mToken refreshed for user: jobseeker@ability.com[39m
 2025-09-28 12:41:57:4157 [32minfo[39m: [32mSurvey updated for user: jobseeker@ability.com[39m
+2025-09-28 13:13:48:1348 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 13:13:55:1355 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 13:13:55:1355 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 13:13:55:1355 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 13:13:55:1355 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 13:13:55:1355 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 13:13:55:1355 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 13:18:59:1859 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 13:18:59:1859 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 13:40:21:4021 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 13:40:21:4021 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-09-28 13:40:52:4052 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 14:08:17:817 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 14:08:18:818 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 14:08:27:827 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-28 14:08:28:828 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-28 14:53:03:533 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 14:53:03:533 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 14:53:03:533 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 14:53:03:533 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 14:53:03:533 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 14:53:03:533 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 14:58:51:5851 [32minfo[39m: [32mSelf profile updated: jobseeker@ability.com[39m
+2025-09-28 15:01:47:147 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 15:01:54:154 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 15:01:54:154 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 15:01:59:159 [31merror[39m: [31mRedis Client Error: Connection timeout[39m
+2025-09-28 15:02:04:24 [31merror[39m: [31mRedis Client Error: Connection timeout[39m
+2025-09-28 15:02:09:29 [31merror[39m: [31mRedis Client Error: Connection timeout[39m
+2025-09-28 15:02:14:214 [31merror[39m: [31mRedis Client Error: Connection timeout[39m
+2025-09-28 15:02:17:217 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 15:06:01:61 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 15:06:01:61 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 15:06:01:61 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 15:06:01:61 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 15:06:01:61 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 15:06:01:61 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 15:14:17:1417 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: avatar/avatar.jpg[39m
+2025-09-28 15:17:03:173 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: avatar/avatar.jpg[39m
+2025-09-28 15:17:45:1745 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 15:17:52:1752 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-28 15:17:52:1752 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 15:17:52:1752 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 15:17:52:1752 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 15:17:52:1752 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 15:17:52:1752 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 15:18:17:1817 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: avatar/avatar.jpg[39m
+2025-09-28 15:25:24:2524 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: avatar/avatar.jpg[39m
+2025-09-28 15:25:26:2526 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: avatar/68d7b72f01e147e6fd0197d7/03f4ec54-ee90-4d17-ae36-21471bb5a38d.jpg[39m
+2025-09-28 15:25:40:2540 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: avatar/c74a334f-9c3d-4364-a2d0-022807ffd98f.JPG[39m
+2025-09-28 15:25:42:2542 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: avatar/68d7b72f01e147e6fd0197d7/c43fac25-6c5b-4d50-ac90-07bf33bf2784.JPG[39m
+2025-09-28 15:26:06:266 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/assignment-68a7263f542ff14de9980b06-1756199612074-122332984.docx[39m
+2025-09-28 15:26:09:269 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/f6ae1517-ba9e-43c0-bee1-e3bcb422bb23.docx[39m
+2025-09-28 15:26:19:2619 [32minfo[39m: [32mSelf profile updated: jobseeker@ability.com[39m
+2025-09-28 15:29:04:294 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/Receipt-2648-0066.pdf[39m
+2025-09-28 15:29:08:298 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/990a7f26-68c7-4a1e-a19e-c9692039a9e5.pdf[39m
+2025-09-28 15:29:14:2914 [32minfo[39m: [32mFile deleted by user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/990a7f26-68c7-4a1e-a19e-c9692039a9e5.pdf[39m
+2025-09-28 15:29:32:2932 [32minfo[39m: [32mSelf profile updated: jobseeker@ability.com[39m
+2025-09-28 15:29:41:2941 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/Receipt-2648-0066.pdf[39m
+2025-09-28 15:29:45:2945 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/ff1ab3ba-9fb2-4481-b911-21abdeadeafb.pdf[39m
+2025-09-28 15:29:51:2951 [32minfo[39m: [32mSelf profile updated: jobseeker@ability.com[39m
+2025-09-28 15:34:01:341 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/Receipt-2648-0066.pdf[39m
+2025-09-28 15:34:05:345 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/d7093a22-7fc9-4368-976d-94019af55f51.pdf[39m
+2025-09-28 15:34:22:3422 [32minfo[39m: [32mFile deleted by user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/d7093a22-7fc9-4368-976d-94019af55f51.pdf[39m
+2025-09-28 15:36:19:3619 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/Receipt-2648-0066.pdf[39m
+2025-09-28 15:36:23:3623 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/2c618102-6974-46c0-b501-569d145e3949.pdf[39m
+2025-09-28 15:36:35:3635 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/Receipt-2648-0066.pdf[39m
+2025-09-28 15:36:38:3638 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/5882a75b-c49b-49d9-94f6-2f2e798e9ec1.pdf[39m
+2025-09-28 15:36:42:3642 [32minfo[39m: [32mSelf profile updated: jobseeker@ability.com[39m
+2025-09-28 15:38:25:3825 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 15:38:25:3825 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 15:38:25:3825 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 15:38:25:3825 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 15:38:25:3825 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 15:38:25:3825 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 15:38:59:3859 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-28 15:39:12:3912 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-28 15:39:12:3912 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 15:39:12:3912 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 15:39:12:3912 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 15:39:12:3912 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 15:39:12:3912 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 15:40:17:4017 [32minfo[39m: [32mUser logged in: jobseeker@ability.com[39m
+2025-09-28 15:41:45:4145 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-28 15:41:45:4145 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-28 15:41:45:4145 [33mwarn[39m: [33mREDIS_URL not provided. Server will start without Redis connection.[39m
+2025-09-28 15:41:45:4145 [32minfo[39m: [32mRedis connection skipped[39m
+2025-09-28 15:41:45:4145 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-28 15:41:45:4145 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-28 15:42:09:429 [32minfo[39m: [32mFile deleted by user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/5882a75b-c49b-49d9-94f6-2f2e798e9ec1.pdf[39m
+2025-09-28 15:42:14:4214 [32minfo[39m: [32mPresigned URL generated for user jobseeker@ability.com: resume/Receipt-2648-0066.pdf[39m
+2025-09-28 15:42:17:4217 [32minfo[39m: [32mFile upload confirmed for user jobseeker@ability.com: resume/68d7b72f01e147e6fd0197d7/Receipt-2648-0066.pdf[39m

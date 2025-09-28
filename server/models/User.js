@@ -154,6 +154,7 @@ userSchema.methods.getPublicProfile = function () {
         email: this.email,
         role: this.role,
         avatarUrl: this.avatarUrl,
+        resumeUrl: this.resumeUrl,
         isActive: this.isActive,
         phoneNumber: this.phoneNumber,
         state: this.state,

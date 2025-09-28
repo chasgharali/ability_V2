@@ -7,6 +7,121 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
+ * GET /api/users/me
+ * Get current authenticated user's profile
+ */
+router.get('/me', authenticateToken, async (req, res) => {
+    try {
+        const { user } = req;
+        const targetUser = await User.findById(user._id);
+        if (!targetUser) {
+            return res.status(404).json({
+                error: 'User not found',
+                message: 'The current user does not exist'
+            });
+        }
+
+        res.json({
+            user: targetUser.getPublicProfile(),
+            profile: targetUser.metadata?.profile || null
+        });
+    } catch (error) {
+        logger.error('Get current user error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve current user',
+            message: 'An error occurred while retrieving the current user'
+        });
+    }
+});
+
+/**
+ * PUT /api/users/me
+ * Update current authenticated user's basic profile and job seeker profile details
+ */
+router.put('/me', authenticateToken, [
+    body('name').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
+    body('phoneNumber').optional().trim().isLength({ min: 7, max: 30 }).withMessage('Phone number must be 7-30 chars'),
+    body('state').optional().trim().isLength({ max: 100 }).withMessage('State too long'),
+    body('city').optional().trim().isLength({ max: 100 }).withMessage('City too long'),
+    body('country').optional().trim().isLength({ max: 2 }).withMessage('Country must be 2-letter code'),
+    // Job seeker profile fields
+    body('profile').optional().isObject().withMessage('Profile must be an object'),
+    body('profile.headline').optional().isString().isLength({ max: 200 }).withMessage('Headline max 200 chars'),
+    body('profile.keywords').optional().isString().isLength({ max: 500 }).withMessage('Keywords max 500 chars'),
+    body('profile.primaryExperience').optional().isArray({ max: 2 }).withMessage('Primary experience must be array (max 2)'),
+    body('profile.workLevel').optional().isString(),
+    body('profile.educationLevel').optional().isString(),
+    body('profile.languages').optional().isArray().withMessage('Languages must be array'),
+    body('profile.employmentTypes').optional().isArray().withMessage('Employment types must be array'),
+    body('profile.clearance').optional().isString(),
+    body('profile.veteranStatus').optional().isString()
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: 'Please check your input data',
+                details: errors.array()
+            });
+        }
+
+        const { user } = req;
+        const targetUser = await User.findById(user._id);
+        if (!targetUser) {
+            return res.status(404).json({
+                error: 'User not found',
+                message: 'The current user does not exist'
+            });
+        }
+
+        const { name, phoneNumber, state, city, country, profile } = req.body;
+
+        // Update basic fields if provided
+        if (name !== undefined) targetUser.name = name;
+        if (phoneNumber !== undefined) targetUser.phoneNumber = phoneNumber;
+        if (state !== undefined) targetUser.state = state;
+        if (city !== undefined) targetUser.city = city;
+        if (country !== undefined) targetUser.country = country;
+
+        // Merge job seeker profile into metadata.profile
+        if (profile && typeof profile === 'object') {
+            const prev = (targetUser.metadata && targetUser.metadata.profile) || {};
+            targetUser.metadata = {
+                ...(targetUser.metadata || {}),
+                profile: {
+                    ...prev,
+                    ...(profile.headline !== undefined ? { headline: profile.headline } : {}),
+                    ...(profile.keywords !== undefined ? { keywords: profile.keywords } : {}),
+                    ...(profile.primaryExperience !== undefined ? { primaryExperience: profile.primaryExperience } : {}),
+                    ...(profile.workLevel !== undefined ? { workLevel: profile.workLevel } : {}),
+                    ...(profile.educationLevel !== undefined ? { educationLevel: profile.educationLevel } : {}),
+                    ...(profile.languages !== undefined ? { languages: profile.languages } : {}),
+                    ...(profile.employmentTypes !== undefined ? { employmentTypes: profile.employmentTypes } : {}),
+                    ...(profile.clearance !== undefined ? { clearance: profile.clearance } : {}),
+                    ...(profile.veteranStatus !== undefined ? { veteranStatus: profile.veteranStatus } : {}),
+                    updatedAt: new Date()
+                }
+            };
+        }
+
+        await targetUser.save();
+
+        logger.info(`Self profile updated: ${targetUser.email}`);
+        res.json({
+            message: 'Profile updated successfully',
+            user: targetUser.getPublicProfile(),
+            profile: targetUser.metadata?.profile || null
+        });
+    } catch (error) {
+        logger.error('Update current user error:', error);
+        res.status(500).json({
+            error: 'Failed to update profile',
+            message: 'An error occurred while updating the profile'
+        });
+    }
+});
+/**
  * GET /api/users
  * Get list of users (Admin/GlobalSupport only)
  */

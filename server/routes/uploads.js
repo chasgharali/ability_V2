@@ -86,9 +86,11 @@ router.post('/presign', authenticateToken, [
             });
         }
 
-        // Generate unique file key
-        const fileExtension = fileName.split('.').pop();
-        const uniqueFileName = `${fileType}/${user._id}/${uuidv4()}.${fileExtension}`;
+        // Generate file key using original filename with a safe prefix
+        // Example: resume/<userId>/Original File Name.pdf => sanitized as needed
+        const baseName = fileName.replace(/^.*[\\\/]/, ''); // strip any path
+        const safeFileName = baseName.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 200); // sanitize and cap length
+        const uniqueFileName = `${fileType}/${user._id}/${safeFileName}`;
 
         // Generate presigned URL for upload
         const presignedUrl = s3.getSignedUrl('putObject', {
