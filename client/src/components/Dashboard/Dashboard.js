@@ -5,6 +5,7 @@ import { MdAccountCircle, MdEvent, MdPerson, MdSettings, MdHelp, MdLogout, MdRef
 import './Dashboard.css';
 import SurveyForm from './SurveyForm';
 import EditProfileResume from './EditProfileResume';
+import ViewProfile from './ViewProfile';
 
 const Dashboard = () => {
     const { user, logout, loading, updateProfile } = useAuth();
@@ -65,6 +66,8 @@ const Dashboard = () => {
             setActiveSection('survey');
         } else if (location.pathname.endsWith('/edit-profile')) {
             setActiveSection('edit-profile');
+        } else if (location.pathname.endsWith('/view-profile')) {
+            setActiveSection('view-profile');
         } else {
             setActiveSection('my-account');
         }
@@ -247,6 +250,9 @@ const Dashboard = () => {
                 }
                 if (activeSection === 'edit-profile') {
                     return <EditProfileResume />;
+                }
+                if (activeSection === 'view-profile') {
+                    return <ViewProfile />;
                 }
                 return (
                     <div className="dashboard-content">
@@ -709,6 +715,7 @@ const Dashboard = () => {
                                     className={`sidebar-item ${activeSection === 'view-profile' ? 'active' : ''}`}
                                     onClick={() => {
                                         setActiveSection('view-profile');
+                                        navigate('/dashboard/view-profile');
                                         closeMobileMenu();
                                     }}
                                 >
