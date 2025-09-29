@@ -14,6 +14,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import BoothManagement from './components/BoothManagement/BoothManagement';
 import EventManagement from './components/EventManagement/EventManagement';
 import BrandingHeaderLogo from './components/Branding/BrandingHeaderLogo';
+import EventRegistration from './components/EventRegistration/EventRegistration';
 import TermsConditionsList from './components/TermsConditions/TermsConditionsList';
 import TermsConditionsForm from './components/TermsConditions/TermsConditionsForm';
 import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
@@ -126,6 +127,8 @@ function App() {
                                 <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
                                 <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                 <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
+                                {/* Public event registration entry; component will redirect to /register if not authenticated */}
+                                <Route path="/event/:slug/register" element={<EventRegistration />} />
                                 <Route path="/terms-conditions" element={<RequireAuth><TermsConditionsList /></RequireAuth>} />
                                 <Route path="/terms-conditions/create" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />

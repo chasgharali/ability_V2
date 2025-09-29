@@ -24,3 +24,8 @@ export async function deleteEvent(id) {
   const res = await axios.delete(`/api/events/${id}`, { headers: authHeaders() });
   return res.data;
 }
+
+export async function getEventBySlug(slug) {
+  const res = await axios.get(`/api/events/slug/${encodeURIComponent(slug)}`, { headers: authHeaders() });
+  return res.data;
+}

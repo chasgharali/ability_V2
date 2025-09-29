@@ -60,6 +60,51 @@ router.get('/', authenticateToken, async (req, res) => {
                 hasPrev: page > 1
             }
         });
+
+/**
+ * GET /api/events/slug/:slug
+ * Get event details by slug
+ */
+router.get('/slug/:slug', authenticateToken, async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { user } = req;
+
+        const event = await Event.findOne({ slug })
+            .populate('createdBy', 'name email')
+            .populate('administrators', 'name email')
+            .populate('booths', 'name description logoUrl status');
+
+        if (!event) {
+            return res.status(404).json({
+                error: 'Event not found',
+                message: 'The specified event does not exist'
+            });
+        }
+
+        if (!event.canUserAccess(user)) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'You do not have permission to view this event'
+            });
+        }
+
+        res.json({
+            event: {
+                ...event.toObject(),
+                isActive: event.isActive,
+                isUpcoming: event.isUpcoming,
+                duration: event.duration
+            }
+        });
+    } catch (error) {
+        logger.error('Get event by slug error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve event',
+            message: 'An error occurred while retrieving the event'
+        });
+    }
+});
     } catch (error) {
         logger.error('Get events error:', error);
         res.status(500).json({
@@ -255,6 +300,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         .optional()
         .isURL()
         .withMessage('Logo URL must be a valid URL'),
+    body('sendyId').optional().isLength({ max: 200 }),
     body('status')
         .optional()
         .isIn(['draft', 'published', 'active', 'completed', 'cancelled'])
@@ -271,7 +317,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             });
         }
 
-        const { name, description, start, end, timezone, logoUrl, status } = req.body;
+        const { name, description, start, end, timezone, logoUrl, status, sendyId } = req.body;
         const { event, user } = req;
 
         // Update allowed fields
@@ -281,6 +327,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         if (end !== undefined) event.end = new Date(end);
         if (timezone !== undefined) event.timezone = timezone;
         if (logoUrl !== undefined) event.logoUrl = logoUrl;
+        if (sendyId !== undefined) event.sendyId = sendyId || null;
         if (status !== undefined) event.status = status;
 
         // Validate date range if both dates are provided
