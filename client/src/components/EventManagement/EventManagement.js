@@ -138,10 +138,18 @@ export default function EventManagement() {
         { key: 'maxBooths', title: 'Max Booths' },
         { key: 'sendyId', title: 'Sendy Event Id', render: (v) => v || '-' },
         {
+            key: 'eventPage',
+            title: 'Event Page',
+            render: (value, row) => (
+                <a className="ajf-btn ajf-btn-outline" href={eventPageUrlFor(row)} target="_blank" rel="noreferrer">
+                    Event Page
+                </a>
+            )
+        },
+        {
             key: 'actions', title: 'Action', render: (_, row) => (
                 <div className="ajf-grid-actions">
                     <button type="button" className="ajf-btn ajf-btn-dark" onClick={() => copyText(registrationUrlFor(row))}>Registration Link</button>
-                    <a className="ajf-btn ajf-btn-outline" href={eventPageUrlFor(row)} target="_blank" rel="noreferrer">Event Page</a>
                     <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => startEdit(row)}>Edit</button>
                     <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => handleDelete(row)}>Delete</button>
                 </div>
@@ -173,9 +181,12 @@ export default function EventManagement() {
             name: row.name || '',
             link: row.link || '',
             logoUrl: row.logoUrl || '',
+            maxBooths: row.maxBooths || 0,
+            maxRecruitersPerEvent: row.maxRecruitersPerEvent || 0,
             startTime: row.startTime ? new Date(row.startTime).toISOString().slice(0, 16) : '',
             endTime: row.endTime ? new Date(row.endTime).toISOString().slice(0, 16) : '',
             information: row.description || '',
+            addFooter: row.addFooter || false,
         }));
         setMode('edit');
     };

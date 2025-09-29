@@ -61,50 +61,50 @@ router.get('/', authenticateToken, async (req, res) => {
             }
         });
 
-/**
- * GET /api/events/slug/:slug
- * Get event details by slug
- */
-router.get('/slug/:slug', authenticateToken, async (req, res) => {
-    try {
-        const { slug } = req.params;
-        const { user } = req;
+        /**
+         * GET /api/events/slug/:slug
+         * Get event details by slug
+         */
+        router.get('/slug/:slug', authenticateToken, async (req, res) => {
+            try {
+                const { slug } = req.params;
+                const { user } = req;
 
-        const event = await Event.findOne({ slug })
-            .populate('createdBy', 'name email')
-            .populate('administrators', 'name email')
-            .populate('booths', 'name description logoUrl status');
+                const event = await Event.findOne({ slug })
+                    .populate('createdBy', 'name email')
+                    .populate('administrators', 'name email')
+                    .populate('booths', 'name description logoUrl status');
 
-        if (!event) {
-            return res.status(404).json({
-                error: 'Event not found',
-                message: 'The specified event does not exist'
-            });
-        }
+                if (!event) {
+                    return res.status(404).json({
+                        error: 'Event not found',
+                        message: 'The specified event does not exist'
+                    });
+                }
 
-        if (!event.canUserAccess(user)) {
-            return res.status(403).json({
-                error: 'Access denied',
-                message: 'You do not have permission to view this event'
-            });
-        }
+                if (!event.canUserAccess(user)) {
+                    return res.status(403).json({
+                        error: 'Access denied',
+                        message: 'You do not have permission to view this event'
+                    });
+                }
 
-        res.json({
-            event: {
-                ...event.toObject(),
-                isActive: event.isActive,
-                isUpcoming: event.isUpcoming,
-                duration: event.duration
+                res.json({
+                    event: {
+                        ...event.toObject(),
+                        isActive: event.isActive,
+                        isUpcoming: event.isUpcoming,
+                        duration: event.duration
+                    }
+                });
+            } catch (error) {
+                logger.error('Get event by slug error:', error);
+                res.status(500).json({
+                    error: 'Failed to retrieve event',
+                    message: 'An error occurred while retrieving the event'
+                });
             }
         });
-    } catch (error) {
-        logger.error('Get event by slug error:', error);
-        res.status(500).json({
-            error: 'Failed to retrieve event',
-            message: 'An error occurred while retrieving the event'
-        });
-    }
-});
     } catch (error) {
         logger.error('Get events error:', error);
         res.status(500).json({
@@ -304,7 +304,15 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
     body('status')
         .optional()
         .isIn(['draft', 'published', 'active', 'completed', 'cancelled'])
-        .withMessage('Invalid status')
+        .withMessage('Invalid status'),
+    body('limits.maxBooths')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('Max booths must be a non-negative integer'),
+    body('limits.maxRecruitersPerEvent')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('Max recruiters per event must be a non-negative integer')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -317,7 +325,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             });
         }
 
-        const { name, description, start, end, timezone, logoUrl, status, sendyId } = req.body;
+        const { name, description, start, end, timezone, logoUrl, status, sendyId, limits, theme } = req.body;
         const { event, user } = req;
 
         // Update allowed fields
@@ -329,6 +337,31 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         if (logoUrl !== undefined) event.logoUrl = logoUrl;
         if (sendyId !== undefined) event.sendyId = sendyId || null;
         if (status !== undefined) event.status = status;
+
+        // Update limits if provided
+        if (limits !== undefined) {
+            if (limits.maxBooths !== undefined) event.limits.maxBooths = limits.maxBooths;
+            if (limits.maxRecruitersPerEvent !== undefined) event.limits.maxRecruitersPerEvent = limits.maxRecruitersPerEvent;
+        }
+
+        // Update theme if provided
+        if (theme !== undefined) {
+            if (theme.headerColor !== undefined) event.theme.headerColor = theme.headerColor;
+            if (theme.headerTextColor !== undefined) event.theme.headerTextColor = theme.headerTextColor;
+            if (theme.bodyColor !== undefined) event.theme.bodyColor = theme.bodyColor;
+            if (theme.bodyTextColor !== undefined) event.theme.bodyTextColor = theme.bodyTextColor;
+            if (theme.sidebarColor !== undefined) event.theme.sidebarColor = theme.sidebarColor;
+            if (theme.sidebarTextColor !== undefined) event.theme.sidebarTextColor = theme.sidebarTextColor;
+            if (theme.btnPrimaryColor !== undefined) event.theme.btnPrimaryColor = theme.btnPrimaryColor;
+            if (theme.btnPrimaryTextColor !== undefined) event.theme.btnPrimaryTextColor = theme.btnPrimaryTextColor;
+            if (theme.btnSecondaryColor !== undefined) event.theme.btnSecondaryColor = theme.btnSecondaryColor;
+            if (theme.btnSecondaryTextColor !== undefined) event.theme.btnSecondaryTextColor = theme.btnSecondaryTextColor;
+            if (theme.entranceFormColor !== undefined) event.theme.entranceFormColor = theme.entranceFormColor;
+            if (theme.entranceFormTextColor !== undefined) event.theme.entranceFormTextColor = theme.entranceFormTextColor;
+            if (theme.chatHeaderColor !== undefined) event.theme.chatHeaderColor = theme.chatHeaderColor;
+            if (theme.chatSidebarColor !== undefined) event.theme.chatSidebarColor = theme.chatSidebarColor;
+            if (theme.addFooter !== undefined) event.theme.addFooter = theme.addFooter;
+        }
 
         // Validate date range if both dates are provided
         if (start !== undefined && end !== undefined) {
