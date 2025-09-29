@@ -7,6 +7,47 @@ const eventSchema = new mongoose.Schema({
         trim: true,
         maxlength: [200, 'Event name cannot exceed 200 characters']
     },
+    // Event limits
+    limits: {
+        maxBooths: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        maxRecruitersPerEvent: {
+            type: Number,
+            default: 0,
+            min: 0
+        }
+    },
+    // UI theme/customization options from the admin form
+    theme: {
+        headerColor: { type: String, default: '#ffffff' },
+        headerTextColor: { type: String, default: '#000000' },
+        bodyColor: { type: String, default: '#ff9800' },
+        bodyTextColor: { type: String, default: '#000000' },
+        sidebarColor: { type: String, default: '#ffffff' },
+        sidebarTextColor: { type: String, default: '#000000' },
+        btnPrimaryColor: { type: String, default: '#000000' },
+        btnPrimaryTextColor: { type: String, default: '#ffffff' },
+        btnSecondaryColor: { type: String, default: '#000000' },
+        btnSecondaryTextColor: { type: String, default: '#ffffff' },
+        entranceFormColor: { type: String, default: '#ff9800' },
+        entranceFormTextColor: { type: String, default: '#000000' },
+        chatHeaderColor: { type: String, default: '#eeeeee' },
+        chatSidebarColor: { type: String, default: '#000000' },
+        addFooter: { type: Boolean, default: false }
+    },
+    termsId: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    // New: allow linking multiple Terms & Conditions documents to an event
+    termsIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TermsConditions'
+    }],
     slug: {
         type: String,
         required: [true, 'Event slug is required'],
@@ -19,6 +60,19 @@ const eventSchema = new mongoose.Schema({
         type: String,
         trim: true,
         maxlength: [1000, 'Description cannot exceed 1000 characters']
+    },
+    // Optional Sendy/Mailing list integration id
+    sendyId: {
+        type: String,
+        trim: true,
+        default: null,
+        maxlength: [200, 'Sendy ID cannot exceed 200 characters']
+    },
+    // Optional public landing link for the event
+    link: {
+        type: String,
+        trim: true,
+        default: null
     },
     logoUrl: {
         type: String,
@@ -179,7 +233,7 @@ eventSchema.virtual('isUpcoming').get(function () {
 });
 
 // Pre-save middleware to generate slug if not provided
-eventSchema.pre('save', function (next) {
+eventSchema.pre('validate', function (next) {
     if (!this.slug && this.name) {
         this.slug = this.name
             .toLowerCase()
@@ -215,6 +269,7 @@ eventSchema.methods.getSummary = function () {
         name: this.name,
         slug: this.slug,
         description: this.description,
+        link: this.link,
         logoUrl: this.logoUrl,
         start: this.start,
         end: this.end,
@@ -223,7 +278,9 @@ eventSchema.methods.getSummary = function () {
         isActive: this.isActive,
         isUpcoming: this.isUpcoming,
         boothCount: this.booths.length,
-        stats: this.stats
+        stats: this.stats,
+        createdAt: this.createdAt,
+        termsIds: this.termsIds || []
     };
 };
 

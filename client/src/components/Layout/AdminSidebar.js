@@ -136,7 +136,7 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded.admin && (
               <div className="sidebar-items">
-                <button className={itemClass('events')} onClick={() => handleItemClick('/dashboard')}>Event Management</button>
+                <button className={itemClass('events')} onClick={() => handleItemClick('/eventmanagement')}>Event Management</button>
                 <button className={itemClass('booths')} onClick={() => handleItemClick('/boothmanagement')}>Booth Management</button>
                 <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/dashboard')}>Job Seeker Management</button>
               </div>
@@ -153,6 +153,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('users')} onClick={() => handleItemClick('/dashboard')}>User Management</button>
                 <button className={itemClass('analytics')} onClick={() => handleItemClick('/dashboard')}>Analytics</button>
                 <button className={itemClass('branding')} onClick={() => handleItemClick('/branding')}>Branding – Header Logo</button>
+                <button className={itemClass('terms-conditions')} onClick={() => handleItemClick('/terms-conditions')}>Terms & Conditions</button>
               </div>
             )}
           </div>

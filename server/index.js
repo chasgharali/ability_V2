@@ -20,6 +20,7 @@ const callRoutes = require('./routes/calls');
 const meetingRoutes = require('./routes/meetings');
 const uploadRoutes = require('./routes/uploads');
 const userRoutes = require('./routes/users');
+const termsConditionsRoutes = require('./routes/termsConditions');
 
 // Import socket handlers
 const socketHandler = require('./socket/socketHandler');
@@ -102,6 +103,7 @@ app.use('/api/calls', callRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/terms-conditions', termsConditionsRoutes);
 
 // Socket.IO connection handling
 socketHandler(io);

@@ -142,7 +142,16 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
     body('logoUrl')
         .optional()
         .isURL()
-        .withMessage('Logo URL must be a valid URL')
+        .withMessage('Logo URL must be a valid URL'),
+    body('sendyId').optional().isLength({ max: 200 }),
+    body('link').optional().isURL(),
+    body('termsId').optional().isLength({ max: 200 }),
+    body('limits.maxBooths').optional().isInt({ min: 0 }),
+    body('limits.maxRecruitersPerEvent').optional().isInt({ min: 0 }),
+    body('theme').optional().isObject(),
+    body('theme.addFooter').optional().isBoolean(),
+    body('termsIds').optional().isArray().withMessage('termsIds must be an array'),
+    body('termsIds.*').optional().isMongoId().withMessage('Each terms id must be a valid id')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -155,7 +164,7 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             });
         }
 
-        const { name, description, start, end, timezone = 'UTC', logoUrl } = req.body;
+        const { name, description, start, end, timezone = 'UTC', logoUrl, sendyId, link, limits, theme, termsId, termsIds } = req.body;
         const { user } = req;
 
         // Validate date range
@@ -177,6 +186,15 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             end: endDate,
             timezone,
             logoUrl,
+            sendyId: sendyId || null,
+            link: link || null,
+            limits: {
+                maxBooths: limits?.maxBooths ?? 0,
+                maxRecruitersPerEvent: limits?.maxRecruitersPerEvent ?? 0
+            },
+            theme: theme || undefined,
+            termsId: termsId || null,
+            termsIds: Array.isArray(termsIds) ? termsIds : [],
             createdBy: user._id,
             administrators: [user._id]
         });

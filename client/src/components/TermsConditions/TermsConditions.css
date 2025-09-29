@@ -1,0 +1,350 @@
+/* Terms & Conditions specific styles that work with the dashboard theme */
+
+/* Shared header layout used on admin screens */
+.bm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.bm-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* spacing between action buttons */
+    margin-left: auto; /* push actions to the right */
+}
+
+/* Align icons and text nicely inside action buttons */
+.bm-header-actions .dashboard-button,
+.form-actions .dashboard-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: auto; /* override global width */
+    line-height: 1; /* prevent vertical misalignment */
+    padding: 0.6rem 1rem; /* consistent padding */
+}
+
+.bm-header-actions .dashboard-button svg,
+.form-actions .dashboard-button svg {
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+/* Add breathing room above the bottom action buttons */
+.form-actions {
+    margin-top: 1rem;
+}
+
+/* Terms badges */
+.terms-badges {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #4caf50;
+}
+
+.status-badge.inactive {
+    background: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ff9800;
+}
+
+.version-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid #2196f3;
+}
+
+/* Terms info grid */
+.terms-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.info-item {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.info-item strong {
+    color: #333;
+    font-weight: 500;
+}
+
+/* Terms content styling */
+.terms-content {
+    margin-top: 2rem;
+}
+
+.terms-content h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.terms-html-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    line-height: 1.6;
+    color: #333;
+}
+
+.terms-html-content h1,
+.terms-html-content h2,
+.terms-html-content h3,
+.terms-html-content h4,
+.terms-html-content h5,
+.terms-html-content h6 {
+    color: #333;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.terms-html-content p {
+    margin-bottom: 1rem;
+}
+
+.terms-html-content ul,
+.terms-html-content ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.terms-html-content li {
+    margin-bottom: 0.5rem;
+}
+
+.terms-html-content blockquote {
+    border-left: 4px solid #2196f3;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #666;
+    font-style: italic;
+}
+
+.terms-html-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.terms-html-content th,
+.terms-html-content td {
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.terms-html-content th {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+/* DataGrid customizations for terms */
+.terms-title-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.active-badge {
+    background: #4caf50;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.terms-preview {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.terms-usage {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.last-used {
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 0.25rem;
+}
+
+.terms-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.action-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: #666;
+}
+
+.action-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.view-btn:hover {
+    color: #2196f3;
+    border-color: #2196f3;
+}
+
+.edit-btn:hover {
+    color: #ff9800;
+    border-color: #ff9800;
+}
+
+.delete-btn:hover {
+    color: #f44336;
+    border-color: #f44336;
+}
+
+.toggle-btn:hover {
+    color: #4caf50;
+    border-color: #4caf50;
+}
+
+/* Preview section */
+.preview-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.preview-section h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.preview-content {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 1rem;
+}
+
+.preview-content h2 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.preview-html {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Rich text editor container */
+.rich-text-container {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Syncfusion Rich Text Editor Customizations */
+.e-richtexteditor {
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+}
+
+.e-richtexteditor .e-rte-toolbar {
+    background: #f5f5f5 !important;
+    border-bottom: 1px solid #ddd !important;
+}
+
+.e-richtexteditor .e-rte-content {
+    background: white !important;
+    min-height: 300px !important;
+}
+
+.e-richtexteditor .e-rte-content p {
+    margin: 0.5rem 0 !important;
+}
+
+/* Button customizations for dashboard theme */
+.dashboard-button.primary {
+    background: #4caf50;
+    color: white;
+    border: none;
+}
+
+.dashboard-button.primary:hover {
+    background: #45a049;
+}
+
+.dashboard-button.secondary {
+    background: #f44336;
+    color: white;
+    border: none;
+}
+
+.dashboard-button.secondary:hover {
+    background: #d32f2f;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .terms-info {
+        grid-template-columns: 1fr;
+    }
+
+    .terms-actions {
+        flex-wrap: wrap;
+    }
+
+    .terms-badges {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

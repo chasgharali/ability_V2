@@ -12,7 +12,11 @@ import VerifyEmailSent from './components/Auth/VerifyEmailSent';
 import VerifyEmailSuccess from './components/Auth/VerifyEmailSuccess';
 import Dashboard from './components/Dashboard/Dashboard';
 import BoothManagement from './components/BoothManagement/BoothManagement';
+import EventManagement from './components/EventManagement/EventManagement';
 import BrandingHeaderLogo from './components/Branding/BrandingHeaderLogo';
+import TermsConditionsList from './components/TermsConditions/TermsConditionsList';
+import TermsConditionsForm from './components/TermsConditions/TermsConditionsForm';
+import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
 
@@ -120,7 +124,12 @@ function App() {
                                 <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
+                                <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                 <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
+                                <Route path="/terms-conditions" element={<RequireAuth><TermsConditionsList /></RequireAuth>} />
+                                <Route path="/terms-conditions/create" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
+                                <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />
+                                <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                             </Routes>
                         </AppLayout>
                     </Router>
