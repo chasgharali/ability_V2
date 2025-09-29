@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -32,7 +32,23 @@ export default function BoothManagement() {
     { id: 'bth_2', name: 'Demonstration Co', logo: '', recruitersCount: 5, eventDate: '2025-10-21T15:30:00.000Z', events: ['Demonstration'], customInviteText: '', expireLinkTime: '2025-12-31T23:00:00.000Z', enableExpiry: true, companyPage: 'https://demo.example.com' }
   ]);
 
-  const boothQueueLink = `https://abilityjobfair.com/queue/${(boothForm.boothName || 'new-booth').toLowerCase().replace(/\s+/g, '-')}`;
+  // Create a short, unique token for the queue URL
+  const genToken = () => `${Date.now().toString(36).slice(-5)}${Math.random().toString(36).slice(2, 6)}`;
+  const [queueToken] = useState(() => genToken());
+
+  const slugify = (s = '') => s
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    || 'new-booth';
+
+  const boothQueueLink = useMemo(() => {
+    const nameSlug = slugify(boothForm.boothName);
+    return `https://abilityjobfair.com/queue/${nameSlug}-${queueToken}`;
+  }, [boothForm.boothName, queueToken]);
 
   // Event options for MultiSelect
   const eventOptions = [
@@ -103,7 +119,12 @@ export default function BoothManagement() {
     setBoothSaving(true);
     try {
       // TODO: wire backend
-      console.log('Create Booth payload', boothForm);
+      const payload = {
+        ...boothForm,
+        queueSlug: `${slugify(boothForm.boothName)}-${queueToken}`,
+        queueUrl: boothQueueLink,
+      };
+      console.log('Create Booth payload', payload);
       setBoothMode('list');
     } finally { setBoothSaving(false); }
   };

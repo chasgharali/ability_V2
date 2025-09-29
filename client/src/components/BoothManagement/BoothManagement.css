@@ -204,6 +204,11 @@
   gap: 1rem;
 }
 
+/* Ensure the 'Choose file' button text is white on dark background */
+.upload-actions .dashboard-button {
+  color: #ffffff !important;
+}
+
 .upload-actions img {
   height: 40px;
   border: 1px solid #e5e7eb;
