@@ -7,6 +7,131 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
+ * GET /api/booths
+ * List booths (optionally by eventId)
+ */
+router.get('/', authenticateToken, async (req, res) => {
+    try {
+        const { eventId, page = 1, limit = 50 } = req.query;
+        const filter = {};
+        if (eventId) filter.eventId = eventId;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const [items, total] = await Promise.all([
+            Booth.find(filter).populate('eventId', 'name').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+            Booth.countDocuments(filter)
+        ]);
+
+        res.json({
+            booths: items.map(b => b.getSummary()),
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        logger.error('List booths error:', error);
+        res.status(500).json({ error: 'Failed to list booths' });
+    }
+});
+
+/**
+ * POST /api/booths
+ * Create booths for one or more events
+ */
+router.post('/', authenticateToken, requireRole(['Admin','GlobalSupport']), [
+    body('name').isString().trim().isLength({ min: 2, max: 200 }),
+    body('description').optional().isString().isLength({ max: 1000 }),
+    body('logoUrl').optional().isURL(),
+    body('companyPage').optional().isURL(),
+    body('recruitersCount').optional().isInt({ min: 1 }),
+    body('expireLinkTime').optional().isISO8601().toDate(),
+    body('customInviteSlug').optional().isString().toLowerCase().matches(/^[a-z0-9-]+$/).withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
+    body('richSections').optional().isArray({ max: 3 }),
+    body('richSections.*.title').optional().isString().isLength({ min: 1, max: 100 }),
+    body('richSections.*.contentHtml').optional().isString().isLength({ min: 0, max: 5000 }),
+    body('eventIds').isArray({ min: 1 }).withMessage('eventIds must be a non-empty array'),
+    body('eventIds.*').isMongoId().withMessage('Each eventId must be a valid id')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ error: 'Validation failed', details: errors.array() });
+        }
+
+        const { name, description, logoUrl, companyPage, recruitersCount, expireLinkTime, customInviteSlug, richSections = [], eventIds } = req.body;
+        const Event = require('../models/Event');
+
+        const created = [];
+        const skipped = [];
+
+        // Check customInviteSlug uniqueness ahead of time (if provided)
+        if (customInviteSlug) {
+            const exists = await Booth.findOne({ customInviteSlug });
+            if (exists) {
+                return res.status(409).json({ error: 'Custom invite already taken' });
+            }
+        }
+
+        for (const eid of eventIds) {
+            const ev = await Event.findById(eid);
+            if (!ev) { skipped.push({ eventId: eid, reason: 'Event not found' }); continue; }
+
+            // Enforce booth limit if configured
+            const maxBooths = ev?.limits?.maxBooths || 0; // 0 = unlimited
+            if (maxBooths > 0) {
+                const current = await Booth.countDocuments({ eventId: eid });
+                if (current >= maxBooths) {
+                    skipped.push({ eventId: eid, reason: 'Limit reached' });
+                    continue;
+                }
+            }
+
+            const booth = await Booth.create({
+                eventId: eid,
+                name,
+                description: description || '',
+                logoUrl: logoUrl || null,
+                companyPage: companyPage || '',
+                recruitersCount: recruitersCount || 1,
+                expireLinkTime: expireLinkTime || null,
+                customInviteSlug: customInviteSlug || undefined,
+                richSections: (richSections || []).slice(0,3).map((s, index) => ({
+                  title: s.title || `Section ${index+1}`,
+                  contentHtml: s.contentHtml || '',
+                  isActive: s.isActive !== false,
+                  order: s.order ?? index
+                }))
+            });
+            created.push(booth.getSummary());
+        }
+
+        res.status(created.length ? 201 : 200).json({
+            message: created.length ? 'Booth(s) created' : 'No booths created',
+            created,
+            skipped
+        });
+    } catch (error) {
+        logger.error('Create booths error:', error);
+        res.status(500).json({ error: 'Failed to create booths' });
+    }
+});
+
+/**
+ * DELETE /api/booths/:id
+ * Delete a booth
+ */
+router.delete('/:id', authenticateToken, requireResourceAccess('booth', 'id'), async (req, res) => {
+    try {
+        const { booth, user } = req;
+        await booth.deleteOne();
+        logger.info(`Booth deleted: ${booth._id} by ${user.email}`);
+        res.json({ message: 'Booth deleted' });
+    } catch (error) {
+        logger.error('Delete booth error:', error);
+        res.status(500).json({ error: 'Failed to delete booth' });
+    }
+});
+/**
  * GET /api/booths/:id
  * Get booth details
  */
@@ -68,6 +193,24 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .optional()
         .isURL()
         .withMessage('Logo URL must be a valid URL'),
+    body('companyPage')
+        .optional()
+        .isURL()
+        .withMessage('Company page must be a valid URL'),
+    body('recruitersCount')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('Recruiters count must be at least 1'),
+    body('expireLinkTime')
+        .optional()
+        .isISO8601()
+        .toDate(),
+    body('customInviteSlug')
+        .optional()
+        .isString()
+        .toLowerCase()
+        .matches(/^[a-z0-9-]+$/)
+        .withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
     body('status')
         .optional()
         .isIn(['active', 'inactive', 'maintenance'])
@@ -84,13 +227,25 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             });
         }
 
-        const { name, description, logoUrl, status } = req.body;
+        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug } = req.body;
         const { booth, user } = req;
 
         // Update allowed fields
         if (name !== undefined) booth.name = name;
         if (description !== undefined) booth.description = description;
         if (logoUrl !== undefined) booth.logoUrl = logoUrl;
+        if (companyPage !== undefined) booth.companyPage = companyPage;
+        if (recruitersCount !== undefined) booth.recruitersCount = recruitersCount;
+        if (expireLinkTime !== undefined) booth.expireLinkTime = expireLinkTime;
+        if (customInviteSlug !== undefined) {
+            if (customInviteSlug) {
+                const exists = await Booth.findOne({ customInviteSlug, _id: { $ne: booth._id } });
+                if (exists) {
+                    return res.status(409).json({ error: 'Custom invite already taken' });
+                }
+            }
+            booth.customInviteSlug = customInviteSlug || undefined;
+        }
         if (status !== undefined) booth.status = status;
 
         await booth.save();

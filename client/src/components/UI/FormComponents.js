@@ -130,11 +130,13 @@ export const MultiSelect = ({
 
     // Filter options based on search term
     const filteredOptions = options.filter(option =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+        (option.label || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Handle option toggle
     const handleOptionToggle = (optionValue) => {
+        const opt = options.find(o => o.value === optionValue);
+        if (opt && opt.disabled) return; // do not allow toggling disabled options
         const newValue = value.includes(optionValue)
             ? value.filter(v => v !== optionValue)
             : [...value, optionValue];
@@ -143,16 +145,17 @@ export const MultiSelect = ({
 
     // Handle select all
     const handleSelectAll = () => {
-        const allValues = filteredOptions.map(option => option.value);
-        const allSelected = allValues.every(val => value.includes(val));
+        // Only consider non-disabled, filtered options
+        const selectable = filteredOptions.filter(opt => !opt.disabled).map(opt => opt.value);
+        const allSelected = selectable.length > 0 && selectable.every(val => value.includes(val));
 
         if (allSelected) {
-            // Deselect all filtered options
-            const newValue = value.filter(val => !allValues.includes(val));
+            // Deselect all selectable filtered options
+            const newValue = value.filter(val => !selectable.includes(val));
             onChange({ target: { value: newValue, name } });
         } else {
-            // Select all filtered options
-            const newValue = [...new Set([...value, ...allValues])];
+            // Select all selectable filtered options
+            const newValue = [...new Set([...value, ...selectable])];
             onChange({ target: { value: newValue, name } });
         }
     };
@@ -249,7 +252,7 @@ export const MultiSelect = ({
                                     className="form-multiselect-option form-multiselect-select-all"
                                     onClick={handleSelectAll}
                                 >
-                                    {filteredOptions.every(opt => value.includes(opt.value)) ? 'Deselect All' : 'Select All'}
+                                    {filteredOptions.filter(opt => !opt.disabled).every(opt => value.includes(opt.value)) && filteredOptions.filter(opt => !opt.disabled).length > 0 ? 'Deselect All' : 'Select All'}
                                 </button>
                             )}
 
@@ -257,10 +260,13 @@ export const MultiSelect = ({
                                 <button
                                     key={option.value}
                                     type="button"
-                                    className={`form-multiselect-option ${value.includes(option.value) ? 'form-multiselect-option-selected' : ''}`}
+                                    className={`form-multiselect-option ${value.includes(option.value) ? 'form-multiselect-option-selected' : ''} ${option.disabled ? 'form-multiselect-option-disabled' : ''}`}
                                     onClick={() => handleOptionToggle(option.value)}
                                     role="option"
                                     aria-selected={value.includes(option.value)}
+                                    aria-disabled={option.disabled ? 'true' : 'false'}
+                                    disabled={option.disabled}
+                                    title={option.disabled ? 'Limit reached' : undefined}
                                 >
                                     <span className="form-multiselect-checkbox" aria-hidden="true">
                                         {value.includes(option.value) ? '✓' : ''}

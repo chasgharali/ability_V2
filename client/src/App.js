@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { AccessibilityAnnouncer } from './components/Accessibility/AccessibilityAnnouncer';
 import { FocusManager } from './components/Accessibility/FocusManager';
 import LoginPage from './components/Auth/LoginPage';
@@ -110,9 +111,10 @@ function App() {
         <ThemeProvider>
             <AuthProvider>
                 <SocketProvider>
-                    <Router>
-                        <AppLayout>
-                            <Routes>
+                    <ToastProvider>
+                        <Router>
+                            <AppLayout>
+                                <Routes>
                                 <Route path="/" element={<LandingPage />} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
@@ -133,9 +135,10 @@ function App() {
                                 <Route path="/terms-conditions/create" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
-                            </Routes>
-                        </AppLayout>
-                    </Router>
+                                </Routes>
+                            </AppLayout>
+                        </Router>
+                    </ToastProvider>
                 </SocketProvider>
             </AuthProvider>
         </ThemeProvider>

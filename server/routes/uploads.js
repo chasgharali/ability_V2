@@ -29,7 +29,7 @@ router.post('/presign', authenticateToken, [
     body('fileType')
         .notEmpty()
         .withMessage('File type is required')
-        .isIn(['resume', 'document', 'image', 'audio', 'video', 'avatar'])
+        .isIn(['resume', 'document', 'image', 'audio', 'video', 'avatar', 'booth-logo'])
         .withMessage('Invalid file type'),
     body('mimeType')
         .notEmpty()
@@ -58,7 +58,8 @@ router.post('/presign', authenticateToken, [
             image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
             audio: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/webm'],
             video: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
-            avatar: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            avatar: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+            'booth-logo': ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         };
 
         if (!allowedMimeTypes[fileType]?.includes(mimeType)) {
@@ -75,7 +76,8 @@ router.post('/presign', authenticateToken, [
             image: 5 * 1024 * 1024, // 5MB
             audio: 50 * 1024 * 1024, // 50MB
             video: 100 * 1024 * 1024, // 100MB
-            avatar: 2 * 1024 * 1024 // 2MB
+            avatar: 2 * 1024 * 1024, // 2MB
+            'booth-logo': 2 * 1024 * 1024 // 2MB
         };
 
         const maxSize = maxSizes[fileType];
@@ -152,7 +154,7 @@ router.post('/complete', authenticateToken, [
     body('fileType')
         .notEmpty()
         .withMessage('File type is required')
-        .isIn(['resume', 'document', 'image', 'audio', 'video', 'avatar'])
+        .isIn(['resume', 'document', 'image', 'audio', 'video', 'avatar', 'booth-logo'])
         .withMessage('Invalid file type'),
     body('fileName')
         .notEmpty()

@@ -39,6 +39,28 @@ const boothSchema = new mongoose.Schema({
         trim: true,
         maxlength: [1000, 'Description cannot exceed 1000 characters']
     },
+    recruitersCount: {
+        type: Number,
+        default: 1,
+        min: 1
+        },
+    companyPage: {
+        type: String,
+        default: '',
+        trim: true
+    },
+    expireLinkTime: {
+        type: Date,
+        default: null
+    },
+    customInviteSlug: {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
+        trim: true,
+        match: [/^[a-z0-9-]+$/, 'Custom invite must be lowercase letters, numbers, and dashes only']
+    },
     logoUrl: {
         type: String,
         default: null
@@ -144,6 +166,7 @@ const boothSchema = new mongoose.Schema({
 // Indexes for performance
 boothSchema.index({ eventId: 1 });
 boothSchema.index({ status: 1 });
+boothSchema.index({ customInviteSlug: 1 }, { unique: true, sparse: true });
 boothSchema.index({ administrators: 1 });
 
 // Virtual for checking if booth is available for queue joining
@@ -179,11 +202,19 @@ boothSchema.methods.getSummary = function () {
         name: this.name,
         description: this.description,
         logoUrl: this.logoUrl,
+        recruitersCount: this.recruitersCount,
+        companyPage: this.companyPage,
+        expireLinkTime: this.expireLinkTime,
+        customInviteSlug: this.customInviteSlug,
         status: this.status,
         isAvailableForQueue: this.isAvailableForQueue,
         queueId: this.queueId,
         stats: this.stats,
-        richSectionsCount: this.richSections.length
+        richSectionsCount: this.richSections.length,
+        richSections: this.richSections
+            .slice(0, 3)
+            .sort((a, b) => a.order - b.order)
+            .map(s => ({ _id: s._id, title: s.title, contentHtml: s.contentHtml, order: s.order, isActive: s.isActive }))
     };
 };
 
@@ -194,6 +225,8 @@ boothSchema.methods.getPublicInfo = function () {
         name: this.name,
         description: this.description,
         logoUrl: this.logoUrl,
+        recruitersCount: this.recruitersCount,
+        companyPage: this.companyPage,
         isAvailableForQueue: this.isAvailableForQueue,
         estimatedWaitTime: this.settings.queueSettings.estimatedWaitTime,
         richSections: this.richSections
