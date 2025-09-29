@@ -135,6 +135,11 @@
     color: #111827;
 }
 
+.connection-text-mobile {
+    display: none;
+    /* Hide shortened text on desktop */
+}
+
 .connection-dot {
     width: 8px;
     height: 8px;
@@ -816,20 +821,25 @@
 
     .dashboard-sidebar {
         position: fixed;
-        top: 80px;
+        top: 72px;
         left: -280px;
         width: 280px;
-        height: calc(100vh - 80px);
+        height: calc(100vh - 72px);
         z-index: 999;
-        transform: translateX(0);
+        transition: left 0.25s ease;
     }
 
     .dashboard-sidebar.mobile-open {
-        transform: translateX(280px);
+        left: 0;
+    }
+
+    /* Slide in when the body flag is set by AdminHeader */
+    body.sidebar-open .dashboard-sidebar {
+        left: 0;
     }
 
     .mobile-overlay {
-        display: block;
+        display: none; /* keep hidden unless sidebar is open */
     }
 
     .dashboard-main {
@@ -838,22 +848,56 @@
 }
 
 @media (max-width: 768px) {
+    .dashboard-header {
+        min-height: 72px;
+    }
+
     .dashboard-header-content {
-        padding: 0 1rem;
+        padding: 0 0.75rem;
+        height: 72px;
+        flex-wrap: nowrap;
     }
 
     .user-info {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-end;
+        flex-direction: row;
+        gap: 0.75rem;
+        align-items: center;
+        flex-shrink: 0;
     }
 
     .user-name {
         font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
     }
 
     .connection-status {
         font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .connection-text {
+        display: none;
+        /* Hide "Connection:" text on mobile */
+    }
+
+    .connection-text-mobile {
+        display: inline;
+        /* Show shortened text on mobile */
+    }
+
+    .connection-dot {
+        width: 6px;
+        height: 6px;
+    }
+
+    .header-logo {
+        max-width: 160px;
+        height: 28px;
     }
 
     .dashboard-main {
@@ -938,7 +982,7 @@
     }
 }
 
-/* ===== Mobile hamburger + slide-in sidebar ===== */
+/* ===== Mobile hamburger styling ===== */
 @media (max-width: 1024px) {
 
     /* Show the hamburger */
@@ -952,28 +996,6 @@
         border-radius: 6px;
         margin-right: 8px;
         background: #fff;
-    }
-
-    /* Off-canvas sidebar baseline */
-    .dashboard-layout {
-        position: relative;
-    }
-
-    .dashboard-sidebar {
-        position: fixed;
-        top: 64px;
-        /* adjust if header height differs */
-        left: -280px;
-        /* hidden off screen */
-        height: calc(100vh - 64px);
-        width: 260px;
-        z-index: 999;
-        transition: left 0.25s ease;
-    }
-
-    /* Slide in when the body flag is set by AdminHeader */
-    body.sidebar-open .dashboard-sidebar {
-        left: 0;
     }
 
     /* Make the overlay visible when open */
@@ -1004,50 +1026,29 @@
 }
 
 
-/* Taller admin header on small phones, wrap user-info, keep sidebar aligned */
-@media (max-width: 640px) {
-
-    /* Single source of truth for header height on tiny screens */
-    :root {
-        --admin-header-h: 120px;
-    }
-
-    /* increase as needed (e.g., 128px) */
-
-    .dashboard-header {
-        min-height: var(--admin-header-h);
-    }
-
+/* Extra small screens - further optimize header */
+@media (max-width: 480px) {
     .dashboard-header-content {
-        height: var(--admin-header-h);
-        padding: 8px 12px;
-        flex-wrap: wrap;
-        /* allow two rows: logo row + user-info row */
-        align-content: center;
+        padding: 0 0.5rem;
     }
 
-    /* First row: hamburger + logo */
-    .header-left {
-        order: 1;
+    .header-logo {
+        max-width: 140px;
+        height: 24px;
     }
 
-    /* Second row: user-info stretches full width, right-aligned */
-    .user-info {
-        order: 2;
-        width: 100%;
-        justify-content: flex-end;
-        gap: 0.75rem;
-        margin-top: 6px;
+    .user-name {
+        max-width: 100px;
+        font-size: 0.75rem;
     }
 
-    /* Keep slide-in sidebar top aligned with taller header */
-    .dashboard-sidebar {
-        top: var(--admin-header-h) !important;
-        height: calc(100vh - var(--admin-header-h)) !important;
+    .connection-status {
+        font-size: 0.65rem;
     }
 
-    /* Keep toast below the taller header */
-    .toast {
-        top: calc(var(--admin-header-h) + 16px);
+    .mobile-menu-toggle {
+        width: 32px;
+        height: 32px;
+        margin-right: 6px;
     }
 }

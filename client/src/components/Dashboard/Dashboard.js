@@ -24,7 +24,6 @@ const Dashboard = () => {
         'registrations': true,
         'upcoming-events': true
     });
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [brandingLogo, setBrandingLogo] = useState(() => {
         try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
     });
@@ -355,13 +354,6 @@ const Dashboard = () => {
         }));
     };
 
-    const toggleMobileMenu = () => {
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-    };
-
-    const closeMobileMenu = () => {
-        setIsMobileMenuOpen(false);
-    };
 
     const getDashboardContent = () => {
         switch (user?.role) {
@@ -400,256 +392,256 @@ const Dashboard = () => {
                                 <p className="section-note">An asterisk (*) indicates a required field.</p>
 
                                 <form className="account-form" onSubmit={handleUpdateSubmit}>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="firstName">First Name *</label>
-                                        <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleFieldChange} aria-invalid={!!errors.firstName} />
-                                        {errors.firstName && <span className="error-text">{errors.firstName}</span>}
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label htmlFor="firstName">First Name *</label>
+                                            <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleFieldChange} aria-invalid={!!errors.firstName} />
+                                            {errors.firstName && <span className="error-text">{errors.firstName}</span>}
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="lastName">Last Name *</label>
+                                            <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleFieldChange} aria-invalid={!!errors.lastName} />
+                                            {errors.lastName && <span className="error-text">{errors.lastName}</span>}
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label htmlFor="lastName">Last Name *</label>
-                                        <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleFieldChange} aria-invalid={!!errors.lastName} />
-                                        {errors.lastName && <span className="error-text">{errors.lastName}</span>}
-                                    </div>
-                                </div>
 
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="email">Email *</label>
-                                        <input type="email" id="email" name="email" value={formData.email} readOnly />
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label htmlFor="email">Email *</label>
+                                            <input type="email" id="email" name="email" value={formData.email} readOnly />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="phone">Phone</label>
+                                            <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleFieldChange} aria-invalid={!!errors.phone} />
+                                            {errors.phone && <span className="error-text">{errors.phone}</span>}
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label htmlFor="phone">Phone</label>
-                                        <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleFieldChange} aria-invalid={!!errors.phone} />
-                                        {errors.phone && <span className="error-text">{errors.phone}</span>}
-                                    </div>
-                                </div>
 
-                                <div className="form-row">
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label htmlFor="state">State</label>
+                                            <input type="text" id="state" name="state" value={formData.state} onChange={handleFieldChange} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="city">City</label>
+                                            <input type="text" id="city" name="city" value={formData.city} onChange={handleFieldChange} />
+                                        </div>
+                                    </div>
+
                                     <div className="form-group">
-                                        <label htmlFor="state">State</label>
-                                        <input type="text" id="state" name="state" value={formData.state} onChange={handleFieldChange} />
+                                        <label htmlFor="country">Country *</label>
+                                        <select id="country" name="country" value={formData.country} onChange={handleFieldChange} aria-invalid={!!errors.country}>
+                                            <option value="US">United States</option>
+                                            <option value="CA">Canada</option>
+                                            <option value="MX">Mexico</option>
+                                            <option value="GB">United Kingdom</option>
+                                            <option value="IE">Ireland</option>
+                                            <option value="FR">France</option>
+                                            <option value="DE">Germany</option>
+                                            <option value="IT">Italy</option>
+                                            <option value="ES">Spain</option>
+                                            <option value="NL">Netherlands</option>
+                                            <option value="BE">Belgium</option>
+                                            <option value="CH">Switzerland</option>
+                                            <option value="AT">Austria</option>
+                                            <option value="SE">Sweden</option>
+                                            <option value="NO">Norway</option>
+                                            <option value="DK">Denmark</option>
+                                            <option value="FI">Finland</option>
+                                            <option value="PL">Poland</option>
+                                            <option value="CZ">Czech Republic</option>
+                                            <option value="HU">Hungary</option>
+                                            <option value="RO">Romania</option>
+                                            <option value="BG">Bulgaria</option>
+                                            <option value="HR">Croatia</option>
+                                            <option value="SI">Slovenia</option>
+                                            <option value="SK">Slovakia</option>
+                                            <option value="EE">Estonia</option>
+                                            <option value="LV">Latvia</option>
+                                            <option value="LT">Lithuania</option>
+                                            <option value="GR">Greece</option>
+                                            <option value="PT">Portugal</option>
+                                            <option value="AU">Australia</option>
+                                            <option value="NZ">New Zealand</option>
+                                            <option value="JP">Japan</option>
+                                            <option value="KR">South Korea</option>
+                                            <option value="CN">China</option>
+                                            <option value="IN">India</option>
+                                            <option value="SG">Singapore</option>
+                                            <option value="HK">Hong Kong</option>
+                                            <option value="TW">Taiwan</option>
+                                            <option value="TH">Thailand</option>
+                                            <option value="MY">Malaysia</option>
+                                            <option value="ID">Indonesia</option>
+                                            <option value="PH">Philippines</option>
+                                            <option value="VN">Vietnam</option>
+                                            <option value="BR">Brazil</option>
+                                            <option value="AR">Argentina</option>
+                                            <option value="CL">Chile</option>
+                                            <option value="CO">Colombia</option>
+                                            <option value="PE">Peru</option>
+                                            <option value="VE">Venezuela</option>
+                                            <option value="EC">Ecuador</option>
+                                            <option value="UY">Uruguay</option>
+                                            <option value="PY">Paraguay</option>
+                                            <option value="BO">Bolivia</option>
+                                            <option value="GY">Guyana</option>
+                                            <option value="SR">Suriname</option>
+                                            <option value="ZA">South Africa</option>
+                                            <option value="NG">Nigeria</option>
+                                            <option value="KE">Kenya</option>
+                                            <option value="EG">Egypt</option>
+                                            <option value="MA">Morocco</option>
+                                            <option value="TN">Tunisia</option>
+                                            <option value="DZ">Algeria</option>
+                                            <option value="LY">Libya</option>
+                                            <option value="SD">Sudan</option>
+                                            <option value="ET">Ethiopia</option>
+                                            <option value="GH">Ghana</option>
+                                            <option value="UG">Uganda</option>
+                                            <option value="TZ">Tanzania</option>
+                                            <option value="ZM">Zambia</option>
+                                            <option value="ZW">Zimbabwe</option>
+                                            <option value="BW">Botswana</option>
+                                            <option value="NA">Namibia</option>
+                                            <option value="MW">Malawi</option>
+                                            <option value="MZ">Mozambique</option>
+                                            <option value="MG">Madagascar</option>
+                                            <option value="MU">Mauritius</option>
+                                            <option value="SC">Seychelles</option>
+                                            <option value="RE">Réunion</option>
+                                            <option value="YT">Mayotte</option>
+                                            <option value="KM">Comoros</option>
+                                            <option value="DJ">Djibouti</option>
+                                            <option value="SO">Somalia</option>
+                                            <option value="ER">Eritrea</option>
+                                            <option value="SS">South Sudan</option>
+                                            <option value="CF">Central African Republic</option>
+                                            <option value="TD">Chad</option>
+                                            <option value="NE">Niger</option>
+                                            <option value="ML">Mali</option>
+                                            <option value="BF">Burkina Faso</option>
+                                            <option value="CI">Côte d'Ivoire</option>
+                                            <option value="LR">Liberia</option>
+                                            <option value="SL">Sierra Leone</option>
+                                            <option value="GN">Guinea</option>
+                                            <option value="GW">Guinea-Bissau</option>
+                                            <option value="GM">Gambia</option>
+                                            <option value="SN">Senegal</option>
+                                            <option value="MR">Mauritania</option>
+                                            <option value="CV">Cape Verde</option>
+                                            <option value="ST">São Tomé and Príncipe</option>
+                                            <option value="GQ">Equatorial Guinea</option>
+                                            <option value="GA">Gabon</option>
+                                            <option value="CG">Republic of the Congo</option>
+                                            <option value="CD">Democratic Republic of the Congo</option>
+                                            <option value="AO">Angola</option>
+                                            <option value="CM">Cameroon</option>
+                                            <option value="RU">Russia</option>
+                                            <option value="KZ">Kazakhstan</option>
+                                            <option value="UZ">Uzbekistan</option>
+                                            <option value="TM">Turkmenistan</option>
+                                            <option value="TJ">Tajikistan</option>
+                                            <option value="KG">Kyrgyzstan</option>
+                                            <option value="AF">Afghanistan</option>
+                                            <option value="PK">Pakistan</option>
+                                            <option value="BD">Bangladesh</option>
+                                            <option value="LK">Sri Lanka</option>
+                                            <option value="MV">Maldives</option>
+                                            <option value="BT">Bhutan</option>
+                                            <option value="NP">Nepal</option>
+                                            <option value="MM">Myanmar</option>
+                                            <option value="LA">Laos</option>
+                                            <option value="KH">Cambodia</option>
+                                            <option value="BN">Brunei</option>
+                                            <option value="TL">East Timor</option>
+                                            <option value="FJ">Fiji</option>
+                                            <option value="PG">Papua New Guinea</option>
+                                            <option value="SB">Solomon Islands</option>
+                                            <option value="VU">Vanuatu</option>
+                                            <option value="NC">New Caledonia</option>
+                                            <option value="PF">French Polynesia</option>
+                                            <option value="WS">Samoa</option>
+                                            <option value="TO">Tonga</option>
+                                            <option value="KI">Kiribati</option>
+                                            <option value="TV">Tuvalu</option>
+                                            <option value="NR">Nauru</option>
+                                            <option value="PW">Palau</option>
+                                            <option value="MH">Marshall Islands</option>
+                                            <option value="FM">Micronesia</option>
+                                            <option value="AS">American Samoa</option>
+                                            <option value="GU">Guam</option>
+                                            <option value="MP">Northern Mariana Islands</option>
+                                            <option value="VI">U.S. Virgin Islands</option>
+                                            <option value="PR">Puerto Rico</option>
+                                            <option value="GT">Guatemala</option>
+                                            <option value="BZ">Belize</option>
+                                            <option value="SV">El Salvador</option>
+                                            <option value="HN">Honduras</option>
+                                            <option value="NI">Nicaragua</option>
+                                            <option value="CR">Costa Rica</option>
+                                            <option value="PA">Panama</option>
+                                            <option value="CU">Cuba</option>
+                                            <option value="JM">Jamaica</option>
+                                            <option value="HT">Haiti</option>
+                                            <option value="DO">Dominican Republic</option>
+                                            <option value="TT">Trinidad and Tobago</option>
+                                            <option value="BB">Barbados</option>
+                                            <option value="AG">Antigua and Barbuda</option>
+                                            <option value="BS">Bahamas</option>
+                                            <option value="DM">Dominica</option>
+                                            <option value="GD">Grenada</option>
+                                            <option value="KN">Saint Kitts and Nevis</option>
+                                            <option value="LC">Saint Lucia</option>
+                                            <option value="VC">Saint Vincent and the Grenadines</option>
+                                            <option value="IS">Iceland</option>
+                                            <option value="GL">Greenland</option>
+                                            <option value="FO">Faroe Islands</option>
+                                            <option value="SJ">Svalbard and Jan Mayen</option>
+                                            <option value="AX">Åland Islands</option>
+                                            <option value="AD">Andorra</option>
+                                            <option value="LI">Liechtenstein</option>
+                                            <option value="MC">Monaco</option>
+                                            <option value="SM">San Marino</option>
+                                            <option value="VA">Vatican City</option>
+                                            <option value="MT">Malta</option>
+                                            <option value="CY">Cyprus</option>
+                                            <option value="LU">Luxembourg</option>
+                                            <option value="MD">Moldova</option>
+                                            <option value="BY">Belarus</option>
+                                            <option value="UA">Ukraine</option>
+                                            <option value="GE">Georgia</option>
+                                            <option value="AM">Armenia</option>
+                                            <option value="AZ">Azerbaijan</option>
+                                            <option value="TR">Turkey</option>
+                                            <option value="IL">Israel</option>
+                                            <option value="PS">Palestine</option>
+                                            <option value="JO">Jordan</option>
+                                            <option value="LB">Lebanon</option>
+                                            <option value="SY">Syria</option>
+                                            <option value="IQ">Iraq</option>
+                                            <option value="IR">Iran</option>
+                                            <option value="KW">Kuwait</option>
+                                            <option value="SA">Saudi Arabia</option>
+                                            <option value="AE">United Arab Emirates</option>
+                                            <option value="QA">Qatar</option>
+                                            <option value="BH">Bahrain</option>
+                                            <option value="OM">Oman</option>
+                                            <option value="YE">Yemen</option>
+                                        </select>
                                     </div>
+
                                     <div className="form-group">
-                                        <label htmlFor="city">City</label>
-                                        <input type="text" id="city" name="city" value={formData.city} onChange={handleFieldChange} />
+                                        <label htmlFor="password">Change Password</label>
+                                        <div className="password-input-container">
+                                            <input type="password" id="password" />
+                                            <button type="button" className="password-toggle">
+                                                <MdRefresh />
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="form-group">
-                                    <label htmlFor="country">Country *</label>
-                                    <select id="country" name="country" value={formData.country} onChange={handleFieldChange} aria-invalid={!!errors.country}>
-                                        <option value="US">United States</option>
-                                        <option value="CA">Canada</option>
-                                        <option value="MX">Mexico</option>
-                                        <option value="GB">United Kingdom</option>
-                                        <option value="IE">Ireland</option>
-                                        <option value="FR">France</option>
-                                        <option value="DE">Germany</option>
-                                        <option value="IT">Italy</option>
-                                        <option value="ES">Spain</option>
-                                        <option value="NL">Netherlands</option>
-                                        <option value="BE">Belgium</option>
-                                        <option value="CH">Switzerland</option>
-                                        <option value="AT">Austria</option>
-                                        <option value="SE">Sweden</option>
-                                        <option value="NO">Norway</option>
-                                        <option value="DK">Denmark</option>
-                                        <option value="FI">Finland</option>
-                                        <option value="PL">Poland</option>
-                                        <option value="CZ">Czech Republic</option>
-                                        <option value="HU">Hungary</option>
-                                        <option value="RO">Romania</option>
-                                        <option value="BG">Bulgaria</option>
-                                        <option value="HR">Croatia</option>
-                                        <option value="SI">Slovenia</option>
-                                        <option value="SK">Slovakia</option>
-                                        <option value="EE">Estonia</option>
-                                        <option value="LV">Latvia</option>
-                                        <option value="LT">Lithuania</option>
-                                        <option value="GR">Greece</option>
-                                        <option value="PT">Portugal</option>
-                                        <option value="AU">Australia</option>
-                                        <option value="NZ">New Zealand</option>
-                                        <option value="JP">Japan</option>
-                                        <option value="KR">South Korea</option>
-                                        <option value="CN">China</option>
-                                        <option value="IN">India</option>
-                                        <option value="SG">Singapore</option>
-                                        <option value="HK">Hong Kong</option>
-                                        <option value="TW">Taiwan</option>
-                                        <option value="TH">Thailand</option>
-                                        <option value="MY">Malaysia</option>
-                                        <option value="ID">Indonesia</option>
-                                        <option value="PH">Philippines</option>
-                                        <option value="VN">Vietnam</option>
-                                        <option value="BR">Brazil</option>
-                                        <option value="AR">Argentina</option>
-                                        <option value="CL">Chile</option>
-                                        <option value="CO">Colombia</option>
-                                        <option value="PE">Peru</option>
-                                        <option value="VE">Venezuela</option>
-                                        <option value="EC">Ecuador</option>
-                                        <option value="UY">Uruguay</option>
-                                        <option value="PY">Paraguay</option>
-                                        <option value="BO">Bolivia</option>
-                                        <option value="GY">Guyana</option>
-                                        <option value="SR">Suriname</option>
-                                        <option value="ZA">South Africa</option>
-                                        <option value="NG">Nigeria</option>
-                                        <option value="KE">Kenya</option>
-                                        <option value="EG">Egypt</option>
-                                        <option value="MA">Morocco</option>
-                                        <option value="TN">Tunisia</option>
-                                        <option value="DZ">Algeria</option>
-                                        <option value="LY">Libya</option>
-                                        <option value="SD">Sudan</option>
-                                        <option value="ET">Ethiopia</option>
-                                        <option value="GH">Ghana</option>
-                                        <option value="UG">Uganda</option>
-                                        <option value="TZ">Tanzania</option>
-                                        <option value="ZM">Zambia</option>
-                                        <option value="ZW">Zimbabwe</option>
-                                        <option value="BW">Botswana</option>
-                                        <option value="NA">Namibia</option>
-                                        <option value="MW">Malawi</option>
-                                        <option value="MZ">Mozambique</option>
-                                        <option value="MG">Madagascar</option>
-                                        <option value="MU">Mauritius</option>
-                                        <option value="SC">Seychelles</option>
-                                        <option value="RE">Réunion</option>
-                                        <option value="YT">Mayotte</option>
-                                        <option value="KM">Comoros</option>
-                                        <option value="DJ">Djibouti</option>
-                                        <option value="SO">Somalia</option>
-                                        <option value="ER">Eritrea</option>
-                                        <option value="SS">South Sudan</option>
-                                        <option value="CF">Central African Republic</option>
-                                        <option value="TD">Chad</option>
-                                        <option value="NE">Niger</option>
-                                        <option value="ML">Mali</option>
-                                        <option value="BF">Burkina Faso</option>
-                                        <option value="CI">Côte d'Ivoire</option>
-                                        <option value="LR">Liberia</option>
-                                        <option value="SL">Sierra Leone</option>
-                                        <option value="GN">Guinea</option>
-                                        <option value="GW">Guinea-Bissau</option>
-                                        <option value="GM">Gambia</option>
-                                        <option value="SN">Senegal</option>
-                                        <option value="MR">Mauritania</option>
-                                        <option value="CV">Cape Verde</option>
-                                        <option value="ST">São Tomé and Príncipe</option>
-                                        <option value="GQ">Equatorial Guinea</option>
-                                        <option value="GA">Gabon</option>
-                                        <option value="CG">Republic of the Congo</option>
-                                        <option value="CD">Democratic Republic of the Congo</option>
-                                        <option value="AO">Angola</option>
-                                        <option value="CM">Cameroon</option>
-                                        <option value="RU">Russia</option>
-                                        <option value="KZ">Kazakhstan</option>
-                                        <option value="UZ">Uzbekistan</option>
-                                        <option value="TM">Turkmenistan</option>
-                                        <option value="TJ">Tajikistan</option>
-                                        <option value="KG">Kyrgyzstan</option>
-                                        <option value="AF">Afghanistan</option>
-                                        <option value="PK">Pakistan</option>
-                                        <option value="BD">Bangladesh</option>
-                                        <option value="LK">Sri Lanka</option>
-                                        <option value="MV">Maldives</option>
-                                        <option value="BT">Bhutan</option>
-                                        <option value="NP">Nepal</option>
-                                        <option value="MM">Myanmar</option>
-                                        <option value="LA">Laos</option>
-                                        <option value="KH">Cambodia</option>
-                                        <option value="BN">Brunei</option>
-                                        <option value="TL">East Timor</option>
-                                        <option value="FJ">Fiji</option>
-                                        <option value="PG">Papua New Guinea</option>
-                                        <option value="SB">Solomon Islands</option>
-                                        <option value="VU">Vanuatu</option>
-                                        <option value="NC">New Caledonia</option>
-                                        <option value="PF">French Polynesia</option>
-                                        <option value="WS">Samoa</option>
-                                        <option value="TO">Tonga</option>
-                                        <option value="KI">Kiribati</option>
-                                        <option value="TV">Tuvalu</option>
-                                        <option value="NR">Nauru</option>
-                                        <option value="PW">Palau</option>
-                                        <option value="MH">Marshall Islands</option>
-                                        <option value="FM">Micronesia</option>
-                                        <option value="AS">American Samoa</option>
-                                        <option value="GU">Guam</option>
-                                        <option value="MP">Northern Mariana Islands</option>
-                                        <option value="VI">U.S. Virgin Islands</option>
-                                        <option value="PR">Puerto Rico</option>
-                                        <option value="GT">Guatemala</option>
-                                        <option value="BZ">Belize</option>
-                                        <option value="SV">El Salvador</option>
-                                        <option value="HN">Honduras</option>
-                                        <option value="NI">Nicaragua</option>
-                                        <option value="CR">Costa Rica</option>
-                                        <option value="PA">Panama</option>
-                                        <option value="CU">Cuba</option>
-                                        <option value="JM">Jamaica</option>
-                                        <option value="HT">Haiti</option>
-                                        <option value="DO">Dominican Republic</option>
-                                        <option value="TT">Trinidad and Tobago</option>
-                                        <option value="BB">Barbados</option>
-                                        <option value="AG">Antigua and Barbuda</option>
-                                        <option value="BS">Bahamas</option>
-                                        <option value="DM">Dominica</option>
-                                        <option value="GD">Grenada</option>
-                                        <option value="KN">Saint Kitts and Nevis</option>
-                                        <option value="LC">Saint Lucia</option>
-                                        <option value="VC">Saint Vincent and the Grenadines</option>
-                                        <option value="IS">Iceland</option>
-                                        <option value="GL">Greenland</option>
-                                        <option value="FO">Faroe Islands</option>
-                                        <option value="SJ">Svalbard and Jan Mayen</option>
-                                        <option value="AX">Åland Islands</option>
-                                        <option value="AD">Andorra</option>
-                                        <option value="LI">Liechtenstein</option>
-                                        <option value="MC">Monaco</option>
-                                        <option value="SM">San Marino</option>
-                                        <option value="VA">Vatican City</option>
-                                        <option value="MT">Malta</option>
-                                        <option value="CY">Cyprus</option>
-                                        <option value="LU">Luxembourg</option>
-                                        <option value="MD">Moldova</option>
-                                        <option value="BY">Belarus</option>
-                                        <option value="UA">Ukraine</option>
-                                        <option value="GE">Georgia</option>
-                                        <option value="AM">Armenia</option>
-                                        <option value="AZ">Azerbaijan</option>
-                                        <option value="TR">Turkey</option>
-                                        <option value="IL">Israel</option>
-                                        <option value="PS">Palestine</option>
-                                        <option value="JO">Jordan</option>
-                                        <option value="LB">Lebanon</option>
-                                        <option value="SY">Syria</option>
-                                        <option value="IQ">Iraq</option>
-                                        <option value="IR">Iran</option>
-                                        <option value="KW">Kuwait</option>
-                                        <option value="SA">Saudi Arabia</option>
-                                        <option value="AE">United Arab Emirates</option>
-                                        <option value="QA">Qatar</option>
-                                        <option value="BH">Bahrain</option>
-                                        <option value="OM">Oman</option>
-                                        <option value="YE">Yemen</option>
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="password">Change Password</label>
-                                    <div className="password-input-container">
-                                        <input type="password" id="password" />
-                                        <button type="button" className="password-toggle">
-                                            <MdRefresh />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <button type="submit" className="update-button">Update Account</button>
+                                    <button type="submit" className="update-button">Update Account</button>
                                 </form>
                             </div>
 
@@ -657,36 +649,36 @@ const Dashboard = () => {
                                 <h3>Accessibility Options</h3>
                                 <p className="section-note">During the job fair, I will use the following</p>
 
-                            <div className="checkbox-group">
-                                <label className="checkbox-label">
-                                    <input type="checkbox" checked={accessibility.usesScreenMagnifier} onChange={(e) => handleAccessibilityToggle('usesScreenMagnifier', e.target.checked)} />
-                                    <span>Screen Magnifier</span>
-                                </label>
-                                <label className="checkbox-label">
-                                    <input type="checkbox" checked={accessibility.usesScreenReader} onChange={(e) => handleAccessibilityToggle('usesScreenReader', e.target.checked)} />
-                                    <span>Screen Reader</span>
-                                </label>
-                                <label className="checkbox-label">
-                                    <input type="checkbox" checked={accessibility.needsASL} onChange={(e) => handleAccessibilityToggle('needsASL', e.target.checked)} />
-                                    <span>American Sign Language (ASL)</span>
-                                </label>
-                                <label className="checkbox-label">
-                                    <input type="checkbox" checked={accessibility.needsCaptions} onChange={(e) => handleAccessibilityToggle('needsCaptions', e.target.checked)} />
-                                    <span>Captions</span>
-                                </label>
-                                <label className="checkbox-label">
-                                    <input type="checkbox" checked={accessibility.needsOther} onChange={(e) => handleAccessibilityToggle('needsOther', e.target.checked)} />
-                                    <span>Others</span>
-                                </label>
-                            </div>
+                                <div className="checkbox-group">
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" checked={accessibility.usesScreenMagnifier} onChange={(e) => handleAccessibilityToggle('usesScreenMagnifier', e.target.checked)} />
+                                        <span>Screen Magnifier</span>
+                                    </label>
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" checked={accessibility.usesScreenReader} onChange={(e) => handleAccessibilityToggle('usesScreenReader', e.target.checked)} />
+                                        <span>Screen Reader</span>
+                                    </label>
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" checked={accessibility.needsASL} onChange={(e) => handleAccessibilityToggle('needsASL', e.target.checked)} />
+                                        <span>American Sign Language (ASL)</span>
+                                    </label>
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" checked={accessibility.needsCaptions} onChange={(e) => handleAccessibilityToggle('needsCaptions', e.target.checked)} />
+                                        <span>Captions</span>
+                                    </label>
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" checked={accessibility.needsOther} onChange={(e) => handleAccessibilityToggle('needsOther', e.target.checked)} />
+                                        <span>Others</span>
+                                    </label>
+                                </div>
 
-                            <div className="checkbox-group">
-                                <label className="checkbox-label">
-                                    <input type="checkbox" checked={accessibility.subscribeAnnouncements} onChange={(e) => handleAccessibilityToggle('subscribeAnnouncements', e.target.checked)} />
-                                    <span>Subscribe to Job Seeker Announcements</span>
-                                </label>
+                                <div className="checkbox-group">
+                                    <label className="checkbox-label">
+                                        <input type="checkbox" checked={accessibility.subscribeAnnouncements} onChange={(e) => handleAccessibilityToggle('subscribeAnnouncements', e.target.checked)} />
+                                        <span>Subscribe to Job Seeker Announcements</span>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
                         </div>
                     </div>
                 );
@@ -769,100 +761,38 @@ const Dashboard = () => {
                 {toast.visible && (
                     <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
                 )}
-                <nav className={`dashboard-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-                    {user?.role === 'JobSeeker' ? (
-                        <>
-                            <div className="sidebar-section">
-                                <button
-                                    className="sidebar-header"
-                                    onClick={() => { setActiveSection('my-account'); navigate('/dashboard/my-account'); closeMobileMenu(); }}
-                                    aria-label="Go to My Account"
-                                >
-                                    <span>My Account</span>
-                                    <span
-                                        className="icon-button"
-                                        onClick={(e) => { e.stopPropagation(); toggleSection('my-account'); }}
-                                        aria-label={expandedSections['my-account'] ? 'Collapse My Account menu' : 'Expand My Account menu'}
-                                        role="button"
-                                        tabIndex={0}
-                                        onKeyDown={(e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); e.stopPropagation(); toggleSection('my-account'); } }}
-                                    >
-                                        {expandedSections['my-account'] ? <MdExpandLess /> : <MdExpandMore />}
-                                    </span>
-                                </button>
-                                {expandedSections['my-account'] && (
-                                    <div className="sidebar-items">
-                                        <button className={`sidebar-item ${activeSection === 'survey' ? 'active' : ''}`}
-                                            onClick={() => { setActiveSection('survey'); navigate('/dashboard/survey'); closeMobileMenu(); }}>Survey</button>
-                                        <button className={`sidebar-item ${activeSection === 'delete-account' ? 'active' : ''}`}
-                                            onClick={() => { setActiveSection('delete-account'); navigate('/dashboard/delete-account'); closeMobileMenu(); }}>Delete My Account</button>
-                                        <button className={`sidebar-item ${activeSection === 'edit-profile' ? 'active' : ''}`}
-                                            onClick={() => { setActiveSection('edit-profile'); navigate('/dashboard/edit-profile'); closeMobileMenu(); }}>Edit Profile & Resume</button>
-                                        <button className={`sidebar-item ${activeSection === 'view-profile' ? 'active' : ''}`}
-                                            onClick={() => { setActiveSection('view-profile'); navigate('/dashboard/view-profile'); closeMobileMenu(); }}>View My Profile</button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="sidebar-section">
-                                <button className="sidebar-header" onClick={() => toggleSection('registrations')}>
-                                    <span>My Current Registrations</span>
-                                    {expandedSections['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
-                                </button>
-                                {expandedSections['registrations'] && (
-                                    <div className="sidebar-items">
-                                        <button className="sidebar-item" onClick={closeMobileMenu}>ABILITY Job Fair - Testing with Friends Event</button>
-                                        <button className="sidebar-item" onClick={closeMobileMenu}>2 Test Event - ABILITY Job Fair</button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="sidebar-section">
-                                <button className="sidebar-header" onClick={() => toggleSection('upcoming-events')}>
-                                    <span>Upcoming Events</span>
-                                    {expandedSections['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
-                                </button>
-                                {expandedSections['upcoming-events'] && (
-                                    <div className="sidebar-items">
-                                        <button className="sidebar-item" onClick={closeMobileMenu}>Event Demo test</button>
-                                        <button className="sidebar-item" onClick={closeMobileMenu}>Demonstration</button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="sidebar-section">
-                                <button className="sidebar-item" onClick={closeMobileMenu}>Trouble Shooting</button>
-                                <button className="sidebar-item" onClick={closeMobileMenu}>Instructions</button>
-                            </div>
-                        </>
+                <AdminSidebar active={(
+                    user?.role === 'JobSeeker' ? (
+                        activeSection === 'survey' ? 'survey' :
+                            activeSection === 'delete-account' ? 'delete-account' :
+                                activeSection === 'edit-profile' ? 'edit-profile' :
+                                    activeSection === 'view-profile' ? 'view-profile' : 'my-account'
                     ) : (
-                        <AdminSidebar active={(
-                            activeSection === 'manage-booths' ? 'booths' :
+                        activeSection === 'manage-booths' ? 'booths' :
                             activeSection === 'branding' ? 'branding' :
-                            activeSection === 'jobseekers' ? 'jobseekers' :
-                            activeSection === 'analytics' ? 'analytics' :
-                            activeSection === 'users' ? 'users' : 'events'
-                        )} />
-                    )}
-                </nav>
+                                activeSection === 'jobseekers' ? 'jobseekers' :
+                                    activeSection === 'analytics' ? 'analytics' :
+                                        activeSection === 'users' ? 'users' : 'events'
+                    )
+                )} />
 
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
                     {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
                         <div className="dashboard-content">
                             <h2>Branding – Header Logo</h2>
-                            <div className="alert-box" style={{background:'#f3f4f6', borderColor:'#e5e7eb', color:'#111827'}}>
+                            <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>
                                 <p>Upload a PNG, SVG, or JPG. The logo displays in the top-left. Recommended height ~28-36px.</p>
                             </div>
-                            <div className="upload-card" style={{maxWidth: 520}}>
+                            <div className="upload-card" style={{ maxWidth: 520 }}>
                                 <h4>Current Logo</h4>
-                                <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
-                                    <img src={brandingLogo || DEFAULT_ICON} alt="Current header logo" style={{height:36, objectFit:'contain', border:'1px solid #e5e7eb', borderRadius:6, background:'#fff', padding:6}} />
-                                    <button className="dashboard-button" style={{width:'auto'}} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <img src={brandingLogo || DEFAULT_ICON} alt="Current header logo" style={{ height: 36, objectFit: 'contain', border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 6 }} />
+                                    <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
                                 </div>
-                                <div className="upload-actions" style={{marginTop:'1rem'}}>
-                                    <label className="dashboard-button" style={{width:'auto', cursor:'pointer'}}>
+                                <div className="upload-actions" style={{ marginTop: '1rem' }}>
+                                    <label className="dashboard-button" style={{ width: 'auto', cursor: 'pointer' }}>
                                         Choose Image
-                                        <input type="file" accept="image/*" onChange={(e)=> onPickLogoFile(e.target.files?.[0])} style={{display:'none'}} />
+                                        <input type="file" accept="image/*" onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
                                     </label>
                                 </div>
                             </div>
@@ -872,8 +802,8 @@ const Dashboard = () => {
                             <h2>Booth Management</h2>
                             {boothMode === 'list' ? (
                                 <>
-                                    <div className="upload-actions" style={{margin:'0 0 1rem 0', display:'flex', gap:'0.5rem'}}>
-                                        <button className="dashboard-button" style={{width:'auto'}} onClick={() => setBoothMode('create')}>Create Booth</button>
+                                    <div className="upload-actions" style={{ margin: '0 0 1rem 0', display: 'flex', gap: '0.5rem' }}>
+                                        <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('create')}>Create Booth</button>
                                     </div>
                                     <GridComponent
                                         dataSource={booths}
@@ -892,13 +822,13 @@ const Dashboard = () => {
                                         <ColumnsDirective>
                                             <ColumnDirective type='checkbox' width='40' />
                                             <ColumnDirective field='name' headerText='Booth Name' width='220' clipMode='EllipsisWithTooltip' />
-                                            <ColumnDirective headerText='Logo' width='110' template={(props)=> props.logo ? (<img src={props.logo} alt="logo" style={{height:28}}/>) : null} />
+                                            <ColumnDirective headerText='Logo' width='110' template={(props) => props.logo ? (<img src={props.logo} alt="logo" style={{ height: 28 }} />) : null} />
                                             <ColumnDirective field='recruitersCount' headerText='Recruiters' width='120' textAlign='Center' />
-                                            <ColumnDirective field='events' headerText='Event Title' width='200' template={(p)=> (p.events||[]).join(', ')} />
-                                            <ColumnDirective field='eventDate' headerText='Event Date' width='190' template={(p)=> p.eventDate ? new Date(p.eventDate).toLocaleString() : ''} />
+                                            <ColumnDirective field='events' headerText='Event Title' width='200' template={(p) => (p.events || []).join(', ')} />
+                                            <ColumnDirective field='eventDate' headerText='Event Date' width='190' template={(p) => p.eventDate ? new Date(p.eventDate).toLocaleString() : ''} />
                                             <ColumnDirective field='customInviteText' headerText='Custom URL' width='200' />
-                                            <ColumnDirective field='expireLinkTime' headerText='Expire Date' width='190' template={(p)=> p.expireLinkTime ? new Date(p.expireLinkTime).toLocaleString() : ''} />
-                                            <ColumnDirective headerText='Action' width='360' allowSorting={false} allowFiltering={false} template={(p)=> (
+                                            <ColumnDirective field='expireLinkTime' headerText='Expire Date' width='190' template={(p) => p.expireLinkTime ? new Date(p.expireLinkTime).toLocaleString() : ''} />
+                                            <ColumnDirective headerText='Action' width='360' allowSorting={false} allowFiltering={false} template={(p) => (
                                                 <div className='ajf-grid-actions'>
                                                     <button className='ajf-btn ajf-btn-dark'>Job Seekers Report</button>
                                                     <button className='ajf-btn ajf-btn-outline'>Placeholder</button>
@@ -911,92 +841,92 @@ const Dashboard = () => {
                                     </GridComponent>
                                 </>
                             ) : (
-                                <form className="account-form" onSubmit={handleCreateBooth} style={{maxWidth: 720}}>
-                                    <div className="upload-actions" style={{margin:'0 0 1rem 0'}}>
-                                        <button type="button" className="dashboard-button" style={{width:'auto'}} onClick={()=> setBoothMode('list')}>Back to List</button>
-                                    </div>
-                                <div className="form-group">
-                                    <label>Booth Name</label>
-                                    <input type="text" value={boothForm.boothName} onChange={(e)=> setBoothField('boothName', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Booth Logo</label>
-                                    <div className="upload-actions" style={{display:'flex', alignItems:'center', gap:'1rem'}}>
-                                        <label className="dashboard-button" style={{width:'auto', cursor:'pointer'}}>
-                                            Choose file
-                                            <input type="file" accept="image/*" onChange={(e)=> onPickBoothLogo(e.target.files?.[0])} style={{display:'none'}} />
-                                        </label>
-                                        {boothForm.boothLogo && <img src={boothForm.boothLogo} alt="Booth logo" style={{height:40, border:'1px solid #e5e7eb', borderRadius:6, background:'#fff', padding:4}} />}
-                                    </div>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Waiting Area Content</label>
-                                    <TabComponent heightAdjustMode="Auto">
-                                        <TabItemsDirective>
-                                            <TabItemDirective header={{ text: 'First Placeholder' }} content={() => (
-                                                <RTE value={boothForm.firstHtml} change={(e)=> setBoothField('firstHtml', e?.value)}>
-                                                    <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
-                                                </RTE>
-                                            )} />
-                                            <TabItemDirective header={{ text: 'Second Placeholder' }} content={() => (
-                                                <RTE value={boothForm.secondHtml} change={(e)=> setBoothField('secondHtml', e?.value)}>
-                                                    <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
-                                                </RTE>
-                                            )} />
-                                            <TabItemDirective header={{ text: 'Third Placeholder' }} content={() => (
-                                                <RTE value={boothForm.thirdHtml} change={(e)=> setBoothField('thirdHtml', e?.value)}>
-                                                    <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
-                                                </RTE>
-                                            )} />
-                                        </TabItemsDirective>
-                                    </TabComponent>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Recruiters Count*</label>
-                                    <input type="number" min="1" value={boothForm.recruitersCount} onChange={(e)=> setBoothField('recruitersCount', Number(e.target.value))} />
-                                    <span className="muted">Enter the maximum number of interviewers allowed for this booth.</span>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Event Date</label>
-                                        <DateTimePickerComponent value={boothForm.eventDate ? new Date(boothForm.eventDate) : null} change={(e)=> setBoothField('eventDate', e?.value ? new Date(e.value).toISOString() : '')} placeholder="Select date & time" />
+                                <form className="account-form" onSubmit={handleCreateBooth} style={{ maxWidth: 720 }}>
+                                    <div className="upload-actions" style={{ margin: '0 0 1rem 0' }}>
+                                        <button type="button" className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('list')}>Back to List</button>
                                     </div>
                                     <div className="form-group">
-                                        <label>Select Event</label>
-                                        <MultiSelectComponent className="ajf-input" placeholder="Choose your Event" value={boothForm.eventIds} change={(e)=> setBoothField('eventIds', e?.value || [])} dataSource={[{id:'evt_demo_1', text:'Event Demo test'},{id:'evt_demo_2', text:'Demonstration'}]} fields={{ value:'id', text:'text' }} mode="Box" />
+                                        <label>Booth Name</label>
+                                        <input type="text" value={boothForm.boothName} onChange={(e) => setBoothField('boothName', e.target.value)} />
                                     </div>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Custom invite text</label>
-                                    <input type="text" value={boothForm.customInviteText} onChange={(e)=> setBoothField('customInviteText', e.target.value)} />
-                                </div>
-
-                                <div className="form-row">
                                     <div className="form-group">
-                                        <label>Expire Link Time</label>
-                                        <DateTimePickerComponent value={boothForm.expireLinkTime ? new Date(boothForm.expireLinkTime) : null} enabled={boothForm.enableExpiry} change={(e)=> setBoothField('expireLinkTime', e?.value ? new Date(e.value).toISOString() : '')} placeholder="Select expiry" />
+                                        <label>Booth Logo</label>
+                                        <div className="upload-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <label className="dashboard-button" style={{ width: 'auto', cursor: 'pointer' }}>
+                                                Choose file
+                                                <input type="file" accept="image/*" onChange={(e) => onPickBoothLogo(e.target.files?.[0])} style={{ display: 'none' }} />
+                                            </label>
+                                            {boothForm.boothLogo && <img src={boothForm.boothLogo} alt="Booth logo" style={{ height: 40, border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 4 }} />}
+                                        </div>
                                     </div>
-                                    <div className="form-group" style={{display:'flex', alignItems:'center', gap:'0.5rem'}}>
-                                        <label style={{margin:0}}>Enable Expiry Link Time</label>
-                                        <input type="checkbox" checked={boothForm.enableExpiry} onChange={(e)=> setBoothField('enableExpiry', e.target.checked)} />
+
+                                    <div className="form-group">
+                                        <label>Waiting Area Content</label>
+                                        <TabComponent heightAdjustMode="Auto">
+                                            <TabItemsDirective>
+                                                <TabItemDirective header={{ text: 'First Placeholder' }} content={() => (
+                                                    <RTE value={boothForm.firstHtml} change={(e) => setBoothField('firstHtml', e?.value)}>
+                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                                                    </RTE>
+                                                )} />
+                                                <TabItemDirective header={{ text: 'Second Placeholder' }} content={() => (
+                                                    <RTE value={boothForm.secondHtml} change={(e) => setBoothField('secondHtml', e?.value)}>
+                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                                                    </RTE>
+                                                )} />
+                                                <TabItemDirective header={{ text: 'Third Placeholder' }} content={() => (
+                                                    <RTE value={boothForm.thirdHtml} change={(e) => setBoothField('thirdHtml', e?.value)}>
+                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                                                    </RTE>
+                                                )} />
+                                            </TabItemsDirective>
+                                        </TabComponent>
                                     </div>
-                                </div>
 
-                                <div className="form-group">
-                                    <label>Company Page</label>
-                                    <input type="url" placeholder="https://example.com" value={boothForm.companyPage} onChange={(e)=> setBoothField('companyPage', e.target.value)} />
-                                </div>
+                                    <div className="form-group">
+                                        <label>Recruiters Count*</label>
+                                        <input type="number" min="1" value={boothForm.recruitersCount} onChange={(e) => setBoothField('recruitersCount', Number(e.target.value))} />
+                                        <span className="muted">Enter the maximum number of interviewers allowed for this booth.</span>
+                                    </div>
 
-                                <div className="form-group">
-                                    <label>Job Seeker Queue Link</label>
-                                    <input type="text" value={boothQueueLink} readOnly />
-                                </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Event Date</label>
+                                            <DateTimePickerComponent value={boothForm.eventDate ? new Date(boothForm.eventDate) : null} change={(e) => setBoothField('eventDate', e?.value ? new Date(e.value).toISOString() : '')} placeholder="Select date & time" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Select Event</label>
+                                            <MultiSelectComponent className="ajf-input" placeholder="Choose your Event" value={boothForm.eventIds} change={(e) => setBoothField('eventIds', e?.value || [])} dataSource={[{ id: 'evt_demo_1', text: 'Event Demo test' }, { id: 'evt_demo_2', text: 'Demonstration' }]} fields={{ value: 'id', text: 'text' }} mode="Box" />
+                                        </div>
+                                    </div>
 
-                                <button type="submit" className="dashboard-button" disabled={boothSaving}>{boothSaving ? 'Saving…' : 'Create Booth'}</button>
+                                    <div className="form-group">
+                                        <label>Custom invite text</label>
+                                        <input type="text" value={boothForm.customInviteText} onChange={(e) => setBoothField('customInviteText', e.target.value)} />
+                                    </div>
+
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Expire Link Time</label>
+                                            <DateTimePickerComponent value={boothForm.expireLinkTime ? new Date(boothForm.expireLinkTime) : null} enabled={boothForm.enableExpiry} change={(e) => setBoothField('expireLinkTime', e?.value ? new Date(e.value).toISOString() : '')} placeholder="Select expiry" />
+                                        </div>
+                                        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <label style={{ margin: 0 }}>Enable Expiry Link Time</label>
+                                            <input type="checkbox" checked={boothForm.enableExpiry} onChange={(e) => setBoothField('enableExpiry', e.target.checked)} />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Company Page</label>
+                                        <input type="url" placeholder="https://example.com" value={boothForm.companyPage} onChange={(e) => setBoothField('companyPage', e.target.value)} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Job Seeker Queue Link</label>
+                                        <input type="text" value={boothQueueLink} readOnly />
+                                    </div>
+
+                                    <button type="submit" className="dashboard-button" disabled={boothSaving}>{boothSaving ? 'Saving…' : 'Create Booth'}</button>
                                 </form>
                             )}
                         </div>
@@ -1007,13 +937,7 @@ const Dashboard = () => {
             </div>
 
             {/* Mobile overlay */}
-            {isMobileMenuOpen && (
-                <div
-                    className="mobile-overlay"
-                    onClick={closeMobileMenu}
-                    aria-hidden="true"
-                />
-            )}
+            <div className="mobile-overlay" aria-hidden="true" />
         </div>
     );
 };

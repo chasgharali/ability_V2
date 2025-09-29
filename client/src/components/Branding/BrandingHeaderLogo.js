@@ -20,10 +20,10 @@ export default function BrandingHeaderLogo() {
       }
       setBrandingLogo(dataUrl || '');
       setMessage(dataUrl ? 'Header logo updated' : 'Header logo removed');
-      setTimeout(()=> setMessage(''), 2000);
+      setTimeout(() => setMessage(''), 2000);
     } catch (e) {
       setMessage('Failed to save header logo');
-      setTimeout(()=> setMessage(''), 2000);
+      setTimeout(() => setMessage(''), 2000);
     }
   };
 
@@ -47,26 +47,29 @@ export default function BrandingHeaderLogo() {
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
           <div className="dashboard-content">
             <h2>Branding – Header Logo</h2>
-            {message && <div className="alert-box" style={{background:'#f3f4f6', borderColor:'#e5e7eb', color:'#111827'}}>{message}</div>}
-            <div className="alert-box" style={{background:'#f3f4f6', borderColor:'#e5e7eb', color:'#111827'}}>
+            {message && <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>{message}</div>}
+            <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>
               <p>Upload a PNG, SVG, or JPG. The logo displays in the top-left. Recommended height ~28-36px.</p>
             </div>
-            <div className="upload-card" style={{maxWidth: 520}}>
+            <div className="upload-card" style={{ maxWidth: 520 }}>
               <h4>Current Logo</h4>
-              <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
-                <img src={brandingLogo || DEFAULT_ICON} alt="Current header logo" style={{height:36, objectFit:'contain', border:'1px solid #e5e7eb', borderRadius:6, background:'#fff', padding:6}} />
-                <button className="dashboard-button" style={{width:'auto'}} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <img src={brandingLogo || DEFAULT_ICON} alt="Current header logo" style={{ height: 36, objectFit: 'contain', border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 6 }} />
+                <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
               </div>
-              <div className="upload-actions" style={{marginTop:'1rem'}}>
-                <label className="dashboard-button" style={{width:'auto', cursor:'pointer'}}>
+              <div className="upload-actions" style={{ marginTop: '1rem' }}>
+                <label className="dashboard-button" style={{ width: 'auto', cursor: 'pointer' }}>
                   Choose Image
-                  <input type="file" accept="image/*" onChange={(e)=> onPickLogoFile(e.target.files?.[0])} style={{display:'none'}} />
+                  <input type="file" accept="image/*" onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
                 </label>
               </div>
             </div>
           </div>
         </main>
       </div>
+
+      {/* Mobile overlay */}
+      <div className="mobile-overlay" aria-hidden="true" />
     </div>
   );
 }

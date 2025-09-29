@@ -1,17 +1,26 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 
 export default function AdminHeader({ onLogout }) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const brandingLogo = useMemo(() => {
     try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
   }, []);
 
-  const handleLogout = () => {
-    if (onLogout) onLogout();
-    (logout || (()=>{}))();
+  const handleLogout = async () => {
+    try {
+      if (onLogout) onLogout();
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('sidebar-open');
+      }
+      await Promise.resolve(logout && logout());
+    } finally {
+      navigate('/login', { replace: true });
+    }
   };
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -37,6 +46,7 @@ export default function AdminHeader({ onLogout }) {
           <div className="connection-status">
             <MdRefresh className="refresh-icon" />
             <span className="connection-text">Connection: Active</span>
+            <span className="connection-text-mobile">Active</span>
             <div className="connection-dot"></div>
           </div>
           <button onClick={handleLogout} className="logout-button" aria-label="Logout">

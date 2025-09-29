@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -94,6 +95,12 @@ const AppLayout = ({ children }) => {
 };
 
 function App() {
+    const RequireAuth = ({ children }) => {
+        const { user, loading } = useAuth();
+        if (loading) return null; // could render a spinner if desired
+        if (!user) return <Navigate to="/login" replace />;
+        return children;
+    };
     return (
         <ThemeProvider>
             <AuthProvider>
@@ -106,14 +113,14 @@ function App() {
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
                                 <Route path="/email-verified" element={<VerifyEmailSuccess />} />
-                                <Route path="/dashboard" element={<Dashboard />} />
-                                <Route path="/dashboard/my-account" element={<Dashboard />} />
-                                <Route path="/dashboard/survey" element={<Dashboard />} />
-                                <Route path="/dashboard/edit-profile" element={<Dashboard />} />
-                                <Route path="/dashboard/view-profile" element={<Dashboard />} />
-                                <Route path="/dashboard/delete-account" element={<Dashboard />} />
-                                <Route path="/boothmanagement" element={<BoothManagement />} />
-                                <Route path="/branding" element={<BrandingHeaderLogo />} />
+                                <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                <Route path="/dashboard/my-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                <Route path="/dashboard/survey" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                <Route path="/dashboard/edit-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
+                                <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
                             </Routes>
                         </AppLayout>
                     </Router>
