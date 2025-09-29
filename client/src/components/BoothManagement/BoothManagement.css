@@ -12,7 +12,8 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-left: auto; /* push actions to the right */
+  margin-left: auto;
+  /* push actions to the right */
 }
 
 .bm-grid-wrap {
@@ -91,6 +92,12 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.ajf-grid-actions .ajf-btn {
+  height: 32px;
+  flex-shrink: 0;
 }
 
 .ajf-btn {
@@ -104,6 +111,13 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 32px;
+  box-sizing: border-box;
+  text-decoration: none;
 }
 
 .ajf-btn-dark {
@@ -130,6 +144,72 @@
   color: #fff;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Icon button styling */
+.ajf-btn svg {
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+/* Specific button styling for better visual hierarchy */
+.ajf-btn-dark svg {
+  color: #fff;
+}
+
+.ajf-btn-outline svg {
+  color: #111;
+}
+
+.ajf-btn-outline:hover svg {
+  color: #fff;
+}
+
+/* Ensure link buttons have same height and behavior as button elements */
+.ajf-btn[href] {
+  height: 32px;
+  line-height: 1;
+  vertical-align: top;
+}
+
+.ajf-btn[href]:hover {
+  text-decoration: none;
+}
+
+/* Edit button - special styling */
+.ajf-btn-dark:has(svg) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.ajf-btn-dark:has(svg):hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+/* Delete button - special styling */
+.ajf-btn-outline:has(svg) {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.ajf-btn-outline:has(svg):hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+/* Company Page column styling */
+.ajf-grid-actions .ajf-btn {
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* Company Page button in its own column */
+.e-grid .e-row .e-rowcell .ajf-btn {
+  width: auto;
+  min-width: 120px;
+  justify-content: center;
 }
 
 /* Form styling for custom components */

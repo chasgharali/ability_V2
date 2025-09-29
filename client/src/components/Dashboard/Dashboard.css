@@ -269,17 +269,34 @@
 /* Action buttons used inside grid */
 .ajf-grid-actions {
     display: flex;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
 }
 
 .ajf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 12px;
+    gap: 6px;
     font-size: 12px;
-    line-height: 1;
-    padding: 8px 10px;
+    line-height: 1; /* neutral, we'll center with flex */
+    font-weight: 500;
     border-radius: 6px;
     border: 1px solid #111;
+    background: #fff;
+    color: #111;
     cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    text-decoration: none; /* normalize <a> to look like button */
+    box-sizing: border-box; /* keep height consistent across elements */
+    -webkit-appearance: none;
+    appearance: none;
 }
+
+.ajf-btn svg { width: 16px; height: 16px; }
 
 .ajf-btn-dark {
     background: #111;
@@ -292,7 +309,7 @@
 }
 
 .ajf-btn-outline {
-    background: transparent;
+    background: #fff;
     color: #111;
     border-color: #111;
 }

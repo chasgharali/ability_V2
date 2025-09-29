@@ -9,6 +9,7 @@ import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections } from '../../services/booths';
 import { uploadBoothLogoToS3 } from '../../services/uploads';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
+import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
 export default function BoothManagement() {
   const navigate = useNavigate();
@@ -114,14 +115,43 @@ export default function BoothManagement() {
       render: (v) => v ?? 0
     },
     {
-      key: 'customUrl',
-      title: 'Custom URL',
-      render: (v) => v ? <a href={v} target="_blank" rel="noreferrer">{v}</a> : 'Not set'
+      key: 'customInviteText',
+      title: 'Custom Invite Text',
+      render: (v, row) => {
+        if (row.customInviteSlug) {
+          return <span>{row.customInviteSlug}</span>;
+        }
+        return 'Not set';
+      }
     },
     {
       key: 'expireLinkTime',
       title: 'Expire Date',
-      render: (v) => v ? new Date(v).toLocaleString() : 'No expiry'
+      render: (v) => {
+        if (!v) return 'No expiry';
+        try {
+          const date = new Date(v);
+          if (isNaN(date.getTime())) return 'Invalid date';
+          return date.toLocaleString();
+        } catch (e) {
+          return 'Invalid date';
+        }
+      }
+    },
+    {
+      key: 'companyPage',
+      title: 'Company Page',
+      render: (value, row) => {
+        if (row.companyPage) {
+          return (
+            <a className="ajf-btn ajf-btn-outline" href={row.companyPage} target="_blank" rel="noreferrer">
+              <MdBusiness style={{ marginRight: '4px' }} />
+              Company Page
+            </a>
+          );
+        }
+        return <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not set</span>;
+      }
     },
     {
       key: 'actions',
@@ -130,12 +160,18 @@ export default function BoothManagement() {
         <div className="ajf-grid-actions">
           <button className="ajf-btn ajf-btn-dark">Job Seekers Report</button>
           <button className="ajf-btn ajf-btn-outline" onClick={() => setPreviewBooth(row)}>Placeholder</button>
-          <button className="ajf-btn ajf-btn-dark" onClick={() => copyInvite(row)}>Invite Link</button>
-          <button className="ajf-btn ajf-btn-dark" onClick={() => startEdit(row)}>Edit</button>
-          {row.companyPage ? (
-            <a className="ajf-btn ajf-btn-outline" href={row.companyPage} target="_blank" rel="noreferrer">Company Page</a>
-          ) : null}
-          <button className="ajf-btn ajf-btn-outline" onClick={() => handleDelete(row)}>Delete</button>
+          <button className="ajf-btn ajf-btn-dark" onClick={() => copyInvite(row)}>
+            <MdLink style={{ marginRight: '4px' }} />
+            Invite Link
+          </button>
+          <button className="ajf-btn ajf-btn-dark" onClick={() => startEdit(row)}>
+            <MdEdit style={{ marginRight: '4px' }} />
+            Edit
+          </button>
+          <button className="ajf-btn ajf-btn-outline" onClick={() => handleDelete(row)}>
+            <MdDelete style={{ marginRight: '4px' }} />
+            Delete
+          </button>
         </div>
       )
     }
@@ -167,7 +203,7 @@ export default function BoothManagement() {
         companyPage: boothForm.companyPage || undefined,
         recruitersCount: boothForm.recruitersCount || 1,
         expireLinkTime: boothForm.expireLinkTime || undefined,
-        customInviteSlug: sanitizeInvite(boothForm.customInviteText || '' ) || undefined,
+        customInviteSlug: sanitizeInvite(boothForm.customInviteText || '') || undefined,
         richSections: [
           { title: 'First Placeholder', contentHtml: boothForm.firstHtml || '' },
           { title: 'Second Placeholder', contentHtml: boothForm.secondHtml || '' },
@@ -463,7 +499,7 @@ export default function BoothManagement() {
               <button className="ajf-btn ajf-btn-outline" onClick={() => setPreviewBooth(null)}>Close</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-              {[0,1,2].map(i => (
+              {[0, 1, 2].map(i => (
                 <div key={i} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, minHeight: 200, overflow: 'auto' }}>
                   <div dangerouslySetInnerHTML={{ __html: previewBooth.richSections?.[i]?.contentHtml || '<em>No content</em>' }} />
                 </div>
