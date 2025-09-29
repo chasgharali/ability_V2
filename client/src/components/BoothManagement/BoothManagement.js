@@ -1,13 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
-import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import DataGrid from '../UI/DataGrid';
+import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
-import './BoothManagement.css';
 
 export default function BoothManagement() {
   const navigate = useNavigate();
@@ -35,6 +33,63 @@ export default function BoothManagement() {
   ]);
 
   const boothQueueLink = `https://abilityjobfair.com/queue/${(boothForm.boothName || 'new-booth').toLowerCase().replace(/\s+/g, '-')}`;
+
+  // Event options for MultiSelect
+  const eventOptions = [
+    { value: 'evt_demo_1', label: 'Event Demo test' },
+    { value: 'evt_demo_2', label: 'Demonstration' }
+  ];
+
+  // Data grid columns configuration
+  const gridColumns = [
+    {
+      key: 'name',
+      title: 'Booth Name',
+      render: (value) => value || 'Unnamed Booth'
+    },
+    {
+      key: 'logo',
+      title: 'Logo',
+      render: (value) => value ? <img src={value} alt="Booth logo" style={{ height: 28, borderRadius: 4 }} /> : null
+    },
+    {
+      key: 'recruitersCount',
+      title: 'Recruiters',
+      render: (value) => value || 0
+    },
+    {
+      key: 'events',
+      title: 'Event Title',
+      render: (value) => (value || []).join(', ') || 'No events'
+    },
+    {
+      key: 'eventDate',
+      title: 'Event Date',
+      render: (value) => value ? new Date(value).toLocaleString() : 'Not set'
+    },
+    {
+      key: 'customInviteText',
+      title: 'Custom URL',
+      render: (value) => value || 'Not set'
+    },
+    {
+      key: 'expireLinkTime',
+      title: 'Expire Date',
+      render: (value) => value ? new Date(value).toLocaleString() : 'No expiry'
+    },
+    {
+      key: 'actions',
+      title: 'Actions',
+      render: (value, row) => (
+        <div className="ajf-grid-actions">
+          <button className="ajf-btn ajf-btn-dark">Job Seekers Report</button>
+          <button className="ajf-btn ajf-btn-outline">Placeholder</button>
+          <button className="ajf-btn ajf-btn-dark">Invite Link</button>
+          <button className="ajf-btn ajf-btn-dark">Edit</button>
+        </div>
+      )
+    }
+  ];
 
   const setBoothField = (k, v) => setBoothForm(prev => ({ ...prev, [k]: v }));
   const onPickBoothLogo = (file) => {
@@ -64,58 +119,40 @@ export default function BoothManagement() {
           <div className="dashboard-content">
             <div className="bm-header">
               <h2>Booth Management</h2>
-              {boothMode === 'list' ? (
-                <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('create')}>Create Booth</button>
-              ) : (
-                <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('list')}>Back to List</button>
-              )}
+              <div className="bm-header-actions">
+                {boothMode === 'list' ? (
+                  <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('create')}>Create Booth</button>
+                ) : (
+                  <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('list')}>Back to List</button>
+                )}
+              </div>
             </div>
 
             {boothMode === 'list' ? (
               <div className="bm-grid-wrap">
-                <GridComponent
-                  dataSource={booths}
-                  allowPaging={true}
-                  pageSettings={{ pageSize: 10 }}
-                  allowSorting={true}
-                  allowFiltering={true}
-                  filterSettings={{ type: 'Menu' }}
-                  showColumnMenu={true}
-                  showColumnChooser={true}
-                  allowResizing={true}
-                  allowReordering={true}
-                  toolbar={['Search', 'ColumnChooser']}
-                  selectionSettings={{ type: 'Multiple' }}
-                >
-                  <ColumnsDirective>
-                    <ColumnDirective type='checkbox' width='40' />
-                    <ColumnDirective field='name' headerText='Booth Name' width='220' clipMode='EllipsisWithTooltip' />
-                    <ColumnDirective headerText='Logo' width='110' template={(props) => props.logo ? (<img src={props.logo} alt="logo" style={{ height: 28 }} />) : null} />
-                    <ColumnDirective field='recruitersCount' headerText='Recruiters' width='120' textAlign='Center' />
-                    <ColumnDirective field='events' headerText='Event Title' width='200' template={(p) => (p.events || []).join(', ')} />
-                    <ColumnDirective field='eventDate' headerText='Event Date' width='190' template={(p) => p.eventDate ? new Date(p.eventDate).toLocaleString() : ''} />
-                    <ColumnDirective field='customInviteText' headerText='Custom URL' width='200' />
-                    <ColumnDirective field='expireLinkTime' headerText='Expire Date' width='190' template={(p) => p.expireLinkTime ? new Date(p.expireLinkTime).toLocaleString() : ''} />
-                    <ColumnDirective headerText='Action' width='360' allowSorting={false} allowFiltering={false} template={(p) => (
-                      <div className='ajf-grid-actions'>
-                        <button className='ajf-btn ajf-btn-dark'>Job Seekers Report</button>
-                        <button className='ajf-btn ajf-btn-outline'>Placeholder</button>
-                        <button className='ajf-btn ajf-btn-dark'>Invite Link</button>
-                        <button className='ajf-btn ajf-btn-dark'>Edit</button>
-                      </div>
-                    )} />
-                  </ColumnsDirective>
-                  <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
-                </GridComponent>
+                <DataGrid
+                  data={booths}
+                  columns={gridColumns}
+                  selectable={true}
+                  searchable={true}
+                  sortable={true}
+                  onRowSelect={(selectedRows) => console.log('Selected rows:', selectedRows)}
+                  onRowClick={(row) => console.log('Row clicked:', row)}
+                  aria-label="Booth management table"
+                />
               </div>
             ) : (
               <form className="account-form" onSubmit={handleCreateBooth} style={{ maxWidth: 720 }}>
+                <Input
+                  label="Booth Name"
+                  value={boothForm.boothName}
+                  onChange={(e) => setBoothField('boothName', e.target.value)}
+                  required
+                  placeholder="Enter booth name"
+                />
+
                 <div className="form-group">
-                  <label>Booth Name</label>
-                  <input type="text" value={boothForm.boothName} onChange={(e) => setBoothField('boothName', e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label>Booth Logo</label>
+                  <label className="form-label">Booth Logo</label>
                   <div className="upload-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <label className="dashboard-button" style={{ width: 'auto', cursor: 'pointer' }}>
                       Choose file
@@ -126,23 +163,35 @@ export default function BoothManagement() {
                 </div>
 
                 <div className="form-group">
-                  <label>Waiting Area Content</label>
+                  <label className="form-label">Waiting Area Content</label>
                   <div className="bm-rte-tabs">
                     <div className="bm-rte-block">
                       <h4>First Placeholder</h4>
-                      <RTE value={boothForm.firstHtml} change={(e) => setBoothField('firstHtml', e?.value)}>
+                      <RTE
+                        value={boothForm.firstHtml}
+                        change={(e) => setBoothField('firstHtml', e?.value || '')}
+                        placeholder="Enter content for first placeholder..."
+                      >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
                       </RTE>
                     </div>
                     <div className="bm-rte-block">
                       <h4>Second Placeholder</h4>
-                      <RTE value={boothForm.secondHtml} change={(e) => setBoothField('secondHtml', e?.value)}>
+                      <RTE
+                        value={boothForm.secondHtml}
+                        change={(e) => setBoothField('secondHtml', e?.value || '')}
+                        placeholder="Enter content for second placeholder..."
+                      >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
                       </RTE>
                     </div>
                     <div className="bm-rte-block">
                       <h4>Third Placeholder</h4>
-                      <RTE value={boothForm.thirdHtml} change={(e) => setBoothField('thirdHtml', e?.value)}>
+                      <RTE
+                        value={boothForm.thirdHtml}
+                        change={(e) => setBoothField('thirdHtml', e?.value || '')}
+                        placeholder="Enter content for third placeholder..."
+                      >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
                       </RTE>
                     </div>
@@ -150,49 +199,75 @@ export default function BoothManagement() {
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group">
-                    <label>Event Date</label>
-                    <DateTimePickerComponent value={boothForm.eventDate ? new Date(boothForm.eventDate) : null} change={(e) => setBoothField('eventDate', e?.value ? new Date(e.value).toISOString() : '')} placeholder="Select date & time" />
-                  </div>
-                  <div className="form-group">
-                    <label>Select Event</label>
-                    <MultiSelectComponent className="ajf-input" placeholder="Choose your Event" value={boothForm.eventIds} change={(e) => setBoothField('eventIds', e?.value || [])} dataSource={[{ id: 'evt_demo_1', text: 'Event Demo test' }, { id: 'evt_demo_2', text: 'Demonstration' }]} fields={{ value: 'id', text: 'text' }} mode="Box" />
-                  </div>
+                  <DateTimePicker
+                    label="Event Date"
+                    value={boothForm.eventDate}
+                    onChange={(e) => setBoothField('eventDate', e.target.value)}
+                    placeholder="Select date & time"
+                    name="eventDate"
+                  />
+                  <MultiSelect
+                    label="Select Event"
+                    value={boothForm.eventIds}
+                    onChange={(e) => setBoothField('eventIds', e.target.value)}
+                    options={eventOptions}
+                    placeholder="Choose your Event"
+                    name="eventIds"
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label>Recruiters Count*</label>
-                  <input type="number" min="1" value={boothForm.recruitersCount} onChange={(e) => setBoothField('recruitersCount', Number(e.target.value))} />
-                  <span className="muted">Enter the maximum number of interviewers allowed for this booth.</span>
-                </div>
+                <Input
+                  label="Recruiters Count"
+                  type="number"
+                  min="1"
+                  value={boothForm.recruitersCount}
+                  onChange={(e) => setBoothField('recruitersCount', Number(e.target.value))}
+                  required
+                  placeholder="Enter number of recruiters"
+                />
 
-                <div className="form-group">
-                  <label>Custom invite text</label>
-                  <input type="text" value={boothForm.customInviteText} onChange={(e) => setBoothField('customInviteText', e.target.value)} />
-                </div>
+                <Input
+                  label="Custom invite text"
+                  value={boothForm.customInviteText}
+                  onChange={(e) => setBoothField('customInviteText', e.target.value)}
+                  placeholder="Enter custom invite text"
+                />
 
                 <div className="form-row">
-                  <div className="form-group">
-                    <label>Expire Link Time</label>
-                    <DateTimePickerComponent value={boothForm.expireLinkTime ? new Date(boothForm.expireLinkTime) : null} enabled={boothForm.enableExpiry} change={(e) => setBoothField('expireLinkTime', e?.value ? new Date(e.value).toISOString() : '')} placeholder="Select expiry" />
-                  </div>
-                  <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label style={{ margin: 0 }}>Enable Expiry Link Time</label>
-                    <input type="checkbox" checked={boothForm.enableExpiry} onChange={(e) => setBoothField('enableExpiry', e.target.checked)} />
-                  </div>
+                  <DateTimePicker
+                    label="Expire Link Time"
+                    value={boothForm.expireLinkTime}
+                    onChange={(e) => setBoothField('expireLinkTime', e.target.value)}
+                    placeholder="Select expiry"
+                    disabled={!boothForm.enableExpiry}
+                    name="expireLinkTime"
+                  />
+                  <Checkbox
+                    label="Enable Expiry Link Time"
+                    checked={boothForm.enableExpiry}
+                    onChange={(e) => setBoothField('enableExpiry', e.target.checked)}
+                    name="enableExpiry"
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label>Company Page</label>
-                  <input type="url" placeholder="https://example.com" value={boothForm.companyPage} onChange={(e) => setBoothField('companyPage', e.target.value)} />
-                </div>
+                <Input
+                  label="Company Page"
+                  type="url"
+                  value={boothForm.companyPage}
+                  onChange={(e) => setBoothField('companyPage', e.target.value)}
+                  placeholder="https://example.com"
+                />
 
-                <div className="form-group">
-                  <label>Job Seeker Queue Link</label>
-                  <input type="text" value={boothQueueLink} readOnly />
-                </div>
+                <Input
+                  label="Job Seeker Queue Link"
+                  value={boothQueueLink}
+                  readOnly
+                  placeholder="Auto-generated link"
+                />
 
-                <button type="submit" className="dashboard-button" disabled={boothSaving}>{boothSaving ? 'Saving…' : 'Create Booth'}</button>
+                <button type="submit" className="dashboard-button" disabled={boothSaving}>
+                  {boothSaving ? 'Saving…' : 'Create Booth'}
+                </button>
               </form>
             )}
           </div>

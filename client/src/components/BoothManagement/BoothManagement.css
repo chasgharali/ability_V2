@@ -1,65 +1,261 @@
+/* Booth Management - Custom Components Only */
+
 /* Booth Management styles */
 .bm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 1.5rem;
 }
+
+.bm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto; /* push actions to the right */
+}
+
 .bm-grid-wrap {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Syncfusion Grid header spacing and look */
-.e-grid .e-columnheader .e-headercell {
-  padding: 10px 12px;
+/* Rich Text Editor Tabs */
+.bm-rte-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
-.e-grid .e-headercell .e-headertext {
+
+.bm-rte-block h4 {
+  font-size: 1rem;
   font-weight: 600;
   color: #111827;
-}
-.e-grid .e-gridheader {
-  background: #fafafa;
+  margin-bottom: 0.75rem;
 }
 
-/* Column menu/popup alignment tweaks */
-.e-grid .e-columnmenu {
-  margin-left: 4px;
-}
-.e-grid .e-filter-popup .e-dlg-content {
-  padding: 10px 12px;
-}
-.e-grid .e-filter-popup .e-footer-content {
-  padding: 6px 12px 12px 12px;
+/* Syncfusion Rich Text Editor Styling */
+.e-richtexteditor {
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  overflow: hidden !important;
 }
 
-/* Action buttons (black theme) */
-.ajf-grid-actions { display: flex; gap: 6px; }
+.e-richtexteditor .e-toolbar {
+  background: #f8f9fa !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.e-richtexteditor .e-toolbar .e-toolbar-items .e-toolbar-item .e-btn {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #374151 !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  margin: 0 !important;
+  transition: all 0.15s ease !important;
+  font-size: 14px !important;
+}
+
+.e-richtexteditor .e-toolbar .e-toolbar-items .e-toolbar-item .e-btn:hover {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+  transform: translateY(-1px) !important;
+}
+
+.e-richtexteditor .e-toolbar .e-toolbar-items .e-toolbar-item .e-btn.e-active {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+}
+
+.e-richtexteditor .e-content {
+  background: #ffffff !important;
+  color: #374151 !important;
+  padding: 16px !important;
+  min-height: 150px !important;
+  line-height: 1.6 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Action buttons - Modern professional styling */
+.ajf-grid-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .ajf-btn {
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid #111;
   cursor: pointer;
+  transition: all 0.15s ease;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
-.ajf-btn-dark { background: #111; color: #fff; border-color: #111; }
-.ajf-btn-dark:hover { background: #000; }
-.ajf-btn-outline { background: transparent; color: #111; border-color: #111; }
-.ajf-btn-outline:hover { background: #111; color: #fff; }
 
-/* Pager selected page black */
-.e-grid .e-pager .e-numericitem.e-active,
-.e-pager .e-numericitem.e-active {
-  background-color: #111 !important;
-  border-color: #111 !important;
-  color: #fff !important;
+.ajf-btn-dark {
+  background: #111;
+  color: #fff;
+  border-color: #111;
 }
-.e-grid .e-pager .e-numericitem.e-active:hover,
-.e-pager .e-numericitem.e-active:hover {
-  background-color: #000 !important;
-  border-color: #000 !important;
-  color: #fff !important;
+
+.ajf-btn-dark:hover {
+  background: #000;
+  border-color: #000;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.ajf-btn-outline {
+  background: transparent;
+  color: #111;
+  border-color: #111;
+}
+
+.ajf-btn-outline:hover {
+  background: #111;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Form styling for custom components */
+.account-form {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #374151;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+  border-color: #000000;
+}
+
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-group .muted {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Upload actions */
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upload-actions img {
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  padding: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .bm-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .ajf-grid-actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ajf-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+
+  .bm-grid-wrap,
+  .account-form {
+    border-width: 2px;
+  }
+
+  .ajf-btn {
+    border-width: 2px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .ajf-btn {
+    transition: none;
+  }
+
+  .ajf-btn:hover {
+    transform: none;
+  }
 }
