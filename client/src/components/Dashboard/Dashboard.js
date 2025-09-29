@@ -11,6 +11,8 @@ import './Dashboard.css';
 import SurveyForm from './SurveyForm';
 import EditProfileResume from './EditProfileResume';
 import ViewProfile from './ViewProfile';
+import AdminHeader from '../Layout/AdminHeader';
+import AdminSidebar from '../Layout/AdminSidebar';
 
 const Dashboard = () => {
     const { user, logout, loading, updateProfile } = useAuth();
@@ -761,31 +763,7 @@ const Dashboard = () => {
             >
                 Skip to main content
             </a>
-            <header className="dashboard-header">
-                <div className="dashboard-header-content">
-                    <div className="header-left">
-                        <button
-                            className="mobile-menu-toggle"
-                            onClick={toggleMobileMenu}
-                            aria-label="Toggle navigation menu"
-                        >
-                            {isMobileMenuOpen ? <MdClose /> : <MdMenu />}
-                        </button>
-                        <img src={brandingLogo || DEFAULT_ICON} alt="Site logo" className="header-logo" />
-                    </div>
-                    <div className="user-info">
-                        <span className="user-name">{user?.name || 'User'} / {getRoleDisplayName(user?.role || 'Guest')}</span>
-                        <div className="connection-status">
-                            <MdRefresh className="refresh-icon" />
-                            <span className="connection-text">Connection: Active</span>
-                            <div className="connection-dot"></div>
-                        </div>
-                        <button onClick={handleLogout} className="logout-button">
-                            <MdLogout />
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <AdminHeader />
 
             <div className="dashboard-layout">
                 {toast.visible && (
@@ -858,34 +836,13 @@ const Dashboard = () => {
                             </div>
                         </>
                     ) : (
-                        <>
-                            <div className="sidebar-section">
-                                <button className="sidebar-header" onClick={() => { setActiveSection('admin'); closeMobileMenu(); }}>
-                                    <span>Administration</span>
-                                </button>
-                                <div className="sidebar-items">
-                                    <button className="sidebar-item" onClick={() => { setActiveSection('manage-events'); closeMobileMenu(); }}>Event Management</button>
-                                    <button className="sidebar-item" onClick={() => { navigate('/boothmanagement'); closeMobileMenu(); }}>Booth Management</button>
-                                    <button className="sidebar-item" onClick={() => { setActiveSection('jobseekers'); closeMobileMenu(); }}>Job Seeker Management</button>
-                                    <button className="sidebar-item" onClick={() => { setActiveSection('branding'); closeMobileMenu(); }}>Branding – Header Logo</button>
-                                </div>
-                            </div>
-
-                            <div className="sidebar-section">
-                                <button className="sidebar-header" onClick={() => { setActiveSection('tools'); closeMobileMenu(); }}>
-                                    <span>Tools</span>
-                                </button>
-                                <div className="sidebar-items">
-                                    <button className="sidebar-item" onClick={() => { setActiveSection('users'); closeMobileMenu(); }}>User Management</button>
-                                    <button className="sidebar-item" onClick={() => { setActiveSection('analytics'); closeMobileMenu(); }}>Analytics</button>
-                                </div>
-                            </div>
-
-                            <div className="sidebar-section">
-                                <button className="sidebar-item" onClick={closeMobileMenu}>Trouble Shooting</button>
-                                <button className="sidebar-item" onClick={closeMobileMenu}>Instructions</button>
-                            </div>
-                        </>
+                        <AdminSidebar active={(
+                            activeSection === 'manage-booths' ? 'booths' :
+                            activeSection === 'branding' ? 'branding' :
+                            activeSection === 'jobseekers' ? 'jobseekers' :
+                            activeSection === 'analytics' ? 'analytics' :
+                            activeSection === 'users' ? 'users' : 'events'
+                        )} />
                     )}
                 </nav>
 

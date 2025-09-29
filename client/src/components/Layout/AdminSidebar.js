@@ -12,7 +12,7 @@ export default function AdminSidebar({ active = 'booths' }) {
   return (
     <nav className="dashboard-sidebar">
       <div className="sidebar-section">
-        <button className="sidebar-header" onClick={() => setExpanded(s=>({...s, admin:!s.admin}))}>
+        <button className="sidebar-header" onClick={() => setExpanded(s=>({...s, admin:!s.admin}))} aria-expanded={expanded.admin}>
           <span>Administration</span>
         </button>
         {expanded.admin && (
@@ -25,7 +25,7 @@ export default function AdminSidebar({ active = 'booths' }) {
       </div>
 
       <div className="sidebar-section">
-        <button className="sidebar-header" onClick={() => setExpanded(s=>({...s, tools:!s.tools}))}><span>Tools</span></button>
+        <button className="sidebar-header" onClick={() => setExpanded(s=>({...s, tools:!s.tools}))} aria-expanded={expanded.tools}><span>Tools</span></button>
         {expanded.tools && (
           <div className="sidebar-items">
             <button className={itemClass('users')} onClick={() => navigate('/dashboard')}>User Management</button>

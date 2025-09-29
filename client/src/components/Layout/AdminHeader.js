@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { MdLogout, MdRefresh } from 'react-icons/md';
+import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 
 export default function AdminHeader({ onLogout }) {
@@ -14,10 +14,22 @@ export default function AdminHeader({ onLogout }) {
     (logout || (()=>{}))();
   };
 
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const toggleMobile = () => {
+    const next = !mobileOpen;
+    setMobileOpen(next);
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('sidebar-open', next);
+    }
+  };
+
   return (
     <header className="dashboard-header">
       <div className="dashboard-header-content">
         <div className="header-left">
+          <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
+            {mobileOpen ? <MdClose /> : <MdMenu />}
+          </button>
           <img src={brandingLogo} alt="Site logo" className="header-logo" />
         </div>
         <div className="user-info">
