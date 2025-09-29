@@ -1,6 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+// Syncfusion styles
+import '@syncfusion/ej2-base/styles/material.css';
+import '@syncfusion/ej2-react-richtexteditor/styles/material.css';
+import '@syncfusion/ej2-react-dropdowns/styles/material.css';
+import '@syncfusion/ej2-react-calendars/styles/material.css';
+import '@syncfusion/ej2-react-navigations/styles/material.css';
+import '@syncfusion/ej2-react-grids/styles/material.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 

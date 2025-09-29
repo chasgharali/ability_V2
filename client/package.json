@@ -6,7 +6,11 @@
     "dependencies": {
         "@adobe/react-spectrum": "^3.30.0",
         "@syncfusion/ej2-base": "^31.1.20",
+        "@syncfusion/ej2-react-calendars": "^31.1.21",
         "@syncfusion/ej2-react-dropdowns": "^31.1.20",
+        "@syncfusion/ej2-react-grids": "^31.1.21",
+        "@syncfusion/ej2-react-navigations": "^31.1.20",
+        "@syncfusion/ej2-react-richtexteditor": "^31.1.21",
         "@testing-library/jest-dom": "^5.17.0",
         "@testing-library/react": "^13.4.0",
         "@testing-library/user-event": "^14.5.1",

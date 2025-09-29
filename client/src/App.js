@@ -10,6 +10,8 @@ import RegisterPage from './components/Auth/RegisterPage';
 import VerifyEmailSent from './components/Auth/VerifyEmailSent';
 import VerifyEmailSuccess from './components/Auth/VerifyEmailSuccess';
 import Dashboard from './components/Dashboard/Dashboard';
+import BoothManagement from './components/BoothManagement/BoothManagement';
+import BrandingHeaderLogo from './components/Branding/BrandingHeaderLogo';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
 
@@ -110,6 +112,8 @@ function App() {
                                 <Route path="/dashboard/edit-profile" element={<Dashboard />} />
                                 <Route path="/dashboard/view-profile" element={<Dashboard />} />
                                 <Route path="/dashboard/delete-account" element={<Dashboard />} />
+                                <Route path="/boothmanagement" element={<BoothManagement />} />
+                                <Route path="/branding" element={<BrandingHeaderLogo />} />
                             </Routes>
                         </AppLayout>
                     </Router>

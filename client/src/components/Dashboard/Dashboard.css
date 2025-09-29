@@ -195,12 +195,26 @@
 }
 
 .dashboard-sidebar {
-    width: 280px;
-    background: #2c2c2c;
+    width: 260px;
+    background: #1f2937;
     color: #ffffff;
     padding: 1rem 0;
     overflow-y: auto;
     transition: transform 0.3s ease;
+}
+
+/* ---- Syncfusion Grid pagination overrides (selected page to black) ---- */
+.e-grid .e-pager .e-numericitem.e-active,
+.e-pager .e-numericitem.e-active {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+}
+.e-grid .e-pager .e-numericitem.e-active:hover,
+.e-pager .e-numericitem.e-active:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: #ffffff !important;
 }
 
 .mobile-overlay {
@@ -213,6 +227,21 @@
     background: rgba(0, 0, 0, 0.5);
     z-index: 998;
 }
+
+/* Action buttons used inside grid */
+.ajf-grid-actions { display: flex; gap: 6px; }
+.ajf-btn {
+  font-size: 12px;
+  line-height: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #111;
+  cursor: pointer;
+}
+.ajf-btn-dark { background: #111; color: #fff; border-color: #111; }
+.ajf-btn-dark:hover { background: #000; }
+.ajf-btn-outline { background: transparent; color: #111; border-color: #111; }
+.ajf-btn-outline:hover { background: #111; color: #fff; }
 
 .sidebar-section {
     margin-bottom: 1rem;
