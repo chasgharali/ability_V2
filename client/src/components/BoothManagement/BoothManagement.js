@@ -49,6 +49,20 @@ export default function BoothManagement() {
     ? window.location.origin
     : 'https://abilityjobfair.com';
 
+  // RichTextEditor toolbar settings: MultiRow with floating toolbar and comprehensive items
+  const rteToolbar = useMemo(() => ({
+    type: 'MultiRow',
+    enableFloating: true,
+    items: [
+      'Bold', 'Italic', 'Underline', 'StrikeThrough',
+      'FontName', 'FontSize', 'FontColor', 'BackgroundColor',
+      'LowerCase', 'UpperCase', 'Formats',
+      'Alignments', 'OrderedList', 'UnorderedList', 'Outdent', 'Indent',
+      'CreateLink', 'Image',
+      'ClearFormat', 'Print', 'SourceCode', 'FullScreen', 'Undo', 'Redo'
+    ]
+  }), []);
+
   const slugify = (s = '') => {
     const slug = s
       .toString()
@@ -500,6 +514,7 @@ export default function BoothManagement() {
                       <RTE
                         value={boothForm.firstHtml}
                         change={(e) => setBoothField('firstHtml', e?.value || '')}
+                        toolbarSettings={rteToolbar}
                         placeholder="Enter content for first placeholder..."
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
@@ -510,6 +525,7 @@ export default function BoothManagement() {
                       <RTE
                         value={boothForm.secondHtml}
                         change={(e) => setBoothField('secondHtml', e?.value || '')}
+                        toolbarSettings={rteToolbar}
                         placeholder="Enter content for second placeholder..."
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
@@ -520,6 +536,7 @@ export default function BoothManagement() {
                       <RTE
                         value={boothForm.thirdHtml}
                         change={(e) => setBoothField('thirdHtml', e?.value || '')}
+                        toolbarSettings={rteToolbar}
                         placeholder="Enter content for third placeholder..."
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
