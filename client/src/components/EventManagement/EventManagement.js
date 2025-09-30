@@ -32,6 +32,11 @@ export default function EventManagement() {
     const [toast, setToast] = useState(null);
     const toastTimer = useRef(null);
 
+    // RTE image upload helpers (Event Information editor)
+    const rteInfoRef = useRef(null);
+    const hiddenImageInputRef = useRef(null);
+    const [activeRteRef, setActiveRteRef] = useState(null);
+
     const [form, setForm] = useState({
         sendyId: '',
         name: '',
@@ -60,6 +65,46 @@ export default function EventManagement() {
         chatSidebarColor: '#000000',
         addFooter: false,
     });
+
+    // RichTextEditor toolbar settings: MultiRow with floating toolbar and comprehensive items
+    const buildRteToolbar = (onInsertImage) => ({
+        type: 'MultiRow',
+        enableFloating: true,
+        items: [
+            'Bold', 'Italic', 'Underline', 'StrikeThrough',
+            'FontName', 'FontSize', 'FontColor', 'BackgroundColor',
+            'LowerCase', 'UpperCase', 'Formats',
+            'Alignments', 'OrderedList', 'UnorderedList', 'Outdent', 'Indent',
+            'CreateLink',
+            { tooltipText: 'Insert Image from S3', text: 'Image', prefixIcon: 'e-icons e-image', id: 'ajf-s3-image', click: onInsertImage },
+            'ClearFormat', 'Print', 'SourceCode', 'FullScreen', 'Undo', 'Redo'
+        ]
+    });
+
+    const openImagePickerFor = (rteRef) => {
+        setActiveRteRef(rteRef);
+        hiddenImageInputRef.current?.click();
+    };
+
+    const onHiddenImagePicked = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file || !activeRteRef?.current) return;
+        try {
+            const { downloadUrl } = await uploadImageToS3(file);
+            try {
+                activeRteRef.current.executeCommand('insertImage', { url: downloadUrl, altText: file.name });
+            } catch {
+                activeRteRef.current.executeCommand('insertHTML', `<img src="${downloadUrl}" alt="${file.name}" />`);
+            }
+            showToast('Image inserted');
+        } catch (err) {
+            console.error('Event RTE image upload failed', err);
+            showToast('Failed to upload image');
+        } finally {
+            setActiveRteRef(null);
+        }
+    };
 
     const [events, setEvents] = useState([]);
     const [loadingList, setLoadingList] = useState(false);
@@ -323,7 +368,13 @@ export default function EventManagement() {
 
                                 <div className="form-group">
                                     <label className="form-label">Event Information</label>
-                                    <RTE value={form.information} change={(e) => setField('information', e?.value || '')} placeholder="Type event details...">
+                                    <RTE
+                                        ref={rteInfoRef}
+                                        value={form.information}
+                                        change={(e) => setField('information', e?.value || '')}
+                                        placeholder="Type event details..."
+                                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteInfoRef))}
+                                    >
                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
                                     </RTE>
                                 </div>
@@ -393,6 +444,8 @@ export default function EventManagement() {
                     {toast}
                 </div>
             )}
+            {/* hidden input for S3 image insert */}
+            <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
         </div>
     );
 }

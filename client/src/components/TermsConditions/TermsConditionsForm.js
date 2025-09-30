@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
@@ -9,6 +9,7 @@ import { termsConditionsAPI } from '../../services/termsConditions';
 import { MdSave, MdCancel, MdPreview } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './TermsConditions.css';
+import { uploadImageToS3 } from '../../services/uploads';
 
 const TermsConditionsForm = () => {
     const [formData, setFormData] = useState({
@@ -119,22 +120,40 @@ const TermsConditionsForm = () => {
         navigate('/terms-conditions');
     };
 
-    // Rich text editor toolbar configuration
-    const toolbarSettings = {
+    // Shared Syncfusion RTE toolbar settings (MultiRow + floating)
+    // RTE image upload helpers
+    const rteRef = useRef(null);
+    const hiddenImageInputRef = useRef(null);
+    const openImagePicker = () => hiddenImageInputRef.current?.click();
+    const onHiddenImagePicked = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file || !rteRef.current) return;
+        try {
+            const { downloadUrl } = await uploadImageToS3(file);
+            try {
+                rteRef.current.executeCommand('insertImage', { url: downloadUrl, altText: file.name });
+            } catch {
+                rteRef.current.executeCommand('insertHTML', `<img src="${downloadUrl}" alt="${file.name}" />`);
+            }
+        } catch (err) {
+            console.error('Terms RTE image upload failed', err);
+        }
+    };
+
+    const rteToolbar = useMemo(() => ({
+        type: 'MultiRow',
+        enableFloating: true,
         items: [
             'Bold', 'Italic', 'Underline', 'StrikeThrough',
-            '|',
             'FontName', 'FontSize', 'FontColor', 'BackgroundColor',
-            '|',
-            'LowerCase', 'UpperCase', '|',
-            'Formats', 'Alignments', 'NumberFormatList', 'BulletFormatList',
-            '|',
-            'Outdent', 'Indent',
-            '|',
-            'CreateLink', 'Image', '|', 'ClearFormat', 'Print',
-            '|', 'SourceCode', 'FullScreen', '|', 'Undo', 'Redo'
+            'LowerCase', 'UpperCase', 'Formats',
+            'Alignments', 'OrderedList', 'UnorderedList', 'Outdent', 'Indent',
+            'CreateLink',
+            { tooltipText: 'Insert Image from S3', text: 'Image', prefixIcon: 'e-icons e-image', id: 'ajf-s3-image', click: openImagePicker },
+            'ClearFormat', 'Print', 'SourceCode', 'FullScreen', 'Undo', 'Redo'
         ]
-    };
+    }), []);
 
     if (loading && isEdit) {
         return (
@@ -145,7 +164,9 @@ const TermsConditionsForm = () => {
                     <main id="dashboard-main" className="dashboard-main">
                         <div className="loading">Loading terms and conditions...</div>
                     </main>
-                </div>
+                    {/* hidden input for S3 image insert */}
+            <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
+        </div>
                 <div className="mobile-overlay" aria-hidden="true" />
             </div>
         );
@@ -210,9 +231,10 @@ const TermsConditionsForm = () => {
                             <div className="rich-text-container">
                                 <RTE
                                     id="content"
+                                    ref={rteRef}
                                     value={formData.content}
                                     change={handleContentChange}
-                                    toolbarSettings={toolbarSettings}
+                                    toolbarSettings={rteToolbar}
                                     height={400}
                                     placeholder="Enter terms and conditions content..."
                                     aria-label="Terms and conditions content editor"

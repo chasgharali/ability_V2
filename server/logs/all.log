@@ -4613,3 +4613,264 @@
 2025-09-30 03:57:19:5719 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
 2025-09-30 03:57:19:5719 [32minfo[39m: [32mServer is ready to accept connections[39m
 2025-09-30 03:57:19:5719 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:00:32:032 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:00:32:032 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:02:13:213 [32minfo[39m: [32mBooth updated: f12e by admin@ability.com[39m
+2025-09-30 04:02:13:213 [32minfo[39m: [32mBooth rich sections updated: f12e by admin@ability.com[39m
+2025-09-30 04:05:32:532 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:05:32:532 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:08:13:813 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:08:13:813 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:09:49:949 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:09:49:949 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:09:49:949 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:11:17:1117 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:11:17:1117 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:11:17:1117 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:12:26:1226 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:12:26:1226 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:12:26:1226 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:15:17:1517 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:15:17:1517 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:16:10:1610 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:16:11:1611 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:16:12:1612 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:17:17:1717 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:17:17:1717 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:19:33:1933 [32minfo[39m: [32mEvent updated: 101-event by admin@ability.com[39m
+2025-09-30 04:20:40:2040 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-30 04:20:40:2040 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:20:40:2040 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:20:40:2040 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:20:40:2040 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:20:40:2040 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:20:48:2048 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-09-30 04:20:48:2048 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:20:48:2048 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:20:48:2048 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:20:48:2048 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:20:48:2048 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:21:05:215 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-30 04:21:05:215 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:21:05:215 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:21:06:216 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:21:06:216 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:21:06:216 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:21:07:217 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:21:07:217 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:21:07:217 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:21:24:2124 [32minfo[39m: [32mEvent updated: 101-event by admin@ability.com[39m
+2025-09-30 04:23:00:230 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:23:00:230 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:23:00:230 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:25:26:2526 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-30 04:25:26:2526 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:25:26:2526 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:25:26:2526 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:25:26:2526 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:25:26:2526 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:25:48:2548 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-30 04:25:48:2548 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:25:48:2548 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:25:48:2548 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:25:48:2548 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:25:48:2548 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:25:51:2551 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:25:52:2552 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:26:19:2619 [32minfo[39m: [32mPresigned URL generated for user admin@ability.com: booth-logo/101ability-logo-400.jpg[39m
+2025-09-30 04:26:21:2621 [32minfo[39m: [32mFile upload confirmed for user admin@ability.com: booth-logo/68d7b72a01e147e6fd0197bf/101ability-logo-400.jpg[39m
+2025-09-30 04:27:10:2710 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:27:10:2710 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:27:10:2710 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:27:13:2713 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:27:13:2713 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:27:14:2714 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 04:29:30:2930 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-30 04:29:30:2930 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:29:30:2930 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:29:30:2930 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:29:30:2930 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:29:30:2930 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:29:38:2938 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-30 04:29:38:2938 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:29:38:2938 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:29:38:2938 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:29:38:2938 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:29:38:2938 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:29:57:2957 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-30 04:29:57:2957 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:29:57:2957 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:29:57:2957 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:29:57:2957 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:29:57:2957 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:30:39:3039 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-30 04:30:39:3039 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 04:30:39:3039 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 04:30:39:3039 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 04:30:39:3039 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 04:30:39:3039 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 04:56:20:5620 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 04:56:20:5620 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 04:56:31:5631 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 04:56:31:5631 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 06:09:21:921 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 06:09:21:921 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 06:09:31:931 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 06:09:31:931 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 06:31:38:3138 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 06:31:48:3148 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 06:31:48:3148 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 07:32:39:3239 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 07:32:50:3250 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 07:32:50:3250 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 08:33:40:3340 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 08:33:51:3351 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 08:33:51:3351 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 09:34:41:3441 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 09:34:41:3441 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 09:34:53:3453 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 09:34:53:3453 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 10:35:42:3542 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 10:35:42:3542 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 10:35:53:3553 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 10:35:53:3553 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 10:48:28:4828 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 10:48:28:4828 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 10:48:49:4849 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 10:48:49:4849 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 11:36:42:3642 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 11:36:53:3653 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 11:36:53:3653 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 11:44:53:4453 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 11:55:11:5511 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 11:55:11:5511 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 11:56:56:5656 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 11:56:56:5656 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 11:57:07:577 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 11:57:07:577 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 13:48:37:4837 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-30 13:48:37:4837 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 13:48:37:4837 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 13:48:37:4837 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 13:48:37:4837 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 13:48:37:4837 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 13:48:48:4848 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:48:49:4849 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:48:49:4849 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:19:5719 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:19:5719 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:20:5720 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:20:5720 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:21:5721 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:26:5726 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:26:5726 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:57:26:5726 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:58:06:586 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-09-30 13:58:06:586 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 13:58:21:5821 [32minfo[39m: [32mPresigned URL generated for user admin@ability.com: booth-logo/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 13:58:24:5824 [32minfo[39m: [32mFile upload confirmed for user admin@ability.com: booth-logo/68d7b72a01e147e6fd0197bf/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 14:17:36:1736 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:17:36:1736 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:17:53:1753 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:17:54:1754 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:17:54:1754 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:19:23:1923 [32minfo[39m: [32mPresigned URL generated for user admin@ability.com: booth-logo/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 14:19:25:1925 [32minfo[39m: [32mFile upload confirmed for user admin@ability.com: booth-logo/68d7b72a01e147e6fd0197bf/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 14:21:14:2114 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:21:14:2114 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:21:45:2145 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:21:45:2145 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:21:46:2146 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:21:46:2146 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:21:46:2146 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-30 14:21:58:2158 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-09-30 14:21:58:2158 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 14:21:58:2158 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 14:21:58:2158 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 14:21:58:2158 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 14:21:58:2158 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 14:22:00:220 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:23:25:2325 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-09-30 14:23:25:2325 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:27:42:2742 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:27:42:2742 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:55:52:5552 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:55:52:5552 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:55:53:5553 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:55:55:5555 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:55:55:5555 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:55:55:5555 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 14:56:21:5621 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-09-30 14:56:22:5622 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 15:05:18:518 [32minfo[39m: [32mPresigned URL generated for user admin@ability.com: booth-logo/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 15:05:20:520 [32minfo[39m: [32mFile upload confirmed for user admin@ability.com: booth-logo/68d7b72a01e147e6fd0197bf/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 15:06:55:655 [32minfo[39m: [32mEvent updated: 101-event by admin@ability.com[39m
+2025-09-30 15:07:09:79 [32minfo[39m: [32mPresigned URL generated for user admin@ability.com: booth-logo/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 15:07:11:711 [32minfo[39m: [32mFile upload confirmed for user admin@ability.com: booth-logo/68d7b72a01e147e6fd0197bf/amazon-logo-amazon-icon-free-free-vector.jpg[39m
+2025-09-30 15:30:14:3014 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-09-30 15:30:22:3022 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-09-30 15:30:22:3022 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-09-30 15:30:22:3022 [32minfo[39m: [32mConnected to Redis[39m
+2025-09-30 15:30:22:3022 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-09-30 15:30:22:3022 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-09-30 15:30:22:3022 [32minfo[39m: [32mRedis Client Connected[39m
+2025-09-30 16:38:25:3825 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:38:25:3825 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:39:06:396 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 16:39:07:397 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:40:07:407 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:40:07:407 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:40:17:4017 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 16:40:18:4018 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:41:38:4138 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:41:39:4139 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:41:49:4149 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 16:41:50:4150 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:43:10:4310 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:43:10:4310 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 16:43:22:4322 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 16:43:22:4322 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 17:18:14:1814 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 17:18:15:1815 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 17:18:25:1825 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 17:18:26:1826 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 17:49:27:4927 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 17:49:28:4928 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 17:49:37:4937 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 17:49:39:4939 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 18:01:18:118 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 18:01:19:119 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 18:01:19:119 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 18:01:19:119 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 18:01:20:120 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 18:09:59:959 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 18:10:00:100 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 18:10:09:109 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-09-30 18:10:11:1011 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 18:50:42:5042 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 18:50:44:5044 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-09-30 19:09:44:944 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:09:45:945 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:09:46:946 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:09:46:946 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:09:47:947 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:09:47:947 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:10:20:1020 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-09-30 19:10:20:1020 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:12:39:1239 [32minfo[39m: [32mPresigned URL generated for user admin@ability.com: booth-logo/meta-6871457_1280.webp[39m
+2025-09-30 19:12:41:1241 [32minfo[39m: [32mFile upload confirmed for user admin@ability.com: booth-logo/68d7b72a01e147e6fd0197bf/meta-6871457_1280.webp[39m
+2025-09-30 19:23:49:2349 [32minfo[39m: [32mEvent updated: 101-event by admin@ability.com[39m
+2025-09-30 19:24:12:2412 [32minfo[39m: [32mBooth updated: amazon by admin@ability.com[39m
+2025-09-30 19:24:12:2412 [32minfo[39m: [32mBooth rich sections updated: amazon by admin@ability.com[39m
+2025-09-30 19:25:38:2538 [32minfo[39m: [32mBooth updated: amazon by admin@ability.com[39m
+2025-09-30 19:25:39:2539 [32minfo[39m: [32mBooth rich sections updated: amazon by admin@ability.com[39m
+2025-09-30 19:26:10:2610 [32minfo[39m: [32mBooth updated: amazon-u by admin@ability.com[39m
+2025-09-30 19:26:10:2610 [32minfo[39m: [32mBooth rich sections updated: amazon-u by admin@ability.com[39m
+2025-09-30 19:26:20:2620 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:26:20:2620 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:30:59:3059 [32minfo[39m: [32mPresigned URL generated for user admin@ability.com: image/istockphoto-179072798-612x612.jpg[39m
+2025-09-30 19:31:01:311 [32minfo[39m: [32mFile upload confirmed for user admin@ability.com: image/68d7b72a01e147e6fd0197bf/istockphoto-179072798-612x612.jpg[39m
+2025-09-30 19:31:10:3110 [32minfo[39m: [32mBooth updated: amazon-u by admin@ability.com[39m
+2025-09-30 19:31:11:3111 [32minfo[39m: [32mBooth rich sections updated: amazon-u by admin@ability.com[39m
+2025-09-30 19:31:21:3121 [31merror[39m: [31mSocket authentication error: invalid token[39m
+2025-09-30 19:31:21:3121 [31merror[39m: [31mSocket authentication error: invalid token[39m

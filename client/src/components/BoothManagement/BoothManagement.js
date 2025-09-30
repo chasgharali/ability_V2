@@ -8,7 +8,7 @@ import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '
 import Toast from '../UI/Toast';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections } from '../../services/booths';
-import { uploadBoothLogoToS3 } from '../../services/uploads';
+import { uploadBoothLogoToS3, uploadImageToS3 } from '../../services/uploads';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
@@ -39,6 +39,12 @@ export default function BoothManagement() {
   const [toast, setToast] = useState(null); // { message, type: 'success'|'info'|'error', duration }
   const toastTimer = React.useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
+  // RTE image upload helpers
+  const rteFirstRef = React.useRef(null);
+  const rteSecondRef = React.useRef(null);
+  const rteThirdRef = React.useRef(null);
+  const hiddenImageInputRef = React.useRef(null);
+  const [activeRteRef, setActiveRteRef] = useState(null);
 
   // Create a short, unique numeric token for the queue URL (6 digits)
   const genToken = () => String(Math.floor(100000 + Math.random() * 900000));
@@ -49,8 +55,8 @@ export default function BoothManagement() {
     ? window.location.origin
     : 'https://abilityjobfair.com';
 
-  // RichTextEditor toolbar settings: MultiRow with floating toolbar and comprehensive items
-  const rteToolbar = useMemo(() => ({
+  // Build toolbar per instance to wire custom S3 image upload action
+  const buildRteToolbar = (onInsertImage) => ({
     type: 'MultiRow',
     enableFloating: true,
     items: [
@@ -58,10 +64,38 @@ export default function BoothManagement() {
       'FontName', 'FontSize', 'FontColor', 'BackgroundColor',
       'LowerCase', 'UpperCase', 'Formats',
       'Alignments', 'OrderedList', 'UnorderedList', 'Outdent', 'Indent',
-      'CreateLink', 'Image',
+      'CreateLink',
+      { tooltipText: 'Insert Image from S3', text: 'Image', prefixIcon: 'e-icons e-image', id: 'ajf-s3-image', click: onInsertImage },
       'ClearFormat', 'Print', 'SourceCode', 'FullScreen', 'Undo', 'Redo'
     ]
-  }), []);
+  });
+
+  const openImagePickerFor = (rteRef) => {
+    setActiveRteRef(rteRef);
+    hiddenImageInputRef.current?.click();
+  };
+  const onHiddenImagePicked = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !activeRteRef?.current) return;
+    try {
+      setBoothSaving(true);
+      const { downloadUrl } = await uploadImageToS3(file);
+      // Insert image at cursor
+      try {
+        activeRteRef.current.executeCommand('insertImage', { url: downloadUrl, altText: file.name });
+      } catch {
+        activeRteRef.current.executeCommand('insertHTML', `<img src="${downloadUrl}" alt="${file.name}" />`);
+      }
+      showToast('Image inserted', 'success', 2000);
+    } catch (err) {
+      console.error('RTE image upload failed', err);
+      showToast('Failed to upload image', 'error', 4000);
+    } finally {
+      setBoothSaving(false);
+      setActiveRteRef(null);
+    }
+  };
 
   const slugify = (s = '') => {
     const slug = s
@@ -512,9 +546,10 @@ export default function BoothManagement() {
                     <div className="bm-rte-block">
                       <h4>First Placeholder</h4>
                       <RTE
+                        ref={rteFirstRef}
                         value={boothForm.firstHtml}
                         change={(e) => setBoothField('firstHtml', e?.value || '')}
-                        toolbarSettings={rteToolbar}
+                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteFirstRef))}
                         placeholder="Enter content for first placeholder..."
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
@@ -523,9 +558,10 @@ export default function BoothManagement() {
                     <div className="bm-rte-block">
                       <h4>Second Placeholder</h4>
                       <RTE
+                        ref={rteSecondRef}
                         value={boothForm.secondHtml}
                         change={(e) => setBoothField('secondHtml', e?.value || '')}
-                        toolbarSettings={rteToolbar}
+                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteSecondRef))}
                         placeholder="Enter content for second placeholder..."
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
@@ -534,9 +570,10 @@ export default function BoothManagement() {
                     <div className="bm-rte-block">
                       <h4>Third Placeholder</h4>
                       <RTE
+                        ref={rteThirdRef}
                         value={boothForm.thirdHtml}
                         change={(e) => setBoothField('thirdHtml', e?.value || '')}
-                        toolbarSettings={rteToolbar}
+                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteThirdRef))}
                         placeholder="Enter content for third placeholder..."
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
@@ -665,6 +702,9 @@ export default function BoothManagement() {
           autoFocusClose={toast.type === 'error'}
         />
       )}
+
+      {/* hidden input for S3 image insert */}
+      <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
     </div>
   );
 }
