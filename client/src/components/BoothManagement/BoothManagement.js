@@ -5,6 +5,7 @@ import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
 import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
+import Toast from '../UI/Toast';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections } from '../../services/booths';
 import { uploadBoothLogoToS3 } from '../../services/uploads';
@@ -37,32 +38,48 @@ export default function BoothManagement() {
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   const [toast, setToast] = useState(null); // { message, type: 'success'|'info'|'error', duration }
   const toastTimer = React.useRef(null);
-  const toastCloseRef = React.useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
 
   // Create a short, unique numeric token for the queue URL (6 digits)
   const genToken = () => String(Math.floor(100000 + Math.random() * 900000));
   const [queueToken] = useState(() => genToken());
 
-  const slugify = (s = '') => s
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    || 'new-booth';
+  // Base URL from current window location (fallback to production domain if unavailable)
+  const baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin)
+    ? window.location.origin
+    : 'https://abilityjobfair.com';
 
-  // Sanitize Custom Invite (no spaces, only a-z0-9-)
-  const sanitizeInvite = (s = '') => slugify(s).replace(/[^a-z0-9-]/g, '');
+  const slugify = (s = '') => {
+    const slug = s
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    return slug || 'new-booth';
+  };
+
+  // Sanitize Custom Invite (no spaces, only a-z0-9-). If empty, return empty.
+  const sanitizeInvite = (s = '') => {
+    if (!s || !s.toString().trim()) return '';
+    return s
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+  };
 
   // Compute live each render to ensure immediate UI updates as the booth name changes
-  const boothQueueLink = (() => {
+  const boothQueueLink = useMemo(() => {
     const custom = sanitizeInvite(boothForm.customInviteText || '');
-    if (custom) return `https://abilityjobfair.com/queue/${custom}`;
-    const nameSlug = slugify(boothForm.boothName);
-    return `https://abilityjobfair.com/queue/${nameSlug}-${queueToken}`;
-  })();
+    if (custom) return `${baseUrl}/queue/${custom}`;
+    const nameSlug = slugify(boothForm.boothName || '');
+    return `${baseUrl}/queue/${nameSlug}-${queueToken}`;
+  }, [boothForm.boothName, boothForm.customInviteText, queueToken, baseUrl]);
 
   // Event options for MultiSelect (loaded dynamically)
   const [eventOptions, setEventOptions] = useState([]);
@@ -96,16 +113,7 @@ export default function BoothManagement() {
     loadEvents();
   }, []);
 
-  // Accessibility: focus close button when an error toast appears
-  useEffect(() => {
-    if (toast?.type === 'error') {
-      // Defer to next tick to ensure element is mounted
-      const id = setTimeout(() => {
-        try { toastCloseRef.current && toastCloseRef.current.focus(); } catch {}
-      }, 0);
-      return () => clearTimeout(id);
-    }
-  }, [toast]);
+  // (Focus management moved into reusable Toast component)
 
   // Data grid columns configuration
   const gridColumns = [
@@ -303,7 +311,7 @@ export default function BoothManagement() {
         richSections: b.richSections || [],
         customInviteSlug: b.customInviteSlug || '',
         companyPage: b.companyPage || '',
-        customUrl: b.customInviteSlug ? `https://abilityjobfair.com/queue/${b.customInviteSlug}` : '',
+        customUrl: b.customInviteSlug ? `${baseUrl}/queue/${b.customInviteSlug}` : '',
         recruitersCount: b.recruitersCount ?? 0,
         expireLinkTime: b.expireLinkTime || null,
       })));
@@ -361,8 +369,8 @@ export default function BoothManagement() {
   const copyInvite = async (row) => {
     const custom = row.customInviteSlug && sanitizeInvite(row.customInviteSlug);
     const url = custom
-      ? `https://abilityjobfair.com/queue/${custom}`
-      : `https://abilityjobfair.com/queue/${slugify(row.name || 'booth')}-${queueToken}`;
+      ? `${baseUrl}/queue/${custom}`
+      : `${baseUrl}/queue/${slugify(row.name || 'booth')}-${queueToken}`;
     try {
       await navigator.clipboard.writeText(url);
       showToast('Invite link copied');
@@ -490,21 +498,25 @@ export default function BoothManagement() {
                   placeholder="Enter custom invite text"
                 />
 
-                <div className="form-row">
-                  <DateTimePicker
-                    label="Expire Link Time"
-                    value={boothForm.expireLinkTime}
-                    onChange={(e) => setBoothField('expireLinkTime', e.target.value)}
-                    placeholder="Select expiry"
-                    disabled={!boothForm.enableExpiry}
-                    name="expireLinkTime"
-                  />
-                  <Checkbox
-                    label="Enable Expiry Link Time"
-                    checked={boothForm.enableExpiry}
-                    onChange={(e) => setBoothField('enableExpiry', e.target.checked)}
-                    name="enableExpiry"
-                  />
+                <div className="form-inline-row" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 380px', minWidth: 260 }}>
+                    <DateTimePicker
+                      label="Expire Link Time"
+                      value={boothForm.expireLinkTime}
+                      onChange={(e) => setBoothField('expireLinkTime', e.target.value)}
+                      placeholder="Select expiry"
+                      disabled={!boothForm.enableExpiry}
+                      name="expireLinkTime"
+                    />
+                  </div>
+                  <div style={{ flex: '0 0 auto', paddingBottom: 6 }}>
+                    <Checkbox
+                      label="Enable Expiry Link Time"
+                      checked={boothForm.enableExpiry}
+                      onChange={(e) => setBoothField('enableExpiry', e.target.checked)}
+                      name="enableExpiry"
+                    />
+                  </div>
                 </div>
 
                 <Input
@@ -571,37 +583,12 @@ export default function BoothManagement() {
 
       {/* Toast */}
       {toast && (
-        <div
-          role={toast.type === 'error' ? 'alert' : 'status'}
-          aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
-          aria-atomic="true"
-          style={{
-            position: 'fixed',
-            right: 16,
-            bottom: 16,
-            background: toast.type === 'error' ? '#991b1b' : toast.type === 'success' ? '#065f46' : '#111827',
-            color: '#fff',
-            padding: '12px 14px',
-            borderRadius: 8,
-            boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-            zIndex: 80,
-            maxWidth: 420,
-            whiteSpace: 'pre-line',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <div style={{ flex: 1 }}>{toast.message}</div>
-            <button
-              onClick={() => setToast(null)}
-              className="ajf-btn ajf-btn-outline"
-              aria-label="Dismiss notification"
-              ref={toastCloseRef}
-              style={{ padding: '4px 8px' }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          autoFocusClose={toast.type === 'error'}
+        />
       )}
     </div>
   );
