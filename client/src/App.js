@@ -19,6 +19,7 @@ import EventRegistration from './components/EventRegistration/EventRegistration'
 import TermsConditionsList from './components/TermsConditions/TermsConditionsList';
 import TermsConditionsForm from './components/TermsConditions/TermsConditionsForm';
 import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
+import UserManagement from './components/UserManagement/UserManagement';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
 
@@ -129,6 +130,7 @@ function App() {
                                 <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
                                 <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                 <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
+                                <Route path="/users" element={<RequireAuth><UserManagement /></RequireAuth>} />
                                 {/* Public event registration entry; component will redirect to /register if not authenticated */}
                                 <Route path="/event/:slug/register" element={<EventRegistration />} />
                                 <Route path="/terms-conditions" element={<RequireAuth><TermsConditionsList /></RequireAuth>} />
