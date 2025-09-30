@@ -35,12 +35,13 @@ export default function BoothManagement() {
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState(null); // { message, type: 'success'|'info'|'error', duration }
   const toastTimer = React.useRef(null);
+  const toastCloseRef = React.useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
 
-  // Create a short, unique token for the queue URL
-  const genToken = () => `${Date.now().toString(36).slice(-5)}${Math.random().toString(36).slice(2, 6)}`;
+  // Create a short, unique numeric token for the queue URL (6 digits)
+  const genToken = () => String(Math.floor(100000 + Math.random() * 900000));
   const [queueToken] = useState(() => genToken());
 
   const slugify = (s = '') => s
@@ -55,42 +56,56 @@ export default function BoothManagement() {
   // Sanitize Custom Invite (no spaces, only a-z0-9-)
   const sanitizeInvite = (s = '') => slugify(s).replace(/[^a-z0-9-]/g, '');
 
-  const boothQueueLink = useMemo(() => {
+  // Compute live each render to ensure immediate UI updates as the booth name changes
+  const boothQueueLink = (() => {
     const custom = sanitizeInvite(boothForm.customInviteText || '');
     if (custom) return `https://abilityjobfair.com/queue/${custom}`;
     const nameSlug = slugify(boothForm.boothName);
     return `https://abilityjobfair.com/queue/${nameSlug}-${queueToken}`;
-  }, [boothForm.customInviteText, boothForm.boothName, queueToken]);
+  })();
 
   // Event options for MultiSelect (loaded dynamically)
   const [eventOptions, setEventOptions] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
 
+  const loadEvents = async () => {
+    try {
+      setLoadingEvents(true);
+      const res = await listEvents({ page: 1, limit: 200 });
+      const items = res?.events || [];
+      const options = items.map(e => {
+        const maxBooths = e?.limits?.maxBooths || 0; // 0 means unlimited
+        const current = e?.boothCount || 0;
+        const reached = maxBooths > 0 && current >= maxBooths;
+        return {
+          value: e._id,
+          label: reached ? `${e.name} • limit reached` : e.name,
+          disabled: reached,
+        };
+      });
+      setEventOptions(options);
+    } catch (err) {
+      console.error('Failed to load events for booth', err);
+      setEventOptions([]);
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        setLoadingEvents(true);
-        const res = await listEvents({ page: 1, limit: 200 });
-        const items = res?.events || [];
-        const options = items.map(e => {
-          const maxBooths = e?.limits?.maxBooths || 0; // 0 means unlimited
-          const current = e?.boothCount || 0;
-          const reached = maxBooths > 0 && current >= maxBooths;
-          return {
-            value: e._id,
-            label: reached ? `${e.name} • limit reached` : e.name,
-            disabled: reached,
-          };
-        });
-        setEventOptions(options);
-      } catch (err) {
-        console.error('Failed to load events for booth', err);
-        setEventOptions([]);
-      } finally {
-        setLoadingEvents(false);
-      }
-    })();
+    loadEvents();
   }, []);
+
+  // Accessibility: focus close button when an error toast appears
+  useEffect(() => {
+    if (toast?.type === 'error') {
+      // Defer to next tick to ensure element is mounted
+      const id = setTimeout(() => {
+        try { toastCloseRef.current && toastCloseRef.current.focus(); } catch {}
+      }, 0);
+      return () => clearTimeout(id);
+    }
+  }, [toast]);
 
   // Data grid columns configuration
   const gridColumns = [
@@ -226,14 +241,43 @@ export default function BoothManagement() {
         showToast('Booth updated');
       } else {
         const res = await createBooths(payload);
-        if (res.skipped && res.skipped.length) {
-          console.warn('Some events skipped due to limits:', res.skipped);
+        const createdCount = Array.isArray(res?.created) ? res.created.length : 0;
+        const skipped = Array.isArray(res?.skipped) ? res.skipped : [];
+        if (skipped.length) {
+          console.warn('Some events skipped due to limits:', skipped);
+          // Try to resolve event labels from current options
+          const skippedList = skipped.map(s => {
+            const opt = (eventOptions || []).find(o => o.value === s.eventId);
+            const label = opt?.label || s.eventId;
+            const reasonRaw = (s.reason || '').toString();
+            const isRecruiter = /recruit/i.test(reasonRaw);
+            const reasonNormalized = isRecruiter ? 'Recruiter limit reached' : 'Booth limit reached';
+            return `• ${label} — ${reasonNormalized}`;
+          }).join('\n');
+          if (createdCount === 0) {
+            showToast(`No booths were created.\n\n${skippedList}`, 'error', 6000);
+          } else {
+            showToast(`Booth created for some events, but others were skipped due to limits:\n\n${skippedList}`, 'error', 6000);
+          }
+        } else if (createdCount === 0) {
+          // Safety: backend responded but nothing created and no skips array
+          showToast('No booths were created.', 'error', 5000);
+        } else {
+          showToast('Booth created', 'success', 2500);
         }
-        showToast('Booth created');
+        await loadBooths();
+        // Reload events to update booth counts in dropdown
+        await loadEvents();
+        // Only go back to list if at least one booth was created
+        if (createdCount > 0) {
+          setBoothMode('list');
+          setEditingBoothId(null);
+        }
+        if (createdCount === 0) {
+          // Stay on form for user to adjust selections
+          setEditingBoothId(null);
+        }
       }
-      await loadBooths();
-      setBoothMode('list');
-      setEditingBoothId(null);
     } catch (err) {
       if (err?.response?.status === 409) {
         showToast('Custom invite already taken');
@@ -309,10 +353,10 @@ export default function BoothManagement() {
   const cancelDelete = () => { setConfirmOpen(false); setRowPendingDelete(null); };
 
   // Invite link copy
-  const showToast = (message) => {
+  const showToast = (message, type = 'info', duration = 3000) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(null), 2000);
+    setToast({ message, type, duration });
+    toastTimer.current = setTimeout(() => setToast(null), duration);
   };
   const copyInvite = async (row) => {
     const custom = row.customInviteSlug && sanitizeInvite(row.customInviteSlug);
@@ -475,6 +519,8 @@ export default function BoothManagement() {
                   label="Job Seeker Queue Link"
                   value={boothQueueLink}
                   readOnly
+                  aria-live="polite"
+                  name="jobSeekerQueueLink"
                   placeholder="Auto-generated link"
                 />
 
@@ -525,8 +571,36 @@ export default function BoothManagement() {
 
       {/* Toast */}
       {toast && (
-        <div role="status" aria-live="polite" style={{ position: 'fixed', right: 16, bottom: 16, background: '#111', color: '#fff', padding: '10px 14px', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.2)', zIndex: 80 }}>
-          {toast}
+        <div
+          role={toast.type === 'error' ? 'alert' : 'status'}
+          aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+          aria-atomic="true"
+          style={{
+            position: 'fixed',
+            right: 16,
+            bottom: 16,
+            background: toast.type === 'error' ? '#991b1b' : toast.type === 'success' ? '#065f46' : '#111827',
+            color: '#fff',
+            padding: '12px 14px',
+            borderRadius: 8,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+            zIndex: 80,
+            maxWidth: 420,
+            whiteSpace: 'pre-line',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ flex: 1 }}>{toast.message}</div>
+            <button
+              onClick={() => setToast(null)}
+              className="ajf-btn ajf-btn-outline"
+              aria-label="Dismiss notification"
+              ref={toastCloseRef}
+              style={{ padding: '4px 8px' }}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>

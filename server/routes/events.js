@@ -43,6 +43,7 @@ router.get('/', authenticateToken, async (req, res) => {
         const events = await Event.find(query)
             .populate('createdBy', 'name email')
             .populate('administrators', 'name email')
+            .populate('booths', '_id')
             .sort({ start: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);

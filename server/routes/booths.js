@@ -38,7 +38,7 @@ router.get('/', authenticateToken, async (req, res) => {
  * POST /api/booths
  * Create booths for one or more events
  */
-router.post('/', authenticateToken, requireRole(['Admin','GlobalSupport']), [
+router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('name').isString().trim().isLength({ min: 2, max: 200 }),
     body('description').optional().isString().isLength({ max: 1000 }),
     body('logoUrl').optional().isURL(),
@@ -95,13 +95,17 @@ router.post('/', authenticateToken, requireRole(['Admin','GlobalSupport']), [
                 recruitersCount: recruitersCount || 1,
                 expireLinkTime: expireLinkTime || null,
                 customInviteSlug: customInviteSlug || undefined,
-                richSections: (richSections || []).slice(0,3).map((s, index) => ({
-                  title: s.title || `Section ${index+1}`,
-                  contentHtml: s.contentHtml || '',
-                  isActive: s.isActive !== false,
-                  order: s.order ?? index
+                richSections: (richSections || []).slice(0, 3).map((s, index) => ({
+                    title: s.title || `Section ${index + 1}`,
+                    contentHtml: s.contentHtml || '',
+                    isActive: s.isActive !== false,
+                    order: s.order ?? index
                 }))
             });
+
+            // Add booth to event's booths array
+            await Event.findByIdAndUpdate(eid, { $addToSet: { booths: booth._id } });
+
             created.push(booth.getSummary());
         }
 
@@ -123,6 +127,11 @@ router.post('/', authenticateToken, requireRole(['Admin','GlobalSupport']), [
 router.delete('/:id', authenticateToken, requireResourceAccess('booth', 'id'), async (req, res) => {
     try {
         const { booth, user } = req;
+        const Event = require('../models/Event');
+
+        // Remove booth from event's booths array
+        await Event.findByIdAndUpdate(booth.eventId, { $pull: { booths: booth._id } });
+
         await booth.deleteOne();
         logger.info(`Booth deleted: ${booth._id} by ${user.email}`);
         res.json({ message: 'Booth deleted' });
