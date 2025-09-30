@@ -352,7 +352,12 @@ export default function BoothManagement() {
         });
         // Update rich sections via dedicated endpoint
         await updateBoothRichSections(editingBoothId, payload.richSections);
-        showToast('Booth updated');
+        // Refetch and redirect to list
+        await loadBooths();
+        await loadEvents();
+        setBoothMode('list');
+        setEditingBoothId(null);
+        showToast('Booth updated', 'success', 2500);
       } else {
         const res = await createBooths(payload);
         const createdCount = Array.isArray(res?.created) ? res.created.length : 0;
