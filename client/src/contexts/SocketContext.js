@@ -26,7 +26,8 @@ export const SocketProvider = ({ children }) => {
             timeout: 20000,
             forceNew: true,
             withCredentials: true,
-            auth: token ? { token: `Bearer ${token}` } : {}
+            // Send raw token; server will also handle optional 'Bearer ' prefix defensively
+            auth: token ? { token } : {}
         });
 
         // Connection event handlers

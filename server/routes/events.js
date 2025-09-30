@@ -115,51 +115,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-/**
- * GET /api/events/:id
- * Get event details
- */
-router.get('/:id', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { user } = req;
-
-        const event = await Event.findById(id)
-            .populate('createdBy', 'name email')
-            .populate('administrators', 'name email')
-            .populate('booths', 'name description logoUrl status');
-
-        if (!event) {
-            return res.status(404).json({
-                error: 'Event not found',
-                message: 'The specified event does not exist'
-            });
-        }
-
-        // Check if user can access this event
-        if (!event.canUserAccess(user)) {
-            return res.status(403).json({
-                error: 'Access denied',
-                message: 'You do not have permission to view this event'
-            });
-        }
-
-        res.json({
-            event: {
-                ...event.toObject(),
-                isActive: event.isActive,
-                isUpcoming: event.isUpcoming,
-                duration: event.duration
-            }
-        });
-    } catch (error) {
-        logger.error('Get event error:', error);
-        res.status(500).json({
-            error: 'Failed to retrieve event',
-            message: 'An error occurred while retrieving the event'
-        });
-    }
-});
+/* NOTE: dynamic routes like '/:id' must be declared AFTER static routes such as '/upcoming' and '/registered'. */
 
 /**
  * POST /api/events
@@ -532,6 +488,260 @@ router.post('/:id/booths', authenticateToken, requireResourceAccess('event', 'id
         res.status(500).json({
             error: 'Failed to create booth',
             message: 'An error occurred while creating the booth'
+        });
+    }
+});
+
+/**
+ * GET /api/events/upcoming
+ * Get upcoming events for job seekers (published/active events in the future)
+ */
+router.get('/upcoming', authenticateToken, async (req, res) => {
+    try {
+        const { user } = req;
+        const { page = 1, limit = 20 } = req.query;
+
+        // Only show published/active events that are in the future
+        const query = {
+            status: { $in: ['published', 'active'] },
+            start: { $gt: new Date() }
+        };
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const [events, totalCount] = await Promise.all([
+            Event.find(query)
+                .populate('createdBy', 'name email')
+                .populate('booths', '_id name description logoUrl status')
+                .sort({ start: 1 }) // Sort by start date ascending (soonest first)
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Event.countDocuments(query)
+        ]);
+
+        res.json({
+            events: events.map(event => ({
+                ...event.getSummary(),
+                isUpcoming: true,
+                daysUntilStart: Math.ceil((event.start - new Date()) / (1000 * 60 * 60 * 24))
+            })),
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalCount / limit),
+                totalCount,
+                hasNext: page * limit < totalCount,
+                hasPrev: page > 1
+            }
+        });
+    } catch (error) {
+        logger.error('Get upcoming events error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve upcoming events',
+            message: 'An error occurred while retrieving upcoming events'
+        });
+    }
+});
+
+/**
+ * GET /api/events/registered
+ * Get current user's registered events (JobSeeker)
+ */
+router.get('/registered', authenticateToken, async (req, res) => {
+    try {
+        const { user } = req;
+        const { page = 1, limit = 20 } = req.query;
+
+        const reg = (user.metadata && user.metadata.registeredEvents) || [];
+        if (!Array.isArray(reg) || reg.length === 0) {
+            return res.json({
+                events: [],
+                pagination: {
+                    currentPage: 1,
+                    totalPages: 0,
+                    totalCount: 0,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            });
+        }
+
+        // Support both id and slug entries
+        const ids = reg.map(r => r.id).filter(Boolean);
+        const slugs = reg.map(r => r.slug).filter(Boolean);
+        const or = [];
+        if (ids.length) or.push({ _id: { $in: ids } });
+        if (slugs.length) or.push({ slug: { $in: slugs } });
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const [events, totalCount] = await Promise.all([
+            Event.find(or.length ? { $or: or } : { _id: null })
+                .populate('createdBy', 'name email')
+                .populate('booths', '_id name description logoUrl status')
+                .sort({ start: -1 }) // Sort by start date descending (most recent first)
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Event.countDocuments(or.length ? { $or: or } : { _id: null })
+        ]);
+
+        // Add registration info to each event
+        const eventsWithRegistration = events.map(event => {
+            const registration = reg.find(r =>
+                (r.id && r.id.toString() === event._id.toString()) ||
+                (r.slug && r.slug === event.slug)
+            );
+
+            return {
+                ...event.getSummary(),
+                registrationInfo: {
+                    registeredAt: registration?.registeredAt,
+                    isUpcoming: event.start > new Date(),
+                    isActive: event.start <= new Date() && event.end >= new Date(),
+                    isCompleted: event.end < new Date()
+                }
+            };
+        });
+
+        res.json({
+            events: eventsWithRegistration,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalCount / limit),
+                totalCount,
+                hasNext: page * limit < totalCount,
+                hasPrev: page > 1
+            }
+        });
+    } catch (error) {
+        logger.error('Get registered events error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve registered events',
+            message: 'An error occurred while retrieving registered events'
+        });
+    }
+});
+
+/**
+ * GET /api/events/registrations/me
+ * Get current user's event registrations (JobSeeker) - Legacy endpoint
+ * @deprecated Use /api/events/registered instead
+ */
+router.get('/registrations/me', authenticateToken, async (req, res) => {
+    try {
+        const { user } = req;
+        const reg = (user.metadata && user.metadata.registeredEvents) || [];
+        if (!Array.isArray(reg) || reg.length === 0) {
+            return res.json({ events: [] });
+        }
+        // Support both id and slug entries
+        const ids = reg.map(r => r.id).filter(Boolean);
+        const slugs = reg.map(r => r.slug).filter(Boolean);
+        const or = [];
+        if (ids.length) or.push({ _id: { $in: ids } });
+        if (slugs.length) or.push({ slug: { $in: slugs } });
+        const events = await Event.find(or.length ? { $or: or } : { _id: null }).sort({ start: -1 });
+        return res.json({ events: events.map(e => e.getSummary()) });
+    } catch (error) {
+        logger.error('Get my registrations error:', error);
+        res.status(500).json({ error: 'Failed to retrieve registrations' });
+    }
+});
+
+/**
+ * POST /api/events/:id/register
+ * Register current user for an event (JobSeeker)
+ */
+router.post('/:id/register', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { user } = req;
+        if (user.role !== 'JobSeeker') {
+            return res.status(403).json({ error: 'Only JobSeeker can register for events' });
+        }
+
+        // Find event by id or slug
+        let event = null;
+        if (/^[a-f\d]{24}$/i.test(id)) {
+            event = await Event.findById(id);
+        }
+        if (!event) {
+            event = await Event.findOne({ slug: id });
+        }
+        if (!event) return res.status(404).json({ error: 'Event not found' });
+
+        // Initialize metadata.registeredEvents
+        const reg = (user.metadata && user.metadata.registeredEvents) || [];
+        const exists = reg.some(r => (r.id && r.id.toString() === event._id.toString()) || (r.slug && r.slug === event.slug));
+        if (!exists) {
+            const next = [...reg, { id: event._id, slug: event.slug, name: event.name, registeredAt: new Date() }];
+            user.metadata = { ...(user.metadata || {}), registeredEvents: next };
+            await user.save();
+            // best-effort stat increment
+            try {
+                event.stats.totalRegistrations = (event.stats?.totalRegistrations || 0) + 1;
+                await event.save();
+            } catch (e) { logger.warn('Failed to increment event registration stat:', e); }
+        }
+
+        res.json({ message: 'Registered successfully', event: event.getSummary() });
+    } catch (error) {
+        logger.error('Register for event error:', error);
+        res.status(500).json({ error: 'Failed to register for event' });
+    }
+});
+
+/**
+ * GET /api/events/:id
+ * Get event details by Mongo ObjectId or by slug (fallback)
+ * Note: Declared last so it doesn't shadow static routes like /upcoming or /registered
+ */
+router.get('/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { user } = req;
+
+        let event = null;
+        const isObjectId = /^[a-f\d]{24}$/i.test(id);
+        if (isObjectId) {
+            event = await Event.findById(id)
+                .populate('createdBy', 'name email')
+                .populate('administrators', 'name email')
+                .populate('booths', 'name description logoUrl status');
+        }
+        if (!event) {
+            event = await Event.findOne({ slug: id })
+                .populate('createdBy', 'name email')
+                .populate('administrators', 'name email')
+                .populate('booths', 'name description logoUrl status');
+        }
+
+        if (!event) {
+            return res.status(404).json({
+                error: 'Event not found',
+                message: 'The specified event does not exist'
+            });
+        }
+
+        if (!event.canUserAccess(user)) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'You do not have permission to view this event'
+            });
+        }
+
+        res.json({
+            event: {
+                ...event.toObject(),
+                isActive: event.isActive,
+                isUpcoming: event.isUpcoming,
+                duration: event.duration
+            }
+        });
+    } catch (error) {
+        logger.error('Get event error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve event',
+            message: 'An error occurred while retrieving the event'
         });
     }
 });

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
+import { listUpcomingEvents, listRegisteredEvents } from '../../services/events';
 
 export default function AdminSidebar({ active = 'booths' }) {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ export default function AdminSidebar({ active = 'booths' }) {
     'upcoming-events': true
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [myRegistrations, setMyRegistrations] = useState([]);
 
   // Handle mobile menu state from body class
   useEffect(() => {
@@ -32,6 +35,38 @@ export default function AdminSidebar({ active = 'booths' }) {
 
     return () => observer.disconnect();
   }, []);
+
+  // Load upcoming events for JobSeekers
+  useEffect(() => {
+    let cancelled = false;
+    async function loadUpcoming() {
+      if (user?.role !== 'JobSeeker') return;
+      try {
+        const res = await listUpcomingEvents({ page: 1, limit: 50 });
+        if (!cancelled) setUpcomingEvents(res?.events || []);
+      } catch (e) {
+        if (!cancelled) setUpcomingEvents([]);
+      }
+    }
+    loadUpcoming();
+    return () => { cancelled = true; };
+  }, [user?.role]);
+
+  // Load current registrations from API
+  useEffect(() => {
+    let cancelled = false;
+    async function loadRegs() {
+      if (user?.role !== 'JobSeeker') return;
+      try {
+        const res = await listRegisteredEvents({ page: 1, limit: 50 });
+        if (!cancelled) setMyRegistrations(res?.events || []);
+      } catch {
+        if (!cancelled) setMyRegistrations([]);
+      }
+    }
+    loadRegs();
+    return () => { cancelled = true; };
+  }, [user?.role]);
 
   const itemClass = (key) => `sidebar-item ${active === key ? 'active' : ''}`;
 
@@ -100,8 +135,12 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded['registrations'] && (
               <div className="sidebar-items">
-                <button className="sidebar-item" onClick={closeMobileMenu}>ABILITY Job Fair - Testing with Friends Event</button>
-                <button className="sidebar-item" onClick={closeMobileMenu}>2 Test Event - ABILITY Job Fair</button>
+                {myRegistrations.length === 0 && (
+                  <div className="sidebar-empty">No registrations yet.</div>
+                )}
+                {myRegistrations.map((e) => (
+                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/event/${encodeURIComponent(e.slug)}/register`); closeMobileMenu(); }}>{e.name}</button>
+                ))}
               </div>
             )}
           </div>
@@ -113,8 +152,12 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded['upcoming-events'] && (
               <div className="sidebar-items">
-                <button className="sidebar-item" onClick={closeMobileMenu}>Event Demo test</button>
-                <button className="sidebar-item" onClick={closeMobileMenu}>Demonstration</button>
+                {upcomingEvents.length === 0 && (
+                  <div className="sidebar-empty">No upcoming events</div>
+                )}
+                {upcomingEvents.map(evt => (
+                  <button key={evt.slug || evt._id} className="sidebar-item" onClick={() => { handleItemClick(`/event/${encodeURIComponent(evt.slug || evt._id)}/register`); closeMobileMenu(); }}>{evt.name}</button>
+                ))}
               </div>
             )}
           </div>

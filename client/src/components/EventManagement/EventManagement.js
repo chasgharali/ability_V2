@@ -49,6 +49,7 @@ export default function EventManagement() {
         information: '',
         termsId: '',
         termsIds: [],
+        status: 'draft',
         headerColor: '#ffffff',
         headerTextColor: '#000000',
         bodyColor: '#ff9800',
@@ -129,6 +130,7 @@ export default function EventManagement() {
                 createdAt: new Date(e.createdAt).toDateString(),
                 maxRecruitersPerEvent: e.limits?.maxRecruitersPerEvent ?? 0,
                 maxBooths: e.limits?.maxBooths ?? 0,
+                status: e.status || 'draft',
                 addFooter: Boolean((e.addFooter !== undefined ? e.addFooter : e.theme?.addFooter)),
             })));
         } catch (err) {
@@ -179,6 +181,7 @@ export default function EventManagement() {
         { key: 'endTime', title: 'Event End Time', render: (v) => v ? new Date(v).toLocaleString() : '-' },
         { key: 'date', title: 'Event Date' },
         { key: 'createdAt', title: 'Created Time' },
+        { key: 'status', title: 'Status' },
         { key: 'maxRecruitersPerEvent', title: 'Max Recruiters' },
         { key: 'maxBooths', title: 'Max Booths' },
         { key: 'sendyId', title: 'Sendy Event Id', render: (v) => v || '-' },
@@ -231,6 +234,7 @@ export default function EventManagement() {
             startTime: row.startTime ? new Date(row.startTime).toISOString().slice(0, 16) : '',
             endTime: row.endTime ? new Date(row.endTime).toISOString().slice(0, 16) : '',
             information: row.description || '',
+            status: row.status || 'draft',
             addFooter: row.addFooter || false,
         }));
         setMode('edit');
@@ -273,6 +277,7 @@ export default function EventManagement() {
                 sendyId: form.sendyId || undefined,
                 termsId: form.termsId || undefined,
                 termsIds: form.termsIds || [],
+                status: form.status || undefined,
                 limits: {
                     maxBooths: form.maxBooths || 0,
                     maxRecruitersPerEvent: form.maxRecruitersPerEvent || 0,
@@ -346,6 +351,19 @@ export default function EventManagement() {
                                 <Input label="Event Sendy Id" value={form.sendyId} onChange={(e) => setField('sendyId', e.target.value)} placeholder="" />
                                 <Input label="Event Name" value={form.name} onChange={(e) => setField('name', e.target.value)} required placeholder="" />
                                 <Input label="Event Link" value={form.link} onChange={(e) => setField('link', e.target.value)} placeholder="https://..." />
+
+                                <Select
+                                    label="Status"
+                                    value={form.status}
+                                    onChange={(e) => setField('status', e.target.value)}
+                                    options={[
+                                        { value: 'draft', label: 'Draft' },
+                                        { value: 'published', label: 'Published' },
+                                        { value: 'active', label: 'Active' },
+                                        { value: 'completed', label: 'Completed' },
+                                        { value: 'cancelled', label: 'Cancelled' },
+                                    ]}
+                                />
 
                                 <div className="form-group">
                                     <label className="form-label">Event Logo</label>

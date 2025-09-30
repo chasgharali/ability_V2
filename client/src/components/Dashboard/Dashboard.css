@@ -376,6 +376,17 @@
     background: #1a1a1a;
 }
 
+/* Empty state inside sidebar lists (e.g., no registrations/upcoming events) */
+.sidebar-items .sidebar-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    color: #9ca3af; /* muted gray */
+    text-align: center;
+    font-size: 0.95rem;
+}
+
 .sidebar-item {
     width: 100%;
     background: none;

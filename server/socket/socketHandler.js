@@ -12,11 +12,18 @@ const socketHandler = (io) => {
     // Middleware to authenticate socket connections
     io.use(async (socket, next) => {
         try {
-            const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+            // Accept token from multiple places and normalize 'Bearer ' prefix
+            const authToken = socket.handshake.auth?.token
+                || socket.handshake.headers?.authorization
+                || socket.handshake.query?.token;
 
-            if (!token) {
+            if (!authToken) {
                 return next(new Error('Authentication token required'));
             }
+
+            const token = authToken.startsWith('Bearer ')
+                ? authToken.slice(7)
+                : authToken;
 
             // Verify JWT token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
