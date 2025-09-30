@@ -83,7 +83,48 @@ export default function BoothManagement() {
 
   // Event options for MultiSelect (loaded dynamically)
   const [eventOptions, setEventOptions] = useState([]);
+  const [eventLimits, setEventLimits] = useState({}); // { [eventId]: { maxBooths, maxRecruitersPerEvent } }
   const [loadingEvents, setLoadingEvents] = useState(false);
+
+  // Compute current recruiters per event from loaded booths
+  const recruitersByEvent = useMemo(() => {
+    const map = {};
+    for (const b of booths) {
+      const eid = b.eventIdRaw;
+      if (!eid) continue;
+      map[eid] = (map[eid] || 0) + (b.recruitersCount ?? 0);
+    }
+    return map;
+  }, [booths]);
+
+  // Validate recruiters limit per selected event
+  const validateRecruiterLimits = () => {
+    const exceeded = [];
+    for (const eid of boothForm.eventIds || []) {
+      const max = eventLimits?.[eid]?.maxRecruitersPerEvent || 0; // 0 => unlimited
+      if (!max) continue;
+      // existing recruiters for this event, excluding this booth if editing
+      let existing = recruitersByEvent[eid] || 0;
+      if (editingBoothId) {
+        // subtract the editing booth's recruiters if it belongs to this event
+        const editing = booths.find(b => b.id === editingBoothId);
+        if (editing && editing.eventIdRaw === eid) {
+          existing = Math.max(0, existing - (editing.recruitersCount ?? 0));
+        }
+      }
+      const proposedTotal = existing + (boothForm.recruitersCount || 0);
+      if (proposedTotal > max) {
+        exceeded.push({
+          eventId: eid,
+          name: eventLimits?.[eid]?.name || eid,
+          existing,
+          adding: boothForm.recruitersCount || 0,
+          max,
+        });
+      }
+    }
+    return exceeded;
+  };
 
   const loadEvents = async () => {
     try {
@@ -101,6 +142,16 @@ export default function BoothManagement() {
         };
       });
       setEventOptions(options);
+      // capture limits for validation
+      const limitsMap = {};
+      for (const e of items) {
+        limitsMap[e._id] = {
+          maxBooths: e?.limits?.maxBooths || 0,
+          maxRecruitersPerEvent: e?.limits?.maxRecruitersPerEvent || 0,
+          name: e?.name || 'Event',
+        };
+      }
+      setEventLimits(limitsMap);
     } catch (err) {
       console.error('Failed to load events for booth', err);
       setEventOptions([]);
@@ -218,6 +269,13 @@ export default function BoothManagement() {
     e.preventDefault();
     setBoothSaving(true);
     try {
+      // Client-side recruiters limit validation per event
+      const exceeded = validateRecruiterLimits();
+      if (exceeded.length) {
+        const lines = exceeded.map(x => `• ${x.name}: ${x.existing} + ${x.adding} > ${x.max}`).join('\n');
+        showToast(`Max number of recruiters reached for selected event(s):\n\n${lines}`, 'error', 7000);
+        return; // block submit
+      }
       const payload = {
         name: boothForm.boothName,
         description: boothForm.firstHtml || '',
