@@ -180,7 +180,17 @@ const TermsConditionsForm = () => {
                 <main id="dashboard-main" className="dashboard-main">
                     <div className="bm-header">
                         <h2>{isEdit ? 'Edit Terms & Conditions' : 'Create Terms & Conditions'}</h2>
-                        <div className="bm-header-actions" />
+                        <div className="bm-header-actions">
+                            <button
+                                type="button"
+                                className="dashboard-button"
+                                style={{ width: 'auto' }}
+                                onClick={() => navigate('/terms-conditions')}
+                                aria-label="Back to Terms & Conditions list"
+                            >
+                                Back to List
+                            </button>
+                        </div>
                     </div>
 
                     {error && (
