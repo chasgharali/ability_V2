@@ -3,11 +3,13 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
+import './RegistrationWizard.css';
 import { getEventBySlug, registerForEvent } from '../../services/events';
 import EditProfileResume from '../Dashboard/EditProfileResume';
 import SurveyForm from '../Dashboard/SurveyForm';
 import { useAuth } from '../../contexts/AuthContext';
 import MyAccountInline from '../Account/MyAccountInline';
+import { termsConditionsAPI } from '../../services/termsConditions';
 
 export default function RegistrationWizard() {
   const { slug } = useParams();
@@ -16,8 +18,10 @@ export default function RegistrationWizard() {
   const [fetching, setFetching] = useState(true);
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState({});
   const [announcementsOptIn, setAnnouncementsOptIn] = useState(!!user?.subscribeAnnouncements);
+  const [termsDocuments, setTermsDocuments] = useState([]);
+  const [loadingTerms, setLoadingTerms] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const liveRef = useRef(null);
@@ -27,6 +31,25 @@ export default function RegistrationWizard() {
       try {
         const res = await getEventBySlug(slug);
         setEvent(res?.event || null);
+        
+        // Fetch terms documents if event has termsIds
+        if (res?.event?.termsIds?.length) {
+          setLoadingTerms(true);
+          try {
+            const termsPromises = res.event.termsIds.map(id => 
+              termsConditionsAPI.getById(id).catch(err => {
+                console.warn(`Failed to fetch terms ${id}:`, err);
+                return { _id: id, title: `Terms Document ${id}`, content: 'Unable to load terms content.' };
+              })
+            );
+            const terms = await Promise.all(termsPromises);
+            setTermsDocuments(terms.filter(Boolean));
+          } catch (error) {
+            console.error('Error fetching terms:', error);
+          } finally {
+            setLoadingTerms(false);
+          }
+        }
       } finally {
         setFetching(false);
       }
@@ -58,30 +81,87 @@ export default function RegistrationWizard() {
   };
 
   const handleComplete = async () => {
-    if (!termsAccepted) return;
+    if (!allTermsAccepted) return;
     setSaving(true);
     try {
+      // Save terms acceptance data to user profile
+      const termsAcceptanceData = {
+        acceptedTerms: termsAccepted,
+        acceptedAt: new Date().toISOString(),
+        eventSlug: slug
+      };
+      
+      // Update user profile with terms acceptance
+      await updateProfile({ 
+        termsAcceptance: termsAcceptanceData,
+        subscribeAnnouncements: announcementsOptIn 
+      });
+      
+      // Register for the event
       await registerForEvent(slug);
+      
       // Navigate to registered list
       navigate('/events/registered', { replace: true });
     } catch (e) {
+      console.error('Registration error:', e);
       // no-op; could surface toast later
     } finally {
       setSaving(false);
     }
   };
 
+  const handleTermsAcceptance = (termId, accepted) => {
+    setTermsAccepted(prev => ({
+      ...prev,
+      [termId]: accepted
+    }));
+  };
+
+  const allTermsAccepted = useMemo(() => {
+    if (!termsDocuments.length) {
+      // If no terms documents, check for general terms acceptance
+      return termsAccepted.general === true;
+    }
+    return termsDocuments.every(doc => termsAccepted[doc._id] === true);
+  }, [termsDocuments, termsAccepted]);
+
   const termsBlocks = useMemo(() => {
-    const ids = event?.termsIds || [];
-    if (!ids.length) return null;
+    if (!termsDocuments.length) return null;
     return (
-      <ul style={{ paddingLeft: '1rem' }}>
-        {ids.map(id => (
-          <li key={id}><span>Terms document id: {id}</span></li>
+      <div className="terms-documents">
+        {termsDocuments.map(doc => (
+          <div key={doc._id} className="terms-document-option">
+            <div className="terms-content-preview">
+              <h4 className="terms-title">{doc.title || 'Terms & Conditions'}</h4>
+              <div className="terms-content">
+                {doc.content ? (
+                  <div dangerouslySetInnerHTML={{ __html: doc.content }} />
+                ) : (
+                  <p>Terms content not available.</p>
+                )}
+              </div>
+            </div>
+            <div className="terms-checkbox-wrapper">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={termsAccepted[doc._id] || false}
+                  onChange={(e) => handleTermsAcceptance(doc._id, e.target.checked)}
+                  className="checkbox-input"
+                  required
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">
+                  <strong>I accept the {doc.title || 'Terms & Conditions'}</strong>
+                  <small>Required to complete registration</small>
+                </span>
+              </label>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     );
-  }, [event]);
+  }, [termsDocuments, termsAccepted]);
 
   if (loading || fetching) {
     return <div className="dashboard"><div className="dashboard-layout"><main className="dashboard-main"><div>Loading…</div></main></div></div>;
@@ -98,13 +178,55 @@ export default function RegistrationWizard() {
             <h2>{event?.name || 'Event Registration'}</h2>
             <div className="alert-box"><p>Continue Registration by editing and submitting all three pages of registration.</p></div>
 
-            <nav aria-label="Registration steps" style={{ marginBottom: '1rem' }}>
-              <ol style={{ display: 'flex', gap: 8, listStyle: 'none', padding: 0, margin: 0 }}>
-                <li><button className={`ajf-btn ${step === 1 ? 'ajf-btn-dark' : 'ajf-btn-outline'}`} aria-current={step === 1 ? 'step' : undefined} onClick={() => setStep(1)}>Step 1: My Account</button></li>
-                <li><button className={`ajf-btn ${step === 2 ? 'ajf-btn-dark' : 'ajf-btn-outline'}`} aria-current={step === 2 ? 'step' : undefined} onClick={() => setStep(2)}>Step 2: Edit Profile & Resume</button></li>
-                <li><button className={`ajf-btn ${step === 3 ? 'ajf-btn-dark' : 'ajf-btn-outline'}`} aria-current={step === 3 ? 'step' : undefined} onClick={() => setStep(3)}>Step 3: Survey & Terms</button></li>
+            <nav aria-label="Registration steps" className="wizard-nav">
+              <div className="wizard-progress">
+                <div className="wizard-progress-bar" style={{ width: `${(step / 3) * 100}%` }}></div>
+              </div>
+              <ol className="wizard-steps">
+                <li className={`wizard-step ${step >= 1 ? 'completed' : ''} ${step === 1 ? 'active' : ''}`}>
+                  <button 
+                    className="wizard-step-btn" 
+                    aria-current={step === 1 ? 'step' : undefined} 
+                    onClick={() => setStep(1)}
+                    disabled={step < 1}
+                  >
+                    <span className="wizard-step-number">1</span>
+                    <div className="wizard-step-content">
+                      <span className="wizard-step-title">My Account</span>
+                      <span className="wizard-step-desc">Personal information</span>
+                    </div>
+                  </button>
+                </li>
+                <li className={`wizard-step ${step >= 2 ? 'completed' : ''} ${step === 2 ? 'active' : ''}`}>
+                  <button 
+                    className="wizard-step-btn" 
+                    aria-current={step === 2 ? 'step' : undefined} 
+                    onClick={() => setStep(2)}
+                    disabled={step < 2}
+                  >
+                    <span className="wizard-step-number">2</span>
+                    <div className="wizard-step-content">
+                      <span className="wizard-step-title">Profile & Resume</span>
+                      <span className="wizard-step-desc">Professional details</span>
+                    </div>
+                  </button>
+                </li>
+                <li className={`wizard-step ${step >= 3 ? 'completed' : ''} ${step === 3 ? 'active' : ''}`}>
+                  <button 
+                    className="wizard-step-btn" 
+                    aria-current={step === 3 ? 'step' : undefined} 
+                    onClick={() => setStep(3)}
+                    disabled={step < 3}
+                  >
+                    <span className="wizard-step-number">3</span>
+                    <div className="wizard-step-content">
+                      <span className="wizard-step-title">Survey & Terms</span>
+                      <span className="wizard-step-desc">Final requirements</span>
+                    </div>
+                  </button>
+                </li>
               </ol>
-              <div aria-live="polite" ref={liveRef} style={{ position: 'absolute', left: -99999 }} />
+              <div aria-live="polite" ref={liveRef} className="sr-only" />
             </nav>
 
             {step === 1 && (
@@ -115,7 +237,7 @@ export default function RegistrationWizard() {
               <section aria-labelledby="profile-h">
                 <h3 id="profile-h">Edit Profile & Resume</h3>
                 <EditProfileResume />
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="form-actions form-actions-split">
                   <button className="ajf-btn ajf-btn-outline" onClick={prev}>Previous</button>
                   <button className="ajf-btn ajf-btn-dark" onClick={next}>Next</button>
                 </div>
@@ -127,22 +249,59 @@ export default function RegistrationWizard() {
                 <h3 id="survey-h">Survey</h3>
                 <SurveyForm />
                 <hr />
-                <h3>Agreements to Terms and Privacy Policy (Required)</h3>
-                {termsBlocks}
-                <div className="form-group">
-                  <label>
-                    <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} /> I accept the Terms & Conditions.
-                  </label>
+                <div className="terms-section">
+                  <h3 className="terms-section-title">Agreements to Terms and Privacy Policy (Required)</h3>
+                  {loadingTerms ? (
+                    <div className="terms-loading">Loading terms and conditions...</div>
+                  ) : termsBlocks ? (
+                    termsBlocks
+                  ) : (
+                    <div className="terms-fallback">
+                      <p>By proceeding with registration, you agree to our Terms of Service and Privacy Policy.</p>
+                    </div>
+                  )}
+                  
+                  {!termsDocuments.length && (
+                    <div className="terms-agreement">
+                      <label className="checkbox-label">
+                        <input 
+                          type="checkbox" 
+                          checked={termsAccepted.general || false}
+                          onChange={(e) => handleTermsAcceptance('general', e.target.checked)}
+                          className="checkbox-input"
+                          required
+                        />
+                        <span className="checkbox-custom"></span>
+                        <span className="checkbox-text">
+                          <strong>I accept the Terms & Conditions</strong>
+                          <small>Required to complete registration</small>
+                        </span>
+                      </label>
+                    </div>
+                  )}
                 </div>
-                <h3>Announcements</h3>
-                <div className="form-group">
-                  <label>
-                    <input type="checkbox" checked={announcementsOptIn} onChange={(e) => handleAnnouncementsToggle(e.target.checked)} /> Please keep me informed with announcements and reminders of upcoming career fairs and events.
-                  </label>
+
+                <div className="announcements-section">
+                  <h3 className="announcements-section-title">Communication Preferences</h3>
+                  <div className="announcements-option">
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={announcementsOptIn} 
+                        onChange={(e) => handleAnnouncementsToggle(e.target.checked)}
+                        className="checkbox-input"
+                      />
+                      <span className="checkbox-custom"></span>
+                      <span className="checkbox-text">
+                        <strong>Subscribe to Job Seeker Announcements</strong>
+                        <small>Receive updates about upcoming career fairs and events</small>
+                      </span>
+                    </label>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="form-actions form-actions-split">
                   <button className="ajf-btn ajf-btn-outline" onClick={prev}>Previous</button>
-                  <button className="ajf-btn ajf-btn-dark" onClick={handleComplete} disabled={!termsAccepted || saving}>{saving ? 'Completing…' : 'Complete Registration'}</button>
+                  <button className="ajf-btn ajf-btn-dark" onClick={handleComplete} disabled={!allTermsAccepted || saving}>{saving ? 'Completing…' : 'Complete Registration'}</button>
                 </div>
               </section>
             )}

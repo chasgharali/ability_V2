@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './MyAccountInline.css';
 
 export default function MyAccountInline({ user, onDone, updateProfile }) {
   const [form, setForm] = useState({
@@ -49,9 +50,11 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
   };
 
   return (
-    <section aria-labelledby="acc-h" style={{ maxWidth: 860 }}>
-      <h3 id="acc-h">My Account</h3>
-      <p className="section-note">An asterisk (*) indicates a required field.</p>
+    <section aria-labelledby="acc-h" className="account-section">
+      <div className="section-header">
+        <h3 id="acc-h" className="section-title">My Account</h3>
+        <p className="section-note">An asterisk (*) indicates a required field.</p>
+      </div>
 
       {message && <div className="alert-box" role="status" aria-live="polite">{message}</div>}
       {error && <div className="alert-box" style={{ background:'#fdecea', borderColor:'#f5c2c7' }} role="alert">{error}</div>}
@@ -99,19 +102,108 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
           </select>
         </div>
 
-        <fieldset style={{ marginTop: 12 }}>
+        <fieldset className="accessibility-fieldset">
           <legend>Accessibility Options</legend>
-          <div className="form-row">
-            <label><input type="checkbox" checked={a11y.usesScreenMagnifier} onChange={toggle('usesScreenMagnifier')} /> Screen Magnifier</label>
-            <label><input type="checkbox" checked={a11y.usesScreenReader} onChange={toggle('usesScreenReader')} /> Screen Reader</label>
-            <label><input type="checkbox" checked={a11y.needsASL} onChange={toggle('needsASL')} /> American Sign Language (ASL)</label>
-            <label><input type="checkbox" checked={a11y.needsCaptions} onChange={toggle('needsCaptions')} /> Captions</label>
-            <label><input type="checkbox" checked={a11y.needsOther} onChange={toggle('needsOther')} /> Others</label>
-            <label><input type="checkbox" checked={a11y.subscribeAnnouncements} onChange={toggle('subscribeAnnouncements')} /> Subscribe to Job Seeker Announcements</label>
+          <p className="fieldset-description">Select any accessibility accommodations you need during the event.</p>
+          <div className="accessibility-grid">
+            <div className="accessibility-option">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={a11y.usesScreenMagnifier} 
+                  onChange={toggle('usesScreenMagnifier')} 
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">
+                  <strong>Screen Magnifier</strong>
+                  <small>Enlarged text and interface elements</small>
+                </span>
+              </label>
+            </div>
+            <div className="accessibility-option">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={a11y.usesScreenReader} 
+                  onChange={toggle('usesScreenReader')} 
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">
+                  <strong>Screen Reader</strong>
+                  <small>Compatible with assistive technology</small>
+                </span>
+              </label>
+            </div>
+            <div className="accessibility-option">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={a11y.needsASL} 
+                  onChange={toggle('needsASL')} 
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">
+                  <strong>American Sign Language (ASL)</strong>
+                  <small>Sign language interpretation services</small>
+                </span>
+              </label>
+            </div>
+            <div className="accessibility-option">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={a11y.needsCaptions} 
+                  onChange={toggle('needsCaptions')} 
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">
+                  <strong>Captions</strong>
+                  <small>Closed captions for audio content</small>
+                </span>
+              </label>
+            </div>
+            <div className="accessibility-option">
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={a11y.needsOther} 
+                  onChange={toggle('needsOther')} 
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">
+                  <strong>Other Accommodations</strong>
+                  <small>Additional accessibility needs</small>
+                </span>
+              </label>
+            </div>
           </div>
         </fieldset>
 
-        <div style={{ marginTop: '1rem' }}>
+        <fieldset className="notifications-fieldset">
+          <legend>Communication Preferences</legend>
+          <div className="accessibility-option">
+            <label className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={a11y.subscribeAnnouncements} 
+                onChange={toggle('subscribeAnnouncements')} 
+                className="checkbox-input"
+              />
+              <span className="checkbox-custom"></span>
+              <span className="checkbox-text">
+                <strong>Subscribe to Job Seeker Announcements</strong>
+                <small>Receive updates about upcoming events and opportunities</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div className="form-actions">
           <button type="submit" className="ajf-btn ajf-btn-dark" disabled={saving} aria-label="Save and go to next step">{saving ? 'Saving…' : 'Next'}</button>
         </div>
       </form>
