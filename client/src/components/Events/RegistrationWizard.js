@@ -30,24 +30,55 @@ export default function RegistrationWizard() {
     (async () => {
       try {
         const res = await getEventBySlug(slug);
+        console.log('Event data:', res?.event); // Debug log
         setEvent(res?.event || null);
         
         // Fetch terms documents if event has termsIds
         if (res?.event?.termsIds?.length) {
+          console.log('Event has termsIds:', res.event.termsIds); // Debug log
           setLoadingTerms(true);
           try {
             const termsPromises = res.event.termsIds.map(id => 
-              termsConditionsAPI.getById(id).catch(err => {
+              termsConditionsAPI.getById(id).then(response => {
+                console.log(`Terms document ${id}:`, response); // Debug log
+                // Handle backend response structure: { terms: { ... } }
+                if (response.terms) {
+                  return response.terms;
+                } else if (response.data?.terms) {
+                  return response.data.terms;
+                } else if (response._id || response.id) {
+                  return response;
+                } else {
+                  console.warn(`Unexpected response structure for terms ${id}:`, response);
+                  return { _id: id, title: `Terms Document ${id}`, content: 'Unable to load terms content.', isRequired: true };
+                }
+              }).catch(err => {
                 console.warn(`Failed to fetch terms ${id}:`, err);
-                return { _id: id, title: `Terms Document ${id}`, content: 'Unable to load terms content.' };
+                return { _id: id, title: `Terms Document ${id}`, content: 'Unable to load terms content.', isRequired: true };
               })
             );
             const terms = await Promise.all(termsPromises);
+            console.log('All terms documents:', terms); // Debug log
             setTermsDocuments(terms.filter(Boolean));
           } catch (error) {
             console.error('Error fetching terms:', error);
           } finally {
             setLoadingTerms(false);
+          }
+        } else {
+          console.log('Event has no termsIds or empty array'); // Debug log
+          // Try to fetch active terms as fallback
+          try {
+            const activeTermsResponse = await termsConditionsAPI.getActive();
+            console.log('Active terms fallback:', activeTermsResponse); // Debug log
+            // Handle response structure: { terms: { ... } }
+            if (activeTermsResponse?.terms) {
+              setTermsDocuments([activeTermsResponse.terms]);
+            } else if (activeTermsResponse?.data?.terms) {
+              setTermsDocuments([activeTermsResponse.data.terms]);
+            }
+          } catch (error) {
+            console.warn('Failed to fetch active terms:', error);
           }
         }
       } finally {
@@ -124,43 +155,57 @@ export default function RegistrationWizard() {
     }
     // Only check required terms
     const requiredTerms = termsDocuments.filter(doc => doc.isRequired !== false);
-    return requiredTerms.every(doc => termsAccepted[doc._id] === true);
+    return requiredTerms.every(doc => {
+      const docId = doc._id || doc.id;
+      return termsAccepted[docId] === true;
+    });
   }, [termsDocuments, termsAccepted]);
 
   const termsBlocks = useMemo(() => {
     if (!termsDocuments.length) return null;
     return (
       <div className="terms-documents">
-        {termsDocuments.map(doc => (
-          <div key={doc._id} className="terms-document-option" data-required={doc.isRequired !== false}>
-            <div className="terms-content-preview">
-              <h4 className="terms-title">{doc.title || 'Terms & Conditions'}</h4>
-              <div className="terms-content">
-                {doc.content ? (
-                  <div dangerouslySetInnerHTML={{ __html: doc.content }} />
-                ) : (
-                  <p>Terms content not available.</p>
-                )}
+        {termsDocuments.map(doc => {
+          const docId = doc._id || doc.id;
+          const docTitle = doc.title || doc.name || 'Terms & Conditions';
+          const docContent = doc.content || doc.description || '';
+          const isRequired = doc.isRequired !== false;
+          
+          console.log('Rendering terms document:', { docId, docTitle, docContent: docContent.substring(0, 100) + '...', isRequired }); // Debug log
+          
+          return (
+            <div key={docId} className="terms-document-option" data-required={isRequired}>
+              <div className="terms-content-preview">
+                <div className="terms-content">
+                  {docContent ? (
+                    <div dangerouslySetInnerHTML={{ __html: docContent }} />
+                  ) : (
+                    <div>
+                      <p><strong>Terms content not available.</strong></p>
+                      <p>Please contact support to review the full terms and conditions for this event.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="terms-checkbox-wrapper">
+                <label className="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    checked={termsAccepted[docId] || false}
+                    onChange={(e) => handleTermsAcceptance(docId, e.target.checked)}
+                    className="checkbox-input"
+                    required={isRequired}
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span className="checkbox-text">
+                    <strong>I accept the {docTitle}</strong>
+                    <small>{isRequired ? 'Required to complete registration' : 'Optional'}</small>
+                  </span>
+                </label>
               </div>
             </div>
-            <div className="terms-checkbox-wrapper">
-              <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={termsAccepted[doc._id] || false}
-                  onChange={(e) => handleTermsAcceptance(doc._id, e.target.checked)}
-                  className="checkbox-input"
-                  required={doc.isRequired !== false}
-                />
-                <span className="checkbox-custom"></span>
-                <span className="checkbox-text">
-                  <strong>I accept the {doc.title || 'Terms & Conditions'}</strong>
-                  <small>{doc.isRequired !== false ? 'Required to complete registration' : 'Optional'}</small>
-                </span>
-              </label>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }, [termsDocuments, termsAccepted]);
@@ -259,26 +304,31 @@ export default function RegistrationWizard() {
                     termsBlocks
                   ) : (
                     <div className="terms-fallback">
-                      <p>By proceeding with registration, you agree to our Terms of Service and Privacy Policy.</p>
-                    </div>
-                  )}
-                  
-                  {!termsDocuments.length && (
-                    <div className="terms-agreement">
-                      <label className="checkbox-label">
-                        <input 
-                          type="checkbox" 
-                          checked={termsAccepted.general || false}
-                          onChange={(e) => handleTermsAcceptance('general', e.target.checked)}
-                          className="checkbox-input"
-                          required
-                        />
-                        <span className="checkbox-custom"></span>
-                        <span className="checkbox-text">
-                          <strong>I accept the Terms & Conditions</strong>
-                          <small>Required to complete registration</small>
-                        </span>
-                      </label>
+                      <div className="terms-document-option" data-required="true">
+                        <div className="terms-content-preview">
+                          <h4 className="terms-title">Terms & Conditions</h4>
+                          <div className="terms-content">
+                            <p><strong>Terms content not available.</strong></p>
+                            <p>By proceeding with registration, you agree to our Terms of Service and Privacy Policy. Please contact support if you need to review the full terms and conditions.</p>
+                          </div>
+                        </div>
+                        <div className="terms-checkbox-wrapper">
+                          <label className="checkbox-label">
+                            <input 
+                              type="checkbox" 
+                              checked={termsAccepted.general || false}
+                              onChange={(e) => handleTermsAcceptance('general', e.target.checked)}
+                              className="checkbox-input"
+                              required
+                            />
+                            <span className="checkbox-custom"></span>
+                            <span className="checkbox-text">
+                              <strong>I accept the Terms & Conditions</strong>
+                              <small>Required to complete registration</small>
+                            </span>
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

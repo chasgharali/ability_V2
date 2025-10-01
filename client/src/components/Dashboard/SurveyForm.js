@@ -222,7 +222,7 @@ export default function SurveyForm() {
       <h2>Survey – Tell us about yourself</h2>
       <p className="section-note">This survey helps us learn about and better support all job seekers with disabilities. We may share summary group data analytics, but we will never share individual survey information.</p>
 
-      <form className="account-form" onSubmit={handleSubmit}>
+      <form className="account-form survey-form" onSubmit={handleSubmit}>
         <div className="form-row form-row-3">
           <div className="form-group">
             <label>Race (check all that apply)</label>
@@ -276,13 +276,6 @@ export default function SurveyForm() {
         <h3>Disability Information</h3>
         <p className="section-note">Indicate current disability(ies) Check all that apply. If these choices don't apply, use the "other" space below.</p>
         <div style={{ display: 'flex', gap: '0.5rem', margin: '0.25rem 0 0.75rem 0' }}>
-          <button type="button" className="update-button" onClick={async ()=>{
-            const all = [...DISABILITY_OPTIONS];
-            const prev = form.disabilities;
-            setForm(p=>({ ...p, disabilities: all }));
-            const ok = await persistPartial({ disabilities: all });
-            if (!ok) setForm(p=>({ ...p, disabilities: prev }));
-          }}>Select All</button>
           <button type="button" className="update-button" onClick={async ()=>{
             const prev = form.disabilities;
             setForm(p=>({ ...p, disabilities: [] }));

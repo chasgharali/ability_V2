@@ -329,7 +329,7 @@
 .terms-agreement .checkbox-label,
 .terms-checkbox-wrapper .checkbox-label {
   display: flex;
-  align-items: flex-start;
+  align-items: center; /* Center align checkbox with text */
   gap: 1rem;
   cursor: pointer;
   margin: 0;
@@ -353,7 +353,7 @@
   border-radius: 4px;
   background: white;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 0; /* Remove top margin for center alignment */
   position: relative;
   transition: all 0.2s ease;
 }
@@ -460,7 +460,7 @@
 
 .announcements-option .checkbox-label {
   display: flex;
-  align-items: flex-start;
+  align-items: center; /* Center align checkbox with text */
   gap: 1rem;
   cursor: pointer;
   margin: 0;
@@ -482,7 +482,7 @@
   border-radius: 4px;
   background: white;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 0; /* Remove top margin for center alignment */
   position: relative;
   transition: all 0.2s ease;
 }

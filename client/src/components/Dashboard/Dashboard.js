@@ -707,14 +707,14 @@ function DeleteAccountPanel({ onDeleted }) {
     };
 
     return (
-        <div className="account-section">
-            {error && <div className="alert-box" style={{ background: '#ffe8e8' }}>{error}</div>}
-            <p>Please confirm that you want to delete your account. This will deactivate your profile and sign you out.</p>
-            <label className="checkbox-label">
-                <input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} />
-                <span>I understand that this action cannot be undone.</span>
-            </label>
-            <div style={{ marginTop: '1rem' }}>
+        <div className="delete-account-panel">
+            <div className="delete-account-checkbox-container">
+                {error && <div className="alert-box" style={{ background: '#ffe8e8', borderColor: '#f5c2c7' }}>{error}</div>}
+                <p>Please confirm that you want to delete your account. This will deactivate your profile and sign you out.</p>
+                <label className="checkbox-label">
+                    <input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} />
+                    <span>I understand that this action cannot be undone.</span>
+                </label>
                 <button className="dashboard-button" disabled={!confirm || working} onClick={handleDelete}>
                     {working ? 'Deleting…' : 'Delete My Account'}
                 </button>
