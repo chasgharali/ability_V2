@@ -251,15 +251,26 @@ export default function RegisteredEventDetail() {
 
                 {/* Bottom actions */}
                 <div className="registered-event-actions">
-                  <a 
-                    href={`/event/${encodeURIComponent(event.slug || event._id)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ajf-btn ajf-btn-dark"
-                    aria-label={`Go to ${event.name} event page (opens in new tab)`}
-                  >
-                    Go To Event
-                  </a>
+                  {event.link ? (
+                    <a 
+                      href={event.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ajf-btn ajf-btn-dark"
+                      aria-label={`Go to ${event.name} event page (opens in new tab)`}
+                    >
+                      Go To Event
+                    </a>
+                  ) : (
+                    <button
+                      className="ajf-btn ajf-btn-disabled"
+                      disabled
+                      aria-label="Event link not available"
+                      style={{ cursor: 'not-allowed' }}
+                    >
+                      Event Link Not Available
+                    </button>
+                  )}
                 </div>
               </>
             )}

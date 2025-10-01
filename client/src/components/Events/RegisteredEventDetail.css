@@ -267,8 +267,10 @@
 }
 
 .registered-event-actions .ajf-btn {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
   font-weight: 600;
   border-radius: 6px;
   transition: all 0.2s ease;
@@ -276,6 +278,8 @@
   cursor: pointer;
   text-decoration: none;
   text-align: center;
+  min-height: 42px; /* consistent button height */
+  line-height: 1;   /* avoid extra height from text line-height */
 }
 
 .registered-event-actions .ajf-btn-dark {
@@ -287,6 +291,29 @@
 .registered-event-actions .ajf-btn-dark:hover {
   background: #333333;
   border-color: #333333;
+}
+
+.registered-event-actions .ajf-btn-disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  cursor: not-allowed;
+  padding: 0 1.5rem;
+  font-weight: 600;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 42px; /* match enabled button height */
+  line-height: 1;
+}
+
+.registered-event-actions .ajf-btn-disabled:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+  border-color: #d1d5db;
 }
 
 /* Responsive design */
