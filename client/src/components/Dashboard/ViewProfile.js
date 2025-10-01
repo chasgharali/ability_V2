@@ -108,72 +108,140 @@ export default function ViewProfile() {
   const languageNames = mapArray(languages, LANG_MAP);
 
   return (
-    <div className="dashboard-content">
-      <h2>Job Seeker Profile</h2>
-      <div className="alert-box">
-        <p>This is the profile that recruiters will see. It will only be shared with companies you show interest in and the booths you visit.</p>
+    <div className="dashboard-content profile-view">
+      <div className="profile-header-section">
+        <h1 className="profile-title">Job Seeker Profile</h1>
+        <div className="profile-notice">
+          <p>This is the profile that recruiters will see. It will only be shared with companies you show interest in and the booths you visit.</p>
+        </div>
       </div>
 
-      {/* Header card */}
-      <div style={{ display: 'grid', placeItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-        <div style={{ width: 120, height: 120, borderRadius: '50%', background: '#f2f2f2', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
-          <div className="avatar-preview" style={{ width: '100%', height: '100%', borderRadius: 0, backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        </div>
-        <div style={{ textAlign: 'center', lineHeight: 1.35 }}>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>{name || '—'}</div>
-          <div style={{ color: '#475569' }}>{email || '—'}</div>
-          {phone ? <div style={{ color: '#475569' }}>{phone}</div> : null}
-          <div style={{ color: '#475569' }}>{[location, country].filter(Boolean).join(', ') || '—'}</div>
-        </div>
-        {resumeUrl ? (
-          <a href={resumeUrl} target="_blank" rel="noreferrer" className="dashboard-button" style={{ minWidth: 240, textAlign: 'center' }}>
-            View Complete Resume
-          </a>
-        ) : null}
-      </div>
+      <div className="profile-container">
+        {/* Profile Header Card */}
+        <section className="profile-hero-card" aria-labelledby="profile-hero-heading">
+          <div className="profile-hero-content">
+            <div className="profile-avatar-section">
+              <div 
+                className="profile-avatar" 
+                style={{ backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined }}
+                role="img"
+                aria-label={`Profile photo of ${name || 'user'}`}
+              />
+              <div className="profile-status-indicator" aria-label="Profile active"></div>
+            </div>
+            
+            <div className="profile-identity">
+              <h2 id="profile-hero-heading" className="profile-name">{name || 'Name not provided'}</h2>
+              <div className="profile-contact">
+                <p className="profile-email">{email || 'Email not provided'}</p>
+                {phone && <p className="profile-phone">{phone}</p>}
+                <p className="profile-location">{[location, country].filter(Boolean).join(', ') || 'Location not specified'}</p>
+              </div>
+            </div>
 
-      {/* Details grid */}
-      <div className="account-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-        <div className="account-section" style={{ gridColumn: '1 / -1' }}>
-          <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="form-group">
-              <label>Headline</label>
-              <div className="readonly-field">{headline || '—'}</div>
-            </div>
-            <div className="form-group">
-              <label>Keywords</label>
-              <div className="readonly-field">{keywords || '—'}</div>
-            </div>
-            <div className="form-group">
-              <label>Primary Job Experience</label>
-              <div className="readonly-field">{primaryExperienceNames.length ? <Chips items={primaryExperienceNames} /> : '—'}</div>
-            </div>
-            <div className="form-group">
-              <label>Employment Types</label>
-              <div className="readonly-field">{employmentTypeNames.length ? <Chips items={employmentTypeNames} /> : '—'}</div>
-            </div>
-            <div className="form-group">
-              <label>Work Experience Level</label>
-              <div className="readonly-field">{mapValue(workLevel, EXP_MAP)}</div>
-            </div>
-            <div className="form-group">
-              <label>Highest Education Level</label>
-              <div className="readonly-field">{mapValue(educationLevel, EDU_MAP)}</div>
-            </div>
-            <div className="form-group">
-              <label>Language(s)</label>
-              <div className="readonly-field">{languageNames.length ? <Chips items={languageNames} /> : '—'}</div>
-            </div>
-            <div className="form-group">
-              <label>Security Clearance</label>
-              <div className="readonly-field">{mapValue(clearance, CLEAR_MAP)}</div>
-            </div>
-            <div className="form-group">
-              <label>Veteran/Military Status</label>
-              <div className="readonly-field">{mapValue(veteranStatus, VET_MAP)}</div>
+            <div className="profile-actions">
+              {resumeUrl ? (
+                <a 
+                  href={resumeUrl} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="profile-btn profile-btn-primary"
+                  aria-describedby="resume-help"
+                >
+                  <span className="btn-icon">📄</span>
+                  View Complete Resume
+                </a>
+              ) : (
+                <div className="profile-btn profile-btn-disabled" aria-label="No resume uploaded">
+                  <span className="btn-icon">📄</span>
+                  No Resume Available
+                </div>
+              )}
+              <p id="resume-help" className="sr-only">Opens resume in a new tab</p>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Profile Details Grid */}
+        <section className="profile-details-section" aria-labelledby="profile-details-heading">
+          <h2 id="profile-details-heading" className="section-title">Professional Details</h2>
+          
+          <div className="profile-details-grid">
+            <div className="profile-detail-card">
+              <div className="detail-header">
+                <h3 className="detail-title">Professional Summary</h3>
+              </div>
+              <div className="detail-content">
+                <div className="detail-item">
+                  <label className="detail-label">Professional Headline</label>
+                  <div className="detail-value">{headline || <span className="empty-state">No headline provided</span>}</div>
+                </div>
+                <div className="detail-item">
+                  <label className="detail-label">Keywords & Skills</label>
+                  <div className="detail-value">{keywords || <span className="empty-state">No keywords specified</span>}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-detail-card">
+              <div className="detail-header">
+                <h3 className="detail-title">Experience & Employment</h3>
+              </div>
+              <div className="detail-content">
+                <div className="detail-item">
+                  <label className="detail-label">Primary Job Experience</label>
+                  <div className="detail-value">
+                    {primaryExperienceNames.length ? <Chips items={primaryExperienceNames} /> : <span className="empty-state">No experience specified</span>}
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <label className="detail-label">Employment Types</label>
+                  <div className="detail-value">
+                    {employmentTypeNames.length ? <Chips items={employmentTypeNames} /> : <span className="empty-state">No employment types specified</span>}
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <label className="detail-label">Experience Level</label>
+                  <div className="detail-value">{mapValue(workLevel, EXP_MAP) === workLevel ? <span className="empty-state">Not specified</span> : mapValue(workLevel, EXP_MAP)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-detail-card">
+              <div className="detail-header">
+                <h3 className="detail-title">Education & Qualifications</h3>
+              </div>
+              <div className="detail-content">
+                <div className="detail-item">
+                  <label className="detail-label">Highest Education Level</label>
+                  <div className="detail-value">{mapValue(educationLevel, EDU_MAP) === educationLevel ? <span className="empty-state">Not specified</span> : mapValue(educationLevel, EDU_MAP)}</div>
+                </div>
+                <div className="detail-item">
+                  <label className="detail-label">Security Clearance</label>
+                  <div className="detail-value">{mapValue(clearance, CLEAR_MAP) === clearance ? <span className="empty-state">None</span> : mapValue(clearance, CLEAR_MAP)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="profile-detail-card">
+              <div className="detail-header">
+                <h3 className="detail-title">Additional Information</h3>
+              </div>
+              <div className="detail-content">
+                <div className="detail-item">
+                  <label className="detail-label">Languages</label>
+                  <div className="detail-value">
+                    {languageNames.length ? <Chips items={languageNames} /> : <span className="empty-state">No languages specified</span>}
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <label className="detail-label">Veteran/Military Status</label>
+                  <div className="detail-value">{mapValue(veteranStatus, VET_MAP) === veteranStatus ? <span className="empty-state">Not specified</span> : mapValue(veteranStatus, VET_MAP)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

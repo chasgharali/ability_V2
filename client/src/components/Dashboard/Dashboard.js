@@ -13,6 +13,23 @@ import EditProfileResume from './EditProfileResume';
 import ViewProfile from './ViewProfile';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import MyAccountInline from '../Account/MyAccountInline';
+
+// Simple error boundary to prevent white screens if a nested view crashes
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() { return { hasError: true }; }
+    componentDidCatch(err, info) { console.error('Dashboard view error:', err, info); }
+    render() {
+        if (this.state.hasError) {
+            return this.props.fallback || <div className="dashboard-content"><div className="alert-box" style={{ background:'#ffe8e8' }}>Something went wrong loading this view.</div></div>;
+        }
+        return this.props.children;
+    }
+}
 
 const Dashboard = () => {
     const { user, logout, loading, updateProfile } = useAuth();
@@ -365,7 +382,11 @@ const Dashboard = () => {
                     return <EditProfileResume />;
                 }
                 if (activeSection === 'view-profile') {
-                    return <ViewProfile />;
+                    return (
+                        <ErrorBoundary>
+                            <ViewProfile />
+                        </ErrorBoundary>
+                    );
                 }
                 if (activeSection === 'delete-account') {
                     return (
@@ -386,300 +407,7 @@ const Dashboard = () => {
                             <p>• Welcome to your job seeker dashboard</p>
                         </div>
 
-                        <div className="account-grid">
-                            <div className="account-section">
-                                <h3>Account Information</h3>
-                                <p className="section-note">An asterisk (*) indicates a required field.</p>
-
-                                <form className="account-form" onSubmit={handleUpdateSubmit}>
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label htmlFor="firstName">First Name *</label>
-                                            <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleFieldChange} aria-invalid={!!errors.firstName} />
-                                            {errors.firstName && <span className="error-text">{errors.firstName}</span>}
-                                        </div>
-                                        <div className="form-group">
-                                            <label htmlFor="lastName">Last Name *</label>
-                                            <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleFieldChange} aria-invalid={!!errors.lastName} />
-                                            {errors.lastName && <span className="error-text">{errors.lastName}</span>}
-                                        </div>
-                                    </div>
-
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label htmlFor="email">Email *</label>
-                                            <input type="email" id="email" name="email" value={formData.email} readOnly />
-                                        </div>
-                                        <div className="form-group">
-                                            <label htmlFor="phone">Phone</label>
-                                            <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleFieldChange} aria-invalid={!!errors.phone} />
-                                            {errors.phone && <span className="error-text">{errors.phone}</span>}
-                                        </div>
-                                    </div>
-
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label htmlFor="state">State</label>
-                                            <input type="text" id="state" name="state" value={formData.state} onChange={handleFieldChange} />
-                                        </div>
-                                        <div className="form-group">
-                                            <label htmlFor="city">City</label>
-                                            <input type="text" id="city" name="city" value={formData.city} onChange={handleFieldChange} />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="country">Country *</label>
-                                        <select id="country" name="country" value={formData.country} onChange={handleFieldChange} aria-invalid={!!errors.country}>
-                                            <option value="US">United States</option>
-                                            <option value="CA">Canada</option>
-                                            <option value="MX">Mexico</option>
-                                            <option value="GB">United Kingdom</option>
-                                            <option value="IE">Ireland</option>
-                                            <option value="FR">France</option>
-                                            <option value="DE">Germany</option>
-                                            <option value="IT">Italy</option>
-                                            <option value="ES">Spain</option>
-                                            <option value="NL">Netherlands</option>
-                                            <option value="BE">Belgium</option>
-                                            <option value="CH">Switzerland</option>
-                                            <option value="AT">Austria</option>
-                                            <option value="SE">Sweden</option>
-                                            <option value="NO">Norway</option>
-                                            <option value="DK">Denmark</option>
-                                            <option value="FI">Finland</option>
-                                            <option value="PL">Poland</option>
-                                            <option value="CZ">Czech Republic</option>
-                                            <option value="HU">Hungary</option>
-                                            <option value="RO">Romania</option>
-                                            <option value="BG">Bulgaria</option>
-                                            <option value="HR">Croatia</option>
-                                            <option value="SI">Slovenia</option>
-                                            <option value="SK">Slovakia</option>
-                                            <option value="EE">Estonia</option>
-                                            <option value="LV">Latvia</option>
-                                            <option value="LT">Lithuania</option>
-                                            <option value="GR">Greece</option>
-                                            <option value="PT">Portugal</option>
-                                            <option value="AU">Australia</option>
-                                            <option value="NZ">New Zealand</option>
-                                            <option value="JP">Japan</option>
-                                            <option value="KR">South Korea</option>
-                                            <option value="CN">China</option>
-                                            <option value="IN">India</option>
-                                            <option value="SG">Singapore</option>
-                                            <option value="HK">Hong Kong</option>
-                                            <option value="TW">Taiwan</option>
-                                            <option value="TH">Thailand</option>
-                                            <option value="MY">Malaysia</option>
-                                            <option value="ID">Indonesia</option>
-                                            <option value="PH">Philippines</option>
-                                            <option value="VN">Vietnam</option>
-                                            <option value="BR">Brazil</option>
-                                            <option value="AR">Argentina</option>
-                                            <option value="CL">Chile</option>
-                                            <option value="CO">Colombia</option>
-                                            <option value="PE">Peru</option>
-                                            <option value="VE">Venezuela</option>
-                                            <option value="EC">Ecuador</option>
-                                            <option value="UY">Uruguay</option>
-                                            <option value="PY">Paraguay</option>
-                                            <option value="BO">Bolivia</option>
-                                            <option value="GY">Guyana</option>
-                                            <option value="SR">Suriname</option>
-                                            <option value="ZA">South Africa</option>
-                                            <option value="NG">Nigeria</option>
-                                            <option value="KE">Kenya</option>
-                                            <option value="EG">Egypt</option>
-                                            <option value="MA">Morocco</option>
-                                            <option value="TN">Tunisia</option>
-                                            <option value="DZ">Algeria</option>
-                                            <option value="LY">Libya</option>
-                                            <option value="SD">Sudan</option>
-                                            <option value="ET">Ethiopia</option>
-                                            <option value="GH">Ghana</option>
-                                            <option value="UG">Uganda</option>
-                                            <option value="TZ">Tanzania</option>
-                                            <option value="ZM">Zambia</option>
-                                            <option value="ZW">Zimbabwe</option>
-                                            <option value="BW">Botswana</option>
-                                            <option value="NA">Namibia</option>
-                                            <option value="MW">Malawi</option>
-                                            <option value="MZ">Mozambique</option>
-                                            <option value="MG">Madagascar</option>
-                                            <option value="MU">Mauritius</option>
-                                            <option value="SC">Seychelles</option>
-                                            <option value="RE">Réunion</option>
-                                            <option value="YT">Mayotte</option>
-                                            <option value="KM">Comoros</option>
-                                            <option value="DJ">Djibouti</option>
-                                            <option value="SO">Somalia</option>
-                                            <option value="ER">Eritrea</option>
-                                            <option value="SS">South Sudan</option>
-                                            <option value="CF">Central African Republic</option>
-                                            <option value="TD">Chad</option>
-                                            <option value="NE">Niger</option>
-                                            <option value="ML">Mali</option>
-                                            <option value="BF">Burkina Faso</option>
-                                            <option value="CI">Côte d'Ivoire</option>
-                                            <option value="LR">Liberia</option>
-                                            <option value="SL">Sierra Leone</option>
-                                            <option value="GN">Guinea</option>
-                                            <option value="GW">Guinea-Bissau</option>
-                                            <option value="GM">Gambia</option>
-                                            <option value="SN">Senegal</option>
-                                            <option value="MR">Mauritania</option>
-                                            <option value="CV">Cape Verde</option>
-                                            <option value="ST">São Tomé and Príncipe</option>
-                                            <option value="GQ">Equatorial Guinea</option>
-                                            <option value="GA">Gabon</option>
-                                            <option value="CG">Republic of the Congo</option>
-                                            <option value="CD">Democratic Republic of the Congo</option>
-                                            <option value="AO">Angola</option>
-                                            <option value="CM">Cameroon</option>
-                                            <option value="RU">Russia</option>
-                                            <option value="KZ">Kazakhstan</option>
-                                            <option value="UZ">Uzbekistan</option>
-                                            <option value="TM">Turkmenistan</option>
-                                            <option value="TJ">Tajikistan</option>
-                                            <option value="KG">Kyrgyzstan</option>
-                                            <option value="AF">Afghanistan</option>
-                                            <option value="PK">Pakistan</option>
-                                            <option value="BD">Bangladesh</option>
-                                            <option value="LK">Sri Lanka</option>
-                                            <option value="MV">Maldives</option>
-                                            <option value="BT">Bhutan</option>
-                                            <option value="NP">Nepal</option>
-                                            <option value="MM">Myanmar</option>
-                                            <option value="LA">Laos</option>
-                                            <option value="KH">Cambodia</option>
-                                            <option value="BN">Brunei</option>
-                                            <option value="TL">East Timor</option>
-                                            <option value="FJ">Fiji</option>
-                                            <option value="PG">Papua New Guinea</option>
-                                            <option value="SB">Solomon Islands</option>
-                                            <option value="VU">Vanuatu</option>
-                                            <option value="NC">New Caledonia</option>
-                                            <option value="PF">French Polynesia</option>
-                                            <option value="WS">Samoa</option>
-                                            <option value="TO">Tonga</option>
-                                            <option value="KI">Kiribati</option>
-                                            <option value="TV">Tuvalu</option>
-                                            <option value="NR">Nauru</option>
-                                            <option value="PW">Palau</option>
-                                            <option value="MH">Marshall Islands</option>
-                                            <option value="FM">Micronesia</option>
-                                            <option value="AS">American Samoa</option>
-                                            <option value="GU">Guam</option>
-                                            <option value="MP">Northern Mariana Islands</option>
-                                            <option value="VI">U.S. Virgin Islands</option>
-                                            <option value="PR">Puerto Rico</option>
-                                            <option value="GT">Guatemala</option>
-                                            <option value="BZ">Belize</option>
-                                            <option value="SV">El Salvador</option>
-                                            <option value="HN">Honduras</option>
-                                            <option value="NI">Nicaragua</option>
-                                            <option value="CR">Costa Rica</option>
-                                            <option value="PA">Panama</option>
-                                            <option value="CU">Cuba</option>
-                                            <option value="JM">Jamaica</option>
-                                            <option value="HT">Haiti</option>
-                                            <option value="DO">Dominican Republic</option>
-                                            <option value="TT">Trinidad and Tobago</option>
-                                            <option value="BB">Barbados</option>
-                                            <option value="AG">Antigua and Barbuda</option>
-                                            <option value="BS">Bahamas</option>
-                                            <option value="DM">Dominica</option>
-                                            <option value="GD">Grenada</option>
-                                            <option value="KN">Saint Kitts and Nevis</option>
-                                            <option value="LC">Saint Lucia</option>
-                                            <option value="VC">Saint Vincent and the Grenadines</option>
-                                            <option value="IS">Iceland</option>
-                                            <option value="GL">Greenland</option>
-                                            <option value="FO">Faroe Islands</option>
-                                            <option value="SJ">Svalbard and Jan Mayen</option>
-                                            <option value="AX">Åland Islands</option>
-                                            <option value="AD">Andorra</option>
-                                            <option value="LI">Liechtenstein</option>
-                                            <option value="MC">Monaco</option>
-                                            <option value="SM">San Marino</option>
-                                            <option value="VA">Vatican City</option>
-                                            <option value="MT">Malta</option>
-                                            <option value="CY">Cyprus</option>
-                                            <option value="LU">Luxembourg</option>
-                                            <option value="MD">Moldova</option>
-                                            <option value="BY">Belarus</option>
-                                            <option value="UA">Ukraine</option>
-                                            <option value="GE">Georgia</option>
-                                            <option value="AM">Armenia</option>
-                                            <option value="AZ">Azerbaijan</option>
-                                            <option value="TR">Turkey</option>
-                                            <option value="IL">Israel</option>
-                                            <option value="PS">Palestine</option>
-                                            <option value="JO">Jordan</option>
-                                            <option value="LB">Lebanon</option>
-                                            <option value="SY">Syria</option>
-                                            <option value="IQ">Iraq</option>
-                                            <option value="IR">Iran</option>
-                                            <option value="KW">Kuwait</option>
-                                            <option value="SA">Saudi Arabia</option>
-                                            <option value="AE">United Arab Emirates</option>
-                                            <option value="QA">Qatar</option>
-                                            <option value="BH">Bahrain</option>
-                                            <option value="OM">Oman</option>
-                                            <option value="YE">Yemen</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="password">Change Password</label>
-                                        <div className="password-input-container">
-                                            <input type="password" id="password" />
-                                            <button type="button" className="password-toggle">
-                                                <MdRefresh />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <button type="submit" className="update-button">Update Account</button>
-                                </form>
-                            </div>
-
-                            <div className="accessibility-section">
-                                <h3>Accessibility Options</h3>
-                                <p className="section-note">During the job fair, I will use the following</p>
-
-                                <div className="checkbox-group">
-                                    <label className="checkbox-label">
-                                        <input type="checkbox" checked={accessibility.usesScreenMagnifier} onChange={(e) => handleAccessibilityToggle('usesScreenMagnifier', e.target.checked)} />
-                                        <span>Screen Magnifier</span>
-                                    </label>
-                                    <label className="checkbox-label">
-                                        <input type="checkbox" checked={accessibility.usesScreenReader} onChange={(e) => handleAccessibilityToggle('usesScreenReader', e.target.checked)} />
-                                        <span>Screen Reader</span>
-                                    </label>
-                                    <label className="checkbox-label">
-                                        <input type="checkbox" checked={accessibility.needsASL} onChange={(e) => handleAccessibilityToggle('needsASL', e.target.checked)} />
-                                        <span>American Sign Language (ASL)</span>
-                                    </label>
-                                    <label className="checkbox-label">
-                                        <input type="checkbox" checked={accessibility.needsCaptions} onChange={(e) => handleAccessibilityToggle('needsCaptions', e.target.checked)} />
-                                        <span>Captions</span>
-                                    </label>
-                                    <label className="checkbox-label">
-                                        <input type="checkbox" checked={accessibility.needsOther} onChange={(e) => handleAccessibilityToggle('needsOther', e.target.checked)} />
-                                        <span>Others</span>
-                                    </label>
-                                </div>
-
-                                <div className="checkbox-group">
-                                    <label className="checkbox-label">
-                                        <input type="checkbox" checked={accessibility.subscribeAnnouncements} onChange={(e) => handleAccessibilityToggle('subscribeAnnouncements', e.target.checked)} />
-                                        <span>Subscribe to Job Seeker Announcements</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+                        <MyAccountInline user={user} updateProfile={updateProfile} />
                     </div>
                 );
             case 'Recruiter':

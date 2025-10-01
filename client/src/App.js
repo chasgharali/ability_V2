@@ -128,6 +128,7 @@ function App() {
                                 <Route path="/dashboard/my-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/dashboard/survey" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/dashboard/edit-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
                                 <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />

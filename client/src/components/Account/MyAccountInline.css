@@ -1,7 +1,9 @@
 /* Account Section Styles */
 .account-section {
-  max-width: 900px;
+  max-width: 1200px; /* widened from 900px */
   margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .section-header {
@@ -149,7 +151,7 @@
 
 /* Form improvements */
 .account-form {
-  max-width: none;
+  max-width: 100%;
   background: #ffffff;
   border-radius: 8px;
   padding: 2rem;
@@ -162,6 +164,16 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+/* On large screens, give a little more breathing room */
+@media (min-width: 1280px) {
+  .account-section {
+    max-width: 1320px; /* extra wide on xl screens */
+  }
+  .form-row {
+    gap: 1.25rem;
+  }
 }
 
 .form-group {
