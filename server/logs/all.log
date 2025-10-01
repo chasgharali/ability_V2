@@ -11612,3 +11612,218 @@
 2025-10-01 22:15:54:1554 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: client namespace disconnect[39m
 2025-10-01 22:15:54:1554 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
 2025-10-01 22:15:56:1556 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: transport close[39m
+2025-10-01 22:41:11:4111 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-10-01 22:41:11:4111 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-01 22:41:11:4111 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-01 22:41:11:4111 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-01 22:41:11:4111 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-01 22:41:11:4111 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-01 22:41:14:4114 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-01 22:42:05:425 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-10-01 22:42:05:425 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-01 22:42:05:425 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-01 22:42:05:425 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-01 22:42:05:425 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-01 22:42:05:425 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-01 22:42:08:428 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-01 22:42:21:4221 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-10-01 22:42:21:4221 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-01 22:42:21:4221 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-01 22:42:21:4221 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-01 22:42:21:4221 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-01 22:42:21:4221 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-01 22:42:23:4223 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-01 22:42:30:4230 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-10-01 22:42:30:4230 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-01 22:42:30:4230 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-01 22:42:30:4230 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-01 22:42:30:4230 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-01 22:42:30:4230 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-01 22:42:34:4234 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-01 22:46:19:4619 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-10-01 22:46:19:4619 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-01 22:46:19:4619 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-01 22:46:19:4619 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-01 22:46:19:4619 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-01 22:46:19:4619 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-01 22:46:23:4623 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-01 22:46:39:4639 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-10-01 22:46:39:4639 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-01 22:46:39:4639 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-01 22:46:39:4639 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-01 22:46:39:4639 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-01 22:46:39:4639 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-01 22:46:41:4641 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-01 22:46:50:4650 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-10-01 22:46:50:4650 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-01 22:46:50:4650 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-01 22:46:50:4650 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-01 22:46:50:4650 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-01 22:46:50:4650 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-01 22:46:51:4651 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-01 22:49:29:4929 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2025-10-01 22:49:29:4929 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:29:4929 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:29:4929 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:29:4929 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:29:4929 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:30:4930 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:30:4930 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:30:4930 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:31:4931 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:31:4931 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:32:4932 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:32:4932 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:33:4933 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: client namespace disconnect[39m
+2025-10-01 22:49:33:4933 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:34:4934 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:35:4935 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:35:4935 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:36:4936 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:37:4937 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:38:4938 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:39:4939 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:40:4940 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:41:4941 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:42:4942 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:44:4944 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:45:4945 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:46:4946 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:47:4947 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:49:4949 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:50:4950 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:52:4952 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:53:4953 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:55:4955 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:57:4957 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:49:58:4958 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:00:500 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:02:502 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:04:504 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:06:506 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:08:508 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:10:5010 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:11:5011 [32minfo[39m: [32mUser logged in: admin@ability.com[39m
+2025-10-01 22:50:11:5011 [32minfo[39m: [32mUser admin@ability.com connected via socket[39m
+2025-10-01 22:50:12:5012 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:14:5014 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:16:5016 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:18:5018 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:20:5020 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:22:5022 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:24:5024 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:26:5026 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:28:5028 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:30:5030 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:32:5032 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:34:5034 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:36:5036 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:38:5038 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:40:5040 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:42:5042 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:44:5044 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:46:5046 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:48:5048 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:50:5050 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:52:5052 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:54:5054 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:56:5056 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:50:58:5058 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:00:510 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:02:512 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:04:514 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:06:516 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:08:518 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:09:519 [32minfo[39m: [32mBooth updated: amazon-n by admin@ability.com[39m
+2025-10-01 22:51:10:5110 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:10:5110 [32minfo[39m: [32mBooth rich sections updated: amazon-n by admin@ability.com[39m
+2025-10-01 22:51:12:5112 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:14:5114 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:16:5116 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:18:5118 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:20:5120 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:20:5120 [32minfo[39m: [32mBooth updated: amazon by admin@ability.com[39m
+2025-10-01 22:51:21:5121 [32minfo[39m: [32mBooth rich sections updated: amazon by admin@ability.com[39m
+2025-10-01 22:51:22:5122 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:24:5124 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:26:5126 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:28:5128 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:30:5130 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:32:5132 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:34:5134 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:36:5136 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:38:5138 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:40:5140 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:42:5142 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:44:5144 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:46:5146 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:48:5148 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:50:5150 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:52:5152 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:54:5154 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:56:5156 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:51:58:5158 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:00:520 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:02:522 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:04:524 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:05:525 [32minfo[39m: [32mUser updated: recruiter@ability.com by admin@ability.com[39m
+2025-10-01 22:52:06:526 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:08:528 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:10:5210 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:12:5212 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:14:5214 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:16:5216 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:18:5218 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:20:5220 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:22:5222 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:24:5224 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:26:5226 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:28:5228 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:30:5230 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:32:5232 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:34:5234 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:36:5236 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:38:5238 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:40:5240 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:42:5242 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:44:5244 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:46:5246 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:48:5248 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:50:5250 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:52:5252 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:54:5254 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:56:5256 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:52:58:5258 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:00:530 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:02:532 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:04:534 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:06:536 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:08:538 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:10:5310 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:12:5312 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:14:5314 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:16:5316 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:18:5318 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:20:5320 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:22:5322 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:24:5324 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:26:5326 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:28:5328 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:30:5330 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:32:5332 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:34:5334 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:36:5336 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:38:5338 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:40:5340 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:42:5342 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:44:5344 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:46:5346 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:48:5348 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:50:5350 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:52:5352 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:54:5354 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:56:5356 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:53:58:5358 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:54:00:540 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:54:02:542 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-10-01 22:54:04:544 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m

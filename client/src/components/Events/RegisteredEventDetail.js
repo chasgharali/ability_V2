@@ -240,6 +240,13 @@ export default function RegisteredEventDetail() {
                                     {isSaving ? 'Saving...' : "I'm interested"}
                                   </span>
                                 </label>
+                                
+                                <button
+                                  className="join-queue-btn"
+                                  onClick={() => navigate(`/booth-queue/${event.slug}/${booth._id}/entry`)}
+                                >
+                                  Join Queue
+                                </button>
                               </div>
                             </div>
                           );

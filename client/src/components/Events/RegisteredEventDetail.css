@@ -79,13 +79,7 @@
   margin-bottom: 0.75rem;
 }
 
-.participating-employers {
-  margin-top: 2rem;
-}
-
-.section-divider {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+.participating-employers-actions {
   align-items: center;
   gap: 0.75rem;
   margin: 1.5rem 0;
@@ -195,6 +189,27 @@
 .employer-actions {
   width: 100%;
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.join-queue-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.join-queue-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 
 .interest-checkbox-label {

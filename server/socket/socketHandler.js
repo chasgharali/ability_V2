@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Queue = require('../models/Queue');
+const BoothQueue = require('../models/BoothQueue');
 const MeetingRecord = require('../models/MeetingRecord');
 const logger = require('../utils/logger');
 
@@ -319,6 +320,74 @@ const socketHandler = (io) => {
             } catch (error) {
                 logger.error('Accept interpreter request error:', error);
                 socket.emit('error', { message: 'Failed to accept interpreter request' });
+            }
+        });
+
+        /**
+         * Join booth queue room for real-time updates
+         */
+        socket.on('join-booth-queue', (data) => {
+            const { boothId, userId, eventSlug } = data;
+            if (boothId && userId === socket.userId) {
+                socket.join(`booth_${boothId}`);
+                socket.join(`user_${userId}`);
+                socket.currentBoothId = boothId;
+                logger.info(`User ${socket.user.email} joined booth queue room ${boothId}`);
+            }
+        });
+
+        /**
+         * Leave booth queue room
+         */
+        socket.on('leave-booth-queue', (data) => {
+            const { boothId, userId } = data;
+            if (boothId && userId === socket.userId) {
+                socket.leave(`booth_${boothId}`);
+                if (socket.currentBoothId === boothId) {
+                    socket.currentBoothId = null;
+                }
+                logger.info(`User ${socket.user.email} left booth queue room ${boothId}`);
+            }
+        });
+
+        /**
+         * Join booth management room (for recruiters)
+         */
+        socket.on('join-booth-management', (data) => {
+            const { boothId, userId } = data;
+            if (boothId && userId === socket.userId && ['Admin', 'Recruiter', 'GlobalSupport'].includes(socket.user.role)) {
+                socket.join(`booth_management_${boothId}`);
+                socket.currentManagementBoothId = boothId;
+                logger.info(`User ${socket.user.email} joined booth management room ${boothId}`);
+            }
+        });
+
+        /**
+         * Leave booth management room
+         */
+        socket.on('leave-booth-management', (data) => {
+            const { boothId, userId } = data;
+            if (boothId && userId === socket.userId) {
+                socket.leave(`booth_management_${boothId}`);
+                if (socket.currentManagementBoothId === boothId) {
+                    socket.currentManagementBoothId = null;
+                }
+                logger.info(`User ${socket.user.email} left booth management room ${boothId}`);
+            }
+        });
+
+        /**
+         * Update serving number (from recruiter)
+         */
+        socket.on('serving-number-updated', (data) => {
+            const { boothId, currentServing } = data;
+            if (boothId && ['Admin', 'Recruiter', 'GlobalSupport'].includes(socket.user.role)) {
+                // Broadcast to all job seekers in this booth's queue
+                socket.to(`booth_${boothId}`).emit('queue-serving-updated', {
+                    boothId,
+                    currentServing
+                });
+                logger.info(`Serving number updated for booth ${boothId}: ${currentServing}`);
             }
         });
 

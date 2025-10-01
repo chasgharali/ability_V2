@@ -25,6 +25,9 @@ import TermsConditionsForm from './components/TermsConditions/TermsConditionsFor
 import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
 import UserManagement from './components/UserManagement/UserManagement';
 import InterpreterCategories from './components/InterpreterCategories/InterpreterCategories';
+import BoothQueueEntry from './components/BoothQueue/BoothQueueEntry';
+import BoothQueueWaiting from './components/BoothQueue/BoothQueueWaiting';
+import BoothQueueManagement from './components/BoothQueue/BoothQueueManagement';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
 
@@ -147,6 +150,10 @@ function App() {
                                 <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                 <Route path="/interpreter-categories" element={<RequireAuth><InterpreterCategories /></RequireAuth>} />
+                                {/* Booth Queue Routes */}
+                                <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />
+                                <Route path="/booth-queue/:eventSlug/:boothId/waiting" element={<RequireAuth><BoothQueueWaiting /></RequireAuth>} />
+                                <Route path="/booth-queue/manage/:boothId" element={<RequireAuth><BoothQueueManagement /></RequireAuth>} />
                                 </Routes>
                             </AppLayout>
                         </Router>

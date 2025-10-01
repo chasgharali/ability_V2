@@ -23,6 +23,7 @@ const userRoutes = require('./routes/users');
 const termsConditionsRoutes = require('./routes/termsConditions');
 const jobSeekerInterestsRoutes = require('./routes/jobSeekerInterests');
 const interpreterCategoriesRoutes = require('./routes/interpreterCategories');
+const boothQueueRoutes = require('./routes/boothQueue');
 
 // Import socket handlers
 const socketHandler = require('./socket/socketHandler');
@@ -108,9 +109,13 @@ app.use('/api/users', userRoutes);
 app.use('/api/terms-conditions', termsConditionsRoutes);
 app.use('/api/job-seeker-interests', jobSeekerInterestsRoutes);
 app.use('/api/interpreter-categories', interpreterCategoriesRoutes);
+app.use('/api/booth-queue', boothQueueRoutes);
 
 // Socket.IO connection handling
 socketHandler(io);
+
+// Make io available to routes
+app.set('io', io);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
