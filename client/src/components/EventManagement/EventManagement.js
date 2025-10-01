@@ -132,6 +132,7 @@ export default function EventManagement() {
                 maxBooths: e.limits?.maxBooths ?? 0,
                 status: e.status || 'draft',
                 addFooter: Boolean((e.addFooter !== undefined ? e.addFooter : e.theme?.addFooter)),
+                termsIds: e.termsIds || [],
             })));
         } catch (err) {
             console.error('Failed to load events', err);
@@ -236,6 +237,7 @@ export default function EventManagement() {
             information: row.description || '',
             status: row.status || 'draft',
             addFooter: row.addFooter || false,
+            termsIds: row.termsIds || [],
         }));
         setMode('edit');
     };

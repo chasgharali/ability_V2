@@ -84,6 +84,7 @@ router.get('/active', authenticateToken, async (req, res) => {
                 content: activeTerms.content,
                 version: activeTerms.version,
                 isActive: activeTerms.isActive,
+                isRequired: activeTerms.isRequired,
                 usage: activeTerms.usage,
                 createdAt: activeTerms.createdAt,
                 updatedAt: activeTerms.updatedAt,
@@ -135,6 +136,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
                 content: terms.content,
                 version: terms.version,
                 isActive: terms.isActive,
+                isRequired: terms.isRequired,
                 usage: terms.usage,
                 createdAt: terms.createdAt,
                 updatedAt: terms.updatedAt,
@@ -171,7 +173,11 @@ router.post('/', authenticateToken, requireRole(['Admin', 'AdminEvent']), [
     body('isActive')
         .optional()
         .isBoolean()
-        .withMessage('isActive must be a boolean value')
+        .withMessage('isActive must be a boolean value'),
+    body('isRequired')
+        .optional()
+        .isBoolean()
+        .withMessage('isRequired must be a boolean value')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -184,7 +190,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'AdminEvent']), [
             });
         }
 
-        const { title, content, version, isActive = false } = req.body;
+        const { title, content, version, isActive = false, isRequired = true } = req.body;
         const { user } = req;
 
         // Create new terms
@@ -193,6 +199,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'AdminEvent']), [
             content,
             version,
             isActive,
+            isRequired,
             createdBy: user._id,
             updatedBy: user._id
         });
@@ -237,7 +244,11 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'AdminEvent']), [
     body('isActive')
         .optional()
         .isBoolean()
-        .withMessage('isActive must be a boolean value')
+        .withMessage('isActive must be a boolean value'),
+    body('isRequired')
+        .optional()
+        .isBoolean()
+        .withMessage('isRequired must be a boolean value')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -250,7 +261,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'AdminEvent']), [
             });
         }
 
-        const { title, content, version, isActive } = req.body;
+        const { title, content, version, isActive, isRequired } = req.body;
         const { id } = req.params;
         const { user } = req;
 
@@ -275,6 +286,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'AdminEvent']), [
         if (content !== undefined) terms.content = content;
         if (version !== undefined) terms.version = version;
         if (isActive !== undefined) terms.isActive = isActive;
+        if (isRequired !== undefined) terms.isRequired = isRequired;
         terms.updatedBy = user._id;
 
         await terms.save();

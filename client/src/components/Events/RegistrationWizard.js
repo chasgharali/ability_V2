@@ -122,7 +122,9 @@ export default function RegistrationWizard() {
       // If no terms documents, check for general terms acceptance
       return termsAccepted.general === true;
     }
-    return termsDocuments.every(doc => termsAccepted[doc._id] === true);
+    // Only check required terms
+    const requiredTerms = termsDocuments.filter(doc => doc.isRequired !== false);
+    return requiredTerms.every(doc => termsAccepted[doc._id] === true);
   }, [termsDocuments, termsAccepted]);
 
   const termsBlocks = useMemo(() => {
@@ -130,7 +132,7 @@ export default function RegistrationWizard() {
     return (
       <div className="terms-documents">
         {termsDocuments.map(doc => (
-          <div key={doc._id} className="terms-document-option">
+          <div key={doc._id} className="terms-document-option" data-required={doc.isRequired !== false}>
             <div className="terms-content-preview">
               <h4 className="terms-title">{doc.title || 'Terms & Conditions'}</h4>
               <div className="terms-content">
@@ -148,12 +150,12 @@ export default function RegistrationWizard() {
                   checked={termsAccepted[doc._id] || false}
                   onChange={(e) => handleTermsAcceptance(doc._id, e.target.checked)}
                   className="checkbox-input"
-                  required
+                  required={doc.isRequired !== false}
                 />
                 <span className="checkbox-custom"></span>
                 <span className="checkbox-text">
                   <strong>I accept the {doc.title || 'Terms & Conditions'}</strong>
-                  <small>Required to complete registration</small>
+                  <small>{doc.isRequired !== false ? 'Required to complete registration' : 'Optional'}</small>
                 </span>
               </label>
             </div>

@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
-import { Input } from '../UI/FormComponents';
+import { Input, Select, Checkbox } from '../UI/FormComponents';
 import { termsConditionsAPI } from '../../services/termsConditions';
 import { MdSave, MdCancel, MdPreview } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
@@ -16,7 +16,8 @@ const TermsConditionsForm = () => {
         title: '',
         content: '',
         version: '1.0',
-        isActive: false
+        isActive: false,
+        isRequired: true
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -36,7 +37,8 @@ const TermsConditionsForm = () => {
                 title: data.terms.title,
                 content: data.terms.content,
                 version: data.terms.version,
-                isActive: data.terms.isActive
+                isActive: data.terms.isActive,
+                isRequired: data.terms.isRequired !== undefined ? data.terms.isRequired : true
             });
         } catch (err) {
             setError(err.response?.data?.message || err.message || 'Failed to fetch terms and conditions');
@@ -234,6 +236,20 @@ const TermsConditionsForm = () => {
                                     Version number for tracking changes
                                 </small>
                             </div>
+                        </div>
+
+                        <div className="form-group">
+                            <Checkbox
+                                label="Required Field"
+                                id="isRequired"
+                                name="isRequired"
+                                checked={formData.isRequired}
+                                onChange={handleInputChange}
+                                aria-describedby="required-help"
+                            />
+                            <small id="required-help" className="form-help">
+                                Whether users must complete this field to proceed
+                            </small>
                         </div>
 
                         <div className="form-group">

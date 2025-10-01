@@ -22,6 +22,11 @@ const termsConditionsSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // Whether this field is required for form submission
+    isRequired: {
+        type: Boolean,
+        default: true
+    },
     // Terms creator/admin
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -87,6 +92,7 @@ termsConditionsSchema.methods.getSummary = function () {
         version: this.version,
         contentPreview: this.contentPreview,
         isActive: this.isActive,
+        isRequired: this.isRequired,
         usage: this.usage,
         createdAt: this.createdAt,
         updatedAt: this.updatedAt

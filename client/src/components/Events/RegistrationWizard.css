@@ -402,11 +402,28 @@
 
 .terms-agreement .checkbox-text small,
 .terms-checkbox-wrapper .checkbox-text small {
-  color: #dc2626;
   font-size: 0.8rem;
   line-height: 1.5;
   font-weight: 500;
   margin-top: 0.125rem;
+}
+
+.terms-agreement .checkbox-text small,
+.terms-checkbox-wrapper .checkbox-text small {
+  color: #dc2626; /* Required - red */
+}
+
+.terms-checkbox-wrapper .checkbox-text small:contains('Optional') {
+  color: #059669; /* Optional - green */
+}
+
+/* Better approach using data attributes or classes */
+.terms-document-option[data-required="false"] .checkbox-text small {
+  color: #059669;
+}
+
+.terms-document-option[data-required="true"] .checkbox-text small {
+  color: #dc2626;
 }
 
 /* Announcements Section */
