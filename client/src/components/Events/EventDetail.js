@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
-import { getEvent, getEventBooths } from '../../services/events';
+import { getEvent, getEventBooths, listRegisteredEvents } from '../../services/events';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function EventDetail() {
@@ -12,7 +12,18 @@ export default function EventDetail() {
   const [event, setEvent] = useState(null);
   const [booths, setBooths] = useState([]);
   const [fetching, setFetching] = useState(true);
+  const [serverIsRegistered, setServerIsRegistered] = useState(false);
   const navigate = useNavigate();
+
+  // Determine if current user is already registered for this event
+  const isRegistered = useMemo(() => {
+    if (!user || !event) return false;
+    const regs = user.metadata?.registeredEvents || [];
+    return regs.some(r => (
+      (r.id && event._id && r.id.toString() === event._id.toString()) ||
+      (r.slug && event.slug && r.slug === event.slug)
+    ));
+  }, [user, event]);
 
   useEffect(() => {
     if (loading) return;
@@ -24,6 +35,20 @@ export default function EventDetail() {
         if (evt?._id) {
           const b = await getEventBooths(evt._id);
           setBooths(b?.booths || []);
+        }
+
+        // Also verify registration status from server
+        try {
+          const regRes = await listRegisteredEvents({ page: 1, limit: 100 });
+          const regs = regRes?.events || [];
+          const match = regs.some(e => (
+            (evt?._id && e._id && String(e._id) === String(evt._id)) ||
+            (evt?.slug && e.slug && e.slug === evt.slug)
+          ));
+          setServerIsRegistered(match);
+        } catch (e) {
+          // ignore, fallback to client metadata
+          setServerIsRegistered(false);
         }
       } finally {
         setFetching(false);
@@ -49,7 +74,11 @@ export default function EventDetail() {
 
                 {/* Banner note */}
                 <div className="alert-box" role="status" aria-live="polite" style={{ maxWidth: 860, margin: '0 auto 16px' }}>
-                  <p>To register for this upcoming event, click the “Register for the Job Fair” button at the bottom of the page. To find out more about each employer, click the employer link below to visit their portal.</p>
+                  {isRegistered ? (
+                    <p>You are registered for this event. You can manage your registration and mark employer interest below.</p>
+                  ) : (
+                    <p>To register for this upcoming event, click the “Register for the Job Fair” button at the bottom of the page. To find out more about each employer, click the employer link below to visit their portal.</p>
+                  )}
                 </div>
 
                 {/* Content card */}
@@ -128,9 +157,23 @@ export default function EventDetail() {
 
                 {/* Bottom CTA */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', maxWidth: 860, margin: '16px auto 0' }}>
-                  <button className="ajf-btn ajf-btn-dark" onClick={() => navigate(`/event/${encodeURIComponent(event.slug || event._id)}/register`)} aria-label={`Register for ${event.name}`}>
-                    Register for the Job Fair
-                  </button>
+                  {isRegistered ? (
+                    <button
+                      className="ajf-btn ajf-btn-dark"
+                      onClick={() => navigate(`/events/registered/${encodeURIComponent(event.slug || event._id)}`)}
+                      aria-label={`View registration for ${event.name}`}
+                    >
+                      View My Registration
+                    </button>
+                  ) : (
+                    <button
+                      className="ajf-btn ajf-btn-dark"
+                      onClick={() => navigate(`/event/${encodeURIComponent(event.slug || event._id)}/register`)}
+                      aria-label={`Register for ${event.name}`}
+                    >
+                      Register for the Job Fair
+                    </button>
+                  )}
                 </div>
               </>
             )}

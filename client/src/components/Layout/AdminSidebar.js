@@ -36,35 +36,37 @@ export default function AdminSidebar({ active = 'booths' }) {
     return () => observer.disconnect();
   }, []);
 
-  // Load upcoming events for JobSeekers
+  // Load events for JobSeekers
   useEffect(() => {
     let cancelled = false;
-    async function loadUpcoming() {
+    async function loadEvents() {
       if (user?.role !== 'JobSeeker') return;
       try {
-        const res = await listUpcomingEvents({ page: 1, limit: 50 });
-        if (!cancelled) setUpcomingEvents(res?.events || []);
+        // Load both upcoming and registered events
+        const [upcomingRes, registeredRes] = await Promise.all([
+          listUpcomingEvents({ page: 1, limit: 50 }),
+          listRegisteredEvents({ page: 1, limit: 50 })
+        ]);
+        
+        if (!cancelled) {
+          const registered = registeredRes?.events || [];
+          const upcoming = upcomingRes?.events || [];
+          
+          // Filter out registered events from upcoming events
+          const registeredSlugs = new Set(registered.map(e => e.slug));
+          const filteredUpcoming = upcoming.filter(e => !registeredSlugs.has(e.slug));
+          
+          setMyRegistrations(registered);
+          setUpcomingEvents(filteredUpcoming);
+        }
       } catch (e) {
-        if (!cancelled) setUpcomingEvents([]);
+        if (!cancelled) {
+          setUpcomingEvents([]);
+          setMyRegistrations([]);
+        }
       }
     }
-    loadUpcoming();
-    return () => { cancelled = true; };
-  }, [user?.role]);
-
-  // Load current registrations from API
-  useEffect(() => {
-    let cancelled = false;
-    async function loadRegs() {
-      if (user?.role !== 'JobSeeker') return;
-      try {
-        const res = await listRegisteredEvents({ page: 1, limit: 50 });
-        if (!cancelled) setMyRegistrations(res?.events || []);
-      } catch {
-        if (!cancelled) setMyRegistrations([]);
-      }
-    }
-    loadRegs();
+    loadEvents();
     return () => { cancelled = true; };
   }, [user?.role]);
 
@@ -139,7 +141,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   <div className="sidebar-empty">No registrations yet.</div>
                 )}
                 {myRegistrations.map((e) => (
-                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/event/${encodeURIComponent(e.slug)}/register`); closeMobileMenu(); }}>{e.name}</button>
+                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
                 ))}
               </div>
             )}

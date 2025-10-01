@@ -185,6 +185,19 @@
   opacity: 0.6;
 }
 
+.form-actions .ajf-btn-disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  cursor: not-allowed;
+}
+
+.form-actions .ajf-btn-disabled:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
 .form-actions .ajf-btn-outline {
   background: transparent;
   color: #000000;

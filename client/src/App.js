@@ -18,6 +18,7 @@ import BrandingHeaderLogo from './components/Branding/BrandingHeaderLogo';
 import UpcomingEvents from './components/Events/UpcomingEvents';
 import RegisteredEvents from './components/Events/RegisteredEvents';
 import EventDetail from './components/Events/EventDetail';
+import RegisteredEventDetail from './components/Events/RegisteredEventDetail';
 import RegistrationWizard from './components/Events/RegistrationWizard';
 import TermsConditionsList from './components/TermsConditions/TermsConditionsList';
 import TermsConditionsForm from './components/TermsConditions/TermsConditionsForm';
@@ -137,6 +138,7 @@ function App() {
                                 {/* Job Seeker event flow */}
                                 <Route path="/events/upcoming" element={<RequireAuth><UpcomingEvents /></RequireAuth>} />
                                 <Route path="/events/registered" element={<RequireAuth><RegisteredEvents /></RequireAuth>} />
+                                <Route path="/events/registered/:slug" element={<RequireAuth><RegisteredEventDetail /></RequireAuth>} />
                                 <Route path="/event/:slug" element={<RequireAuth><EventDetail /></RequireAuth>} />
                                 <Route path="/event/:slug/register" element={<RegistrationWizard />} />
                                 <Route path="/terms-conditions" element={<RequireAuth><TermsConditionsList /></RequireAuth>} />

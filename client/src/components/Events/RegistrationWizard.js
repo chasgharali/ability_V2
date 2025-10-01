@@ -22,16 +22,35 @@ export default function RegistrationWizard() {
   const [announcementsOptIn, setAnnouncementsOptIn] = useState(!!user?.subscribeAnnouncements);
   const [termsDocuments, setTermsDocuments] = useState([]);
   const [loadingTerms, setLoadingTerms] = useState(false);
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const liveRef = useRef(null);
+
+  // Check if user is already registered for this event
+  const checkRegistrationStatus = (event, user) => {
+    if (!event || !user) return false;
+    const registeredEvents = user.metadata?.registeredEvents || [];
+    return registeredEvents.some(reg => 
+      (reg.id && reg.id.toString() === event._id?.toString()) || 
+      (reg.slug && reg.slug === event.slug)
+    );
+  };
 
   useEffect(() => {
     (async () => {
       try {
         const res = await getEventBySlug(slug);
         console.log('Event data:', res?.event); // Debug log
-        setEvent(res?.event || null);
+        const eventData = res?.event || null;
+        setEvent(eventData);
+        
+        // Check if already registered
+        if (eventData && user) {
+          const alreadyRegistered = checkRegistrationStatus(eventData, user);
+          setIsAlreadyRegistered(alreadyRegistered);
+          console.log('Already registered:', alreadyRegistered); // Debug log
+        }
         
         // Fetch terms documents if event has termsIds
         if (res?.event?.termsIds?.length) {
@@ -85,7 +104,7 @@ export default function RegistrationWizard() {
         setFetching(false);
       }
     })();
-  }, [slug]);
+  }, [slug, user]);
 
   useEffect(() => {
     if (loading) return;
@@ -223,7 +242,28 @@ export default function RegistrationWizard() {
         <main id="dashboard-main" className="dashboard-main">
           <div className="dashboard-content">
             <h2>{event?.name || 'Event Registration'}</h2>
-            <div className="alert-box"><p>Continue Registration by editing and submitting all three pages of registration.</p></div>
+            {isAlreadyRegistered ? (
+              <div className="alert-box" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>
+                <p><strong>You are already registered for this event.</strong> You can view your registration details in "My Current Registrations".</p>
+                <div style={{ marginTop: '1rem' }}>
+                  <button 
+                    className="ajf-btn ajf-btn-dark" 
+                    onClick={() => navigate(`/events/registered/${encodeURIComponent(event.slug || event._id)}`)}
+                    style={{ marginRight: '0.5rem' }}
+                  >
+                    View My Registration
+                  </button>
+                  <button 
+                    className="ajf-btn ajf-btn-outline" 
+                    onClick={() => navigate('/events/registered')}
+                  >
+                    My Current Registrations
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="alert-box"><p>Continue Registration by editing and submitting all three pages of registration.</p></div>
+            )}
 
             <nav aria-label="Registration steps" className="wizard-nav">
               <div className="wizard-progress">
@@ -235,7 +275,7 @@ export default function RegistrationWizard() {
                     className="wizard-step-btn" 
                     aria-current={step === 1 ? 'step' : undefined} 
                     onClick={() => setStep(1)}
-                    disabled={step < 1}
+                    disabled={step < 1 || isAlreadyRegistered}
                   >
                     <span className="wizard-step-number">1</span>
                     <div className="wizard-step-content">
@@ -249,7 +289,7 @@ export default function RegistrationWizard() {
                     className="wizard-step-btn" 
                     aria-current={step === 2 ? 'step' : undefined} 
                     onClick={() => setStep(2)}
-                    disabled={step < 2}
+                    disabled={step < 2 || isAlreadyRegistered}
                   >
                     <span className="wizard-step-number">2</span>
                     <div className="wizard-step-content">
@@ -263,7 +303,7 @@ export default function RegistrationWizard() {
                     className="wizard-step-btn" 
                     aria-current={step === 3 ? 'step' : undefined} 
                     onClick={() => setStep(3)}
-                    disabled={step < 3}
+                    disabled={step < 3 || isAlreadyRegistered}
                   >
                     <span className="wizard-step-number">3</span>
                     <div className="wizard-step-content">
@@ -352,8 +392,14 @@ export default function RegistrationWizard() {
                   </div>
                 </div>
                 <div className="form-actions form-actions-split">
-                  <button className="ajf-btn ajf-btn-outline" onClick={prev}>Previous</button>
-                  <button className="ajf-btn ajf-btn-dark" onClick={handleComplete} disabled={!allTermsAccepted || saving}>{saving ? 'Completing…' : 'Complete Registration'}</button>
+                  <button className="ajf-btn ajf-btn-outline" onClick={prev} disabled={isAlreadyRegistered}>Previous</button>
+                  <button 
+                    className={`ajf-btn ${isAlreadyRegistered ? 'ajf-btn-disabled' : 'ajf-btn-dark'}`} 
+                    onClick={handleComplete} 
+                    disabled={!allTermsAccepted || saving || isAlreadyRegistered}
+                  >
+                    {isAlreadyRegistered ? 'Already Registered' : (saving ? 'Completing…' : 'Complete Registration')}
+                  </button>
                 </div>
               </section>
             )}
