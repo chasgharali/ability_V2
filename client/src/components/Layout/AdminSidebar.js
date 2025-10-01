@@ -217,6 +217,8 @@ export default function AdminSidebar({ active = 'booths' }) {
             {expanded.configuration && (
               <div className="sidebar-items">
                 <button className={itemClass('interpreter-categories')} onClick={() => handleItemClick('/interpreter-categories')}>Interpreter Categories</button>
+                <button className={itemClass('branding')} onClick={() => handleItemClick('/branding')}>Branding – Header Logo</button>
+                <button className={itemClass('terms-conditions')} onClick={() => handleItemClick('/terms-conditions')}>Terms & Conditions</button>
               </div>
             )}
           </div>
@@ -229,8 +231,6 @@ export default function AdminSidebar({ active = 'booths' }) {
             {expanded.tools && (
               <div className="sidebar-items">
                 <button className={itemClass('analytics')} onClick={() => handleItemClick('/dashboard')}>Analytics</button>
-                <button className={itemClass('branding')} onClick={() => handleItemClick('/branding')}>Branding – Header Logo</button>
-                <button className={itemClass('terms-conditions')} onClick={() => handleItemClick('/terms-conditions')}>Terms & Conditions</button>
               </div>
             )}
           </div>
