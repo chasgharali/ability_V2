@@ -790,6 +790,19 @@
     color: #fff;
 }
 
+.ajf-btn-disabled {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    cursor: not-allowed;
+}
+
+.ajf-btn-disabled:hover {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #d1d5db;
+}
+
 .sidebar-section {
     margin-bottom: 1rem;
 }

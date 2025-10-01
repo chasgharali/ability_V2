@@ -16,14 +16,22 @@ export default function EventDetail() {
   const navigate = useNavigate();
 
   // Determine if current user is already registered for this event
+  // Use server-side verification as primary source, fallback to client metadata
   const isRegistered = useMemo(() => {
     if (!user || !event) return false;
+    
+    // Primary: Use server-side verification if available
+    if (serverIsRegistered !== null) {
+      return serverIsRegistered;
+    }
+    
+    // Fallback: Use client-side metadata
     const regs = user.metadata?.registeredEvents || [];
     return regs.some(r => (
       (r.id && event._id && r.id.toString() === event._id.toString()) ||
       (r.slug && event.slug && r.slug === event.slug)
     ));
-  }, [user, event]);
+  }, [user, event, serverIsRegistered]);
 
   useEffect(() => {
     if (loading) return;
@@ -158,13 +166,23 @@ export default function EventDetail() {
                 {/* Bottom CTA */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', maxWidth: 860, margin: '16px auto 0' }}>
                   {isRegistered ? (
-                    <button
-                      className="ajf-btn ajf-btn-dark"
-                      onClick={() => navigate(`/events/registered/${encodeURIComponent(event.slug || event._id)}`)}
-                      aria-label={`View registration for ${event.name}`}
-                    >
-                      View My Registration
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <button
+                        className="ajf-btn ajf-btn-disabled"
+                        disabled
+                        aria-label="Already registered for this event"
+                        style={{ cursor: 'not-allowed' }}
+                      >
+                        Already Registered
+                      </button>
+                      <button
+                        className="ajf-btn ajf-btn-dark"
+                        onClick={() => navigate(`/events/registered/${encodeURIComponent(event.slug || event._id)}`)}
+                        aria-label={`View registration for ${event.name}`}
+                      >
+                        View My Registration
+                      </button>
+                    </div>
                   ) : (
                     <button
                       className="ajf-btn ajf-btn-dark"
