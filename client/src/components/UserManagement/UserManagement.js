@@ -48,7 +48,7 @@ export default function UserManagement() {
     password: '',
     confirmPassword: '',
     role: '',
-    boothId: '',
+    boothId: '', // maps to assignedBooth on API
     field: '',
     eventId: '',
   });
@@ -102,6 +102,7 @@ export default function UserManagement() {
           role: u.role,
           field: u.field || '',
           booth: u.boothName || '',
+          assignedBoothId: u.assignedBooth || '',
           event: u.eventName || '',
           isActive: u.isActive,
           createdAt: u.createdAt,
@@ -164,7 +165,7 @@ export default function UserManagement() {
       lastName,
       email: row.email || '',
       role: row.role || '',
-      boothId: '',
+      boothId: row.assignedBoothId || '',
       field: '',
       eventId: '',
       password: '',
@@ -213,23 +214,35 @@ export default function UserManagement() {
 
     try {
       if (editingId) {
-        await updateUser(editingId, {
+        const payload = {
           name: fullName || undefined,
           email: form.email || undefined,
           role: form.role || undefined,
-        });
+        };
+        if (['Recruiter', 'BoothAdmin'].includes(form.role)) {
+          payload.assignedBooth = form.boothId || undefined;
+        }
+        await updateUser(editingId, payload);
         showToast('User updated', 'success');
       } else {
         if (!form.role) {
           showToast('Please select a role', 'error');
           return;
         }
-        await createUser({
+        const payload = {
           name: fullName,
           email: form.email,
           password: form.password,
           role: form.role,
-        });
+        };
+        if (['Recruiter', 'BoothAdmin'].includes(form.role)) {
+          if (!form.boothId) {
+            showToast('Please select a booth for this role', 'error');
+            return;
+          }
+          payload.assignedBooth = form.boothId;
+        }
+        await createUser(payload);
         showToast('User created', 'success');
       }
       setMode('list');
@@ -288,7 +301,7 @@ export default function UserManagement() {
                     </div>
                   </>
                 )}
-                <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} />
+                <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin'].includes(form.role)} />
                 <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} />
                 <Select label="Select Event (Enable only for Event Admin)" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={form.role !== 'AdminEvent'} />
                 <button type="submit" className="dashboard-button" disabled={loading}>{editingId ? 'Update User' : 'Create User'}</button>

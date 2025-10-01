@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const Booth = require('../models/Booth');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -319,7 +320,11 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('isAvailable')
         .optional()
         .isBoolean()
-        .withMessage('Availability must be boolean')
+        .withMessage('Availability must be boolean'),
+    body('assignedBooth')
+        .optional()
+        .isMongoId()
+        .withMessage('assignedBooth must be a valid ID')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -333,7 +338,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, role, isActive, languages, isAvailable } = req.body;
+        const { name, email, role, isActive, languages, isAvailable, assignedBooth } = req.body;
         const { user } = req;
 
         const targetUser = await User.findById(id);
@@ -354,6 +359,30 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
         if (isAvailable !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(targetUser.role)) {
             targetUser.isAvailable = isAvailable;
+        }
+
+        // Handle assignedBooth updates and validation for recruiter/booth admin
+        const effectiveRole = role !== undefined ? role : targetUser.role;
+        if (['Recruiter', 'BoothAdmin'].includes(effectiveRole)) {
+            if (assignedBooth === undefined && !targetUser.assignedBooth) {
+                return res.status(400).json({
+                    error: 'Validation failed',
+                    message: 'Assigned booth is required for recruiters and booth admins'
+                });
+            }
+            if (assignedBooth !== undefined) {
+                const boothExists = await Booth.findById(assignedBooth).select('_id');
+                if (!boothExists) {
+                    return res.status(400).json({
+                        error: 'Invalid booth',
+                        message: 'Assigned booth does not exist'
+                    });
+                }
+                targetUser.assignedBooth = assignedBooth;
+            }
+        } else if (assignedBooth !== undefined) {
+            // Non-recruiter roles should not carry assignedBooth
+            targetUser.assignedBooth = null;
         }
 
         await targetUser.save();

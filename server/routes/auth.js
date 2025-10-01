@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Booth = require('../models/Booth');
 const { authenticateToken, validateRefreshToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sendVerificationEmail } = require('../utils/mailer');
@@ -68,6 +69,11 @@ router.post('/register', [
         .optional()
         .isArray()
         .withMessage('Languages must be an array')
+    ,
+    body('assignedBooth')
+        .optional()
+        .isMongoId()
+        .withMessage('assignedBooth must be a valid ID')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -80,7 +86,7 @@ router.post('/register', [
             });
         }
 
-        const { name, email, password, role = 'JobSeeker', phoneNumber, languages } = req.body;
+        const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
@@ -91,6 +97,23 @@ router.post('/register', [
             });
         }
 
+        // If recruiter/booth admin, assignedBooth is required and must exist
+        if (['Recruiter', 'BoothAdmin'].includes(role)) {
+            if (!assignedBooth) {
+                return res.status(400).json({
+                    error: 'Validation failed',
+                    message: 'Assigned booth is required for recruiters and booth admins'
+                });
+            }
+            const boothExists = await Booth.findById(assignedBooth).select('_id');
+            if (!boothExists) {
+                return res.status(400).json({
+                    error: 'Invalid booth',
+                    message: 'Assigned booth does not exist'
+                });
+            }
+        }
+
         // Create new user
         const user = new User({
             name,
@@ -98,7 +121,8 @@ router.post('/register', [
             hashedPassword: password, // Will be hashed by pre-save middleware
             role,
             phoneNumber,
-            languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined
+            languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
+            assignedBooth: ['Recruiter', 'BoothAdmin'].includes(role) ? assignedBooth : undefined
         });
 
         // Generate email verification token (24h expiry)

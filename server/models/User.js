@@ -108,6 +108,12 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    // Recruiter/BoothAdmin specific: assigned booth
+    assignedBooth: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Booth',
+        default: null
+    },
     // Metadata for additional user information
     metadata: {
         type: mongoose.Schema.Types.Mixed,
@@ -182,9 +188,19 @@ userSchema.methods.getPublicProfile = function () {
         survey: this.survey,
         languages: this.languages,
         isAvailable: this.isAvailable,
+        assignedBooth: this.assignedBooth,
         createdAt: this.createdAt
     };
 };
+
+// Validate recruiter/booth admin must have assignedBooth
+userSchema.pre('validate', function (next) {
+    const role = this.role;
+    if (['Recruiter', 'BoothAdmin'].includes(role) && !this.assignedBooth) {
+        this.invalidate('assignedBooth', 'Assigned booth is required for recruiters and booth admins');
+    }
+    next();
+});
 
 // Static method to find users by role
 userSchema.statics.findByRole = function (role) {
