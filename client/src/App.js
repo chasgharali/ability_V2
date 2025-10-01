@@ -24,6 +24,7 @@ import TermsConditionsList from './components/TermsConditions/TermsConditionsLis
 import TermsConditionsForm from './components/TermsConditions/TermsConditionsForm';
 import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
 import UserManagement from './components/UserManagement/UserManagement';
+import InterpreterCategories from './components/InterpreterCategories/InterpreterCategories';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
 
@@ -145,6 +146,7 @@ function App() {
                                 <Route path="/terms-conditions/create" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
+                                <Route path="/interpreter-categories" element={<RequireAuth><InterpreterCategories /></RequireAuth>} />
                                 </Routes>
                             </AppLayout>
                         </Router>

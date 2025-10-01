@@ -12,6 +12,7 @@ export default function AdminSidebar({ active = 'booths' }) {
   const [expanded, setExpanded] = useState({
     admin: true,
     tools: true,
+    configuration: true,
     'my-account': true,
     'registrations': true,
     'upcoming-events': true
@@ -204,6 +205,18 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('booths')} onClick={() => handleItemClick('/boothmanagement')}>Booth Management</button>
                 <button className={itemClass('users')} onClick={() => handleItemClick('/users')}>User Management</button>
                 <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/dashboard')}>Job Seeker Management</button>
+              </div>
+            )}
+          </div>
+
+          <div className="sidebar-section">
+            <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, configuration: !s.configuration }))} aria-expanded={expanded.configuration}>
+              <span>Configuration</span>
+              {expanded.configuration ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.configuration && (
+              <div className="sidebar-items">
+                <button className={itemClass('interpreter-categories')} onClick={() => handleItemClick('/interpreter-categories')}>Interpreter Categories</button>
               </div>
             )}
           </div>
