@@ -15,7 +15,10 @@ import Dashboard from './components/Dashboard/Dashboard';
 import BoothManagement from './components/BoothManagement/BoothManagement';
 import EventManagement from './components/EventManagement/EventManagement';
 import BrandingHeaderLogo from './components/Branding/BrandingHeaderLogo';
-import EventRegistration from './components/EventRegistration/EventRegistration';
+import UpcomingEvents from './components/Events/UpcomingEvents';
+import RegisteredEvents from './components/Events/RegisteredEvents';
+import EventDetail from './components/Events/EventDetail';
+import RegistrationWizard from './components/Events/RegistrationWizard';
 import TermsConditionsList from './components/TermsConditions/TermsConditionsList';
 import TermsConditionsForm from './components/TermsConditions/TermsConditionsForm';
 import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
@@ -125,14 +128,16 @@ function App() {
                                 <Route path="/dashboard/my-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/dashboard/survey" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/dashboard/edit-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                 <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
                                 <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                 <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
                                 <Route path="/users" element={<RequireAuth><UserManagement /></RequireAuth>} />
-                                {/* Public event registration entry; component will redirect to /register if not authenticated */}
-                                <Route path="/event/:slug/register" element={<EventRegistration />} />
+                                {/* Job Seeker event flow */}
+                                <Route path="/events/upcoming" element={<RequireAuth><UpcomingEvents /></RequireAuth>} />
+                                <Route path="/events/registered" element={<RequireAuth><RegisteredEvents /></RequireAuth>} />
+                                <Route path="/event/:slug" element={<RequireAuth><EventDetail /></RequireAuth>} />
+                                <Route path="/event/:slug/register" element={<RegistrationWizard />} />
                                 <Route path="/terms-conditions" element={<RequireAuth><TermsConditionsList /></RequireAuth>} />
                                 <Route path="/terms-conditions/create" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />

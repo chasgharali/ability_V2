@@ -61,51 +61,6 @@ router.get('/', authenticateToken, async (req, res) => {
                 hasPrev: page > 1
             }
         });
-
-        /**
-         * GET /api/events/slug/:slug
-         * Get event details by slug
-         */
-        router.get('/slug/:slug', authenticateToken, async (req, res) => {
-            try {
-                const { slug } = req.params;
-                const { user } = req;
-
-                const event = await Event.findOne({ slug })
-                    .populate('createdBy', 'name email')
-                    .populate('administrators', 'name email')
-                    .populate('booths', 'name description logoUrl status');
-
-                if (!event) {
-                    return res.status(404).json({
-                        error: 'Event not found',
-                        message: 'The specified event does not exist'
-                    });
-                }
-
-                if (!event.canUserAccess(user)) {
-                    return res.status(403).json({
-                        error: 'Access denied',
-                        message: 'You do not have permission to view this event'
-                    });
-                }
-
-                res.json({
-                    event: {
-                        ...event.toObject(),
-                        isActive: event.isActive,
-                        isUpcoming: event.isUpcoming,
-                        duration: event.duration
-                    }
-                });
-            } catch (error) {
-                logger.error('Get event by slug error:', error);
-                res.status(500).json({
-                    error: 'Failed to retrieve event',
-                    message: 'An error occurred while retrieving the event'
-                });
-            }
-        });
     } catch (error) {
         logger.error('Get events error:', error);
         res.status(500).json({
@@ -116,6 +71,51 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 /* NOTE: dynamic routes like '/:id' must be declared AFTER static routes such as '/upcoming' and '/registered'. */
+
+/**
+ * GET /api/events/slug/:slug
+ * Get event details by slug
+ */
+router.get('/slug/:slug', authenticateToken, async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { user } = req;
+
+        const event = await Event.findOne({ slug })
+            .populate('createdBy', 'name email')
+            .populate('administrators', 'name email')
+            .populate('booths', 'name description logoUrl status');
+
+        if (!event) {
+            return res.status(404).json({
+                error: 'Event not found',
+                message: 'The specified event does not exist'
+            });
+        }
+
+        if (!event.canUserAccess(user)) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'You do not have permission to view this event'
+            });
+        }
+
+        res.json({
+            event: {
+                ...event.toObject(),
+                isActive: event.isActive,
+                isUpcoming: event.isUpcoming,
+                duration: event.duration
+            }
+        });
+    } catch (error) {
+        logger.error('Get event by slug error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve event',
+            message: 'An error occurred while retrieving the event'
+        });
+    }
+});
 
 /**
  * POST /api/events

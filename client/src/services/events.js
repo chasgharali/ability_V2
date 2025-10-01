@@ -34,6 +34,11 @@ export async function getEventBySlug(slug) {
   return res.data;
 }
 
+export async function getEvent(idOrSlug) {
+  const res = await axios.get(`/api/events/${encodeURIComponent(idOrSlug)}`, { headers: authHeaders() });
+  return res.data;
+}
+
 export async function listUpcomingEvents({ page = 1, limit = 20 } = {}) {
   const params = { page, limit };
   const res = await axios.get('/api/events/upcoming', { params, headers: authHeaders() });

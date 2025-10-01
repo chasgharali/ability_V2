@@ -146,9 +146,22 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button className="sidebar-header" onClick={() => toggleSection('upcoming-events')}>
+            <button
+              className="sidebar-header"
+              onClick={() => { handleItemClick('/events/upcoming'); closeMobileMenu(); }}
+              aria-label="Go to Upcoming Events"
+            >
               <span>Upcoming Events</span>
-              {expanded['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
+              <span
+                className="icon-button"
+                onClick={(e) => { e.stopPropagation(); toggleSection('upcoming-events'); }}
+                aria-label={expanded['upcoming-events'] ? 'Collapse Upcoming Events menu' : 'Expand Upcoming Events menu'}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleSection('upcoming-events'); } }}
+              >
+                {expanded['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
+              </span>
             </button>
             {expanded['upcoming-events'] && (
               <div className="sidebar-items">
@@ -156,7 +169,13 @@ export default function AdminSidebar({ active = 'booths' }) {
                   <div className="sidebar-empty">No upcoming events</div>
                 )}
                 {upcomingEvents.map(evt => (
-                  <button key={evt.slug || evt._id} className="sidebar-item" onClick={() => { handleItemClick(`/event/${encodeURIComponent(evt.slug || evt._id)}/register`); closeMobileMenu(); }}>{evt.name}</button>
+                  <button
+                    key={evt.slug || evt._id}
+                    className="sidebar-item"
+                    onClick={() => { handleItemClick(`/event/${encodeURIComponent(evt.slug || evt._id)}`); closeMobileMenu(); }}
+                  >
+                    {evt.name}
+                  </button>
                 ))}
               </div>
             )}
