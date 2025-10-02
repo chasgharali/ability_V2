@@ -122,6 +122,7 @@ export default function BoothQueueEntry() {
   };
 
   const handleExit = () => {
+    // Don't leave queue on exit from entry form - user hasn't joined yet
     navigate(`/events/registered/${eventSlug}`);
   };
 

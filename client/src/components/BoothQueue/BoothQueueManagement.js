@@ -11,7 +11,7 @@ export default function BoothQueueManagement() {
   const { boothId } = useParams();
   const { user } = useAuth();
   const { socket } = useSocket();
-  
+
   const [booth, setBooth] = useState(null);
   const [event, setEvent] = useState(null);
   const [queue, setQueue] = useState([]);
@@ -22,6 +22,7 @@ export default function BoothQueueManagement() {
   const [showDetails, setShowDetails] = useState(false);
   const [messages, setMessages] = useState([]);
   const [nowTs, setNowTs] = useState(Date.now());
+  const [socketConnected, setSocketConnected] = useState(false);
 
   // Theme colors from event (fallbacks provided)
   const theme = useMemo(() => ({
@@ -35,7 +36,7 @@ export default function BoothQueueManagement() {
   useEffect(() => {
     loadData();
     joinSocketRoom();
-    
+
     return () => {
       if (socket) {
         socket.emit('leave-booth-management', { boothId, userId: user._id });
@@ -45,13 +46,25 @@ export default function BoothQueueManagement() {
 
   useEffect(() => {
     if (socket) {
+      console.log('Socket connected, setting up event listeners');
+      setSocketConnected(true);
       socket.on('queue-updated', handleQueueUpdate);
       socket.on('new-queue-message', handleNewMessage);
-      
+      socket.on('test-connection-response', (data) => {
+        console.log('Test connection response received:', data);
+      });
+
+      // Test socket connection
+      socket.emit('test-connection', { message: 'Testing socket connection' });
+
       return () => {
+        console.log('Cleaning up socket event listeners');
         socket.off('queue-updated', handleQueueUpdate);
         socket.off('new-queue-message', handleNewMessage);
       };
+    } else {
+      console.log('No socket available');
+      setSocketConnected(false);
     }
   }, [socket]);
 
@@ -78,7 +91,7 @@ export default function BoothQueueManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       const [boothRes, queueRes] = await Promise.all([
         fetch(`/api/booths/${boothId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -87,10 +100,10 @@ export default function BoothQueueManagement() {
       ]);
 
       const boothData = await boothRes.json();
-      
+
       if (boothRes.ok && boothData.booth) {
         setBooth(boothData.booth);
-        
+
         // Set event data if it's included in the response
         if (boothData.event) {
           setEvent(boothData.event);
@@ -98,7 +111,7 @@ export default function BoothQueueManagement() {
       } else {
         console.error('Failed to load booth:', boothData.message || boothData.error);
       }
-      
+
       if (queueRes.success) {
         setQueue(queueRes.queue);
         setCurrentServing(queueRes.currentServing || 1);
@@ -115,16 +128,45 @@ export default function BoothQueueManagement() {
 
   const joinSocketRoom = () => {
     if (socket && boothId && user) {
-      socket.emit('join-booth-management', { 
-        boothId, 
-        userId: user._id 
-      });
+      console.log('Joining socket rooms for booth management:', { boothId, userId: user._id, userRole: user.role });
+      socket.emit('join-booth-management', { boothId, userId: user._id });
+      // Also join booth room to receive generic queue updates
+      socket.emit('join-booth-queue', { boothId, userId: user._id });
+
+      // Add a small delay and then test the connection
+      setTimeout(() => {
+        console.log('Testing socket connection after joining rooms...');
+        socket.emit('test-connection', { message: 'Testing after room join' });
+      }, 1000);
+    } else {
+      console.warn('Cannot join socket rooms:', { socket: !!socket, boothId, user: !!user });
     }
   };
 
   const handleQueueUpdate = (data) => {
-    if (data.boothId === boothId) {
-      setQueue(data.queue);
+    console.log('Received queue-updated event:', data);
+    console.log('Current boothId:', boothId);
+    console.log('Event boothId:', data.boothId, 'Event booth:', data.booth);
+
+    // When any update occurs for this booth, reload queue from API
+    if (data.boothId === boothId || data.booth === boothId) {
+      console.log('Reloading queue data due to update');
+      // Use a more efficient approach - only reload queue data, not booth data
+      loadQueueData();
+    } else {
+      console.log('Queue update not for this booth, ignoring');
+    }
+  };
+
+  const loadQueueData = async () => {
+    try {
+      const queueRes = await boothQueueAPI.getBoothQueue(boothId);
+      if (queueRes.success) {
+        setQueue(queueRes.queue);
+        setCurrentServing(queueRes.currentServing || 1);
+      }
+    } catch (error) {
+      console.error('Error reloading queue data:', error);
     }
   };
 
@@ -144,10 +186,10 @@ export default function BoothQueueManagement() {
       };
 
       await boothQueueAPI.inviteToMeeting(queueEntry._id, meetingData);
-      
+
       // Update serving number
       await handleUpdateServing(queueEntry.position);
-      
+
       alert(`${queueEntry.jobSeeker.name} has been invited to the meeting!`);
     } catch (error) {
       console.error('Error inviting to meeting:', error);
@@ -159,7 +201,7 @@ export default function BoothQueueManagement() {
     try {
       await boothQueueAPI.updateServingNumber(boothId, newServingNumber);
       setCurrentServing(newServingNumber);
-      
+
       // Emit socket event for real-time updates
       if (socket) {
         socket.emit('serving-number-updated', {
@@ -202,9 +244,9 @@ export default function BoothQueueManagement() {
   if (loading) {
     return (
       <div className="dashboard">
-        <AdminHeader 
-          brandingLogo={event?.logoUrl || event?.logo || ''} 
-          secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''} 
+        <AdminHeader
+          brandingLogo={event?.logoUrl || event?.logo || ''}
+          secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
         />
         <div className="dashboard-layout">
           <AdminSidebar active="booths" />
@@ -219,9 +261,9 @@ export default function BoothQueueManagement() {
 
   return (
     <div className="dashboard">
-      <AdminHeader 
-        brandingLogo={event?.logoUrl || event?.logo || ''} 
-        secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''} 
+      <AdminHeader
+        brandingLogo={event?.logoUrl || event?.logo || ''}
+        secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
       />
       <div className="dashboard-layout">
         <AdminSidebar active="booths" />
@@ -238,10 +280,53 @@ export default function BoothQueueManagement() {
                 <div>
                   <h1>{booth?.name || booth?.company} - Meeting Queue</h1>
                   <p>{event?.name}</p>
+                  <div className="connection-status">
+                    <span className={`status-indicator ${socketConnected ? 'connected' : 'disconnected'}`}>
+                      {socketConnected ? '🟢 Real-time updates active' : '🔴 Real-time updates offline'}
+                    </span>
+                  </div>
                 </div>
               </div>
-              
+
               <div className="serving-controls">
+                <button
+                  onClick={loadQueueData}
+                  className="refresh-btn"
+                  title="Refresh queue data"
+                >
+                  🔄 Refresh
+                </button>
+                <button
+                  onClick={joinSocketRoom}
+                  className="refresh-btn"
+                  title="Rejoin socket rooms"
+                >
+                  🔌 Reconnect
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('Testing socket emit...');
+                    socket.emit('test-connection', { message: 'Manual test' });
+                  }}
+                  className="refresh-btn"
+                  title="Test socket connection"
+                >
+                  🧪 Test Socket
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('Simulating queue update...');
+                    handleQueueUpdate({
+                      boothId: boothId,
+                      action: 'test',
+                      queueEntry: { _id: 'test', position: 1 }
+                    });
+                  }}
+                  className="refresh-btn"
+                  title="Test queue update handler"
+                >
+                  📋 Test Queue Update
+                </button>
                 <label>Now Serving:</label>
                 <input
                   type="number"
@@ -278,7 +363,7 @@ export default function BoothQueueManagement() {
             {/* Queue List */}
             <div className="queue-list">
               <h2>Job Seekers in Queue</h2>
-              
+
               {queue.length === 0 ? (
                 <div className="empty-queue">
                   <p>No job seekers in queue</p>
@@ -286,8 +371,8 @@ export default function BoothQueueManagement() {
               ) : (
                 <div className="queue-grid">
                   {queue.map((queueEntry) => (
-                    <div 
-                      key={queueEntry._id} 
+                    <div
+                      key={queueEntry._id}
                       className={`queue-card ${queueEntry.position <= currentServing ? 'ready' : 'waiting'}`}
                     >
                       <div className="queue-card-header">
@@ -310,7 +395,7 @@ export default function BoothQueueManagement() {
                             <p className="job-seeker-email">{queueEntry.jobSeeker.email}</p>
                           </div>
                         </div>
-                        
+
                         <div className="queue-status">
                           {queueEntry.position <= currentServing ? (
                             <span className="status-badge ready">Ready</span>
@@ -351,7 +436,7 @@ export default function BoothQueueManagement() {
                         >
                           Invite
                         </button>
-                        
+
                         <button
                           onClick={() => handleViewMessages(queueEntry)}
                           className="btn-messages"
@@ -359,7 +444,7 @@ export default function BoothQueueManagement() {
                         >
                           Messages ({queueEntry.messageCount || 0})
                         </button>
-                        
+
                         <button
                           onClick={() => handleRemoveFromQueue(queueEntry)}
                           className="btn-remove"
@@ -383,14 +468,14 @@ export default function BoothQueueManagement() {
           <div className="modal-content messages-modal">
             <div className="modal-header">
               <h3>Messages from {selectedJobSeeker.jobSeeker.name}</h3>
-              <button 
+              <button
                 className="modal-close"
                 onClick={() => setShowMessages(false)}
               >
                 ×
               </button>
             </div>
-            
+
             <div className="messages-list">
               {messages.length === 0 ? (
                 <p className="no-messages">No messages from this job seeker</p>
@@ -430,7 +515,7 @@ export default function BoothQueueManagement() {
           <div className="modal-content details-modal">
             <div className="modal-header">
               <h3>Job Seeker Details</h3>
-              <button 
+              <button
                 className="modal-close"
                 onClick={() => setShowDetails(false)}
               >
@@ -462,10 +547,10 @@ export default function BoothQueueManagement() {
 
               <div className="details-actions">
                 {selectedJobSeeker.jobSeeker.resumeUrl ? (
-                  <a 
-                    href={selectedJobSeeker.jobSeeker.resumeUrl} 
-                    target="_blank" 
-                    rel="noreferrer" 
+                  <a
+                    href={selectedJobSeeker.jobSeeker.resumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
                     className="btn btn-primary"
                     style={{ background: theme.primary, borderColor: theme.primary }}
                   >
@@ -474,7 +559,7 @@ export default function BoothQueueManagement() {
                 ) : (
                   <button className="btn" disabled>No Resume</button>
                 )}
-                <button 
+                <button
                   className="btn"
                   onClick={() => setShowDetails(false)}
                 >

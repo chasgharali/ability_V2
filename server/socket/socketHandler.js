@@ -332,7 +332,7 @@ const socketHandler = (io) => {
                 socket.join(`booth_${boothId}`);
                 socket.join(`user_${userId}`);
                 socket.currentBoothId = boothId;
-                
+
                 // Update activity timestamp for job seekers
                 if (socket.user.role === 'JobSeeker') {
                     try {
@@ -342,7 +342,7 @@ const socketHandler = (io) => {
                             booth: boothId,
                             status: { $in: ['waiting', 'invited'] }
                         });
-                        
+
                         if (queueEntry) {
                             await queueEntry.updateActivity();
                         }
@@ -350,7 +350,7 @@ const socketHandler = (io) => {
                         logger.error('Error updating queue activity:', error);
                     }
                 }
-                
+
                 logger.info(`User ${socket.user.email} joined booth queue room ${boothId}`);
             }
         });
@@ -374,10 +374,18 @@ const socketHandler = (io) => {
          */
         socket.on('join-booth-management', (data) => {
             const { boothId, userId } = data;
+            console.log('join-booth-management event received:', { boothId, userId, userRole: socket.user.role });
             if (boothId && userId === socket.userId && ['Admin', 'Recruiter', 'GlobalSupport'].includes(socket.user.role)) {
                 socket.join(`booth_management_${boothId}`);
                 socket.currentManagementBoothId = boothId;
                 logger.info(`User ${socket.user.email} joined booth management room ${boothId}`);
+                console.log(`User joined booth_management_${boothId} room`);
+
+                // Verify the room was joined
+                const rooms = Array.from(socket.rooms);
+                console.log(`User ${socket.user.email} is now in rooms:`, rooms);
+            } else {
+                console.log('Failed to join booth management room:', { boothId, userId, userRole: socket.user.role });
             }
         });
 
@@ -411,6 +419,42 @@ const socketHandler = (io) => {
         });
 
         /**
+         * Handle queue heartbeat from job seekers
+         */
+        socket.on('queue-heartbeat', async (data) => {
+            const { boothId, userId } = data;
+            if (boothId && userId === socket.userId && socket.user.role === 'JobSeeker') {
+                try {
+                    const BoothQueue = require('../models/BoothQueue');
+                    const queueEntry = await BoothQueue.findOne({
+                        jobSeeker: socket.userId,
+                        booth: boothId,
+                        status: { $in: ['waiting', 'invited'] }
+                    });
+
+                    if (queueEntry) {
+                        await queueEntry.updateActivity();
+                        logger.debug(`Heartbeat received from user ${socket.user.email} for booth ${boothId}`);
+                    }
+                } catch (error) {
+                    logger.error('Error handling queue heartbeat:', error);
+                }
+            }
+        });
+
+        /**
+         * Test connection handler
+         */
+        socket.on('test-connection', (data) => {
+            console.log('Test connection received from user:', socket.user.email, data);
+            socket.emit('test-connection-response', {
+                message: 'Connection test successful',
+                userId: socket.userId,
+                timestamp: new Date()
+            });
+        });
+
+        /**
          * Handle disconnection
          */
         socket.on('disconnect', async (reason) => {
@@ -428,7 +472,7 @@ const socketHandler = (io) => {
             if (socket.user.role === 'JobSeeker') {
                 try {
                     const BoothQueue = require('../models/BoothQueue');
-                    
+
                     // Find any active queue entries for this user
                     const activeQueues = await BoothQueue.find({
                         jobSeeker: socket.userId,
@@ -438,18 +482,21 @@ const socketHandler = (io) => {
                     // Leave all active queues
                     for (const queueEntry of activeQueues) {
                         await queueEntry.leaveQueue();
-                        
+
                         // Notify booth management about queue update
-                        socket.to(`booth_${queueEntry.booth}`).emit('queue-updated', {
-                            type: 'left',
+                        const updateData = {
+                            boothId: queueEntry.booth,
+                            action: 'left',
                             queueEntry: {
                                 _id: queueEntry._id,
                                 jobSeeker: socket.user.getPublicProfile(),
                                 position: queueEntry.position,
                                 status: 'left'
                             }
-                        });
-                        
+                        };
+                        socket.to(`booth_${queueEntry.booth}`).emit('queue-updated', updateData);
+                        socket.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', updateData);
+
                         logger.info(`Auto-removed user ${socket.user.email} from queue for booth ${queueEntry.booth} due to disconnect`);
                     }
                 } catch (error) {

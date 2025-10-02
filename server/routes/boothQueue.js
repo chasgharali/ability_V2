@@ -34,14 +34,14 @@ router.post('/join', authenticateToken, async (req, res) => {
         if (existingQueue) {
             // Check if this is a stale entry (older than 5 minutes with no recent activity)
             const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-            const isStale = existingQueue.createdAt < fiveMinutesAgo && 
-                           (!existingQueue.lastActivity || existingQueue.lastActivity < fiveMinutesAgo);
-            
+            const isStale = existingQueue.createdAt < fiveMinutesAgo &&
+                (!existingQueue.lastActivity || existingQueue.lastActivity < fiveMinutesAgo);
+
             if (isStale && existingQueue.status === 'waiting') {
                 // Auto-cleanup stale waiting entries
                 await existingQueue.leaveQueue();
                 logger.info(`Auto-cleaned stale queue entry for user ${jobSeekerId} in booth ${existingQueue.booth}`);
-                
+
                 // Notify booth management about the cleanup
                 const io = getIO();
                 io.to(`booth_${existingQueue.booth}`).emit('queue-updated', {
@@ -53,7 +53,7 @@ router.post('/join', authenticateToken, async (req, res) => {
                         status: 'left'
                     }
                 });
-                
+
                 existingQueue = null; // Allow them to join
             } else {
                 return res.status(400).json({
@@ -89,18 +89,18 @@ router.post('/join', authenticateToken, async (req, res) => {
             if (error.code === 11000) {
                 // Handle duplicate key error - there might still be an active entry
                 logger.warn(`Duplicate key error for user ${jobSeekerId} in booth ${boothId}, attempting cleanup`);
-                
+
                 // Find and clean up any remaining active entries
                 const duplicateEntry = await BoothQueue.findOne({
                     jobSeeker: jobSeekerId,
                     booth: boothId,
                     status: { $in: ['waiting', 'invited', 'in_meeting'] }
                 });
-                
+
                 if (duplicateEntry) {
                     await duplicateEntry.leaveQueue();
                     logger.info(`Cleaned up duplicate entry ${duplicateEntry._id} for user ${jobSeekerId}`);
-                    
+
                     // Retry creating the queue entry
                     queueEntry = new BoothQueue({
                         jobSeeker: jobSeekerId,
@@ -111,7 +111,7 @@ router.post('/join', authenticateToken, async (req, res) => {
                         agreedToTerms,
                         status: 'waiting'
                     });
-                    
+
                     await queueEntry.save();
                 } else {
                     throw error; // Re-throw if we can't find the duplicate
@@ -131,11 +131,24 @@ router.post('/join', authenticateToken, async (req, res) => {
 
         // Emit socket event for real-time updates
         if (req.app.get('io')) {
-            req.app.get('io').to(`booth_${boothId}`).emit('queue-updated', {
+            const updateData = {
                 boothId,
                 action: 'joined',
                 queueEntry: queueEntry.toJSON()
-            });
+            };
+            console.log('Emitting queue-updated event:', updateData);
+            console.log('Emitting to rooms:', `booth_${boothId}`, `booth_management_${boothId}`);
+
+            // Check how many users are in each room
+            const boothRoom = req.app.get('io').sockets.adapter.rooms.get(`booth_${boothId}`);
+            const managementRoom = req.app.get('io').sockets.adapter.rooms.get(`booth_management_${boothId}`);
+            console.log(`Users in booth_${boothId}:`, boothRoom ? boothRoom.size : 0);
+            console.log(`Users in booth_management_${boothId}:`, managementRoom ? managementRoom.size : 0);
+
+            req.app.get('io').to(`booth_${boothId}`).emit('queue-updated', updateData);
+            req.app.get('io').to(`booth_management_${boothId}`).emit('queue-updated', updateData);
+        } else {
+            console.log('No socket.io instance available');
         }
 
         res.status(201).json({
@@ -179,11 +192,13 @@ router.post('/leave', authenticateToken, async (req, res) => {
 
         // Emit socket event
         if (req.app.get('io')) {
-            req.app.get('io').to(`booth_${boothId}`).emit('queue-updated', {
+            const updateData = {
                 boothId,
                 action: 'left',
                 queueEntry: queueEntry.toJSON()
-            });
+            };
+            req.app.get('io').to(`booth_${boothId}`).emit('queue-updated', updateData);
+            req.app.get('io').to(`booth_management_${boothId}`).emit('queue-updated', updateData);
         }
 
         res.json({
@@ -255,7 +270,7 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
         }
 
         const queue = await BoothQueue.getBoothQueue(boothId);
-        
+
         // Get current serving number
         const currentServing = await BoothQueue.countDocuments({
             booth: boothId,
@@ -347,7 +362,7 @@ router.get('/messages/:queueId', authenticateToken, async (req, res) => {
         }
 
         const queueEntry = await BoothQueue.findById(queueId);
-        
+
         if (!queueEntry) {
             return res.status(404).json({
                 success: false,
@@ -387,7 +402,7 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
         }
 
         const queueEntry = await BoothQueue.findById(queueId);
-        
+
         if (!queueEntry) {
             return res.status(404).json({
                 success: false,
@@ -489,7 +504,7 @@ router.delete('/remove/:queueId', authenticateToken, async (req, res) => {
         }
 
         const queueEntry = await BoothQueue.findById(queueId);
-        
+
         if (!queueEntry) {
             return res.status(404).json({
                 success: false,
@@ -501,11 +516,13 @@ router.delete('/remove/:queueId', authenticateToken, async (req, res) => {
 
         // Emit socket event
         if (req.app.get('io')) {
-            req.app.get('io').to(`booth_${queueEntry.booth}`).emit('queue-updated', {
+            const updateData = {
                 boothId: queueEntry.booth,
                 action: 'removed',
                 queueEntry: queueEntry.toJSON()
-            });
+            };
+            req.app.get('io').to(`booth_${queueEntry.booth}`).emit('queue-updated', updateData);
+            req.app.get('io').to(`booth_management_${queueEntry.booth}`).emit('queue-updated', updateData);
         }
 
         res.json({

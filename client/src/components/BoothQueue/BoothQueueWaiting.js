@@ -13,7 +13,7 @@ export default function BoothQueueWaiting() {
   const location = useLocation();
   const { user } = useAuth();
   const { socket } = useSocket();
-  
+
   const [event, setEvent] = useState(null);
   const [booth, setBooth] = useState(null);
   const [queuePosition, setQueuePosition] = useState(location.state?.queuePosition || 0);
@@ -25,18 +25,32 @@ export default function BoothQueueWaiting() {
   const [messageType, setMessageType] = useState('text');
   const [messageContent, setMessageContent] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  
+
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
 
   useEffect(() => {
     loadData();
     joinSocketRoom();
-    
+
+    // Handle page unload (close tab, navigate away, etc.) - only for actual page unload
+    const handleBeforeUnload = (event) => {
+      // Only leave queue on actual page unload, not navigation within the app
+      if (event.type === 'beforeunload') {
+        // Use synchronous request for beforeunload
+        navigator.sendBeacon('/api/booth-queue/leave', JSON.stringify({ boothId }));
+      }
+    };
+
+    // Don't remove users on visibility change - they might just switch tabs
+    // Only handle actual page unload
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       if (socket) {
         socket.emit('leave-booth-queue', { boothId, userId: user._id });
       }
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [eventSlug, boothId]);
 
@@ -45,7 +59,7 @@ export default function BoothQueueWaiting() {
       socket.on('queue-position-updated', handleQueueUpdate);
       socket.on('queue-serving-updated', handleServingUpdate);
       socket.on('queue-invited-to-meeting', handleMeetingInvite);
-      
+
       return () => {
         socket.off('queue-position-updated', handleQueueUpdate);
         socket.off('queue-serving-updated', handleServingUpdate);
@@ -54,10 +68,21 @@ export default function BoothQueueWaiting() {
     }
   }, [socket]);
 
+  // Heartbeat to keep connection alive and detect if user is still active
+  useEffect(() => {
+    const heartbeatInterval = setInterval(() => {
+      if (socket && socket.connected) {
+        socket.emit('queue-heartbeat', { boothId, userId: user._id });
+      }
+    }, 120000); // Send heartbeat every 2 minutes (less aggressive)
+
+    return () => clearInterval(heartbeatInterval);
+  }, [socket, boothId, user._id]);
+
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       const [eventRes, boothRes, queueRes] = await Promise.all([
         fetch(`/api/events/slug/${eventSlug}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -102,10 +127,10 @@ export default function BoothQueueWaiting() {
 
   const joinSocketRoom = () => {
     if (socket && boothId && user) {
-      socket.emit('join-booth-queue', { 
-        boothId, 
+      socket.emit('join-booth-queue', {
+        boothId,
         userId: user._id,
-        eventSlug 
+        eventSlug
       });
     }
   };
@@ -143,11 +168,20 @@ export default function BoothQueueWaiting() {
   };
 
   const handleReturnToEvent = () => {
+    // Don't leave queue when returning to event - user might want to come back
     navigate(`/events/registered/${eventSlug}`);
   };
 
-  const handleExitEvent = () => {
-    navigate('/dashboard');
+  const handleExitEvent = async () => {
+    // Only leave queue when explicitly exiting the event
+    if (window.confirm('Are you sure you want to exit the event? This will remove you from the queue.')) {
+      try {
+        await boothQueueAPI.leaveQueue(boothId);
+      } catch (error) {
+        console.error('Error leaving queue:', error);
+      }
+      navigate('/dashboard');
+    }
   };
 
   const handleSendMessage = async () => {
@@ -171,34 +205,34 @@ export default function BoothQueueWaiting() {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true, 
-        video: messageType === 'video' 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: messageType === 'video'
       });
-      
+
       mediaRecorderRef.current = new MediaRecorder(stream);
       recordedChunksRef.current = [];
-      
+
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           recordedChunksRef.current.push(event.data);
         }
       };
-      
+
       mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(recordedChunksRef.current, {
           type: messageType === 'video' ? 'video/webm' : 'audio/webm'
         });
-        
+
         const reader = new FileReader();
         reader.onload = () => {
           setMessageContent(reader.result);
         };
         reader.readAsDataURL(blob);
-        
+
         stream.getTracks().forEach(track => track.stop());
       };
-      
+
       mediaRecorderRef.current.start();
       setIsRecording(true);
     } catch (error) {
@@ -229,7 +263,7 @@ export default function BoothQueueWaiting() {
     <div className="booth-queue-waiting">
       {/* Global header with event branding */}
       <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} />
-      
+
       {/* Main content area */}
       <div className="waiting-layout">
         {/* Main content */}
@@ -252,38 +286,38 @@ export default function BoothQueueWaiting() {
               </div>
             </div>
           </div>
-          
+
           {/* Waiting message */}
           <div className="waiting-message">
             <h3>You are now joining the queue.</h3>
             <p>Wait for the invitation to join a meeting</p>
           </div>
-          
+
           {/* Content sections - expanded */}
           <div className="content-grid-expanded">
             {(booth?.richSections && booth.richSections.length > 0
               ? booth.richSections
-                  .filter(s => s.isActive !== false)
-                  .sort((a,b) => (a.order ?? 0) - (b.order ?? 0))
-                  .slice(0,3)
+                .filter(s => s.isActive !== false)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                .slice(0, 3)
               : [
-                  { title: 'First Placeholder', contentHtml: '<p>place1e</p>' },
-                  { title: 'Second Placeholder', contentHtml: '<p>place2e</p>' },
-                  { title: 'Third Placeholder', contentHtml: '<p>place3e</p>' }
-                ]
-              ).map((section, idx) => (
-                <div key={section._id || idx} className="content-card-expanded">
-                  {section.title && <h4 className="content-title">{section.title}</h4>}
-                  {section.contentHtml ? (
-                    <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
-                  ) : (
-                    <p className="content-placeholder">Content will be available soon.</p>
-                  )}
-                </div>
-              ))}
+                { title: 'First Placeholder', contentHtml: '<p>place1e</p>' },
+                { title: 'Second Placeholder', contentHtml: '<p>place2e</p>' },
+                { title: 'Third Placeholder', contentHtml: '<p>place3e</p>' }
+              ]
+            ).map((section, idx) => (
+              <div key={section._id || idx} className="content-card-expanded">
+                {section.title && <h4 className="content-title">{section.title}</h4>}
+                {section.contentHtml ? (
+                  <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
+                ) : (
+                  <p className="content-placeholder">Content will be available soon.</p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
-        
+
         {/* Right sidebar with queue info and actions */}
         <div className="waiting-sidebar-right">
           <div className="queue-numbers">
@@ -300,43 +334,43 @@ export default function BoothQueueWaiting() {
             <span className="status-dot waiting"></span>
             <span className="status-text">Waiting</span>
           </div>
-          
+
           {/* Return button */}
           <button className="return-btn" onClick={handleReturnToEvent}>
             Return to<br />abilityJOBS.com Employer
           </button>
-          
+
           {/* Action buttons moved here */}
           <div className="sidebar-actions">
-            <button 
+            <button
               className="sidebar-action-btn camera-btn"
               onClick={() => alert('Camera & Mic selection coming soon')}
             >
               📹 Select your camera and mic
             </button>
-            
-            <button 
+
+            <button
               className="sidebar-action-btn message-btn"
               onClick={() => setShowMessageModal(true)}
             >
               💬 Create a message
             </button>
-            
-            <button 
+
+            <button
               className="sidebar-action-btn refresh-btn"
               onClick={() => window.location.reload()}
             >
               🔄 Refresh your connection
             </button>
-            
-            <button 
+
+            <button
               className="sidebar-action-btn return-btn-alt"
               onClick={handleReturnToEvent}
             >
               ↩️ Return to main event
             </button>
-            
-            <button 
+
+            <button
               className="sidebar-action-btn exit-btn"
               onClick={handleExitEvent}
             >
@@ -348,35 +382,35 @@ export default function BoothQueueWaiting() {
 
       {/* Bottom Actions */}
       <footer className="queue-actions">
-        <button 
+        <button
           className="action-btn camera-btn"
           onClick={() => alert('Camera & Mic selection coming soon')}
         >
           📹 Select your camera and mic
         </button>
-        
-        <button 
+
+        <button
           className="action-btn message-btn"
           onClick={() => setShowMessageModal(true)}
         >
           💬 Create a message
         </button>
-        
-        <button 
+
+        <button
           className="action-btn refresh-btn"
           onClick={() => window.location.reload()}
         >
           🔄 Refresh your connection
         </button>
-        
-        <button 
+
+        <button
           className="action-btn return-btn"
           onClick={handleReturnToEvent}
         >
           ↩️ Return to main event
         </button>
-        
-        <button 
+
+        <button
           className="action-btn exit-btn"
           onClick={handleExitEvent}
         >
@@ -390,14 +424,14 @@ export default function BoothQueueWaiting() {
           <div className="modal-content">
             <div className="modal-header">
               <h3>Send Message to Recruiter</h3>
-              <button 
+              <button
                 className="modal-close"
                 onClick={() => setShowMessageModal(false)}
               >
                 ×
               </button>
             </div>
-            
+
             <div className="message-form">
               <div className="message-type-selector">
                 <label>
@@ -454,13 +488,13 @@ export default function BoothQueueWaiting() {
               )}
 
               <div className="modal-actions">
-                <button 
+                <button
                   onClick={() => setShowMessageModal(false)}
                   className="btn-cancel"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleSendMessage}
                   disabled={!messageContent}
                   className="btn-send"
