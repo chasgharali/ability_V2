@@ -83,10 +83,6 @@ export default function BoothQueueManagement() {
     return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
   };
 
-  const shortToken = (token) => {
-    if (!token) return '';
-    return `#${token.slice(-6).toUpperCase()}`;
-  };
 
   const loadData = async () => {
     try {
@@ -387,10 +383,7 @@ export default function BoothQueueManagement() {
                             )}
                           </div>
                           <div>
-                            <h3>
-                              <span className="token-badge" title={queueEntry.queueToken}>{shortToken(queueEntry.queueToken)}</span>
-                              Meeting no. {queueEntry.position}
-                            </h3>
+                            <h3>Meeting no. {queueEntry.position}</h3>
                             <p className="job-seeker-name">{queueEntry.jobSeeker.name}</p>
                             <p className="job-seeker-email">{queueEntry.jobSeeker.email}</p>
                           </div>
@@ -406,8 +399,17 @@ export default function BoothQueueManagement() {
                       </div>
 
                       <div className="queue-details">
-                        <div className="detail-item">
-                          <strong>Waiting:</strong> <span className="waiting-timer">{formatDuration(nowTs - new Date(queueEntry.joinedAt).getTime())}</span>
+                        <div className="waiting-row">
+                          <div className="waiting-left">
+                            <strong>Waiting:</strong>
+                            <span className="waiting-timer">{formatDuration(nowTs - new Date(queueEntry.joinedAt).getTime())}</span>
+                          </div>
+                          <button
+                            onClick={() => { setSelectedJobSeeker(queueEntry); setShowDetails(true); }}
+                            className="btn-details-inline"
+                          >
+                            View Details
+                          </button>
                         </div>
                         {queueEntry.interpreterCategory && (
                           <div className="detail-item">
@@ -422,12 +424,6 @@ export default function BoothQueueManagement() {
                       </div>
 
                       <div className="queue-actions">
-                        <button
-                          onClick={() => { setSelectedJobSeeker(queueEntry); setShowDetails(true); }}
-                          className="btn-details"
-                        >
-                          View Details
-                        </button>
                         <button
                           onClick={() => handleInviteToMeeting(queueEntry)}
                           className="btn-invite"
@@ -509,12 +505,12 @@ export default function BoothQueueManagement() {
         </div>
       )}
 
-      {/* Details Modal */}
+      {/* Job Seeker Profile Modal */}
       {showDetails && selectedJobSeeker && (
         <div className="modal-overlay">
-          <div className="modal-content details-modal">
+          <div className="modal-content profile-modal">
             <div className="modal-header">
-              <h3>Job Seeker Details</h3>
+              <h3>Job Seeker Profile</h3>
               <button
                 className="modal-close"
                 onClick={() => setShowDetails(false)}
@@ -522,9 +518,16 @@ export default function BoothQueueManagement() {
                 ×
               </button>
             </div>
-            <div className="details-body">
-              <div className="details-header">
-                <div className="avatar lg">
+            
+            <div className="profile-body">
+              {/* Info Notice */}
+              <div className="profile-notice">
+                This is the profile that recruiters will see. It will only be shared with companies you show interest in and the booths you visit.
+              </div>
+
+              {/* Profile Header */}
+              <div className="profile-header">
+                <div className="profile-avatar">
                   {selectedJobSeeker.jobSeeker.avatarUrl ? (
                     <img src={selectedJobSeeker.jobSeeker.avatarUrl} alt="Profile" />
                   ) : (
@@ -532,39 +535,113 @@ export default function BoothQueueManagement() {
                       {selectedJobSeeker.jobSeeker.name.charAt(0)}
                     </div>
                   )}
+                  <div className="online-indicator"></div>
                 </div>
-                <div>
-                  <h4 className="details-name">{selectedJobSeeker.jobSeeker.name}</h4>
-                  <p className="details-email">{selectedJobSeeker.jobSeeker.email}</p>
+                <div className="profile-info">
+                  <h2 className="profile-name">{selectedJobSeeker.jobSeeker.name}</h2>
+                  <p className="profile-email">{selectedJobSeeker.jobSeeker.email}</p>
                   {selectedJobSeeker.jobSeeker.phoneNumber && (
-                    <p className="details-meta">{selectedJobSeeker.jobSeeker.phoneNumber}</p>
+                    <p className="profile-phone">{selectedJobSeeker.jobSeeker.phoneNumber}</p>
                   )}
                   {(selectedJobSeeker.jobSeeker.city || selectedJobSeeker.jobSeeker.state) && (
-                    <p className="details-meta">{[selectedJobSeeker.jobSeeker.city, selectedJobSeeker.jobSeeker.state].filter(Boolean).join(', ')}</p>
+                    <p className="profile-location">
+                      {[selectedJobSeeker.jobSeeker.city, selectedJobSeeker.jobSeeker.state, 'US'].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+                </div>
+                <div className="profile-actions">
+                  {selectedJobSeeker.jobSeeker.resumeUrl ? (
+                    <a
+                      href={selectedJobSeeker.jobSeeker.resumeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-resume"
+                    >
+                      📄 View Complete Resume
+                    </a>
+                  ) : (
+                    <button className="btn-resume" disabled>📄 No Resume Available</button>
                   )}
                 </div>
               </div>
 
-              <div className="details-actions">
-                {selectedJobSeeker.jobSeeker.resumeUrl ? (
-                  <a
-                    href={selectedJobSeeker.jobSeeker.resumeUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-primary"
-                    style={{ background: theme.primary, borderColor: theme.primary }}
-                  >
-                    View Resume
-                  </a>
-                ) : (
-                  <button className="btn" disabled>No Resume</button>
-                )}
-                <button
-                  className="btn"
-                  onClick={() => setShowDetails(false)}
-                >
-                  Close
-                </button>
+              {/* Professional Details */}
+              <div className="professional-details">
+                <h3>Professional Details</h3>
+                
+                <div className="details-grid">
+                  {/* Professional Summary */}
+                  <div className="detail-section">
+                    <h4>Professional Summary</h4>
+                    <div className="detail-content">
+                      <div className="detail-item">
+                        <span className="detail-label">PROFESSIONAL HEADLINE</span>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.professionalHeadline || 'this is test headline'}</p>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">KEYWORDS & SKILLS</span>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.skills || 'mern dev'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Experience & Employment */}
+                  <div className="detail-section">
+                    <h4>Experience & Employment</h4>
+                    <div className="detail-content">
+                      <div className="detail-item">
+                        <span className="detail-label">PRIMARY JOB EXPERIENCE</span>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.primaryJobExperience || 'Accounting / Finance'}</p>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.secondaryJobExperience || 'Administrative Services / Human Resources'}</p>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">EMPLOYMENT TYPES</span>
+                        <div className="tags">
+                          <span className="tag">Part-Time</span>
+                          <span className="tag">Contract</span>
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">EXPERIENCE LEVEL</span>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.experienceLevel || 'Experienced (non-Manager)'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Education & Qualifications */}
+                  <div className="detail-section">
+                    <h4>Education & Qualifications</h4>
+                    <div className="detail-content">
+                      <div className="detail-item">
+                        <span className="detail-label">HIGHEST EDUCATION LEVEL</span>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.education || 'General Educational Development (GED)'}</p>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">SECURITY CLEARANCE</span>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.securityClearance || 'None'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Information */}
+                  <div className="detail-section">
+                    <h4>Additional Information</h4>
+                    <div className="detail-content">
+                      <div className="detail-item">
+                        <span className="detail-label">LANGUAGES</span>
+                        <div className="tags">
+                          <span className="tag">ASL/Sign Language</span>
+                          <span className="tag">English</span>
+                          <span className="tag">Urdu</span>
+                        </div>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">VETERAN/MILITARY STATUS</span>
+                        <p>{selectedJobSeeker.jobSeeker.metadata?.veteranStatus || 'None'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -129,13 +129,12 @@ boothQueueSchema.statics.getNextPosition = async function(boothId) {
     return lastEntry ? lastEntry.position + 1 : 1;
 };
 
-// Static method to get current queue for a booth
 boothQueueSchema.statics.getBoothQueue = async function(boothId) {
     return this.find({ 
         booth: boothId, 
         status: { $in: ['waiting', 'invited'] }
     })
-    .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state')
+    .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
     .populate('interpreterCategory', 'name code')
     .sort({ position: 1 });
 };
@@ -149,7 +148,7 @@ boothQueueSchema.statics.getJobSeekerQueue = async function(jobSeekerId, boothId
     })
     .populate('booth', 'company companyLogo')
     .populate('event', 'name logo')
-    .populate('jobSeeker', 'name email avatarUrl resumeUrl')
+    .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
     .populate('interpreterCategory', 'name code');
 };
 
