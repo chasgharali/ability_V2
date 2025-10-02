@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
@@ -19,7 +19,18 @@ export default function BoothQueueManagement() {
   const [loading, setLoading] = useState(true);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   const [showMessages, setShowMessages] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [nowTs, setNowTs] = useState(Date.now());
+
+  // Theme colors from event (fallbacks provided)
+  const theme = useMemo(() => ({
+    primary: event?.theme?.primaryColor || '#3b82f6',
+    success: event?.theme?.successColor || '#10b981',
+    danger: event?.theme?.dangerColor || '#ef4444',
+    warningBg: '#fef3c7',
+    warningText: '#92400e',
+  }), [event]);
 
   useEffect(() => {
     loadData();
@@ -43,6 +54,26 @@ export default function BoothQueueManagement() {
       };
     }
   }, [socket]);
+
+  // Tick every second for live waiting timers
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const formatDuration = (ms) => {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  };
+
+  const shortToken = (token) => {
+    if (!token) return '';
+    return `#${token.slice(-6).toUpperCase()}`;
+  };
 
   const loadData = async () => {
     try {
@@ -262,8 +293,8 @@ export default function BoothQueueManagement() {
                       <div className="queue-card-header">
                         <div className="job-seeker-info">
                           <div className="avatar">
-                            {queueEntry.jobSeeker.profilePicture ? (
-                              <img src={queueEntry.jobSeeker.profilePicture} alt="Profile" />
+                            {queueEntry.jobSeeker.avatarUrl ? (
+                              <img src={queueEntry.jobSeeker.avatarUrl} alt="Profile" />
                             ) : (
                               <div className="avatar-placeholder">
                                 {queueEntry.jobSeeker.name.charAt(0)}
@@ -271,7 +302,10 @@ export default function BoothQueueManagement() {
                             )}
                           </div>
                           <div>
-                            <h3>Meeting no. {queueEntry.position}</h3>
+                            <h3>
+                              <span className="token-badge" title={queueEntry.queueToken}>{shortToken(queueEntry.queueToken)}</span>
+                              Meeting no. {queueEntry.position}
+                            </h3>
                             <p className="job-seeker-name">{queueEntry.jobSeeker.name}</p>
                             <p className="job-seeker-email">{queueEntry.jobSeeker.email}</p>
                           </div>
@@ -288,7 +322,7 @@ export default function BoothQueueManagement() {
 
                       <div className="queue-details">
                         <div className="detail-item">
-                          <strong>Joined:</strong> {new Date(queueEntry.joinedAt).toLocaleTimeString()}
+                          <strong>Waiting:</strong> <span className="waiting-timer">{formatDuration(nowTs - new Date(queueEntry.joinedAt).getTime())}</span>
                         </div>
                         {queueEntry.interpreterCategory && (
                           <div className="detail-item">
@@ -304,8 +338,15 @@ export default function BoothQueueManagement() {
 
                       <div className="queue-actions">
                         <button
+                          onClick={() => { setSelectedJobSeeker(queueEntry); setShowDetails(true); }}
+                          className="btn-details"
+                        >
+                          View Details
+                        </button>
+                        <button
                           onClick={() => handleInviteToMeeting(queueEntry)}
                           className="btn-invite"
+                          style={{ background: theme.success, borderColor: theme.success }}
                           disabled={queueEntry.position > currentServing}
                         >
                           Invite
@@ -314,6 +355,7 @@ export default function BoothQueueManagement() {
                         <button
                           onClick={() => handleViewMessages(queueEntry)}
                           className="btn-messages"
+                          style={{ background: theme.primary, borderColor: theme.primary }}
                         >
                           Messages ({queueEntry.messageCount || 0})
                         </button>
@@ -321,6 +363,7 @@ export default function BoothQueueManagement() {
                         <button
                           onClick={() => handleRemoveFromQueue(queueEntry)}
                           className="btn-remove"
+                          style={{ background: theme.danger, borderColor: theme.danger }}
                         >
                           Remove
                         </button>
@@ -376,6 +419,68 @@ export default function BoothQueueManagement() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {showDetails && selectedJobSeeker && (
+        <div className="modal-overlay">
+          <div className="modal-content details-modal">
+            <div className="modal-header">
+              <h3>Job Seeker Details</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowDetails(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="details-body">
+              <div className="details-header">
+                <div className="avatar lg">
+                  {selectedJobSeeker.jobSeeker.avatarUrl ? (
+                    <img src={selectedJobSeeker.jobSeeker.avatarUrl} alt="Profile" />
+                  ) : (
+                    <div className="avatar-placeholder">
+                      {selectedJobSeeker.jobSeeker.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h4 className="details-name">{selectedJobSeeker.jobSeeker.name}</h4>
+                  <p className="details-email">{selectedJobSeeker.jobSeeker.email}</p>
+                  {selectedJobSeeker.jobSeeker.phoneNumber && (
+                    <p className="details-meta">{selectedJobSeeker.jobSeeker.phoneNumber}</p>
+                  )}
+                  {(selectedJobSeeker.jobSeeker.city || selectedJobSeeker.jobSeeker.state) && (
+                    <p className="details-meta">{[selectedJobSeeker.jobSeeker.city, selectedJobSeeker.jobSeeker.state].filter(Boolean).join(', ')}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="details-actions">
+                {selectedJobSeeker.jobSeeker.resumeUrl ? (
+                  <a 
+                    href={selectedJobSeeker.jobSeeker.resumeUrl} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="btn btn-primary"
+                    style={{ background: theme.primary, borderColor: theme.primary }}
+                  >
+                    View Resume
+                  </a>
+                ) : (
+                  <button className="btn" disabled>No Resume</button>
+                )}
+                <button 
+                  className="btn"
+                  onClick={() => setShowDetails(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

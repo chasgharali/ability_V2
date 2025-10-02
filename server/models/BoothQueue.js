@@ -135,7 +135,7 @@ boothQueueSchema.statics.getBoothQueue = async function(boothId) {
         booth: boothId, 
         status: { $in: ['waiting', 'invited'] }
     })
-    .populate('jobSeeker', 'name email profilePicture')
+    .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state')
     .populate('interpreterCategory', 'name code')
     .sort({ position: 1 });
 };
@@ -149,6 +149,7 @@ boothQueueSchema.statics.getJobSeekerQueue = async function(jobSeekerId, boothId
     })
     .populate('booth', 'company companyLogo')
     .populate('event', 'name logo')
+    .populate('jobSeeker', 'name email avatarUrl resumeUrl')
     .populate('interpreterCategory', 'name code');
 };
 

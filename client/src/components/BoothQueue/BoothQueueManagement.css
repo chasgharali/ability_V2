@@ -150,7 +150,7 @@
 }
 
 .queue-card-header {
-  padding: 1rem;
+  padding: 1rem 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -192,8 +192,11 @@
 .job-seeker-info h3 {
   margin: 0 0 0.25rem 0;
   font-size: 1rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .job-seeker-name {
@@ -233,7 +236,7 @@
 }
 
 .queue-details {
-  padding: 1rem;
+  padding: 0.875rem 1.25rem;
   background: #f9fafb;
 }
 
@@ -252,7 +255,7 @@
 }
 
 .queue-actions {
-  padding: 1rem;
+  padding: 0.875rem 1.25rem 1.25rem;
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -270,10 +273,32 @@
   min-width: 80px;
 }
 
+/* Generic button styles for modal actions */
+.btn {
+  padding: 0.55rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  color: #ffffff;
+  border-color: transparent;
+}
+
 .btn-invite {
   background: #10b981;
-  color: white;
+  color: #ffffff;
   border-color: #10b981;
+  box-shadow: 0 1px 2px rgba(16,185,129,0.25);
 }
 
 .btn-invite:hover:not(:disabled) {
@@ -289,8 +314,9 @@
 
 .btn-messages {
   background: #3b82f6;
-  color: white;
+  color: #ffffff;
   border-color: #3b82f6;
+  box-shadow: 0 1px 2px rgba(59,130,246,0.25);
 }
 
 .btn-messages:hover {
@@ -300,8 +326,41 @@
 
 .btn-remove {
   background: #ef4444;
-  color: white;
+  color: #ffffff;
   border-color: #ef4444;
+  box-shadow: 0 1px 2px rgba(239,68,68,0.25);
+}
+
+/* Token badge shown before meeting number */
+.token-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.675rem;
+  font-weight: 700;
+  color: #1f2937;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+}
+
+/* Live waiting timer */
+.waiting-timer {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+}
+
+/* Subtle card lift */
+.queue-card {
+  border: 1px solid #e5e7eb;
+}
+.queue-card:hover {
+  transform: translateY(-1px);
 }
 
 .btn-remove:hover {
@@ -334,6 +393,59 @@
   padding: 1rem;
   margin-bottom: 1rem;
   border: 1px solid #e5e7eb;
+}
+
+/* Details modal styles */
+.details-modal {
+  max-width: 640px;
+}
+
+.details-body {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.details-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.avatar.lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.details-name {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.details-email, .details-meta {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.details-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-details {
+  background: #111827;
+  color: #ffffff;
+  border-color: #111827;
+}
+
+.btn-details:hover {
+  background: #0b1220;
+  border-color: #0b1220;
 }
 
 .message-item:last-child {
