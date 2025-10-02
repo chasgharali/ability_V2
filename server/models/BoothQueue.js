@@ -95,7 +95,15 @@ boothQueueSchema.virtual('messageCount').get(function() {
     return this.messages ? this.messages.filter(msg => !msg.isRead).length : 0;
 });
 
-// Pre-save middleware to generate queue token
+// Generate queue token before validation so the required validator passes
+boothQueueSchema.pre('validate', function(next) {
+    if (!this.queueToken) {
+        this.queueToken = `${this.booth}_${this.jobSeeker}_${Date.now()}`;
+    }
+    next();
+});
+
+// Defensive fallback in case something clears it between validate and save
 boothQueueSchema.pre('save', function(next) {
     if (!this.queueToken) {
         this.queueToken = `${this.booth}_${this.jobSeeker}_${Date.now()}`;

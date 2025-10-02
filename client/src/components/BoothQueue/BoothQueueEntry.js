@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
 import { boothQueueAPI } from '../../services/boothQueue';
 import './BoothQueueEntry.css';
+import AdminHeader from '../Layout/AdminHeader';
+import '../Dashboard/Dashboard.css'; // Import header styles
 
 export default function BoothQueueEntry() {
   const { eventSlug, boothId } = useParams();
@@ -25,7 +27,7 @@ export default function BoothQueueEntry() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       // Load event, booth, and interpreter categories
       const [eventRes, boothRes, interpreterRes] = await Promise.all([
         fetch(`/api/events/slug/${eventSlug}`, {
@@ -40,8 +42,35 @@ export default function BoothQueueEntry() {
       const eventData = await eventRes.json();
       const boothData = await boothRes.json();
 
-      if (eventData.success) setEvent(eventData.event);
-      if (boothData.success) setBooth(boothData.booth);
+      console.log('Event data:', eventData);
+      console.log('Booth data:', boothData);
+
+      // Handle different response structures
+      let extractedEvent = null;
+      let extractedBooth = null;
+
+      if (eventData.event) {
+        extractedEvent = eventData.event;
+      } else if (eventData.success && eventData.data) {
+        extractedEvent = eventData.data;
+      } else if (eventData.name) {
+        extractedEvent = eventData;
+      }
+
+      if (boothData.booth) {
+        extractedBooth = boothData.booth;
+      } else if (boothData.success && boothData.data) {
+        extractedBooth = boothData.data;
+      } else if (boothData.name) {
+        extractedBooth = boothData;
+      }
+
+      console.log('Extracted event:', extractedEvent);
+      console.log('Extracted booth:', extractedBooth);
+
+      setEvent(extractedEvent);
+      setBooth(extractedBooth);
+
       if (interpreterRes.success) setInterpreterCategories(interpreterRes.categories);
 
     } catch (error) {
@@ -58,6 +87,11 @@ export default function BoothQueueEntry() {
       return;
     }
 
+    if (!event || !booth) {
+      setError('Event or booth information is not available. Please try refreshing the page.');
+      return;
+    }
+
     try {
       setJoining(true);
       setError('');
@@ -70,7 +104,7 @@ export default function BoothQueueEntry() {
       };
 
       const response = await boothQueueAPI.joinQueue(queueData);
-      
+
       if (response.success) {
         // Navigate to waiting area with queue token
         navigate(`/booth-queue/${eventSlug}/${boothId}/waiting`, {
@@ -118,27 +152,27 @@ export default function BoothQueueEntry() {
 
   return (
     <div className="booth-queue-entry">
+      {/* Standard header with user status; override branding with event logo */}
+      <AdminHeader brandingLogo={event?.logoUrl || ''} />
+
       <div className="entry-modal">
         <div className="modal-header">
-          <h1 className="event-title">{event?.name || 'Event'}</h1>
-          <div className="event-logo">
-            {event?.logo && (
-              <img src={event.logo} alt={`${event.name} logo`} />
-            )}
+          <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
+          <div className="company-branding">
+            <div className="company-logo">
+              {booth?.logoUrl ? (
+                <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} />
+              ) : (
+                <div className="logo-placeholder">
+                  <span className="logo-text">{booth?.name?.[0] || 'C'}</span>
+                </div>
+              )}
+            </div>
+            <div className="company-name">{booth?.name || 'Company'}</div>
           </div>
         </div>
 
-        <div className="booth-info">
-          <div className="booth-logo">
-            {booth?.companyLogo && (
-              <img src={booth.companyLogo} alt={`${booth.company} logo`} />
-            )}
-          </div>
-          <div className="booth-details">
-            <h2>{booth?.company || 'Company'}</h2>
-            <p>{booth?.description}</p>
-          </div>
-        </div>
+        <div className="divider" />
 
         <div className="interpreter-selection">
           <label htmlFor="interpreter-select">
@@ -167,11 +201,11 @@ export default function BoothQueueEntry() {
               onChange={(e) => setAgreedToTerms(e.target.checked)}
             />
             <span>I agree to </span>
-            <a href="/terms-of-use" target="_blank" rel="noopener noreferrer">
+            <a href="https://abilityjobfair.org/terms-of-use/" target="_blank" rel="noopener noreferrer">
               Terms of Use
             </a>
             <span> and </span>
-            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">
+            <a href="https://abilityjobfair.org/privacy-policy/" target="_blank" rel="noopener noreferrer">
               Privacy Policy
             </a>
             <span className="required"> *</span>

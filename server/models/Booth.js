@@ -183,7 +183,7 @@ boothSchema.methods.canUserManage = function (user) {
     if (['Admin', 'GlobalSupport'].includes(user.role)) return true;
 
     // Booth administrators can manage their booths
-    if (this.administrators.includes(user._id)) return true;
+    if (this.administrators && this.administrators.includes(user._id)) return true;
 
     // AdminEvent can manage booths in their events
     if (user.role === 'AdminEvent') {
@@ -196,6 +196,7 @@ boothSchema.methods.canUserManage = function (user) {
 
 // Instance method to get booth summary
 boothSchema.methods.getSummary = function () {
+    const sections = Array.isArray(this.richSections) ? this.richSections : [];
     return {
         _id: this._id,
         eventId: this.eventId,
@@ -210,8 +211,8 @@ boothSchema.methods.getSummary = function () {
         isAvailableForQueue: this.isAvailableForQueue,
         queueId: this.queueId,
         stats: this.stats,
-        richSectionsCount: this.richSections.length,
-        richSections: this.richSections
+        richSectionsCount: sections.length,
+        richSections: sections
             .slice(0, 3)
             .sort((a, b) => a.order - b.order)
             .map(s => ({ _id: s._id, title: s.title, contentHtml: s.contentHtml, order: s.order, isActive: s.isActive }))
@@ -220,6 +221,7 @@ boothSchema.methods.getSummary = function () {
 
 // Instance method to get public booth info (for job seekers)
 boothSchema.methods.getPublicInfo = function () {
+    const sections = Array.isArray(this.richSections) ? this.richSections : [];
     return {
         _id: this._id,
         name: this.name,
@@ -229,7 +231,7 @@ boothSchema.methods.getPublicInfo = function () {
         companyPage: this.companyPage,
         isAvailableForQueue: this.isAvailableForQueue,
         estimatedWaitTime: this.settings.queueSettings.estimatedWaitTime,
-        richSections: this.richSections
+        richSections: sections
             .filter(section => section.isActive)
             .sort((a, b) => a.order - b.order)
             .map(section => ({

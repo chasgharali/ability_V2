@@ -13,6 +13,7 @@ interface User {
     isActive: boolean;
     languages?: string[];
     isAvailable?: boolean;
+    assignedBooth?: string;
     createdAt: string;
 }
 

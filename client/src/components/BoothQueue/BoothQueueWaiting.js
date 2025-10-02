@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import './BoothQueueWaiting.css';
+import AdminHeader from '../Layout/AdminHeader';
+import '../Dashboard/Dashboard.css';
 
 export default function BoothQueueWaiting() {
   const { eventSlug, boothId } = useParams();
@@ -70,8 +72,20 @@ export default function BoothQueueWaiting() {
       const boothData = await boothRes.json();
       const queueData = await queueRes;
 
-      if (eventData.success) setEvent(eventData.event);
-      if (boothData.success) setBooth(boothData.booth);
+      // Normalize event
+      let extractedEvent = null;
+      if (eventData?.event) extractedEvent = eventData.event;
+      else if (eventData?.success && eventData?.data) extractedEvent = eventData.data;
+      else if (eventData?.name) extractedEvent = eventData;
+
+      // Normalize booth
+      let extractedBooth = null;
+      if (boothData?.booth) extractedBooth = boothData.booth;
+      else if (boothData?.success && boothData?.data) extractedBooth = boothData.data;
+      else if (boothData?.name) extractedBooth = boothData;
+
+      if (extractedEvent) setEvent(extractedEvent);
+      if (extractedBooth) setBooth(extractedBooth);
       if (queueData.success) {
         setQueuePosition(queueData.position);
         setCurrentServing(queueData.currentServing);
@@ -213,65 +227,124 @@ export default function BoothQueueWaiting() {
 
   return (
     <div className="booth-queue-waiting">
-      {/* Header */}
-      <header className="queue-header">
-        <div className="header-left">
-          <div className="booth-logo">
-            {booth?.companyLogo && (
-              <img src={booth.companyLogo} alt={`${booth.company} logo`} />
-            )}
+      {/* Global header with event branding */}
+      <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} />
+      
+      {/* Main content area */}
+      <div className="waiting-layout">
+        {/* Main content */}
+        <div className="waiting-main">
+          {/* Header with booth logo */}
+          <div className="event-header">
+            <div className="header-content">
+              <div className="booth-logo-section">
+                {booth?.logoUrl ? (
+                  <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} className="booth-logo-modern" />
+                ) : (
+                  <div className="booth-logo-modern-placeholder">
+                    <span>{booth?.name?.[0] || 'C'}</span>
+                  </div>
+                )}
+              </div>
+              <div className="event-info">
+                <h1 className="event-title">{event?.name || 'ABILITY Job Fair - Event'}</h1>
+                <h2 className="booth-subtitle">{booth?.name || 'Company Booth'}</h2>
+              </div>
+            </div>
           </div>
-          <div className="event-logo">
-            {event?.logo && (
-              <img src={event.logo} alt={`${event.name} logo`} />
-            )}
+          
+          {/* Waiting message */}
+          <div className="waiting-message">
+            <h3>You are now joining the queue.</h3>
+            <p>Wait for the invitation to join a meeting</p>
+          </div>
+          
+          {/* Content sections - expanded */}
+          <div className="content-grid-expanded">
+            {(booth?.richSections && booth.richSections.length > 0
+              ? booth.richSections
+                  .filter(s => s.isActive !== false)
+                  .sort((a,b) => (a.order ?? 0) - (b.order ?? 0))
+                  .slice(0,3)
+              : [
+                  { title: 'First Placeholder', contentHtml: '<p>place1e</p>' },
+                  { title: 'Second Placeholder', contentHtml: '<p>place2e</p>' },
+                  { title: 'Third Placeholder', contentHtml: '<p>place3e</p>' }
+                ]
+              ).map((section, idx) => (
+                <div key={section._id || idx} className="content-card-expanded">
+                  {section.title && <h4 className="content-title">{section.title}</h4>}
+                  {section.contentHtml ? (
+                    <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
+                  ) : (
+                    <p className="content-placeholder">Content will be available soon.</p>
+                  )}
+                </div>
+              ))}
           </div>
         </div>
         
-        <div className="header-center">
-          <h1 className="event-title">{event?.name}</h1>
-          <h2 className="booth-title">{booth?.company}</h2>
-        </div>
-        
-        <div className="header-right">
-          <div className="queue-info">
-            <div className="queue-numbers">
-              <div className="your-number">
-                <span className="label">Your Meeting Number</span>
-                <span className="number">{queuePosition}</span>
-              </div>
-              <div className="serving-number">
-                <span className="label">Now Serving Number</span>
-                <span className="number">{currentServing}</span>
-              </div>
+        {/* Right sidebar with queue info and actions */}
+        <div className="waiting-sidebar-right">
+          <div className="queue-numbers">
+            <div className="queue-number-card">
+              <span className="queue-label">Your Meeting Number</span>
+              <span className="queue-number">{queuePosition}</span>
             </div>
-            <div className="queue-status">
-              <span className="status-indicator waiting"></span>
-              <span>Waiting</span>
+            <div className="queue-number-card">
+              <span className="queue-label">Now Serving Number</span>
+              <span className="queue-number">{currentServing}</span>
             </div>
           </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="queue-main">
-        <div className="waiting-message">
-          <h3>You are now joining the queue.</h3>
-          <p>Wait for the invitation to join a meeting</p>
-        </div>
-
-        <div className="queue-content">
-          <div className="content-section">
-            <h4>test content</h4>
+          <div className="queue-status">
+            <span className="status-dot waiting"></span>
+            <span className="status-text">Waiting</span>
           </div>
-          <div className="content-section">
-            <h4>test content</h4>
-          </div>
-          <div className="content-section">
-            <h4>test content</h4>
+          
+          {/* Return button */}
+          <button className="return-btn" onClick={handleReturnToEvent}>
+            Return to<br />abilityJOBS.com Employer
+          </button>
+          
+          {/* Action buttons moved here */}
+          <div className="sidebar-actions">
+            <button 
+              className="sidebar-action-btn camera-btn"
+              onClick={() => alert('Camera & Mic selection coming soon')}
+            >
+              📹 Select your camera and mic
+            </button>
+            
+            <button 
+              className="sidebar-action-btn message-btn"
+              onClick={() => setShowMessageModal(true)}
+            >
+              💬 Create a message
+            </button>
+            
+            <button 
+              className="sidebar-action-btn refresh-btn"
+              onClick={() => window.location.reload()}
+            >
+              🔄 Refresh your connection
+            </button>
+            
+            <button 
+              className="sidebar-action-btn return-btn-alt"
+              onClick={handleReturnToEvent}
+            >
+              ↩️ Return to main event
+            </button>
+            
+            <button 
+              className="sidebar-action-btn exit-btn"
+              onClick={handleExitEvent}
+            >
+              🚪 Exit the event
+            </button>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Bottom Actions */}
       <footer className="queue-actions">

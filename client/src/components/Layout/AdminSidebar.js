@@ -190,8 +190,47 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
         </>
       );
+    } else if (user?.role === 'Recruiter' || user?.role === 'BoothAdmin') {
+      // Recruiter/Booth Admin view: queue management focused
+      const assignedBoothId = user?.assignedBooth;
+      return (
+        <>
+          <div className="sidebar-section">
+            <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, admin: !s.admin }))} aria-expanded={expanded.admin}>
+              <span>Recruiter</span>
+              {expanded.admin ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.admin && (
+              <div className="sidebar-items">
+                <button className={itemClass('queue')} onClick={() => handleItemClick(assignedBoothId ? `/booth-queue/manage/${assignedBoothId}` : '/boothmanagement')}>
+                  Meeting Queue
+                </button>
+                <button className={itemClass('meetings')} onClick={() => handleItemClick('/meetings')}>
+                  Meeting Records
+                </button>
+                <button className={itemClass('interests')} onClick={() => handleItemClick('/jobseeker-interests')}>
+                  JobSeeker Interests
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="sidebar-section">
+            <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, tools: !s.tools }))} aria-expanded={expanded.tools}>
+              <span>Tools</span>
+              {expanded.tools ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.tools && (
+              <div className="sidebar-items">
+                <button className={itemClass('troubleshooting')} onClick={closeMobileMenu}>Trouble Shooting</button>
+                <button className={itemClass('instructions')} onClick={closeMobileMenu}>Instructions</button>
+              </div>
+            )}
+          </div>
+        </>
+      );
     } else {
-      // Admin, Recruiter, and other roles
+      // Admin and other elevated roles
       return (
         <>
           <div className="sidebar-section">

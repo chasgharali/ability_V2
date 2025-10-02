@@ -35,6 +35,33 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 /**
+ * GET /api/booths/invite/:slug
+ * Resolve a booth by its customInviteSlug
+ */
+router.get('/invite/:slug', authenticateToken, async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const booth = await Booth.findOne({ customInviteSlug: slug }).populate('eventId', 'name slug logoUrl status');
+        if (!booth) {
+            return res.status(404).json({
+                error: 'Booth not found',
+                message: 'No booth found for this invite link'
+            });
+        }
+
+        // Public info for job seekers
+        res.json({
+            booth: booth.getPublicInfo(),
+            boothId: booth._id,
+            event: booth.eventId ? (booth.eventId.getSummary ? booth.eventId.getSummary() : { _id: booth.eventId._id, name: booth.eventId.name, slug: booth.eventId.slug, logoUrl: booth.eventId.logoUrl, status: booth.eventId.status }) : null
+        });
+    } catch (error) {
+        logger.error('Resolve booth by invite slug error:', error);
+        res.status(500).json({ error: 'Failed to resolve invite link' });
+    }
+});
+
+/**
  * POST /api/booths
  * Create booths for one or more events
  */
@@ -149,7 +176,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const { user } = req;
 
-        const booth = await Booth.findById(id).populate('eventId', 'name start end status');
+        const booth = await Booth.findById(id).populate('eventId', 'name slug description link sendyId logoUrl start end timezone status administrators createdBy booths limits theme termsIds createdAt');
         if (!booth) {
             return res.status(404).json({
                 error: 'Booth not found',
@@ -157,8 +184,12 @@ router.get('/:id', authenticateToken, async (req, res) => {
             });
         }
 
-        // Check if user can access this booth
-        if (!booth.canUserManage(user) && !booth.eventId.canUserAccess(user)) {
+        // Check if user can access this booth (guard against missing fields)
+        const canManage = typeof booth.canUserManage === 'function' ? booth.canUserManage(user) : false;
+        const canAccessEvent = booth.eventId && typeof booth.eventId.canUserAccess === 'function'
+            ? booth.eventId.canUserAccess(user)
+            : false;
+        if (!canManage && !canAccessEvent) {
             return res.status(403).json({
                 error: 'Access denied',
                 message: 'You do not have permission to view this booth'
@@ -166,13 +197,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
 
         // Return appropriate data based on user role
-        const boothData = user.role === 'JobSeeker'
-            ? booth.getPublicInfo()
-            : booth.getSummary();
+        const boothData = user?.role === 'JobSeeker'
+            ? (typeof booth.getPublicInfo === 'function' ? booth.getPublicInfo() : booth)
+            : (typeof booth.getSummary === 'function' ? booth.getSummary() : booth);
 
         res.json({
             booth: boothData,
-            event: booth.eventId.getSummary()
+            event: booth.eventId && typeof booth.eventId.getSummary === 'function'
+                ? booth.eventId.getSummary()
+                : (booth.eventId || null)
         });
     } catch (error) {
         logger.error('Get booth error:', error);

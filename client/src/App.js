@@ -28,6 +28,7 @@ import InterpreterCategories from './components/InterpreterCategories/Interprete
 import BoothQueueEntry from './components/BoothQueue/BoothQueueEntry';
 import BoothQueueWaiting from './components/BoothQueue/BoothQueueWaiting';
 import BoothQueueManagement from './components/BoothQueue/BoothQueueManagement';
+import QueueInviteResolver from './components/BoothQueue/QueueInviteResolver';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
 
@@ -151,6 +152,7 @@ function App() {
                                 <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                 <Route path="/interpreter-categories" element={<RequireAuth><InterpreterCategories /></RequireAuth>} />
                                 {/* Booth Queue Routes */}
+                                <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
                                 <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />
                                 <Route path="/booth-queue/:eventSlug/:boothId/waiting" element={<RequireAuth><BoothQueueWaiting /></RequireAuth>} />
                                 <Route path="/booth-queue/manage/:boothId" element={<RequireAuth><BoothQueueManagement /></RequireAuth>} />

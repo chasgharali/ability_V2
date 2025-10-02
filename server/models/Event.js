@@ -253,7 +253,7 @@ eventSchema.methods.canUserAccess = function (user) {
     if (['Admin', 'GlobalSupport'].includes(user.role)) return true;
 
     // Event administrators can access their events
-    if (this.administrators.includes(user._id)) return true;
+    if (this.administrators && this.administrators.includes(user._id)) return true;
 
     // AdminEvent can access events they created
     if (user.role === 'AdminEvent' && this.createdBy.equals(user._id)) return true;
@@ -280,7 +280,7 @@ eventSchema.methods.getSummary = function () {
         isUpcoming: this.isUpcoming,
         limits: this.limits,
         addFooter: this.theme?.addFooter ?? false,
-        boothCount: this.booths.length,
+        boothCount: (this.booths ? this.booths.length : 0),
         stats: this.stats,
         createdAt: this.createdAt,
         termsIds: this.termsIds || []

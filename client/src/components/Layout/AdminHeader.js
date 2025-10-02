@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 
-export default function AdminHeader({ onLogout }) {
+export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const brandingLogo = useMemo(() => {
+    if (brandingLogoProp) return brandingLogoProp;
     try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
-  }, []);
+  }, [brandingLogoProp]);
 
   const handleLogout = async () => {
     try {

@@ -411,28 +411,36 @@ const Dashboard = () => {
                     </div>
                 );
             case 'Recruiter':
+            case 'BoothAdmin': {
+                const assignedBoothId = user?.assignedBooth;
                 return (
                     <div className="dashboard-content">
                         <h2>Recruiter Dashboard</h2>
+                        {!assignedBoothId && (
+                            <div className="alert-box" style={{ background: '#fff3cd', borderColor: '#ffeeba' }}>
+                                <p><strong>Action required:</strong> No booth is assigned to your account yet. Please ask an administrator to assign a booth so you can manage your meeting queue.</p>
+                            </div>
+                        )}
                         <div className="dashboard-cards">
                             <div className="dashboard-card">
                                 <h3>Active Booths</h3>
                                 <p>Manage your recruitment booths</p>
-                                <button className="dashboard-button">View Booths</button>
+                                <button className="dashboard-button" onClick={() => navigate('/boothmanagement')}>View Booths</button>
                             </div>
                             <div className="dashboard-card">
                                 <h3>Queue Management</h3>
                                 <p>View and manage job seeker queues</p>
-                                <button className="dashboard-button">Manage Queue</button>
+                                <button className="dashboard-button" disabled={!assignedBoothId} onClick={() => assignedBoothId && navigate(`/booth-queue/manage/${assignedBoothId}`)}>Manage Queue</button>
                             </div>
                             <div className="dashboard-card">
                                 <h3>Interview Schedule</h3>
                                 <p>Schedule and conduct interviews</p>
-                                <button className="dashboard-button">Schedule Interview</button>
+                                <button className="dashboard-button" onClick={() => navigate('/meetings')}>Schedule Interview</button>
                             </div>
                         </div>
                     </div>
                 );
+            }
             case 'Admin':
             case 'AdminEvent':
                 return (
