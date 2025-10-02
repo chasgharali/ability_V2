@@ -33,24 +33,27 @@ const boothQueueSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['waiting', 'invited', 'in_meeting', 'completed', 'left'],
-        default: 'waiting'
     },
     joinedAt: {
         type: Date,
         default: Date.now
     },
-    invitedAt: {
-        type: Date,
-        default: null
-    },
     leftAt: {
         type: Date,
         default: null
     },
-    agreedToTerms: {
-        type: Boolean,
-        required: true,
-        default: false
+    invitedAt: {
+        type: Date,
+        default: null
+    },
+    lastActivity: {
+        type: Date,
+        default: Date.now
+    },
+    meetingId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'MeetingRecord',
+        default: null
     },
     // Messages from job seeker to recruiter
     messages: [{
@@ -86,8 +89,14 @@ const boothQueueSchema = new mongoose.Schema({
 
 // Indexes for performance
 boothQueueSchema.index({ booth: 1, status: 1 });
-boothQueueSchema.index({ jobSeeker: 1, booth: 1 }, { unique: true });
-boothQueueSchema.index({ queueToken: 1 });
+// Partial unique index - only enforce uniqueness for active queue entries
+boothQueueSchema.index(
+    { jobSeeker: 1, booth: 1 }, 
+    { 
+        unique: true, 
+        partialFilterExpression: { status: { $in: ['waiting', 'invited', 'in_meeting'] } }
+    }
+);
 boothQueueSchema.index({ event: 1, booth: 1 });
 
 // Virtual for unread message count
@@ -173,7 +182,14 @@ boothQueueSchema.methods.leaveQueue = function() {
 boothQueueSchema.methods.inviteToMeeting = function(meetingId) {
     this.status = 'invited';
     this.invitedAt = new Date();
+    this.lastActivity = new Date();
     this.meetingId = meetingId;
+    return this.save();
+};
+
+// Instance method to update activity timestamp
+boothQueueSchema.methods.updateActivity = function() {
+    this.lastActivity = new Date();
     return this.save();
 };
 

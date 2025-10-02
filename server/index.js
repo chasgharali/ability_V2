@@ -149,6 +149,10 @@ const startServer = async () => {
         server.listen(PORT, HOST, () => {
             logger.info(`Server running on ${HOST}:${PORT} in ${process.env.NODE_ENV} mode`);
             logger.info('Server is ready to accept connections');
+            
+            // Start queue cleanup job
+            const { startQueueCleanup } = require('./utils/queueCleanup');
+            startQueueCleanup();
         });
     } catch (error) {
         logger.error('Failed to start server:', error);

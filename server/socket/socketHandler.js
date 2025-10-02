@@ -326,12 +326,31 @@ const socketHandler = (io) => {
         /**
          * Join booth queue room for real-time updates
          */
-        socket.on('join-booth-queue', (data) => {
+        socket.on('join-booth-queue', async (data) => {
             const { boothId, userId, eventSlug } = data;
             if (boothId && userId === socket.userId) {
                 socket.join(`booth_${boothId}`);
                 socket.join(`user_${userId}`);
                 socket.currentBoothId = boothId;
+                
+                // Update activity timestamp for job seekers
+                if (socket.user.role === 'JobSeeker') {
+                    try {
+                        const BoothQueue = require('../models/BoothQueue');
+                        const queueEntry = await BoothQueue.findOne({
+                            jobSeeker: socket.userId,
+                            booth: boothId,
+                            status: { $in: ['waiting', 'invited'] }
+                        });
+                        
+                        if (queueEntry) {
+                            await queueEntry.updateActivity();
+                        }
+                    } catch (error) {
+                        logger.error('Error updating queue activity:', error);
+                    }
+                }
+                
                 logger.info(`User ${socket.user.email} joined booth queue room ${boothId}`);
             }
         });
@@ -394,7 +413,7 @@ const socketHandler = (io) => {
         /**
          * Handle disconnection
          */
-        socket.on('disconnect', (reason) => {
+        socket.on('disconnect', async (reason) => {
             logger.info(`User ${socket.user.email} disconnected: ${reason}`);
 
             // Notify call participants if user was in a call
@@ -403,6 +422,39 @@ const socketHandler = (io) => {
                     userId: socket.userId,
                     user: socket.user.getPublicProfile()
                 });
+            }
+
+            // Clean up queue entries for job seekers who disconnect
+            if (socket.user.role === 'JobSeeker') {
+                try {
+                    const BoothQueue = require('../models/BoothQueue');
+                    
+                    // Find any active queue entries for this user
+                    const activeQueues = await BoothQueue.find({
+                        jobSeeker: socket.userId,
+                        status: { $in: ['waiting', 'invited'] }
+                    });
+
+                    // Leave all active queues
+                    for (const queueEntry of activeQueues) {
+                        await queueEntry.leaveQueue();
+                        
+                        // Notify booth management about queue update
+                        socket.to(`booth_${queueEntry.booth}`).emit('queue-updated', {
+                            type: 'left',
+                            queueEntry: {
+                                _id: queueEntry._id,
+                                jobSeeker: socket.user.getPublicProfile(),
+                                position: queueEntry.position,
+                                status: 'left'
+                            }
+                        });
+                        
+                        logger.info(`Auto-removed user ${socket.user.email} from queue for booth ${queueEntry.booth} due to disconnect`);
+                    }
+                } catch (error) {
+                    logger.error('Error cleaning up queue on disconnect:', error);
+                }
             }
         });
     });

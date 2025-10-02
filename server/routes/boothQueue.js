@@ -5,6 +5,8 @@ const Booth = require('../models/Booth');
 const Event = require('../models/Event');
 const MeetingRecord = require('../models/MeetingRecord');
 const { authenticateToken } = require('../middleware/auth');
+const { getIO } = require('../socket/socketHandler');
+const logger = require('../utils/logger');
 
 // Join a booth queue
 router.post('/join', authenticateToken, async (req, res) => {
@@ -21,34 +23,103 @@ router.post('/join', authenticateToken, async (req, res) => {
         }
 
         // Check if job seeker is already in any queue for this event
-        const existingQueue = await BoothQueue.findOne({
+        let existingQueue = await BoothQueue.findOne({
             jobSeeker: jobSeekerId,
             event: eventId,
             status: { $in: ['waiting', 'invited', 'in_meeting'] }
         });
 
+        // If there's an existing queue entry, try to clean up stale entries
+        // (entries where user might have disconnected without proper cleanup)
         if (existingQueue) {
-            return res.status(400).json({
-                success: false,
-                message: 'You are already in a queue for this event. Please leave your current queue first.'
-            });
+            // Check if this is a stale entry (older than 5 minutes with no recent activity)
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            const isStale = existingQueue.createdAt < fiveMinutesAgo && 
+                           (!existingQueue.lastActivity || existingQueue.lastActivity < fiveMinutesAgo);
+            
+            if (isStale && existingQueue.status === 'waiting') {
+                // Auto-cleanup stale waiting entries
+                await existingQueue.leaveQueue();
+                logger.info(`Auto-cleaned stale queue entry for user ${jobSeekerId} in booth ${existingQueue.booth}`);
+                
+                // Notify booth management about the cleanup
+                const io = getIO();
+                io.to(`booth_${existingQueue.booth}`).emit('queue-updated', {
+                    type: 'left',
+                    queueEntry: {
+                        _id: existingQueue._id,
+                        jobSeeker: req.user.getPublicProfile(),
+                        position: existingQueue.position,
+                        status: 'left'
+                    }
+                });
+                
+                existingQueue = null; // Allow them to join
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You are already in a queue for this event. Please leave your current queue first.',
+                    existingQueue: {
+                        boothId: existingQueue.booth,
+                        position: existingQueue.position,
+                        status: existingQueue.status
+                    }
+                });
+            }
         }
 
         // Get next position in queue
         const position = await BoothQueue.getNextPosition(boothId);
 
-        // Create queue entry
-        const queueEntry = new BoothQueue({
-            jobSeeker: jobSeekerId,
-            booth: boothId,
-            event: eventId,
-            position,
-            interpreterCategory: interpreterCategory || null,
-            agreedToTerms,
-            status: 'waiting'
-        });
+        // Create queue entry with duplicate handling
+        let queueEntry;
+        try {
+            queueEntry = new BoothQueue({
+                jobSeeker: jobSeekerId,
+                booth: boothId,
+                event: eventId,
+                position,
+                interpreterCategory: interpreterCategory || null,
+                agreedToTerms,
+                status: 'waiting'
+            });
 
-        await queueEntry.save();
+            await queueEntry.save();
+        } catch (error) {
+            if (error.code === 11000) {
+                // Handle duplicate key error - there might still be an active entry
+                logger.warn(`Duplicate key error for user ${jobSeekerId} in booth ${boothId}, attempting cleanup`);
+                
+                // Find and clean up any remaining active entries
+                const duplicateEntry = await BoothQueue.findOne({
+                    jobSeeker: jobSeekerId,
+                    booth: boothId,
+                    status: { $in: ['waiting', 'invited', 'in_meeting'] }
+                });
+                
+                if (duplicateEntry) {
+                    await duplicateEntry.leaveQueue();
+                    logger.info(`Cleaned up duplicate entry ${duplicateEntry._id} for user ${jobSeekerId}`);
+                    
+                    // Retry creating the queue entry
+                    queueEntry = new BoothQueue({
+                        jobSeeker: jobSeekerId,
+                        booth: boothId,
+                        event: eventId,
+                        position,
+                        interpreterCategory: interpreterCategory || null,
+                        agreedToTerms,
+                        status: 'waiting'
+                    });
+                    
+                    await queueEntry.save();
+                } else {
+                    throw error; // Re-throw if we can't find the duplicate
+                }
+            } else {
+                throw error; // Re-throw non-duplicate errors
+            }
+        }
 
         // Populate references for response
         await queueEntry.populate([
@@ -235,7 +306,9 @@ router.post('/message', authenticateToken, async (req, res) => {
             });
         }
 
+        // Add message to queue entry and update activity
         await queueEntry.addMessage({ type, content });
+        await queueEntry.updateActivity();
 
         // Emit socket event to recruiters
         if (req.app.get('io')) {
