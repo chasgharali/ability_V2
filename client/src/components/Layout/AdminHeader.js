@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 
-export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp }) {
+export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const brandingLogo = useMemo(() => {
     if (brandingLogoProp) return brandingLogoProp;
     try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
   }, [brandingLogoProp]);
+
 
   const handleLogout = async () => {
     try {
@@ -40,8 +41,26 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp }
           <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
             {mobileOpen ? <MdClose /> : <MdMenu />}
           </button>
-          <img src={brandingLogo} alt="Site logo" className="header-logo" />
+          {/* Primary (event) logo */}
+          {brandingLogo && brandingLogo.trim() !== '' && (
+            <img src={brandingLogo} alt="Site logo" className="header-logo" />
+          )}
+          {/* Secondary (booth) logo if provided - not on left for Recruiters */}
+          {user?.role !== 'Recruiter' && secondaryLogo && secondaryLogo.trim() !== '' && (
+            <img src={secondaryLogo} alt="Booth logo" className="header-logo" style={{ marginLeft: 8 }} />
+          )}
+          {/* Fallback text if no logos */}
+          {(!brandingLogo || brandingLogo.trim() === '') && (!secondaryLogo || secondaryLogo.trim() === '') && (
+            <span className="header-text">ABILITY Job Fair</span>
+          )}
         </div>
+
+        {/* Centered booth logo for Recruiter */}
+        {user?.role === 'Recruiter' && secondaryLogo && secondaryLogo.trim() !== '' && (
+          <div className="header-center-logo" aria-hidden="true">
+            <img src={secondaryLogo} alt="" className="header-logo booth-centered" />
+          </div>
+        )}
         <div className="user-info">
           <span className="user-name">{user?.name || 'User'} / {user?.role || 'Guest'}</span>
           <div className="connection-status">

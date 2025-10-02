@@ -509,6 +509,7 @@
     align-items: center;
     height: 72px;
     /* match header height */
+    position: relative; /* allow centered logo overlay */
 }
 
 .header-left {
@@ -549,6 +550,31 @@
     max-width: 220px;
     object-fit: contain;
     display: block;
+}
+
+/* Centered booth logo wrapper (overlay, doesn't affect layout) */
+.header-center-logo {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    height: 72px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    pointer-events: none; /* clicks go through */
+}
+
+.header-center-logo .booth-centered {
+    height: 28px;
+    max-width: 260px;
+}
+
+/* Header text fallback */
+.header-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.025em;
 }
 
 .user-info {
@@ -1412,12 +1438,8 @@
         height: 28px;
     }
 
-    .dashboard-main {
-        padding: 1rem;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
+    .header-center-logo {
+        display: flex;
     }
 
     .form-row-4 {

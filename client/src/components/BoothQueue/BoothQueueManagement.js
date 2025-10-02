@@ -57,21 +57,22 @@ export default function BoothQueueManagement() {
 
       const boothData = await boothRes.json();
       
-      if (boothData.success) {
+      if (boothRes.ok && boothData.booth) {
         setBooth(boothData.booth);
-        // Load event data if booth has eventId
-        if (boothData.booth.eventId) {
-          const eventRes = await fetch(`/api/events/${boothData.booth.eventId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          });
-          const eventData = await eventRes.json();
-          if (eventData.success) setEvent(eventData.event);
+        
+        // Set event data if it's included in the response
+        if (boothData.event) {
+          setEvent(boothData.event);
         }
+      } else {
+        console.error('Failed to load booth:', boothData.message || boothData.error);
       }
       
       if (queueRes.success) {
         setQueue(queueRes.queue);
         setCurrentServing(queueRes.currentServing || 1);
+      } else {
+        console.error('Failed to load queue:', queueRes.message);
       }
 
     } catch (error) {
@@ -170,7 +171,10 @@ export default function BoothQueueManagement() {
   if (loading) {
     return (
       <div className="dashboard">
-        <AdminHeader />
+        <AdminHeader 
+          brandingLogo={event?.logoUrl || event?.logo || ''} 
+          secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''} 
+        />
         <div className="dashboard-layout">
           <AdminSidebar active="booths" />
           <main className="dashboard-main">
@@ -181,9 +185,13 @@ export default function BoothQueueManagement() {
     );
   }
 
+
   return (
     <div className="dashboard">
-      <AdminHeader />
+      <AdminHeader 
+        brandingLogo={event?.logoUrl || event?.logo || ''} 
+        secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''} 
+      />
       <div className="dashboard-layout">
         <AdminSidebar active="booths" />
         <main className="dashboard-main">
@@ -192,12 +200,12 @@ export default function BoothQueueManagement() {
             <div className="management-header">
               <div className="booth-info">
                 <div className="booth-logo">
-                  {booth?.companyLogo && (
-                    <img src={booth.companyLogo} alt={`${booth.company} logo`} />
+                  {(booth?.logoUrl || booth?.companyLogo) && (
+                    <img src={booth?.logoUrl || booth?.companyLogo} alt={`${booth?.name || booth?.company} logo`} />
                   )}
                 </div>
                 <div>
-                  <h1>{booth?.company} - Meeting Queue</h1>
+                  <h1>{booth?.name || booth?.company} - Meeting Queue</h1>
                   <p>{event?.name}</p>
                 </div>
               </div>
