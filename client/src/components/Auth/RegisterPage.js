@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdPerson, MdPhone, MdLocationOn, MdWork, MdBuild } from 'react-icons/md';
-import './Auth.css';
+import './RegisterPage.css';
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
@@ -24,6 +24,9 @@ const RegisterPage = () => {
     const { register } = useAuth();
     const navigate = useNavigate();
     const formRef = useRef(null);
+
+    const togglePasswordVisibility = () => setShowPassword(!showPassword);
+    const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -65,10 +68,7 @@ const RegisterPage = () => {
             errors.email = 'Please enter a valid email address';
         }
 
-        // Phone validation (optional but if provided, should be valid)
-        if (formData.phone && !/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/[\s\-\(\)]/g, ''))) {
-            errors.phone = 'Please enter a valid phone number';
-        }
+        // Phone validation has been removed to make the field optional.
 
         // Password validation
         if (!formData.password) {
@@ -136,47 +136,47 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="auth-container">
+        <div className="register-container">
             <a href="#register-form" className="skip-link" onClick={handleSkipToForm}>
                 Skip to registration form
             </a>
-            <div className="auth-card register-card">
+            <div className="register-card">
                 {/* Back to Landing Link */}
-                <Link to="/" className="back-link" aria-label="Back to landing page">
+                <Link to="/" className="register-back-link" aria-label="Back to landing page">
                     <span className="back-arrow">←</span>
                     Back to Landing
                 </Link>
 
                 {/* Login Option */}
-                <div className="login-option">
-                    <Link to="/login" className="login-link">Already have an account? Login here</Link>
+                <div className="register-login-option">
+                    <Link to="/login" className="register-login-link">Already have an account? Login here</Link>
                 </div>
 
                 {/* Registration Form */}
-                <div className="auth-form-container">
-                    <h1 className="auth-title">Create your Job Seeker Account</h1>
-                    <p className="auth-subtitle">Enter your information to create your account. Be sure to signup for announcements about future events.</p>
+                <div className="register-form-container">
+                    <h1 className="register-title">Create your Job Seeker Account</h1>
+                    <p className="register-subtitle">Enter your information to create your account. Be sure to signup for announcements about future events.</p>
 
                     {error && (
-                        <div className="error-message" role="alert" aria-live="polite">
+                        <div className="register-error-message" role="alert" aria-live="polite">
                             {error}
                         </div>
                     )}
 
-                    <form ref={formRef} id="register-form" onSubmit={handleSubmit} className="auth-form" noValidate>
+                    <form ref={formRef} id="register-form" onSubmit={handleSubmit} className="register-form" noValidate>
                         {/* Enter your information section */}
-                        <div className="form-section">
-                            <h2 className="section-title">Enter your information</h2>
-                            <p className="section-note">An asterisk (*) indicates a required field.</p>
+                        <div className="register-form-section">
+                            <h2 className="register-section-title">Enter your information</h2>
+                            <p className="register-section-note">An asterisk (*) indicates a required field.</p>
 
-                            <div className="form-row">
+                            <div className="register-form-row">
                                 {/* First Name Field */}
-                                <div className="form-group">
-                                    <label htmlFor="firstName" className="form-label">
+                                <div className="register-form-group">
+                                    <label htmlFor="firstName" className="register-form-label">
                                         First Name*
                                     </label>
-                                    <div className="input-container">
-                                        <MdPerson className="input-icon" aria-hidden="true" />
+                                    <div className="register-input-container">
+                                        <MdPerson className="register-input-icon" aria-hidden="true" />
                                         <input
                                             type="text"
                                             id="firstName"
@@ -184,26 +184,26 @@ const RegisterPage = () => {
                                             value={formData.firstName}
                                             onChange={handleInputChange}
                                             placeholder="First Name"
-                                            className={`form-input ${validationErrors.firstName ? 'error' : ''}`}
+                                            className={`register-form-input ${validationErrors.firstName ? 'error' : ''}`}
                                             required
                                             autoComplete="given-name"
                                             aria-describedby={validationErrors.firstName ? "firstName-error" : undefined}
                                         />
                                     </div>
                                     {validationErrors.firstName && (
-                                        <div id="firstName-error" className="field-error" role="alert" aria-live="polite">
+                                        <div id="firstName-error" className="register-field-error" role="alert" aria-live="polite">
                                             {validationErrors.firstName}
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Last Name Field */}
-                                <div className="form-group">
-                                    <label htmlFor="lastName" className="form-label">
+                                <div className="register-form-group">
+                                    <label htmlFor="lastName" className="register-form-label">
                                         Last Name*
                                     </label>
-                                    <div className="input-container">
-                                        <MdPerson className="input-icon" aria-hidden="true" />
+                                    <div className="register-input-container">
+                                        <MdPerson className="register-input-icon" aria-hidden="true" />
                                         <input
                                             type="text"
                                             id="lastName"
@@ -211,28 +211,28 @@ const RegisterPage = () => {
                                             value={formData.lastName}
                                             onChange={handleInputChange}
                                             placeholder="Last Name"
-                                            className={`form-input ${validationErrors.lastName ? 'error' : ''}`}
+                                            className={`register-form-input ${validationErrors.lastName ? 'error' : ''}`}
                                             required
                                             autoComplete="family-name"
                                             aria-describedby={validationErrors.lastName ? "lastName-error" : undefined}
                                         />
                                     </div>
                                     {validationErrors.lastName && (
-                                        <div id="lastName-error" className="field-error" role="alert" aria-live="polite">
+                                        <div id="lastName-error" className="register-field-error" role="alert" aria-live="polite">
                                             {validationErrors.lastName}
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="form-row">
+                            <div className="register-form-row">
                                 {/* Email Field */}
-                                <div className="form-group">
-                                    <label htmlFor="email" className="form-label">
+                                <div className="register-form-group">
+                                    <label htmlFor="email" className="register-form-label">
                                         Email*
                                     </label>
-                                    <div className="input-container">
-                                        <MdEmail className="input-icon" aria-hidden="true" />
+                                    <div className="register-input-container">
+                                        <MdEmail className="register-input-icon" aria-hidden="true" />
                                         <input
                                             type="email"
                                             id="email"
@@ -240,26 +240,26 @@ const RegisterPage = () => {
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             placeholder="Email"
-                                            className={`form-input ${validationErrors.email ? 'error' : ''}`}
+                                            className={`register-form-input ${validationErrors.email ? 'error' : ''}`}
                                             required
                                             autoComplete="email"
                                             aria-describedby={validationErrors.email ? "email-error" : undefined}
                                         />
                                     </div>
                                     {validationErrors.email && (
-                                        <div id="email-error" className="field-error" role="alert" aria-live="polite">
+                                        <div id="email-error" className="register-field-error" role="alert" aria-live="polite">
                                             {validationErrors.email}
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Phone Field */}
-                                <div className="form-group">
-                                    <label htmlFor="phone" className="form-label">
+                                <div className="register-form-group">
+                                    <label htmlFor="phone" className="register-form-label">
                                         Phone
                                     </label>
-                                    <div className="input-container">
-                                        <MdPhone className="input-icon" aria-hidden="true" />
+                                    <div className="register-input-container">
+                                        <MdPhone className="register-input-icon" aria-hidden="true" />
                                         <input
                                             type="tel"
                                             id="phone"
@@ -267,27 +267,27 @@ const RegisterPage = () => {
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             placeholder="Phone"
-                                            className={`form-input ${validationErrors.phone ? 'error' : ''}`}
+                                            className={`register-form-input ${validationErrors.phone ? 'error' : ''}`}
                                             autoComplete="tel"
                                             aria-describedby={validationErrors.phone ? "phone-error" : undefined}
                                         />
                                     </div>
                                     {validationErrors.phone && (
-                                        <div id="phone-error" className="field-error" role="alert" aria-live="polite">
+                                        <div id="phone-error" className="register-field-error" role="alert" aria-live="polite">
                                             {validationErrors.phone}
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="form-row">
+                            <div className="register-form-row">
                                 {/* Password Field */}
-                                <div className="form-group">
-                                    <label htmlFor="password" className="form-label">
+                                <div className="register-form-group">
+                                    <label htmlFor="password" className="register-form-label">
                                         New Password*
                                     </label>
-                                    <div className="input-container">
-                                        <MdLock className="input-icon" aria-hidden="true" />
+                                    <div className="register-input-container">
+                                        <MdLock className="register-input-icon" aria-hidden="true" />
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             id="password"
@@ -295,15 +295,15 @@ const RegisterPage = () => {
                                             value={formData.password}
                                             onChange={handleInputChange}
                                             placeholder="New Password"
-                                            className={`form-input ${validationErrors.password ? 'error' : ''}`}
+                                            className={`register-form-input ${validationErrors.password ? 'error' : ''}`}
                                             required
                                             autoComplete="new-password"
                                             aria-describedby={validationErrors.password ? "password-error" : undefined}
                                         />
                                         <button
                                             type="button"
-                                            className="password-toggle"
-                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="register-password-toggle"
+                                            onClick={togglePasswordVisibility}
                                             aria-label={showPassword ? "Hide password" : "Show password"}
                                             tabIndex="-1"
                                         >
@@ -311,19 +311,19 @@ const RegisterPage = () => {
                                         </button>
                                     </div>
                                     {validationErrors.password && (
-                                        <div id="password-error" className="field-error" role="alert" aria-live="polite">
+                                        <div id="password-error" className="register-field-error" role="alert" aria-live="polite">
                                             {validationErrors.password}
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Confirm Password Field */}
-                                <div className="form-group">
-                                    <label htmlFor="confirmPassword" className="form-label">
+                                <div className="register-form-group">
+                                    <label htmlFor="confirmPassword" className="register-form-label">
                                         Repeat Password*
                                     </label>
-                                    <div className="input-container">
-                                        <MdLock className="input-icon" aria-hidden="true" />
+                                    <div className="register-input-container">
+                                        <MdLock className="register-input-icon" aria-hidden="true" />
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
                                             id="confirmPassword"
@@ -331,15 +331,15 @@ const RegisterPage = () => {
                                             value={formData.confirmPassword}
                                             onChange={handleInputChange}
                                             placeholder="Repeat Password"
-                                            className={`form-input ${validationErrors.confirmPassword ? 'error' : ''}`}
+                                            className={`register-form-input ${validationErrors.confirmPassword ? 'error' : ''}`}
                                             required
                                             autoComplete="new-password"
                                             aria-describedby={validationErrors.confirmPassword ? "confirmPassword-error" : undefined}
                                         />
                                         <button
                                             type="button"
-                                            className="password-toggle"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="register-password-toggle"
+                                            onClick={toggleConfirmPasswordVisibility}
                                             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                                             tabIndex="-1"
                                         >
@@ -347,7 +347,7 @@ const RegisterPage = () => {
                                         </button>
                                     </div>
                                     {validationErrors.confirmPassword && (
-                                        <div id="confirmPassword-error" className="field-error" role="alert" aria-live="polite">
+                                        <div id="confirmPassword-error" className="register-field-error" role="alert" aria-live="polite">
                                             {validationErrors.confirmPassword}
                                         </div>
                                     )}
@@ -356,18 +356,18 @@ const RegisterPage = () => {
                         </div>
 
                         {/* Announcements Section */}
-                        <div className="form-section">
-                            <h2 className="section-title">Announcements</h2>
-                            <div className="checkbox-group">
-                                <label className="checkbox-label">
+                        <div className="register-form-section">
+                            <h2 className="register-section-title">Announcements</h2>
+                            <div className="register-checkbox-group">
+                                <label className="register-checkbox-label">
                                     <input
                                         type="checkbox"
                                         name="announcements"
                                         checked={formData.announcements}
                                         onChange={handleInputChange}
-                                        className="checkbox-input"
+                                        className="register-checkbox-input"
                                     />
-                                    <span className="checkbox-text">
+                                    <span className="register-checkbox-text">
                                         Please keep me informed with announcements and reminders of upcoming career fairs and events.
                                     </span>
                                 </label>
@@ -375,25 +375,25 @@ const RegisterPage = () => {
                         </div>
 
                         {/* Agree to Terms Section */}
-                        <div className="form-section">
-                            <h2 className="section-title">Agree to Terms</h2>
-                            <div className="checkbox-group">
-                                <label className="checkbox-label">
+                        <div className="register-form-section">
+                            <h2 className="register-section-title">Agree to Terms</h2>
+                            <div className="register-checkbox-group">
+                                <label className="register-checkbox-label">
                                     <input
                                         type="checkbox"
                                         name="agreeToTerms"
                                         checked={formData.agreeToTerms}
                                         onChange={handleInputChange}
-                                        className="checkbox-input"
+                                        className="register-checkbox-input"
                                         required
                                         aria-describedby={validationErrors.agreeToTerms ? "terms-error" : undefined}
                                     />
-                                    <span className="checkbox-text">
-                                        I agree to ABILITY Job Fair's <a href="https://abilityjobfair.org/terms-of-use/" target="_blank" rel="noopener noreferrer" className="terms-link">Terms of Use</a> and <a href="https://abilityjobfair.org/privacy-policy/" target="_blank" rel="noopener noreferrer" className="terms-link">Privacy Policy</a>.
+                                    <span className="register-checkbox-text">
+                                        I agree to ABILITY Job Fair's <a href="https://abilityjobfair.org/terms-of-use/" target="_blank" rel="noopener noreferrer" className="register-terms-link">Terms of Use</a> and <a href="https://abilityjobfair.org/privacy-policy/" target="_blank" rel="noopener noreferrer" className="register-terms-link">Privacy Policy</a>.
                                     </span>
                                 </label>
                                 {validationErrors.agreeToTerms && (
-                                    <div id="terms-error" className="field-error" role="alert" aria-live="polite">
+                                    <div id="terms-error" className="register-field-error" role="alert" aria-live="polite">
                                         {validationErrors.agreeToTerms}
                                     </div>
                                 )}
@@ -403,7 +403,7 @@ const RegisterPage = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="submit-button"
+                            className="register-submit-button"
                             disabled={isLoading}
                             aria-describedby={isLoading ? "loading-message" : undefined}
                         >
@@ -411,7 +411,7 @@ const RegisterPage = () => {
                         </button>
 
                         {isLoading && (
-                            <div id="loading-message" className="sr-only" aria-live="polite">
+                            <div id="loading-message" className="register-sr-only" aria-live="polite">
                                 Creating your account, please wait...
                             </div>
                         )}
@@ -420,7 +420,7 @@ const RegisterPage = () => {
             </div>
 
             {/* Branding */}
-            <div className="auth-branding">
+            <div className="register-branding">
                 <p>powered by abilityCONNECT.online</p>
             </div>
         </div>

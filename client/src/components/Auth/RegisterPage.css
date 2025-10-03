@@ -1,0 +1,206 @@
+/* RegisterPage.css */
+
+:root {
+    --register-primary-text: #111827;
+    --register-secondary-text: #6b7280;
+    --register-accent-color: #000000;
+    --register-background-color: #f9fafb;
+    --register-card-background: #ffffff;
+    --register-border-color: #d1d5db;
+    --register-input-background: #f3f4f6;
+}
+
+.register-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at center, #4a5568 0%, #1a202c 100%);
+    padding: 2rem 1rem;
+}
+
+.register-card {
+    background: var(--register-card-background);
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+}
+
+.register-login-option {
+    text-align: right;
+    margin-bottom: 1rem;
+}
+
+.register-login-link {
+    color: var(--register-primary-text);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.register-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--register-primary-text);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.register-subtitle {
+    text-align: center;
+    color: var(--register-secondary-text);
+    margin-bottom: 2rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.register-form-section {
+    margin-bottom: 2rem;
+    border-top: 1px solid var(--register-border-color);
+    padding-top: 1.5rem;
+}
+
+.register-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.register-section-note {
+    font-size: 0.875rem;
+    color: var(--register-secondary-text);
+    margin-bottom: 1.5rem;
+}
+
+.register-form-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.register-form-group {
+    flex: 1;
+}
+
+.register-form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--register-primary-text);
+    margin-bottom: 0.5rem;
+}
+
+.register-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.register-input-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--register-secondary-text);
+    font-size: 1.25rem;
+}
+
+.register-form-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    /* Add padding for icon */
+    border: 1px solid var(--register-border-color);
+    border-radius: 0.5rem;
+    background-color: var(--register-card-background);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.register-form-input:focus {
+    outline: none;
+    border-color: var(--register-accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.register-password-toggle {
+    position: absolute;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--register-secondary-text);
+    font-size: 1.5rem;
+    padding: 0;
+}
+
+.register-checkbox-group {
+    margin-top: 1rem;
+}
+
+.register-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: var(--register-secondary-text);
+}
+
+.register-checkbox-input {
+    margin-top: -0.5em;
+    flex-shrink: 0;
+}
+
+.register-terms-link {
+    color: var(--register-primary-text);
+    font-weight: 500;
+}
+
+.register-submit-button {
+    width: 100%;
+    max-width: 300px;
+    display: block;
+    margin: 2rem auto 0;
+    padding: 1rem;
+    background-color: var(--register-accent-color);
+    color: var(--register-card-background);
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.register-submit-button:hover {
+    background-color: #374151;
+}
+
+.register-branding {
+    margin-top: 2rem;
+    text-align: center;
+    color: var(--register-secondary-text);
+}
+
+/* Accessibility */
+.register-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+@media (max-width: 768px) {
+    .register-form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .register-form-group {
+        margin-bottom: 1.5rem;
+    }
+}

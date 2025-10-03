@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import './LoginPage.css';
 
 const LoginPage = () => {
-    const [userType, setUserType] = useState('jobseeker'); // 'jobseeker' or 'company'
+    const location = useLocation();
+    const [userType, setUserType] = useState(location.state?.userType || 'jobseeker'); // 'jobseeker' or 'company'
     const [formData, setFormData] = useState({
         email: '',
         password: '',

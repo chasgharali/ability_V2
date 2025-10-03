@@ -1,0 +1,72 @@
+/* LandingPage.css */
+
+.landing-page-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at center, #4a5568 0%, #1a202c 100%);
+    padding: 2rem;
+}
+
+.landing-card {
+    background: #ffffff;
+    padding: 3rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+}
+
+.landing-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+}
+
+.login-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.login-option-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: left;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0 1.5rem;
+    align-items: center;
+}
+
+.login-option-icon {
+    grid-row: 1 / -1;
+    font-size: 2.5rem;
+    color: #4a5568;
+}
+
+.login-option-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.login-option-description {
+    color: #6b7280;
+    margin: 0.5rem 0 1.5rem 0;
+}
+
+.login-option-button {
+    background-color: #111827;
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
