@@ -1,0 +1,188 @@
+/* LoginPage.css */
+
+:root {
+    --login-primary-text: #111827;
+    --login-secondary-text: #6b7280;
+    --login-accent-color: #000000;
+    --login-background-color: #f9fafb;
+    --login-card-background: #ffffff;
+    --login-border-color: #d1d5db;
+    --login-input-background: #f3f4f6;
+}
+
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at center, #4a5568 0%, #1a202c 100%);
+    padding: 1rem;
+}
+
+.login-card {
+    background: var(--login-card-background);
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+}
+
+.login-back-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--login-secondary-text);
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.login-role-tabs {
+    display: flex;
+    background-color: var(--login-input-background);
+    border-radius: 0.75rem;
+    padding: 0.25rem;
+    margin-bottom: 2rem;
+}
+
+.login-role-tab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 0.625rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--login-secondary-text);
+}
+
+.login-role-tab.active {
+    background-color: var(--login-card-background);
+    color: var(--login-primary-text);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.login-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--login-primary-text);
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--login-primary-text);
+    margin-bottom: 0.5rem;
+}
+
+.login-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.login-input-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--login-secondary-text);
+    font-size: 1.25rem;
+}
+
+.login-form-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem; /* Add padding for icon */
+    border: 1px solid var(--login-border-color);
+    border-radius: 0.5rem;
+    background-color: var(--login-card-background);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-form-input:focus {
+    outline: none;
+    border-color: var(--login-accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.login-password-toggle {
+    position: absolute;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--login-secondary-text);
+    font-size: 1.5rem;
+    padding: 0;
+}
+
+.login-form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.login-checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--login-secondary-text);
+}
+
+.login-checkbox-input {
+    margin-right: 0.5rem;
+}
+
+.login-forgot-link {
+    color: var(--login-primary-text);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.login-submit-button {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--login-accent-color);
+    color: var(--login-card-background);
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.login-submit-button:hover {
+    background-color: #374151;
+}
+
+.login-register-link-container {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.login-register-text {
+    color: var(--login-secondary-text);
+}
+
+.login-register-link {
+    color: var(--login-primary-text);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.login-branding {
+    margin-top: 2rem;
+    text-align: center;
+    color: var(--login-secondary-text);
+}
