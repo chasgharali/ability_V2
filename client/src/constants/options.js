@@ -466,3 +466,13 @@ export const EDUCATION_LEVEL_LIST = [
   { name: 'Post-Doctorate', value: 'post-doctorate' },
   { name: 'International', value: 'international' }
 ];
+
+export const INTERPRETER_CATEGORIES = [
+  { label: 'ASL (American Sign Language)', value: 'ASL' },
+  { label: 'Spanish', value: 'Spanish' },
+  { label: 'French', value: 'French' },
+  { label: 'German', value: 'German' },
+  { label: 'Mandarin', value: 'Mandarin' },
+  { label: 'Arabic', value: 'Arabic' },
+  { label: 'Other', value: 'Other' }
+];

@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
+import VideoCall from '../VideoCall/VideoCall';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
 import '../Dashboard/Dashboard.css';
@@ -25,6 +26,10 @@ export default function BoothQueueWaiting() {
   const [messageType, setMessageType] = useState('text');
   const [messageContent, setMessageContent] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  
+  // Video call state
+  const [callInvitation, setCallInvitation] = useState(null);
+  const [isInCall, setIsInCall] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
@@ -59,11 +64,13 @@ export default function BoothQueueWaiting() {
       socket.on('queue-position-updated', handleQueueUpdate);
       socket.on('queue-serving-updated', handleServingUpdate);
       socket.on('queue-invited-to-meeting', handleMeetingInvite);
+      socket.on('call_invitation', handleCallInvitation);
 
       return () => {
         socket.off('queue-position-updated', handleQueueUpdate);
         socket.off('queue-serving-updated', handleServingUpdate);
         socket.off('queue-invited-to-meeting', handleMeetingInvite);
+        socket.off('call_invitation', handleCallInvitation);
       };
     }
   }, [socket]);
@@ -154,6 +161,33 @@ export default function BoothQueueWaiting() {
         state: { fromQueue: true, eventSlug, boothId }
       });
     }
+  };
+
+  const handleCallInvitation = (data) => {
+    console.log('Received call invitation:', data);
+    // Set call invitation data and show video call interface
+    setCallInvitation({
+      id: data.callId,
+      roomName: data.roomName,
+      accessToken: data.accessToken,
+      userRole: 'jobseeker',
+      participants: {
+        recruiter: data.recruiter,
+        jobSeeker: user
+      },
+      metadata: {
+        interpreterRequested: false,
+        interpreterCategory: null
+      }
+    });
+    setIsInCall(true);
+  };
+
+  const handleCallEnd = () => {
+    setCallInvitation(null);
+    setIsInCall(false);
+    // Refresh queue status after call ends
+    loadData();
   };
 
   const handleLeaveQueue = async () => {
@@ -505,6 +539,14 @@ export default function BoothQueueWaiting() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Video Call Component */}
+      {isInCall && callInvitation && (
+        <VideoCall
+          callData={callInvitation}
+          onCallEnd={handleCallEnd}
+        />
       )}
     </div>
   );

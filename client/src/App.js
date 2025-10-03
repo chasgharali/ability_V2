@@ -28,6 +28,7 @@ import InterpreterCategories from './components/InterpreterCategories/Interprete
 import BoothQueueEntry from './components/BoothQueue/BoothQueueEntry';
 import BoothQueueWaiting from './components/BoothQueue/BoothQueueWaiting';
 import BoothQueueManagement from './components/BoothQueue/BoothQueueManagement';
+import VideoCall from './components/VideoCall/VideoCall';
 import QueueInviteResolver from './components/BoothQueue/QueueInviteResolver';
 import { MdPerson, MdBusiness } from 'react-icons/md';
 import './App.css';
@@ -94,10 +95,6 @@ const LandingPage = () => {
 
 // Component to conditionally render header and footer
 const AppLayout = ({ children }) => {
-    const location = useLocation();
-    const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-    const isLandingPage = location.pathname === '/';
-
     return (
         <div className="App">
             <main id="main-content" role="main">
@@ -156,6 +153,7 @@ function App() {
                                 <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />
                                 <Route path="/booth-queue/:eventSlug/:boothId/waiting" element={<RequireAuth><BoothQueueWaiting /></RequireAuth>} />
                                 <Route path="/booth-queue/manage/:boothId" element={<RequireAuth><BoothQueueManagement /></RequireAuth>} />
+                                <Route path="/video-call/:callId" element={<RequireAuth><VideoCall /></RequireAuth>} />
                                 </Routes>
                             </AppLayout>
                         </Router>

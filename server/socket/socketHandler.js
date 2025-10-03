@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Queue = require('../models/Queue');
 const BoothQueue = require('../models/BoothQueue');
 const MeetingRecord = require('../models/MeetingRecord');
+const VideoCall = require('../models/VideoCall');
 const logger = require('../utils/logger');
 
 /**
@@ -443,6 +444,168 @@ const socketHandler = (io) => {
         });
 
         /**
+         * Join video call room
+         */
+        socket.on('join-video-call', async (data) => {
+            try {
+                const { callId, roomName } = data;
+
+                if (!callId || !roomName) {
+                    socket.emit('error', { message: 'Call ID and room name are required' });
+                    return;
+                }
+
+                // Verify video call exists and user has access
+                const videoCall = await VideoCall.findById(callId)
+                    .populate('recruiter jobSeeker interpreters.interpreter');
+
+                if (!videoCall) {
+                    socket.emit('error', { message: 'Video call not found' });
+                    return;
+                }
+
+                // Check if user has access to this call
+                const hasAccess = videoCall.recruiter._id.toString() === socket.userId ||
+                                 videoCall.jobSeeker._id.toString() === socket.userId ||
+                                 videoCall.interpreters.some(i => i.interpreter._id.toString() === socket.userId);
+
+                if (!hasAccess) {
+                    socket.emit('error', { message: 'Access denied to video call' });
+                    return;
+                }
+
+                socket.join(`call_${roomName}`);
+                socket.currentVideoCallId = callId;
+                socket.currentVideoCallRoom = roomName;
+
+                // Notify other participants that user joined
+                socket.to(`call_${roomName}`).emit('participant-joined-video', {
+                    userId: socket.userId,
+                    user: socket.user.getPublicProfile(),
+                    role: socket.user.role
+                });
+
+                logger.info(`User ${socket.user.email} joined video call room ${roomName}`);
+            } catch (error) {
+                logger.error('Join video call room error:', error);
+                socket.emit('error', { message: 'Failed to join video call room' });
+            }
+        });
+
+        /**
+         * Leave video call room
+         */
+        socket.on('leave-video-call', (data) => {
+            const { roomName } = data;
+            if (roomName) {
+                socket.leave(`call_${roomName}`);
+
+                // Notify other participants that user left
+                socket.to(`call_${roomName}`).emit('participant-left-video', {
+                    userId: socket.userId,
+                    user: socket.user.getPublicProfile()
+                });
+
+                if (socket.currentVideoCallRoom === roomName) {
+                    socket.currentVideoCallId = null;
+                    socket.currentVideoCallRoom = null;
+                }
+                logger.info(`User ${socket.user.email} left video call room ${roomName}`);
+            }
+        });
+
+        /**
+         * Handle video call participant status updates
+         */
+        socket.on('video-participant-status', (data) => {
+            const { roomName, status, participantSid } = data;
+            if (roomName && socket.currentVideoCallRoom === roomName) {
+                // Broadcast status update to other participants
+                socket.to(`call_${roomName}`).emit('participant-status-update', {
+                    userId: socket.userId,
+                    status: status,
+                    participantSid: participantSid,
+                    timestamp: new Date()
+                });
+            }
+        });
+
+        /**
+         * Handle video call quality updates
+         */
+        socket.on('video-call-quality', async (data) => {
+            try {
+                const { callId, qualityData } = data;
+                if (callId && socket.currentVideoCallId === callId) {
+                    // Update call quality in database
+                    const videoCall = await VideoCall.findById(callId);
+                    if (videoCall) {
+                        if (!videoCall.callQuality) {
+                            videoCall.callQuality = {};
+                        }
+                        Object.assign(videoCall.callQuality, qualityData);
+                        await videoCall.save();
+                    }
+                }
+            } catch (error) {
+                logger.error('Video call quality update error:', error);
+            }
+        });
+
+        /**
+         * Handle interpreter response to invitation
+         */
+        socket.on('interpreter-response', async (data) => {
+            try {
+                const { callId, response } = data; // response: 'accept' or 'decline'
+
+                if (!callId || !response) {
+                    socket.emit('error', { message: 'Call ID and response are required' });
+                    return;
+                }
+
+                const videoCall = await VideoCall.findById(callId)
+                    .populate('recruiter jobSeeker');
+
+                if (!videoCall) {
+                    socket.emit('error', { message: 'Video call not found' });
+                    return;
+                }
+
+                // Update interpreter status
+                const status = response === 'accept' ? 'joined' : 'declined';
+                await videoCall.updateInterpreterStatus(socket.userId, status);
+
+                // Notify call participants
+                const responseData = {
+                    callId: callId,
+                    interpreter: socket.user.getPublicProfile(),
+                    response: response,
+                    timestamp: new Date()
+                };
+
+                io.to(`call_${videoCall.roomName}`).emit('interpreter-response', responseData);
+
+                // Add system message to chat
+                const message = response === 'accept' 
+                    ? `${socket.user.name} joined as interpreter`
+                    : `${socket.user.name} declined interpreter invitation`;
+                
+                await videoCall.addChatMessage(
+                    socket.userId,
+                    'interpreter',
+                    message,
+                    'system'
+                );
+
+                logger.info(`Interpreter ${socket.user.email} ${response}ed call ${callId}`);
+            } catch (error) {
+                logger.error('Interpreter response error:', error);
+                socket.emit('error', { message: 'Failed to process interpreter response' });
+            }
+        });
+
+        /**
          * Test connection handler
          */
         socket.on('test-connection', (data) => {
@@ -466,6 +629,27 @@ const socketHandler = (io) => {
                     userId: socket.userId,
                     user: socket.user.getPublicProfile()
                 });
+            }
+
+            // Notify video call participants if user was in a video call
+            if (socket.currentVideoCallRoom) {
+                socket.to(`call_${socket.currentVideoCallRoom}`).emit('participant-left-video', {
+                    userId: socket.userId,
+                    user: socket.user.getPublicProfile(),
+                    reason: 'disconnected'
+                });
+
+                // Update participant status in video call
+                try {
+                    if (socket.currentVideoCallId) {
+                        const videoCall = await VideoCall.findById(socket.currentVideoCallId);
+                        if (videoCall) {
+                            await videoCall.removeParticipant(socket.userId);
+                        }
+                    }
+                } catch (error) {
+                    logger.error('Error updating video call on disconnect:', error);
+                }
             }
 
             // Clean up queue entries for job seekers who disconnect

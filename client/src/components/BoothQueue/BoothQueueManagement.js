@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
+import videoCallService from '../../services/videoCall';
+import VideoCall from '../VideoCall/VideoCall';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import './BoothQueueManagement.css';
@@ -23,6 +25,10 @@ export default function BoothQueueManagement() {
   const [messages, setMessages] = useState([]);
   const [nowTs, setNowTs] = useState(Date.now());
   const [socketConnected, setSocketConnected] = useState(false);
+  
+  // Video call state
+  const [activeCall, setActiveCall] = useState(null);
+  const [isInCall, setIsInCall] = useState(false);
 
   // Theme colors from event (fallbacks provided)
   const theme = useMemo(() => ({
@@ -36,13 +42,27 @@ export default function BoothQueueManagement() {
   useEffect(() => {
     loadData();
     joinSocketRoom();
+    // Don't check for active calls automatically - only when recruiter creates one
 
     return () => {
       if (socket) {
-        socket.emit('leave-booth-management', { boothId, userId: user._id });
+        socket.emit('leave-booth-management', { boothId, userId: user?._id });
       }
     };
-  }, [boothId]);
+  }, [boothId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Check for active video call
+  const checkActiveCall = async () => {
+    try {
+      const response = await videoCallService.getActiveCall();
+      if (response.activeCall) {
+        setActiveCall(response.activeCall);
+        setIsInCall(true);
+      }
+    } catch (error) {
+      console.error('Error checking active call:', error);
+    }
+  };
 
   useEffect(() => {
     if (socket) {
@@ -54,19 +74,15 @@ export default function BoothQueueManagement() {
         console.log('Test connection response received:', data);
       });
 
-      // Test socket connection
-      socket.emit('test-connection', { message: 'Testing socket connection' });
-
       return () => {
-        console.log('Cleaning up socket event listeners');
         socket.off('queue-updated', handleQueueUpdate);
         socket.off('new-queue-message', handleNewMessage);
+        socket.off('test-connection-response');
       };
     } else {
-      console.log('No socket available');
       setSocketConnected(false);
     }
-  }, [socket]);
+  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tick every second for live waiting timers
   useEffect(() => {
@@ -174,23 +190,42 @@ export default function BoothQueueManagement() {
 
   const handleInviteToMeeting = async (queueEntry) => {
     try {
-      const meetingData = {
-        jobSeekerId: queueEntry.jobSeeker._id,
-        boothId: booth._id,
-        eventId: event._id,
-        interpreterCategory: queueEntry.interpreterCategory
-      };
-
-      await boothQueueAPI.inviteToMeeting(queueEntry._id, meetingData);
-
-      // Update serving number
-      await handleUpdateServing(queueEntry.position);
-
-      alert(`${queueEntry.jobSeeker.name} has been invited to the meeting!`);
+      // Create video call
+      const callResponse = await videoCallService.createCall(queueEntry._id);
+      
+      if (callResponse.success) {
+        setActiveCall({
+          id: callResponse.callId,
+          roomName: callResponse.roomName,
+          accessToken: callResponse.accessToken,
+          userRole: 'recruiter',
+          participants: {
+            recruiter: user,
+            jobSeeker: callResponse.jobSeeker
+          },
+          metadata: {
+            interpreterRequested: callResponse.interpreterRequested,
+            interpreterCategory: callResponse.interpreterCategory
+          }
+        });
+        setIsInCall(true);
+        
+        // Update serving number
+        await handleUpdateServing(queueEntry.position);
+        
+        console.log(`Video call created for ${queueEntry.jobSeeker.name}`);
+      }
     } catch (error) {
-      console.error('Error inviting to meeting:', error);
-      alert('Failed to invite job seeker to meeting');
+      console.error('Error creating video call:', error);
+      alert('Failed to start video call with job seeker');
     }
+  };
+
+  const handleCallEnd = () => {
+    setActiveCall(null);
+    setIsInCall(false);
+    // Refresh queue data to see updated statuses
+    loadData();
   };
 
   const handleUpdateServing = async (newServingNumber) => {
@@ -428,7 +463,6 @@ export default function BoothQueueManagement() {
                           onClick={() => handleInviteToMeeting(queueEntry)}
                           className="btn-invite"
                           style={{ background: theme.success, borderColor: theme.success }}
-                          disabled={queueEntry.position > currentServing}
                         >
                           Invite
                         </button>
@@ -646,6 +680,15 @@ export default function BoothQueueManagement() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Video Call Component */}
+      {isInCall && activeCall && (
+        <VideoCall
+          callId={typeof activeCall === 'string' ? activeCall : activeCall.id}
+          callData={typeof activeCall === 'object' ? activeCall : null}
+          onCallEnd={handleCallEnd}
+        />
       )}
     </div>
   );

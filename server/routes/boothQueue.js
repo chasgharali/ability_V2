@@ -22,7 +22,39 @@ router.post('/join', authenticateToken, async (req, res) => {
             });
         }
 
-        // Check if job seeker is already in any queue for this event
+        // First, clean up any stale queue entries for this user across all events
+        const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+        const staleEntries = await BoothQueue.find({
+            jobSeeker: jobSeekerId,
+            status: { $in: ['waiting', 'in_meeting'] }, // Include in_meeting status for cleanup
+            $or: [
+                { lastActivity: { $lt: oneMinuteAgo } },
+                { lastActivity: { $exists: false }, createdAt: { $lt: oneMinuteAgo } }
+            ]
+        });
+
+        // Remove stale entries
+        for (const staleEntry of staleEntries) {
+            // For in_meeting status, also check if there's an active video call
+            if (staleEntry.status === 'in_meeting') {
+                const VideoCall = require('../models/VideoCall');
+                const activeCall = await VideoCall.findOne({
+                    queueEntry: staleEntry._id,
+                    status: 'active'
+                });
+                
+                // If no active call found, it's safe to clean up
+                if (!activeCall) {
+                    await staleEntry.leaveQueue();
+                    logger.info(`Auto-cleaned orphaned in_meeting queue entry for user ${jobSeekerId} in booth ${staleEntry.booth} (no active call)`);
+                }
+            } else {
+                await staleEntry.leaveQueue();
+                logger.info(`Auto-cleaned stale queue entry for user ${jobSeekerId} in booth ${staleEntry.booth}`);
+            }
+        }
+
+        // Check if user is already in any queue for this event
         let existingQueue = await BoothQueue.findOne({
             jobSeeker: jobSeekerId,
             event: eventId,
@@ -32,34 +64,57 @@ router.post('/join', authenticateToken, async (req, res) => {
         // If there's an existing queue entry, try to clean up stale entries
         // (entries where user might have disconnected without proper cleanup)
         if (existingQueue) {
-            // Check if this is a stale entry (older than 5 minutes with no recent activity)
-            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-            const isStale = existingQueue.createdAt < fiveMinutesAgo &&
-                (!existingQueue.lastActivity || existingQueue.lastActivity < fiveMinutesAgo);
+            // Check if this is a stale entry (older than 2 minutes with no recent activity)
+            const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+            const isStale = existingQueue.createdAt < twoMinutesAgo &&
+                (!existingQueue.lastActivity || existingQueue.lastActivity < twoMinutesAgo);
 
-            if (isStale && existingQueue.status === 'waiting') {
-                // Auto-cleanup stale waiting entries
-                await existingQueue.leaveQueue();
-                logger.info(`Auto-cleaned stale queue entry for user ${jobSeekerId} in booth ${existingQueue.booth}`);
+            // Also check if user is trying to join the same booth they're already in
+            const isSameBooth = existingQueue.booth.toString() === boothId;
 
-                // Notify booth management about the cleanup
-                const io = getIO();
-                io.to(`booth_${existingQueue.booth}`).emit('queue-updated', {
-                    type: 'left',
-                    queueEntry: {
-                        _id: existingQueue._id,
-                        jobSeeker: req.user.getPublicProfile(),
-                        position: existingQueue.position,
-                        status: 'left'
-                    }
+            if (isStale && (existingQueue.status === 'waiting' || existingQueue.status === 'in_meeting')) {
+                // For in_meeting status, check if there's actually an active call
+                let shouldCleanup = true;
+                if (existingQueue.status === 'in_meeting') {
+                    const VideoCall = require('../models/VideoCall');
+                    const activeCall = await VideoCall.findOne({
+                        queueEntry: existingQueue._id,
+                        status: 'active'
+                    });
+                    shouldCleanup = !activeCall; // Only cleanup if no active call
+                }
+
+                if (shouldCleanup) {
+                    // Auto-cleanup stale entries
+                    await existingQueue.leaveQueue();
+                    logger.info(`Auto-cleaned stale queue entry for user ${jobSeekerId} in booth ${existingQueue.booth} (status: ${existingQueue.status})`);
+
+                    // Notify booth management about the cleanup
+                    const io = getIO();
+                    io.to(`booth_${existingQueue.booth}`).emit('queue-updated', {
+                        type: 'left',
+                        queueEntry: {
+                            _id: existingQueue._id,
+                            jobSeeker: req.user.getPublicProfile(),
+                            position: existingQueue.position,
+                            status: 'left'
+                        }
+                    });
+
+                    existingQueue = null; // Allow them to join
+                }
+            } else if (isSameBooth && existingQueue.status === 'waiting') {
+                // If trying to rejoin the same booth, return the existing queue entry
+                return res.json({
+                    success: true,
+                    message: 'You are already in this queue',
+                    queueEntry: existingQueue,
+                    queueToken: existingQueue.queueToken
                 });
-
-                existingQueue = null; // Allow them to join
             } else {
                 return res.status(400).json({
-                    success: false,
-                    message: 'You are already in a queue for this event. Please leave your current queue first.',
-                    existingQueue: {
+                    error: 'You are already in a queue for this event. Please leave your current queue first.',
+                    currentQueue: {
                         boothId: existingQueue.booth,
                         position: existingQueue.position,
                         status: existingQueue.status
@@ -536,6 +591,58 @@ router.delete('/remove/:queueId', authenticateToken, async (req, res) => {
             success: false,
             message: 'Failed to remove from queue',
             error: error.message
+        });
+    }
+});
+
+// Manual cleanup endpoint for stuck queue entries
+router.post('/cleanup', authenticateToken, async (req, res) => {
+    try {
+        const jobSeekerId = req.user._id;
+        
+        // Find all queue entries for this user
+        const userQueues = await BoothQueue.find({
+            jobSeeker: jobSeekerId,
+            status: { $in: ['waiting', 'invited', 'in_meeting'] }
+        });
+
+        let cleanedCount = 0;
+        const VideoCall = require('../models/VideoCall');
+
+        for (const queueEntry of userQueues) {
+            let shouldCleanup = false;
+
+            if (queueEntry.status === 'in_meeting') {
+                // Check if there's an active video call
+                const activeCall = await VideoCall.findOne({
+                    queueEntry: queueEntry._id,
+                    status: 'active'
+                });
+                shouldCleanup = !activeCall;
+            } else {
+                // For waiting/invited, cleanup if older than 1 minute
+                const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+                shouldCleanup = queueEntry.createdAt < oneMinuteAgo;
+            }
+
+            if (shouldCleanup) {
+                await queueEntry.leaveQueue();
+                cleanedCount++;
+                logger.info(`Manual cleanup: removed queue entry for user ${jobSeekerId} in booth ${queueEntry.booth} (status: ${queueEntry.status})`);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Cleaned up ${cleanedCount} queue entries`,
+            cleanedCount
+        });
+
+    } catch (error) {
+        logger.error('Manual cleanup error:', error);
+        res.status(500).json({
+            error: 'Failed to cleanup queue entries',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
