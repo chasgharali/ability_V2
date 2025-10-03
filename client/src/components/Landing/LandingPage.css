@@ -41,6 +41,13 @@
     grid-template-rows: auto auto auto;
     gap: 0 1.5rem;
     align-items: center;
+    transition: all 0.3s ease;
+}
+
+.login-option-card:hover {
+    border-color: #000000;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-4px);
 }
 
 .login-option-icon {
