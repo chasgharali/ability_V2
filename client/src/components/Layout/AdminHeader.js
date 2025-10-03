@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
+import './AdminHeader.css';
 
 export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo }) {
   const { user, logout } = useAuth();
@@ -35,8 +36,8 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
   };
 
   return (
-    <header className="dashboard-header">
-      <div className="dashboard-header-content">
+    <header className="dashboard-header admin-header">
+      <div className="dashboard-header-content admin-header-content">
         <div className="header-left">
           <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
             {mobileOpen ? <MdClose /> : <MdMenu />}
@@ -61,9 +62,9 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
             <img src={secondaryLogo} alt="" className="header-logo booth-centered" />
           </div>
         )}
-        <div className="user-info">
-          <span className="user-name">{user?.name || 'User'} / {user?.role || 'Guest'}</span>
-          <div className="connection-status">
+        <div className="user-info admin-user-info">
+          <span className="user-name admin-user-name">{user?.name || 'User'} / {user?.role || 'Guest'}</span>
+          <div className="connection-status admin-connection">
             <MdRefresh className="refresh-icon" />
             <span className="connection-text">Connection: Active</span>
             <span className="connection-text-mobile">Active</span>

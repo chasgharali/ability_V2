@@ -1,0 +1,84 @@
+/* Scoped styles for AdminHeader only */
+.admin-header {
+  position: relative;
+  z-index: 10;
+}
+
+.admin-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Right-side user area: keep everything on one line */
+.admin-user-info {
+  display: flex;
+  align-items: center; /* vertically center all controls */
+  gap: 12px;
+  white-space: nowrap;
+  line-height: 1; /* normalize line box */
+}
+
+.admin-user-name {
+  font-weight: 600;
+  line-height: 1; /* prevent extra line box height */
+  display: flex;
+  align-items: center; /* keep baseline aligned */
+}
+
+.admin-connection {
+  display: flex;
+  align-items: center; /* vertical centering of icon/text/dot */
+  gap: 6px;
+  line-height: 1; /* avoid text pushing block downward */
+  position: relative;
+  top: -1px; /* slight upward nudge for baseline alignment */
+}
+
+/* Optional: smaller dot and icon spacing */
+.admin-connection .connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981; /* green */
+  display: inline-block;
+  transform: translateY(-2px); /* align with text baseline */
+}
+
+/* Normalize the refresh icon vertical alignment */
+.admin-connection .refresh-icon {
+  display: inline-block;
+  vertical-align: middle;
+  transform: translateY(-2px); /* nudge up slightly to align with text */
+}
+
+/* Normalize inline text spacing */
+.admin-connection .connection-text,
+.admin-connection .connection-text-mobile {
+  margin: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  transform: translateY(-2px); /* move text up by 2px */
+}
+
+/* Keep all inline SVG icons centered */
+.admin-user-info svg {
+  vertical-align: middle;
+}
+
+/* Ensure logout button aligns to center with text */
+.admin-user-info .logout-button {
+  align-self: center;
+}
+
+/* Hide long label on small screens, show short label */
+@media (max-width: 640px) {
+  .admin-connection .connection-text { display: none; }
+  .admin-connection .connection-text-mobile { display: inline; }
+}
+
+@media (min-width: 641px) {
+  .admin-connection .connection-text { display: inline; }
+  .admin-connection .connection-text-mobile { display: none; }
+}
