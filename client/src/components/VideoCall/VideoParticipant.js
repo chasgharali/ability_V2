@@ -206,6 +206,7 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
         <div className="participant-name">
           <span className="name">{getParticipantName()}</span>
         </div>
+        {getParticipantRole() && <div className="participant-role-badge">{getParticipantRole()}</div>}
 
         {/* Controls Indicators */}
         <div className="participant-controls">

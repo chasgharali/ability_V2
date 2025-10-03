@@ -131,7 +131,8 @@ const CallControls = ({
                 title={button.label}
                 aria-label={button.label}
               >
-                <IconComponent size={20} />
+                <IconComponent size={20} aria-hidden="true" />
+                <span className="tooltip">{button.label}</span>
                 {button.badge && (
                   <span className="control-badge">{button.badge}</span>
                 )}
@@ -152,7 +153,8 @@ const CallControls = ({
                 title={button.label}
                 aria-label={button.label}
               >
-                <IconComponent size={20} />
+                <IconComponent size={20} aria-hidden="true" />
+                <span className="tooltip">{button.label}</span>
                 {button.badge && (
                   <span className="control-badge">{button.badge}</span>
                 )}
@@ -169,7 +171,8 @@ const CallControls = ({
                 title="More options"
                 aria-label="More options"
               >
-                <FiMoreHorizontal size={20} />
+                <FiMoreHorizontal size={20} aria-hidden="true" />
+                <span className="tooltip">More options</span>
               </button>
               
               {showMoreOptions && (
@@ -214,7 +217,8 @@ const CallControls = ({
             title="End Call"
             aria-label="End Call"
           >
-            <FiPhoneOff size={20} />
+            <FiPhoneOff size={20} aria-hidden="true" />
+                <span className="tooltip">End Call</span>
           </button>
         </div>
       </div>

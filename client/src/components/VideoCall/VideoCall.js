@@ -537,12 +537,20 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   }
 
   return (
-    <div className="video-call-container">
-      {/* Connection Quality Indicator */}
-      <div className={`connection-quality ${connectionQuality}`}>
-        <span className="quality-dot"></span>
-        <span className="quality-text">{connectionQuality}</span>
-      </div>
+    <div className="video-call-container-new">
+      <header className="video-call-header">
+        <div className="header-info">
+          {callInfo?.event?.logoUrl && <img src={callInfo.event.logoUrl} alt={`${callInfo.event.name} logo`} className="header-logo" />}
+          <h1 className="header-event-name">{callInfo?.event?.name || 'Event'}</h1>
+          <span className="header-divider">|</span>
+          {callInfo?.booth?.logoUrl && <img src={callInfo.booth.logoUrl} alt={`${callInfo.booth.name} logo`} className="header-logo" />}
+          <h2 className="header-booth-name">{callInfo?.booth?.name || 'Booth'}</h2>
+        </div>
+        <div className={`connection-quality ${connectionQuality}`}>
+          <span className="quality-dot"></span>
+          <span className="quality-text">{connectionQuality}</span>
+        </div>
+      </header>
 
       {/* Main Video Area */}
       <div className="video-main-area">
@@ -595,8 +603,8 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         />
       )}
 
-      {/* Call Controls */}
-      <CallControls
+      <footer className="video-call-footer">
+        <CallControls
         isAudioEnabled={isAudioEnabled}
         isVideoEnabled={isVideoEnabled}
         onToggleAudio={toggleAudio}
@@ -609,6 +617,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         participantCount={participants.size + 1}
         chatUnreadCount={0} // TODO: Implement unread count
       />
+      </footer>
 
       {/* Error Banner */}
       {error && (
