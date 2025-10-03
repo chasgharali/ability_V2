@@ -74,6 +74,15 @@
     margin-bottom: 2rem;
 }
 
+.login-error-message {
+    background-color: #fef2f2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
 .login-form-group {
     margin-bottom: 1.5rem;
 }
