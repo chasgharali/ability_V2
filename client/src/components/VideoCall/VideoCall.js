@@ -34,8 +34,9 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const [connectionQuality, setConnectionQuality] = useState('good');
   
   // Refs
-  const localVideoRef = useRef();
-  const remoteMediaRef = useRef();
+  // Cleanup guards
+  const isMountedRef = useRef(true);
+  const isCleaningUpRef = useRef(false);
   const roomRef = useRef();
   const reconnectTimeoutRef = useRef();
   const qualityCheckIntervalRef = useRef();
@@ -68,6 +69,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
       cleanup();
     };
   }, []);
@@ -117,15 +119,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       });
 
       setLocalTracks([videoTrack, audioTrack]);
-
-      // Attach local video with safety checks
-      if (localVideoRef.current && videoTrack && videoTrack.attach) {
-        try {
-          videoTrack.attach(localVideoRef.current);
-        } catch (error) {
-          console.warn('Error attaching local video track:', error);
-        }
-      }
 
       // Connect to Twilio room using provided access token
       const room = await connect(data.accessToken, {
@@ -204,14 +197,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
       setLocalTracks([videoTrack, audioTrack]);
 
-      // Attach local video with safety checks
-      if (localVideoRef.current && videoTrack && videoTrack.attach) {
-        try {
-          videoTrack.attach(localVideoRef.current);
-        } catch (error) {
-          console.warn('Error attaching local video track:', error);
-        }
-      }
+      // No manual local video attach; handled by VideoParticipant
 
       // Connect to Twilio room
       const room = await connect(callDetails.accessToken, {
@@ -480,6 +466,9 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   };
 
   const cleanup = () => {
+    if (isCleaningUpRef.current) return;
+    isCleaningUpRef.current = true;
+
     // Clear intervals
     if (qualityCheckIntervalRef.current) {
       clearInterval(qualityCheckIntervalRef.current);
@@ -491,7 +480,11 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
     // Disconnect from room
     if (roomRef.current) {
-      roomRef.current.disconnect();
+      try {
+        roomRef.current.disconnect();
+      } catch (e) {
+        // ignore
+      }
       roomRef.current = null;
     }
 
@@ -501,31 +494,21 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         try {
           track.stop();
         } catch (error) {
-          console.warn('Error stopping local track:', error);
+          // ignore
         }
       }
     });
     setLocalTracks([]);
 
-    // Clean up remote media container
-    const remoteMediaContainer = remoteMediaRef.current;
-    if (remoteMediaContainer) {
-      // Remove all child elements safely
-      while (remoteMediaContainer.firstChild) {
-        try {
-          remoteMediaContainer.removeChild(remoteMediaContainer.firstChild);
-        } catch (error) {
-          console.warn('Error removing remote media child:', error);
-          break;
-        }
-      }
-    }
-
     // Leave socket room
     if (socket && callInfo) {
-      socket.emit('leave-video-call', {
-        roomName: callInfo.roomName
-      });
+      try {
+        socket.emit('leave-video-call', {
+          roomName: callInfo.roomName
+        });
+      } catch (e) {
+        // ignore
+      }
     }
 
     setRoom(null);
@@ -584,18 +567,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
             />
           </div>
         )}
-
-        {/* Hidden video element for local track attachment */}
-        <video
-          ref={localVideoRef}
-          autoPlay
-          muted
-          playsInline
-          style={{ display: 'none' }}
-        />
-        
-        {/* Hidden remote media container for track attachment */}
-        <div ref={remoteMediaRef} style={{ display: 'none' }}></div>
       </div>
 
       {/* Side Panels */}

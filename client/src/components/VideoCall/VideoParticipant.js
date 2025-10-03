@@ -26,10 +26,26 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     const trackUnsubscribed = (track) => {
       if (track.kind === 'video') {
         setVideoTrack(null);
-        track.detach().forEach(element => element.remove());
+        try {
+          const els = track.detach();
+          // Do not remove React-managed element; just let React handle DOM
+          // If Twilio created any extra element, it's safe to remove those
+          els.forEach(el => {
+            if (el && el !== videoRef.current && el.parentNode) {
+              try { el.parentNode.removeChild(el); } catch (e) {}
+            }
+          });
+        } catch (_) {}
       } else if (track.kind === 'audio') {
         setAudioTrack(null);
-        track.detach().forEach(element => element.remove());
+        try {
+          const els = track.detach();
+          els.forEach(el => {
+            if (el && el !== audioRef.current && el.parentNode) {
+              try { el.parentNode.removeChild(el); } catch (e) {}
+            }
+          });
+        } catch (_) {}
       }
     };
 
@@ -96,7 +112,12 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     return () => {
       if (videoTrack && videoTrack.detach) {
         try {
-          videoTrack.detach().forEach(el => el.remove());
+          const els = videoTrack.detach();
+          els.forEach(el => {
+            if (el && el !== videoRef.current && el.parentNode) {
+              try { el.parentNode.removeChild(el); } catch (e) {}
+            }
+          });
         } catch (e) {
           // ignore
         }
@@ -117,7 +138,12 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     return () => {
       if (audioTrack && audioTrack.detach) {
         try {
-          audioTrack.detach().forEach(el => el.remove());
+          const els = audioTrack.detach();
+          els.forEach(el => {
+            if (el && el !== audioRef.current && el.parentNode) {
+              try { el.parentNode.removeChild(el); } catch (e) {}
+            }
+          });
         } catch (e) {
           // ignore
         }

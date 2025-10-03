@@ -65,12 +65,17 @@ export default function BoothQueueWaiting() {
       socket.on('queue-serving-updated', handleServingUpdate);
       socket.on('queue-invited-to-meeting', handleMeetingInvite);
       socket.on('call_invitation', handleCallInvitation);
+      // Detect server-side queue leaves (e.g., when recruiter ends call)
+      socket.on('queue-updated', handleQueueUpdated);
+      socket.on('queue_left', handleQueueUpdated);
 
       return () => {
         socket.off('queue-position-updated', handleQueueUpdate);
         socket.off('queue-serving-updated', handleServingUpdate);
         socket.off('queue-invited-to-meeting', handleMeetingInvite);
         socket.off('call_invitation', handleCallInvitation);
+        socket.off('queue-updated', handleQueueUpdated);
+        socket.off('queue_left', handleQueueUpdated);
       };
     }
   }, [socket]);
@@ -163,6 +168,29 @@ export default function BoothQueueWaiting() {
     }
   };
 
+  // Handle queue updates from server indicating the user has left
+  const handleQueueUpdated = (data) => {
+    try {
+      // We get this on booth rooms; ensure it's this booth and it's our queue entry
+      if (!data) return;
+      const sameBooth = String(data.boothId) === String(boothId);
+      const isLeft = data.action === 'left' || data.type === 'left';
+      const je = data.queueEntry?.jobSeeker;
+      const jobSeekerId = typeof je === 'string' ? je : je?._id;
+      const isCurrentUser = String(jobSeekerId) === String(user._id);
+
+      if (sameBooth && isLeft && isCurrentUser) {
+        // User has been removed from the queue (e.g., call ended)
+        setIsInCall(false);
+        setCallInvitation(null);
+        // Redirect out of the waiting page
+        navigate(`/events/registered/${eventSlug}`);
+      }
+    } catch (err) {
+      console.warn('Error handling queue-updated event:', err);
+    }
+  };
+
   const handleCallInvitation = (data) => {
     console.log('Received call invitation:', data);
     // Set call invitation data and show video call interface
@@ -186,8 +214,8 @@ export default function BoothQueueWaiting() {
   const handleCallEnd = () => {
     setCallInvitation(null);
     setIsInCall(false);
-    // Refresh queue status after call ends
-    loadData();
+    // Backend already removes queue entry on call end; navigate away
+    navigate(`/events/registered/${eventSlug}`);
   };
 
   const handleLeaveQueue = async () => {

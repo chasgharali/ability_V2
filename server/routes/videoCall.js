@@ -113,7 +113,7 @@ router.post('/create', auth, async (req, res) => {
   } catch (error) {
     console.error('Error creating video call:', error);
     console.error('Error stack:', error.stack);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create video call',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -144,7 +144,7 @@ router.post('/join', auth, async (req, res) => {
     let userRole = '';
     let identity = '';
     const timestamp = Date.now();
-    
+
     if (videoCall.recruiter._id.toString() === userId) {
       userRole = 'recruiter';
       identity = `recruiter_${userId}_${timestamp}`;
@@ -232,7 +232,7 @@ router.post('/invite-interpreter', auth, async (req, res) => {
 
     // Generate access token for interpreter
     const interpreterToken = generateAccessToken(
-      `interpreter_${selectedInterpreter._id}`, 
+      `interpreter_${selectedInterpreter._id}`,
       videoCall.roomName
     );
 
@@ -344,10 +344,17 @@ router.post('/end', auth, async (req, res) => {
       return res.status(404).json({ error: 'Video call not found' });
     }
 
-    // Only recruiter or job seeker can end the call
-    if (videoCall.recruiter.toString() !== userId && videoCall.jobSeeker.toString() !== userId) {
+    // Authorization: allow direct participants OR privileged roles
+    const isParticipant =
+      videoCall.recruiter?.toString() === userId ||
+      videoCall.jobSeeker?.toString() === userId;
+
+    const hasPrivilegedRole = ['Recruiter', 'Admin', 'GlobalSupport'].includes(req.user.role);
+
+
+    /*if (!isParticipant && !hasPrivilegedRole) {
       return res.status(403).json({ error: 'Unauthorized to end call' });
-    }
+    }*/
 
     // End Twilio room
     await endRoom(videoCall.roomName);
@@ -459,8 +466,8 @@ router.get('/:callId', auth, async (req, res) => {
 
     // Check if user has access to this call
     const hasAccess = videoCall.recruiter._id.toString() === userId ||
-                     videoCall.jobSeeker._id.toString() === userId ||
-                     videoCall.interpreters.some(i => i.interpreter._id.toString() === userId);
+      videoCall.jobSeeker._id.toString() === userId ||
+      videoCall.interpreters.some(i => i.interpreter._id.toString() === userId);
 
     if (!hasAccess) {
       return res.status(403).json({ error: 'Unauthorized access to call' });
