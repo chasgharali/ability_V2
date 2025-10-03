@@ -20014,3 +20014,121 @@
 2025-10-03 18:45:44:4544 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759499076376[39m
 2025-10-03 18:45:44:4544 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759499076376[39m
 2025-10-03 18:45:49:4549 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:22:04:224 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-10-04 01:22:04:224 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-04 01:22:04:224 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-04 01:22:04:224 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-04 01:22:04:224 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-04 01:22:04:224 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-10-04 01:22:04:224 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-04 01:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:22:09:229 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-10-04 01:22:16:2216 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-10-04 01:22:16:2216 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-04 01:22:16:2216 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-04 01:22:16:2216 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-04 01:22:16:2216 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-04 01:22:16:2216 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-10-04 01:22:16:2216 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-04 01:22:19:2219 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:22:21:2221 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-04 01:22:23:2223 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: transport close[39m
+2025-10-04 01:22:27:2227 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-04 01:22:42:2242 [33mwarn[39m: [33mDuplicate key error for user 68d91ec9123b4be761f24115 in booth 68dbac04c53da0640bdc5512, attempting cleanup[39m
+2025-10-04 01:22:43:2243 [32minfo[39m: [32mCleaned up duplicate entry 68e02fd50e10305e42a88f31 for user 68d91ec9123b4be761f24115[39m
+2025-10-04 01:22:43:2243 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:22:43:2243 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:22:43:2243 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:22:49:2249 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2025-10-04 01:22:51:2251 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:22:51:2251 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2025-10-04 01:22:51:2251 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:22:59:2259 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759522977094[39m
+2025-10-04 01:22:59:2259 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759522977094[39m
+2025-10-04 01:22:59:2259 [32minfo[39m: [32mServing number updated for booth 68dbac04c53da0640bdc5512: 47[39m
+2025-10-04 01:23:01:231 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759522977094[39m
+2025-10-04 01:23:02:232 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759522977094[39m
+2025-10-04 01:23:15:2315 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759522977094[39m
+2025-10-04 01:23:15:2315 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: client namespace disconnect[39m
+2025-10-04 01:23:16:2316 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759522977094[39m
+2025-10-04 01:23:16:2316 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759522977094[39m
+2025-10-04 01:23:16:2316 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2025-10-04 01:27:36:2736 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-10-04 01:27:42:2742 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-10-04 01:27:42:2742 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-10-04 01:27:42:2742 [32minfo[39m: [32mConnected to Redis[39m
+2025-10-04 01:27:42:2742 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-10-04 01:27:42:2742 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-10-04 01:27:42:2742 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-10-04 01:27:42:2742 [32minfo[39m: [32mRedis Client Connected[39m
+2025-10-04 01:28:53:2853 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-04 01:28:53:2853 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:28:53:2853 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: client namespace disconnect[39m
+2025-10-04 01:28:53:2853 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2025-10-04 01:28:53:2853 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-04 01:28:53:2853 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:29:37:2937 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2025-10-04 01:29:39:2939 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:29:39:2939 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2025-10-04 01:29:40:2940 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:29:45:2945 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: transport close[39m
+2025-10-04 01:29:50:2950 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-04 01:29:59:2959 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:29:59:2959 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:29:59:2959 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:30:04:304 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2025-10-04 01:30:05:305 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:30:05:305 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2025-10-04 01:30:06:306 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:30:06:306 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2025-10-04 01:30:06:306 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:30:12:3012 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759523409724[39m
+2025-10-04 01:30:12:3012 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759523409724[39m
+2025-10-04 01:30:12:3012 [32minfo[39m: [32mServing number updated for booth 68dbac04c53da0640bdc5512: 48[39m
+2025-10-04 01:30:15:3015 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759523409724[39m
+2025-10-04 01:30:15:3015 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759523409724[39m
+2025-10-04 01:30:22:3022 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 01:30:27:3027 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759523409724[39m
+2025-10-04 01:30:28:3028 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759523409724[39m
+2025-10-04 01:31:26:3126 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: transport close[39m
+2025-10-04 01:31:26:3126 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport error[39m
+2025-10-04 01:31:27:3127 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 01:31:27:3127 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m
+2025-10-04 02:23:08:238 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-10-04 02:23:35:2335 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2025-10-04 02:23:38:2338 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759523409724[39m
+2025-10-04 02:23:43:2343 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 02:23:43:2343 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2025-10-04 02:23:46:2346 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2025-10-04 02:24:02:242 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:24:02:242 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:24:02:242 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:26:03:263 [37mdebug[39m: [37mHeartbeat received from user my-test-js2@maildrop.cc for booth 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:02:282 [37mdebug[39m: [37mHeartbeat received from user my-test-js2@maildrop.cc for booth 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:08:288 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:31:2831 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:31:2831 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:34:2834 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:28:34:2834 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:29:10:2910 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:29:30:2930 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:29:31:2931 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:29:31:2931 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:29:43:2943 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759526979804[39m
+2025-10-04 02:29:43:2943 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759526979804[39m
+2025-10-04 02:29:43:2943 [32minfo[39m: [32mServing number updated for booth 68dbac04c53da0640bdc5512: 50[39m
+2025-10-04 02:29:46:2946 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759526979804[39m
+2025-10-04 02:29:46:2946 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759526979804[39m
+2025-10-04 02:29:56:2956 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
+2025-10-04 02:30:02:302 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759526979804[39m
+2025-10-04 02:30:02:302 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759526979804[39m
+2025-10-04 02:30:12:3012 [32minfo[39m: [32mUser my-test-js2@maildrop.cc disconnected: transport close[39m
+2025-10-04 02:30:16:3016 [32minfo[39m: [32mUser my-test-js2@maildrop.cc connected via socket[39m

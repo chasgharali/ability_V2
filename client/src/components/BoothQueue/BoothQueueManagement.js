@@ -51,6 +51,39 @@ export default function BoothQueueManagement() {
     };
   }, [boothId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Ensure we (re)join socket rooms after the socket connects/reconnects
+  useEffect(() => {
+    if (!socket) {
+      setSocketConnected(false);
+      return;
+    }
+
+    const handleConnect = () => {
+      setSocketConnected(true);
+      // Re-join rooms for this booth so we receive live updates
+      joinSocketRoom();
+    };
+
+    const handleDisconnect = () => {
+      setSocketConnected(false);
+    };
+
+    // Reflect current state immediately
+    setSocketConnected(!!socket.connected);
+    if (socket.connected) {
+      // If already connected (hot reload/navigation), ensure we are in rooms
+      joinSocketRoom();
+    }
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+    };
+  }, [socket, boothId, user]);
+
   // Check for active video call
   const checkActiveCall = async () => {
     try {
@@ -65,24 +98,25 @@ export default function BoothQueueManagement() {
   };
 
   useEffect(() => {
-    if (socket) {
-      console.log('Socket connected, setting up event listeners');
-      setSocketConnected(true);
-      socket.on('queue-updated', handleQueueUpdate);
-      socket.on('new-queue-message', handleNewMessage);
-      socket.on('test-connection-response', (data) => {
-        console.log('Test connection response received:', data);
-      });
-
-      return () => {
-        socket.off('queue-updated', handleQueueUpdate);
-        socket.off('new-queue-message', handleNewMessage);
-        socket.off('test-connection-response');
-      };
-    } else {
+    if (!socket || !socket.connected) {
       setSocketConnected(false);
+      return;
     }
-  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    console.log('Setting up socket event listeners for booth management');
+    setSocketConnected(true);
+    socket.on('queue-updated', handleQueueUpdate);
+    socket.on('new-queue-message', handleNewMessage);
+    socket.on('test-connection-response', (data) => {
+      console.log('Test connection response received:', data);
+    });
+
+    return () => {
+      socket.off('queue-updated', handleQueueUpdate);
+      socket.off('new-queue-message', handleNewMessage);
+      socket.off('test-connection-response');
+    };
+  }, [socket?.connected]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tick every second for live waiting timers
   useEffect(() => {

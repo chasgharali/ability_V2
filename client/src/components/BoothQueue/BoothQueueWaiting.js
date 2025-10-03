@@ -59,26 +59,41 @@ export default function BoothQueueWaiting() {
     };
   }, [eventSlug, boothId]);
 
+  // Ensure we (re)join socket rooms after the socket connects/reconnects
   useEffect(() => {
-    if (socket) {
-      socket.on('queue-position-updated', handleQueueUpdate);
-      socket.on('queue-serving-updated', handleServingUpdate);
-      socket.on('queue-invited-to-meeting', handleMeetingInvite);
-      socket.on('call_invitation', handleCallInvitation);
-      // Detect server-side queue leaves (e.g., when recruiter ends call)
-      socket.on('queue-updated', handleQueueUpdated);
-      socket.on('queue_left', handleQueueUpdated);
+    if (!socket) return;
 
-      return () => {
-        socket.off('queue-position-updated', handleQueueUpdate);
-        socket.off('queue-serving-updated', handleServingUpdate);
-        socket.off('queue-invited-to-meeting', handleMeetingInvite);
-        socket.off('call_invitation', handleCallInvitation);
-        socket.off('queue-updated', handleQueueUpdated);
-        socket.off('queue_left', handleQueueUpdated);
-      };
-    }
-  }, [socket]);
+    const handleConnect = () => {
+      // Re-join booth room so recruiter sees updates in real-time
+      joinSocketRoom();
+    };
+
+    socket.on('connect', handleConnect);
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, [socket, boothId, user?._id]);
+
+  useEffect(() => {
+    if (!socket || !socket.connected) return;
+
+    socket.on('queue-position-updated', handleQueueUpdate);
+    socket.on('queue-serving-updated', handleServingUpdate);
+    socket.on('queue-invited-to-meeting', handleMeetingInvite);
+    socket.on('call_invitation', handleCallInvitation);
+    // Detect server-side queue leaves (e.g., when recruiter ends call)
+    socket.on('queue-updated', handleQueueUpdated);
+    socket.on('queue_left', handleQueueUpdated);
+
+    return () => {
+      socket.off('queue-position-updated', handleQueueUpdate);
+      socket.off('queue-serving-updated', handleServingUpdate);
+      socket.off('queue-invited-to-meeting', handleMeetingInvite);
+      socket.off('call_invitation', handleCallInvitation);
+      socket.off('queue-updated', handleQueueUpdated);
+      socket.off('queue_left', handleQueueUpdated);
+    };
+  }, [socket?.connected]);
 
   // Heartbeat to keep connection alive and detect if user is still active
   useEffect(() => {
