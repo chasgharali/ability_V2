@@ -3,10 +3,10 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
+import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt } from 'react-icons/fa';
 import VideoCall from '../VideoCall/VideoCall';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
-import '../Dashboard/Dashboard.css';
 
 export default function BoothQueueWaiting() {
   const { eventSlug, boothId } = useParams();
@@ -361,30 +361,35 @@ export default function BoothQueueWaiting() {
                 <h1 className="event-title">{event?.name || 'ABILITY Job Fair - Event'}</h1>
                 <h2 className="booth-subtitle">{booth?.name || 'Company Booth'}</h2>
               </div>
+              {/* Waiting message moved here */}
+              <div className="waiting-message-header">
+                <h3>You are now in the queue.</h3>
+                <p>An invitation to join will appear when it's your turn.</p>
+              </div>
             </div>
           </div>
 
-          {/* Waiting message */}
-          <div className="waiting-message">
-            <h3>You are now joining the queue.</h3>
-            <p>Wait for the invitation to join a meeting</p>
-          </div>
-
+          
           {/* Content sections - expanded */}
           <div className="content-grid-expanded">
             {(booth?.richSections && booth.richSections.length > 0
               ? booth.richSections
-                .filter(s => s.isActive !== false)
-                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                .slice(0, 3)
+                  .filter(s => s.isActive !== false)
+                  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                  .slice(0, 3)
               : [
-                { title: 'First Placeholder', contentHtml: '<p>place1e</p>' },
-                { title: 'Second Placeholder', contentHtml: '<p>place2e</p>' },
-                { title: 'Third Placeholder', contentHtml: '<p>place3e</p>' }
-              ]
+                  {
+                    contentHtml: '<div><img src="/img/placeholder-1.jpg" alt="A person smiling in a professional setting." style="width:100%;height:auto;border-radius:8px;"/></div>'
+                  },
+                  {
+                    contentHtml: '<div><img src="/img/placeholder-2.jpg" alt="Two people collaborating over a laptop." style="width:100%;height:auto;border-radius:8px;"/></div>'
+                  },
+                  {
+                    contentHtml: '<div><img src="/img/placeholder-3.jpg" alt="A person writing on a whiteboard." style="width:100%;height:auto;border-radius:8px;"/></div>'
+                  }
+                ]
             ).map((section, idx) => (
               <div key={section._id || idx} className="content-card-expanded">
-                {section.title && <h4 className="content-title">{section.title}</h4>}
                 {section.contentHtml ? (
                   <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
                 ) : (
@@ -412,89 +417,48 @@ export default function BoothQueueWaiting() {
             <span className="status-text">Waiting</span>
           </div>
 
-          {/* Return button */}
-          <button className="return-btn" onClick={handleReturnToEvent}>
-            Return to<br />abilityJOBS.com Employer
-          </button>
-
+          
           {/* Action buttons moved here */}
           <div className="sidebar-actions">
-            <button
+                        <button
               className="sidebar-action-btn camera-btn"
               onClick={() => alert('Camera & Mic selection coming soon')}
             >
-              📹 Select your camera and mic
+              <FaVideo /> Select camera & mic
             </button>
 
-            <button
+                        <button
               className="sidebar-action-btn message-btn"
               onClick={() => setShowMessageModal(true)}
             >
-              💬 Create a message
+              <FaCommentDots /> Create a message
             </button>
 
-            <button
+                        <button
               className="sidebar-action-btn refresh-btn"
               onClick={() => window.location.reload()}
             >
-              🔄 Refresh your connection
+              <FaSyncAlt /> Refresh connection
             </button>
 
-            <button
+                        <button
               className="sidebar-action-btn return-btn-alt"
               onClick={handleReturnToEvent}
             >
-              ↩️ Return to main event
+              <FaArrowLeft /> Return to main event
             </button>
 
-            <button
+                        <button
               className="sidebar-action-btn exit-btn"
               onClick={handleExitEvent}
             >
-              🚪 Exit the event
+              <FaSignOutAlt /> Exit the event
             </button>
           </div>
         </div>
       </div>
 
-      {/* Bottom Actions */}
-      <footer className="queue-actions">
-        <button
-          className="action-btn camera-btn"
-          onClick={() => alert('Camera & Mic selection coming soon')}
-        >
-          📹 Select your camera and mic
-        </button>
-
-        <button
-          className="action-btn message-btn"
-          onClick={() => setShowMessageModal(true)}
-        >
-          💬 Create a message
-        </button>
-
-        <button
-          className="action-btn refresh-btn"
-          onClick={() => window.location.reload()}
-        >
-          🔄 Refresh your connection
-        </button>
-
-        <button
-          className="action-btn return-btn"
-          onClick={handleReturnToEvent}
-        >
-          ↩️ Return to main event
-        </button>
-
-        <button
-          className="action-btn exit-btn"
-          onClick={handleExitEvent}
-        >
-          🚪 Exit the event
-        </button>
-      </footer>
-
+      
       {/* Message Modal */}
       {showMessageModal && (
         <div className="modal-overlay">
