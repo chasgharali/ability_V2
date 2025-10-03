@@ -355,11 +355,17 @@ router.post('/end', auth, async (req, res) => {
     // Update call status
     await videoCall.endCall();
 
-    // Update queue entry status
+    // Update queue entry status: ensure jobseeker leaves the queue
     const queueEntry = await BoothQueue.findById(videoCall.queueEntry);
+    let queueUpdateData = null;
     if (queueEntry) {
-      queueEntry.status = 'completed';
-      await queueEntry.save();
+      await queueEntry.leaveQueue();
+      // Prepare socket update for booth rooms
+      queueUpdateData = {
+        boothId: queueEntry.booth,
+        action: 'left',
+        queueEntry: queueEntry.toJSON()
+      };
     }
 
     // Emit socket event to all participants
@@ -369,6 +375,12 @@ router.post('/end', auth, async (req, res) => {
       endedBy: userId,
       duration: videoCall.duration
     });
+
+    // Also notify booth queue rooms so recruiter and others see the queue update
+    if (queueUpdateData && io) {
+      io.to(`booth_${queueEntry.booth}`).emit('queue-updated', queueUpdateData);
+      io.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', queueUpdateData);
+    }
 
     res.json({ success: true, duration: videoCall.duration });
 
