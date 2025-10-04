@@ -258,10 +258,36 @@ export default function BoothQueueWaiting() {
     }
   };
 
+  // Speak announcement using Web Speech API
+  const speak = (text) => {
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      // Cancel any ongoing speech to avoid overlap
+      if (synth.speaking) synth.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1.05;
+      utter.pitch = 1.0;
+      utter.volume = 1.0;
+      // Prefer an English voice if available
+      const voices = synth.getVoices();
+      const enVoice = voices.find(v => /en(-|_)?.*/i.test(v.lang));
+      if (enVoice) utter.voice = enVoice;
+      synth.speak(utter);
+    } catch (e) {
+      // ignore failures
+    }
+  };
+
   const handleCallInvitation = (data) => {
     console.log('Received call invitation:', data);
     setPendingInvitation(data);
     playInviteSound();
+    const recruiterName = data?.recruiter?.name || 'recruiter';
+    const boothName = booth?.name || '';
+    const eventName = event?.name || '';
+    const message = `You have been invited by ${recruiterName} to a video call${boothName ? ` at ${boothName}` : ''}${eventName ? ` for ${eventName}` : ''}.`;
+    speak(message);
     enumerateDevicesAndShowModal();
   };
 
