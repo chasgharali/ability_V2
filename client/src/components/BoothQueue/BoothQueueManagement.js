@@ -299,6 +299,8 @@ export default function BoothQueueManagement() {
           roomName: callResponse.roomName,
           accessToken: callResponse.accessToken,
           userRole: 'recruiter',
+          booth: callResponse.booth,
+          event: callResponse.event,
           participants: {
             recruiter: user,
             jobSeeker: callResponse.jobSeeker

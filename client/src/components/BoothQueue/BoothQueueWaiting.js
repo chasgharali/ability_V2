@@ -313,6 +313,8 @@ export default function BoothQueueWaiting() {
       roomName: data.roomName,
       accessToken: data.accessToken,
       userRole: 'jobseeker',
+      booth: data.booth,
+      event: data.event,
       participants: {
         recruiter: data.recruiter,
         jobSeeker: user

@@ -101,6 +101,8 @@ router.post('/create', auth, async (req, res) => {
       roomName: roomName,
       accessToken: recruiterToken,
       roomSid: twilioRoom.sid,
+      booth: queueEntry.booth,
+      event: queueEntry.event,
       jobSeeker: {
         id: queueEntry.jobSeeker._id,
         name: queueEntry.jobSeeker.name,
@@ -176,6 +178,8 @@ router.post('/join', auth, async (req, res) => {
       roomName: videoCall.roomName,
       accessToken: accessToken,
       userRole: userRole,
+      booth: videoCall.booth,
+      event: videoCall.event,
       participants: {
         recruiter: videoCall.recruiter,
         jobSeeker: videoCall.jobSeeker,
@@ -431,6 +435,8 @@ router.get('/active', auth, async (req, res) => {
         roomName: activeCall.roomName,
         accessToken: accessToken,
         userRole: userRole,
+        booth: activeCall.booth,
+        event: activeCall.event,
         participants: {
           recruiter: activeCall.recruiter,
           jobSeeker: activeCall.jobSeeker,

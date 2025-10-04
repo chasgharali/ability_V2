@@ -575,12 +575,51 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     <div className="video-call-container-new">
       <header className="video-call-header">
         <div className="header-info">
-          {callInfo?.event?.logoUrl && <img src={callInfo.event.logoUrl} alt={`${callInfo.event.name} logo`} className="header-logo" />}
-          <h1 className="header-event-name">{callInfo?.event?.name || 'Event'}</h1>
+          {/* Event Logo Only */}
+          <div className="header-section">
+            {callInfo?.event?.logoUrl ? (
+              <img
+                src={callInfo.event.logoUrl}
+                alt={`${callInfo.event.name || 'Event'} logo`}
+                className="header-logo event-logo"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div
+              className="header-logo-placeholder event-logo-placeholder"
+              style={{ display: callInfo?.event?.logoUrl ? 'none' : 'flex' }}
+            >
+              <span>{(callInfo?.event?.name || 'Event').charAt(0).toUpperCase()}</span>
+            </div>
+          </div>
+
           <span className="header-divider">|</span>
-          {callInfo?.booth?.logoUrl && <img src={callInfo.booth.logoUrl} alt={`${callInfo.booth.name} logo`} className="header-logo" />}
-          <h2 className="header-booth-name">{callInfo?.booth?.name || 'Booth'}</h2>
+
+          {/* Booth Logo Only */}
+          <div className="header-section">
+            {callInfo?.booth?.logoUrl ? (
+              <img
+                src={callInfo.booth.logoUrl}
+                alt={`${callInfo.booth.name || 'Booth'} logo`}
+                className="header-logo booth-logo"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div
+              className="header-logo-placeholder booth-logo-placeholder"
+              style={{ display: callInfo?.booth?.logoUrl ? 'none' : 'flex' }}
+            >
+              <span>{(callInfo?.booth?.name || 'Booth').charAt(0).toUpperCase()}</span>
+            </div>
+          </div>
         </div>
+
         <div className={`connection-quality ${connectionQuality}`}>
           <span className="quality-dot"></span>
           <span className="quality-text">{connectionQuality}</span>
