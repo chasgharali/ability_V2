@@ -117,19 +117,18 @@ export default function BoothQueueWaiting() {
     try {
       setLoading(true);
 
-      const [eventRes, boothRes, queueRes] = await Promise.all([
+      // Load event and booth in parallel
+      const [eventRes, boothRes] = await Promise.all([
         fetch(`/api/events/slug/${eventSlug}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }),
         fetch(`/api/booths/${boothId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }),
-        boothQueueAPI.getQueueStatus(boothId)
+        })
       ]);
 
       const eventData = await eventRes.json();
       const boothData = await boothRes.json();
-      const queueData = await queueRes;
 
       // Normalize event
       let extractedEvent = null;
@@ -145,10 +144,22 @@ export default function BoothQueueWaiting() {
 
       if (extractedEvent) setEvent(extractedEvent);
       if (extractedBooth) setBooth(extractedBooth);
-      if (queueData.success) {
-        setQueuePosition(queueData.position);
-        setCurrentServing(queueData.currentServing);
-        setQueueToken(queueData.token);
+
+      // Load queue status separately so a 404 doesn't break the page on refresh
+      try {
+        const queueData = await boothQueueAPI.getQueueStatus(boothId);
+        if (queueData?.success) {
+          setQueuePosition(queueData.position);
+          setCurrentServing(queueData.currentServing);
+          setQueueToken(queueData.token);
+        } else {
+          // Not in queue or backend returned a non-successful shape
+          setQueuePosition(0);
+        }
+      } catch (qErr) {
+        // Gracefully handle 404 Not Found (user not in queue after refresh)
+        console.warn('Queue status unavailable (likely not in queue):', qErr?.response?.status || qErr);
+        setQueuePosition(0);
       }
 
     } catch (error) {
@@ -473,13 +484,13 @@ export default function BoothQueueWaiting() {
                   .slice(0, 3)
               : [
                   {
-                    contentHtml: '<div><img src="/img/placeholder-1.jpg" alt="A person smiling in a professional setting." style="width:100%;height:auto;border-radius:8px;"/></div>'
+                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Welcome to the booth</div>'
                   },
                   {
-                    contentHtml: '<div><img src="/img/placeholder-2.jpg" alt="Two people collaborating over a laptop." style="width:100%;height:auto;border-radius:8px;"/></div>'
+                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Resources coming soon</div>'
                   },
                   {
-                    contentHtml: '<div><img src="/img/placeholder-3.jpg" alt="A person writing on a whiteboard." style="width:100%;height:auto;border-radius:8px;"/></div>'
+                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Please stay on this page</div>'
                   }
                 ]
             ).map((section, idx) => (
