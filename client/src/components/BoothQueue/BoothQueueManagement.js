@@ -5,6 +5,7 @@ import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import videoCallService from '../../services/videoCall';
 import VideoCall from '../VideoCall/VideoCall';
+import { FaRedoAlt, FaPlug } from 'react-icons/fa';
 import CallInviteModal from '../VideoCall/CallInviteModal';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
@@ -26,6 +27,7 @@ export default function BoothQueueManagement() {
   const [messages, setMessages] = useState([]);
   const [nowTs, setNowTs] = useState(Date.now());
   const [socketConnected, setSocketConnected] = useState(false);
+  const [toast, setToast] = useState('');
   
   // Video call state
   const [activeCall, setActiveCall] = useState(null);
@@ -384,52 +386,51 @@ export default function BoothQueueManagement() {
                 <div>
                   <h1>{booth?.name || booth?.company} - Meeting Queue</h1>
                   <p>{event?.name}</p>
-                  <div className="connection-status">
-                    <span className={`status-indicator ${socketConnected ? 'connected' : 'disconnected'}`}>
-                      {socketConnected ? '🟢 Real-time updates active' : '🔴 Real-time updates offline'}
-                    </span>
+                  {/* Compact stats in header */}
+                  <div className="header-stats">
+                    <div className="header-stat">
+                      <span className="stat-label">Total</span>
+                      <span className="stat-value">{queue.length}</span>
+                    </div>
+                    <div className="header-stat">
+                      <span className="stat-label">Serving</span>
+                      <span className="stat-value">{currentServing}</span>
+                    </div>
+                    <div className="header-stat">
+                      <span className="stat-label">Waiting</span>
+                      <span className="stat-value">{queue.filter(q => q.position > currentServing).length}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div className="serving-controls">
+                <span className={`rt-badge ${socketConnected ? 'online' : 'offline'}`} title={socketConnected ? 'Real-time connected' : 'Real-time offline'}>
+                  <span className="rt-dot" /> {socketConnected ? 'Online' : 'Offline'}
+                </span>
                 <button
-                  onClick={loadQueueData}
-                  className="refresh-btn"
-                  title="Refresh queue data"
+                  onClick={async () => {
+                    await loadQueueData();
+                    setToast('Queue refreshed');
+                    setTimeout(() => setToast(''), 1500);
+                  }}
+                  className="icon-btn"
+                  title="Refresh"
+                  aria-label="Refresh"
                 >
-                  🔄 Refresh
-                </button>
-                <button
-                  onClick={joinSocketRoom}
-                  className="refresh-btn"
-                  title="Rejoin socket rooms"
-                >
-                  🔌 Reconnect
+                  <FaRedoAlt size={18} />
                 </button>
                 <button
                   onClick={() => {
-                    console.log('Testing socket emit...');
-                    socket.emit('test-connection', { message: 'Manual test' });
+                    joinSocketRoom();
+                    setToast('Reconnected');
+                    setTimeout(() => setToast(''), 1500);
                   }}
-                  className="refresh-btn"
-                  title="Test socket connection"
+                  className="icon-btn"
+                  title="Reconnect"
+                  aria-label="Reconnect"
                 >
-                  🧪 Test Socket
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('Simulating queue update...');
-                    handleQueueUpdate({
-                      boothId: boothId,
-                      action: 'test',
-                      queueEntry: { _id: 'test', position: 1 }
-                    });
-                  }}
-                  className="refresh-btn"
-                  title="Test queue update handler"
-                >
-                  📋 Test Queue Update
+                  <FaPlug size={18} />
                 </button>
                 <label>Now Serving:</label>
                 <input
@@ -440,29 +441,20 @@ export default function BoothQueueManagement() {
                   className="serving-input"
                 />
                 <button
-                  onClick={() => handleUpdateServing(currentServing)}
+                  onClick={async () => {
+                    await handleUpdateServing(currentServing);
+                    setToast('Now Serving updated');
+                    setTimeout(() => setToast(''), 2000);
+                  }}
                   className="update-serving-btn"
+                  style={{ background:'#111827', borderColor:'#111827', color:'#fff' }}
                 >
                   Update
                 </button>
               </div>
             </div>
 
-            {/* Queue Stats */}
-            <div className="queue-stats">
-              <div className="stat-card">
-                <h3>Total Queue Count</h3>
-                <span className="stat-number">{queue.length}</span>
-              </div>
-              <div className="stat-card">
-                <h3>Currently Serving</h3>
-                <span className="stat-number">{currentServing}</span>
-              </div>
-              <div className="stat-card">
-                <h3>Waiting</h3>
-                <span className="stat-number">{queue.filter(q => q.position > currentServing).length}</span>
-              </div>
-            </div>
+            {/* Stats moved to header; removed cards */}
 
             {/* Queue List */}
             <div className="queue-list">
@@ -752,6 +744,13 @@ export default function BoothQueueManagement() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position:'fixed', right:20, bottom:20, background:'#111827', color:'#fff', padding:'10px 14px', borderRadius:8, boxShadow:'0 6px 18px rgba(0,0,0,0.15)', zIndex:1000 }}>
+          {toast}
         </div>
       )}
 
