@@ -119,7 +119,9 @@
     gap: 0.25rem;
 }
 
-.profile-email, .profile-phone, .profile-location {
+.profile-email,
+.profile-phone,
+.profile-location {
     margin: 0;
     color: #6b7280;
     font-size: 0.95rem;
@@ -276,36 +278,36 @@
     .profile-view {
         padding: 0 0.75rem;
     }
-    
+
     .profile-title {
         font-size: 1.75rem;
     }
-    
+
     .profile-hero-content {
         grid-template-columns: 1fr;
         text-align: center;
         gap: 1.25rem;
     }
-    
+
     .profile-avatar {
         width: 100px;
         height: 100px;
     }
-    
+
     .profile-name {
         font-size: 1.5rem;
     }
-    
+
     .profile-actions {
         align-items: center;
         width: 100%;
     }
-    
+
     .profile-btn {
         width: 100%;
         justify-content: center;
     }
-    
+
     .profile-details-grid {
         grid-template-columns: 1fr;
     }
@@ -315,7 +317,7 @@
     .profile-hero-card {
         padding: 1.5rem;
     }
-    
+
     .detail-content {
         padding: 1rem;
     }
@@ -326,11 +328,11 @@
     .profile-hero-card {
         border-width: 2px;
     }
-    
+
     .profile-detail-card {
         border-width: 2px;
     }
-    
+
     .profile-btn-primary {
         border: 2px solid #000000;
     }
@@ -338,16 +340,17 @@
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+
     .profile-detail-card,
     .profile-btn,
     .profile-hero-card {
         transition: none;
     }
-    
+
     .profile-detail-card:hover {
         transform: none;
     }
-    
+
     .profile-btn-primary:hover {
         transform: none;
     }
@@ -399,7 +402,7 @@
     border-radius: 4px;
 }
 
-.survey-form .checkbox-columns .checkbox-label input[type="checkbox"]:checked + span {
+.survey-form .checkbox-columns .checkbox-label input[type="checkbox"]:checked+span {
     color: #111827;
     font-weight: 600;
 }
@@ -416,7 +419,7 @@
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
     }
-    
+
     .survey-form .checkbox-col {
         gap: 0.5rem;
     }
@@ -431,14 +434,16 @@
 /* ===== Delete Account Panel (scoped) ===== */
 .delete-account-panel .checkbox-label {
     display: inline-flex;
-    align-items: center; /* center align checkbox and text */
+    align-items: center;
+    /* center align checkbox and text */
     gap: 0.5rem;
     cursor: pointer;
     margin: 0.25rem 0 0.5rem 0;
 }
 
 .delete-account-panel .checkbox-label input[type="checkbox"] {
-    margin: 0; /* remove default */
+    margin: 0;
+    /* remove default */
     flex-shrink: 0;
     width: 18px;
     height: 18px;
@@ -509,7 +514,8 @@
     align-items: center;
     height: 72px;
     /* match header height */
-    position: relative; /* allow centered logo overlay */
+    position: relative;
+    /* allow centered logo overlay */
 }
 
 .header-left {
@@ -561,7 +567,8 @@
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    pointer-events: none; /* clicks go through */
+    pointer-events: none;
+    /* clicks go through */
 }
 
 .header-center-logo .booth-centered {
@@ -666,13 +673,16 @@
     align-items: center;
     justify-content: center;
 }
+
 .toast .toast-close:hover {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
 }
+
 .toast .toast-close:focus {
     outline: 2px solid #000;
     outline-offset: 2px;
 }
+
 .toast .toast-icon {
     display: inline-flex;
     align-items: center;
@@ -778,7 +788,8 @@
     padding: 0 12px;
     gap: 6px;
     font-size: 12px;
-    line-height: 1; /* neutral, we'll center with flex */
+    line-height: 1;
+    /* neutral, we'll center with flex */
     font-weight: 500;
     border-radius: 6px;
     border: 1px solid #111;
@@ -787,13 +798,18 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
-    text-decoration: none; /* normalize <a> to look like button */
-    box-sizing: border-box; /* keep height consistent across elements */
+    text-decoration: none;
+    /* normalize <a> to look like button */
+    box-sizing: border-box;
+    /* keep height consistent across elements */
     -webkit-appearance: none;
     appearance: none;
 }
 
-.ajf-btn svg { width: 16px; height: 16px; }
+.ajf-btn svg {
+    width: 16px;
+    height: 16px;
+}
 
 .ajf-btn-dark {
     background: #111;
@@ -865,7 +881,8 @@
     align-items: center;
     justify-content: center;
     padding: 1rem 1.5rem;
-    color: #9ca3af; /* muted gray */
+    color: #9ca3af;
+    /* muted gray */
     text-align: center;
     font-size: 0.95rem;
 }
@@ -903,26 +920,31 @@
     overflow-y: auto;
 }
 
-/* Skip link for accessibility */
-.skip-link {
+/* Skip link for accessibility - Dashboard specific */
+.dashboard .skip-link {
     position: absolute;
     left: -9999px;
     top: auto;
     width: 1px;
     height: 1px;
     overflow: hidden;
+    background: #000000;
+    color: #ffffff;
+    padding: 0.5rem 0.75rem;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+    z-index: 1001;
 }
 
-.skip-link:focus {
+.dashboard .skip-link:focus {
     left: 16px;
     top: 16px;
     width: auto;
     height: auto;
     background: #ffffff;
     color: #000000;
-    padding: 0.5rem 0.75rem;
     border: 2px solid #000000;
-    z-index: 1001;
 }
 
 .dashboard-content h2 {
@@ -1377,7 +1399,8 @@
     }
 
     .mobile-overlay {
-        display: none; /* keep hidden unless sidebar is open */
+        display: none;
+        /* keep hidden unless sidebar is open */
     }
 
     .dashboard-main {

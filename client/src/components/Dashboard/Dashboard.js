@@ -25,7 +25,7 @@ class ErrorBoundary extends React.Component {
     componentDidCatch(err, info) { console.error('Dashboard view error:', err, info); }
     render() {
         if (this.state.hasError) {
-            return this.props.fallback || <div className="dashboard-content"><div className="alert-box" style={{ background:'#ffe8e8' }}>Something went wrong loading this view.</div></div>;
+            return this.props.fallback || <div className="dashboard-content"><div className="alert-box" style={{ background: '#ffe8e8' }}>Something went wrong loading this view.</div></div>;
         }
         return this.props.children;
     }
@@ -482,10 +482,21 @@ const Dashboard = () => {
                 href="#dashboard-main"
                 className="skip-link"
                 onClick={(e) => {
-                    // Ensure focus moves to main content for screen readers/keyboard users
+                    e.preventDefault();
                     const el = document.getElementById('dashboard-main');
                     if (el) {
                         el.focus();
+                        el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const el = document.getElementById('dashboard-main');
+                        if (el) {
+                            el.focus();
+                            el.scrollIntoView({ behavior: 'smooth' });
+                        }
                     }
                 }}
             >
@@ -512,7 +523,7 @@ const Dashboard = () => {
                     )
                 )} />
 
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} role="main" aria-label="Dashboard main content">
                     {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
                         <div className="dashboard-content">
                             <h2>Branding – Header Logo</h2>
