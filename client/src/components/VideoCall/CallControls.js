@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  FiMic, 
-  FiMicOff, 
-  FiVideo, 
-  FiVideoOff, 
-  FiMessageCircle, 
-  FiUsers, 
-  FiUser, 
+import {
+  FiMic,
+  FiMicOff,
+  FiVideo,
+  FiVideoOff,
+  FiMessageCircle,
+  FiUsers,
+  FiUser,
   FiPhoneOff,
   FiSettings,
-  FiMonitor,
   FiMoreHorizontal
 } from 'react-icons/fi';
 import './CallControls.css';
@@ -28,39 +27,35 @@ const CallControls = ({
   chatUnreadCount = 0
 }) => {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  const handleScreenShare = async () => {
-    try {
-      if (!isScreenSharing) {
-        // Start screen sharing
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true
-        });
-        
-        // TODO: Replace video track with screen share
-        setIsScreenSharing(true);
-        
-        // Listen for screen share end
-        stream.getVideoTracks()[0].addEventListener('ended', () => {
-          setIsScreenSharing(false);
-        });
-      } else {
-        // Stop screen sharing
-        setIsScreenSharing(false);
-        // TODO: Replace with camera track
+  // Close more options menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showMoreOptions && !event.target.closest('.more-options')) {
+        setShowMoreOptions(false);
       }
-    } catch (error) {
-      console.error('Error with screen sharing:', error);
+    };
+
+    if (showMoreOptions) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          setShowMoreOptions(false);
+        }
+      });
     }
-  };
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleClickOutside);
+    };
+  }, [showMoreOptions]);
 
   const controlButtons = [
     {
       id: 'audio',
       icon: isAudioEnabled ? FiMic : FiMicOff,
-      label: isAudioEnabled ? 'Mute' : 'Unmute',
+      label: isAudioEnabled ? 'Mute microphone' : 'Unmute microphone',
       onClick: onToggleAudio,
       className: `control-button ${isAudioEnabled ? 'enabled' : 'disabled'}`,
       primary: true
@@ -68,23 +63,15 @@ const CallControls = ({
     {
       id: 'video',
       icon: isVideoEnabled ? FiVideo : FiVideoOff,
-      label: isVideoEnabled ? 'Stop Video' : 'Start Video',
+      label: isVideoEnabled ? 'Stop video' : 'Start video',
       onClick: onToggleVideo,
       className: `control-button ${isVideoEnabled ? 'enabled' : 'disabled'}`,
       primary: true
     },
     {
-      id: 'screen-share',
-      icon: FiMonitor,
-      label: isScreenSharing ? 'Stop Sharing' : 'Share Screen',
-      onClick: handleScreenShare,
-      className: `control-button ${isScreenSharing ? 'active' : ''}`,
-      primary: false
-    },
-    {
       id: 'chat',
       icon: FiMessageCircle,
-      label: 'Chat',
+      label: chatUnreadCount > 0 ? `Open chat (${chatUnreadCount} unread messages)` : 'Open chat',
       onClick: onToggleChat,
       className: 'control-button',
       badge: chatUnreadCount > 0 ? chatUnreadCount : null,
@@ -93,7 +80,7 @@ const CallControls = ({
     {
       id: 'participants',
       icon: FiUsers,
-      label: 'Participants',
+      label: `View participants (${participantCount} in call)`,
       onClick: onToggleParticipants,
       className: 'control-button',
       badge: participantCount,
@@ -106,7 +93,7 @@ const CallControls = ({
     controlButtons.push({
       id: 'profile',
       icon: FiUser,
-      label: 'Job Seeker Profile',
+      label: 'View job seeker profile',
       onClick: onToggleProfile,
       className: 'control-button',
       primary: false
@@ -116,11 +103,20 @@ const CallControls = ({
   const primaryButtons = controlButtons.filter(btn => btn.primary);
   const secondaryButtons = controlButtons.filter(btn => !btn.primary);
 
+  // Debug: Log control buttons to help identify icon issues
+  React.useEffect(() => {
+    console.log('CallControls rendered with buttons:', controlButtons.map(btn => ({
+      id: btn.id,
+      label: btn.label,
+      iconName: btn.icon.name
+    })));
+  }, [controlButtons]);
+
   return (
     <div className="call-controls">
       <div className="controls-container">
         {/* Primary Controls (Always Visible) */}
-        <div className="primary-controls">
+        <div className="primary-controls" role="toolbar" aria-label="Primary call controls">
           {primaryButtons.map(button => {
             const IconComponent = button.icon;
             return (
@@ -130,11 +126,19 @@ const CallControls = ({
                 onClick={button.onClick}
                 title={button.label}
                 aria-label={button.label}
+                aria-describedby={`${button.id}-tooltip`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    button.onClick();
+                  }
+                }}
               >
                 <IconComponent size={20} aria-hidden="true" />
-                <span className="tooltip">{button.label}</span>
+                <span id={`${button.id}-tooltip`} className="tooltip" role="tooltip" aria-live="polite">{button.label}</span>
                 {button.badge && (
-                  <span className="control-badge">{button.badge}</span>
+                  <span className="control-badge" aria-label={`${button.badge} items`}>{button.badge}</span>
                 )}
               </button>
             );
@@ -142,7 +146,7 @@ const CallControls = ({
         </div>
 
         {/* Secondary Controls */}
-        <div className="secondary-controls">
+        <div className="secondary-controls" role="toolbar" aria-label="Secondary call controls">
           {secondaryButtons.slice(0, 3).map(button => {
             const IconComponent = button.icon;
             return (
@@ -152,11 +156,19 @@ const CallControls = ({
                 onClick={button.onClick}
                 title={button.label}
                 aria-label={button.label}
+                aria-describedby={`${button.id}-tooltip`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    button.onClick();
+                  }
+                }}
               >
                 <IconComponent size={20} aria-hidden="true" />
-                <span className="tooltip">{button.label}</span>
+                <span id={`${button.id}-tooltip`} className="tooltip" role="tooltip" aria-live="polite">{button.label}</span>
                 {button.badge && (
-                  <span className="control-badge">{button.badge}</span>
+                  <span className="control-badge" aria-label={`${button.badge} items`}>{button.badge}</span>
                 )}
               </button>
             );
@@ -170,13 +182,23 @@ const CallControls = ({
                 onClick={() => setShowMoreOptions(!showMoreOptions)}
                 title="More options"
                 aria-label="More options"
+                aria-describedby="more-options-tooltip"
+                aria-expanded={showMoreOptions}
+                aria-haspopup="menu"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowMoreOptions(!showMoreOptions);
+                  }
+                }}
               >
                 <FiMoreHorizontal size={20} aria-hidden="true" />
-                <span className="tooltip">More options</span>
+                <span id="more-options-tooltip" className="tooltip" role="tooltip" aria-live="polite">More options</span>
               </button>
-              
+
               {showMoreOptions && (
-                <div className="more-options-menu">
+                <div className="more-options-menu" role="menu" aria-label="Additional call options">
                   {secondaryButtons.slice(3).map(button => {
                     const IconComponent = button.icon;
                     return (
@@ -187,20 +209,47 @@ const CallControls = ({
                           button.onClick();
                           setShowMoreOptions(false);
                         }}
+                        role="menuitem"
+                        tabIndex={0}
+                        aria-label={button.label}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            button.onClick();
+                            setShowMoreOptions(false);
+                          } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setShowMoreOptions(false);
+                          }
+                        }}
                       >
-                        <IconComponent size={18} />
+                        <IconComponent size={18} aria-hidden="true" />
                         <span>{button.label}</span>
                         {button.badge && (
-                          <span className="menu-badge">{button.badge}</span>
+                          <span className="menu-badge" aria-label={`${button.badge} items`}>{button.badge}</span>
                         )}
                       </button>
                     );
                   })}
-                  
+
                   <div className="menu-divider"></div>
-                  
-                  <button className="menu-item">
-                    <FiSettings size={18} />
+
+                  <button
+                    className="menu-item"
+                    role="menuitem"
+                    tabIndex={0}
+                    aria-label="Call settings"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        // TODO: Implement settings functionality
+                      } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setShowMoreOptions(false);
+                      }
+                    }}
+                  >
+                    <FiSettings size={18} aria-hidden="true" />
                     <span>Settings</span>
                   </button>
                 </div>
@@ -210,15 +259,23 @@ const CallControls = ({
         </div>
 
         {/* End Call Button */}
-        <div className="end-call-controls">
+        <div className="end-call-controls" role="toolbar" aria-label="End call controls">
           <button
             className="end-call-button"
             onClick={onEndCall}
-            title="End Call"
-            aria-label="End Call"
+            title="End call"
+            aria-label="End call"
+            aria-describedby="end-call-tooltip"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onEndCall();
+              }
+            }}
           >
             <FiPhoneOff size={20} aria-hidden="true" />
-                <span className="tooltip">End Call</span>
+            <span id="end-call-tooltip" className="tooltip" role="tooltip" aria-live="polite">End call</span>
           </button>
         </div>
       </div>
