@@ -5,6 +5,7 @@ import './Auth.css';
 export default function VerifyEmailSent() {
   const location = useLocation();
   const email = location.state?.email || '';
+  const redirectPath = location.state?.redirectPath;
 
   return (
     <div className="auth-container" style={{ background: '#eef2f7' }}>
@@ -52,7 +53,11 @@ export default function VerifyEmailSent() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-          <Link to="/login" className="submit-button" style={{ width: 'auto', padding: '0.6rem 1rem' }}>
+          <Link
+            to={redirectPath ? `/login?redirect=${encodeURIComponent(redirectPath)}` : '/login'}
+            className="submit-button"
+            style={{ width: 'auto', padding: '0.6rem 1rem' }}
+          >
             Back to Login
           </Link>
         </div>

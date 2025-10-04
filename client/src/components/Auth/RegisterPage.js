@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdPerson, MdPhone, MdLocationOn, MdWork, MdBuild } from 'react-icons/md';
 import './RegisterPage.css';
@@ -21,9 +21,22 @@ const RegisterPage = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
 
-    const { register } = useAuth();
+    const { register, user, loading } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const formRef = useRef(null);
+
+    // Get redirect parameter from URL
+    const urlParams = new URLSearchParams(location.search);
+    const redirectPath = urlParams.get('redirect');
+
+    // Redirect already authenticated users to their intended destination
+    useEffect(() => {
+        if (!loading && user && redirectPath) {
+            // User is already logged in and has a redirect path, navigate directly
+            navigate(decodeURIComponent(redirectPath), { replace: true });
+        }
+    }, [user, loading, redirectPath, navigate]);
 
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
     const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
@@ -117,7 +130,17 @@ const RegisterPage = () => {
             };
 
             await register(userData);
-            navigate('/verify-email-sent', { state: { email: formData.email } });
+            // Store redirect path in localStorage for persistence through email verification
+            if (redirectPath) {
+                localStorage.setItem('eventRegistrationRedirect', redirectPath);
+            }
+            // Store redirect path in state to use after email verification
+            navigate('/verify-email-sent', {
+                state: {
+                    email: formData.email,
+                    redirectPath: redirectPath
+                }
+            });
         } catch (err) {
             setError(err.message || 'Registration failed. Please try again.');
         } finally {
@@ -135,6 +158,24 @@ const RegisterPage = () => {
         }
     };
 
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="register-container">
+                <div className="register-card">
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // If user is authenticated and has redirect, don't show the form
+    if (user && redirectPath) {
+        return null; // The useEffect will handle the redirect
+    }
+
     return (
         <div className="register-container">
             <a href="#register-form" className="skip-link" onClick={handleSkipToForm}>
@@ -149,7 +190,12 @@ const RegisterPage = () => {
 
                 {/* Login Option */}
                 <div className="register-login-option">
-                    <Link to="/login" className="register-login-link">Already have an account? Login here</Link>
+                    <Link
+                        to={redirectPath ? `/login?redirect=${encodeURIComponent(redirectPath)}` : '/login'}
+                        className="register-login-link"
+                    >
+                        Already have an account? Login here
+                    </Link>
                 </div>
 
                 {/* Registration Form */}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
@@ -17,9 +17,21 @@ const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
 
-    const { login } = useAuth();
+    const { login, user, loading } = useAuth();
     const navigate = useNavigate();
     const formRef = useRef(null);
+
+    // Get redirect parameter from URL
+    const urlParams = new URLSearchParams(location.search);
+    const redirectPath = urlParams.get('redirect');
+
+    // Redirect already authenticated users to their intended destination
+    useEffect(() => {
+        if (!loading && user && redirectPath) {
+            // User is already logged in and has a redirect path, navigate directly
+            navigate(decodeURIComponent(redirectPath), { replace: true });
+        }
+    }, [user, loading, redirectPath, navigate]);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -77,8 +89,14 @@ const LoginPage = () => {
             const loginType = userType === 'jobseeker' ? 'jobseeker' : 'company';
             const result = await login(formData.email, formData.password, loginType);
             if (result.success) {
-                // Navigate to dashboard on successful login
-                navigate('/dashboard');
+                // Clear stored redirect path from localStorage
+                localStorage.removeItem('eventRegistrationRedirect');
+                // Navigate to redirect path if available, otherwise to dashboard
+                if (redirectPath) {
+                    navigate(decodeURIComponent(redirectPath), { replace: true });
+                } else {
+                    navigate('/dashboard');
+                }
             } else {
                 setError(result.error || 'Invalid email or password');
             }
@@ -103,6 +121,24 @@ const LoginPage = () => {
             }
         }
     };
+
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="login-container">
+                <div className="login-card">
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // If user is authenticated and has redirect, don't show the form
+    if (user && redirectPath) {
+        return null; // The useEffect will handle the redirect
+    }
 
     return (
         <div className="login-container">
@@ -256,7 +292,12 @@ const LoginPage = () => {
                     {userType === 'jobseeker' && (
                         <div className="login-register-link-container">
                             <p className="login-register-text">
-                                Don't have an account? <Link to="/register" className="login-register-link">Register here</Link>
+                                Don't have an account? <Link
+                                    to={redirectPath ? `/register?redirect=${encodeURIComponent(redirectPath)}` : '/register'}
+                                    className="login-register-link"
+                                >
+                                    Register here
+                                </Link>
                             </p>
                         </div>
                     )}
