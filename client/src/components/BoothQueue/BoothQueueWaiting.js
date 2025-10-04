@@ -27,7 +27,7 @@ export default function BoothQueueWaiting() {
   const [messageType, setMessageType] = useState('text');
   const [messageContent, setMessageContent] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  
+
   // Video call state
   const [callInvitation, setCallInvitation] = useState(null);
   const [isInCall, setIsInCall] = useState(false);
@@ -474,25 +474,25 @@ export default function BoothQueueWaiting() {
             </div>
           </div>
 
-          
+
           {/* Content sections - expanded */}
           <div className="content-grid-expanded">
             {(booth?.richSections && booth.richSections.length > 0
               ? booth.richSections
-                  .filter(s => s.isActive !== false)
-                  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                  .slice(0, 3)
+                .filter(s => s.isActive !== false)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                .slice(0, 3)
               : [
-                  {
-                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Welcome to the booth</div>'
-                  },
-                  {
-                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Resources coming soon</div>'
-                  },
-                  {
-                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Please stay on this page</div>'
-                  }
-                ]
+                {
+                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Welcome to the booth</div>'
+                },
+                {
+                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Resources coming soon</div>'
+                },
+                {
+                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Please stay on this page</div>'
+                }
+              ]
             ).map((section, idx) => (
               <div key={section._id || idx} className="content-card-expanded">
                 {section.contentHtml ? (
@@ -522,38 +522,38 @@ export default function BoothQueueWaiting() {
             <span className="status-text">Waiting</span>
           </div>
 
-          
+
           {/* Action buttons moved here */}
           <div className="sidebar-actions">
-                        <button
+            <button
               className="sidebar-action-btn camera-btn"
               onClick={() => alert('Camera & Mic selection coming soon')}
             >
               <FaVideo /> Select camera & mic
             </button>
 
-                        <button
+            <button
               className="sidebar-action-btn message-btn"
               onClick={() => setShowMessageModal(true)}
             >
               <FaCommentDots /> Create a message
             </button>
 
-                        <button
+            <button
               className="sidebar-action-btn refresh-btn"
               onClick={() => window.location.reload()}
             >
               <FaSyncAlt /> Refresh connection
             </button>
 
-                        <button
+            <button
               className="sidebar-action-btn return-btn-alt"
               onClick={handleReturnToEvent}
             >
               <FaArrowLeft /> Return to main event
             </button>
 
-                        <button
+            <button
               className="sidebar-action-btn exit-btn"
               onClick={handleExitEvent}
             >
@@ -563,7 +563,7 @@ export default function BoothQueueWaiting() {
         </div>
       </div>
 
-      
+
       {/* Message Modal */}
       {showMessageModal && (
         <div className="modal-overlay">

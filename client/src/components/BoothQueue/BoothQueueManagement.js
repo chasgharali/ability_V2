@@ -28,7 +28,9 @@ export default function BoothQueueManagement() {
   const [nowTs, setNowTs] = useState(Date.now());
   const [socketConnected, setSocketConnected] = useState(false);
   const [toast, setToast] = useState('');
-  
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+
   // Video call state
   const [activeCall, setActiveCall] = useState(null);
   const [isInCall, setIsInCall] = useState(false);
@@ -182,8 +184,16 @@ export default function BoothQueueManagement() {
     }
   };
 
-  const joinSocketRoom = () => {
-    if (socket && boothId && user) {
+  const joinSocketRoom = async () => {
+    if (!socket || !boothId || !user) {
+      console.warn('Cannot join socket rooms:', { socket: !!socket, boothId, user: !!user });
+      setToast('Cannot reconnect: Missing connection details');
+      setTimeout(() => setToast(''), 3000);
+      return;
+    }
+
+    try {
+      setIsReconnecting(true);
       console.log('Joining socket rooms for booth management:', { boothId, userId: user._id, userRole: user.role });
       socket.emit('join-booth-management', { boothId, userId: user._id });
       // Also join booth room to receive generic queue updates
@@ -193,9 +203,15 @@ export default function BoothQueueManagement() {
       setTimeout(() => {
         console.log('Testing socket connection after joining rooms...');
         socket.emit('test-connection', { message: 'Testing after room join' });
+        setToast('Reconnected to real-time updates');
+        setTimeout(() => setToast(''), 2000);
       }, 1000);
-    } else {
-      console.warn('Cannot join socket rooms:', { socket: !!socket, boothId, user: !!user });
+    } catch (error) {
+      console.error('Error joining socket rooms:', error);
+      setToast('Failed to reconnect');
+      setTimeout(() => setToast(''), 3000);
+    } finally {
+      setIsReconnecting(false);
     }
   };
 
@@ -216,13 +232,23 @@ export default function BoothQueueManagement() {
 
   const loadQueueData = async () => {
     try {
+      setIsRefreshing(true);
       const queueRes = await boothQueueAPI.getBoothQueue(boothId);
       if (queueRes.success) {
         setQueue(queueRes.queue);
         setCurrentServing(queueRes.currentServing || 1);
+        setToast('Queue data refreshed successfully');
+        setTimeout(() => setToast(''), 2000);
+      } else {
+        setToast('Failed to refresh queue data');
+        setTimeout(() => setToast(''), 3000);
       }
     } catch (error) {
       console.error('Error reloading queue data:', error);
+      setToast('Error refreshing queue data');
+      setTimeout(() => setToast(''), 3000);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -234,7 +260,7 @@ export default function BoothQueueManagement() {
 
   const enumerateDevicesForRecruiter = async () => {
     try {
-      try { await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); } catch (e) {}
+      try { await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); } catch (e) { }
       const devices = await navigator.mediaDevices.enumerateDevices();
       const audios = devices.filter(d => d.kind === 'audioinput');
       const videos = devices.filter(d => d.kind === 'videoinput');
@@ -409,28 +435,22 @@ export default function BoothQueueManagement() {
                   <span className="rt-dot" /> {socketConnected ? 'Online' : 'Offline'}
                 </span>
                 <button
-                  onClick={async () => {
-                    await loadQueueData();
-                    setToast('Queue refreshed');
-                    setTimeout(() => setToast(''), 1500);
-                  }}
-                  className="icon-btn"
-                  title="Refresh"
-                  aria-label="Refresh"
+                  onClick={loadQueueData}
+                  className={`icon-btn refresh-btn ${isRefreshing ? 'loading' : ''}`}
+                  title="Refresh Queue Data"
+                  aria-label="Refresh Queue Data"
+                  disabled={isRefreshing}
                 >
-                  <FaRedoAlt size={18} />
+                  <FaRedoAlt size={16} />
                 </button>
                 <button
-                  onClick={() => {
-                    joinSocketRoom();
-                    setToast('Reconnected');
-                    setTimeout(() => setToast(''), 1500);
-                  }}
-                  className="icon-btn"
-                  title="Reconnect"
-                  aria-label="Reconnect"
+                  onClick={joinSocketRoom}
+                  className={`icon-btn reconnect-btn ${isReconnecting ? 'loading' : ''}`}
+                  title="Reconnect to Real-time Updates"
+                  aria-label="Reconnect to Real-time Updates"
+                  disabled={isReconnecting}
                 >
-                  <FaPlug size={18} />
+                  <FaPlug size={16} />
                 </button>
                 <label>Now Serving:</label>
                 <input
@@ -447,7 +467,7 @@ export default function BoothQueueManagement() {
                     setTimeout(() => setToast(''), 2000);
                   }}
                   className="update-serving-btn"
-                  style={{ background:'#111827', borderColor:'#111827', color:'#fff' }}
+                  style={{ background: '#111827', borderColor: '#111827', color: '#fff' }}
                 >
                   Update
                 </button>
@@ -617,7 +637,7 @@ export default function BoothQueueManagement() {
                 ×
               </button>
             </div>
-            
+
             <div className="profile-body">
               {/* Info Notice */}
               <div className="profile-notice">
@@ -667,7 +687,7 @@ export default function BoothQueueManagement() {
               {/* Professional Details */}
               <div className="professional-details">
                 <h3>Professional Details</h3>
-                
+
                 <div className="details-grid">
                   {/* Professional Summary */}
                   <div className="detail-section">
@@ -749,7 +769,21 @@ export default function BoothQueueManagement() {
 
       {/* Toast */}
       {toast && (
-        <div style={{ position:'fixed', right:20, bottom:20, background:'#111827', color:'#fff', padding:'10px 14px', borderRadius:8, boxShadow:'0 6px 18px rgba(0,0,0,0.15)', zIndex:1000 }}>
+        <div style={{
+          position: 'fixed',
+          right: 20,
+          bottom: 20,
+          background: '#111827',
+          color: '#fff',
+          padding: '12px 16px',
+          borderRadius: 8,
+          boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+          zIndex: 1000,
+          fontSize: '14px',
+          fontWeight: '500',
+          maxWidth: '300px',
+          wordWrap: 'break-word'
+        }}>
           {toast}
         </div>
       )}

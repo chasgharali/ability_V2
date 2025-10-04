@@ -13,7 +13,7 @@ import './VideoCall.css';
 const VideoCall = ({ callId, callData, onCallEnd }) => {
   const { user } = useAuth();
   const { socket } = useSocket();
-  
+
   // Play a short tone to indicate room join
   const playJoinSound = () => {
     try {
@@ -41,7 +41,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const [error, setError] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  
+
   // UI state
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -50,7 +50,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [connectionQuality, setConnectionQuality] = useState('good');
-  
+
   // Refs
   // Cleanup guards
   const isMountedRef = useRef(true);
@@ -62,7 +62,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   // Initialize call
   useEffect(() => {
     if (isInitializing || room) return; // Prevent multiple initializations
-    
+
     // Add a small delay to ensure DOM is ready
     const initTimer = setTimeout(() => {
       // Prioritize callData over callId - if we have call data, use it directly
@@ -78,7 +78,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         console.log('No valid call data or ID provided');
       }
     }, 100); // Small delay to ensure DOM is ready
-    
+
     return () => {
       clearTimeout(initTimer);
     };
@@ -130,14 +130,14 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         height: 720,
         frameRate: 30,
         facingMode: 'user',
-        ...(preferredVideoDeviceId ? {deviceId: { exact: preferredVideoDeviceId } } : {})
+        ...(preferredVideoDeviceId ? { deviceId: { exact: preferredVideoDeviceId } } : {})
       };
 
       const audioConstraints = {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
-        ...(preferredAudioDeviceId ? {deviceId: { exact: preferredAudioDeviceId } } : {})
+        ...(preferredAudioDeviceId ? { deviceId: { exact: preferredAudioDeviceId } } : {})
       };
 
       const videoTrack = await createLocalVideoTrack(videoConstraints);
@@ -217,14 +217,14 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         height: 720,
         frameRate: 30,
         facingMode: 'user',
-        ...(preferredVideoDeviceId2 ? {deviceId: { exact: preferredVideoDeviceId2 } } : {})
+        ...(preferredVideoDeviceId2 ? { deviceId: { exact: preferredVideoDeviceId2 } } : {})
       };
 
       const audioConstraints2 = {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
-        ...(preferredAudioDeviceId2 ? {deviceId: { exact: preferredAudioDeviceId2 } } : {})
+        ...(preferredAudioDeviceId2 ? { deviceId: { exact: preferredAudioDeviceId2 } } : {})
       };
 
       const videoTrack = await createLocalVideoTrack(videoConstraints2);
@@ -232,16 +232,16 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
       setLocalTracks([videoTrack, audioTrack]);
 
-  // No manual local video attach; handled by VideoParticipant
+      // No manual local video attach; handled by VideoParticipant
 
-  // Connect to Twilio room
-  const room = await connect(callDetails.accessToken, {
-    name: callDetails.roomName,
-    tracks: [videoTrack, audioTrack],
-    audio: true,
-    video: true,
-    maxAudioBitrate: 16000,
-    maxVideoBitrate: 2500000,
+      // Connect to Twilio room
+      const room = await connect(callDetails.accessToken, {
+        name: callDetails.roomName,
+        tracks: [videoTrack, audioTrack],
+        audio: true,
+        video: true,
+        maxAudioBitrate: 16000,
+        maxVideoBitrate: 2500000,
         preferredVideoCodecs: ['VP8', 'H264'],
         networkQuality: {
           local: 1,
@@ -376,7 +376,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       4: 'excellent',
       5: 'excellent'
     };
-    
+
     if (participant === room?.localParticipant) {
       setConnectionQuality(qualityMap[networkQualityLevel] || 'poor');
     }
@@ -490,7 +490,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
           console.warn('API call to end call failed, proceeding with local cleanup:', apiError);
         }
       }
-      
+
       cleanup();
       onCallEnd?.();
     } catch (error) {
@@ -640,18 +640,18 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
       <footer className="video-call-footer">
         <CallControls
-        isAudioEnabled={isAudioEnabled}
-        isVideoEnabled={isVideoEnabled}
-        onToggleAudio={toggleAudio}
-        onToggleVideo={toggleVideo}
-        onToggleChat={() => setIsChatOpen(!isChatOpen)}
-        onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
-        onToggleProfile={() => setIsProfileOpen(!isProfileOpen)}
-        onEndCall={endCall}
-        userRole={callInfo?.userRole}
-        participantCount={participants.size + 1}
-        chatUnreadCount={0} // TODO: Implement unread count
-      />
+          isAudioEnabled={isAudioEnabled}
+          isVideoEnabled={isVideoEnabled}
+          onToggleAudio={toggleAudio}
+          onToggleVideo={toggleVideo}
+          onToggleChat={() => setIsChatOpen(!isChatOpen)}
+          onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
+          onToggleProfile={() => setIsProfileOpen(!isProfileOpen)}
+          onEndCall={endCall}
+          userRole={callInfo?.userRole}
+          participantCount={participants.size + 1}
+          chatUnreadCount={0} // TODO: Implement unread count
+        />
       </footer>
 
       {/* Error Banner */}

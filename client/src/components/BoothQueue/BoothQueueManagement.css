@@ -1,15 +1,18 @@
 /* Booth Queue Management Styles */
 
 .booth-queue-management {
-  padding: 1.25rem; /* compact container padding */
+  padding: 1.25rem;
+  /* compact container padding */
 }
 
 .booth-queue-management .management-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem; /* less vertical space */
-  padding: 0.75rem 1rem; /* compact header */
+  margin-bottom: 1rem;
+  /* less vertical space */
+  padding: 0.75rem 1rem;
+  /* compact header */
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
@@ -22,7 +25,8 @@
 }
 
 .booth-queue-management .booth-logo img {
-  width: 56px; /* larger, more prominent */
+  width: 56px;
+  /* larger, more prominent */
   height: 56px;
   object-fit: contain;
   border-radius: 8px;
@@ -30,7 +34,8 @@
 
 .booth-queue-management .booth-info h1 {
   margin: 0 0 0.25rem 0;
-  font-size: 1.125rem; /* compact title */
+  font-size: 1.125rem;
+  /* compact title */
   font-weight: 600;
   color: #1f2937;
 }
@@ -38,7 +43,8 @@
 .booth-queue-management .booth-info p {
   margin: 0;
   color: #6b7280;
-  font-size: 0.75rem; /* compact subtitle */
+  font-size: 0.75rem;
+  /* compact subtitle */
 }
 
 /* Compact header stats row */
@@ -47,7 +53,8 @@
   align-items: center;
   gap: 12px;
   margin-top: 6px;
-  flex-wrap: wrap; /* wrap on small screens */
+  flex-wrap: wrap;
+  /* wrap on small screens */
 }
 
 .booth-queue-management .header-stat {
@@ -56,7 +63,8 @@
   gap: 6px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 9999px; /* pill */
+  border-radius: 9999px;
+  /* pill */
   padding: 6px 12px;
 }
 
@@ -94,7 +102,7 @@
   height: 8px;
   border-radius: 50%;
   background: #9ca3af;
-  box-shadow: 0 0 0 2px rgba(156,163,175,0.25);
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.25);
 }
 
 .booth-queue-management .rt-badge.online {
@@ -105,7 +113,7 @@
 
 .booth-queue-management .rt-badge.online .rt-dot {
   background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .booth-queue-management .rt-badge.offline {
@@ -116,7 +124,7 @@
 
 .booth-queue-management .rt-badge.offline .rt-dot {
   background: #ef4444;
-  box-shadow: 0 0 0 2px rgba(239,68,68,0.2);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
 .connection-status {
@@ -146,7 +154,8 @@
 .booth-queue-management .serving-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem; /* tighter controls */
+  gap: 0.5rem;
+  /* tighter controls */
 }
 
 .booth-queue-management .refresh-btn {
@@ -167,35 +176,92 @@
 
 /* Icon-only control buttons */
 .booth-queue-management .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #f8fafc;
   border: 1px solid #e5e7eb;
-  color: #111827; /* black-ish */
+  color: #374151;
   border-radius: 8px;
-  font-size: 18px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .booth-queue-management .icon-btn:hover {
-  background: #eef2f7;
-  border-color: #cbd5e1;
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: #111827;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Ensure inline SVG inherits color */
+.booth-queue-management .icon-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Specific styling for refresh button */
+.booth-queue-management .icon-btn.refresh-btn {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+
+.booth-queue-management .icon-btn.refresh-btn:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #075985;
+}
+
+/* Specific styling for reconnect button */
+.booth-queue-management .icon-btn.reconnect-btn {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.booth-queue-management .icon-btn.reconnect-btn:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #78350f;
+}
+
+/* Ensure inline SVG inherits color and is properly sized */
 .booth-queue-management .icon-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: block;
+  flex-shrink: 0;
 }
 
-/* Feather icons rely on stroke; ensure it inherits */
-.booth-queue-management .icon-btn svg path {
-  stroke: currentColor;
+/* Ensure React Icons inherit color properly */
+.booth-queue-management .icon-btn svg path,
+.booth-queue-management .icon-btn svg {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Loading state for buttons */
+.booth-queue-management .icon-btn.loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.booth-queue-management .icon-btn.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .booth-queue-management .serving-controls label {
@@ -231,13 +297,16 @@
 .booth-queue-management .queue-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem; /* tighter spacing */
-  margin-bottom: 1rem; /* less vertical space */
+  gap: 0.75rem;
+  /* tighter spacing */
+  margin-bottom: 1rem;
+  /* less vertical space */
 }
 
 .booth-queue-management .stat-card {
   background: white;
-  padding: 1rem; /* compact cards */
+  padding: 1rem;
+  /* compact cards */
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -253,7 +322,8 @@
 }
 
 .booth-queue-management .stat-number {
-  font-size: 2rem; /* smaller number */
+  font-size: 2rem;
+  /* smaller number */
   font-weight: 700;
   color: #1f2937;
 }
@@ -573,7 +643,8 @@
 /* Make sure the profile modal overrides the base modal-content sizing */
 .modal-content.profile-modal {
   width: 96vw !important;
-  max-width: 1280px !important; /* wider modal */
+  max-width: 1280px !important;
+  /* wider modal */
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -586,7 +657,8 @@
   background: #dbeafe;
   color: #1e40af;
   padding: 0.9rem 1rem;
-  margin: 1rem 1.5rem 0; /* inset from edges */
+  margin: 1rem 1.5rem 0;
+  /* inset from edges */
   font-size: 0.875rem;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
@@ -594,7 +666,8 @@
 
 .profile-header {
   display: grid;
-  grid-template-columns: auto 1fr auto; /* avatar | info | actions */
+  grid-template-columns: auto 1fr auto;
+  /* avatar | info | actions */
   align-items: center;
   gap: 1.25rem 1.5rem;
   padding: 1.25rem 1.5rem 1.5rem;
@@ -751,13 +824,13 @@
     max-width: 95vw;
     margin: 1rem;
   }
-  
+
   .profile-header {
     flex-direction: column;
     text-align: center;
     gap: 1rem;
   }
-  
+
   .details-grid {
     grid-template-columns: 1fr;
   }
@@ -816,14 +889,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000; /* above any headers */
+  z-index: 10000;
+  /* above any headers */
 }
 
 .modal-content {
   background: white;
   border-radius: 8px;
   width: 90%;
-  max-width: 500px; /* default; overridden by .profile-modal */
+  max-width: 500px;
+  /* default; overridden by .profile-modal */
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -877,23 +952,29 @@
   .booth-queue-management .management-header {
     padding: 0.6rem 0.75rem;
   }
+
   .booth-queue-management .booth-logo img {
     width: 56px;
     height: 56px;
   }
+
   .booth-queue-management .serving-controls {
     flex-wrap: wrap;
     justify-content: center;
   }
+
   .booth-queue-management .header-stats {
     gap: 8px;
   }
+
   .booth-queue-management .queue-stats {
     grid-template-columns: 1fr;
   }
+
   .booth-queue-management .queue-actions {
     flex-direction: column;
   }
+
   .booth-queue-management .queue-actions button {
     flex: none;
   }
