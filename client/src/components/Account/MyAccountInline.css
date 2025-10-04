@@ -1,6 +1,7 @@
 /* Account Section Styles */
 .account-section {
-  max-width: 1200px; /* widened from 900px */
+  max-width: 1200px;
+  /* widened from 900px */
   margin: 0 auto;
   padding-left: 1rem;
   padding-right: 1rem;
@@ -104,12 +105,12 @@
   transition: all 0.2s ease;
 }
 
-.checkbox-input:checked + .checkbox-custom {
+.checkbox-input:checked+.checkbox-custom {
   background: #000000;
   border-color: #000000;
 }
 
-.checkbox-input:checked + .checkbox-custom::after {
+.checkbox-input:checked+.checkbox-custom::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -121,7 +122,7 @@
   transform: translate(-50%, -60%) rotate(45deg);
 }
 
-.checkbox-input:focus + .checkbox-custom {
+.checkbox-input:focus+.checkbox-custom {
   outline: 2px solid #000000;
   outline-offset: 2px;
 }
@@ -169,8 +170,10 @@
 /* On large screens, give a little more breathing room */
 @media (min-width: 1280px) {
   .account-section {
-    max-width: 1320px; /* extra wide on xl screens */
+    max-width: 1320px;
+    /* extra wide on xl screens */
   }
+
   .form-row {
     gap: 1.25rem;
   }
@@ -266,15 +269,30 @@
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .accessibility-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .accessibility-fieldset,
   .notifications-fieldset {
     padding: 1rem;
   }
+}
+
+/* Field Help Styles */
+.field-help {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+  font-weight: 500;
 }
 
 /* High contrast mode support */
@@ -282,11 +300,11 @@
   .accessibility-option {
     border-width: 2px;
   }
-  
+
   .checkbox-custom {
     border-width: 3px;
   }
-  
+
   .wizard-step-number {
     border: 2px solid currentColor;
   }
@@ -294,6 +312,7 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
   .accessibility-option,
   .checkbox-custom,
   .wizard-step-btn,

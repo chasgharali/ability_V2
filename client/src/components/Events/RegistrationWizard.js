@@ -23,6 +23,13 @@ export default function RegistrationWizard() {
   const [termsDocuments, setTermsDocuments] = useState([]);
   const [loadingTerms, setLoadingTerms] = useState(false);
   const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
+  const [stepValidation, setStepValidation] = useState({
+    step1: false,
+    step2: false,
+    step3: false
+  });
+  const [validationErrors, setValidationErrors] = useState({});
+  const [currentFormData, setCurrentFormData] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const liveRef = useRef(null);
@@ -31,8 +38,8 @@ export default function RegistrationWizard() {
   const checkRegistrationStatus = (event, user) => {
     if (!event || !user) return false;
     const registeredEvents = user.metadata?.registeredEvents || [];
-    return registeredEvents.some(reg => 
-      (reg.id && reg.id.toString() === event._id?.toString()) || 
+    return registeredEvents.some(reg =>
+      (reg.id && reg.id.toString() === event._id?.toString()) ||
       (reg.slug && reg.slug === event.slug)
     );
   };
@@ -44,20 +51,20 @@ export default function RegistrationWizard() {
         console.log('Event data:', res?.event); // Debug log
         const eventData = res?.event || null;
         setEvent(eventData);
-        
+
         // Check if already registered
         if (eventData && user) {
           const alreadyRegistered = checkRegistrationStatus(eventData, user);
           setIsAlreadyRegistered(alreadyRegistered);
           console.log('Already registered:', alreadyRegistered); // Debug log
         }
-        
+
         // Fetch terms documents if event has termsIds
         if (res?.event?.termsIds?.length) {
           console.log('Event has termsIds:', res.event.termsIds); // Debug log
           setLoadingTerms(true);
           try {
-            const termsPromises = res.event.termsIds.map(id => 
+            const termsPromises = res.event.termsIds.map(id =>
               termsConditionsAPI.getById(id).then(response => {
                 console.log(`Terms document ${id}:`, response); // Debug log
                 // Handle backend response structure: { terms: { ... } }
@@ -120,7 +127,139 @@ export default function RegistrationWizard() {
     }
   }, [step]);
 
-  const next = () => setStep(s => Math.min(3, s + 1));
+  // Validate step 2 when form data changes
+  useEffect(() => {
+    if (currentFormData && step === 2) {
+      validateStep2();
+    }
+  }, [currentFormData, step]);
+
+
+  // Validation functions for each step
+  const validateStep1 = () => {
+    if (!user) return false;
+    const errors = {};
+    let isValid = true;
+
+    // Required fields for step 1: city, state, country
+    if (!user.city || user.city.trim() === '') {
+      errors.city = 'City is required';
+      isValid = false;
+    }
+    if (!user.state || user.state.trim() === '') {
+      errors.state = 'State is required';
+      isValid = false;
+    }
+    if (!user.country || user.country.trim() === '') {
+      errors.country = 'Country is required';
+      isValid = false;
+    }
+
+    setValidationErrors(prev => ({ ...prev, step1: errors }));
+    setStepValidation(prev => ({ ...prev, step1: isValid }));
+    return isValid;
+  };
+
+  const validateStep2 = () => {
+    if (!currentFormData) {
+      return false;
+    }
+
+    const errors = {};
+    let isValid = true;
+
+    // All fields are required for step 2
+    const requiredFields = [
+      'headline', 'keywords', 'primaryExperience', 'workLevel',
+      'educationLevel', 'languages', 'employmentTypes'
+    ];
+
+    requiredFields.forEach(field => {
+      const value = currentFormData[field];
+
+      if (!value || (Array.isArray(value) && value.length === 0) || (typeof value === 'string' && value.trim() === '')) {
+        errors[field] = `${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} is required`;
+        isValid = false;
+      }
+    });
+
+    // Check if resume is uploaded (required)
+    if (!user?.resumeUrl) {
+      errors.resume = 'Resume upload is required';
+      isValid = false;
+    }
+
+    setValidationErrors(prev => ({ ...prev, step2: errors }));
+    setStepValidation(prev => ({ ...prev, step2: isValid }));
+    return isValid;
+  };
+
+  const validateStep3 = () => {
+    if (!user || !user.metadata?.survey) return false;
+    const errors = {};
+    let isValid = true;
+
+    // Required fields for step 3: race, gender, age group, country of origin
+    if (!user.metadata.survey.race || user.metadata.survey.race.length === 0) {
+      errors.race = 'Race selection is required';
+      isValid = false;
+    }
+    if (!user.metadata.survey.genderIdentity || user.metadata.survey.genderIdentity.trim() === '') {
+      errors.genderIdentity = 'Gender identity is required';
+      isValid = false;
+    }
+    if (!user.metadata.survey.ageGroup || user.metadata.survey.ageGroup.trim() === '') {
+      errors.ageGroup = 'Age group is required';
+      isValid = false;
+    }
+    if (!user.metadata.survey.countryOfOrigin || user.metadata.survey.countryOfOrigin.trim() === '') {
+      errors.countryOfOrigin = 'Country of origin is required';
+      isValid = false;
+    }
+
+    // Check terms acceptance
+    if (!allTermsAccepted) {
+      errors.terms = 'Terms and conditions acceptance is required';
+      isValid = false;
+    }
+
+    setValidationErrors(prev => ({ ...prev, step3: errors }));
+    setStepValidation(prev => ({ ...prev, step3: isValid }));
+    return isValid;
+  };
+
+  const next = () => {
+    let canProceed = false;
+
+    switch (step) {
+      case 1:
+        canProceed = validateStep1();
+        break;
+      case 2:
+        canProceed = validateStep2();
+        break;
+      case 3:
+        canProceed = validateStep3();
+        break;
+      default:
+        canProceed = false;
+    }
+
+    if (canProceed) {
+      setStep(s => Math.min(3, s + 1));
+      setValidationErrors(prev => ({ ...prev, [`step${step}`]: {} }));
+    } else {
+      // Announce validation errors to screen readers
+      if (liveRef.current) {
+        const currentStepErrors = validationErrors[`step${step}`];
+        if (currentStepErrors) {
+          const errorMessages = Object.values(currentStepErrors).join(', ');
+          liveRef.current.textContent = `Validation errors: ${errorMessages}`;
+        }
+      }
+    }
+  };
+
   const prev = () => setStep(s => Math.max(1, s - 1));
 
   const handleAnnouncementsToggle = async (checked) => {
@@ -140,16 +279,16 @@ export default function RegistrationWizard() {
         acceptedAt: new Date().toISOString(),
         eventSlug: slug
       };
-      
+
       // Update user profile with terms acceptance
-      await updateProfile({ 
+      await updateProfile({
         termsAcceptance: termsAcceptanceData,
-        subscribeAnnouncements: announcementsOptIn 
+        subscribeAnnouncements: announcementsOptIn
       });
-      
+
       // Register for the event
       await registerForEvent(slug);
-      
+
       // Navigate to registered list
       navigate('/events/registered', { replace: true });
     } catch (e) {
@@ -180,6 +319,13 @@ export default function RegistrationWizard() {
     });
   }, [termsDocuments, termsAccepted]);
 
+  // Validate step 3 when user survey data changes
+  useEffect(() => {
+    if (user && step === 3) {
+      validateStep3();
+    }
+  }, [user, step, allTermsAccepted]);
+
   const termsBlocks = useMemo(() => {
     if (!termsDocuments.length) return null;
     return (
@@ -189,9 +335,9 @@ export default function RegistrationWizard() {
           const docTitle = doc.title || doc.name || 'Terms & Conditions';
           const docContent = doc.content || doc.description || '';
           const isRequired = doc.isRequired !== false;
-          
+
           console.log('Rendering terms document:', { docId, docTitle, docContent: docContent.substring(0, 100) + '...', isRequired }); // Debug log
-          
+
           return (
             <div key={docId} className="terms-document-option" data-required={isRequired}>
               <div className="terms-content-preview">
@@ -208,8 +354,8 @@ export default function RegistrationWizard() {
               </div>
               <div className="terms-checkbox-wrapper">
                 <label className="checkbox-label">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={termsAccepted[docId] || false}
                     onChange={(e) => handleTermsAcceptance(docId, e.target.checked)}
                     className="checkbox-input"
@@ -246,15 +392,15 @@ export default function RegistrationWizard() {
               <div className="alert-box" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>
                 <p><strong>You are already registered for this event.</strong> You can view your registration details in "My Current Registrations".</p>
                 <div style={{ marginTop: '1rem' }}>
-                  <button 
-                    className="ajf-btn ajf-btn-dark" 
+                  <button
+                    className="ajf-btn ajf-btn-dark"
                     onClick={() => navigate(`/events/registered/${encodeURIComponent(event.slug || event._id)}`)}
                     style={{ marginRight: '0.5rem' }}
                   >
                     View My Registration
                   </button>
-                  <button 
-                    className="ajf-btn ajf-btn-outline" 
+                  <button
+                    className="ajf-btn ajf-btn-outline"
                     onClick={() => navigate('/events/registered')}
                   >
                     My Current Registrations
@@ -266,18 +412,19 @@ export default function RegistrationWizard() {
             )}
 
             <nav aria-label="Registration steps" className="wizard-nav">
-              <div className="wizard-progress">
+              <div className="wizard-progress" role="progressbar" aria-valuenow={step} aria-valuemin="1" aria-valuemax="3" aria-label={`Step ${step} of 3`}>
                 <div className="wizard-progress-bar" style={{ width: `${(step / 3) * 100}%` }}></div>
               </div>
               <ol className="wizard-steps">
                 <li className={`wizard-step ${step >= 1 ? 'completed' : ''} ${step === 1 ? 'active' : ''}`}>
-                  <button 
-                    className="wizard-step-btn" 
-                    aria-current={step === 1 ? 'step' : undefined} 
+                  <button
+                    className="wizard-step-btn"
+                    aria-current={step === 1 ? 'step' : undefined}
                     onClick={() => setStep(1)}
                     disabled={step < 1 || isAlreadyRegistered}
+                    aria-label="Step 1: My Account - Personal information"
                   >
-                    <span className="wizard-step-number">1</span>
+                    <span className="wizard-step-number" aria-hidden="true">1</span>
                     <div className="wizard-step-content">
                       <span className="wizard-step-title">My Account</span>
                       <span className="wizard-step-desc">Personal information</span>
@@ -285,13 +432,14 @@ export default function RegistrationWizard() {
                   </button>
                 </li>
                 <li className={`wizard-step ${step >= 2 ? 'completed' : ''} ${step === 2 ? 'active' : ''}`}>
-                  <button 
-                    className="wizard-step-btn" 
-                    aria-current={step === 2 ? 'step' : undefined} 
+                  <button
+                    className="wizard-step-btn"
+                    aria-current={step === 2 ? 'step' : undefined}
                     onClick={() => setStep(2)}
                     disabled={step < 2 || isAlreadyRegistered}
+                    aria-label="Step 2: Profile & Resume - Professional details"
                   >
-                    <span className="wizard-step-number">2</span>
+                    <span className="wizard-step-number" aria-hidden="true">2</span>
                     <div className="wizard-step-content">
                       <span className="wizard-step-title">Profile & Resume</span>
                       <span className="wizard-step-desc">Professional details</span>
@@ -299,13 +447,14 @@ export default function RegistrationWizard() {
                   </button>
                 </li>
                 <li className={`wizard-step ${step >= 3 ? 'completed' : ''} ${step === 3 ? 'active' : ''}`}>
-                  <button 
-                    className="wizard-step-btn" 
-                    aria-current={step === 3 ? 'step' : undefined} 
+                  <button
+                    className="wizard-step-btn"
+                    aria-current={step === 3 ? 'step' : undefined}
                     onClick={() => setStep(3)}
                     disabled={step < 3 || isAlreadyRegistered}
+                    aria-label="Step 3: Survey & Terms - Final requirements"
                   >
-                    <span className="wizard-step-number">3</span>
+                    <span className="wizard-step-number" aria-hidden="true">3</span>
                     <div className="wizard-step-content">
                       <span className="wizard-step-title">Survey & Terms</span>
                       <span className="wizard-step-desc">Final requirements</span>
@@ -317,27 +466,75 @@ export default function RegistrationWizard() {
             </nav>
 
             {step === 1 && (
-              <MyAccountInline user={user} updateProfile={updateProfile} onDone={next} />
+              <section aria-labelledby="account-h">
+                <h3 id="account-h">My Account Information</h3>
+                {validationErrors.step1 && Object.keys(validationErrors.step1).length > 0 && (
+                  <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
+                    <h4>Please complete all required fields:</h4>
+                    <ul>
+                      {Object.entries(validationErrors.step1).map(([field, error]) => (
+                        <li key={field}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <MyAccountInline user={user} updateProfile={updateProfile} onDone={next} />
+              </section>
             )}
 
             {step === 2 && (
               <section aria-labelledby="profile-h">
                 <h3 id="profile-h">Edit Profile & Resume</h3>
-                <EditProfileResume />
+                {validationErrors.step2 && Object.keys(validationErrors.step2).length > 0 && (
+                  <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
+                    <h4>Please complete all required fields:</h4>
+                    <ul>
+                      {Object.entries(validationErrors.step2).map(([field, error]) => (
+                        <li key={field}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <EditProfileResume
+                  onValidationChange={() => validateStep2()}
+                  onFormDataChange={setCurrentFormData}
+                />
                 <div className="form-actions form-actions-split">
-                  <button className="ajf-btn ajf-btn-outline" onClick={prev}>Previous</button>
-                  <button className="ajf-btn ajf-btn-dark" onClick={next}>Next</button>
+                  <button className="ajf-btn ajf-btn-outline" onClick={prev} aria-label="Go to previous step">Previous</button>
+                  <button
+                    className={`ajf-btn ${stepValidation.step2 ? 'ajf-btn-dark' : 'ajf-btn-disabled'}`}
+                    onClick={next}
+                    disabled={!stepValidation.step2}
+                    aria-label="Go to next step"
+                  >
+                    Next
+                  </button>
                 </div>
               </section>
             )}
 
             {step === 3 && (
               <section aria-labelledby="survey-h">
-                <h3 id="survey-h">Survey</h3>
-                <SurveyForm />
+                <h3 id="survey-h">Survey & Final Requirements</h3>
+                {validationErrors.step3 && Object.keys(validationErrors.step3).length > 0 && (
+                  <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
+                    <h4>Please complete all required fields:</h4>
+                    <ul>
+                      {Object.entries(validationErrors.step3).map(([field, error]) => (
+                        <li key={field}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <SurveyForm onValidationChange={() => validateStep3()} />
                 <hr />
                 <div className="terms-section">
                   <h3 className="terms-section-title">Agreements to Terms and Privacy Policy (Required)</h3>
+                  {validationErrors.step3?.terms && (
+                    <div className="field-error" role="alert" aria-live="polite">
+                      {validationErrors.step3.terms}
+                    </div>
+                  )}
                   {loadingTerms ? (
                     <div className="terms-loading">Loading terms and conditions...</div>
                   ) : termsBlocks ? (
@@ -354,12 +551,16 @@ export default function RegistrationWizard() {
                         </div>
                         <div className="terms-checkbox-wrapper">
                           <label className="checkbox-label">
-                            <input 
-                              type="checkbox" 
+                            <input
+                              type="checkbox"
                               checked={termsAccepted.general || false}
-                              onChange={(e) => handleTermsAcceptance('general', e.target.checked)}
+                              onChange={(e) => {
+                                handleTermsAcceptance('general', e.target.checked);
+                                validateStep3(); // Re-validate after terms change
+                              }}
                               className="checkbox-input"
                               required
+                              aria-describedby={validationErrors.step3?.terms ? "terms-error" : undefined}
                             />
                             <span className="checkbox-custom"></span>
                             <span className="checkbox-text">
@@ -367,6 +568,11 @@ export default function RegistrationWizard() {
                               <small>Required to complete registration</small>
                             </span>
                           </label>
+                          {validationErrors.step3?.terms && (
+                            <div id="terms-error" className="field-error" role="alert" aria-live="polite">
+                              {validationErrors.step3.terms}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -377,9 +583,9 @@ export default function RegistrationWizard() {
                   <h3 className="announcements-section-title">Communication Preferences</h3>
                   <div className="announcements-option">
                     <label className="checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        checked={announcementsOptIn} 
+                      <input
+                        type="checkbox"
+                        checked={announcementsOptIn}
                         onChange={(e) => handleAnnouncementsToggle(e.target.checked)}
                         className="checkbox-input"
                       />
@@ -392,11 +598,12 @@ export default function RegistrationWizard() {
                   </div>
                 </div>
                 <div className="form-actions form-actions-split">
-                  <button className="ajf-btn ajf-btn-outline" onClick={prev} disabled={isAlreadyRegistered}>Previous</button>
-                  <button 
-                    className={`ajf-btn ${isAlreadyRegistered ? 'ajf-btn-disabled' : 'ajf-btn-dark'}`} 
-                    onClick={handleComplete} 
+                  <button className="ajf-btn ajf-btn-outline" onClick={prev} disabled={isAlreadyRegistered} aria-label="Go to previous step">Previous</button>
+                  <button
+                    className={`ajf-btn ${isAlreadyRegistered ? 'ajf-btn-disabled' : 'ajf-btn-dark'}`}
+                    onClick={handleComplete}
                     disabled={!allTermsAccepted || saving || isAlreadyRegistered}
+                    aria-label="Complete registration"
                   >
                     {isAlreadyRegistered ? 'Already Registered' : (saving ? 'Completing…' : 'Complete Registration')}
                   </button>

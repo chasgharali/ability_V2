@@ -57,9 +57,9 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
       </div>
 
       {message && <div className="alert-box" role="status" aria-live="polite">{message}</div>}
-      {error && <div className="alert-box" style={{ background:'#fdecea', borderColor:'#f5c2c7' }} role="alert">{error}</div>}
+      {error && <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{error}</div>}
 
-      <form onSubmit={(e)=>{e.preventDefault(); handleNext();}} className="account-form" aria-describedby="acc-help">
+      <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="account-form" aria-describedby="acc-help">
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">First Name *</label>
@@ -82,17 +82,44 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
         </div>
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="state">State</label>
-            <input id="state" name="state" value={form.state} onChange={onChange} />
+            <label htmlFor="state">State *</label>
+            <input
+              id="state"
+              name="state"
+              value={form.state}
+              onChange={onChange}
+              required
+              aria-describedby="state-help"
+              aria-invalid={!form.state}
+            />
+            <div id="state-help" className="field-help">State is required for event registration</div>
           </div>
           <div className="form-group">
-            <label htmlFor="city">City</label>
-            <input id="city" name="city" value={form.city} onChange={onChange} />
+            <label htmlFor="city">City *</label>
+            <input
+              id="city"
+              name="city"
+              value={form.city}
+              onChange={onChange}
+              required
+              aria-describedby="city-help"
+              aria-invalid={!form.city}
+            />
+            <div id="city-help" className="field-help">City is required for event registration</div>
           </div>
         </div>
         <div className="form-group">
           <label htmlFor="country">Country *</label>
-          <select id="country" name="country" value={form.country} onChange={onChange} required>
+          <select
+            id="country"
+            name="country"
+            value={form.country}
+            onChange={onChange}
+            required
+            aria-describedby="country-help"
+            aria-invalid={!form.country}
+          >
+            <option value="">Select Country</option>
             <option value="US">United States</option>
             <option value="CA">Canada</option>
             <option value="GB">United Kingdom</option>
@@ -100,6 +127,7 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
             <option value="AU">Australia</option>
             <option value="NZ">New Zealand</option>
           </select>
+          <div id="country-help" className="field-help">Country is required for event registration</div>
         </div>
 
         <fieldset className="accessibility-fieldset">
@@ -108,10 +136,10 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
           <div className="accessibility-grid">
             <div className="accessibility-option">
               <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={a11y.usesScreenMagnifier} 
-                  onChange={toggle('usesScreenMagnifier')} 
+                <input
+                  type="checkbox"
+                  checked={a11y.usesScreenMagnifier}
+                  onChange={toggle('usesScreenMagnifier')}
                   className="checkbox-input"
                 />
                 <span className="checkbox-custom"></span>
@@ -123,10 +151,10 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
             </div>
             <div className="accessibility-option">
               <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={a11y.usesScreenReader} 
-                  onChange={toggle('usesScreenReader')} 
+                <input
+                  type="checkbox"
+                  checked={a11y.usesScreenReader}
+                  onChange={toggle('usesScreenReader')}
                   className="checkbox-input"
                 />
                 <span className="checkbox-custom"></span>
@@ -138,10 +166,10 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
             </div>
             <div className="accessibility-option">
               <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={a11y.needsASL} 
-                  onChange={toggle('needsASL')} 
+                <input
+                  type="checkbox"
+                  checked={a11y.needsASL}
+                  onChange={toggle('needsASL')}
                   className="checkbox-input"
                 />
                 <span className="checkbox-custom"></span>
@@ -153,10 +181,10 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
             </div>
             <div className="accessibility-option">
               <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={a11y.needsCaptions} 
-                  onChange={toggle('needsCaptions')} 
+                <input
+                  type="checkbox"
+                  checked={a11y.needsCaptions}
+                  onChange={toggle('needsCaptions')}
                   className="checkbox-input"
                 />
                 <span className="checkbox-custom"></span>
@@ -168,10 +196,10 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
             </div>
             <div className="accessibility-option">
               <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  checked={a11y.needsOther} 
-                  onChange={toggle('needsOther')} 
+                <input
+                  type="checkbox"
+                  checked={a11y.needsOther}
+                  onChange={toggle('needsOther')}
                   className="checkbox-input"
                 />
                 <span className="checkbox-custom"></span>
@@ -188,10 +216,10 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
           <legend>Communication Preferences</legend>
           <div className="accessibility-option">
             <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={a11y.subscribeAnnouncements} 
-                onChange={toggle('subscribeAnnouncements')} 
+              <input
+                type="checkbox"
+                checked={a11y.subscribeAnnouncements}
+                onChange={toggle('subscribeAnnouncements')}
                 className="checkbox-input"
               />
               <span className="checkbox-custom"></span>

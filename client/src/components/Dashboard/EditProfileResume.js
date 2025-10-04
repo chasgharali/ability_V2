@@ -10,9 +10,9 @@ import { LANGUAGE_LIST, SECURITY_CLEARANCE_LIST, MILITARY_EXPERIENCE_LIST, EDUCA
 // Using centralized EXPERIENCE_LEVEL_LIST for work levels
 // Using centralized EDUCATION_LEVEL_LIST
 // Use centralized JOB_TYPE_LIST for employment types
-const VETERAN_STATUS = ['None','Veteran','Active Duty','Reservist','Military Spouse'];
+const VETERAN_STATUS = ['None', 'Veteran', 'Active Duty', 'Reservist', 'Military Spouse'];
 
-export default function EditProfileResume() {
+export default function EditProfileResume({ onValidationChange, onFormDataChange }) {
   const [form, setForm] = useState({
     headline: '',
     keywords: '',
@@ -70,9 +70,9 @@ export default function EditProfileResume() {
           // Some browsers require canplay before play
           const playPromise = videoRef.current.play();
           if (playPromise && typeof playPromise.then === 'function') {
-            await playPromise.catch(() => {});
+            await playPromise.catch(() => { });
           }
-        } catch (_) {}
+        } catch (_) { }
       }
     };
     attach();
@@ -128,6 +128,13 @@ export default function EditProfileResume() {
     return res.json();
   };
 
+  // Notify parent of form data changes
+  useEffect(() => {
+    if (onFormDataChange) {
+      onFormDataChange(form);
+    }
+  }, [form, onFormDataChange]);
+
   // Prefill from backend on mount
   useEffect(() => {
     const loadProfile = async () => {
@@ -160,7 +167,7 @@ export default function EditProfileResume() {
             const fname = path.split('/').pop();
             if (fname) setResumeFileName(fname);
             setResumeUrl(rUrl);
-          } catch {}
+          } catch { }
         }
       } catch (e) {
         showToast('Failed to load profile', 'error');
@@ -173,6 +180,10 @@ export default function EditProfileResume() {
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+    // Trigger validation callback when form changes
+    if (onValidationChange) {
+      setTimeout(onValidationChange, 0); // Use setTimeout to ensure state is updated
+    }
   };
 
   // languages handled by MultiSelect change below
@@ -268,7 +279,7 @@ export default function EditProfileResume() {
     try {
       const s = mediaStreamRef.current;
       if (s) s.getTracks().forEach(t => t.stop());
-    } catch {}
+    } catch { }
     mediaStreamRef.current = null;
     setCameraOpen(false);
   };
@@ -421,6 +432,10 @@ export default function EditProfileResume() {
               change={(args) => {
                 const values = Array.isArray(args?.value) ? args.value : [];
                 setForm(prev => ({ ...prev, primaryExperience: values.slice(0, 2) }));
+                // Trigger validation callback when form changes
+                if (onValidationChange) {
+                  setTimeout(onValidationChange, 0);
+                }
               }}
             />
           </div>
@@ -460,6 +475,10 @@ export default function EditProfileResume() {
               change={(args) => {
                 const values = Array.isArray(args?.value) ? args.value : [];
                 setForm(prev => ({ ...prev, employmentTypes: values }));
+                // Trigger validation callback when form changes
+                if (onValidationChange) {
+                  setTimeout(onValidationChange, 0);
+                }
               }}
             />
           </div>
@@ -481,6 +500,10 @@ export default function EditProfileResume() {
             change={(args) => {
               const values = Array.isArray(args?.value) ? args.value : [];
               setForm(prev => ({ ...prev, languages: values }));
+              // Trigger validation callback when form changes
+              if (onValidationChange) {
+                setTimeout(onValidationChange, 0);
+              }
             }}
           />
         </div>

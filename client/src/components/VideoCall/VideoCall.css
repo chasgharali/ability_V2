@@ -51,8 +51,8 @@
 
 .header-logo {
   height: 48px;
-  width: 48px;
-  max-width: 120px;
+  width: 180px;
+  max-width: 180px;
   object-fit: contain;
   border-radius: 8px;
   flex-shrink: 0;
