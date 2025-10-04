@@ -5,6 +5,7 @@ import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import videoCallService from '../../services/videoCall';
 import VideoCall from '../VideoCall/VideoCall';
+import CallInviteModal from '../VideoCall/CallInviteModal';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import './BoothQueueManagement.css';
@@ -29,6 +30,13 @@ export default function BoothQueueManagement() {
   // Video call state
   const [activeCall, setActiveCall] = useState(null);
   const [isInCall, setIsInCall] = useState(false);
+  // Recruiter pre-join device selection
+  const [showRecruiterInviteModal, setShowRecruiterInviteModal] = useState(false);
+  const [pendingQueueEntry, setPendingQueueEntry] = useState(null);
+  const [audioInputs, setAudioInputs] = useState([]);
+  const [videoInputs, setVideoInputs] = useState([]);
+  const [selectedAudioId, setSelectedAudioId] = useState('');
+  const [selectedVideoId, setSelectedVideoId] = useState('');
 
   // Theme colors from event (fallbacks provided)
   const theme = useMemo(() => ({
@@ -222,11 +230,41 @@ export default function BoothQueueManagement() {
     }
   };
 
-  const handleInviteToMeeting = async (queueEntry) => {
+  const enumerateDevicesForRecruiter = async () => {
     try {
-      // Create video call
+      try { await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); } catch (e) {}
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audios = devices.filter(d => d.kind === 'audioinput');
+      const videos = devices.filter(d => d.kind === 'videoinput');
+      setAudioInputs(audios);
+      setVideoInputs(videos);
+      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
+      setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
+      setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
+    } catch (err) {
+      console.error('Failed to enumerate devices (recruiter):', err);
+    }
+  };
+
+  const handleInviteToMeeting = async (queueEntry) => {
+    setPendingQueueEntry(queueEntry);
+    await enumerateDevicesForRecruiter();
+    setShowRecruiterInviteModal(true);
+  };
+
+  const handleRecruiterAcceptInvite = async () => {
+    try {
+      if (selectedAudioId) localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+      if (selectedVideoId) localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+      setShowRecruiterInviteModal(false);
+      if (!pendingQueueEntry) return;
+
+      const queueEntry = pendingQueueEntry;
+      setPendingQueueEntry(null);
+
+      // Create video call after device selection
       const callResponse = await videoCallService.createCall(queueEntry._id);
-      
       if (callResponse.success) {
         setActiveCall({
           id: callResponse.callId,
@@ -243,16 +281,17 @@ export default function BoothQueueManagement() {
           }
         });
         setIsInCall(true);
-        
-        // Update serving number
         await handleUpdateServing(queueEntry.position);
-        
-        console.log(`Video call created for ${queueEntry.jobSeeker.name}`);
       }
     } catch (error) {
       console.error('Error creating video call:', error);
       alert('Failed to start video call with job seeker');
     }
+  };
+
+  const handleRecruiterDeclineInvite = () => {
+    setShowRecruiterInviteModal(false);
+    setPendingQueueEntry(null);
   };
 
   const handleCallEnd = () => {
@@ -722,6 +761,23 @@ export default function BoothQueueManagement() {
           callId={typeof activeCall === 'string' ? activeCall : activeCall.id}
           callData={typeof activeCall === 'object' ? activeCall : null}
           onCallEnd={handleCallEnd}
+        />
+      )}
+
+      {/* Recruiter device selection before inviting */}
+      {showRecruiterInviteModal && (
+        <CallInviteModal
+          recruiterName={user?.name}
+          boothName={booth?.name}
+          eventName={event?.name}
+          audioInputs={audioInputs}
+          videoInputs={videoInputs}
+          selectedAudioId={selectedAudioId}
+          selectedVideoId={selectedVideoId}
+          onChangeAudio={setSelectedAudioId}
+          onChangeVideo={setSelectedVideoId}
+          onAccept={handleRecruiterAcceptInvite}
+          onDecline={handleRecruiterDeclineInvite}
         />
       )}
     </div>

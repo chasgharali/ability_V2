@@ -5,6 +5,7 @@ import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt } from 'react-icons/fa';
 import VideoCall from '../VideoCall/VideoCall';
+import CallInviteModal from '../VideoCall/CallInviteModal';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
 
@@ -30,6 +31,12 @@ export default function BoothQueueWaiting() {
   // Video call state
   const [callInvitation, setCallInvitation] = useState(null);
   const [isInCall, setIsInCall] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [pendingInvitation, setPendingInvitation] = useState(null);
+  const [audioInputs, setAudioInputs] = useState([]);
+  const [videoInputs, setVideoInputs] = useState([]);
+  const [selectedAudioId, setSelectedAudioId] = useState('');
+  const [selectedVideoId, setSelectedVideoId] = useState('');
 
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
@@ -206,9 +213,64 @@ export default function BoothQueueWaiting() {
     }
   };
 
+  // Play a short beep using Web Audio
+  const playInviteSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880; // A5
+      o.connect(g);
+      g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      o.start();
+      o.stop(ctx.currentTime + 0.6);
+    } catch (e) {
+      // ignore audio failures
+    }
+  };
+
+  const enumerateDevicesAndShowModal = async () => {
+    try {
+      // Request permissions so device labels are available
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    } catch (e) {
+      // If user blocks, still attempt to enumerate
+    }
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audios = devices.filter(d => d.kind === 'audioinput');
+      const videos = devices.filter(d => d.kind === 'videoinput');
+      setAudioInputs(audios);
+      setVideoInputs(videos);
+      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
+      setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
+      setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
+      setShowInviteModal(true);
+    } catch (err) {
+      console.error('Failed to enumerate devices:', err);
+      // Fallback: proceed without modal
+      handleAcceptInvite();
+    }
+  };
+
   const handleCallInvitation = (data) => {
     console.log('Received call invitation:', data);
-    // Set call invitation data and show video call interface
+    setPendingInvitation(data);
+    playInviteSound();
+    enumerateDevicesAndShowModal();
+  };
+
+  const handleAcceptInvite = () => {
+    if (!pendingInvitation) return;
+    if (selectedAudioId) localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+    if (selectedVideoId) localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+    // Build callData for VideoCall
+    const data = pendingInvitation;
     setCallInvitation({
       id: data.callId,
       roomName: data.roomName,
@@ -223,7 +285,13 @@ export default function BoothQueueWaiting() {
         interpreterCategory: null
       }
     });
+    setShowInviteModal(false);
     setIsInCall(true);
+  };
+
+  const handleDeclineInvite = () => {
+    setShowInviteModal(false);
+    setPendingInvitation(null);
   };
 
   const handleCallEnd = () => {
@@ -553,6 +621,23 @@ export default function BoothQueueWaiting() {
         <VideoCall
           callData={callInvitation}
           onCallEnd={handleCallEnd}
+        />
+      )}
+
+      {/* Call Invitation Modal */}
+      {showInviteModal && (
+        <CallInviteModal
+          recruiterName={pendingInvitation?.recruiter?.name}
+          boothName={booth?.name}
+          eventName={event?.name}
+          audioInputs={audioInputs}
+          videoInputs={videoInputs}
+          selectedAudioId={selectedAudioId}
+          selectedVideoId={selectedVideoId}
+          onChangeAudio={setSelectedAudioId}
+          onChangeVideo={setSelectedVideoId}
+          onAccept={handleAcceptInvite}
+          onDecline={handleDeclineInvite}
         />
       )}
     </div>

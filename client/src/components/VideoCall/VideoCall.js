@@ -14,6 +14,24 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const { user } = useAuth();
   const { socket } = useSocket();
   
+  // Play a short tone to indicate room join
+  const playJoinSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 987.77; // B5
+      o.connect(g);
+      g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      o.start();
+      o.stop(ctx.currentTime + 0.5);
+    } catch (_) { /* ignore */ }
+  };
+
   // Call state
   const [room, setRoom] = useState(null);
   const [participants, setParticipants] = useState(new Map());
@@ -90,7 +108,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       socket.off('new_chat_message', handleNewChatMessage);
       socket.off('participant-joined-video', handleParticipantJoined);
       socket.off('participant-left-video', handleParticipantLeft);
-      socket.off('interpreter-response', handleInterpreterResponse);
       socket.off('call_ended', handleCallEnded);
     };
   }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -104,19 +121,27 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       setCallInfo(data);
       setChatMessages(data.chatMessages || []);
 
-      // Create local tracks
-      const videoTrack = await createLocalVideoTrack({
+      // Create local tracks with preferred devices if set
+      const preferredVideoDeviceId = localStorage.getItem('preferredVideoDeviceId');
+      const preferredAudioDeviceId = localStorage.getItem('preferredAudioDeviceId');
+
+      const videoConstraints = {
         width: 1280,
         height: 720,
         frameRate: 30,
-        facingMode: 'user'
-      });
-      
-      const audioTrack = await createLocalAudioTrack({
+        facingMode: 'user',
+        ...(preferredVideoDeviceId ? {deviceId: { exact: preferredVideoDeviceId } } : {})
+      };
+
+      const audioConstraints = {
         echoCancellation: true,
         noiseSuppression: true,
-        autoGainControl: true
-      });
+        autoGainControl: true,
+        ...(preferredAudioDeviceId ? {deviceId: { exact: preferredAudioDeviceId } } : {})
+      };
+
+      const videoTrack = await createLocalVideoTrack(videoConstraints);
+      const audioTrack = await createLocalAudioTrack(audioConstraints);
 
       setLocalTracks([videoTrack, audioTrack]);
 
@@ -159,6 +184,8 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
       // Start quality monitoring
       startQualityMonitoring();
+      // Play join sound once connected
+      playJoinSound();
 
       setLoading(false);
       setIsInitializing(false);
@@ -181,32 +208,40 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       setCallInfo(callDetails);
       setChatMessages(callDetails.chatMessages || []);
 
-      // Create local tracks
-      const videoTrack = await createLocalVideoTrack({
+      // Create local tracks using preferred device IDs if available
+      const preferredVideoDeviceId2 = localStorage.getItem('preferredVideoDeviceId');
+      const preferredAudioDeviceId2 = localStorage.getItem('preferredAudioDeviceId');
+
+      const videoConstraints2 = {
         width: 1280,
         height: 720,
         frameRate: 30,
-        facingMode: 'user'
-      });
-      
-      const audioTrack = await createLocalAudioTrack({
+        facingMode: 'user',
+        ...(preferredVideoDeviceId2 ? {deviceId: { exact: preferredVideoDeviceId2 } } : {})
+      };
+
+      const audioConstraints2 = {
         echoCancellation: true,
         noiseSuppression: true,
-        autoGainControl: true
-      });
+        autoGainControl: true,
+        ...(preferredAudioDeviceId2 ? {deviceId: { exact: preferredAudioDeviceId2 } } : {})
+      };
+
+      const videoTrack = await createLocalVideoTrack(videoConstraints2);
+      const audioTrack = await createLocalAudioTrack(audioConstraints2);
 
       setLocalTracks([videoTrack, audioTrack]);
 
-      // No manual local video attach; handled by VideoParticipant
+  // No manual local video attach; handled by VideoParticipant
 
-      // Connect to Twilio room
-      const room = await connect(callDetails.accessToken, {
-        name: callDetails.roomName,
-        tracks: [videoTrack, audioTrack],
-        audio: true,
-        video: true,
-        maxAudioBitrate: 16000,
-        maxVideoBitrate: 2500000,
+  // Connect to Twilio room
+  const room = await connect(callDetails.accessToken, {
+    name: callDetails.roomName,
+    tracks: [videoTrack, audioTrack],
+    audio: true,
+    video: true,
+    maxAudioBitrate: 16000,
+    maxVideoBitrate: 2500000,
         preferredVideoCodecs: ['VP8', 'H264'],
         networkQuality: {
           local: 1,

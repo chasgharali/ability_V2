@@ -1,0 +1,115 @@
+.call-invite-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.call-invite-modal {
+  width: 520px;
+  max-width: 92vw;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.call-invite-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.call-invite-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.call-invite-close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.call-invite-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0;
+}
+
+.call-invite-body {
+  padding: 16px 20px 8px 20px;
+}
+
+.call-invite-text {
+  margin: 0 0 6px 0;
+  color: #374151;
+}
+
+.call-invite-subtext {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.call-invite-device-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.call-invite-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.call-invite-label {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.call-invite-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.call-invite-actions {
+  display: flex;
+  gap: 12px;
+  padding: 14px 20px 20px 20px;
+}
+
+.call-invite-btn {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.call-invite-decline {
+  background: #fff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+
+.call-invite-accept {
+  background: #111827;
+  color: #fff;
+  border: 1px solid #111827;
+}
