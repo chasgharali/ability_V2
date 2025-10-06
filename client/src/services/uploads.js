@@ -89,3 +89,89 @@ export async function uploadImageToS3(file) {
     downloadUrl: completeRes?.data?.file?.downloadUrl || download?.url,
   };
 }
+
+export async function uploadAudioToS3(file) {
+  if (!file) throw new Error('No file provided');
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+
+  // 1) Ask backend for presigned URL
+  const presignRes = await axios.post(
+    '/api/uploads/presign',
+    {
+      fileName: file.name,
+      fileType: 'audio',
+      mimeType: file.type || 'audio/webm',
+    },
+    { headers }
+  );
+
+  const { upload, download } = presignRes.data;
+  const { url, key } = upload;
+
+  // 2) Upload the file to S3 directly
+  await axios.put(url, file, {
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+  });
+
+  // 3) Confirm upload so server can return a long-lived download URL
+  const completeRes = await axios.post(
+    '/api/uploads/complete',
+    {
+      fileKey: key,
+      fileType: 'audio',
+      fileName: file.name,
+      mimeType: file.type || 'audio/webm',
+      size: file.size,
+    },
+    { headers }
+  );
+
+  return {
+    key,
+    downloadUrl: completeRes?.data?.file?.downloadUrl || download?.url,
+  };
+}
+
+export async function uploadVideoToS3(file) {
+  if (!file) throw new Error('No file provided');
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+
+  // 1) Ask backend for presigned URL
+  const presignRes = await axios.post(
+    '/api/uploads/presign',
+    {
+      fileName: file.name,
+      fileType: 'video',
+      mimeType: file.type || 'video/webm',
+    },
+    { headers }
+  );
+
+  const { upload, download } = presignRes.data;
+  const { url, key } = upload;
+
+  // 2) Upload the file to S3 directly
+  await axios.put(url, file, {
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+  });
+
+  // 3) Confirm upload so server can return a long-lived download URL
+  const completeRes = await axios.post(
+    '/api/uploads/complete',
+    {
+      fileKey: key,
+      fileType: 'video',
+      fileName: file.name,
+      mimeType: file.type || 'video/webm',
+      size: file.size,
+    },
+    { headers }
+  );
+
+  return {
+    key,
+    downloadUrl: completeRes?.data?.file?.downloadUrl || download?.url,
+  };
+}

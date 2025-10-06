@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
+import { uploadAudioToS3, uploadVideoToS3 } from '../../services/uploads';
 import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt } from 'react-icons/fa';
 import VideoCall from '../VideoCall/VideoCall';
 import CallInviteModal from '../VideoCall/CallInviteModal';
@@ -27,6 +28,9 @@ export default function BoothQueueWaiting() {
   const [messageType, setMessageType] = useState('text');
   const [messageContent, setMessageContent] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [showMessagePreview, setShowMessagePreview] = useState(false);
+  const [recordedBlob, setRecordedBlob] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Video call state
   const [callInvitation, setCallInvitation] = useState(null);
@@ -37,9 +41,17 @@ export default function BoothQueueWaiting() {
   const [videoInputs, setVideoInputs] = useState([]);
   const [selectedAudioId, setSelectedAudioId] = useState('');
   const [selectedVideoId, setSelectedVideoId] = useState('');
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [deviceTestStream, setDeviceTestStream] = useState(null);
+  const [isTestingAudio, setIsTestingAudio] = useState(false);
+  const [audioTestLevel, setAudioTestLevel] = useState(0);
 
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
+  const testVideoRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const animationFrameRef = useRef(null);
 
   useEffect(() => {
     loadData();
@@ -63,6 +75,13 @@ export default function BoothQueueWaiting() {
         socket.emit('leave-booth-queue', { boothId, userId: user._id });
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Cleanup device test resources
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [eventSlug, boothId]);
 
@@ -352,8 +371,9 @@ export default function BoothQueueWaiting() {
   };
 
   const handleReturnToEvent = () => {
-    // Don't leave queue when returning to event - user might want to come back
-    navigate(`/events/registered/${eventSlug}`);
+    // Open event page in a new tab without leaving the queue
+    const eventUrl = `/events/registered/${eventSlug}`;
+    window.open(eventUrl, '_blank');
   };
 
   const handleExitEvent = async () => {
@@ -368,22 +388,199 @@ export default function BoothQueueWaiting() {
     }
   };
 
+  const handleDeviceSelection = async () => {
+    try {
+      // Request permissions and enumerate devices
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audios = devices.filter(d => d.kind === 'audioinput');
+      const videos = devices.filter(d => d.kind === 'videoinput');
+
+      setAudioInputs(audios);
+      setVideoInputs(videos);
+
+      // Load saved preferences
+      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
+      setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
+      setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
+
+      setShowDeviceModal(true);
+    } catch (error) {
+      console.error('Error accessing devices:', error);
+      alert('Unable to access camera and microphone. Please check your permissions.');
+    }
+  };
+
+  const handleDeviceTest = async () => {
+    try {
+      // Stop existing test stream and cleanup
+      if (deviceTestStream) {
+        deviceTestStream.getTracks().forEach(track => track.stop());
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+
+      const constraints = {
+        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
+        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      setDeviceTestStream(stream);
+
+      // Display video in test element
+      if (testVideoRef.current && stream.getVideoTracks().length > 0) {
+        testVideoRef.current.srcObject = stream;
+      }
+
+      // Setup audio level monitoring
+      if (stream.getAudioTracks().length > 0) {
+        setIsTestingAudio(true);
+        setupAudioLevelMonitoring(stream);
+      }
+    } catch (error) {
+      console.error('Error testing devices:', error);
+      alert('Failed to test selected devices. Please try different devices.');
+    }
+  };
+
+  const setupAudioLevelMonitoring = (stream) => {
+    try {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+
+      analyserRef.current.fftSize = 256;
+      analyserRef.current.smoothingTimeConstant = 0.8;
+
+      source.connect(analyserRef.current);
+
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+
+      const updateAudioLevel = () => {
+        // Stop if analyser has been cleaned up
+        if (!analyserRef.current) return;
+
+        analyserRef.current.getByteFrequencyData(dataArray);
+
+        // Calculate average audio level
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length;
+        const normalizedLevel = (average / 255) * 100;
+
+        setAudioTestLevel(normalizedLevel);
+
+        // Continue the loop while analyser exists; cleanup stops it
+        animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+      };
+
+      updateAudioLevel();
+    } catch (error) {
+      console.error('Error setting up audio monitoring:', error);
+    }
+  };
+
+  const cleanupDeviceTest = () => {
+    // Stop test stream
+    if (deviceTestStream) {
+      deviceTestStream.getTracks().forEach(track => track.stop());
+      setDeviceTestStream(null);
+    }
+
+    // Stop audio monitoring
+    setIsTestingAudio(false);
+    setAudioTestLevel(0);
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    analyserRef.current = null;
+  };
+
+  const handleDeviceSave = () => {
+    if (selectedAudioId) {
+      localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+    }
+    if (selectedVideoId) {
+      localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+    }
+
+    cleanupDeviceTest();
+    setShowDeviceModal(false);
+    alert('Camera and microphone preferences saved successfully!');
+  };
+
+  const handleDeviceCancel = () => {
+    cleanupDeviceTest();
+    setShowDeviceModal(false);
+  };
+
   const handleSendMessage = async () => {
     try {
+      setIsUploading(true);
+      let finalContent = messageContent;
+
+      // If it's audio/video, upload to S3 first
+      if ((messageType === 'audio' || messageType === 'video') && recordedBlob) {
+        const fileName = `message_${Date.now()}.${messageType === 'audio' ? 'webm' : 'webm'}`;
+        const file = new File([recordedBlob], fileName, {
+          type: messageType === 'audio' ? 'audio/webm' : 'video/webm'
+        });
+
+        const uploadResult = messageType === 'audio'
+          ? await uploadAudioToS3(file)
+          : await uploadVideoToS3(file);
+
+        finalContent = uploadResult.downloadUrl;
+      }
+
       const messageData = {
         boothId,
         type: messageType,
-        content: messageContent,
+        content: finalContent,
         queueToken
       };
 
       await boothQueueAPI.sendMessage(messageData);
+
+      // Reset all message-related state
       setShowMessageModal(false);
+      setShowMessagePreview(false);
       setMessageContent('');
+      setRecordedBlob(null);
+      setMessageType('text');
+
       alert('Message sent successfully!');
+
+      // If audio/video message, leave queue and navigate to event detail
+      if (messageType === 'audio' || messageType === 'video') {
+        try {
+          await boothQueueAPI.leaveQueue(boothId);
+        } catch (error) {
+          console.error('Error leaving queue after message:', error);
+        }
+        navigate(`/events/registered/${eventSlug}`);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -408,11 +605,12 @@ export default function BoothQueueWaiting() {
           type: messageType === 'video' ? 'video/webm' : 'audio/webm'
         });
 
-        const reader = new FileReader();
-        reader.onload = () => {
-          setMessageContent(reader.result);
-        };
-        reader.readAsDataURL(blob);
+        setRecordedBlob(blob);
+
+        // Create preview URL for audio/video
+        const previewUrl = URL.createObjectURL(blob);
+        setMessageContent(previewUrl);
+        setShowMessagePreview(true);
 
         stream.getTracks().forEach(track => track.stop());
       };
@@ -430,6 +628,18 @@ export default function BoothQueueWaiting() {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
+  };
+
+  const handleMessagePreview = () => {
+    if (recordedBlob) {
+      setShowMessagePreview(true);
+    }
+  };
+
+  const handleRetakeRecording = () => {
+    setRecordedBlob(null);
+    setMessageContent('');
+    setShowMessagePreview(false);
   };
 
   if (loading) {
@@ -529,7 +739,7 @@ export default function BoothQueueWaiting() {
           <div className="sidebar-actions">
             <button
               className="sidebar-action-btn camera-btn"
-              onClick={() => alert('Camera & Mic selection coming soon')}
+              onClick={handleDeviceSelection}
             >
               <FaVideo /> Select camera & mic
             </button>
@@ -620,17 +830,55 @@ export default function BoothQueueWaiting() {
                 />
               ) : (
                 <div className="recording-controls">
-                  {!isRecording ? (
-                    <button onClick={startRecording} className="record-btn">
-                      Start Recording {messageType === 'video' ? 'Video' : 'Audio'}
-                    </button>
+                  {!recordedBlob ? (
+                    <div className="recording-section">
+                      {!isRecording ? (
+                        <button onClick={startRecording} className="record-btn">
+                          Start Recording {messageType === 'video' ? 'Video' : 'Audio'}
+                        </button>
+                      ) : (
+                        <button onClick={stopRecording} className="stop-btn">
+                          Stop Recording
+                        </button>
+                      )}
+                      {isRecording && (
+                        <p className="recording-status">Recording in progress...</p>
+                      )}
+                    </div>
                   ) : (
-                    <button onClick={stopRecording} className="stop-btn">
-                      Stop Recording
-                    </button>
-                  )}
-                  {messageContent && (
-                    <p className="recording-ready">Recording ready to send</p>
+                    <div className="recording-preview-section">
+                      <div className="preview-controls">
+                        <button onClick={handleMessagePreview} className="btn-preview">
+                          Preview {messageType === 'video' ? 'Video' : 'Audio'}
+                        </button>
+                        <button onClick={handleRetakeRecording} className="btn-retake">
+                          Retake Recording
+                        </button>
+                      </div>
+
+                      {showMessagePreview && (
+                        <div className="media-preview">
+                          {messageType === 'video' ? (
+                            <video
+                              src={messageContent}
+                              controls
+                              style={{
+                                width: '100%',
+                                maxWidth: '300px',
+                                borderRadius: '8px',
+                                backgroundColor: '#000'
+                              }}
+                            />
+                          ) : (
+                            <audio
+                              src={messageContent}
+                              controls
+                              style={{ width: '100%' }}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -644,10 +892,10 @@ export default function BoothQueueWaiting() {
                 </button>
                 <button
                   onClick={handleSendMessage}
-                  disabled={!messageContent}
+                  disabled={!messageContent || isUploading || (messageType !== 'text' && !recordedBlob)}
                   className="btn-send"
                 >
-                  Send Message
+                  {isUploading ? 'Sending...' : 'Send Message'}
                 </button>
               </div>
             </div>
@@ -678,6 +926,119 @@ export default function BoothQueueWaiting() {
           onAccept={handleAcceptInvite}
           onDecline={handleDeclineInvite}
         />
+      )}
+
+      {/* Device Selection Modal */}
+      {showDeviceModal && (
+        <div className="modal-overlay">
+          <div className="modal-content device-modal">
+            <div className="modal-header">
+              <h3>Select Camera & Microphone</h3>
+              <button
+                className="modal-close"
+                onClick={handleDeviceCancel}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="device-selection-content">
+              <div className="device-grid">
+                <div className="device-field">
+                  <label className="device-label" htmlFor="mic-select">Microphone</label>
+                  <select
+                    id="mic-select"
+                    className="device-select"
+                    value={selectedAudioId || ''}
+                    onChange={e => setSelectedAudioId(e.target.value)}
+                  >
+                    {audioInputs.map(d => (
+                      <option key={d.deviceId} value={d.deviceId}>
+                        {d.label || 'Microphone'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="device-field">
+                  <label className="device-label" htmlFor="cam-select">Camera</label>
+                  <select
+                    id="cam-select"
+                    className="device-select"
+                    value={selectedVideoId || ''}
+                    onChange={e => setSelectedVideoId(e.target.value)}
+                  >
+                    {videoInputs.map(d => (
+                      <option key={d.deviceId} value={d.deviceId}>
+                        {d.label || 'Camera'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="device-test-section">
+                <button
+                  onClick={handleDeviceTest}
+                  className="btn-test-devices"
+                  disabled={!selectedAudioId && !selectedVideoId}
+                >
+                  Test Devices
+                </button>
+
+                {deviceTestStream && (
+                  <div className="test-preview">
+                    <video
+                      ref={testVideoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      style={{
+                        width: '200px',
+                        height: '150px',
+                        borderRadius: '8px',
+                        backgroundColor: '#000'
+                      }}
+                    />
+
+                    {/* Audio Level Meter */}
+                    {isTestingAudio && (
+                      <div className="audio-level-meter">
+                        <div className="audio-level-label">Microphone Level</div>
+                        <div className="audio-level-bar">
+                          <div
+                            className="audio-level-fill"
+                            style={{ width: `${audioTestLevel}%` }}
+                          />
+                        </div>
+                        <div className="audio-level-text">
+                          {audioTestLevel > 5 ? '🎤 Microphone working!' : '🎤 Speak to test microphone'}
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="test-status">Device test active</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                onClick={handleDeviceCancel}
+                className="btn-cancel"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeviceSave}
+                className="btn-save"
+              >
+                Save Preferences
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
