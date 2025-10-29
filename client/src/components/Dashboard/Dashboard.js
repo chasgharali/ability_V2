@@ -450,17 +450,22 @@ const Dashboard = () => {
                             <div className="dashboard-card">
                                 <h3>Event Management</h3>
                                 <p>Create and manage job fair events</p>
-                                <button className="dashboard-button">Manage Events</button>
+                                <button className="dashboard-button" onClick={() => navigate('/eventmanagement')}>Manage Events</button>
                             </div>
                             <div className="dashboard-card">
                                 <h3>User Management</h3>
                                 <p>Manage users and permissions</p>
-                                <button className="dashboard-button">Manage Users</button>
+                                <button className="dashboard-button" onClick={() => navigate('/usermanagement')}>Manage Users</button>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>Job Seeker Management</h3>
+                                <p>Manage job seekers and their profiles</p>
+                                <button className="dashboard-button" onClick={() => navigate('/jobseekermanagement')}>Manage Job Seekers</button>
                             </div>
                             <div className="dashboard-card">
                                 <h3>Analytics</h3>
                                 <p>View platform analytics and reports</p>
-                                <button className="dashboard-button">View Analytics</button>
+                                <button className="dashboard-button" onClick={() => navigate('/analytics')}>View Analytics</button>
                             </div>
                         </div>
                     </div>

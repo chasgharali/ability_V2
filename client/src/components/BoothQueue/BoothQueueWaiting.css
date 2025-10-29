@@ -1,3 +1,8 @@
+.waiting-message-centered {
+  margin: 0 auto 1rem auto;
+  max-width: 720px;
+}
+
 /* Booth Queue Waiting Styles */
 
 .booth-queue-waiting {
@@ -10,14 +15,80 @@
 /* Main Layout */
 .waiting-layout {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 320px 1fr;
+  /* sidebar left */
+  grid-template-areas: 'sidebar main';
   min-height: calc(100vh - 72px);
   background: #ffffff;
   gap: 0;
 }
 
+/* Mobile toggle button - hidden on desktop */
+.mobile-toggle-btn {
+  display: none;
+}
+
+/* Left sidebar (queue panel) */
+.waiting-sidebar-left {
+  grid-area: sidebar;
+  background: #f8fafc;
+  border-right: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-header {
+  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sidebar-header .booth-logo-section {
+  margin-bottom: 1rem;
+}
+
+.sidebar-header .event-info {
+  text-align: center;
+}
+
+.sidebar-header .event-title {
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-header .booth-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Waiting message centered */
+.waiting-message-centered {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+}
+
+.waiting-message-centered h3 {
+  margin: 0 0 0.5rem 0;
+  color: #1e40af;
+  font-size: 1.125rem;
+}
+
+.waiting-message-centered p {
+  margin: 0;
+  color: #3730a3;
+  font-size: 0.875rem;
+}
+
 /* Main Content Area */
 .waiting-main {
+  grid-area: main;
   padding: 2rem 3rem;
   display: flex;
   flex-direction: column;
@@ -153,16 +224,40 @@
   margin: 0;
 }
 
-/* Right Sidebar - Queue Info and Actions */
-.waiting-sidebar-right {
+/* Mobile toggle button */
+.mobile-toggle-btn {
+  display: none;
+  margin: 0 0 0.75rem 0;
+  background: #111827;
+  color: #fff;
+  border: 1px solid #374151;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Left Sidebar - Queue Info and Actions */
+.waiting-sidebar-left {
+  grid-area: sidebar;
   background: #f8fafc;
   padding: 2rem 1.5rem;
-  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   overflow-y: auto;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
 }
 
 .queue-numbers {
@@ -496,7 +591,8 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
   .waiting-layout {
-    grid-template-columns: 180px 1fr 280px;
+    grid-template-columns: 260px 1fr;
+    grid-template-areas: 'sidebar main';
   }
 
   .content-grid {
@@ -510,9 +606,26 @@
 }
 
 @media (max-width: 1024px) {
+  .mobile-toggle-btn {
+    display: inline-flex;
+  }
+
+  /* Collapsible sidebar behavior */
+  .mobile-collapsible {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .mobile-collapsible.open {
+    max-height: 1000px;
+    /* large enough for content */
+  }
+
   .waiting-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
+    display: flex;
+    flex-direction: column;
+    /* ensure sidebar then main by DOM order */
   }
 
   .waiting-main {
@@ -529,10 +642,11 @@
     padding: 2rem 1.5rem;
   }
 
-  .waiting-sidebar-right {
-    order: 2;
+  .waiting-sidebar-left {
+    order: 0;
+    /* ensure before main content */
     background: #ffffff;
-    border-left: none;
+    border-right: none;
     border-top: 1px solid #e5e7eb;
     padding: 1.5rem;
     flex-direction: row;
@@ -540,6 +654,10 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
+  }
+
+  .waiting-main {
+    order: 1;
   }
 
   .queue-numbers {
@@ -600,7 +718,7 @@
     padding: 1rem 1.5rem;
   }
 
-  .waiting-sidebar-right {
+  .waiting-sidebar-left {
     flex-direction: column;
     gap: 1rem;
   }
@@ -680,7 +798,7 @@
   flex-direction: column;
 }
 
-.device-field + .device-field {
+.device-field+.device-field {
   margin-top: 0.25rem;
 }
 
@@ -851,8 +969,72 @@
   font-size: 0.875rem;
 }
 
-/* Responsive adjustments for device modal */
+/* Mobile responsive layout */
 @media (max-width: 768px) {
+
+  /* Mobile layout changes */
+  .waiting-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'main';
+    position: relative;
+  }
+
+  /* Show mobile toggle button */
+  .mobile-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #1e40af;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .mobile-toggle-btn:hover {
+    background: #1d4ed8;
+  }
+
+  /* Mobile backdrop overlay */
+  .mobile-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: block;
+  }
+
+  /* Mobile sidebar behavior */
+  .waiting-sidebar-left {
+    position: fixed;
+    top: 72px;
+    /* Below header */
+    left: 0;
+    width: 280px;
+    height: calc(100vh - 72px);
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .waiting-sidebar-left.open {
+    transform: translateX(0);
+  }
+
+
+  /* Mobile main content */
+  .waiting-main {
+    padding: 1rem;
+  }
+
+  /* Device modal responsive */
   .device-modal {
     max-width: 90vw;
     margin: 1rem;

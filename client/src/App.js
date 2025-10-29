@@ -24,6 +24,7 @@ import TermsConditionsList from './components/TermsConditions/TermsConditionsLis
 import TermsConditionsForm from './components/TermsConditions/TermsConditionsForm';
 import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
 import UserManagement from './components/UserManagement/UserManagement';
+import JobSeekerManagement from './components/JobSeekerManagement/JobSeekerManagement';
 import InterpreterCategories from './components/InterpreterCategories/InterpreterCategories';
 import BoothQueueEntry from './components/BoothQueue/BoothQueueEntry';
 import BoothQueueWaiting from './components/BoothQueue/BoothQueueWaiting';
@@ -76,7 +77,8 @@ function App() {
                                 <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
                                 <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                 <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
-                                <Route path="/users" element={<RequireAuth><UserManagement /></RequireAuth>} />
+                                <Route path="/usermanagement" element={<RequireAuth><UserManagement /></RequireAuth>} />
+                                <Route path="/jobseekermanagement" element={<RequireAuth><JobSeekerManagement /></RequireAuth>} />
                                 {/* Job Seeker event flow */}
                                 <Route path="/events/upcoming" element={<RequireAuth><UpcomingEvents /></RequireAuth>} />
                                 <Route path="/events/registered" element={<RequireAuth><RegisteredEvents /></RequireAuth>} />

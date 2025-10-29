@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import { uploadAudioToS3, uploadVideoToS3 } from '../../services/uploads';
-import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt } from 'react-icons/fa';
+import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt, FaBars } from 'react-icons/fa';
 import VideoCall from '../VideoCall/VideoCall';
 import CallInviteModal from '../VideoCall/CallInviteModal';
 import './BoothQueueWaiting.css';
@@ -19,8 +19,18 @@ export default function BoothQueueWaiting() {
 
   const [event, setEvent] = useState(null);
   const [booth, setBooth] = useState(null);
-  const [queuePosition, setQueuePosition] = useState(location.state?.queuePosition || 0);
-  const [currentServing, setCurrentServing] = useState(0);
+  // Persist numbers across refresh
+  const initialQueuePos = (() => {
+    const fromState = location.state?.queuePosition;
+    const fromStorage = sessionStorage.getItem(`queuePos_${boothId}`);
+    return typeof fromState === 'number' ? fromState : (fromStorage ? Number(fromStorage) : 0);
+  })();
+  const initialServing = (() => {
+    const fromStorage = sessionStorage.getItem(`serving_${boothId}`);
+    return fromStorage ? Number(fromStorage) : 0;
+  })();
+  const [queuePosition, setQueuePosition] = useState(initialQueuePos);
+  const [currentServing, setCurrentServing] = useState(initialServing);
   const [queueToken, setQueueToken] = useState(location.state?.queueToken || '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,6 +41,7 @@ export default function BoothQueueWaiting() {
   const [showMessagePreview, setShowMessagePreview] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(true);
 
   // Video call state
   const [callInvitation, setCallInvitation] = useState(null);
@@ -171,14 +182,18 @@ export default function BoothQueueWaiting() {
           setQueuePosition(queueData.position);
           setCurrentServing(queueData.currentServing);
           setQueueToken(queueData.token);
+          try {
+            sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
+            sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+          } catch (e) { }
         } else {
           // Not in queue or backend returned a non-successful shape
-          setQueuePosition(0);
+          // Do not reset to 0; retain last known value in UI
         }
       } catch (qErr) {
         // Gracefully handle 404 Not Found (user not in queue after refresh)
         console.warn('Queue status unavailable (likely not in queue):', qErr?.response?.status || qErr);
-        setQueuePosition(0);
+        // Keep existing values to avoid flashing zeros
       }
 
     } catch (error) {
@@ -202,12 +217,14 @@ export default function BoothQueueWaiting() {
   const handleQueueUpdate = (data) => {
     if (data.userId === user._id) {
       setQueuePosition(data.position);
+      try { sessionStorage.setItem(`queuePos_${boothId}`, String(data.position)); } catch (e) { }
     }
   };
 
   const handleServingUpdate = (data) => {
     if (data.boothId === boothId) {
       setCurrentServing(data.currentServing);
+      try { sessionStorage.setItem(`serving_${boothId}`, String(data.currentServing)); } catch (e) { }
     }
   };
 
@@ -418,12 +435,19 @@ export default function BoothQueueWaiting() {
       if (deviceTestStream) {
         deviceTestStream.getTracks().forEach(track => track.stop());
       }
+      if (testVideoRef.current) {
+        testVideoRef.current.srcObject = null;
+      }
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+
+      // Reset states
+      setIsTestingAudio(false);
+      setAudioTestLevel(0);
 
       const constraints = {
         audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
@@ -436,6 +460,7 @@ export default function BoothQueueWaiting() {
       // Display video in test element
       if (testVideoRef.current && stream.getVideoTracks().length > 0) {
         testVideoRef.current.srcObject = stream;
+        testVideoRef.current.play().catch(e => console.log('Video autoplay prevented:', e));
       }
 
       // Setup audio level monitoring
@@ -455,8 +480,8 @@ export default function BoothQueueWaiting() {
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
 
-      analyserRef.current.fftSize = 256;
-      analyserRef.current.smoothingTimeConstant = 0.8;
+      analyserRef.current.fftSize = 512;
+      analyserRef.current.smoothingTimeConstant = 0.3;
 
       source.connect(analyserRef.current);
 
@@ -468,15 +493,19 @@ export default function BoothQueueWaiting() {
 
         analyserRef.current.getByteFrequencyData(dataArray);
 
-        // Calculate average audio level
+        // Calculate RMS (Root Mean Square) for better sensitivity
         let sum = 0;
         for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
+          sum += dataArray[i] * dataArray[i];
         }
-        const average = sum / dataArray.length;
-        const normalizedLevel = (average / 255) * 100;
+        const rms = Math.sqrt(sum / dataArray.length);
 
-        setAudioTestLevel(normalizedLevel);
+        // Apply logarithmic scaling and boost for better visibility
+        const logLevel = Math.log10(rms + 1) * 20; // Convert to dB-like scale
+        const boostedLevel = Math.min(logLevel * 4, 100); // Boost and cap at 100%
+        const finalLevel = Math.max(boostedLevel, 0);
+
+        setAudioTestLevel(finalLevel);
 
         // Continue the loop while analyser exists; cleanup stops it
         animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
@@ -493,6 +522,11 @@ export default function BoothQueueWaiting() {
     if (deviceTestStream) {
       deviceTestStream.getTracks().forEach(track => track.stop());
       setDeviceTestStream(null);
+    }
+
+    // Clear video element
+    if (testVideoRef.current) {
+      testVideoRef.current.srcObject = null;
     }
 
     // Stop audio monitoring
@@ -528,6 +562,10 @@ export default function BoothQueueWaiting() {
   const handleDeviceCancel = () => {
     cleanupDeviceTest();
     setShowDeviceModal(false);
+  };
+
+  const handleMobilePanelClose = () => {
+    setMobilePanelOpen(false);
   };
 
   const handleSendMessage = async () => {
@@ -660,65 +698,35 @@ export default function BoothQueueWaiting() {
 
       {/* Main content area */}
       <div className="waiting-layout">
-        {/* Main content */}
-        <div className="waiting-main">
-          {/* Header with booth logo */}
-          <div className="event-header">
-            <div className="header-content">
-              <div className="booth-logo-section">
-                {booth?.logoUrl ? (
-                  <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} className="booth-logo-modern" />
-                ) : (
-                  <div className="booth-logo-modern-placeholder">
-                    <span>{booth?.name?.[0] || 'C'}</span>
-                  </div>
-                )}
-              </div>
-              <div className="event-info">
-                <h1 className="event-title">{event?.name || 'ABILITY Job Fair - Event'}</h1>
-                <h2 className="booth-subtitle">{booth?.name || 'Company Booth'}</h2>
-              </div>
-              {/* Waiting message moved here */}
-              <div className="waiting-message-header">
-                <h3>You are now in the queue.</h3>
-                <p>An invitation to join will appear when it's your turn.</p>
-              </div>
+        {/* Mobile backdrop overlay */}
+        {mobilePanelOpen && (
+          <div
+            className="mobile-backdrop"
+            onClick={handleMobilePanelClose}
+          />
+        )}
+
+        {/* Left sidebar with queue info and actions (moved from right) */}
+        <div
+          id="queue-panel"
+          className={`waiting-sidebar-left mobile-collapsible ${mobilePanelOpen ? 'open' : ''}`}
+        >
+          <div className="sidebar-header">
+            <div className="booth-logo-section">
+              {booth?.logoUrl ? (
+                <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} className="booth-logo-modern" />
+              ) : (
+                <div className="booth-logo-modern-placeholder">
+                  <span>{booth?.name?.[0] || 'C'}</span>
+                </div>
+              )}
+            </div>
+            <div className="event-info">
+              <h1 className="event-title">{event?.name || 'ABILITY Job Fair - Event'}</h1>
+              <h2 className="booth-subtitle">{booth?.name || 'Company Booth'}</h2>
             </div>
           </div>
 
-
-          {/* Content sections - expanded */}
-          <div className="content-grid-expanded">
-            {(booth?.richSections && booth.richSections.length > 0
-              ? booth.richSections
-                .filter(s => s.isActive !== false)
-                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                .slice(0, 3)
-              : [
-                {
-                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Welcome to the booth</div>'
-                },
-                {
-                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Resources coming soon</div>'
-                },
-                {
-                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Please stay on this page</div>'
-                }
-              ]
-            ).map((section, idx) => (
-              <div key={section._id || idx} className="content-card-expanded">
-                {section.contentHtml ? (
-                  <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
-                ) : (
-                  <p className="content-placeholder">Content will be available soon.</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right sidebar with queue info and actions */}
-        <div className="waiting-sidebar-right">
           <div className="queue-numbers">
             <div className="queue-number-card">
               <span className="queue-label">Your Meeting Number</span>
@@ -729,13 +737,13 @@ export default function BoothQueueWaiting() {
               <span className="queue-number">{currentServing}</span>
             </div>
           </div>
+
           <div className="queue-status">
             <span className="status-dot waiting"></span>
             <span className="status-text">Waiting</span>
           </div>
 
-
-          {/* Action buttons moved here */}
+          {/* Action buttons */}
           <div className="sidebar-actions">
             <button
               className="sidebar-action-btn camera-btn"
@@ -773,6 +781,56 @@ export default function BoothQueueWaiting() {
             </button>
           </div>
         </div>
+
+        {/* Main content */}
+        <div className="waiting-main">
+          {/* Mobile toggle for queue panel */}
+          <button
+            className="mobile-toggle-btn"
+            onClick={() => setMobilePanelOpen(v => !v)}
+            aria-expanded={mobilePanelOpen}
+            aria-controls="queue-panel"
+          >
+            <FaBars /> {mobilePanelOpen ? 'Hide queue panel' : 'Show queue panel'}
+          </button>
+
+          {/* Waiting message on top of placeholders */}
+          <div className="waiting-message-header waiting-message-centered">
+            <h3>You are now in the queue.</h3>
+            <p>An invitation to join will appear when it's your turn.</p>
+          </div>
+
+          {/* Content sections - expanded */}
+          <div className="content-grid-expanded">
+            {(booth?.richSections && booth.richSections.length > 0
+              ? booth.richSections
+                .filter(s => s.isActive !== false)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                .slice(0, 3)
+              : [
+                {
+                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Welcome to the booth</div>'
+                },
+                {
+                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Resources coming soon</div>'
+                },
+                {
+                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Please stay on this page</div>'
+                }
+              ]
+            ).map((section, idx) => (
+              <div key={section._id || idx} className="content-card-expanded">
+                {section.contentHtml ? (
+                  <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
+                ) : (
+                  <p className="content-placeholder">Content will be available soon.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Removed old right sidebar */}
       </div>
 
 
@@ -993,11 +1051,18 @@ export default function BoothQueueWaiting() {
                       autoPlay
                       muted
                       playsInline
+                      controls={false}
                       style={{
                         width: '200px',
                         height: '150px',
                         borderRadius: '8px',
-                        backgroundColor: '#000'
+                        backgroundColor: '#000',
+                        objectFit: 'cover'
+                      }}
+                      onLoadedMetadata={() => {
+                        if (testVideoRef.current) {
+                          testVideoRef.current.play().catch(e => console.log('Video play error:', e));
+                        }
                       }}
                     />
 
@@ -1012,7 +1077,7 @@ export default function BoothQueueWaiting() {
                           />
                         </div>
                         <div className="audio-level-text">
-                          {audioTestLevel > 5 ? '🎤 Microphone working!' : '🎤 Speak to test microphone'}
+                          {audioTestLevel > 2 ? '🎤 Microphone working!' : '🎤 Speak to test microphone'}
                         </div>
                       </div>
                     )}
