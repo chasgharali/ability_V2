@@ -45,7 +45,7 @@ export default function VerifyEmailSent() {
     <div className="auth-container" style={{ background: '#eef2f7' }}>
       {/* Skip to main content link for keyboard navigation */}
       <a 
-        href="#main-content" 
+        href="#verify-title" 
         className="sr-only sr-only-focusable"
         style={{
           position: 'absolute',
@@ -67,10 +67,24 @@ export default function VerifyEmailSent() {
         }}
         onClick={(e) => {
           e.preventDefault();
-          const mainContent = document.getElementById('main-content');
-          if (mainContent) {
-            mainContent.focus();
-            mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          console.log('Skip link clicked');
+          const titleElement = document.getElementById('verify-title');
+          console.log('Title element found:', titleElement);
+          if (titleElement) {
+            titleElement.focus();
+            titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            console.log('Title focused and scrolled into view');
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            console.log('Skip link activated via keyboard');
+            const titleElement = document.getElementById('verify-title');
+            if (titleElement) {
+              titleElement.focus();
+              titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
           }
         }}
       >

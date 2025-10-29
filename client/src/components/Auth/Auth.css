@@ -543,6 +543,17 @@
     box-shadow: 0 0 0 2px #ffffff, 0 0 0 5px #3b82f6;
 }
 
+/* Focus styles for headings when focused programmatically */
+.auth-title:focus,
+h1:focus {
+    outline: 3px solid #3b82f6;
+    outline-offset: 4px;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: -4px -8px;
+}
+
 /* High contrast mode support */
 @media (prefers-contrast: high) {
     .auth-card {
