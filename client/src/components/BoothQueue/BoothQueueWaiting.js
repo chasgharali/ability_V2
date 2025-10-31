@@ -820,7 +820,7 @@ export default function BoothQueueWaiting() {
       <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} />
       
       {/* Skip to main content link for screen readers */}
-      <a href="#main-content" className="sr-only sr-only-focusable">
+      <a href="#main-content" className="skip-link sr-only sr-only-focusable">
         Skip to main content
       </a>
 
