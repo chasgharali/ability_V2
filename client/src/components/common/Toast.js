@@ -5,6 +5,29 @@ import './Toast.css';
 export default function Toast({ message, type = 'success', duration = 3000, onClose }) {
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
+  const [announced, setAnnounced] = useState(false);
+
+  // Announce to screen readers when toast appears
+  useEffect(() => {
+    if (isVisible && !announced) {
+      // Create a temporary element for screen reader announcement
+      const announcement = document.createElement('div');
+      announcement.setAttribute('aria-live', 'assertive');
+      announcement.setAttribute('aria-atomic', 'true');
+      announcement.className = 'sr-only';
+      announcement.textContent = `${type} notification: ${message}`;
+      document.body.appendChild(announcement);
+      
+      // Remove after announcement
+      setTimeout(() => {
+        if (document.body.contains(announcement)) {
+          document.body.removeChild(announcement);
+        }
+      }, 1000);
+      
+      setAnnounced(true);
+    }
+  }, [isVisible, announced, message, type]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -35,22 +58,51 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
 
   if (!isVisible) return null;
 
+  const handleClose = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      onClose && onClose();
+    }, 300);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      handleClose();
+    }
+  };
+
   return (
-    <div className={`toast toast-${type} ${isExiting ? 'toast-exit' : 'toast-enter'}`}>
-      {getIcon()}
-      <span className="toast-message">{message}</span>
+    <div 
+      className={`toast toast-${type} ${isExiting ? 'toast-exit' : 'toast-enter'}`}
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      aria-describedby={`toast-message-${type}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
+      <div className="toast-content">
+        <div className="toast-icon-wrapper" aria-hidden="true">
+          {getIcon()}
+        </div>
+        <span 
+          id={`toast-message-${type}`}
+          className="toast-message"
+          role="status"
+        >
+          {message}
+        </span>
+      </div>
       <button
         className="toast-close"
-        onClick={() => {
-          setIsExiting(true);
-          setTimeout(() => {
-            setIsVisible(false);
-            onClose && onClose();
-          }, 300);
-        }}
-        aria-label="Close notification"
+        onClick={handleClose}
+        aria-label={`Close ${type} notification: ${message}`}
+        title="Close notification (Press Escape)"
+        type="button"
       >
-        <FaTimes />
+        <FaTimes aria-hidden="true" />
+        <span className="sr-only">Close</span>
       </button>
     </div>
   );
@@ -59,7 +111,13 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
 // Toast Container Component
 export function ToastContainer({ toasts, removeToast }) {
   return (
-    <div className="toast-container">
+    <div 
+      className="toast-container"
+      aria-label="Notifications"
+      role="region"
+      aria-live="polite"
+      aria-relevant="additions removals"
+    >
       {toasts.map(toast => (
         <Toast
           key={toast.id}

@@ -1,3 +1,16 @@
+/* Screen Reader Only Classes */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 /* Toast Container */
 .toast-container {
   position: fixed;
@@ -13,7 +26,7 @@
 /* Toast Base Styles */
 .toast {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
   border-radius: 8px;
@@ -27,6 +40,30 @@
   font-weight: 500;
   position: relative;
   overflow: hidden;
+}
+
+/* Focus styles for keyboard navigation */
+.toast:focus {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.toast:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Toast Content Layout */
+.toast-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.toast-icon-wrapper {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
 }
 
 /* Toast Types */
@@ -72,24 +109,42 @@
   border: none;
   color: currentColor;
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.5rem;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0.8;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
   flex-shrink: 0;
+  min-width: 32px;
+  min-height: 32px;
+  margin-top: -0.25rem;
+  margin-right: -0.25rem;
 }
 
 .toast-close:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 .toast-close:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline: 2px solid #ffffff;
   outline-offset: 2px;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.toast-close:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.toast-close:active {
+  transform: scale(0.95);
 }
 
 /* Toast Animations */
