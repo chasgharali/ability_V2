@@ -7,6 +7,8 @@ import { uploadAudioToS3, uploadVideoToS3 } from '../../services/uploads';
 import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt, FaBars } from 'react-icons/fa';
 import VideoCall from '../VideoCall/VideoCall';
 import CallInviteModal from '../VideoCall/CallInviteModal';
+import DeviceTestModal from './DeviceTestModal';
+import { useToast, ToastContainer } from '../common/Toast';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
 
@@ -16,6 +18,7 @@ export default function BoothQueueWaiting() {
   const location = useLocation();
   const { user } = useAuth();
   const { socket } = useSocket();
+  const { toasts, removeToast, showSuccess } = useToast();
 
   const [event, setEvent] = useState(null);
   const [booth, setBooth] = useState(null);
@@ -57,16 +60,9 @@ export default function BoothQueueWaiting() {
   const [selectedAudioId, setSelectedAudioId] = useState('');
   const [selectedVideoId, setSelectedVideoId] = useState('');
   const [showDeviceModal, setShowDeviceModal] = useState(false);
-  const [deviceTestStream, setDeviceTestStream] = useState(null);
-  const [isTestingAudio, setIsTestingAudio] = useState(false);
-  const [audioTestLevel, setAudioTestLevel] = useState(0);
 
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
-  const testVideoRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const animationFrameRef = useRef(null);
 
   useEffect(() => {
     loadData();
@@ -90,13 +86,6 @@ export default function BoothQueueWaiting() {
         socket.emit('leave-booth-queue', { boothId, userId: user._id });
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Cleanup device test resources
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
     };
   }, [eventSlug, boothId]);
 
@@ -462,122 +451,6 @@ export default function BoothQueueWaiting() {
     }
   };
 
-  const handleDeviceTest = async () => {
-    try {
-      // Stop existing test stream and cleanup
-      if (deviceTestStream) {
-        deviceTestStream.getTracks().forEach(track => track.stop());
-      }
-      if (testVideoRef.current) {
-        testVideoRef.current.srcObject = null;
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-
-      // Reset states
-      setIsTestingAudio(false);
-      setAudioTestLevel(0);
-
-      const constraints = {
-        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
-        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      setDeviceTestStream(stream);
-
-      // Display video in test element
-      if (testVideoRef.current && stream.getVideoTracks().length > 0) {
-        testVideoRef.current.srcObject = stream;
-        testVideoRef.current.play().catch(e => console.log('Video autoplay prevented:', e));
-      }
-
-      // Setup audio level monitoring
-      if (stream.getAudioTracks().length > 0) {
-        setIsTestingAudio(true);
-        setupAudioLevelMonitoring(stream);
-      }
-    } catch (error) {
-      console.error('Error testing devices:', error);
-      alert('Failed to test selected devices. Please try different devices.');
-    }
-  };
-
-  const setupAudioLevelMonitoring = (stream) => {
-    try {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      analyserRef.current = audioContextRef.current.createAnalyser();
-
-      analyserRef.current.fftSize = 512;
-      analyserRef.current.smoothingTimeConstant = 0.3;
-
-      source.connect(analyserRef.current);
-
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-
-      const updateAudioLevel = () => {
-        // Stop if analyser has been cleaned up
-        if (!analyserRef.current) return;
-
-        analyserRef.current.getByteFrequencyData(dataArray);
-
-        // Calculate RMS (Root Mean Square) for better sensitivity
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i] * dataArray[i];
-        }
-        const rms = Math.sqrt(sum / dataArray.length);
-
-        // Apply logarithmic scaling and boost for better visibility
-        const logLevel = Math.log10(rms + 1) * 20; // Convert to dB-like scale
-        const boostedLevel = Math.min(logLevel * 4, 100); // Boost and cap at 100%
-        const finalLevel = Math.max(boostedLevel, 0);
-
-        setAudioTestLevel(finalLevel);
-
-        // Continue the loop while analyser exists; cleanup stops it
-        animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
-      };
-
-      updateAudioLevel();
-    } catch (error) {
-      console.error('Error setting up audio monitoring:', error);
-    }
-  };
-
-  const cleanupDeviceTest = () => {
-    // Stop test stream
-    if (deviceTestStream) {
-      deviceTestStream.getTracks().forEach(track => track.stop());
-      setDeviceTestStream(null);
-    }
-
-    // Clear video element
-    if (testVideoRef.current) {
-      testVideoRef.current.srcObject = null;
-    }
-
-    // Stop audio monitoring
-    setIsTestingAudio(false);
-    setAudioTestLevel(0);
-
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-
-    analyserRef.current = null;
-  };
 
   const handleDeviceSave = () => {
     if (selectedAudioId) {
@@ -587,13 +460,11 @@ export default function BoothQueueWaiting() {
       localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
     }
 
-    cleanupDeviceTest();
     setShowDeviceModal(false);
-    alert('Camera and microphone preferences saved successfully!');
+    showSuccess('Camera and microphone preferences saved successfully!');
   };
 
   const handleDeviceCancel = () => {
-    cleanupDeviceTest();
     setShowDeviceModal(false);
   };
 
@@ -1192,125 +1063,21 @@ export default function BoothQueueWaiting() {
         />
       )}
 
-      {/* Device Selection Modal */}
-      {showDeviceModal && (
-        <div className="modal-overlay">
-          <div className="modal-content device-modal">
-            <div className="modal-header">
-              <h3>Select Camera & Microphone</h3>
-              <button
-                className="modal-close"
-                onClick={handleDeviceCancel}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="device-selection-content">
-              <div className="device-grid">
-                <div className="device-field">
-                  <label className="device-label" htmlFor="mic-select">Microphone</label>
-                  <select
-                    id="mic-select"
-                    className="device-select"
-                    value={selectedAudioId || ''}
-                    onChange={e => setSelectedAudioId(e.target.value)}
-                  >
-                    {audioInputs.map(d => (
-                      <option key={d.deviceId} value={d.deviceId}>
-                        {d.label || 'Microphone'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="device-field">
-                  <label className="device-label" htmlFor="cam-select">Camera</label>
-                  <select
-                    id="cam-select"
-                    className="device-select"
-                    value={selectedVideoId || ''}
-                    onChange={e => setSelectedVideoId(e.target.value)}
-                  >
-                    {videoInputs.map(d => (
-                      <option key={d.deviceId} value={d.deviceId}>
-                        {d.label || 'Camera'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="device-test-section">
-                <button
-                  onClick={handleDeviceTest}
-                  className="btn-test-devices"
-                  disabled={!selectedAudioId && !selectedVideoId}
-                >
-                  Test Devices
-                </button>
-
-                {deviceTestStream && (
-                  <div className="test-preview">
-                    <video
-                      ref={testVideoRef}
-                      autoPlay
-                      muted
-                      playsInline
-                      controls={false}
-                      style={{
-                        width: '200px',
-                        height: '150px',
-                        borderRadius: '8px',
-                        backgroundColor: '#000',
-                        objectFit: 'cover'
-                      }}
-                      onLoadedMetadata={() => {
-                        if (testVideoRef.current) {
-                          testVideoRef.current.play().catch(e => console.log('Video play error:', e));
-                        }
-                      }}
-                    />
-
-                    {/* Audio Level Meter */}
-                    {isTestingAudio && (
-                      <div className="audio-level-meter">
-                        <div className="audio-level-label">Microphone Level</div>
-                        <div className="audio-level-bar">
-                          <div
-                            className="audio-level-fill"
-                            style={{ width: `${audioTestLevel}%` }}
-                          />
-                        </div>
-                        <div className="audio-level-text">
-                          {audioTestLevel > 2 ? '🎤 Microphone working!' : '🎤 Speak to test microphone'}
-                        </div>
-                      </div>
-                    )}
-
-                    <p className="test-status">Device test active</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="modal-actions">
-              <button
-                onClick={handleDeviceCancel}
-                className="btn-cancel"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeviceSave}
-                className="btn-save"
-              >
-                Save Preferences
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Device Test Modal */}
+      <DeviceTestModal
+        isOpen={showDeviceModal}
+        onClose={handleDeviceCancel}
+        audioInputs={audioInputs}
+        videoInputs={videoInputs}
+        selectedAudioId={selectedAudioId}
+        selectedVideoId={selectedVideoId}
+        onChangeAudio={setSelectedAudioId}
+        onChangeVideo={setSelectedVideoId}
+        onSave={handleDeviceSave}
+      />
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }
