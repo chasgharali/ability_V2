@@ -291,13 +291,13 @@ export default function UserManagement() {
                 <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
                 {!editingId && (
                   <>
-                    <div className="form-row">
+                    <div className="password-field-container">
                       <Input label="Password" type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setField('password', e.target.value)} required />
-                      <button type="button" className="ajf-btn ajf-btn-outline" aria-pressed={showPwd} aria-label={showPwd ? 'Hide password' : 'Show password'} onClick={() => setShowPwd(s => !s)} style={{ alignSelf: 'flex-end', height: 40 }}> {showPwd ? 'Hide' : 'Show'} </button>
+                      <button type="button" className="ajf-btn ajf-btn-outline password-toggle-btn" aria-pressed={showPwd} aria-label={showPwd ? 'Hide password' : 'Show password'} onClick={() => setShowPwd(s => !s)}> {showPwd ? 'Hide' : 'Show'} </button>
                     </div>
-                    <div className="form-row">
+                    <div className="password-field-container">
                       <Input label="Confirm Password" type={showConfirmPwd ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required />
-                      <button type="button" className="ajf-btn ajf-btn-outline" aria-pressed={showConfirmPwd} aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} onClick={() => setShowConfirmPwd(s => !s)} style={{ alignSelf: 'flex-end', height: 40 }}> {showConfirmPwd ? 'Hide' : 'Show'} </button>
+                      <button type="button" className="ajf-btn ajf-btn-outline password-toggle-btn" aria-pressed={showConfirmPwd} aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} onClick={() => setShowConfirmPwd(s => !s)}> {showConfirmPwd ? 'Hide' : 'Show'} </button>
                     </div>
                   </>
                 )}

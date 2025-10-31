@@ -1020,6 +1020,29 @@
     gap: 1rem;
 }
 
+/* Password field with show/hide button */
+.password-field-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.password-field-container .form-field {
+    margin-bottom: 0;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 12px; /* Account for label height */
+    height: 36px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    min-width: 60px;
+    z-index: 2;
+}
+
 /* 4-column layout for survey top row */
 .form-row-4 {
     display: grid;
