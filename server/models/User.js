@@ -187,6 +187,7 @@ userSchema.methods.getPublicProfile = function () {
         needsOther: this.needsOther,
         subscribeAnnouncements: this.subscribeAnnouncements,
         survey: this.survey,
+        metadata: this.metadata,
         languages: this.languages,
         isAvailable: this.isAvailable,
         assignedBooth: this.assignedBooth,
