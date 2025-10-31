@@ -218,28 +218,28 @@ export default function BoothManagement() {
   const gridColumns = [
     {
       key: 'name',
-      title: 'Booth Name',
-      render: (value) => value || 'Unnamed Booth'
+      label: 'Booth Name',
+      render: (row) => row.name || 'Unnamed Booth'
     },
     {
       key: 'logo',
-      title: 'Logo',
-      render: (value) => value ? <img src={value} alt="Booth logo" style={{ height: 28, borderRadius: 4 }} /> : null
+      label: 'Logo',
+      render: (row) => row.logo ? <img src={row.logo} alt="Booth logo" style={{ height: 28, borderRadius: 4 }} /> : null
     },
     {
       key: 'events',
-      title: 'Event Title',
-      render: (value) => (value || []).join(', ') || 'No events'
+      label: 'Event Title',
+      render: (row) => (row.events || []).join(', ') || 'No events'
     },
     {
       key: 'recruitersCount',
-      title: 'Recruiters',
-      render: (v) => v ?? 0
+      label: 'Recruiters',
+      render: (row) => row.recruitersCount ?? 0
     },
     {
       key: 'customInviteText',
-      title: 'Custom Invite Text',
-      render: (v, row) => {
+      label: 'Custom Invite Text',
+      render: (row) => {
         if (row.customInviteSlug) {
           return <span>{row.customInviteSlug}</span>;
         }
@@ -248,11 +248,11 @@ export default function BoothManagement() {
     },
     {
       key: 'expireLinkTime',
-      title: 'Expire Date',
-      render: (v) => {
-        if (!v) return 'No expiry';
+      label: 'Expire Date',
+      render: (row) => {
+        if (!row.expireLinkTime) return 'No expiry';
         try {
-          const date = new Date(v);
+          const date = new Date(row.expireLinkTime);
           if (isNaN(date.getTime())) return 'Invalid date';
           return date.toLocaleString();
         } catch (e) {
@@ -262,8 +262,8 @@ export default function BoothManagement() {
     },
     {
       key: 'companyPage',
-      title: 'Company Page',
-      render: (value, row) => {
+      label: 'Company Page',
+      render: (row) => {
         if (row.companyPage) {
           return (
             <a className="ajf-btn ajf-btn-outline" href={row.companyPage} target="_blank" rel="noreferrer">
@@ -277,8 +277,8 @@ export default function BoothManagement() {
     },
     {
       key: 'actions',
-      title: 'Actions',
-      render: (value, row) => (
+      label: 'Actions',
+      render: (row) => (
         <div className="ajf-grid-actions">
           <button className="ajf-btn ajf-btn-dark">Job Seekers Report</button>
           <button className="ajf-btn ajf-btn-outline" onClick={() => setPreviewBooth(row)}>Placeholder</button>

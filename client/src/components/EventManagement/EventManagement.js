@@ -177,26 +177,26 @@ export default function EventManagement() {
     const eventPageUrlFor = (row) => row.link || `${window.location.origin}/event/${row.slug}`;
 
     const gridColumns = [
-        { key: 'name', title: 'Event Name' },
-        { key: 'startTime', title: 'Event Start Time', render: (v) => v ? new Date(v).toLocaleString() : '-' },
-        { key: 'endTime', title: 'Event End Time', render: (v) => v ? new Date(v).toLocaleString() : '-' },
-        { key: 'date', title: 'Event Date' },
-        { key: 'createdAt', title: 'Created Time' },
-        { key: 'status', title: 'Status' },
-        { key: 'maxRecruitersPerEvent', title: 'Max Recruiters' },
-        { key: 'maxBooths', title: 'Max Booths' },
-        { key: 'sendyId', title: 'Sendy Event Id', render: (v) => v || '-' },
+        { key: 'name', label: 'Event Name' },
+        { key: 'startTime', label: 'Event Start Time', render: (row) => row.startTime ? new Date(row.startTime).toLocaleString() : '-' },
+        { key: 'endTime', label: 'Event End Time', render: (row) => row.endTime ? new Date(row.endTime).toLocaleString() : '-' },
+        { key: 'date', label: 'Event Date' },
+        { key: 'createdAt', label: 'Created Time' },
+        { key: 'status', label: 'Status' },
+        { key: 'maxRecruitersPerEvent', label: 'Max Recruiters' },
+        { key: 'maxBooths', label: 'Max Booths' },
+        { key: 'sendyId', label: 'Sendy Event Id', render: (row) => row.sendyId || '-' },
         {
             key: 'eventPage',
-            title: 'Event Page',
-            render: (value, row) => (
+            label: 'Event Page',
+            render: (row) => (
                 <a className="ajf-btn ajf-btn-outline" href={eventPageUrlFor(row)} target="_blank" rel="noreferrer">
                     Event Page
                 </a>
             )
         },
         {
-            key: 'actions', title: 'Action', render: (_, row) => (
+            key: 'actions', label: 'Action', render: (row) => (
                 <div className="ajf-grid-actions">
                     <button type="button" className="ajf-btn ajf-btn-dark" onClick={() => copyText(registrationUrlFor(row))}>Registration Link</button>
                     <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => startEdit(row)}>Edit</button>

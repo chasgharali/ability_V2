@@ -134,14 +134,14 @@ export default function UserManagement() {
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
 
   const gridColumns = [
-    { key: 'firstName', title: 'First Name' },
-    { key: 'lastName', title: 'Last Name' },
-    { key: 'email', title: 'Email' },
-    { key: 'role', title: 'Role' },
-    { key: 'field', title: 'Field' },
-    { key: 'booth', title: 'Booth' },
-    { key: 'event', title: 'Event' },
-    { key: 'actions', title: 'Action', render: (_, row) => (
+    { key: 'firstName', label: 'First Name' },
+    { key: 'lastName', label: 'Last Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'role', label: 'Role' },
+    { key: 'field', label: 'Field' },
+    { key: 'booth', label: 'Booth' },
+    { key: 'event', label: 'Event' },
+    { key: 'actions', label: 'Action', render: (row) => (
       <div className="ajf-grid-actions">
         <button className="ajf-btn ajf-btn-outline" onClick={() => startEdit(row)} aria-label={`Edit ${row.firstName} ${row.lastName}`}>Edit</button>
         {row.isActive ? (
