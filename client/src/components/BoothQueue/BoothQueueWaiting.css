@@ -12,6 +12,35 @@
   background: #ffffff;
 }
 
+/* Screen Reader Only Classes */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0.5rem 1rem !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  border-radius: 4px !important;
+  z-index: 10000 !important;
+}
+
 /* Main Layout */
 .waiting-layout {
   display: grid;
@@ -26,6 +55,26 @@
 /* Mobile toggle button - hidden on desktop */
 .mobile-toggle-btn {
   display: none;
+}
+
+/* Hide queue panel toggle on large desktop screens only */
+@media (min-width: 1200px) {
+  .mobile-toggle-btn {
+    display: none !important;
+  }
+  
+  /* Ensure queue panel is always visible on large desktop */
+  .waiting-sidebar-left {
+    transform: none !important;
+    position: static !important;
+  }
+}
+
+/* Show mobile toggle for medium screens (tablets) */
+@media (max-width: 1199px) {
+  .mobile-toggle-btn {
+    display: flex !important;
+  }
 }
 
 /* Left sidebar (queue panel) */
@@ -351,6 +400,17 @@
   border-color: #111827;
 }
 
+.sidebar-action-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.sidebar-action-btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
 
 @keyframes pulse {
 
@@ -430,6 +490,14 @@
   gap: 1rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+  border: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+}
+
+.message-type-selector legend {
+  padding: 0;
+  margin-bottom: 0.5rem;
 }
 
 .message-type-selector label {
@@ -521,6 +589,41 @@
 .btn-send:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Focus indicators for form elements */
+.message-form input[type="radio"]:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.message-form textarea:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-color: #3b82f6;
+}
+
+.record-btn:focus,
+.stop-btn:focus,
+.btn-preview:focus,
+.btn-retake:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .sidebar-action-btn {
+    border-width: 2px;
+  }
+  
+  .queue-number-card {
+    border: 2px solid #000000;
+  }
+  
+  .mobile-toggle-btn {
+    border: 2px solid #ffffff;
+  }
 }
 
 /* Primary button for device modal save action */
@@ -969,6 +1072,57 @@
   font-size: 0.875rem;
 }
 
+/* Medium screens (tablets) - show toggle button but keep sidebar behavior */
+@media (max-width: 1199px) and (min-width: 769px) {
+  .waiting-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'main';
+    position: relative;
+  }
+
+  .waiting-sidebar-left {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 70vh;
+    z-index: 1000;
+    transform: translateY(100%);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 12px 12px 0 0;
+    overflow-y: auto;
+    background: #ffffff;
+    border-right: none;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .waiting-sidebar-left.open {
+    transform: translateY(0);
+  }
+
+  .mobile-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: block;
+    cursor: pointer;
+  }
+
+  .mobile-backdrop:focus {
+    outline: 2px solid #ffffff;
+    outline-offset: -2px;
+  }
+
+  .waiting-main {
+    padding: 1.5rem 2rem;
+  }
+}
+
 /* Mobile responsive layout */
 @media (max-width: 768px) {
 
@@ -993,10 +1147,38 @@
     cursor: pointer;
     margin-bottom: 1rem;
     font-size: 0.875rem;
+    position: relative;
+    z-index: 10;
   }
 
   .mobile-toggle-btn:hover {
     background: #1d4ed8;
+  }
+
+  .mobile-toggle-btn:focus {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  .mobile-toggle-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .waiting-sidebar-left {
+      transition: none;
+    }
+    
+    .mobile-backdrop {
+      transition: none;
+    }
+    
+    .status-dot.waiting {
+      animation: none;
+    }
   }
 
   /* Mobile backdrop overlay */
@@ -1009,23 +1191,34 @@
     background: rgba(0, 0, 0, 0.5);
     z-index: 999;
     display: block;
+    cursor: pointer;
   }
 
-  /* Mobile sidebar behavior */
+  .mobile-backdrop:focus {
+    outline: 2px solid #ffffff;
+    outline-offset: -2px;
+  }
+
+  /* Mobile sidebar behavior - slide from bottom */
   .waiting-sidebar-left {
     position: fixed;
-    top: 72px;
-    /* Below header */
+    bottom: 0;
     left: 0;
-    width: 280px;
-    height: calc(100vh - 72px);
+    right: 0;
+    width: 100%;
+    max-height: 70vh;
     z-index: 1000;
-    transform: translateX(-100%);
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(100%);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 12px 12px 0 0;
+    overflow-y: auto;
+    background: #ffffff;
+    border-right: none;
+    border-top: 1px solid #e5e7eb;
   }
 
   .waiting-sidebar-left.open {
-    transform: translateX(0);
+    transform: translateY(0);
   }
 
 

@@ -41,7 +41,11 @@ export default function BoothQueueWaiting() {
   const [showMessagePreview, setShowMessagePreview] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(true);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1199);
+  const modalRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
   // Video call state
   const [callInvitation, setCallInvitation] = useState(null);
@@ -216,15 +220,39 @@ export default function BoothQueueWaiting() {
 
   const handleQueueUpdate = (data) => {
     if (data.userId === user._id) {
+      const oldPosition = queuePosition;
       setQueuePosition(data.position);
       try { sessionStorage.setItem(`queuePos_${boothId}`, String(data.position)); } catch (e) { }
+      
+      // Announce position changes to screen readers
+      if (oldPosition !== data.position) {
+        const announcement = `Your queue position has been updated to number ${data.position}`;
+        announceToScreenReader(announcement);
+      }
     }
   };
 
   const handleServingUpdate = (data) => {
     if (data.boothId === boothId) {
+      const oldServing = currentServing;
       setCurrentServing(data.currentServing);
       try { sessionStorage.setItem(`serving_${boothId}`, String(data.currentServing)); } catch (e) { }
+      
+      // Announce serving number changes to screen readers
+      if (oldServing !== data.currentServing) {
+        const announcement = `Now serving number ${data.currentServing}`;
+        announceToScreenReader(announcement);
+        
+        // Check if user is next or being called
+        if (queuePosition === data.currentServing) {
+          const urgentAnnouncement = 'It is now your turn! Please prepare for your meeting invitation.';
+          announceToScreenReader(urgentAnnouncement);
+          speak(urgentAnnouncement);
+        } else if (queuePosition === data.currentServing + 1) {
+          const nextAnnouncement = 'You are next in line. Please be ready.';
+          announceToScreenReader(nextAnnouncement);
+        }
+      }
     }
   };
 
@@ -303,6 +331,11 @@ export default function BoothQueueWaiting() {
       // Fallback: proceed without modal
       handleAcceptInvite();
     }
+  };
+
+  // Announce to screen readers using ARIA live regions
+  const announceToScreenReader = (message) => {
+    setAnnouncements(prev => [...prev.slice(-4), { id: Date.now(), message }]);
   };
 
   // Speak announcement using Web Speech API
@@ -566,7 +599,97 @@ export default function BoothQueueWaiting() {
 
   const handleMobilePanelClose = () => {
     setMobilePanelOpen(false);
+    announceToScreenReader('Queue panel closed');
   };
+
+  const handleMobilePanelToggle = () => {
+    const newState = !mobilePanelOpen;
+    setMobilePanelOpen(newState);
+    announceToScreenReader(newState ? 'Queue panel opened' : 'Queue panel closed');
+  };
+
+  // Focus management for modals
+  const openModal = () => {
+    previousFocusRef.current = document.activeElement;
+    setShowMessageModal(true);
+  };
+
+  const closeModal = () => {
+    setShowMessageModal(false);
+    if (previousFocusRef.current) {
+      previousFocusRef.current.focus();
+    }
+  };
+
+  // Focus trap for modal
+  const handleModalKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      closeModal();
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      const modal = modalRef.current;
+      if (!modal) return;
+
+      const focusableElements = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          event.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          event.preventDefault();
+        }
+      }
+    }
+  };
+
+  // Focus first element when modal opens
+  useEffect(() => {
+    if (showMessageModal && modalRef.current) {
+      const firstFocusable = modalRef.current.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (firstFocusable) {
+        firstFocusable.focus();
+      }
+    }
+  }, [showMessageModal]);
+
+  // Keyboard event handler for accessibility
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape' && mobilePanelOpen) {
+      handleMobilePanelClose();
+    }
+  };
+
+  // Add keyboard event listener and window resize listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 1199;
+      setIsMobile(mobile);
+      if (!mobile && mobilePanelOpen) {
+        setMobilePanelOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [mobilePanelOpen]);
 
   const handleSendMessage = async () => {
     try {
@@ -695,6 +818,11 @@ export default function BoothQueueWaiting() {
     <div className="booth-queue-waiting">
       {/* Global header with event branding */}
       <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} />
+      
+      {/* Skip to main content link for screen readers */}
+      <a href="#main-content" className="sr-only sr-only-focusable">
+        Skip to main content
+      </a>
 
       {/* Main content area */}
       <div className="waiting-layout">
@@ -703,6 +831,15 @@ export default function BoothQueueWaiting() {
           <div
             className="mobile-backdrop"
             onClick={handleMobilePanelClose}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleMobilePanelClose();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close queue panel"
           />
         )}
 
@@ -710,37 +847,62 @@ export default function BoothQueueWaiting() {
         <div
           id="queue-panel"
           className={`waiting-sidebar-left mobile-collapsible ${mobilePanelOpen ? 'open' : ''}`}
+          role="complementary"
+          aria-label="Queue information and actions"
+          aria-hidden={isMobile && !mobilePanelOpen ? 'true' : 'false'}
         >
           <div className="sidebar-header">
             <div className="booth-logo-section">
               {booth?.logoUrl ? (
-                <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} className="booth-logo-modern" />
+                <img 
+                  src={booth.logoUrl} 
+                  alt={`${booth?.name || 'Company'} logo`} 
+                  className="booth-logo-modern"
+                />
               ) : (
-                <div className="booth-logo-modern-placeholder">
-                  <span>{booth?.name?.[0] || 'C'}</span>
+                <div className="booth-logo-modern-placeholder" role="img" aria-label={`${booth?.name || 'Company'} logo placeholder`}>
+                  <span aria-hidden="true">{booth?.name?.[0] || 'C'}</span>
                 </div>
               )}
             </div>
             <div className="event-info">
-              <h1 className="event-title">{event?.name || 'ABILITY Job Fair - Event'}</h1>
-              <h2 className="booth-subtitle">{booth?.name || 'Company Booth'}</h2>
+              <h1 className="event-title" id="event-title">{event?.name || 'ABILITY Job Fair - Event'}</h1>
+              <h2 className="booth-subtitle" id="booth-title">{booth?.name || 'Company Booth'}</h2>
             </div>
           </div>
 
-          <div className="queue-numbers">
-            <div className="queue-number-card">
-              <span className="queue-label">Your Meeting Number</span>
-              <span className="queue-number">{queuePosition}</span>
+          <div className="queue-numbers" role="region" aria-label="Queue status information">
+            <div className="queue-number-card" role="status" aria-live="polite">
+              <span className="queue-label" id="user-position-label">Your Meeting Number</span>
+              <span 
+                className="queue-number" 
+                aria-labelledby="user-position-label"
+                aria-describedby="queue-position-desc"
+              >
+                {queuePosition}
+              </span>
+              <span id="queue-position-desc" className="sr-only">
+                You are number {queuePosition} in the queue
+              </span>
             </div>
-            <div className="queue-number-card">
-              <span className="queue-label">Now Serving Number</span>
-              <span className="queue-number">{currentServing}</span>
+            <div className="queue-number-card" role="status" aria-live="polite">
+              <span className="queue-label" id="serving-number-label">Now Serving Number</span>
+              <span 
+                className="queue-number"
+                aria-labelledby="serving-number-label"
+                aria-describedby="serving-number-desc"
+              >
+                {currentServing}
+              </span>
+              <span id="serving-number-desc" className="sr-only">
+                Currently serving number {currentServing}
+              </span>
             </div>
           </div>
 
-          <div className="queue-status">
-            <span className="status-dot waiting"></span>
-            <span className="status-text">Waiting</span>
+          <div className="queue-status" role="status" aria-live="polite" aria-label="Current queue status">
+            <span className="status-dot waiting" aria-hidden="true"></span>
+            <span className="status-text">Waiting in queue</span>
           </div>
 
           {/* Action buttons */}
@@ -748,56 +910,76 @@ export default function BoothQueueWaiting() {
             <button
               className="sidebar-action-btn camera-btn"
               onClick={handleDeviceSelection}
+              aria-label="Select camera and microphone devices"
+              type="button"
             >
-              <FaVideo /> Select camera & mic
+              <FaVideo aria-hidden="true" /> Select camera & mic
             </button>
 
             <button
               className="sidebar-action-btn message-btn"
-              onClick={() => setShowMessageModal(true)}
+              onClick={openModal}
+              aria-label="Create and send a message to the recruiter"
+              type="button"
             >
-              <FaCommentDots /> Create a message
+              <FaCommentDots aria-hidden="true" /> Create a message
             </button>
 
             <button
               className="sidebar-action-btn refresh-btn"
               onClick={() => window.location.reload()}
+              aria-label="Refresh connection to update queue status"
+              type="button"
             >
-              <FaSyncAlt /> Refresh connection
+              <FaSyncAlt aria-hidden="true" /> Refresh connection
             </button>
 
             <button
               className="sidebar-action-btn return-btn-alt"
               onClick={handleReturnToEvent}
+              aria-label="Return to main event page in new tab"
+              type="button"
             >
-              <FaArrowLeft /> Return to main event
+              <FaArrowLeft aria-hidden="true" /> Return to main event
             </button>
 
             <button
               className="sidebar-action-btn exit-btn"
               onClick={handleExitEvent}
+              aria-label="Exit the event and leave the queue"
+              type="button"
             >
-              <FaSignOutAlt /> Exit the event
+              <FaSignOutAlt aria-hidden="true" /> Exit the event
             </button>
           </div>
         </div>
 
         {/* Main content */}
-        <div className="waiting-main">
+        <div className="waiting-main" id="main-content">
           {/* Mobile toggle for queue panel */}
           <button
             className="mobile-toggle-btn"
-            onClick={() => setMobilePanelOpen(v => !v)}
+            onClick={handleMobilePanelToggle}
             aria-expanded={mobilePanelOpen}
             aria-controls="queue-panel"
+            aria-label={mobilePanelOpen ? 'Close queue information panel' : 'Open queue information panel'}
+            type="button"
           >
-            <FaBars /> {mobilePanelOpen ? 'Hide queue panel' : 'Show queue panel'}
+            <FaBars aria-hidden="true" /> 
+            {mobilePanelOpen ? 'Close Queue Options' : 'Queue Options'}
           </button>
 
           {/* Waiting message on top of placeholders */}
-          <div className="waiting-message-header waiting-message-centered">
+          <div className="waiting-message-header waiting-message-centered" role="status" aria-live="polite">
             <h3>You are now in the queue.</h3>
             <p>An invitation to join will appear when it's your turn.</p>
+          </div>
+
+          {/* ARIA Live Regions for Screen Reader Announcements */}
+          <div aria-live="assertive" aria-atomic="true" className="sr-only">
+            {announcements.map(announcement => (
+              <div key={announcement.id}>{announcement.message}</div>
+            ))}
           </div>
 
           {/* Content sections - expanded */}
@@ -836,48 +1018,66 @@ export default function BoothQueueWaiting() {
 
       {/* Message Modal */}
       {showMessageModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div 
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          onKeyDown={handleModalKeyDown}
+        >
+          <div className="modal-content" ref={modalRef}>
             <div className="modal-header">
-              <h3>Send Message to Recruiter</h3>
+              <h3 id="modal-title">Send Message to Recruiter</h3>
               <button
                 className="modal-close"
-                onClick={() => setShowMessageModal(false)}
+                onClick={closeModal}
+                aria-label="Close message dialog"
+                type="button"
               >
                 ×
               </button>
             </div>
 
             <div className="message-form">
-              <div className="message-type-selector">
+              <fieldset className="message-type-selector">
+                <legend className="sr-only">Choose message type</legend>
                 <label>
                   <input
                     type="radio"
+                    name="messageType"
                     value="text"
                     checked={messageType === 'text'}
                     onChange={(e) => setMessageType(e.target.value)}
+                    aria-describedby="text-message-desc"
                   />
                   Text Message
+                  <span id="text-message-desc" className="sr-only">Send a written text message</span>
                 </label>
                 <label>
                   <input
                     type="radio"
+                    name="messageType"
                     value="audio"
                     checked={messageType === 'audio'}
                     onChange={(e) => setMessageType(e.target.value)}
+                    aria-describedby="audio-message-desc"
                   />
                   Audio Message
+                  <span id="audio-message-desc" className="sr-only">Record and send an audio message</span>
                 </label>
                 <label>
                   <input
                     type="radio"
+                    name="messageType"
                     value="video"
                     checked={messageType === 'video'}
                     onChange={(e) => setMessageType(e.target.value)}
+                    aria-describedby="video-message-desc"
                   />
                   Video Message
+                  <span id="video-message-desc" className="sr-only">Record and send a video message</span>
                 </label>
-              </div>
+              </fieldset>
 
               {messageType === 'text' ? (
                 <textarea
@@ -885,6 +1085,8 @@ export default function BoothQueueWaiting() {
                   onChange={(e) => setMessageContent(e.target.value)}
                   placeholder="Type your message here..."
                   rows={4}
+                  aria-label="Message content"
+                  aria-describedby="text-input-help"
                 />
               ) : (
                 <div className="recording-controls">
@@ -943,8 +1145,10 @@ export default function BoothQueueWaiting() {
 
               <div className="modal-actions">
                 <button
-                  onClick={() => setShowMessageModal(false)}
+                  onClick={closeModal}
                   className="btn-cancel"
+                  type="button"
+                  aria-label="Cancel and close dialog"
                 >
                   Cancel
                 </button>
@@ -952,6 +1156,8 @@ export default function BoothQueueWaiting() {
                   onClick={handleSendMessage}
                   disabled={!messageContent || isUploading || (messageType !== 'text' && !recordedBlob)}
                   className="btn-send"
+                  type="button"
+                  aria-label={isUploading ? 'Sending message, please wait' : 'Send message to recruiter'}
                 >
                   {isUploading ? 'Sending...' : 'Send Message'}
                 </button>
