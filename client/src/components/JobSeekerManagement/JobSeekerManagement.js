@@ -6,7 +6,7 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
 import { Input, Select } from '../UI/FormComponents';
 import Toast from '../UI/Toast';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail } from '../../services/users';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -138,6 +138,21 @@ export default function JobSeekerManagement() {
     setMode('view');
   };
 
+  const handleVerifyEmail = async (row) => {
+    if (row.emailVerified) return; // safety check
+    const ok = window.confirm(`Verify email for ${row.firstName} ${row.lastName}?`);
+    if (!ok) return;
+    try {
+      await verifyUserEmail(row.id);
+      showToast(`Email verified for ${row.firstName} ${row.lastName}`, 'success');
+      await loadJobSeekers(); // Refresh the list
+    } catch (e) {
+      console.error('Verify email failed', e);
+      const msg = e?.response?.data?.message || 'Failed to verify email';
+      showToast(msg, 'error');
+    }
+  };
+
   const filteredJobSeekers = useMemo(() => {
     return jobSeekers.filter(js => {
       const matchesSearch = !searchFilter || 
@@ -195,6 +210,15 @@ export default function JobSeekerManagement() {
           >
             View
           </button>
+          {!row.emailVerified && (
+            <button
+              className="btn-sm btn-info"
+              onClick={() => handleVerifyEmail(row)}
+              title="Verify Email"
+            >
+              Verify Email
+            </button>
+          )}
           <button
             className={`btn-sm ${row.isActive ? 'btn-warning' : 'btn-success'}`}
             onClick={() => handleToggleActive(row)}

@@ -568,4 +568,51 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
     }
 });
 
+/**
+ * POST /api/users/:id/verify-email
+ * Admin manually verify user's email (Admin/GlobalSupport only)
+ */
+router.post('/:id/verify-email', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { user: currentUser } = req;
+
+        // Find the target user
+        const targetUser = await User.findById(id);
+        if (!targetUser) {
+            return res.status(404).json({
+                error: 'User not found',
+                message: 'The specified user does not exist'
+            });
+        }
+
+        // Check if email is already verified
+        if (targetUser.emailVerified) {
+            return res.status(400).json({
+                error: 'Email already verified',
+                message: 'This user\'s email is already verified'
+            });
+        }
+
+        // Manually verify the email
+        targetUser.emailVerified = true;
+        targetUser.emailVerificationToken = null;
+        targetUser.emailVerificationExpires = null;
+        await targetUser.save();
+
+        logger.info(`Admin ${currentUser.email} manually verified email for user ${targetUser.email}`);
+
+        res.json({
+            message: 'Email verified successfully',
+            user: targetUser.getPublicProfile()
+        });
+    } catch (error) {
+        logger.error('Admin verify email error:', error);
+        res.status(500).json({
+            error: 'Failed to verify email',
+            message: 'An error occurred while verifying the email'
+        });
+    }
+});
+
 module.exports = router;
