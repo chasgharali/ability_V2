@@ -281,7 +281,7 @@ const DataGrid = ({
                                     }
                                 >
                                     <span className="data-grid-header-content">
-                                        {column.title}
+                                        {column.label || column.title}
                                         {sortable && (
                                             <span className="data-grid-sort-indicator" aria-hidden="true">
                                                 {sortConfig.key === column.key
@@ -338,9 +338,9 @@ const DataGrid = ({
                                             key={column.key}
                                             role="cell"
                                             className="data-grid-cell"
-                                            data-label={column.title}
+                                            data-label={column.label || column.title}
                                         >
-                                            {column.render ? column.render(row[column.key], row) : row[column.key]}
+                                            {column.render ? column.render(row) : row[column.key]}
                                         </td>
                                     ))}
                                 </tr>

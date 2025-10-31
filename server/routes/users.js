@@ -412,11 +412,12 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 
 /**
  * DELETE /api/users/:id
- * Deactivate user account (Admin/GlobalSupport only)
+ * Deactivate or permanently delete user account (Admin/GlobalSupport only)
  */
 router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { id } = req.params;
+        const { permanent } = req.query;
         const { user } = req;
 
         const targetUser = await User.findById(id);
@@ -427,29 +428,48 @@ router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
             });
         }
 
-        // Prevent self-deactivation
+        // Prevent self-deletion/deactivation
         if (id === user._id.toString()) {
             return res.status(400).json({
-                error: 'Cannot deactivate self',
-                message: 'You cannot deactivate your own account'
+                error: 'Cannot delete/deactivate self',
+                message: 'You cannot delete or deactivate your own account'
             });
         }
 
-        // Deactivate user instead of deleting
-        targetUser.isActive = false;
-        targetUser.refreshTokens = []; // Invalidate all refresh tokens
-        await targetUser.save();
+        if (permanent === 'true') {
+            // Permanent deletion - only allow for inactive users
+            if (targetUser.isActive) {
+                return res.status(400).json({
+                    error: 'Cannot permanently delete active user',
+                    message: 'User must be deactivated before permanent deletion'
+                });
+            }
 
-        logger.info(`User deactivated: ${targetUser.email} by ${user.email}`);
+            // Permanently delete the user
+            await User.findByIdAndDelete(id);
+            
+            logger.info(`User permanently deleted: ${targetUser.email} by ${user.email}`);
 
-        res.json({
-            message: 'User account deactivated successfully'
-        });
+            res.json({
+                message: 'User account permanently deleted successfully'
+            });
+        } else {
+            // Deactivate user instead of deleting
+            targetUser.isActive = false;
+            targetUser.refreshTokens = []; // Invalidate all refresh tokens
+            await targetUser.save();
+
+            logger.info(`User deactivated: ${targetUser.email} by ${user.email}`);
+
+            res.json({
+                message: 'User account deactivated successfully'
+            });
+        }
     } catch (error) {
-        logger.error('Deactivate user error:', error);
+        logger.error('Delete/deactivate user error:', error);
         res.status(500).json({
-            error: 'Failed to deactivate user',
-            message: 'An error occurred while deactivating the user account'
+            error: 'Failed to delete/deactivate user',
+            message: 'An error occurred while processing the user account'
         });
     }
 });

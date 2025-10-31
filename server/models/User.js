@@ -175,6 +175,7 @@ userSchema.methods.getPublicProfile = function () {
         emailVerified: this.emailVerified,
         resumeUrl: this.resumeUrl,
         isActive: this.isActive,
+        lastLogin: this.lastLogin,
         phoneNumber: this.phoneNumber,
         state: this.state,
         city: this.city,
