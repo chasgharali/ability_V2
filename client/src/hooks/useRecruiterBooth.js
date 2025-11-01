@@ -82,16 +82,28 @@ export function useRecruiterBooth() {
                     // No booth found for this recruiter - try to get any booth as fallback
                     console.log('useRecruiterBooth: No booth found for this recruiter, trying fallback');
                     
-                    // Prefer booths with logos, specifically looking for f12 or Amazon booth
-                    const fallbackBooth = data.booths?.find(booth => 
-                        booth.name?.toLowerCase().includes('f12')
-                    ) || data.booths?.find(booth => 
-                        booth.customInviteSlug === 'amazon-735202'
-                    ) || data.booths?.find(booth => 
-                        booth.name?.toLowerCase().includes('amazon')
-                    ) || data.booths?.find(booth => booth.logoUrl) || data.booths?.[0];
+                    // Dynamic fallback: check if user has assignedBooth field
+                    let fallbackBooth = null;
                     
-                    console.log('useRecruiterBooth: Available booths:', data.booths?.map(b => ({ name: b.name, logoUrl: b.logoUrl })));
+                    // 1. First try to use user's assignedBooth field if it exists
+                    if (user.assignedBooth) {
+                        fallbackBooth = data.booths?.find(booth => booth._id === user.assignedBooth);
+                        console.log('useRecruiterBooth: Found booth via user.assignedBooth:', fallbackBooth?.name);
+                    }
+                    
+                    // 2. If no assignedBooth or booth not found, use first available booth with logo
+                    if (!fallbackBooth) {
+                        fallbackBooth = data.booths?.find(booth => booth.logoUrl) || data.booths?.[0];
+                        console.log('useRecruiterBooth: Using first available booth:', fallbackBooth?.name);
+                    }
+                    
+                    console.log('useRecruiterBooth: Available booths:', data.booths?.map(b => ({ 
+                    name: b.name, 
+                    logoUrl: b.logoUrl, 
+                    administrators: b.administrators,
+                    _id: b._id 
+                })));
+                console.log('useRecruiterBooth: Current user ID:', user._id);
                     
                     if (fallbackBooth) {
                         console.log('useRecruiterBooth: Using fallback booth:', fallbackBooth.name);

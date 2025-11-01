@@ -15,17 +15,30 @@ async function assignRecruiterToBooth() {
     
     console.log('Found recruiter:', recruiter.name, recruiter.email);
     
-    // Find the f12 booth specifically
-    let booth = await Booth.findOne({ 
-      $or: [
-        { name: { $regex: /f12/i } },
-        { customInviteSlug: 'amazon-735202' },
-        { name: { $regex: /amazon/i } }
-      ]
-    });
+    // Find booth dynamically - prefer booth that matches recruiter context or use first available
+    let booth = null;
     
+    // 1. If recruiter already has assignedBooth, use that
+    if (recruiter.assignedBooth) {
+      booth = await Booth.findById(recruiter.assignedBooth);
+      console.log('Using recruiter\'s assigned booth:', booth?.name);
+    }
+    
+    // 2. If no assigned booth, try to find booth that matches recruiter name/email
+    if (!booth) {
+      const recruiterIdentifier = (recruiter.name + ' ' + recruiter.email).toLowerCase();
+      booth = await Booth.findOne({
+        name: { $regex: new RegExp(recruiterIdentifier.split(' ').join('|'), 'i') }
+      });
+      if (booth) {
+        console.log('Found booth matching recruiter context:', booth.name);
+      }
+    }
+    
+    // 3. Final fallback - use any available booth
     if (!booth) {
       booth = await Booth.findOne({});
+      console.log('Using first available booth:', booth?.name);
     }
     
     if (!booth) {
@@ -35,24 +48,37 @@ async function assignRecruiterToBooth() {
     
     console.log('Found booth:', booth.name);
     
-    // Check if recruiter is already an administrator
-    if (booth.administrators.includes(recruiter._id)) {
-      console.log('Recruiter is already an administrator of this booth');
-    } else {
-      // Add recruiter as administrator
-      booth.administrators.push(recruiter._id);
-      await booth.save();
-      console.log('Added recruiter as administrator to booth:', booth.name);
-    }
-    
-    // Update booth with logos if they don't exist
+    // Sync both systems: User.assignedBooth and Booth.administrators
     let updated = false;
-    if (!booth.logoUrl) {
-      booth.logoUrl = 'https://via.placeholder.com/100x50/ff9900/ffffff?text=f12';
+    
+    // 1. Update User.assignedBooth if not set
+    if (!recruiter.assignedBooth || recruiter.assignedBooth.toString() !== booth._id.toString()) {
+      recruiter.assignedBooth = booth._id;
+      await recruiter.save();
+      console.log('Updated recruiter assignedBooth to:', booth.name);
       updated = true;
     }
     
-    if (updated) {
+    // 2. Add recruiter to Booth.administrators if not already there
+    if (!booth.administrators.includes(recruiter._id)) {
+      booth.administrators.push(recruiter._id);
+      await booth.save();
+      console.log('Added recruiter as administrator to booth:', booth.name);
+      updated = true;
+    }
+    
+    if (!updated) {
+      console.log('Recruiter is already properly assigned to this booth');
+    }
+    
+    // Update booth with logos if they don't exist
+    let logoUpdated = false;
+    if (!booth.logoUrl) {
+      booth.logoUrl = 'https://via.placeholder.com/100x50/ff9900/ffffff?text=f12';
+      logoUpdated = true;
+    }
+    
+    if (logoUpdated) {
       await booth.save();
       console.log('Updated booth with logo');
     }

@@ -132,6 +132,21 @@ router.post('/register', [
 
         await user.save();
 
+        // If recruiter/booth admin, add them to the booth's administrators array
+        if (['Recruiter', 'BoothAdmin'].includes(role) && assignedBooth) {
+            try {
+                const booth = await Booth.findById(assignedBooth);
+                if (booth && !booth.administrators.includes(user._id)) {
+                    booth.administrators.push(user._id);
+                    await booth.save();
+                    logger.info(`Added user ${user.email} as administrator to booth ${booth.name}`);
+                }
+            } catch (error) {
+                logger.error(`Failed to add user ${user.email} to booth administrators:`, error);
+                // Don't fail the registration if booth update fails
+            }
+        }
+
         // Send verification email (best-effort)
         try {
             const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
