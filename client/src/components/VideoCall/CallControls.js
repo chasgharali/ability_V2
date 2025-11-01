@@ -279,42 +279,6 @@ const CallControls = ({
           </button>
         </div>
       </div>
-
-      {/* Call Duration */}
-      <div className="call-info">
-        <CallDuration />
-      </div>
-    </div>
-  );
-};
-
-// Call Duration Component
-const CallDuration = () => {
-  const [duration, setDuration] = useState(0);
-
-  React.useEffect(() => {
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      setDuration(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  return (
-    <div className="call-duration">
-      <span className="duration-text">{formatDuration(duration)}</span>
     </div>
   );
 };

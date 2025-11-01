@@ -1,7 +1,7 @@
 :root {
-  --control-bg: rgba(255, 255, 255, 0.1);
-  --control-bg-hover: rgba(255, 255, 255, 0.2);
-  --control-disabled-bg: rgba(255, 255, 255, 0.05);
+  --control-bg: rgba(0, 0, 0, 0.8);
+  --control-bg-hover: rgba(0, 0, 0, 0.9);
+  --control-disabled-bg: rgba(0, 0, 0, 0.6);
   --end-call-bg: #e63946;
   --end-call-bg-hover: #d90429;
 }
@@ -121,7 +121,7 @@
 
 .control-button.disabled {
   background: var(--control-disabled-bg);
-  color: #9e9e9e;
+  color: #cccccc;
 }
 
 .end-call-button {
@@ -170,13 +170,7 @@
   outline-offset: 2px;
 }
 
-.call-duration {
-  color: white;
-  font-size: 0.875rem;
-  background: var(--control-bg);
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-}
+/* Call duration removed - should only be in header */
 
 /* More options menu styling */
 .more-options {
@@ -187,12 +181,13 @@
   position: absolute;
   bottom: 100%;
   right: 0;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.95);
   border-radius: 8px;
   padding: 0.5rem 0;
   margin-bottom: 0.5rem;
   min-width: 200px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 1000;
 }
 

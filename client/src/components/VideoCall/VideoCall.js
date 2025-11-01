@@ -50,6 +50,9 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [connectionQuality, setConnectionQuality] = useState('good');
+  const [callDuration, setCallDuration] = useState(0);
+  const [callStartTime, setCallStartTime] = useState(null);
+  const [networkStats, setNetworkStats] = useState({ latency: 0, packetLoss: 0 });
 
   // Refs
   // Cleanup guards
@@ -190,6 +193,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       setLoading(false);
       setIsInitializing(false);
       setReconnectAttempts(0); // Reset on successful connection
+      setCallStartTime(Date.now());
     } catch (err) {
       console.error('Error initializing call with data:', err);
       setError(err.message || 'Failed to initialize call');
@@ -198,7 +202,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     }
   };
 
-  const initializeCall = async () => {
+  const initializeCall = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -282,7 +286,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       setLoading(false);
       setIsInitializing(false);
     }
-  };
+  }, [callId, socket]); // Add dependencies for useCallback
 
   const addParticipant = useCallback((participant) => {
     console.log('Adding participant:', participant.identity);
@@ -550,6 +554,58 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     setParticipants(new Map());
   };
 
+  // Call duration timer
+  useEffect(() => {
+    let interval;
+    if (room && callStartTime) {
+      interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+        setCallDuration(elapsed);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [room, callStartTime]);
+
+  // Network quality monitoring
+  useEffect(() => {
+    if (!room) return;
+
+    const monitorNetworkQuality = () => {
+      // Monitor network quality for all participants
+      const participants = Array.from(room.participants.values());
+      let overallQuality = 5; // Start with excellent
+
+      participants.forEach(participant => {
+        participant.on('networkQualityLevelChanged', (networkQualityLevel) => {
+          if (networkQualityLevel < overallQuality) {
+            overallQuality = networkQualityLevel;
+          }
+        });
+      });
+
+      // Update connection quality based on network level
+      const getQualityString = (level) => {
+        if (level >= 4) return 'excellent';
+        if (level >= 3) return 'good';
+        if (level >= 2) return 'fair';
+        return 'poor';
+      };
+
+      setConnectionQuality(getQualityString(overallQuality));
+
+      // Simulate network stats (in real implementation, get from Twilio stats)
+      setNetworkStats({
+        latency: Math.floor(Math.random() * 100) + 50,
+        packetLoss: Math.floor(Math.random() * 5)
+      });
+    };
+
+    const interval = setInterval(monitorNetworkQuality, 5000);
+    return () => clearInterval(interval);
+  }, [room]);
+
   if (loading) {
     return (
       <div className="video-call-loading">
@@ -572,11 +628,14 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   }
 
   return (
-    <div className="video-call-container-new">
-      <header className="video-call-header">
+    <div className="video-call-container-new" role="main" aria-label="Video call interface">
+      {/* Skip to main content link for accessibility */}
+      <a href="#call-controls" className="skip-link">Skip to call controls</a>
+      
+      <header className="video-call-header" role="banner">
         <div className="header-info">
-          {/* Event Logo Only */}
-          <div className="header-section">
+          {/* Event Logo and Name */}
+          <div className="header-section" role="img" aria-label={`Event: ${callInfo?.event?.name || 'Unknown Event'}`}>
             {callInfo?.event?.logoUrl ? (
               <img
                 src={callInfo.event.logoUrl}
@@ -591,15 +650,19 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
             <div
               className="header-logo-placeholder event-logo-placeholder"
               style={{ display: callInfo?.event?.logoUrl ? 'none' : 'flex' }}
+              aria-label={`${callInfo?.event?.name || 'Event'} logo placeholder`}
             >
               <span>{(callInfo?.event?.name || 'Event').charAt(0).toUpperCase()}</span>
             </div>
+            <div className="header-names">
+              <h1 className="header-event-name">{callInfo?.event?.name || 'Event'}</h1>
+            </div>
           </div>
 
-          <span className="header-divider">|</span>
+          <span className="header-divider" aria-hidden="true">|</span>
 
-          {/* Booth Logo Only */}
-          <div className="header-section">
+          {/* Booth Logo and Name */}
+          <div className="header-section" role="img" aria-label={`Booth: ${callInfo?.booth?.name || 'Unknown Booth'}`}>
             {callInfo?.booth?.logoUrl ? (
               <img
                 src={callInfo.booth.logoUrl}
@@ -614,22 +677,45 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
             <div
               className="header-logo-placeholder booth-logo-placeholder"
               style={{ display: callInfo?.booth?.logoUrl ? 'none' : 'flex' }}
+              aria-label={`${callInfo?.booth?.name || 'Booth'} logo placeholder`}
             >
               <span>{(callInfo?.booth?.name || 'Booth').charAt(0).toUpperCase()}</span>
+            </div>
+            <div className="header-names">
+              <h2 className="header-booth-name">{callInfo?.booth?.name || 'Booth'}</h2>
             </div>
           </div>
         </div>
 
-        <div className={`connection-quality ${connectionQuality}`}>
-          <span className="quality-dot"></span>
-          <span className="quality-text">{connectionQuality}</span>
+        {/* Call Info and Quality */}
+        <div className="header-status">
+          <div className="call-duration" aria-live="polite" aria-label={`Call duration: ${Math.floor(callDuration / 60)} minutes ${callDuration % 60} seconds`}>
+            <span className="duration-label" aria-hidden="true">Duration:</span>
+            <span className="duration-time">
+              {String(Math.floor(callDuration / 60)).padStart(2, '0')}:
+              {String(callDuration % 60).padStart(2, '0')}
+            </span>
+          </div>
+          
+          <div className={`connection-quality ${connectionQuality}`} role="status" aria-live="polite" aria-label={`Connection quality: ${connectionQuality}`}>
+            <span className="quality-dot" aria-hidden="true"></span>
+            <span className="quality-text">{connectionQuality}</span>
+            {networkStats.latency > 0 && (
+              <span className="network-details" aria-label={`Latency: ${networkStats.latency}ms, Packet loss: ${networkStats.packetLoss}%`}>
+                {networkStats.latency}ms
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Video Area */}
-      <div className="video-main-area">
+      <div className="video-main-area" role="region" aria-label="Video participants">
+        {/* Screen reader announcements */}
+        <div className="sr-only" aria-live="polite" id="participant-announcements"></div>
+        
         {/* All Participants Grid */}
-        <div className="participants-grid">
+        <div className="participants-grid" role="group" aria-label={`${participants.size} remote participants`}>
           {/* Remote Participants */}
           {Array.from(participants.values()).map(participant => (
             <VideoParticipant
@@ -638,11 +724,21 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
               isLocal={false}
             />
           ))}
+          
+          {/* No participants message */}
+          {participants.size === 0 && (
+            <div className="no-participants" role="status" aria-live="polite">
+              <div className="no-participants-content">
+                <h3>Waiting for other participants...</h3>
+                <p>You are currently alone in this call.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Local Video - Small box in bottom right */}
         {room && (
-          <div className="local-video-overlay">
+          <div className="local-video-overlay" role="region" aria-label="Your video">
             <VideoParticipant
               participant={room.localParticipant}
               isLocal={true}

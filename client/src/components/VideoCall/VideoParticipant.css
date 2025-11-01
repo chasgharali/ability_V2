@@ -4,10 +4,22 @@
   background: #333;
   border-radius: 10px;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 300px; /* Increased minimum height */
+  height: 100%; /* Take full available height */
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.video-participant:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.video-participant:focus-within {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
 }
 
 .video-participant.local {

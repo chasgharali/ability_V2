@@ -180,7 +180,12 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
   };
 
   return (
-    <div className={`video-participant ${isLocal ? 'local' : 'remote'}`}>
+    <div 
+      className={`video-participant ${isLocal ? 'local' : 'remote'}`}
+      role="region"
+      aria-label={`${getParticipantName()} video ${isLocal ? '(you)' : ''}`}
+      tabIndex={0}
+    >
       {/* Video Container */}
       <div className="video-container">
         {/* Always render the video element so refs are available when tracks arrive */}
@@ -190,15 +195,16 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
           playsInline
           muted={isLocal}
           className={`participant-video ${!(isVideoEnabled && videoTrack) ? 'hidden' : ''}`}
+          aria-label={`${getParticipantName()} video stream`}
         />
         {!(isVideoEnabled && videoTrack) && (
-          <div className="video-placeholder">
-            <FiUser size={48} />
+          <div className="video-placeholder" role="img" aria-label={`${getParticipantName()} camera is off`}>
+            <FiUser size={48} aria-hidden="true" />
           </div>
         )}
         
         {/* Audio element (hidden) */}
-        <audio ref={audioRef} autoPlay />
+        <audio ref={audioRef} autoPlay aria-hidden="true" />
       </div>
 
       {/* Participant Info Overlay */}
@@ -209,19 +215,31 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
         {getParticipantRole() && <div className="participant-role-badge">{getParticipantRole()}</div>}
 
         {/* Controls Indicators */}
-        <div className="participant-controls">
-          <div className={`control-indicator ${isAudioEnabled ? 'enabled' : 'disabled'}`}>
-            {isAudioEnabled ? <FiMic size={16} /> : <FiMicOff size={16} />}
+        <div className="participant-controls" role="group" aria-label={`${getParticipantName()} controls status`}>
+          <div 
+            className={`control-indicator ${isAudioEnabled ? 'enabled' : 'disabled'}`}
+            role="status"
+            aria-label={`${getParticipantName()} microphone is ${isAudioEnabled ? 'on' : 'off'}`}
+          >
+            {isAudioEnabled ? <FiMic size={16} aria-hidden="true" /> : <FiMicOff size={16} aria-hidden="true" />}
           </div>
-          <div className={`control-indicator ${isVideoEnabled ? 'enabled' : 'disabled'}`}>
-            {isVideoEnabled ? <FiVideo size={16} /> : <FiVideoOff size={16} />}
+          <div 
+            className={`control-indicator ${isVideoEnabled ? 'enabled' : 'disabled'}`}
+            role="status"
+            aria-label={`${getParticipantName()} camera is ${isVideoEnabled ? 'on' : 'off'}`}
+          >
+            {isVideoEnabled ? <FiVideo size={16} aria-hidden="true" /> : <FiVideoOff size={16} aria-hidden="true" />}
           </div>
         </div>
 
         {/* Network Quality Indicator */}
         {!isLocal && (
-          <div className={`network-quality ${getNetworkQualityClass()}`}>
-            <div className="quality-bars">
+          <div 
+            className={`network-quality ${getNetworkQualityClass()}`}
+            role="status"
+            aria-label={`${getParticipantName()} connection quality: ${getNetworkQualityClass()}`}
+          >
+            <div className="quality-bars" aria-hidden="true">
               <div className={`bar ${networkQuality >= 1 ? 'active' : ''}`}></div>
               <div className={`bar ${networkQuality >= 2 ? 'active' : ''}`}></div>
               <div className={`bar ${networkQuality >= 3 ? 'active' : ''}`}></div>
