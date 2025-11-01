@@ -352,10 +352,9 @@ export default function BoothQueueWaiting() {
     console.log('Received call invitation:', data);
     setPendingInvitation(data);
     playInviteSound();
-    const recruiterName = data?.recruiter?.name || 'recruiter';
-    const boothName = booth?.name || '';
-    const eventName = event?.name || '';
-    const message = `You have been invited by ${recruiterName} to a video call${boothName ? ` at ${boothName}` : ''}${eventName ? ` for ${eventName}` : ''}.`;
+    const boothName = booth?.name || data?.booth?.name || '';
+    const eventName = event?.name || data?.event?.name || '';
+    const message = `You are invited to join a video call${boothName ? ` at ${boothName}` : ''}${eventName ? ` for ${eventName}` : ''}.`;
     speak(message);
     enumerateDevicesAndShowModal();
   };
