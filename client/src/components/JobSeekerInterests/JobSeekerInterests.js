@@ -5,6 +5,7 @@ import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { listEvents } from '../../services/events';
 import { listUsers } from '../../services/users';
 import AdminHeader from '../Layout/AdminHeader';
+import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
 import { Select, Input } from '../UI/FormComponents';
@@ -15,6 +16,7 @@ import './JobSeekerInterests.css';
 const JobSeekerInterests = () => {
     const { user, loading } = useAuth();
     const navigate = useNavigate();
+    const { booth, event } = useRecruiterBooth();
 
     // Redirect if not authenticated or not authorized
     useEffect(() => {
@@ -218,7 +220,10 @@ const JobSeekerInterests = () => {
     if (loading) {
         return (
             <div className="dashboard">
-                <AdminHeader />
+                <AdminHeader 
+                    brandingLogo={event?.logoUrl || event?.logo || ''}
+                    secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                />
                 <div className="dashboard-layout">
                     <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />
                     <main className="dashboard-main">
@@ -234,7 +239,10 @@ const JobSeekerInterests = () => {
 
     return (
         <div className="dashboard">
-            <AdminHeader />
+            <AdminHeader 
+                brandingLogo={event?.logoUrl || event?.logo || ''}
+                secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+            />
             <div className="dashboard-layout">
                 <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>

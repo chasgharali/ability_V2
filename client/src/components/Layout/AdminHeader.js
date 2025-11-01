@@ -8,6 +8,7 @@ import './AdminHeader.css';
 export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
   const brandingLogo = useMemo(() => {
     if (brandingLogoProp) return brandingLogoProp;
     try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }

@@ -6,11 +6,13 @@ import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { useAuth } from '../../contexts/AuthContext';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
+import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 
 export default function MeetingRecordDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user, loading } = useAuth();
+    const { booth, event } = useRecruiterBooth();
 
     const [meetingRecord, setMeetingRecord] = useState(null);
     const [loadingData, setLoadingData] = useState(true);
@@ -85,7 +87,10 @@ export default function MeetingRecordDetail() {
     if (loadingData) {
         return (
             <div className="dashboard">
-                <AdminHeader />
+                <AdminHeader 
+                    brandingLogo={event?.logoUrl || event?.logo || ''}
+                    secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                />
                 <div className="dashboard-layout">
                     <AdminSidebar active="meeting-records" />
                     <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
@@ -104,7 +109,10 @@ export default function MeetingRecordDetail() {
     if (error || !meetingRecord) {
         return (
             <div className="dashboard">
-                <AdminHeader />
+                <AdminHeader 
+                    brandingLogo={event?.logoUrl || event?.logo || ''}
+                    secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                />
                 <div className="dashboard-layout">
                     <AdminSidebar active="meeting-records" />
                     <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
@@ -128,7 +136,10 @@ export default function MeetingRecordDetail() {
 
     return (
         <div className="dashboard">
-            <AdminHeader />
+            <AdminHeader 
+                brandingLogo={event?.logoUrl || event?.logo || ''}
+                secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+            />
             <div className="dashboard-layout">
                 <AdminSidebar active="meeting-records" />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>

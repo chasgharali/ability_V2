@@ -10,10 +10,12 @@ import { useNavigate } from 'react-router-dom';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
 import { listEvents } from '../../services/events';
+import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 
 export default function MeetingRecords() {
     const { user, loading } = useAuth();
     const navigate = useNavigate();
+    const { booth, event } = useRecruiterBooth();
     
     useEffect(() => {
         if (!loading) {
@@ -274,7 +276,10 @@ export default function MeetingRecords() {
 
     return (
         <div className="dashboard">
-            <AdminHeader />
+            <AdminHeader 
+                brandingLogo={event?.logoUrl || event?.logo || ''}
+                secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+            />
             <div className="dashboard-layout">
                 <AdminSidebar active="meeting-records" />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>

@@ -12,6 +12,7 @@ async function createTestBooth() {
       event = await Event.create({
         name: 'Test Event',
         slug: 'test-event',
+        logoUrl: 'https://via.placeholder.com/200x50/0066cc/ffffff?text=Test+Event',
         start: new Date(),
         end: new Date(Date.now() + 24 * 60 * 60 * 1000),
         createdBy: new mongoose.Types.ObjectId()
@@ -25,7 +26,8 @@ async function createTestBooth() {
         name: 'Amazon Booth',
         customInviteSlug: 'amazon-735202',
         eventId: event._id,
-        description: 'Test booth for Amazon'
+        description: 'Test booth for Amazon',
+        logoUrl: 'https://via.placeholder.com/100x50/ff9900/ffffff?text=f12'
       });
       console.log('Created booth:', booth.name, 'with invite slug:', booth.customInviteSlug);
     } else {

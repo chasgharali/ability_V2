@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useSocket } from '../../contexts/SocketContext';
+import { useToast } from '../../contexts/ToastContext';
+import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import { MdLogout, MdRefresh, MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
 import { TabComponent, TabItemsDirective, TabItemDirective } from '@syncfusion/ej2-react-navigations';
@@ -35,6 +38,9 @@ const Dashboard = () => {
     const { user, logout, loading, updateProfile } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const { socket } = useSocket();
+    const { showToast } = useToast();
+    const { booth, event } = useRecruiterBooth();
     const [activeSection, setActiveSection] = useState('my-account');
     const [expandedSections, setExpandedSections] = useState({
         'my-account': true,
@@ -234,10 +240,6 @@ const Dashboard = () => {
     };
 
 
-    const showToast = (message, type = 'success') => {
-        setToast({ visible: true, message, type });
-        setTimeout(() => setToast({ visible: false, message: '', type }), 2500);
-    };
 
     const handleFieldChange = (e) => {
         const { name, value } = e.target;
@@ -507,7 +509,10 @@ const Dashboard = () => {
             >
                 Skip to main content
             </a>
-            <AdminHeader />
+            <AdminHeader 
+                brandingLogo={event?.logoUrl || event?.logo || ''}
+                secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+            />
 
             <div className="dashboard-layout">
                 {toast.visible && (
