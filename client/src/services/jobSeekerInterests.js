@@ -38,6 +38,20 @@ api.interceptors.response.use(
 );
 
 export const jobSeekerInterestsAPI = {
+    // Get all job seeker interests with filtering (for admins/recruiters)
+    getInterests: async (filters = {}) => {
+        const params = new URLSearchParams();
+        
+        Object.keys(filters).forEach(key => {
+            if (filters[key] !== undefined && filters[key] !== '') {
+                params.append(key, filters[key]);
+            }
+        });
+
+        const response = await api.get(`/api/job-seeker-interests?${params.toString()}`);
+        return response.data;
+    },
+
     // Create or update interest in a booth
     createOrUpdateInterest: async (data) => {
         const response = await api.post('/api/job-seeker-interests', data);

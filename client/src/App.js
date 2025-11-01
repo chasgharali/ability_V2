@@ -27,6 +27,7 @@ import UserManagement from './components/UserManagement/UserManagement';
 import JobSeekerManagement from './components/JobSeekerManagement/JobSeekerManagement';
 import MeetingRecords from './components/MeetingRecords/MeetingRecords';
 import MeetingRecordDetail from './components/MeetingRecords/MeetingRecordDetail';
+import JobSeekerInterests from './components/JobSeekerInterests/JobSeekerInterests';
 import InterpreterCategories from './components/InterpreterCategories/InterpreterCategories';
 import BoothQueueEntry from './components/BoothQueue/BoothQueueEntry';
 import BoothQueueWaiting from './components/BoothQueue/BoothQueueWaiting';
@@ -83,6 +84,7 @@ function App() {
                                 <Route path="/jobseekermanagement" element={<RequireAuth><JobSeekerManagement /></RequireAuth>} />
                                 <Route path="/meeting-records" element={<RequireAuth><MeetingRecords /></RequireAuth>} />
                                 <Route path="/meeting-records/:id" element={<RequireAuth><MeetingRecordDetail /></RequireAuth>} />
+                                <Route path="/jobseeker-interests" element={<RequireAuth><JobSeekerInterests /></RequireAuth>} />
                                 {/* Job Seeker event flow */}
                                 <Route path="/events/upcoming" element={<RequireAuth><UpcomingEvents /></RequireAuth>} />
                                 <Route path="/events/registered" element={<RequireAuth><RegisteredEvents /></RequireAuth>} />

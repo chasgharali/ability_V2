@@ -244,6 +244,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('users')} onClick={() => handleItemClick('/usermanagement')}>User Management</button>
                 <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/jobseekermanagement')}>Job Seeker Management</button>
                 <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>Meeting Records</button>
+                <button className={itemClass('jobseeker-interests')} onClick={() => handleItemClick('/jobseeker-interests')}>JobSeeker Interests</button>
               </div>
             )}
           </div>

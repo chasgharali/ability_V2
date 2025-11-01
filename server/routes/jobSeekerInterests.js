@@ -112,6 +112,113 @@ router.get('/my-interests/:eventId', authenticateToken, requireRole(['JobSeeker'
 });
 
 /**
+ * GET /api/job-seeker-interests
+ * Get all job seeker interests with filtering (for admins/recruiters)
+ */
+router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const {
+            eventId,
+            boothId,
+            recruiterId,
+            page = 1,
+            limit = 10,
+            sortBy = 'createdAt',
+            sortOrder = 'desc'
+        } = req.query;
+
+        console.log('JobSeeker Interests API called by user:', req.user.role, req.user._id);
+        console.log('Query params:', { eventId, boothId, recruiterId, page, limit });
+
+        // Build query based on user role and filters
+        let query = { isInterested: true };
+
+        // Role-based filtering
+        if (req.user.role === 'Recruiter') {
+            // Recruiters can only see interests for their booths
+            const Booth = require('../models/Booth');
+            const recruiterBooths = await Booth.find({ 
+                administrators: req.user._id 
+            }).select('_id');
+            
+            const boothIds = recruiterBooths.map(booth => booth._id);
+            console.log('Recruiter booths found:', recruiterBooths.length, 'IDs:', boothIds);
+            
+            // If recruiter has no booths, return empty result
+            if (boothIds.length === 0) {
+                console.log('Recruiter has no assigned booths, returning empty result');
+                return res.json({
+                    interests: [],
+                    pagination: {
+                        currentPage: 1,
+                        totalPages: 0,
+                        totalInterests: 0,
+                        hasNext: false,
+                        hasPrev: false
+                    }
+                });
+            }
+            
+            query.booth = { $in: boothIds };
+        } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
+            // Admins can filter by recruiter or see all
+            if (recruiterId) {
+                const Booth = require('../models/Booth');
+                const recruiterBooths = await Booth.find({ 
+                    administrators: recruiterId 
+                }).select('_id');
+                
+                const boothIds = recruiterBooths.map(booth => booth._id);
+                query.booth = { $in: boothIds };
+            }
+        }
+
+        // Apply additional filters
+        if (eventId) query.event = eventId;
+        if (boothId) query.booth = boothId;
+
+        // Pagination
+        const skip = (page - 1) * limit;
+        const sortOptions = {};
+        sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+        console.log('Final query:', JSON.stringify(query, null, 2));
+
+        // Execute query with population
+        const interests = await JobSeekerInterest.find(query)
+            .populate('jobSeeker', 'name email city state')
+            .populate('event', 'name slug')
+            .populate('booth', 'name description')
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        // Get total count for pagination
+        const totalInterests = await JobSeekerInterest.countDocuments(query);
+        
+        console.log('Found interests:', interests.length, 'Total in DB:', totalInterests);
+
+        res.json({
+            interests,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalInterests / limit),
+                totalInterests,
+                hasNext: page * limit < totalInterests,
+                hasPrev: page > 1
+            }
+        });
+
+    } catch (error) {
+        logger.error('Get job seeker interests error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve interests',
+            message: 'An error occurred while retrieving interests'
+        });
+    }
+});
+
+/**
  * GET /api/job-seeker-interests/booth/:boothId
  * Get all job seekers interested in a specific booth (for recruiters/admins)
  */
