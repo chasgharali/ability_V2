@@ -67,11 +67,21 @@ router.get('/', authenticateToken, async (req, res) => {
             .skip(skip)
             .limit(parseInt(limit));
 
+        // Calculate duration for records that don't have it
+        const processedRecords = meetingRecords.map(record => {
+            const recordObj = record.toObject();
+            // If duration is null but we have start and end times, calculate it
+            if (!recordObj.duration && recordObj.startTime && recordObj.endTime) {
+                recordObj.duration = Math.round((new Date(recordObj.endTime) - new Date(recordObj.startTime)) / (1000 * 60));
+            }
+            return recordObj;
+        });
+
         // Get total count for pagination
         const totalRecords = await MeetingRecord.countDocuments(query);
 
         res.json({
-            meetingRecords,
+            meetingRecords: processedRecords,
             pagination: {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(totalRecords / limit),
@@ -114,7 +124,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        res.json(meetingRecord);
+        // Calculate duration if missing
+        const recordObj = meetingRecord.toObject();
+        if (!recordObj.duration && recordObj.startTime && recordObj.endTime) {
+            recordObj.duration = Math.round((new Date(recordObj.endTime) - new Date(recordObj.startTime)) / (1000 * 60));
+        }
+
+        res.json(recordObj);
 
     } catch (error) {
         console.error('Error fetching meeting record:', error);
@@ -317,7 +333,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         // Convert to CSV format
         const csvHeaders = [
             'Event Name',
-            'Booth Company',
+            'Booth',
             'Recruiter Name',
             'Recruiter Email',
             'Job Seeker Name',
@@ -333,23 +349,31 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             'Messages Count'
         ];
 
-        const csvRows = meetingRecords.map(record => [
-            record.eventId?.name || '',
-            record.boothId?.name || '',
-            record.recruiterId?.name || '',
-            record.recruiterId?.email || '',
-            record.jobseekerId?.name || '',
-            record.jobseekerId?.email || '',
-            `${record.jobseekerId?.city || ''}, ${record.jobseekerId?.state || ''}`.trim().replace(/^,\s*|,\s*$/g, ''),
-            record.interpreterId?.name || 'None',
-            record.startTime ? new Date(record.startTime).toLocaleString() : '',
-            record.endTime ? new Date(record.endTime).toLocaleString() : '',
-            record.duration || '',
-            record.status || '',
-            record.recruiterRating || '',
-            record.recruiterFeedback ? `"${record.recruiterFeedback.replace(/"/g, '""')}"` : '',
-            record.jobSeekerMessages?.length || 0
-        ]);
+        const csvRows = meetingRecords.map(record => {
+            // Calculate duration if missing
+            let duration = record.duration;
+            if (!duration && record.startTime && record.endTime) {
+                duration = Math.round((new Date(record.endTime) - new Date(record.startTime)) / (1000 * 60));
+            }
+            
+            return [
+                record.eventId?.name || '',
+                record.boothId?.name || '',
+                record.recruiterId?.name || '',
+                record.recruiterId?.email || '',
+                record.jobseekerId?.name || '',
+                record.jobseekerId?.email || '',
+                `${record.jobseekerId?.city || ''}, ${record.jobseekerId?.state || ''}`.trim().replace(/^,\s*|,\s*$/g, ''),
+                record.interpreterId?.name || 'None',
+                record.startTime ? new Date(record.startTime).toLocaleString() : '',
+                record.endTime ? new Date(record.endTime).toLocaleString() : '',
+                duration || '',
+                record.status || '',
+                record.recruiterRating || '',
+                record.recruiterFeedback ? `"${record.recruiterFeedback.replace(/"/g, '""')}"` : '',
+                record.jobSeekerMessages?.length || 0
+            ];
+        });
 
         const csvContent = [csvHeaders, ...csvRows]
             .map(row => row.join(','))

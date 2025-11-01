@@ -166,7 +166,7 @@
 
 .feedback-textarea:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #333;
 }
 
 .feedback-textarea:disabled {
@@ -213,12 +213,12 @@
 }
 
 .btn-submit {
-    background: #007bff;
+    background: #333;
     color: white;
 }
 
 .btn-submit:hover:not(:disabled) {
-    background: #0056b3;
+    background: #555;
 }
 
 .btn-cancel:disabled,

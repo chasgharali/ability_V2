@@ -30,6 +30,7 @@ export default function MeetingRecords() {
     const [events, setEvents] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const [toast, setToast] = useState(null);
+    const [filtersExpanded, setFiltersExpanded] = useState(false);
     const toastTimer = useRef(null);
 
     // Filters
@@ -167,7 +168,7 @@ export default function MeetingRecords() {
     };
 
     const formatDuration = (minutes) => {
-        if (!minutes) return 'N/A';
+        if (!minutes || minutes === 0 || isNaN(minutes)) return 'N/A';
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         if (hours > 0) {
@@ -192,7 +193,7 @@ export default function MeetingRecords() {
             render: (row) => row.eventId?.name || 'N/A'
         },
         {
-            label: 'Company',
+            label: 'Booth',
             render: (row) => row.boothId?.name || 'N/A'
         },
         {
@@ -316,8 +317,32 @@ export default function MeetingRecords() {
 
                         {/* Filters */}
                         <div className="filters-section">
-                            <h3>Filters</h3>
-                            <div className="filters-grid">
+                            <div 
+                                className="filters-header" 
+                                onClick={() => setFiltersExpanded(!filtersExpanded)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        setFiltersExpanded(!filtersExpanded);
+                                    }
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                aria-expanded={filtersExpanded}
+                                aria-controls="filters-content"
+                            >
+                                <h3>
+                                    Filters
+                                    {(filters.recruiterId || filters.eventId || filters.status || filters.startDate || filters.endDate) && (
+                                        <span className="active-filters-indicator">●</span>
+                                    )}
+                                </h3>
+                                <span className={`filter-toggle ${filtersExpanded ? 'expanded' : ''}`}>
+                                    {filtersExpanded ? '▼' : '▶'}
+                                </span>
+                            </div>
+                            {filtersExpanded && (
+                                <div id="filters-content" className="filters-grid">
                                 {['Admin', 'GlobalSupport'].includes(user.role) && (
                                     <Select
                                         label="Recruiter"
@@ -370,6 +395,7 @@ export default function MeetingRecords() {
                                     </button>
                                 </div>
                             </div>
+                            )}
                         </div>
 
                         {/* Data Grid */}
