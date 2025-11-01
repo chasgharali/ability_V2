@@ -193,7 +193,7 @@ export default function MeetingRecords() {
         },
         {
             label: 'Company',
-            render: (row) => row.boothId?.company || 'N/A'
+            render: (row) => row.boothId?.name || 'N/A'
         },
         {
             label: 'Recruiter',

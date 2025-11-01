@@ -57,7 +57,7 @@ router.get('/', authenticateToken, async (req, res) => {
         // Execute query with population
         const meetingRecords = await MeetingRecord.find(query)
             .populate('eventId', 'name slug')
-            .populate('boothId', 'company companyLogo')
+            .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
             .populate('jobseekerId', 'name email city state metadata')
             .populate('interpreterId', 'name email')
@@ -92,7 +92,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const meetingRecord = await MeetingRecord.findById(req.params.id)
             .populate('eventId', 'name slug')
-            .populate('boothId', 'company companyLogo')
+            .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
             .populate('jobseekerId', 'name email city state metadata resumeUrl')
             .populate('interpreterId', 'name email')
@@ -159,7 +159,9 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             twilioRoomSid: videoCall.roomSid,
             startTime: videoCall.startedAt,
             endTime: videoCall.endedAt,
-            duration: videoCall.duration ? Math.floor(videoCall.duration / 60) : null,
+            duration: videoCall.duration ? Math.floor(videoCall.duration / 60) : 
+                     (videoCall.startedAt && videoCall.endedAt ? 
+                      Math.floor((new Date(videoCall.endedAt) - new Date(videoCall.startedAt)) / (1000 * 60)) : null),
             status: videoCall.status === 'ended' ? 'completed' : videoCall.status,
             jobSeekerMessages: jobSeekerMessages,
             chatMessages: videoCall.chatMessages || []
@@ -170,7 +172,7 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
         // Populate the created record
         const populatedRecord = await MeetingRecord.findById(meetingRecord._id)
             .populate('eventId', 'name slug')
-            .populate('boothId', 'company companyLogo')
+            .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
             .populate('jobseekerId', 'name email city state metadata')
             .populate('interpreterId', 'name email');
@@ -306,7 +308,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
         const meetingRecords = await MeetingRecord.find(query)
             .populate('eventId', 'name')
-            .populate('boothId', 'company')
+            .populate('boothId', 'name')
             .populate('recruiterId', 'name email')
             .populate('jobseekerId', 'name email city state')
             .populate('interpreterId', 'name')
@@ -333,7 +335,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
         const csvRows = meetingRecords.map(record => [
             record.eventId?.name || '',
-            record.boothId?.company || '',
+            record.boothId?.name || '',
             record.recruiterId?.name || '',
             record.recruiterId?.email || '',
             record.jobseekerId?.name || '',
