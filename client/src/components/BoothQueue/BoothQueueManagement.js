@@ -7,6 +7,8 @@ import videoCallService from '../../services/videoCall';
 import VideoCall from '../VideoCall/VideoCall';
 import { FaRedoAlt, FaPlug } from 'react-icons/fa';
 import CallInviteModal from '../VideoCall/CallInviteModal';
+import RatingModal from '../MeetingRecords/RatingModal';
+import { meetingRecordsAPI } from '../../services/meetingRecords';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import './BoothQueueManagement.css';
@@ -41,6 +43,11 @@ export default function BoothQueueManagement() {
   const [videoInputs, setVideoInputs] = useState([]);
   const [selectedAudioId, setSelectedAudioId] = useState('');
   const [selectedVideoId, setSelectedVideoId] = useState('');
+
+  // Rating modal state
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingModalData, setRatingModalData] = useState(null);
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   // Theme colors from event (fallbacks provided)
   const theme = useMemo(() => ({
@@ -324,11 +331,71 @@ export default function BoothQueueManagement() {
     setPendingQueueEntry(null);
   };
 
-  const handleCallEnd = () => {
+  const handleCallEnd = async () => {
+    try {
+      // Create meeting record from the video call
+      if (activeCall && (activeCall.id || activeCall.callId)) {
+        const videoCallId = activeCall.id || activeCall.callId;
+        await meetingRecordsAPI.createFromVideoCall(videoCallId);
+      }
+
+      // Show rating modal for recruiters
+      if (user.role === 'Recruiter' && activeCall) {
+        const jobSeekerName = activeCall.jobSeekerName || 
+                             activeCall.jobSeeker?.name || 
+                             'Job Seeker';
+        
+        setRatingModalData({
+          meetingId: null, // Will be set after meeting record is created
+          videoCallId: activeCall.id || activeCall.callId,
+          jobSeekerName: jobSeekerName
+        });
+        setShowRatingModal(true);
+      }
+    } catch (error) {
+      console.error('Error handling call end:', error);
+      showToast('Error processing call end', 'error');
+    }
+
     setActiveCall(null);
     setIsInCall(false);
     // Refresh queue data to see updated statuses
     loadData();
+  };
+
+  const showToast = (message, type = 'info') => {
+    setToast(message);
+    setTimeout(() => setToast(''), 3000);
+  };
+
+  const handleRatingSubmit = async ({ rating, feedback }) => {
+    try {
+      setSubmittingRating(true);
+      
+      // First, get the meeting record ID by creating it from the video call
+      if (ratingModalData?.videoCallId) {
+        const meetingRecord = await meetingRecordsAPI.createFromVideoCall(ratingModalData.videoCallId);
+        
+        // Submit the rating
+        await meetingRecordsAPI.submitRating(meetingRecord._id, rating, feedback);
+        
+        showToast('Rating submitted successfully!', 'success');
+        setShowRatingModal(false);
+        setRatingModalData(null);
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      showToast('Failed to submit rating. Please try again.', 'error');
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
+  const handleRatingClose = () => {
+    if (!submittingRating) {
+      setShowRatingModal(false);
+      setRatingModalData(null);
+    }
   };
 
   const handleUpdateServing = async (newServingNumber) => {
@@ -813,6 +880,17 @@ export default function BoothQueueManagement() {
           onChangeVideo={setSelectedVideoId}
           onAccept={handleRecruiterAcceptInvite}
           onDecline={handleRecruiterDeclineInvite}
+        />
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && ratingModalData && (
+        <RatingModal
+          isOpen={showRatingModal}
+          onClose={handleRatingClose}
+          onSubmit={handleRatingSubmit}
+          jobSeekerName={ratingModalData.jobSeekerName}
+          loading={submittingRating}
         />
       )}
     </div>

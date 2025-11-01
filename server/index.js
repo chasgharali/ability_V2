@@ -25,6 +25,7 @@ const jobSeekerInterestsRoutes = require('./routes/jobSeekerInterests');
 const interpreterCategoriesRoutes = require('./routes/interpreterCategories');
 const boothQueueRoutes = require('./routes/boothQueue');
 const videoCallRoutes = require('./routes/videoCall');
+const meetingRecordsRoutes = require('./routes/meetingRecords');
 
 // Import socket handlers
 const socketHandler = require('./socket/socketHandler');
@@ -112,6 +113,7 @@ app.use('/api/job-seeker-interests', jobSeekerInterestsRoutes);
 app.use('/api/interpreter-categories', interpreterCategoriesRoutes);
 app.use('/api/booth-queue', boothQueueRoutes);
 app.use('/api/video-call', videoCallRoutes);
+app.use('/api/meeting-records', meetingRecordsRoutes);
 
 // Socket.IO connection handling
 socketHandler(io);

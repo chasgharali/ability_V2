@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
@@ -7,7 +7,6 @@ import { listUpcomingEvents, listRegisteredEvents } from '../../services/events'
 
 export default function AdminSidebar({ active = 'booths' }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const [expanded, setExpanded] = useState({
     admin: true,
@@ -205,7 +204,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('queue')} onClick={() => handleItemClick(assignedBoothId ? `/booth-queue/manage/${assignedBoothId}` : '/boothmanagement')}>
                   Meeting Queue
                 </button>
-                <button className={itemClass('meetings')} onClick={() => handleItemClick('/meetings')}>
+                <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>
                   Meeting Records
                 </button>
                 <button className={itemClass('interests')} onClick={() => handleItemClick('/jobseeker-interests')}>
@@ -244,6 +243,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('booths')} onClick={() => handleItemClick('/boothmanagement')}>Booth Management</button>
                 <button className={itemClass('users')} onClick={() => handleItemClick('/usermanagement')}>User Management</button>
                 <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/jobseekermanagement')}>Job Seeker Management</button>
+                <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>Meeting Records</button>
               </div>
             )}
           </div>

@@ -77,8 +77,13 @@ const meetingRecordSchema = new mongoose.Schema({
     },
     queueId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Queue',
+        ref: 'BoothQueue',
         required: [true, 'Queue ID is required']
+    },
+    videoCallId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'VideoCall',
+        default: null
     },
     // Participants
     recruiterId: {
@@ -151,6 +156,39 @@ const meetingRecordSchema = new mongoose.Schema({
         type: feedbackSchema,
         default: null
     },
+    // Recruiter rating (1-5 stars) and feedback message
+    recruiterRating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: null
+    },
+    recruiterFeedback: {
+        type: String,
+        trim: true,
+        maxlength: [1000, 'Feedback cannot exceed 1000 characters'],
+        default: null
+    },
+    // Job seeker messages from queue (audio, video, text)
+    jobSeekerMessages: [{
+        type: {
+            type: String,
+            enum: ['text', 'audio', 'video'],
+            required: true
+        },
+        content: {
+            type: String,
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        },
+        isRead: {
+            type: Boolean,
+            default: false
+        }
+    }],
     // Attachments (resume, documents shared during call)
     attachments: [attachmentSchema],
     // Chat messages (if using Twilio Chat)
@@ -329,6 +367,13 @@ meetingRecordSchema.methods.submitFeedback = function (feedbackData) {
         ...feedbackData,
         submittedAt: new Date()
     };
+    return this.save();
+};
+
+// Instance method to submit recruiter rating and feedback
+meetingRecordSchema.methods.submitRecruiterRating = function (rating, feedback) {
+    this.recruiterRating = rating;
+    this.recruiterFeedback = feedback;
     return this.save();
 };
 
