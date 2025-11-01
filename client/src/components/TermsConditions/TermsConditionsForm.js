@@ -180,159 +180,185 @@ const TermsConditionsForm = () => {
             <div className="dashboard-layout">
                 <AdminSidebar active="terms-conditions" />
                 <main id="dashboard-main" className="dashboard-main">
-                    <div className="bm-header">
-                        <h2>{isEdit ? 'Edit Terms & Conditions' : 'Create Terms & Conditions'}</h2>
-                        <div className="bm-header-actions">
-                            <button
-                                type="button"
-                                className="dashboard-button"
-                                style={{ width: 'auto' }}
-                                onClick={() => navigate('/terms-conditions')}
-                                aria-label="Back to Terms & Conditions list"
-                            >
-                                Back to List
-                            </button>
+                    <div className="terms-form-container">
+                        <div className="terms-form-header">
+                            <h2>{isEdit ? 'Edit Terms & Conditions' : 'Create Terms & Conditions'}</h2>
+                        </div>
+                        
+                        <div className="terms-form-body">
+                            {error && (
+                                <div className="terms-error-message">
+                                    {error}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleSubmit} className="terms-form">
+                                <div className="terms-form-section">
+                                    <h3 className="terms-form-section-title">Basic Information</h3>
+                                    <div className="terms-form-row">
+                                        <div className="form-group">
+                                            <label htmlFor="title">Terms Title *</label>
+                                            <input
+                                                type="text"
+                                                id="title"
+                                                name="title"
+                                                value={formData.title}
+                                                onChange={handleInputChange}
+                                                placeholder="Enter terms title"
+                                                required
+                                                aria-describedby="title-help"
+                                            />
+                                            <small id="title-help" className="form-help">
+                                                A descriptive title for these terms and conditions
+                                            </small>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label htmlFor="version">Version *</label>
+                                            <input
+                                                type="text"
+                                                id="version"
+                                                name="version"
+                                                value={formData.version}
+                                                onChange={handleInputChange}
+                                                placeholder="e.g., 1.0, 2.1"
+                                                required
+                                                aria-describedby="version-help"
+                                            />
+                                            <small id="version-help" className="form-help">
+                                                Version number for tracking changes
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="terms-form-section">
+                                    <h3 className="terms-form-section-title">Field Settings</h3>
+                                    <div className="terms-checkbox-group">
+                                        <input
+                                            type="checkbox"
+                                            id="isRequired"
+                                            name="isRequired"
+                                            checked={formData.isRequired}
+                                            onChange={handleInputChange}
+                                            aria-describedby="required-help"
+                                        />
+                                        <div className="terms-checkbox-content">
+                                            <label htmlFor="isRequired" className="terms-checkbox-label">
+                                                Required Field
+                                            </label>
+                                            <p id="required-help" className="terms-checkbox-help">
+                                                Whether users must complete this field to proceed
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="terms-form-section">
+                                    <h3 className="terms-form-section-title">Content</h3>
+                                    <div className="form-group">
+                                        <label htmlFor="content">Terms & Conditions Content *</label>
+                                        <div className="terms-rte-container">
+                                            <RTE
+                                                id="content"
+                                                ref={rteRef}
+                                                value={formData.content}
+                                                change={handleContentChange}
+                                                toolbarSettings={rteToolbar}
+                                                height={400}
+                                                placeholder="Enter terms and conditions content..."
+                                                aria-label="Terms and conditions content editor"
+                                            >
+                                                <RTEInject services={[RTEToolbar, RteLink, RteImage, HtmlEditor, QuickToolbar]} />
+                                            </RTE>
+                                        </div>
+                                        <small className="form-help">
+                                            Use the toolbar to format your terms and conditions content
+                                        </small>
+                                    </div>
+                                </div>
+
+                                {['Admin', 'AdminEvent'].includes(user?.role) && (
+                                    <div className="terms-form-section">
+                                        <h3 className="terms-form-section-title">Activation Settings</h3>
+                                        <div className="terms-checkbox-group">
+                                            <input
+                                                type="checkbox"
+                                                id="isActive"
+                                                name="isActive"
+                                                checked={formData.isActive}
+                                                onChange={handleInputChange}
+                                                aria-describedby="active-help"
+                                            />
+                                            <div className="terms-checkbox-content">
+                                                <label htmlFor="isActive" className="terms-checkbox-label">
+                                                    Make this the active terms and conditions
+                                                </label>
+                                                <p id="active-help" className="terms-checkbox-help">
+                                                    Only one terms and conditions can be active at a time. Activating this will deactivate others.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {showPreview && (
+                                    <div className="terms-preview-section" ref={previewRef}>
+                                        <div className="terms-preview-header">
+                                            Preview
+                                        </div>
+                                        <div className="terms-preview-content">
+                                            <h2 className="terms-preview-title">{formData.title || 'Untitled Terms'}</h2>
+                                            <div className="terms-preview-meta">
+                                                <strong>Version:</strong> {formData.version}
+                                            </div>
+                                            <div
+                                                className="terms-preview-html"
+                                                dangerouslySetInnerHTML={{ __html: formData.content || '<p>No content yet...</p>' }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="terms-form-actions">
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('/terms-conditions')}
+                                        className="terms-btn terms-btn-outline"
+                                        disabled={loading}
+                                    >
+                                        <MdCancel />
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowPreview((p) => !p);
+                                            setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+                                        }}
+                                        className="terms-btn terms-btn-secondary"
+                                        disabled={loading}
+                                    >
+                                        <MdPreview />
+                                        {showPreview ? 'Hide Preview' : 'Preview'}
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="terms-btn terms-btn-primary"
+                                    >
+                                        <MdSave />
+                                        {loading ? 'Saving...' : (isEdit ? 'Update Terms' : 'Create Terms')}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-
-                    {error && (
-                        <div className="error-message">
-                            <p>{error}</p>
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="dashboard-form">
-                        <div className="form-row">
-                            <div className="form-group">
-                                <Input
-                                    label="Terms Title *"
-                                    id="title"
-                                    name="title"
-                                    type="text"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter terms title"
-                                    required
-                                    aria-describedby="title-help"
-                                />
-                                <small id="title-help" className="form-help">
-                                    A descriptive title for these terms and conditions
-                                </small>
-                            </div>
-
-                            <div className="form-group">
-                                <Input
-                                    label="Version *"
-                                    id="version"
-                                    name="version"
-                                    type="text"
-                                    value={formData.version}
-                                    onChange={handleInputChange}
-                                    placeholder="e.g., 1.0, 2.1"
-                                    required
-                                    aria-describedby="version-help"
-                                />
-                                <small id="version-help" className="form-help">
-                                    Version number for tracking changes
-                                </small>
-                            </div>
-                        </div>
-
-                        <div className="form-group">
-                            <Checkbox
-                                label="Required Field"
-                                id="isRequired"
-                                name="isRequired"
-                                checked={formData.isRequired}
-                                onChange={handleInputChange}
-                                aria-describedby="required-help"
-                            />
-                            <small id="required-help" className="form-help">
-                                Whether users must complete this field to proceed
-                            </small>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="content">Content *</label>
-                            <div className="rich-text-container">
-                                <RTE
-                                    id="content"
-                                    ref={rteRef}
-                                    value={formData.content}
-                                    change={handleContentChange}
-                                    toolbarSettings={rteToolbar}
-                                    height={400}
-                                    placeholder="Enter terms and conditions content..."
-                                    aria-label="Terms and conditions content editor"
-                                >
-                                    <RTEInject services={[RTEToolbar, RteLink, RteImage, HtmlEditor, QuickToolbar]} />
-                                </RTE>
-                            </div>
-                            <small className="form-help">
-                                Use the toolbar to format your terms and conditions content
-                            </small>
-                        </div>
-
-                        {['Admin', 'AdminEvent'].includes(user?.role) && (
-                            <div className="form-group">
-                                <label className="checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        name="isActive"
-                                        checked={formData.isActive}
-                                        onChange={handleInputChange}
-                                        aria-describedby="active-help"
-                                    />
-                                    <span className="checkbox-text">Make this the active terms and conditions</span>
-                                </label>
-                                <small id="active-help" className="form-help">
-                                    Only one terms and conditions can be active at a time. Activating this will deactivate others.
-                                </small>
-                            </div>
-                        )}
-
-                        {showPreview && (
-                            <div className="preview-section" ref={previewRef}>
-                                <h3>Preview</h3>
-                                <div className="preview-content">
-                                    <h2>{formData.title || 'Untitled Terms'}</h2>
-                                    <p><strong>Version:</strong> {formData.version}</p>
-                                    <div
-                                        className="preview-html"
-                                        dangerouslySetInnerHTML={{ __html: formData.content || '<p>No content yet...</p>' }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="form-actions" style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowPreview((p) => !p);
-                                    setTimeout(() => previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
-                                }}
-                                className="dashboard-button"
-                                style={{ width: 'auto' }}
-                                disabled={loading}
-                            >
-                                <MdPreview />
-                                {showPreview ? 'Hide Preview' : 'Preview'}
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="dashboard-button save-btn"
-                                style={{ width: 'auto' }}
-                            >
-                                <MdSave />
-                                {loading ? 'Saving...' : (isEdit ? 'Update Terms' : 'Create Terms')}
-                            </button>
-                        </div>
-                    </form>
                 </main>
             </div>
             <div className="mobile-overlay" aria-hidden="true" />
+            {/* hidden input for S3 image insert */}
+            <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
         </div>
     );
 };

@@ -71,36 +71,36 @@ const TermsConditionsList = () => {
     const columns = [
         {
             key: 'title',
-            title: 'Title',
-            render: (value, row) => (
+            label: 'Title',
+            render: (row) => (
                 <div className="terms-title-cell">
-                    <strong>{value}</strong>
+                    <strong>{row.title}</strong>
                     {row.isActive && <span className="active-badge">Active</span>}
                 </div>
             )
         },
         {
             key: 'version',
-            title: 'Version'
+            label: 'Version'
         },
         {
             key: 'contentPreview',
-            title: 'Preview',
-            render: (value) => (
+            label: 'Preview',
+            render: (row) => (
                 <div className="terms-preview">
-                    {value || 'No preview available'}
+                    {row.contentPreview || 'No preview available'}
                 </div>
             )
         },
         {
             key: 'usage',
-            title: 'Usage',
-            render: (value) => (
+            label: 'Usage',
+            render: (row) => (
                 <div className="terms-usage">
-                    <div>Events: {value?.totalEvents || 0}</div>
-                    {value?.lastUsed && (
+                    <div>Events: {row.usage?.totalEvents || 0}</div>
+                    {row.usage?.lastUsed && (
                         <div className="last-used">
-                            Last used: {new Date(value.lastUsed).toLocaleDateString()}
+                            Last used: {new Date(row.usage.lastUsed).toLocaleDateString()}
                         </div>
                     )}
                 </div>
@@ -108,13 +108,13 @@ const TermsConditionsList = () => {
         },
         {
             key: 'createdAt',
-            title: 'Created',
-            render: (value) => new Date(value).toLocaleDateString()
+            label: 'Created',
+            render: (row) => new Date(row.createdAt).toLocaleDateString()
         },
         {
             key: 'actions',
-            title: 'Actions',
-            render: (value, row) => (
+            label: 'Actions',
+            render: (row) => (
                 <div className="terms-actions">
                     <button
                         className="action-btn view-btn"
