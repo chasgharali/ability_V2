@@ -282,12 +282,58 @@ const socketHandler = (io) => {
 
                 // Broadcast message to all participants in the video call room
                 // Use the same room format as join-video-call handler
-                io.to(`call_${videoCall.roomName}`).emit('video-call-message', messageData);
+                const roomName = `call_${videoCall.roomName}`;
+                console.log(`DEBUG: Broadcasting message to room ${roomName}`);
+                console.log(`DEBUG: Message data:`, messageData);
+                console.log(`DEBUG: Room size:`, io.sockets.adapter.rooms.get(roomName)?.size || 0);
+                console.log(`DEBUG: Sockets in room:`, Array.from(io.sockets.adapter.rooms.get(roomName) || []));
+                
+                io.to(roomName).emit('video-call-message', messageData);
 
                 logger.info(`User ${socket.user.email} sent message in video call ${callId}`);
             } catch (error) {
                 logger.error('Video call message error:', error);
                 socket.emit('error', { message: 'Failed to send message' });
+            }
+        });
+
+        /**
+         * Simple video call message (direct broadcast without database)
+         */
+        socket.on('video-call-message-direct', async (data) => {
+            try {
+                const { roomName, message } = data;
+                
+                console.log(`DEBUG: Direct message received from ${socket.user.email}`);
+                console.log(`DEBUG: Room: ${roomName}, Message: ${message}`);
+                
+                if (!roomName || !message) {
+                    socket.emit('error', { message: 'Room name and message are required' });
+                    return;
+                }
+                
+                const messageData = {
+                    sender: {
+                        id: socket.userId,
+                        name: socket.user.name,
+                        role: socket.user.role
+                    },
+                    message: message,
+                    timestamp: new Date().toISOString(),
+                    messageType: 'text'
+                };
+                
+                const fullRoomName = `call_${roomName}`;
+                console.log(`DEBUG: Broadcasting direct message to room ${fullRoomName}`);
+                console.log(`DEBUG: Room size:`, io.sockets.adapter.rooms.get(fullRoomName)?.size || 0);
+                
+                // Broadcast to all participants including sender
+                io.to(fullRoomName).emit('video-call-message-direct', messageData);
+                
+                logger.info(`User ${socket.user.email} sent direct message to room ${fullRoomName}`);
+            } catch (error) {
+                logger.error('Direct video call message error:', error);
+                socket.emit('error', { message: 'Failed to send direct message' });
             }
         });
 
@@ -534,6 +580,11 @@ const socketHandler = (io) => {
                 socket.join(`call_${roomName}`);
                 socket.currentVideoCallId = callId;
                 socket.currentVideoCallRoom = roomName;
+
+                // Debug: Log room joining
+                console.log(`DEBUG: User ${socket.user.email} joined room call_${roomName}`);
+                console.log(`DEBUG: Socket rooms after join:`, Array.from(socket.rooms));
+                console.log(`DEBUG: Total sockets in room call_${roomName}:`, io.sockets.adapter.rooms.get(`call_${roomName}`)?.size || 0);
 
                 // Notify other participants that user joined
                 socket.to(`call_${roomName}`).emit('participant-joined-video', {

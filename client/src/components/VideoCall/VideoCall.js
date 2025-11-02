@@ -120,7 +120,17 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
     socket.on('call_invitation', handleCallInvitation);
     socket.on('chat_message', handleNewChatMessage);
-    socket.on('video-call-message', handleNewChatMessage);
+    socket.on('video-call-message', (data) => {
+      console.log('=== VIDEO CALL MESSAGE EVENT RECEIVED ===');
+      console.log('Raw event data:', data);
+      handleNewChatMessage(data);
+    });
+    
+    socket.on('video-call-message-direct', (data) => {
+      console.log('=== DIRECT VIDEO CALL MESSAGE EVENT RECEIVED ===');
+      console.log('Raw event data:', data);
+      handleNewChatMessage(data);
+    });
     socket.on('participant_joined', handleParticipantJoined);
     socket.on('participant_left', handleParticipantLeft);
     socket.on('interpreter_response', handleInterpreterResponse);
@@ -138,7 +148,8 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       socket.off('call_invitation', handleCallInvitation);
       socket.off('new_chat_message', handleNewChatMessage);
       socket.off('chat_message', handleNewChatMessage);
-      socket.off('video-call-message', handleNewChatMessage);
+      socket.off('video-call-message');
+      socket.off('video-call-message-direct');
       socket.off('participant_joined', handleParticipantJoined);
       socket.off('participant_left', handleParticipantLeft);
       socket.off('interpreter_response', handleInterpreterResponse);
@@ -220,11 +231,21 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         roomName: data.roomName
       };
       console.log('Joining video call socket room:', socketPayload);
+      console.log('Socket connected:', socket?.connected);
+      console.log('Socket ID:', socket?.id);
+      
       socket?.emit('join-video-call', socketPayload);
+      
+      // Test socket connection
+      socket?.emit('test-connection', { message: 'Testing from video call' });
       
       // Add success/error handlers for room joining
       socket?.on('error', (error) => {
         console.error('Socket error during room join:', error);
+      });
+      
+      socket?.on('test-connection-response', (data) => {
+        console.log('Socket test response:', data);
       });
 
       // Start quality monitoring
@@ -416,7 +437,17 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         console.log('Sending chat message via socket:', chatPayload);
         console.log('Socket rooms:', socket.rooms);
         console.log('CallInfo:', callInfo);
+        
+        // Send using original method
         socket.emit('video-call-message', chatPayload);
+        
+        // Also try direct method as backup
+        const directPayload = {
+          roomName: callInfo?.roomName,
+          message: messageData.message
+        };
+        console.log('Sending direct chat message:', directPayload);
+        socket.emit('video-call-message-direct', directPayload);
       } else {
         console.warn('Socket not available for chat message');
       }
@@ -431,12 +462,26 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   };
 
   const handleNewChatMessage = (messageData) => {
-    console.log('Received chat message:', messageData);
+    console.log('=== RECEIVED CHAT MESSAGE ===');
+    console.log('Message data:', messageData);
+    console.log('Current user ID:', user._id || user.id);
+    console.log('Message sender ID:', messageData.sender?.id);
+    console.log('Is own message:', messageData.sender?.id === (user._id || user.id));
+    console.log('Current chat messages count:', chatMessages.length);
     
     // Don't add our own messages again
-    if (messageData.sender?.id === (user._id || user.id)) return;
+    if (messageData.sender?.id === (user._id || user.id)) {
+      console.log('Skipping own message');
+      return;
+    }
 
-    setChatMessages(prev => [...prev, messageData]);
+    console.log('Adding message to chat');
+    setChatMessages(prev => {
+      console.log('Previous messages:', prev.length);
+      const newMessages = [...prev, messageData];
+      console.log('New messages count:', newMessages.length);
+      return newMessages;
+    });
     
     // Play sound and increment unread count if chat is closed
     if (!isChatOpen) {
