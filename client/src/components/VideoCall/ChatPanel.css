@@ -1,4 +1,18 @@
 /* ChatPanel.css */
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .chat-panel {
   position: fixed;
   right: 0;
@@ -31,6 +45,12 @@
   color: #333;
 }
 
+.chat-title h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 .message-count {
   color: #666;
   font-weight: normal;
@@ -50,6 +70,11 @@
 .close-button:hover {
   background: #e9ecef;
   color: #333;
+}
+
+.close-button:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
 }
 
 /* Messages */
@@ -250,6 +275,16 @@
 .send-button:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+.send-button:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.message-input:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
 }
 
 .input-footer {

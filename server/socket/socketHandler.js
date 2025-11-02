@@ -235,6 +235,63 @@ const socketHandler = (io) => {
         });
 
         /**
+         * Send chat message in video call
+         */
+        socket.on('video-call-message', async (data) => {
+            try {
+                const { callId, message } = data;
+
+                if (!callId || !message) {
+                    socket.emit('error', { message: 'Call ID and message are required' });
+                    return;
+                }
+
+                // Verify video call exists and user is a participant
+                const videoCall = await VideoCall.findById(callId)
+                    .populate('recruiter jobSeeker interpreters.interpreter');
+
+                if (!videoCall) {
+                    socket.emit('error', { message: 'Video call not found' });
+                    return;
+                }
+
+                // Check if user is a participant
+                const hasAccess = videoCall.recruiter._id.toString() === socket.userId ||
+                                 videoCall.jobSeeker._id.toString() === socket.userId ||
+                                 videoCall.interpreters.some(i => i.interpreter._id.toString() === socket.userId);
+
+                if (!hasAccess) {
+                    socket.emit('error', { message: 'Access denied to send messages' });
+                    return;
+                }
+
+                // Add message to video call record
+                const messageData = {
+                    sender: {
+                        id: socket.userId,
+                        name: socket.user.name,
+                        role: socket.user.role
+                    },
+                    message: message.message,
+                    timestamp: message.timestamp || new Date().toISOString(),
+                    messageType: message.messageType || 'text'
+                };
+
+                videoCall.chatMessages.push(messageData);
+                await videoCall.save();
+
+                // Broadcast message to all participants in the video call room
+                // Use the same room format as join-video-call handler
+                io.to(`call_${videoCall.roomName}`).emit('video-call-message', messageData);
+
+                logger.info(`User ${socket.user.email} sent message in video call ${callId}`);
+            } catch (error) {
+                logger.error('Video call message error:', error);
+                socket.emit('error', { message: 'Failed to send message' });
+            }
+        });
+
+        /**
          * Request interpreter for call
          */
         socket.on('request-interpreter', async (data) => {

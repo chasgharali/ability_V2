@@ -24,7 +24,7 @@ export default function CallInviteModal({
         <hr className="call-invite-divider" />
         <div className="call-invite-body">
           <p className="call-invite-text">
-            You are invited by <strong>{recruiterName || 'Recruiter'}</strong> to join a video call
+            You are invited to join a video call
             {boothName ? <> at <strong>{boothName}</strong></> : null}
             {eventName ? <> for <strong>{eventName}</strong></> : null}.
           </p>

@@ -49,9 +49,7 @@ const interpreterCategorySchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Indexes for performance
-interpreterCategorySchema.index({ name: 1 });
-interpreterCategorySchema.index({ code: 1 });
+// Indexes for performance (name and code indexes are created by unique: true)
 interpreterCategorySchema.index({ isActive: 1 });
 interpreterCategorySchema.index({ sortOrder: 1 });
 

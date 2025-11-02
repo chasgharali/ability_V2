@@ -163,10 +163,9 @@ const boothSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Indexes for performance
+// Indexes for performance (customInviteSlug index is created by unique: true)
 boothSchema.index({ eventId: 1 });
 boothSchema.index({ status: 1 });
-boothSchema.index({ customInviteSlug: 1 }, { unique: true, sparse: true });
 boothSchema.index({ administrators: 1 });
 
 // Virtual for checking if booth is available for queue joining

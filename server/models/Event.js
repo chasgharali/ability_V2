@@ -209,8 +209,7 @@ const eventSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Indexes for performance
-eventSchema.index({ slug: 1 });
+// Indexes for performance (slug index is created by unique: true)
 eventSchema.index({ status: 1 });
 eventSchema.index({ start: 1, end: 1 });
 eventSchema.index({ createdBy: 1 });

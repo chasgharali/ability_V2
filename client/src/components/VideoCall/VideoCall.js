@@ -32,6 +32,24 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     } catch (_) { /* ignore */ }
   };
 
+  // Play chat notification sound
+  const playChatSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 800; // Pleasant notification tone
+      o.connect(g);
+      g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.1, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      o.start();
+      o.stop(ctx.currentTime + 0.2);
+    } catch (_) { /* ignore */ }
+  };
+
   // Call state
   const [room, setRoom] = useState(null);
   const [participants, setParticipants] = useState(new Map());
@@ -49,6 +67,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [connectionQuality, setConnectionQuality] = useState('good');
   const [callDuration, setCallDuration] = useState(0);
   const [callStartTime, setCallStartTime] = useState(null);
@@ -100,15 +119,21 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     if (!socket) return;
 
     socket.on('call_invitation', handleCallInvitation);
-    socket.on('new_chat_message', handleNewChatMessage);
-    socket.on('participant-joined-video', handleParticipantJoined);
-    socket.on('participant-left-video', handleParticipantLeft);
-    socket.on('interpreter-response', handleInterpreterResponse);
+    socket.on('chat_message', handleNewChatMessage);
+    socket.on('video-call-message', handleNewChatMessage);
+    socket.on('participant_joined', handleParticipantJoined);
+    socket.on('participant_left', handleParticipantLeft);
+    socket.on('interpreter_response', handleInterpreterResponse);
     socket.on('call_ended', handleCallEnded);
 
     return () => {
       socket.off('call_invitation', handleCallInvitation);
       socket.off('new_chat_message', handleNewChatMessage);
+      socket.off('chat_message', handleNewChatMessage);
+      socket.off('video-call-message', handleNewChatMessage);
+      socket.off('participant_joined', handleParticipantJoined);
+      socket.off('participant_left', handleParticipantLeft);
+      socket.off('interpreter_response', handleInterpreterResponse);
       socket.off('participant-joined-video', handleParticipantJoined);
       socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
@@ -320,10 +345,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     }
   };
 
-  const handleNewChatMessage = (messageData) => {
-    setChatMessages(prev => [...prev, messageData]);
-  };
-
   const handleParticipantJoined = (data) => {
     console.log('Participant joined:', data);
   };
@@ -346,6 +367,65 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const handleCallEnded = (data) => {
     cleanup();
     onCallEnd?.(data);
+  };
+
+  // Chat functionality
+  const sendChatMessage = async (message) => {
+    if (!message.trim() || !room) return;
+
+    try {
+      const messageData = {
+        message: message.trim(),
+        sender: {
+          id: user._id,
+          name: user.name,
+          role: user.role
+        },
+        timestamp: new Date().toISOString(),
+        messageType: 'text'
+      };
+
+      // Add to local messages immediately for better UX
+      setChatMessages(prev => [...prev, messageData]);
+
+      // Send via socket if available
+      if (socket) {
+        socket.emit('video-call-message', {
+          callId: callId,
+          message: messageData
+        });
+      }
+
+      console.log('Chat message sent:', messageData);
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      // Remove the message from local state if sending failed
+      setChatMessages(prev => prev.slice(0, -1));
+      throw error;
+    }
+  };
+
+  const handleNewChatMessage = (messageData) => {
+    console.log('Received chat message:', messageData);
+    
+    // Don't add our own messages again
+    if (messageData.sender?.id === user._id) return;
+
+    setChatMessages(prev => [...prev, messageData]);
+    
+    // Play sound and increment unread count if chat is closed
+    if (!isChatOpen) {
+      playChatSound();
+      setUnreadChatCount(prev => prev + 1);
+    }
+  };
+
+  // Reset unread count when chat is opened
+  const handleToggleChat = () => {
+    setIsChatOpen(!isChatOpen);
+    if (!isChatOpen) {
+      setUnreadChatCount(0);
+    }
   };
 
   const handleRoomDisconnected = (room, error) => {
@@ -469,18 +549,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       await videoCallService.inviteInterpreter(callInfo.id || callInfo.callId, category);
     } catch (error) {
       console.error('Error inviting interpreter:', error);
-    }
-  };
-
-  const sendChatMessage = async (message) => {
-    try {
-      if (callInfo && (callInfo.id || callInfo.callId)) {
-        await videoCallService.sendMessage(callInfo.id || callInfo.callId, message);
-      } else {
-        console.warn('No call info available for sending message');
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
     }
   };
 
@@ -779,13 +847,13 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
           isVideoEnabled={isVideoEnabled}
           onToggleAudio={toggleAudio}
           onToggleVideo={toggleVideo}
-          onToggleChat={() => setIsChatOpen(!isChatOpen)}
+          onToggleChat={handleToggleChat}
           onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
           onToggleProfile={() => setIsProfileOpen(!isProfileOpen)}
           onEndCall={endCall}
           userRole={callInfo?.userRole}
           participantCount={participants.size + 1}
-          chatUnreadCount={0} // TODO: Implement unread count
+          chatUnreadCount={unreadChatCount}
         />
       </footer>
 

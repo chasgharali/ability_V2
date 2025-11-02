@@ -134,8 +134,7 @@ const videoCallSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for efficient queries
-videoCallSchema.index({ roomName: 1 });
+// Index for efficient queries (roomName index is created by unique: true)
 videoCallSchema.index({ recruiter: 1, status: 1 });
 videoCallSchema.index({ jobSeeker: 1, status: 1 });
 videoCallSchema.index({ event: 1, booth: 1 });
