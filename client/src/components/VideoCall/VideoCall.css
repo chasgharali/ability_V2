@@ -342,9 +342,11 @@
   gap: 15px;
   padding: 15px;
   grid-template-columns: repeat(auto-fit, minmax(min(450px, 100%), 1fr));
-  grid-auto-rows: minmax(400px, 1fr); /* Increased minimum height */
+  grid-auto-rows: minmax(400px, 1fr);
   align-content: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 /* No Participants State */

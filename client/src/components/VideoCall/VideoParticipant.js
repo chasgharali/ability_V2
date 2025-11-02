@@ -103,7 +103,32 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
   useEffect(() => {
     if (videoTrack && videoRef.current && videoTrack.attach) {
       try {
-        videoTrack.attach(videoRef.current);
+        const attachedElements = videoTrack.attach(videoRef.current);
+        console.log('Attached video elements:', attachedElements);
+        
+        // Ensure the video element has the correct styles after attachment
+        if (videoRef.current) {
+          const applyVideoStyles = () => {
+            videoRef.current.style.width = '100%';
+            videoRef.current.style.height = '100%';
+            videoRef.current.style.objectFit = 'cover';
+            videoRef.current.style.position = 'absolute';
+            videoRef.current.style.top = '0';
+            videoRef.current.style.left = '0';
+            videoRef.current.style.maxWidth = 'none';
+            videoRef.current.style.maxHeight = 'none';
+            videoRef.current.style.minWidth = '100%';
+            videoRef.current.style.minHeight = '100%';
+          };
+          
+          // Apply styles immediately
+          applyVideoStyles();
+          
+          // Also apply styles after a short delay in case Twilio overrides them
+          setTimeout(applyVideoStyles, 100);
+          setTimeout(applyVideoStyles, 500);
+        }
+        
         console.log('Video track attached successfully (post-mount)');
       } catch (error) {
         console.error('Error attaching video track (post-mount):', error);

@@ -125,6 +125,14 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     socket.on('participant_left', handleParticipantLeft);
     socket.on('interpreter_response', handleInterpreterResponse);
     socket.on('call_ended', handleCallEnded);
+    socket.on('error', (error) => {
+      console.error('Socket error in video call:', error);
+    });
+    
+    // Add success handler for room joining
+    socket.on('participant-joined-video', (data) => {
+      console.log('Participant joined video call:', data);
+    });
 
     return () => {
       socket.off('call_invitation', handleCallInvitation);
@@ -137,6 +145,8 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       socket.off('participant-joined-video', handleParticipantJoined);
       socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
+      socket.off('error');
+      socket.off('participant-joined-video');
     };
   }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -205,9 +215,16 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       room.on('networkQualityLevelChanged', handleNetworkQualityChanged);
 
       // Join socket room
-      socket?.emit('join-video-call', {
-        callId: data.id,
+      const socketPayload = {
+        callId: data.id || data.callId,
         roomName: data.roomName
+      };
+      console.log('Joining video call socket room:', socketPayload);
+      socket?.emit('join-video-call', socketPayload);
+      
+      // Add success/error handlers for room joining
+      socket?.on('error', (error) => {
+        console.error('Socket error during room join:', error);
       });
 
       // Start quality monitoring
@@ -295,10 +312,12 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       room.on('networkQualityLevelChanged', handleNetworkQualityChanged);
 
       // Join socket room
-      socket?.emit('join-video-call', {
-        callId: callDetails.callId,
+      const socketPayload = {
+        callId: callDetails.callId || callDetails.id,
         roomName: callDetails.roomName
-      });
+      };
+      console.log('Joining video call socket room (from callId):', socketPayload);
+      socket?.emit('join-video-call', socketPayload);
 
       // Start quality monitoring
       startQualityMonitoring();
@@ -377,7 +396,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       const messageData = {
         message: message.trim(),
         sender: {
-          id: user._id,
+          id: user._id || user.id,
           name: user.name,
           role: user.role
         },
@@ -390,10 +409,16 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
       // Send via socket if available
       if (socket) {
-        socket.emit('video-call-message', {
-          callId: callId,
+        const chatPayload = {
+          callId: callInfo?.id || callInfo?.callId || callId,
           message: messageData
-        });
+        };
+        console.log('Sending chat message via socket:', chatPayload);
+        console.log('Socket rooms:', socket.rooms);
+        console.log('CallInfo:', callInfo);
+        socket.emit('video-call-message', chatPayload);
+      } else {
+        console.warn('Socket not available for chat message');
       }
 
       console.log('Chat message sent:', messageData);
@@ -409,7 +434,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     console.log('Received chat message:', messageData);
     
     // Don't add our own messages again
-    if (messageData.sender?.id === user._id) return;
+    if (messageData.sender?.id === (user._id || user.id)) return;
 
     setChatMessages(prev => [...prev, messageData]);
     
