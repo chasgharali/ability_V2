@@ -235,8 +235,11 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
       <div className="participant-info">
         <div className="participant-name">
           <span className="name">{getParticipantName()}</span>
+          {/* Only show role label if it's different from the name (avoids duplicate) */}
+          {getParticipantRole() && getParticipantRole() !== getParticipantName() && (
+            <span className="role">{getParticipantRole()}</span>
+          )}
         </div>
-        {getParticipantRole() && <div className="participant-role-badge">{getParticipantRole()}</div>}
 
         {/* Controls Indicators */}
         <div className="participant-controls" role="group" aria-label={`${getParticipantName()} controls status`}>
@@ -245,33 +248,16 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
             role="status"
             aria-label={`${getParticipantName()} microphone is ${isAudioEnabled ? 'on' : 'off'}`}
           >
-            {isAudioEnabled ? <FiMic size={16} aria-hidden="true" /> : <FiMicOff size={16} aria-hidden="true" />}
+            {isAudioEnabled ? <FiMic size={18} aria-hidden="true" /> : <FiMicOff size={18} aria-hidden="true" />}
           </div>
           <div 
             className={`control-indicator ${isVideoEnabled ? 'enabled' : 'disabled'}`}
             role="status"
             aria-label={`${getParticipantName()} camera is ${isVideoEnabled ? 'on' : 'off'}`}
           >
-            {isVideoEnabled ? <FiVideo size={16} aria-hidden="true" /> : <FiVideoOff size={16} aria-hidden="true" />}
+            {isVideoEnabled ? <FiVideo size={18} aria-hidden="true" /> : <FiVideoOff size={18} aria-hidden="true" />}
           </div>
         </div>
-
-        {/* Network Quality Indicator */}
-        {!isLocal && (
-          <div 
-            className={`network-quality ${getNetworkQualityClass()}`}
-            role="status"
-            aria-label={`${getParticipantName()} connection quality: ${getNetworkQualityClass()}`}
-          >
-            <div className="quality-bars" aria-hidden="true">
-              <div className={`bar ${networkQuality >= 1 ? 'active' : ''}`}></div>
-              <div className={`bar ${networkQuality >= 2 ? 'active' : ''}`}></div>
-              <div className={`bar ${networkQuality >= 3 ? 'active' : ''}`}></div>
-              <div className={`bar ${networkQuality >= 4 ? 'active' : ''}`}></div>
-              <div className={`bar ${networkQuality >= 5 ? 'active' : ''}`}></div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Speaking Indicator */}
