@@ -55,7 +55,7 @@ const CallControls = ({
     {
       id: 'audio',
       icon: isAudioEnabled ? FiMic : FiMicOff,
-      label: 'Mute',
+      label: isAudioEnabled ? 'Mute' : 'Unmute',
       ariaLabel: isAudioEnabled ? 'Mute microphone' : 'Unmute microphone',
       onClick: onToggleAudio,
       className: `control-button ${isAudioEnabled ? 'enabled' : 'disabled'}`,
@@ -64,7 +64,7 @@ const CallControls = ({
     {
       id: 'video',
       icon: isVideoEnabled ? FiVideo : FiVideoOff,
-      label: 'Stop video',
+      label: isVideoEnabled ? 'Stop video' : 'Start video',
       ariaLabel: isVideoEnabled ? 'Stop video' : 'Start video',
       onClick: onToggleVideo,
       className: `control-button ${isVideoEnabled ? 'enabled' : 'disabled'}`,

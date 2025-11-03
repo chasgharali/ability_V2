@@ -207,18 +207,23 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     >
       {/* Video Container */}
       <div className="video-container">
-        {/* Always render the video element so refs are available when tracks arrive */}
+        {/* Always render the video element - keep visible to preserve last frame when disabled */}
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted={isLocal}
-          className={`participant-video ${!(isVideoEnabled && videoTrack) ? 'hidden' : ''}`}
+          className="participant-video"
           aria-label={`${getParticipantName()} video stream`}
         />
+        
+        {/* Overlay when video is disabled or not available - shows over frozen frame */}
         {!(isVideoEnabled && videoTrack) && (
-          <div className="video-placeholder" role="img" aria-label={`${getParticipantName()} camera is off`}>
-            <FiUser size={48} aria-hidden="true" />
+          <div className="video-disabled-overlay" role="img" aria-label={`${getParticipantName()} camera is off`}>
+            <div className="video-disabled-content">
+              <FiUser size={48} aria-hidden="true" />
+              <span className="video-disabled-text">Camera Off</span>
+            </div>
           </div>
         )}
         

@@ -658,30 +658,32 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   };
 
   const toggleAudio = () => {
-    if (localTracks.length > 0) {
-      const audioTrack = localTracks.find(track => track.kind === 'audio');
-      if (audioTrack) {
-        if (isAudioEnabled) {
-          audioTrack.disable();
-        } else {
-          audioTrack.enable();
-        }
-        setIsAudioEnabled(!isAudioEnabled);
-      }
+    const audioTrack = localTracks.find(track => track.kind === 'audio');
+    if (!audioTrack) return;
+
+    if (isAudioEnabled) {
+      // Mute: disable the track (stops transmission)
+      audioTrack.disable();
+      setIsAudioEnabled(false);
+    } else {
+      // Unmute: enable the track (resumes transmission)
+      audioTrack.enable();
+      setIsAudioEnabled(true);
     }
   };
 
   const toggleVideo = () => {
-    if (localTracks.length > 0) {
-      const videoTrack = localTracks.find(track => track.kind === 'video');
-      if (videoTrack) {
-        if (isVideoEnabled) {
-          videoTrack.disable();
-        } else {
-          videoTrack.enable();
-        }
-        setIsVideoEnabled(!isVideoEnabled);
-      }
+    const videoTrack = localTracks.find(track => track.kind === 'video');
+    if (!videoTrack) return;
+
+    if (isVideoEnabled) {
+      // Stop video: disable the track (stops transmission, preserves last frame)
+      videoTrack.disable();
+      setIsVideoEnabled(false);
+    } else {
+      // Start video: enable the track (resumes transmission)
+      videoTrack.enable();
+      setIsVideoEnabled(true);
     }
   };
 
