@@ -8,6 +8,7 @@ import CallControls from './CallControls';
 import ChatPanel from './ChatPanel';
 import ParticipantsList from './ParticipantsList';
 import JobSeekerProfile from './JobSeekerProfile';
+import CallInviteModal from './CallInviteModal';
 import './VideoCall.css';
 
 const VideoCall = ({ callId, callData, onCallEnd }) => {
@@ -59,10 +60,11 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const [error, setError] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
-
-  // UI state
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [callStartTime, setCallStartTime] = useState(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteData, setInviteData] = useState(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -70,7 +72,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [connectionQuality, setConnectionQuality] = useState('good');
   const [callDuration, setCallDuration] = useState(0);
-  const [callStartTime, setCallStartTime] = useState(null);
   const [networkStats, setNetworkStats] = useState({ latency: 0, packetLoss: 0 });
 
   // Refs
@@ -89,15 +90,11 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     const initTimer = setTimeout(() => {
       // Prioritize callData over callId - if we have call data, use it directly
       if (callData && callData.accessToken) {
-        console.log('Initializing call with provided data:', callData);
         setIsInitializing(true);
         initializeCallWithData(callData);
       } else if (callId && !callData) {
-        console.log('Initializing call by joining with ID:', callId);
         setIsInitializing(true);
         initializeCall();
-      } else {
-        console.log('No valid call data or ID provided');
       }
     }, 100); // Small delay to ensure DOM is ready
 
@@ -121,14 +118,10 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     socket.on('call_invitation', handleCallInvitation);
     socket.on('chat_message', handleNewChatMessage);
     socket.on('video-call-message', (data) => {
-      console.log('=== VIDEO CALL MESSAGE EVENT RECEIVED ===');
-      console.log('Raw event data:', data);
       handleNewChatMessage(data);
     });
     
     socket.on('video-call-message-direct', (data) => {
-      console.log('=== DIRECT VIDEO CALL MESSAGE EVENT RECEIVED ===');
-      console.log('Raw event data:', data);
       handleNewChatMessage(data);
     });
     socket.on('participant_joined', handleParticipantJoined);
@@ -141,7 +134,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     
     // Add success handler for room joining
     socket.on('participant-joined-video', (data) => {
-      console.log('Participant joined video call:', data);
+      // Handle participant joined
     });
 
     return () => {
@@ -230,9 +223,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         callId: data.id || data.callId,
         roomName: data.roomName
       };
-      console.log('Joining video call socket room:', socketPayload);
-      console.log('Socket connected:', socket?.connected);
-      console.log('Socket ID:', socket?.id);
       
       socket?.emit('join-video-call', socketPayload);
       
@@ -245,13 +235,18 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       });
       
       socket?.on('test-connection-response', (data) => {
-        console.log('Socket test response:', data);
+        // Handle test connection response
       });
 
       // Start quality monitoring
       startQualityMonitoring();
       // Play join sound once connected
       playJoinSound();
+
+      // Announce successful connection for job seekers
+      if (user.role === 'JobSeeker') {
+        speak("You are now connected to the call. You can now speak with the recruiter.");
+      }
 
       setLoading(false);
       setIsInitializing(false);
@@ -337,11 +332,15 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         callId: callDetails.callId || callDetails.id,
         roomName: callDetails.roomName
       };
-      console.log('Joining video call socket room (from callId):', socketPayload);
       socket?.emit('join-video-call', socketPayload);
 
       // Start quality monitoring
       startQualityMonitoring();
+
+      // Announce successful connection for job seekers
+      if (user.role === 'JobSeeker') {
+        speak("You are now connected to the call. You can now speak with the recruiter.");
+      }
 
       setLoading(false);
       setIsInitializing(false);
@@ -354,7 +353,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   }, [callId, socket]); // Add dependencies for useCallback
 
   const addParticipant = useCallback((participant) => {
-    console.log('Adding participant:', participant.identity);
     setParticipants(prevParticipants => {
       const newParticipants = new Map(prevParticipants);
       newParticipants.set(participant.sid, participant);
@@ -366,7 +364,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   }, []);
 
   const removeParticipant = useCallback((participant) => {
-    console.log('Removing participant:', participant.identity);
     setParticipants(prevParticipants => {
       const newParticipants = new Map(prevParticipants);
       newParticipants.delete(participant.sid);
@@ -377,20 +374,89 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     // No need to manually detach tracks here
   }, []);
 
+  // Speak announcement using Web Speech API
+  const speak = (text) => {
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      
+      // Cancel any ongoing speech to avoid overlap
+      if (synth.speaking) synth.cancel();
+      
+      const speakText = () => {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.05;
+        utter.pitch = 1.0;
+        utter.volume = 1.0;
+        
+        // Prefer an English voice if available
+        const voices = synth.getVoices();
+        const enVoice = voices.find(v => /en(-|_)?.*/i.test(v.lang));
+        if (enVoice) utter.voice = enVoice;
+        
+        synth.speak(utter);
+      };
+      
+      // If voices are not loaded yet, wait for them
+      if (synth.getVoices().length === 0) {
+        synth.addEventListener('voiceschanged', speakText, { once: true });
+      } else {
+        speakText();
+      }
+    } catch (e) {
+      // ignore failures
+    }
+  };
+
   const handleCallInvitation = (data) => {
     // Handle incoming call invitation for job seekers
     if (user.role === 'JobSeeker') {
-      setCallInfo(data);
+      setInviteData(data);
+      setShowInviteModal(true);
       setLoading(false);
+      
+      // Play notification sound
+      try {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.play().catch(e => {/* Could not play notification sound */});
+      } catch (e) {
+        /* Notification sound not available */
+      }
+
+      // Announce invitation with text-to-speech
+      speak("You have been invited to a call. Please check your screen for the invitation.");
+    }
+  };
+
+  const handleAcceptInvitation = async () => {
+    if (inviteData) {
+      setCallInfo(inviteData);
+      setShowInviteModal(false);
+      setInviteData(null);
+      
+      // Announce call joining
+      speak("Joining the call now. Please wait while we connect you.");
+      
+      // Initialize call with the invitation data
+      await initializeCallWithData(inviteData);
+    }
+  };
+
+  const handleDeclineInvitation = () => {
+    setShowInviteModal(false);
+    setInviteData(null);
+    // Optionally notify the server about the decline
+    if (socket && inviteData) {
+      socket.emit('call-invitation-declined', { callId: inviteData.id });
     }
   };
 
   const handleParticipantJoined = (data) => {
-    console.log('Participant joined:', data);
+    // Handle participant joined
   };
 
   const handleParticipantLeft = (data) => {
-    console.log('Participant left:', data);
+    // Handle participant left
   };
 
   const handleInterpreterResponse = (data) => {
@@ -405,6 +471,11 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   };
 
   const handleCallEnded = (data) => {
+    // Announce call end for job seekers
+    if (user.role === 'JobSeeker') {
+      speak("The call has ended. Thank you for participating.");
+    }
+    
     cleanup();
     onCallEnd?.(data);
   };
@@ -434,9 +505,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
           callId: callInfo?.id || callInfo?.callId || callId,
           message: messageData
         };
-        console.log('Sending chat message via socket:', chatPayload);
-        console.log('Socket rooms:', socket.rooms);
-        console.log('CallInfo:', callInfo);
         
         // Send using original method
         socket.emit('video-call-message', chatPayload);
@@ -446,13 +514,10 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
           roomName: callInfo?.roomName,
           message: messageData.message
         };
-        console.log('Sending direct chat message:', directPayload);
         socket.emit('video-call-message-direct', directPayload);
-      } else {
-        console.warn('Socket not available for chat message');
       }
 
-      console.log('Chat message sent:', messageData);
+      // Chat message sent
     } catch (error) {
       console.error('Error sending chat message:', error);
       // Remove the message from local state if sending failed
@@ -462,24 +527,13 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   };
 
   const handleNewChatMessage = (messageData) => {
-    console.log('=== RECEIVED CHAT MESSAGE ===');
-    console.log('Message data:', messageData);
-    console.log('Current user ID:', user._id || user.id);
-    console.log('Message sender ID:', messageData.sender?.id);
-    console.log('Is own message:', messageData.sender?.id === (user._id || user.id));
-    console.log('Current chat messages count:', chatMessages.length);
-    
     // Don't add our own messages again
     if (messageData.sender?.id === (user._id || user.id)) {
-      console.log('Skipping own message');
       return;
     }
 
-    console.log('Adding message to chat');
     setChatMessages(prev => {
-      console.log('Previous messages:', prev.length);
       const newMessages = [...prev, messageData];
-      console.log('New messages count:', newMessages.length);
       return newMessages;
     });
     
@@ -499,23 +553,18 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
   };
 
   const handleRoomDisconnected = (room, error) => {
-    console.log('Room disconnected:', error);
     // Only attempt reconnect if it's an unexpected disconnection
     if (error && error.code !== 20104) { // 20104 is normal disconnection
       setError('Call disconnected. Attempting to reconnect...');
       attemptReconnect();
-    } else {
-      console.log('Room disconnected normally');
     }
   };
 
   const handleReconnecting = (error) => {
-    console.log('Reconnecting to room:', error);
     setConnectionQuality('poor');
   };
 
   const handleReconnected = () => {
-    console.log('Reconnected to room');
     setError(null);
     setConnectionQuality('good');
     setReconnectAttempts(0); // Reset reconnection attempts on successful connection
@@ -538,7 +587,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
   const attemptReconnect = () => {
     if (reconnectAttempts >= 3) {
-      console.log('Max reconnection attempts reached');
       setError('Unable to reconnect to call. Please refresh and try again.');
       return;
     }
@@ -549,7 +597,6 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
     reconnectTimeoutRef.current = setTimeout(() => {
       if (callInfo && callInfo.accessToken) {
-        console.log(`Reconnection attempt ${reconnectAttempts + 1}/3`);
         setReconnectAttempts(prev => prev + 1);
         // Use the existing call data to reconnect
         initializeCallWithData(callInfo);
@@ -896,20 +943,43 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
       {isParticipantsOpen && (
         <ParticipantsList
-          participants={callInfo?.participants}
+          participants={{
+            ...callInfo?.participants,
+            twilioParticipants: Array.from(participants.values()),
+            localUser: user
+          }}
           onClose={() => setIsParticipantsOpen(false)}
           onInviteInterpreter={inviteInterpreter}
-          userRole={callInfo?.userRole}
+          userRole={callInfo?.userRole || user?.role}
           interpreterRequested={callInfo?.metadata?.interpreterRequested}
         />
       )}
+      
 
-      {isProfileOpen && callInfo?.userRole === 'recruiter' && (
-        <JobSeekerProfile
-          jobSeeker={callInfo.participants?.jobSeeker}
-          onClose={() => setIsProfileOpen(false)}
-        />
-      )}
+      {isProfileOpen && callInfo?.userRole === 'recruiter' && (() => {
+        // Try to get job seeker data from multiple sources
+        let jobSeekerData = callInfo.participants?.jobSeeker;
+        
+        // If we don't have job seeker data from callInfo, try to find it from participants
+        if (!jobSeekerData && callInfo.participants) {
+          // Look for job seeker in the participants object
+          const allParticipants = [
+            callInfo.participants.recruiter,
+            callInfo.participants.jobSeeker,
+            ...(callInfo.participants.interpreters || []).map(i => i.interpreter)
+          ].filter(Boolean);
+          
+          jobSeekerData = allParticipants.find(p => p.role === 'jobseeker' || p.role === 'JobSeeker');
+        }
+        
+        
+        return (
+          <JobSeekerProfile
+            jobSeeker={jobSeekerData}
+            onClose={() => setIsProfileOpen(false)}
+          />
+        );
+      })()}
 
       <footer className="video-call-footer">
         <CallControls
@@ -933,6 +1003,23 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
           <span>{error}</span>
           <button onClick={() => setError(null)}>×</button>
         </div>
+      )}
+
+      {/* Call Invitation Modal */}
+      {showInviteModal && inviteData && (
+        <CallInviteModal
+          recruiterName={inviteData.recruiterName}
+          boothName={inviteData.boothName}
+          eventName={inviteData.eventName}
+          audioInputs={[]} // TODO: Get actual device list
+          videoInputs={[]} // TODO: Get actual device list
+          selectedAudioId=""
+          selectedVideoId=""
+          onChangeAudio={() => {}} // TODO: Implement device selection
+          onChangeVideo={() => {}} // TODO: Implement device selection
+          onAccept={handleAcceptInvitation}
+          onDecline={handleDeclineInvitation}
+        />
       )}
     </div>
   );

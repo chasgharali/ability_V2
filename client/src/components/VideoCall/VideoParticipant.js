@@ -15,7 +15,6 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     if (!participant) return;
 
     const trackSubscribed = (track) => {
-      console.log('Track subscribed:', track.kind, 'for participant:', participant.identity);
       if (track.kind === 'video') {
         setVideoTrack(track);
       } else if (track.kind === 'audio') {
@@ -70,9 +69,7 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     };
 
     // Handle existing tracks
-    console.log('Participant tracks:', participant.tracks.size, 'for', participant.identity);
     participant.tracks.forEach(publication => {
-      console.log('Publication:', publication.kind, 'subscribed:', publication.isSubscribed);
       // For remote participants, isSubscribed indicates an active track.
       // For local participants, publication.track exists even if isSubscribed is undefined/false.
       if (publication.isSubscribed || publication.track) {
@@ -104,7 +101,6 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     if (videoTrack && videoRef.current && videoTrack.attach) {
       try {
         const attachedElements = videoTrack.attach(videoRef.current);
-        console.log('Attached video elements:', attachedElements);
         
         // Ensure the video element has the correct styles after attachment
         if (videoRef.current) {
@@ -129,7 +125,6 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
           setTimeout(applyVideoStyles, 500);
         }
         
-        console.log('Video track attached successfully (post-mount)');
       } catch (error) {
         console.error('Error attaching video track (post-mount):', error);
       }
@@ -155,7 +150,6 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
     if (audioTrack && audioRef.current && audioTrack.attach) {
       try {
         audioTrack.attach(audioRef.current);
-        console.log('Audio track attached successfully (post-mount)');
       } catch (error) {
         console.error('Error attaching audio track (post-mount):', error);
       }

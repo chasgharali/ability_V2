@@ -103,14 +103,6 @@ const CallControls = ({
   const primaryButtons = controlButtons.filter(btn => btn.primary);
   const secondaryButtons = controlButtons.filter(btn => !btn.primary);
 
-  // Debug: Log control buttons to help identify icon issues
-  React.useEffect(() => {
-    console.log('CallControls rendered with buttons:', controlButtons.map(btn => ({
-      id: btn.id,
-      label: btn.label,
-      iconName: btn.icon.name
-    })));
-  }, [controlButtons]);
 
   return (
     <div className="call-controls">

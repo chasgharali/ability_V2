@@ -4,8 +4,10 @@
   background: #333;
   border-radius: 10px;
   overflow: hidden;
-  min-height: 300px; /* Increased minimum height */
-  height: 100%; /* Take full available height */
+  min-height: 300px;
+  /* Increased minimum height */
+  height: 100%;
+  /* Take full available height */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +75,6 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
   padding: 20px 15px 10px;
   color: white;
   display: flex;
@@ -161,11 +162,25 @@
   transition: background-color 0.3s ease;
 }
 
-.quality-bars .bar:nth-child(1) { height: 4px; }
-.quality-bars .bar:nth-child(2) { height: 7px; }
-.quality-bars .bar:nth-child(3) { height: 10px; }
-.quality-bars .bar:nth-child(4) { height: 13px; }
-.quality-bars .bar:nth-child(5) { height: 16px; }
+.quality-bars .bar:nth-child(1) {
+  height: 4px;
+}
+
+.quality-bars .bar:nth-child(2) {
+  height: 7px;
+}
+
+.quality-bars .bar:nth-child(3) {
+  height: 10px;
+}
+
+.quality-bars .bar:nth-child(4) {
+  height: 13px;
+}
+
+.quality-bars .bar:nth-child(5) {
+  height: 16px;
+}
 
 .network-quality.excellent .bar.active {
   background: #17a2b8;
@@ -208,10 +223,13 @@
 }
 
 @keyframes speaking-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.6;
     transform: scale(1);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.02);
@@ -223,49 +241,63 @@
   .participant-info {
     padding: 15px 10px 8px;
   }
-  
+
   .participant-name .name {
     font-size: 13px;
   }
-  
+
   .participant-name .role {
     font-size: 11px;
   }
-  
+
   .control-indicator {
     width: 24px;
     height: 24px;
   }
-  
+
   .network-quality {
     top: 8px;
     right: 8px;
   }
-  
+
   .quality-bars {
     height: 14px;
   }
-  
-  .quality-bars .bar:nth-child(1) { height: 3px; }
-  .quality-bars .bar:nth-child(2) { height: 6px; }
-  .quality-bars .bar:nth-child(3) { height: 9px; }
-  .quality-bars .bar:nth-child(4) { height: 12px; }
-  .quality-bars .bar:nth-child(5) { height: 14px; }
+
+  .quality-bars .bar:nth-child(1) {
+    height: 3px;
+  }
+
+  .quality-bars .bar:nth-child(2) {
+    height: 6px;
+  }
+
+  .quality-bars .bar:nth-child(3) {
+    height: 9px;
+  }
+
+  .quality-bars .bar:nth-child(4) {
+    height: 12px;
+  }
+
+  .quality-bars .bar:nth-child(5) {
+    height: 14px;
+  }
 }
 
 @media (max-width: 480px) {
   .participant-info {
     padding: 10px 8px 6px;
   }
-  
+
   .participant-name .name {
     font-size: 12px;
   }
-  
+
   .participant-name .role {
     font-size: 10px;
   }
-  
+
   .control-indicator {
     width: 20px;
     height: 20px;
