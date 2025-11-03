@@ -246,7 +246,8 @@
   }
 
   .video-main-area {
-    padding-top: 120px; /* More space for stacked mobile header */
+    padding-top: 120px;
+    /* More space for stacked mobile header */
   }
 }
 
@@ -332,7 +333,8 @@
   display: flex;
   background: #000;
   overflow: hidden;
-  padding-top: 80px; /* Increased space for enhanced header */
+  padding-top: 80px;
+  /* Increased space for enhanced header */
   padding-bottom: 90px;
 }
 
@@ -398,7 +400,7 @@
 .local-video-overlay .participant-video {
   transform: scaleX(-1);
   /* Mirror effect for local video */
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
   height: 100%;
 }
@@ -427,7 +429,7 @@
     border-bottom: 2px solid var(--text-light);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
-  
+
   .connection-quality,
   .call-duration {
     background: rgba(255, 255, 255, 0.9);
@@ -440,7 +442,7 @@
   .skip-link {
     transition: none;
   }
-  
+
   .quality-dot {
     animation: none;
   }
