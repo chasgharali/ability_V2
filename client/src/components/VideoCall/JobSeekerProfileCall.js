@@ -174,29 +174,33 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
         <div className={`profile-sections ${loading ? 'loading' : ''}`}>
         {/* Basic Information */}
         <div className="profile-section">
-          <div className="profile-avatar">
-            {profilePicUrl ? (
-              <img 
-                src={profilePicUrl} 
-                alt={jobSeeker.name || 'Profile'}
-                className="avatar-image"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  const initials = getDisplayName().charAt(0).toUpperCase();
-                  e.target.insertAdjacentHTML('afterend', `<div class="avatar-circle large">${initials}</div>`);
-                }}
-              />
-            ) : (
-              <div className="avatar-circle large">
-                {getDisplayName().charAt(0).toUpperCase()}
-              </div>
-            )}
+          <div className="profile-header-section">
+            <div className="profile-avatar">
+              {profilePicUrl ? (
+                <img 
+                  src={profilePicUrl} 
+                  alt={jobSeeker.name || 'Profile'}
+                  className="avatar-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const initials = getDisplayName().charAt(0).toUpperCase();
+                    e.target.insertAdjacentHTML('afterend', `<div class="avatar-circle large">${initials}</div>`);
+                  }}
+                />
+              ) : (
+                <div className="avatar-circle large">
+                  {getDisplayName().charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="profile-header-info">
+              <h2 className="profile-name">{getDisplayName()}</h2>
+              {(metadata.professionalHeadline || metadata.headline) && (
+                <p className="professional-headline">{metadata.professionalHeadline || metadata.headline}</p>
+              )}
+            </div>
           </div>
           <div className="basic-info">
-            <h2 className="profile-name">{getDisplayName()}</h2>
-            {(metadata.professionalHeadline || metadata.headline) && (
-              <p className="professional-headline">{metadata.professionalHeadline || metadata.headline}</p>
-            )}
             <div className="contact-info">
               <p className="profile-email">
                 <FiMail size={16} aria-hidden="true" />
