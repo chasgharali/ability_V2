@@ -767,6 +767,8 @@
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 1.1rem 1.25rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .detail-section h4 {
@@ -782,21 +784,24 @@
   gap: 1rem;
 }
 
-.detail-item {
+.profile-modal .detail-item {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.detail-label {
+.profile-modal .detail-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.detail-item p {
+.profile-modal .detail-item p {
   margin: 0;
   color: #374151;
   font-size: 0.875rem;

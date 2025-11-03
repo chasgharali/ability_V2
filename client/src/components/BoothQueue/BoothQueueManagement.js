@@ -708,11 +708,6 @@ export default function BoothQueueManagement() {
             </div>
 
             <div className="profile-body">
-              {/* Info Notice */}
-              <div className="profile-notice">
-                This is the profile that recruiters will see. It will only be shared with companies you show interest in and the booths you visit.
-              </div>
-
               {/* Profile Header */}
               <div className="profile-header">
                 <div className="profile-avatar">
@@ -736,20 +731,20 @@ export default function BoothQueueManagement() {
                       {[selectedJobSeeker.jobSeeker.city, selectedJobSeeker.jobSeeker.state, 'US'].filter(Boolean).join(', ')}
                     </p>
                   )}
-                </div>
-                <div className="profile-actions">
-                  {selectedJobSeeker.jobSeeker.resumeUrl ? (
-                    <a
-                      href={selectedJobSeeker.jobSeeker.resumeUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-resume"
-                    >
-                      📄 View Complete Resume
-                    </a>
-                  ) : (
-                    <button className="btn-resume" disabled>📄 No Resume Available</button>
-                  )}
+                  <div className="profile-actions">
+                    {selectedJobSeeker.jobSeeker.resumeUrl ? (
+                      <a
+                        href={selectedJobSeeker.jobSeeker.resumeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-resume"
+                      >
+                        📄 View Complete Resume
+                      </a>
+                    ) : (
+                      <button className="btn-resume" disabled>📄 No Resume Available</button>
+                    )}
+                  </div>
                 </div>
               </div>
 

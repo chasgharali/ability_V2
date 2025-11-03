@@ -7,7 +7,7 @@ import VideoParticipant from './VideoParticipant';
 import CallControls from './CallControls';
 import ChatPanel from './ChatPanel';
 import ParticipantsList from './ParticipantsList';
-import JobSeekerProfile from './JobSeekerProfile';
+import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
 import './VideoCall.css';
 
@@ -546,9 +546,33 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
   // Reset unread count when chat is opened
   const handleToggleChat = () => {
-    setIsChatOpen(!isChatOpen);
-    if (!isChatOpen) {
+    const newState = !isChatOpen;
+    setIsChatOpen(newState);
+    if (newState) {
       setUnreadChatCount(0);
+      // Close other panels
+      setIsParticipantsOpen(false);
+      setIsProfileOpen(false);
+    }
+  };
+
+  const handleToggleParticipants = () => {
+    const newState = !isParticipantsOpen;
+    setIsParticipantsOpen(newState);
+    if (newState) {
+      // Close other panels
+      setIsChatOpen(false);
+      setIsProfileOpen(false);
+    }
+  };
+
+  const handleToggleProfile = () => {
+    const newState = !isProfileOpen;
+    setIsProfileOpen(newState);
+    if (newState) {
+      // Close other panels
+      setIsChatOpen(false);
+      setIsParticipantsOpen(false);
     }
   };
 
@@ -970,23 +994,44 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
       {isProfileOpen && callInfo?.userRole === 'recruiter' && (() => {
         // Try to get job seeker data from multiple sources
-        let jobSeekerData = callInfo.participants?.jobSeeker;
+        let jobSeekerData = null;
         
-        // If we don't have job seeker data from callInfo, try to find it from participants
+        // First, try to get from callInfo.participants.jobSeeker
+        if (callInfo.participants?.jobSeeker) {
+          jobSeekerData = callInfo.participants.jobSeeker;
+        }
+        
+        // If not found, try to find from the participants array
         if (!jobSeekerData && callInfo.participants) {
-          // Look for job seeker in the participants object
+          // Check if there's a direct user object
           const allParticipants = [
             callInfo.participants.recruiter,
             callInfo.participants.jobSeeker,
-            ...(callInfo.participants.interpreters || []).map(i => i.interpreter)
+            ...(callInfo.participants.interpreters || []).map(i => i.interpreter || i.user || i)
           ].filter(Boolean);
           
-          jobSeekerData = allParticipants.find(p => p.role === 'jobseeker' || p.role === 'JobSeeker');
+          jobSeekerData = allParticipants.find(p => 
+            p.role === 'jobseeker' || 
+            p.role === 'JobSeeker' || 
+            p.role === 'jobSeeker'
+          );
         }
         
+        // If still not found, try to find from booth/event data
+        if (!jobSeekerData && callInfo.jobSeeker) {
+          jobSeekerData = callInfo.jobSeeker;
+        }
+        
+        // Try to get job seeker ID from call participants
+        if (!jobSeekerData || (!jobSeekerData._id && !jobSeekerData.id)) {
+          const jobSeekerId = callInfo.jobSeekerId || callInfo.participants?.jobSeeker?._id || callInfo.participants?.jobSeeker?.id;
+          if (jobSeekerId) {
+            jobSeekerData = { ...jobSeekerData, _id: jobSeekerId, id: jobSeekerId };
+          }
+        }
         
         return (
-          <JobSeekerProfile
+          <JobSeekerProfileCall
             jobSeeker={jobSeekerData}
             onClose={() => setIsProfileOpen(false)}
           />
@@ -1000,8 +1045,8 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
           onToggleAudio={toggleAudio}
           onToggleVideo={toggleVideo}
           onToggleChat={handleToggleChat}
-          onToggleParticipants={() => setIsParticipantsOpen(!isParticipantsOpen)}
-          onToggleProfile={() => setIsProfileOpen(!isProfileOpen)}
+          onToggleParticipants={handleToggleParticipants}
+          onToggleProfile={handleToggleProfile}
           onEndCall={endCall}
           userRole={callInfo?.userRole}
           participantCount={participants.size + 1}

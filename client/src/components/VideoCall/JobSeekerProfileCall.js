@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiUser, FiMail, FiPhone, FiMapPin, FiFileText, FiAward, FiBriefcase, FiGlobe, FiCalendar, FiDollarSign, FiCheckCircle, FiLoader } from 'react-icons/fi';
 import { getUser } from '../../services/users';
-import './JobSeekerProfile.css';
+import './JobSeekerProfileCall.css';
 
-const JobSeekerProfile = ({ jobSeeker, onClose }) => {
+const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
   const [fullJobSeekerData, setFullJobSeekerData] = useState(jobSeeker);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -60,21 +60,21 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
 
   if (!jobSeeker) {
     return (
-      <div className="profile-panel" role="dialog" aria-labelledby="profile-title" aria-modal="true">
-        <div className="profile-header">
-          <div className="profile-title" id="profile-title">
+      <div className="profile-panel-call" role="dialog" aria-labelledby="profile-title" aria-modal="true">
+        <div className="profile-header-call">
+          <div className="profile-title-call" id="profile-title">
             <FiUser size={20} aria-hidden="true" />
             <span>Job Seeker Profile</span>
           </div>
           <button 
-            className="close-button" 
+            className="close-button-call" 
             onClick={onClose}
             aria-label="Close job seeker profile"
           >
             <FiX size={20} aria-hidden="true" />
           </button>
         </div>
-        <div className="profile-content">
+        <div className="profile-content-call">
           <div className="no-data-message">
             <FiUser size={48} aria-hidden="true" />
             <p>No job seeker information available</p>
@@ -137,15 +137,15 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
   };
 
   return (
-    <div className="profile-panel" role="dialog" aria-labelledby="profile-title" aria-modal="true">
+    <div className="profile-panel-call" role="dialog" aria-labelledby="profile-title" aria-modal="true">
       {/* Header */}
-      <div className="profile-header">
-        <div className="profile-title" id="profile-title">
+      <div className="profile-header-call">
+        <div className="profile-title-call" id="profile-title">
           <FiUser size={20} aria-hidden="true" />
           <span>Job Seeker Profile</span>
         </div>
         <button 
-          className="close-button"
+          className="close-button-call"
           onClick={onClose}
           aria-label="Close job seeker profile"
         >
@@ -154,7 +154,7 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
       </div>
 
       {/* Profile Content */}
-      <div className="profile-content">
+      <div className="profile-content-call">
         {/* Loading State */}
         {loading && (
           <div className="loading-state" role="status" aria-live="polite">
@@ -182,22 +182,20 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
                 className="avatar-image"
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
+                  const initials = getDisplayName().charAt(0).toUpperCase();
+                  e.target.insertAdjacentHTML('afterend', `<div class="avatar-circle large">${initials}</div>`);
                 }}
               />
-            ) : null}
-            <div 
-              className="avatar-circle large" 
-              style={{ display: profilePicUrl ? 'none' : 'flex' }}
-            >
-              {jobSeeker.name?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
+            ) : (
+              <div className="avatar-circle large">
+                {getDisplayName().charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
-          
           <div className="basic-info">
             <h2 className="profile-name">{getDisplayName()}</h2>
-            {metadata.professionalHeadline && (
-              <p className="professional-headline">{metadata.professionalHeadline}</p>
+            {(metadata.professionalHeadline || metadata.headline) && (
+              <p className="professional-headline">{metadata.professionalHeadline || metadata.headline}</p>
             )}
             <div className="contact-info">
               <p className="profile-email">
@@ -326,53 +324,51 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
               <FiCheckCircle size={18} aria-hidden="true" />
               Accessibility Needs
             </h3>
-            <div className="accessibility-badges" role="list" aria-label="Accessibility accommodations needed">
-              {currentJobSeeker.needsASL && <span className="accessibility-badge" role="listitem">ASL Interpreter</span>}
-              {currentJobSeeker.needsCaptions && <span className="accessibility-badge" role="listitem">Captions</span>}
-              {currentJobSeeker.usesScreenReader && <span className="accessibility-badge" role="listitem">Screen Reader</span>}
-              {currentJobSeeker.usesScreenMagnifier && <span className="accessibility-badge" role="listitem">Screen Magnifier</span>}
-              {currentJobSeeker.needsOther && <span className="accessibility-badge" role="listitem">{currentJobSeeker.needsOther}</span>}
+            <div className="accessibility-badges">
+              {currentJobSeeker.needsASL && (
+                <span className="accessibility-badge">ASL Required</span>
+              )}
+              {currentJobSeeker.needsCaptions && (
+                <span className="accessibility-badge">Captions Required</span>
+              )}
+              {currentJobSeeker.usesScreenReader && (
+                <span className="accessibility-badge">Screen Reader</span>
+              )}
+              {currentJobSeeker.usesScreenMagnifier && (
+                <span className="accessibility-badge">Screen Magnifier</span>
+              )}
+              {currentJobSeeker.needsOther && (
+                <span className="accessibility-badge">Other Needs</span>
+              )}
             </div>
           </div>
         )}
 
         {/* Languages */}
-        {(currentJobSeeker.languages && currentJobSeeker.languages.length > 0) && (
+        {metadata.languages && metadata.languages.length > 0 && (
           <div className="profile-section">
             <h3 className="section-title">
               <FiGlobe size={18} aria-hidden="true" />
               Languages
             </h3>
-            <div className="languages-badges" role="list" aria-label="Languages spoken">
-              {currentJobSeeker.languages.map((lang, index) => (
-                <span key={index} className="language-badge" role="listitem">
-                  {lang}
+            <div className="languages-badges">
+              {metadata.languages.map((lang, index) => (
+                <span key={index} className="language-badge">
+                  {typeof lang === 'string' ? lang : lang.name}
                 </span>
               ))}
             </div>
           </div>
         )}
 
-        {/* Additional Information */}
-        {(metadata.additionalInfo || metadata.workAuthorization || metadata.securityClearance || metadata.willingToRelocate !== undefined || metadata.desiredSalary || metadata.availableStartDate || metadata.preferredJobTypes || metadata.preferredLocations) && (
+        {/* Job Preferences */}
+        {(metadata.willingToRelocate || metadata.desiredSalary || metadata.availableStartDate || metadata.preferredJobTypes || metadata.preferredLocations) && (
           <div className="profile-section">
             <h3 className="section-title">
-              <FiFileText size={18} aria-hidden="true" />
-              Additional Information
+              <FiBriefcase size={18} aria-hidden="true" />
+              Job Preferences
             </h3>
             <div className="info-grid">
-              {metadata.workAuthorization && (
-                <div className="info-card">
-                  <strong>Work Authorization:</strong>
-                  <span>{metadata.workAuthorization}</span>
-                </div>
-              )}
-              {metadata.securityClearance && (
-                <div className="info-card">
-                  <strong>Security Clearance:</strong>
-                  <span>{metadata.securityClearance}</span>
-                </div>
-              )}
               {metadata.willingToRelocate !== undefined && (
                 <div className="info-card">
                   <strong>Willing to Relocate:</strong>
@@ -445,4 +441,4 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
   );
 };
 
-export default JobSeekerProfile;
+export default JobSeekerProfileCall;

@@ -198,6 +198,7 @@
     overflow: hidden;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
     transition: all 0.2s ease;
+    min-width: 0;
 }
 
 .profile-detail-card:hover {
@@ -223,15 +224,15 @@
     padding: 1.25rem;
 }
 
-.detail-item {
+.profile-view .detail-item {
     margin-bottom: 1.25rem;
 }
 
-.detail-item:last-child {
+.profile-view .detail-item:last-child {
     margin-bottom: 0;
 }
 
-.detail-label {
+.profile-view .detail-label {
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
@@ -239,9 +240,12 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.5rem;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-.detail-value {
+.profile-view .detail-value {
     color: #111827;
     font-size: 0.95rem;
     font-weight: 500;

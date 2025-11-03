@@ -262,11 +262,17 @@ router.get('/:id', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const { user } = req;
 
-        // Users can only view their own profile unless they're admin
-        if (id !== user._id.toString() && !['Admin', 'GlobalSupport'].includes(user.role)) {
+        // Users can view their own profile, admins can view any profile
+        // Recruiters and booth admins can view job seeker profiles
+        const canViewProfile = 
+            id === user._id.toString() || 
+            ['Admin', 'GlobalSupport'].includes(user.role) ||
+            (['Recruiter', 'BoothAdmin'].includes(user.role));
+
+        if (!canViewProfile) {
             return res.status(403).json({
                 error: 'Access denied',
-                message: 'You can only view your own profile'
+                message: 'You do not have permission to view this profile'
             });
         }
 
