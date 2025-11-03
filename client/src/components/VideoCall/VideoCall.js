@@ -874,6 +874,14 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
 
         {/* Call Info and Quality */}
         <div className="header-status">
+          {/* Interpreter Requested Badge */}
+          {callInfo?.metadata?.interpreterRequested && (
+            <div className="interpreter-requested-badge" role="status" aria-live="polite" aria-label="Interpreter has been requested">
+              <span className="badge-icon">🗣️</span>
+              <span className="badge-text">Interpreter Requested</span>
+            </div>
+          )}
+          
           <div className="call-duration" aria-live="polite" aria-label={`Call duration: ${Math.floor(callDuration / 60)} minutes ${callDuration % 60} seconds`}>
             <span className="duration-label" aria-hidden="true">Duration:</span>
             <span className="duration-time">
@@ -883,8 +891,12 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
           </div>
           
           <div className={`connection-quality ${connectionQuality}`} role="status" aria-live="polite" aria-label={`Connection quality: ${connectionQuality}`}>
-            <span className="quality-dot" aria-hidden="true"></span>
-            <span className="quality-text">{connectionQuality}</span>
+            <div className="signal-bars" aria-hidden="true">
+              <span className="signal-bar bar-1"></span>
+              <span className="signal-bar bar-2"></span>
+              <span className="signal-bar bar-3"></span>
+              <span className="signal-bar bar-4"></span>
+            </div>
             {networkStats.latency > 0 && (
               <span className="network-details" aria-label={`Latency: ${networkStats.latency}ms, Packet loss: ${networkStats.packetLoss}%`}>
                 {networkStats.latency}ms
