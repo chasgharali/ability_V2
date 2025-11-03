@@ -55,7 +55,8 @@ const CallControls = ({
     {
       id: 'audio',
       icon: isAudioEnabled ? FiMic : FiMicOff,
-      label: isAudioEnabled ? 'Mute microphone' : 'Unmute microphone',
+      label: 'Mute',
+      ariaLabel: isAudioEnabled ? 'Mute microphone' : 'Unmute microphone',
       onClick: onToggleAudio,
       className: `control-button ${isAudioEnabled ? 'enabled' : 'disabled'}`,
       primary: true
@@ -63,7 +64,8 @@ const CallControls = ({
     {
       id: 'video',
       icon: isVideoEnabled ? FiVideo : FiVideoOff,
-      label: isVideoEnabled ? 'Stop video' : 'Start video',
+      label: 'Stop video',
+      ariaLabel: isVideoEnabled ? 'Stop video' : 'Start video',
       onClick: onToggleVideo,
       className: `control-button ${isVideoEnabled ? 'enabled' : 'disabled'}`,
       primary: true
@@ -71,7 +73,8 @@ const CallControls = ({
     {
       id: 'chat',
       icon: FiMessageCircle,
-      label: chatUnreadCount > 0 ? `Open chat (${chatUnreadCount} unread messages)` : 'Open chat',
+      label: 'Chat',
+      ariaLabel: chatUnreadCount > 0 ? `Open chat (${chatUnreadCount} unread messages)` : 'Open chat',
       onClick: onToggleChat,
       className: 'control-button',
       badge: chatUnreadCount > 0 ? chatUnreadCount : null,
@@ -80,7 +83,8 @@ const CallControls = ({
     {
       id: 'participants',
       icon: FiUsers,
-      label: `View participants (${participantCount} in call)`,
+      label: 'Participants',
+      ariaLabel: `View participants (${participantCount} in call)`,
       onClick: onToggleParticipants,
       className: 'control-button',
       badge: participantCount,
@@ -93,7 +97,8 @@ const CallControls = ({
     controlButtons.push({
       id: 'profile',
       icon: FiUser,
-      label: 'View job seeker profile',
+      label: 'Profile',
+      ariaLabel: 'View job seeker profile',
       onClick: onToggleProfile,
       className: 'control-button',
       primary: false
@@ -112,27 +117,27 @@ const CallControls = ({
           {primaryButtons.map(button => {
             const IconComponent = button.icon;
             return (
-              <button
-                key={button.id}
-                className={button.className}
-                onClick={button.onClick}
-                title={button.label}
-                aria-label={button.label}
-                aria-describedby={`${button.id}-tooltip`}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    button.onClick();
-                  }
-                }}
-              >
-                <IconComponent size={20} aria-hidden="true" />
-                <span id={`${button.id}-tooltip`} className="tooltip" role="tooltip" aria-live="polite">{button.label}</span>
-                {button.badge && (
-                  <span className="control-badge" aria-label={`${button.badge} items`}>{button.badge}</span>
-                )}
-              </button>
+              <div key={button.id} className="control-wrapper">
+                <button
+                  className={button.className}
+                  onClick={button.onClick}
+                  title={button.ariaLabel}
+                  aria-label={button.ariaLabel}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      button.onClick();
+                    }
+                  }}
+                >
+                  <IconComponent size={20} aria-hidden="true" />
+                  {button.badge && (
+                    <span className="control-badge" aria-label={`${button.badge} items`}>{button.badge}</span>
+                  )}
+                </button>
+                <span className="control-label">{button.label}</span>
+              </div>
             );
           })}
         </div>
@@ -142,27 +147,27 @@ const CallControls = ({
           {secondaryButtons.slice(0, 3).map(button => {
             const IconComponent = button.icon;
             return (
-              <button
-                key={button.id}
-                className={button.className}
-                onClick={button.onClick}
-                title={button.label}
-                aria-label={button.label}
-                aria-describedby={`${button.id}-tooltip`}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    button.onClick();
-                  }
-                }}
-              >
-                <IconComponent size={20} aria-hidden="true" />
-                <span id={`${button.id}-tooltip`} className="tooltip" role="tooltip" aria-live="polite">{button.label}</span>
-                {button.badge && (
-                  <span className="control-badge" aria-label={`${button.badge} items`}>{button.badge}</span>
-                )}
-              </button>
+              <div key={button.id} className="control-wrapper">
+                <button
+                  className={button.className}
+                  onClick={button.onClick}
+                  title={button.ariaLabel}
+                  aria-label={button.ariaLabel}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      button.onClick();
+                    }
+                  }}
+                >
+                  <IconComponent size={20} aria-hidden="true" />
+                  {button.badge && (
+                    <span className="control-badge" aria-label={`${button.badge} items`}>{button.badge}</span>
+                  )}
+                </button>
+                <span className="control-label">{button.label}</span>
+              </div>
             );
           })}
 
@@ -252,23 +257,24 @@ const CallControls = ({
 
         {/* End Call Button */}
         <div className="end-call-controls" role="toolbar" aria-label="End call controls">
-          <button
-            className="end-call-button"
-            onClick={onEndCall}
-            title="End call"
-            aria-label="End call"
-            aria-describedby="end-call-tooltip"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onEndCall();
-              }
-            }}
-          >
-            <FiPhoneOff size={20} aria-hidden="true" />
-            <span id="end-call-tooltip" className="tooltip" role="tooltip" aria-live="polite">End call</span>
-          </button>
+          <div className="control-wrapper">
+            <button
+              className="end-call-button"
+              onClick={onEndCall}
+              title="End call"
+              aria-label="End call"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onEndCall();
+                }
+              }}
+            >
+              <FiPhoneOff size={20} aria-hidden="true" />
+            </button>
+            <span className="control-label">End call</span>
+          </div>
         </div>
       </div>
     </div>
