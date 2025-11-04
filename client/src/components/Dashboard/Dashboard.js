@@ -14,6 +14,7 @@ import './Dashboard.css';
 import SurveyForm from './SurveyForm';
 import EditProfileResume from './EditProfileResume';
 import ViewProfile from './ViewProfile';
+import InterpreterDashboard from './InterpreterDashboard';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import MyAccountInline from '../Account/MyAccountInline';
@@ -391,6 +392,9 @@ const Dashboard = () => {
 
     const getDashboardContent = () => {
         switch (user?.role) {
+            case 'Interpreter':
+            case 'GlobalInterpreter':
+                return <InterpreterDashboard />;
             case 'JobSeeker':
                 if (activeSection === 'survey') {
                     return <SurveyForm />;

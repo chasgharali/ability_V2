@@ -95,7 +95,27 @@ export default function AdminSidebar({ active = 'booths' }) {
 
   // Render role-specific sidebar content
   const renderSidebarContent = () => {
-    if (user?.role === 'JobSeeker') {
+    if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+      // Interpreter view: minimal menu with only Dashboard and Troubleshoot
+      return (
+        <>
+          <div className="sidebar-section">
+            <button 
+              className={itemClass('dashboard')} 
+              onClick={() => handleItemClick('/dashboard')}
+            >
+              Dashboard
+            </button>
+            <button 
+              className={itemClass('troubleshooting')} 
+              onClick={closeMobileMenu}
+            >
+              Trouble Shooting
+            </button>
+          </div>
+        </>
+      );
+    } else if (user?.role === 'JobSeeker') {
       return (
         <>
           <div className="sidebar-section">
