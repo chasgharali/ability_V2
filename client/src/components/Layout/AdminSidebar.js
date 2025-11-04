@@ -47,15 +47,15 @@ export default function AdminSidebar({ active = 'booths' }) {
           listUpcomingEvents({ page: 1, limit: 50 }),
           listRegisteredEvents({ page: 1, limit: 50 })
         ]);
-        
+
         if (!cancelled) {
           const registered = registeredRes?.events || [];
           const upcoming = upcomingRes?.events || [];
-          
+
           // Filter out registered events from upcoming events
           const registeredSlugs = new Set(registered.map(e => e.slug));
           const filteredUpcoming = upcoming.filter(e => !registeredSlugs.has(e.slug));
-          
+
           setMyRegistrations(registered);
           setUpcomingEvents(filteredUpcoming);
         }
@@ -131,9 +131,22 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button className="sidebar-header" onClick={() => toggleSection('registrations')}>
-              <span>My Current Registrations</span>
-              {expanded['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
+            <button
+              className="sidebar-header"
+              onClick={() => { handleItemClick('/events/registered'); closeMobileMenu(); }}
+              aria-label="Go to My Current Registrations"
+            >
+              <span>Current Registrations</span>
+              <span
+                className="icon-button"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); toggleSection('registrations'); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleSection('registrations'); } }}
+                aria-label="Toggle registrations list"
+              >
+                {expanded['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
+              </span>
             </button>
             {expanded['registrations'] && (
               <div className="sidebar-items">
@@ -141,7 +154,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   <div className="sidebar-empty">No registrations yet.</div>
                 )}
                 {myRegistrations.map((e) => (
-                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
+                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/event/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
                 ))}
               </div>
             )}
