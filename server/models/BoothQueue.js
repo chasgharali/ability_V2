@@ -32,7 +32,7 @@ const boothQueueSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['waiting', 'invited', 'in_meeting', 'completed', 'left'],
+        enum: ['waiting', 'invited', 'in_meeting', 'completed', 'left', 'left_with_message'],
     },
     joinedAt: {
         type: Date,
@@ -55,7 +55,7 @@ const boothQueueSchema = new mongoose.Schema({
         ref: 'MeetingRecord',
         default: null
     },
-    // Messages from job seeker to recruiter
+    // Bidirectional messages between job seeker and recruiter
     messages: [{
         type: {
             type: String,
@@ -65,6 +65,11 @@ const boothQueueSchema = new mongoose.Schema({
         content: {
             type: String,
             required: true
+        },
+        sender: {
+            type: String,
+            enum: ['jobseeker', 'recruiter'],
+            default: 'jobseeker'
         },
         createdAt: {
             type: Date,
@@ -99,9 +104,14 @@ boothQueueSchema.index(
 );
 boothQueueSchema.index({ event: 1, booth: 1 });
 
-// Virtual for unread message count
+// Virtual for unread message count for recruiter (from job seeker)
 boothQueueSchema.virtual('messageCount').get(function() {
-    return this.messages ? this.messages.filter(msg => !msg.isRead).length : 0;
+    return this.messages ? this.messages.filter(msg => !msg.isRead && msg.sender === 'jobseeker').length : 0;
+});
+
+// Virtual for unread message count for job seeker (from recruiter)
+boothQueueSchema.virtual('unreadForJobSeeker').get(function() {
+    return this.messages ? this.messages.filter(msg => !msg.isRead && msg.sender === 'recruiter').length : 0;
 });
 
 // Generate queue token before validation so the required validator passes
@@ -157,23 +167,33 @@ boothQueueSchema.methods.addMessage = function(messageData) {
     this.messages.push({
         type: messageData.type,
         content: messageData.content,
+        sender: messageData.sender,
         createdAt: new Date(),
         isRead: false
     });
     return this.save();
 };
 
-// Instance method to mark messages as read
-boothQueueSchema.methods.markMessagesAsRead = function() {
-    this.messages.forEach(message => {
-        message.isRead = true;
-    });
+// Instance method to mark messages as read (by sender type)
+boothQueueSchema.methods.markMessagesAsRead = function(senderType) {
+    if (senderType) {
+        this.messages.forEach(message => {
+            if (message.sender === senderType) {
+                message.isRead = true;
+            }
+        });
+    } else {
+        // Mark all as read if no sender type specified
+        this.messages.forEach(message => {
+            message.isRead = true;
+        });
+    }
     return this.save();
 };
 
 // Instance method to leave queue
-boothQueueSchema.methods.leaveQueue = function() {
-    this.status = 'left';
+boothQueueSchema.methods.leaveQueue = function(withMessage = false) {
+    this.status = withMessage ? 'left_with_message' : 'left';
     this.leftAt = new Date();
     return this.save();
 };

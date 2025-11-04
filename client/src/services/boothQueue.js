@@ -77,5 +77,30 @@ export const boothQueueAPI = {
       headers: authHeaders() 
     });
     return res.data;
+  },
+
+  // Leave queue with message (audio/video)
+  async leaveWithMessage(messageData) {
+    const res = await axios.post('/api/booth-queue/leave-with-message', messageData, { 
+      headers: authHeaders() 
+    });
+    return res.data;
+  },
+
+  // Get messages for current user's queue entry
+  async getMessages(queueId) {
+    const res = await axios.get(`/api/booth-queue/messages/${queueId}`, { 
+      headers: authHeaders() 
+    });
+    return res.data;
+  },
+
+  // Send message from recruiter to job seeker
+  async sendMessageToJobSeeker(queueId, content) {
+    const res = await axios.post(`/api/booth-queue/message-to-jobseeker/${queueId}`, 
+      { content }, 
+      { headers: authHeaders() }
+    );
+    return res.data;
   }
 };

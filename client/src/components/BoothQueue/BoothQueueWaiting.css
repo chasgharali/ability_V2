@@ -1323,3 +1323,142 @@
     cursor: not-allowed;
   }
 }
+
+/* Text Messaging Modal */
+.text-messaging-modal {
+  max-width: 600px;
+  max-height: 80vh;
+}
+
+.messages-container {
+  display: flex;
+  flex-direction: column;
+  height: 60vh;
+  max-height: 500px;
+}
+
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #f9fafb;
+}
+
+.no-messages {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.message-bubble {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.message-bubble.sent {
+  margin-left: auto;
+  background: #111827;
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble.received {
+  margin-right: auto;
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-bottom-left-radius: 4px;
+}
+
+.message-sender {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  opacity: 0.8;
+}
+
+.message-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 0.25rem;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  text-align: right;
+}
+
+.message-input-area {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.message-input-area textarea {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.message-input-area textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-send-message {
+  padding: 0.75rem 1.5rem;
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.btn-send-message:hover:not(:disabled) {
+  background: #000000;
+}
+
+.btn-send-message:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Leave Message Button Styling */
+.sidebar-action-btn.leave-message-btn {
+  background: #ef4444;
+  border-color: #dc2626;
+}
+
+.sidebar-action-btn.leave-message-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #b91c1c;
+}
+
+/* Unread count badge */
+.sidebar-action-btn .unread-badge {
+  display: inline-block;
+  background: #ef4444;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: 0.25rem;
+}

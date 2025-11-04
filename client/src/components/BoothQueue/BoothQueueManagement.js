@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast, ToastContainer } from '../common/Toast';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import videoCallService from '../../services/videoCall';
@@ -32,6 +33,11 @@ export default function BoothQueueManagement() {
   const [toast, setToast] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [currentChatEntry, setCurrentChatEntry] = useState(null);
+  const [messageToSend, setMessageToSend] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
 
   // Video call state
   const [activeCall, setActiveCall] = useState(null);
@@ -48,6 +54,7 @@ export default function BoothQueueManagement() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingModalData, setRatingModalData] = useState(null);
   const [submittingRating, setSubmittingRating] = useState(false);
+  const messagesEndRef = useRef(null);
 
   // Theme colors from event (fallbacks provided)
   const theme = useMemo(() => ({
@@ -126,6 +133,7 @@ export default function BoothQueueManagement() {
     setSocketConnected(true);
     socket.on('queue-updated', handleQueueUpdate);
     socket.on('new-queue-message', handleNewMessage);
+    socket.on('jobseeker-left-with-message', handleJobSeekerLeftWithMessage);
     socket.on('test-connection-response', (data) => {
       console.log('Test connection response received:', data);
     });
@@ -133,6 +141,7 @@ export default function BoothQueueManagement() {
     return () => {
       socket.off('queue-updated', handleQueueUpdate);
       socket.off('new-queue-message', handleNewMessage);
+      socket.off('jobseeker-left-with-message', handleJobSeekerLeftWithMessage);
       socket.off('test-connection-response');
     };
   }, [socket?.connected]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -259,9 +268,84 @@ export default function BoothQueueManagement() {
     }
   };
 
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleNewMessage = (data) => {
-    if (data.boothId === boothId && selectedJobSeeker?._id === data.queueEntry._id) {
-      setMessages(prev => [...prev, data.message]);
+    if (data.boothId === boothId) {
+      playNotificationSound();
+      // Show toast with job seeker name, auto-dismiss after 200ms
+      const jobSeekerName = data.queueEntry?.jobSeeker?.name || 'job seeker';
+      showInfo(`New message from ${jobSeekerName}`, 200);
+      
+      // If chat modal is open for this entry, add message to chat and scroll
+      if (currentChatEntry?._id === data.queueEntry._id && showMessagesModal) {
+        setMessages(prev => [...prev, data.message]);
+        setTimeout(scrollToBottom, 100);
+      }
+      
+      // Always refresh queue data to update unread counter
+      loadQueueData();
+    }
+  };
+
+  const handleJobSeekerLeftWithMessage = (data) => {
+    showInfo(`${data.jobSeekerName} left a ${data.messageType} message and exited the queue`);
+    loadQueueData(); // Refresh queue to show left_with_message status
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageToSend.trim() || !currentChatEntry) return;
+
+    try {
+      setIsSendingMessage(true);
+      await boothQueueAPI.sendMessageToJobSeeker(currentChatEntry._id, messageToSend);
+      
+      // Add message to local state immediately for instant feedback
+      const newMessage = {
+        type: 'text',
+        content: messageToSend,
+        sender: 'recruiter',
+        createdAt: new Date(),
+        isRead: true
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setMessageToSend('');
+      // Removed toast notification for message sent
+      
+      // Scroll to bottom
+      setTimeout(scrollToBottom, 100);
+    } catch (error) {
+      console.error('Error sending message to job seeker:', error);
+      showError('Failed to send message');
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  const playNotificationSound = () => {
+    try {
+      // Create a simple notification beep using Web Audio API
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (err) {
+      console.log('Could not play notification sound:', err);
     }
   };
 
@@ -428,17 +512,20 @@ export default function BoothQueueManagement() {
   };
 
   const handleViewMessages = async (queueEntry) => {
+    setCurrentChatEntry(queueEntry);
+    setShowMessagesModal(true);
     try {
-      setSelectedJobSeeker(queueEntry);
-      const messagesRes = await boothQueueAPI.getQueueMessages(queueEntry._id);
-      if (messagesRes.success) {
-        setMessages(messagesRes.messages);
+      const response = await boothQueueAPI.getQueueMessages(queueEntry._id);
+      if (response.success) {
+        setMessages(response.messages || []);
+        // Scroll to bottom after messages load
+        setTimeout(scrollToBottom, 100);
+        // Refresh queue to update counter
+        loadQueueData();
       }
-      setShowMessages(true);
     } catch (error) {
-      console.error('Error loading messages:', error);
-      setMessages([]);
-      setShowMessages(true);
+      console.error('Error fetching messages:', error);
+      showError('Error loading messages');
     }
   };
 
@@ -558,7 +645,7 @@ export default function BoothQueueManagement() {
                   {queue.map((queueEntry) => (
                     <div
                       key={queueEntry._id}
-                      className={`queue-card ${queueEntry.position <= currentServing ? 'ready' : 'waiting'}`}
+                      className={`queue-card ${queueEntry.status === 'left_with_message' ? 'left-message' : queueEntry.position <= currentServing ? 'ready' : 'waiting'}`}
                     >
                       <div className="queue-card-header">
                         <div className="job-seeker-info">
@@ -579,7 +666,9 @@ export default function BoothQueueManagement() {
                         </div>
 
                         <div className="queue-status">
-                          {queueEntry.position <= currentServing ? (
+                          {queueEntry.status === 'left_with_message' ? (
+                            <span className="status-badge left-message-badge">Left Message</span>
+                          ) : queueEntry.position <= currentServing ? (
                             <span className="status-badge ready">Ready</span>
                           ) : (
                             <span className="status-badge waiting">Waiting</span>
@@ -613,29 +702,50 @@ export default function BoothQueueManagement() {
                       </div>
 
                       <div className="queue-actions">
-                        <button
-                          onClick={() => handleInviteToMeeting(queueEntry)}
-                          className="btn-invite"
-                          style={{ background: theme.success, borderColor: theme.success }}
-                        >
-                          Invite
-                        </button>
+                        {queueEntry.status === 'left_with_message' ? (
+                          <>
+                            <button
+                              onClick={() => handleViewMessages(queueEntry)}
+                              className="btn-messages"
+                              style={{ background: theme.primary, borderColor: theme.primary }}
+                            >
+                              View Message ({queueEntry.messageCount || 0})
+                            </button>
+                            <button
+                              onClick={() => handleRemoveFromQueue(queueEntry)}
+                              className="btn-remove"
+                              style={{ background: theme.danger, borderColor: theme.danger }}
+                            >
+                              Remove
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleInviteToMeeting(queueEntry)}
+                              className="btn-invite"
+                              style={{ background: theme.success, borderColor: theme.success }}
+                            >
+                              Invite
+                            </button>
 
-                        <button
-                          onClick={() => handleViewMessages(queueEntry)}
-                          className="btn-messages"
-                          style={{ background: theme.primary, borderColor: theme.primary }}
-                        >
-                          Messages ({queueEntry.messageCount || 0})
-                        </button>
+                            <button
+                              onClick={() => handleViewMessages(queueEntry)}
+                              className="btn-messages"
+                              style={{ background: theme.primary, borderColor: theme.primary }}
+                            >
+                              Messages ({queueEntry.messageCount || 0})
+                            </button>
 
-                        <button
-                          onClick={() => handleRemoveFromQueue(queueEntry)}
-                          className="btn-remove"
-                          style={{ background: theme.danger, borderColor: theme.danger }}
-                        >
-                          Remove
-                        </button>
+                            <button
+                              onClick={() => handleRemoveFromQueue(queueEntry)}
+                              className="btn-remove"
+                              style={{ background: theme.danger, borderColor: theme.danger }}
+                            >
+                              Remove
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -646,48 +756,83 @@ export default function BoothQueueManagement() {
         </main>
       </div>
 
-      {/* Messages Modal */}
-      {showMessages && selectedJobSeeker && (
+      {/* Chat-style Messages Modal */}
+      {showMessagesModal && currentChatEntry && (
         <div className="modal-overlay">
-          <div className="modal-content messages-modal">
+          <div className="modal-content text-messaging-modal">
             <div className="modal-header">
-              <h3>Messages from {selectedJobSeeker.jobSeeker.name}</h3>
+              <h3>Messages - {currentChatEntry.jobSeeker.name}</h3>
               <button
                 className="modal-close"
-                onClick={() => setShowMessages(false)}
+                onClick={() => {
+                  setShowMessagesModal(false);
+                  setCurrentChatEntry(null);
+                  setMessages([]);
+                  setMessageToSend('');
+                }}
               >
                 ×
               </button>
             </div>
 
-            <div className="messages-list">
-              {messages.length === 0 ? (
-                <p className="no-messages">No messages from this job seeker</p>
-              ) : (
-                messages.map((message, index) => (
-                  <div key={index} className="message-item">
-                    <div className="message-header">
-                      <span className="message-type">{message.type}</span>
-                      <span className="message-time">
-                        {new Date(message.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="message-content">
-                      {message.type === 'text' ? (
-                        <p>{message.content}</p>
-                      ) : (
-                        <div className="media-message">
-                          {message.type === 'audio' ? (
-                            <audio controls src={message.content} />
-                          ) : (
-                            <video controls src={message.content} />
-                          )}
+            <div className="messages-container">
+              <div className="messages-list">
+                {messages.length === 0 ? (
+                  <p className="no-messages">No messages yet</p>
+                ) : (
+                  <>
+                    {messages.map((msg, index) => (
+                      <div 
+                        key={index} 
+                        className={`message-bubble ${msg.sender === 'recruiter' ? 'sent' : 'received'}`}
+                      >
+                        <div className="message-sender">
+                          {msg.sender === 'recruiter' ? 'You' : currentChatEntry.jobSeeker.name}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+                        {msg.type === 'text' ? (
+                          <div className="message-text">{msg.content}</div>
+                        ) : msg.type === 'audio' ? (
+                          <audio src={msg.content} controls style={{ width: '100%', maxWidth: '250px' }} />
+                        ) : (
+                          <video
+                            src={msg.content}
+                            controls
+                            style={{ width: '100%', maxWidth: '250px', borderRadius: '8px' }}
+                          />
+                        )}
+                        <div className="message-time">
+                          {new Date(msg.createdAt).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </>
+                )}
+              </div>
+
+              <div className="message-input-area">
+                <textarea
+                  value={messageToSend}
+                  onChange={(e) => setMessageToSend(e.target.value)}
+                  placeholder="Type your message..."
+                  rows={3}
+                  aria-label="Message content"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!messageToSend.trim() || isSendingMessage}
+                  className="btn-send-message"
+                  type="button"
+                >
+                  {isSendingMessage ? 'Sending...' : 'Send'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -831,26 +976,8 @@ export default function BoothQueueManagement() {
         </div>
       )}
 
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: 'fixed',
-          right: 20,
-          bottom: 20,
-          background: '#111827',
-          color: '#fff',
-          padding: '12px 16px',
-          borderRadius: 8,
-          boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
-          zIndex: 1000,
-          fontSize: '14px',
-          fontWeight: '500',
-          maxWidth: '300px',
-          wordWrap: 'break-word'
-        }}>
-          {toast}
-        </div>
-      )}
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {/* Video Call Component */}
       {isInCall && activeCall && (

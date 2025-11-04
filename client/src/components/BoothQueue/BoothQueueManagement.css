@@ -370,6 +370,11 @@
   border-left: 4px solid #f59e0b;
 }
 
+.queue-card.left-message {
+  border-left: 4px solid #8b5cf6;
+  background: #f5f3ff;
+}
+
 .queue-card-header {
   padding: 1rem 1.25rem;
   display: flex;
@@ -454,6 +459,13 @@
 .status-badge.waiting {
   background: #fef3c7;
   color: #92400e;
+}
+
+.status-badge.left-message-badge {
+  background: #ede9fe;
+  color: #5b21b6;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .queue-details {
@@ -592,6 +604,18 @@
 .btn-remove:hover {
   background: #dc2626;
   border-color: #dc2626;
+}
+
+.btn-send-msg {
+  background: #6366f1;
+  color: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 1px 2px rgba(99, 102, 241, 0.25);
+}
+
+.btn-send-msg:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
 }
 
 /* Messages Modal */

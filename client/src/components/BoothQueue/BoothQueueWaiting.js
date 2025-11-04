@@ -18,7 +18,7 @@ export default function BoothQueueWaiting() {
   const location = useLocation();
   const { user } = useAuth();
   const { socket } = useSocket();
-  const { toasts, removeToast, showSuccess } = useToast();
+  const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
 
   const [event, setEvent] = useState(null);
   const [booth, setBooth] = useState(null);
@@ -35,20 +35,27 @@ export default function BoothQueueWaiting() {
   const [queuePosition, setQueuePosition] = useState(initialQueuePos);
   const [currentServing, setCurrentServing] = useState(initialServing);
   const [queueToken, setQueueToken] = useState(location.state?.queueToken || '');
+  const [queueEntryId, setQueueEntryId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showLeaveMessageModal, setShowLeaveMessageModal] = useState(false);
+  const [showTextMessagingModal, setShowTextMessagingModal] = useState(false);
   const [messageType, setMessageType] = useState('text');
   const [messageContent, setMessageContent] = useState('');
+  const [textMessageContent, setTextMessageContent] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [showMessagePreview, setShowMessagePreview] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1199);
   const modalRef = useRef(null);
   const previousFocusRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   // Video call state
   const [callInvitation, setCallInvitation] = useState(null);
@@ -123,6 +130,7 @@ export default function BoothQueueWaiting() {
     socket.on('queue-serving-updated', handleServingUpdate);
     socket.on('queue-invited-to-meeting', handleMeetingInvite);
     socket.on('call_invitation', handleCallInvitation);
+    socket.on('new-message-from-recruiter', handleNewMessageFromRecruiter);
     // Detect server-side queue leaves (e.g., when recruiter ends call)
     socket.on('queue-updated', handleQueueUpdated);
     socket.on('queue_left', handleQueueUpdated);
@@ -132,6 +140,7 @@ export default function BoothQueueWaiting() {
       socket.off('queue-serving-updated', handleServingUpdate);
       socket.off('queue-invited-to-meeting', handleMeetingInvite);
       socket.off('call_invitation', handleCallInvitation);
+      socket.off('new-message-from-recruiter', handleNewMessageFromRecruiter);
       socket.off('queue-updated', handleQueueUpdated);
       socket.off('queue_left', handleQueueUpdated);
     };
@@ -187,6 +196,8 @@ export default function BoothQueueWaiting() {
           setQueuePosition(queueData.position);
           setCurrentServing(queueData.currentServing);
           setQueueToken(queueData.token);
+          setQueueEntryId(queueData.queueEntry?._id);
+          setUnreadCount(queueData.unreadMessages || 0);
           try {
             sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -220,16 +231,13 @@ export default function BoothQueueWaiting() {
   };
 
   const handleQueueUpdate = (data) => {
-    if (data.userId === user._id) {
-      const oldPosition = queuePosition;
-      setQueuePosition(data.position);
-      try { sessionStorage.setItem(`queuePos_${boothId}`, String(data.position)); } catch (e) { }
-      
-      // Announce position changes to screen readers
-      if (oldPosition !== data.position) {
-        const announcement = `Your queue position has been updated to number ${data.position}`;
-        announceToScreenReader(announcement);
-      }
+    if (data?.queueEntry?.jobSeeker?._id === user?._id) {
+      setQueuePosition(data.queueEntry.position);
+      setQueueEntryId(data.queueEntry._id);
+      try {
+        sessionStorage.setItem(`queuePos_${boothId}`, String(data.queueEntry.position));
+      } catch (e) { }
+      speak(`Your position has been updated to ${data.queueEntry.position}.`, 'polite');
     }
   };
 
@@ -443,13 +451,55 @@ export default function BoothQueueWaiting() {
     navigate(`/events/registered/${eventSlug}`);
   };
 
+  const playNotificationSound = () => {
+    try {
+      // Create a simple notification beep using Web Audio API
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (err) {
+      console.log('Could not play notification sound:', err);
+    }
+  };
+
+  const handleNewMessageFromRecruiter = (data) => {
+    if (data.queueId === queueEntryId || data.boothId === boothId) {
+      playNotificationSound();
+      // Show toast that stays until manually closed
+      showInfo('New message from recruiter', 0); // 0 means no auto-dismiss
+      
+      // If chat modal is open, add message to chat and scroll
+      if (showTextMessagingModal) {
+        setMessages(prev => [...prev, data.message]);
+        setTimeout(scrollToBottom, 100);
+      } else {
+        // If modal is closed, increment unread counter
+        setUnreadCount(prev => prev + 1);
+      }
+    }
+  };
+
   const handleLeaveQueue = async () => {
     if (window.confirm('Are you sure you want to leave the queue?')) {
       try {
         await boothQueueAPI.leaveQueue(boothId);
+        showSuccess('Successfully left the queue');
         navigate(`/events/registered/${eventSlug}`);
       } catch (error) {
         console.error('Error leaving queue:', error);
+        showError('Failed to leave queue');
       }
     }
   };
@@ -607,6 +657,116 @@ export default function BoothQueueWaiting() {
     };
   }, [mobilePanelOpen]);
 
+  const handleSendTextMessage = async () => {
+    try {
+      if (!textMessageContent.trim()) return;
+      
+      setIsUploading(true);
+      const messageData = {
+        boothId,
+        type: 'text',
+        content: textMessageContent,
+        queueToken
+      };
+
+      await boothQueueAPI.sendMessage(messageData);
+      
+      // Add message to local state immediately
+      const newMessage = {
+        type: 'text',
+        content: textMessageContent,
+        sender: 'jobseeker',
+        createdAt: new Date(),
+        isRead: true
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setTextMessageContent('');
+      // Removed toast notification for message sent
+      
+      // Scroll to bottom
+      setTimeout(scrollToBottom, 100);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showError('Failed to send message');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleLeaveWithMessage = async () => {
+    try {
+      setIsUploading(true);
+      let finalContent = messageContent;
+
+      // Upload audio/video to S3
+      if ((messageType === 'audio' || messageType === 'video') && recordedBlob) {
+        const fileName = `leave_message_${Date.now()}.${messageType === 'audio' ? 'webm' : 'webm'}`;
+        const file = new File([recordedBlob], fileName, {
+          type: messageType === 'audio' ? 'audio/webm' : 'video/webm'
+        });
+
+        const uploadResult = messageType === 'audio'
+          ? await uploadAudioToS3(file)
+          : await uploadVideoToS3(file);
+
+        finalContent = uploadResult.downloadUrl;
+      }
+
+      const messageData = {
+        boothId,
+        type: messageType,
+        content: finalContent,
+        queueToken
+      };
+
+      await boothQueueAPI.leaveWithMessage(messageData);
+
+      // Reset state
+      setShowLeaveMessageModal(false);
+      setShowMessagePreview(false);
+      setMessageContent('');
+      setRecordedBlob(null);
+      setMessageType('audio');
+
+      showSuccess('Message sent! You have left the queue.');
+      navigate(`/events/registered/${eventSlug}`);
+    } catch (error) {
+      console.error('Error leaving with message:', error);
+      showError('Failed to send leave message');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const loadMessages = async () => {
+    if (!queueEntryId) {
+      console.error('No queue entry ID available');
+      return;
+    }
+    try {
+      const response = await boothQueueAPI.getMessages(queueEntryId);
+      if (response.success) {
+        setMessages(response.messages || []);
+        setUnreadCount(0); // Mark as read when viewing
+        // Scroll to bottom after messages load
+        setTimeout(scrollToBottom, 100);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
+  };
+
+  const handleViewMessages = async () => {
+    setShowTextMessagingModal(true);
+    await loadMessages();
+  };
+
   const handleSendMessage = async () => {
     try {
       setIsUploading(true);
@@ -642,7 +802,7 @@ export default function BoothQueueWaiting() {
       setRecordedBlob(null);
       setMessageType('text');
 
-      alert('Message sent successfully!');
+      showSuccess('Message sent successfully!');
 
       // If audio/video message, leave queue and navigate to event detail
       if (messageType === 'audio' || messageType === 'video') {
@@ -655,7 +815,7 @@ export default function BoothQueueWaiting() {
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message');
+      showError('Failed to send message');
     } finally {
       setIsUploading(false);
     }
@@ -834,11 +994,20 @@ export default function BoothQueueWaiting() {
 
             <button
               className="sidebar-action-btn message-btn"
-              onClick={openModal}
-              aria-label="Create and send a message to the recruiter"
+              onClick={handleViewMessages}
+              aria-label="View and send text messages to the recruiter"
               type="button"
             >
-              <FaCommentDots aria-hidden="true" /> Create a message
+              <FaCommentDots aria-hidden="true" /> Messages {unreadCount > 0 && `(${unreadCount})`}
+            </button>
+
+            <button
+              className="sidebar-action-btn leave-message-btn"
+              onClick={() => { setShowLeaveMessageModal(true); setMessageType('audio'); }}
+              aria-label="Leave a message and exit the queue"
+              type="button"
+            >
+              <FaCommentDots aria-hidden="true" /> Leave Message
             </button>
 
             <button
@@ -1076,6 +1245,195 @@ export default function BoothQueueWaiting() {
                   aria-label={isUploading ? 'Sending message, please wait' : 'Send message to recruiter'}
                 >
                   {isUploading ? 'Sending...' : 'Send Message'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Message Modal */}
+      {showLeaveMessageModal && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="leave-modal-title">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3 id="leave-modal-title">Leave a Message</h3>
+              <button
+                className="modal-close"
+                onClick={() => {
+                  setShowLeaveMessageModal(false);
+                  setRecordedBlob(null);
+                  setMessageContent('');
+                  setShowMessagePreview(false);
+                }}
+                aria-label="Close leave message dialog"
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="message-form">
+              <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
+                Record an audio or video message. You will be removed from the queue after sending.
+              </p>
+              <fieldset className="message-type-selector">
+                <legend className="sr-only">Choose message type</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="leaveMessageType"
+                    value="audio"
+                    checked={messageType === 'audio'}
+                    onChange={(e) => setMessageType(e.target.value)}
+                  />
+                  Audio Message
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="leaveMessageType"
+                    value="video"
+                    checked={messageType === 'video'}
+                    onChange={(e) => setMessageType(e.target.value)}
+                  />
+                  Video Message
+                </label>
+              </fieldset>
+
+              <div className="recording-controls">
+                {!recordedBlob ? (
+                  <div className="recording-section">
+                    {!isRecording ? (
+                      <button onClick={startRecording} className="record-btn">
+                        Start Recording {messageType === 'video' ? 'Video' : 'Audio'}
+                      </button>
+                    ) : (
+                      <button onClick={stopRecording} className="stop-btn">
+                        Stop Recording
+                      </button>
+                    )}
+                    {isRecording && (
+                      <p className="recording-status">Recording in progress...</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="recording-preview-section">
+                    <div className="preview-controls">
+                      <button onClick={handleMessagePreview} className="btn-preview">
+                        Preview {messageType === 'video' ? 'Video' : 'Audio'}
+                      </button>
+                      <button onClick={handleRetakeRecording} className="btn-retake">
+                        Retake Recording
+                      </button>
+                    </div>
+
+                    {showMessagePreview && (
+                      <div className="media-preview">
+                        {messageType === 'video' ? (
+                          <video
+                            src={messageContent}
+                            controls
+                            style={{ width: '100%', maxWidth: '300px', borderRadius: '8px', backgroundColor: '#000' }}
+                          />
+                        ) : (
+                          <audio src={messageContent} controls style={{ width: '100%' }} />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  onClick={() => {
+                    setShowLeaveMessageModal(false);
+                    setRecordedBlob(null);
+                    setMessageContent('');
+                    setShowMessagePreview(false);
+                  }}
+                  className="btn-cancel"
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLeaveWithMessage}
+                  disabled={!recordedBlob || isUploading}
+                  className="btn-send"
+                  type="button"
+                >
+                  {isUploading ? 'Sending...' : 'Send & Leave Queue'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Text Messaging Modal */}
+      {showTextMessagingModal && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="text-modal-title">
+          <div className="modal-content text-messaging-modal">
+            <div className="modal-header">
+              <h3 id="text-modal-title">Messages</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowTextMessagingModal(false)}
+                aria-label="Close messages dialog"
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="messages-container">
+              <div className="messages-list">
+                {messages.length === 0 ? (
+                  <p className="no-messages">No messages yet</p>
+                ) : (
+                  <>
+                    {messages.map((msg, index) => (
+                      <div 
+                        key={index} 
+                        className={`message-bubble ${msg.sender === 'jobseeker' ? 'sent' : 'received'}`}
+                      >
+                        <div className="message-sender">
+                          {msg.sender === 'jobseeker' ? 'You' : 'Recruiter'}
+                        </div>
+                        <div className="message-text">{msg.content}</div>
+                        <div className="message-time">
+                          {new Date(msg.createdAt).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </>
+                )}
+              </div>
+
+              <div className="message-input-area">
+                <textarea
+                  value={textMessageContent}
+                  onChange={(e) => setTextMessageContent(e.target.value)}
+                  placeholder="Type your message..."
+                  rows={3}
+                  aria-label="Message content"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendTextMessage();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleSendTextMessage}
+                  disabled={!textMessageContent.trim() || isUploading}
+                  className="btn-send-message"
+                  type="button"
+                >
+                  {isUploading ? 'Sending...' : 'Send'}
                 </button>
               </div>
             </div>

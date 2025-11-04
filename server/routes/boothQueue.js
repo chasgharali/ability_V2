@@ -243,7 +243,7 @@ router.post('/leave', authenticateToken, async (req, res) => {
             });
         }
 
-        await queueEntry.leaveQueue();
+        await queueEntry.leaveQueue(false);
 
         // Emit socket event
         if (req.app.get('io')) {
@@ -266,6 +266,71 @@ router.post('/leave', authenticateToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to leave queue',
+            error: error.message
+        });
+    }
+});
+
+// Leave queue with message (audio/video message)
+router.post('/leave-with-message', authenticateToken, async (req, res) => {
+    try {
+        const { boothId, type, content, queueToken } = req.body;
+        const jobSeekerId = req.user._id;
+
+        if (!['audio', 'video'].includes(type)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Only audio or video messages are allowed when leaving queue'
+            });
+        }
+
+        const queueEntry = await BoothQueue.findOne({
+            jobSeeker: jobSeekerId,
+            booth: boothId,
+            queueToken,
+            status: { $in: ['waiting', 'invited'] }
+        }).populate('jobSeeker', 'name email');
+
+        if (!queueEntry) {
+            return res.status(404).json({
+                success: false,
+                message: 'Queue entry not found'
+            });
+        }
+
+        // Add the leave message
+        await queueEntry.addMessage({ type, content, sender: 'jobseeker' });
+        
+        // Mark as left with message
+        await queueEntry.leaveQueue(true);
+
+        // Emit socket event to recruiters
+        if (req.app.get('io')) {
+            const updateData = {
+                boothId,
+                action: 'left_with_message',
+                queueEntry: queueEntry.toJSON(),
+                jobSeekerName: queueEntry.jobSeeker.name
+            };
+            req.app.get('io').to(`booth_${boothId}`).emit('queue-updated', updateData);
+            req.app.get('io').to(`booth_management_${boothId}`).emit('queue-updated', updateData);
+            req.app.get('io').to(`booth_management_${boothId}`).emit('jobseeker-left-with-message', {
+                jobSeekerName: queueEntry.jobSeeker.name,
+                queueEntryId: queueEntry._id,
+                messageType: type
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Successfully left queue with message'
+        });
+
+    } catch (error) {
+        console.error('Error leaving queue with message:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to leave queue with message',
             error: error.message
         });
     }
@@ -298,7 +363,8 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
             token: queueEntry.queueToken,
             currentServing,
             status: queueEntry.status,
-            queueEntry
+            queueEntry,
+            unreadMessages: queueEntry.unreadForJobSeeker
         });
 
     } catch (error) {
@@ -324,7 +390,13 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
             });
         }
 
-        const queue = await BoothQueue.getBoothQueue(boothId);
+        const queue = await BoothQueue.find({ 
+            booth: boothId, 
+            status: { $in: ['waiting', 'invited', 'left_with_message'] }
+        })
+        .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+        .populate('interpreterCategory', 'name code')
+        .sort({ position: 1 });
 
         // Get current serving number
         const currentServing = await BoothQueue.countDocuments({
@@ -349,7 +421,7 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
     }
 });
 
-// Send message to recruiter
+// Send message from job seeker to recruiter
 router.post('/message', authenticateToken, async (req, res) => {
     try {
         const { boothId, type, content, queueToken } = req.body;
@@ -367,7 +439,7 @@ router.post('/message', authenticateToken, async (req, res) => {
             booth: boothId,
             queueToken,
             status: { $in: ['waiting', 'invited'] }
-        });
+        }).populate('jobSeeker', 'name email');
 
         if (!queueEntry) {
             return res.status(404).json({
@@ -376,8 +448,8 @@ router.post('/message', authenticateToken, async (req, res) => {
             });
         }
 
-        // Add message to queue entry and update activity
-        await queueEntry.addMessage({ type, content });
+        // Add message with sender info
+        await queueEntry.addMessage({ type, content, sender: 'jobseeker' });
         await queueEntry.updateActivity();
 
         // Emit socket event to recruiters
@@ -385,7 +457,7 @@ router.post('/message', authenticateToken, async (req, res) => {
             req.app.get('io').to(`booth_management_${boothId}`).emit('new-queue-message', {
                 boothId,
                 queueEntry: queueEntry.toJSON(),
-                message: { type, content, createdAt: new Date() }
+                message: { type, content, sender: 'jobseeker', createdAt: new Date() }
             });
         }
 
@@ -404,10 +476,11 @@ router.post('/message', authenticateToken, async (req, res) => {
     }
 });
 
-// Get messages for a queue entry (recruiter view)
-router.get('/messages/:queueId', authenticateToken, async (req, res) => {
+// Send message from recruiter to job seeker
+router.post('/message-to-jobseeker/:queueId', authenticateToken, async (req, res) => {
     try {
         const { queueId } = req.params;
+        const { content } = req.body;
 
         if (!['Admin', 'Recruiter', 'GlobalSupport'].includes(req.user.role)) {
             return res.status(403).json({
@@ -415,6 +488,51 @@ router.get('/messages/:queueId', authenticateToken, async (req, res) => {
                 message: 'Insufficient permissions'
             });
         }
+
+        const queueEntry = await BoothQueue.findById(queueId)
+            .populate('jobSeeker', 'name email');
+
+        if (!queueEntry) {
+            return res.status(404).json({
+                success: false,
+                message: 'Queue entry not found'
+            });
+        }
+
+        // Add text message from recruiter
+        await queueEntry.addMessage({ type: 'text', content, sender: 'recruiter' });
+        await queueEntry.updateActivity();
+
+        // Emit socket event to job seeker
+        if (req.app.get('io')) {
+            req.app.get('io').to(`user_${queueEntry.jobSeeker._id}`).emit('new-message-from-recruiter', {
+                queueId: queueEntry._id,
+                boothId: queueEntry.booth,
+                message: { type: 'text', content, sender: 'recruiter', createdAt: new Date() }
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Message sent successfully'
+        });
+
+    } catch (error) {
+        console.error('Error sending message to job seeker:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send message',
+            error: error.message
+        });
+    }
+});
+
+// Get messages for a queue entry
+router.get('/messages/:queueId', authenticateToken, async (req, res) => {
+    try {
+        const { queueId } = req.params;
+        const userId = req.user._id;
+        const userRole = req.user.role;
 
         const queueEntry = await BoothQueue.findById(queueId);
 
@@ -425,12 +543,28 @@ router.get('/messages/:queueId', authenticateToken, async (req, res) => {
             });
         }
 
-        // Mark messages as read
-        await queueEntry.markMessagesAsRead();
+        // Check permissions
+        const isJobSeeker = queueEntry.jobSeeker.toString() === userId.toString();
+        const isRecruiter = ['Admin', 'Recruiter', 'GlobalSupport'].includes(userRole);
+
+        if (!isJobSeeker && !isRecruiter) {
+            return res.status(403).json({
+                success: false,
+                message: 'Insufficient permissions'
+            });
+        }
+
+        // Mark messages as read based on user type
+        if (isRecruiter) {
+            await queueEntry.markMessagesAsRead('jobseeker');
+        } else if (isJobSeeker) {
+            await queueEntry.markMessagesAsRead('recruiter');
+        }
 
         res.json({
             success: true,
-            messages: queueEntry.messages
+            messages: queueEntry.messages,
+            unreadCount: isJobSeeker ? queueEntry.unreadForJobSeeker : queueEntry.messageCount
         });
 
     } catch (error) {

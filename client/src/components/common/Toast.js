@@ -30,6 +30,11 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
   }, [isVisible, announced, message, type]);
 
   useEffect(() => {
+    // If duration is 0 or null, don't auto-dismiss
+    if (!duration || duration === 0) {
+      return;
+    }
+
     const timer = setTimeout(() => {
       setIsExiting(true);
       setTimeout(() => {
