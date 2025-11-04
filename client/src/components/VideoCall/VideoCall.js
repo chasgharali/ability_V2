@@ -103,6 +103,17 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     };
   }, [callId, callData]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Initialize speech synthesis on mount
+  useEffect(() => {
+    // Trigger voice loading immediately
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      console.log('✓ Speech synthesis available (VideoCall)');
+    } else {
+      console.warn('⚠️ Speech synthesis not supported in this browser');
+    }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -374,39 +385,54 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     // No need to manually detach tracks here
   }, []);
 
-  // Speak announcement using Web Speech API
+  // Simple, reliable speech function using native SpeechSynthesis
   const speak = (text) => {
     try {
-      const synth = window.speechSynthesis;
-      if (!synth) return;
+      if (!('speechSynthesis' in window)) {
+        console.warn('Speech synthesis not supported');
+        return;
+      }
       
-      // Cancel any ongoing speech to avoid overlap
-      if (synth.speaking) synth.cancel();
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
       
-      const speakText = () => {
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.rate = 1.05;
-        utter.pitch = 1.0;
-        utter.volume = 1.0;
-        
-        // Prefer an English voice if available
-        const voices = synth.getVoices();
-        const enVoice = voices.find(v => /en(-|_)?.*/i.test(v.lang));
-        if (enVoice) utter.voice = enVoice;
-        
-        synth.speak(utter);
+      console.log('🗣️ Speaking:', text);
+      
+      // Create utterance
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      utterance.lang = 'en-US';
+      
+      // Get voices and set English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+      
+      // Event handlers
+      utterance.onstart = () => {
+        console.log('▶️ Speech started');
       };
       
-      // If voices are not loaded yet, wait for them
-      if (synth.getVoices().length === 0) {
-        synth.addEventListener('voiceschanged', speakText, { once: true });
-      } else {
-        speakText();
-      }
+      utterance.onend = () => {
+        console.log('✅ Speech completed');
+      };
+      
+      utterance.onerror = (event) => {
+        console.error('❌ Speech error:', event.error);
+      };
+      
+      // Speak immediately
+      window.speechSynthesis.speak(utterance);
+      
     } catch (e) {
-      // ignore failures
+      console.error('Speech error:', e);
     }
   };
+
 
   const handleCallInvitation = (data) => {
     // Handle incoming call invitation for job seekers

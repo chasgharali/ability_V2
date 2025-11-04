@@ -63,6 +63,7 @@ export default function BoothQueueWaiting() {
 
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
+  const announcementCounterRef = useRef(0);
 
   useEffect(() => {
     loadData();
@@ -88,6 +89,17 @@ export default function BoothQueueWaiting() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [eventSlug, boothId]);
+
+  // Initialize speech synthesis on mount
+  useEffect(() => {
+    // Trigger voice loading immediately
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      console.log('✓ Speech synthesis available');
+    } else {
+      console.warn('⚠️ Speech synthesis not supported in this browser');
+    }
+  }, []);
 
   // Ensure we (re)join socket rooms after the socket connects/reconnects
   useEffect(() => {
@@ -324,29 +336,63 @@ export default function BoothQueueWaiting() {
 
   // Announce to screen readers using ARIA live regions
   const announceToScreenReader = (message) => {
-    setAnnouncements(prev => [...prev.slice(-4), { id: Date.now(), message }]);
+    announcementCounterRef.current += 1;
+    const uniqueId = `announcement-${Date.now()}-${announcementCounterRef.current}-${Math.random().toString(36).substr(2, 9)}`;
+    setAnnouncements(prev => {
+      const newAnnouncements = [...prev, { id: uniqueId, message }];
+      // Keep only last 5 announcements
+      return newAnnouncements.slice(-5);
+    });
   };
 
-  // Speak announcement using Web Speech API
+  // Simple, reliable speech function using native SpeechSynthesis
   const speak = (text) => {
     try {
-      const synth = window.speechSynthesis;
-      if (!synth) return;
-      // Cancel any ongoing speech to avoid overlap
-      if (synth.speaking) synth.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.rate = 1.05;
-      utter.pitch = 1.0;
-      utter.volume = 1.0;
-      // Prefer an English voice if available
-      const voices = synth.getVoices();
-      const enVoice = voices.find(v => /en(-|_)?.*/i.test(v.lang));
-      if (enVoice) utter.voice = enVoice;
-      synth.speak(utter);
+      if (!('speechSynthesis' in window)) {
+        console.warn('Speech synthesis not supported');
+        return;
+      }
+      
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      console.log('🗣️ Speaking:', text);
+      
+      // Create utterance
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      utterance.lang = 'en-US';
+      
+      // Get voices and set English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+      if (englishVoice) {
+        utterance.voice = englishVoice;
+      }
+      
+      // Event handlers
+      utterance.onstart = () => {
+        console.log('▶️ Speech started');
+      };
+      
+      utterance.onend = () => {
+        console.log('✅ Speech completed');
+      };
+      
+      utterance.onerror = (event) => {
+        console.error('❌ Speech error:', event.error);
+      };
+      
+      // Speak immediately
+      window.speechSynthesis.speak(utterance);
+      
     } catch (e) {
-      // ignore failures
+      console.error('Speech error:', e);
     }
   };
+
 
   const handleCallInvitation = (data) => {
     console.log('Received call invitation:', data);
