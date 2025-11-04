@@ -422,31 +422,37 @@ export default function MeetingRecords() {
                                 loading={loadingData}
                                 emptyMessage="No meeting records found"
                             />
+                            
+                            {/* Pagination Footer */}
+                            {pagination.totalPages > 1 && (
+                                <div className="table-footer-pagination">
+                                    <div className="pagination-info">
+                                        Showing {((pagination.currentPage - 1) * filters.limit) + 1} to {Math.min(pagination.currentPage * filters.limit, pagination.totalRecords)} of {pagination.totalRecords} rows
+                                    </div>
+                                    <div className="pagination-controls">
+                                        <button
+                                            className="pagination-btn"
+                                            disabled={!pagination.hasPrev}
+                                            onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                            aria-label="Previous page"
+                                        >
+                                            Previous
+                                        </button>
+                                        <span className="pagination-page-info">
+                                            Page {pagination.currentPage} of {pagination.totalPages}
+                                        </span>
+                                        <button
+                                            className="pagination-btn"
+                                            disabled={!pagination.hasNext}
+                                            onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                            aria-label="Next page"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-
-                        {/* Pagination */}
-                        {pagination.totalPages > 1 && (
-                            <div className="pagination">
-                                <button
-                                    className="pagination-btn"
-                                    disabled={!pagination.hasPrev}
-                                    onClick={() => handlePageChange(pagination.currentPage - 1)}
-                                >
-                                    Previous
-                                </button>
-                                <span className="pagination-info">
-                                    Page {pagination.currentPage} of {pagination.totalPages} 
-                                    ({pagination.totalRecords} total records)
-                                </span>
-                                <button
-                                    className="pagination-btn"
-                                    disabled={!pagination.hasNext}
-                                    onClick={() => handlePageChange(pagination.currentPage + 1)}
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
                         </div>
                     </div>
                 </main>
