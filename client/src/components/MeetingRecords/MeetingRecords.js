@@ -226,11 +226,21 @@ export default function MeetingRecords() {
         },
         {
             label: 'Status',
-            render: (row) => (
-                <span className={`status-badge status-${row.status}`}>
-                    {row.status}
-                </span>
-            )
+            render: (row) => {
+                const statusLabels = {
+                    'scheduled': 'Scheduled',
+                    'active': 'Active',
+                    'completed': 'Completed',
+                    'cancelled': 'Cancelled',
+                    'failed': 'Failed',
+                    'left_with_message': 'Left Message'
+                };
+                return (
+                    <span className={`status-badge status-${row.status}`}>
+                        {statusLabels[row.status] || row.status}
+                    </span>
+                );
+            }
         },
         {
             label: 'Rating',
@@ -378,7 +388,8 @@ export default function MeetingRecords() {
                                         { value: 'active', label: 'Active' },
                                         { value: 'completed', label: 'Completed' },
                                         { value: 'cancelled', label: 'Cancelled' },
-                                        { value: 'failed', label: 'Failed' }
+                                        { value: 'failed', label: 'Failed' },
+                                        { value: 'left_with_message', label: 'Left Message' }
                                     ]}
                                 />
                                 <DateTimePicker

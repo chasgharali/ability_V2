@@ -76,6 +76,18 @@ export default function MeetingRecordDetail() {
         return typeMap[type] || type;
     };
 
+    const formatStatus = (status) => {
+        const statusLabels = {
+            'scheduled': 'Scheduled',
+            'active': 'Active',
+            'completed': 'Completed',
+            'cancelled': 'Cancelled',
+            'failed': 'Failed',
+            'left_with_message': 'Left Message'
+        };
+        return statusLabels[status] || status;
+    };
+
     if (loading || !user) {
         return (
             <div className="loading-container">
@@ -185,7 +197,7 @@ export default function MeetingRecordDetail() {
                                         <div className="detail-item">
                                             <label>Status</label>
                                             <span className={`status-badge status-${meetingRecord.status}`}>
-                                                {meetingRecord.status}
+                                                {formatStatus(meetingRecord.status)}
                                             </span>
                                         </div>
                                     </div>
@@ -260,10 +272,25 @@ export default function MeetingRecordDetail() {
                                                     <div className="message-content">
                                                         {message.type === 'text' ? (
                                                             <p>{message.content}</p>
+                                                        ) : message.type === 'audio' ? (
+                                                            <div className="media-player">
+                                                                <audio controls style={{ width: '100%', maxWidth: '500px' }}>
+                                                                    <source src={message.content} type="audio/webm" />
+                                                                    <source src={message.content} type="audio/mp4" />
+                                                                    Your browser does not support the audio element.
+                                                                </audio>
+                                                            </div>
+                                                        ) : message.type === 'video' ? (
+                                                            <div className="media-player">
+                                                                <video controls style={{ width: '100%', maxWidth: '600px', maxHeight: '400px', borderRadius: '8px' }}>
+                                                                    <source src={message.content} type="video/webm" />
+                                                                    <source src={message.content} type="video/mp4" />
+                                                                    Your browser does not support the video element.
+                                                                </video>
+                                                            </div>
                                                         ) : (
                                                             <div className="media-message">
                                                                 <p>Media file: {message.content}</p>
-                                                                <small>({message.type} message)</small>
                                                             </div>
                                                         )}
                                                     </div>

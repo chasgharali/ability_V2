@@ -55,6 +55,22 @@ const boothQueueSchema = new mongoose.Schema({
         ref: 'MeetingRecord',
         default: null
     },
+    // Leave message when job seeker exits queue (separate from regular messages)
+    leaveMessage: {
+        type: {
+            type: String,
+            enum: ['text', 'audio', 'video'],
+            default: null
+        },
+        content: {
+            type: String,
+            default: null
+        },
+        createdAt: {
+            type: Date,
+            default: null
+        }
+    },
     // Bidirectional messages between job seeker and recruiter
     messages: [{
         type: {

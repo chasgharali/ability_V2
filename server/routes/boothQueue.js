@@ -271,16 +271,16 @@ router.post('/leave', authenticateToken, async (req, res) => {
     }
 });
 
-// Leave queue with message (audio/video message)
+// Leave queue with message (text/audio/video message)
 router.post('/leave-with-message', authenticateToken, async (req, res) => {
     try {
         const { boothId, type, content, queueToken } = req.body;
         const jobSeekerId = req.user._id;
 
-        if (!['audio', 'video'].includes(type)) {
+        if (!['text', 'audio', 'video'].includes(type)) {
             return res.status(400).json({
                 success: false,
-                message: 'Only audio or video messages are allowed when leaving queue'
+                message: 'Invalid message type'
             });
         }
 
@@ -289,7 +289,7 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
             booth: boothId,
             queueToken,
             status: { $in: ['waiting', 'invited'] }
-        }).populate('jobSeeker', 'name email');
+        }).populate('jobSeeker', 'name email').populate('booth', 'name administrators').populate('event', 'name');
 
         if (!queueEntry) {
             return res.status(404).json({
@@ -298,11 +298,76 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
             });
         }
 
-        // Add the leave message
-        await queueEntry.addMessage({ type, content, sender: 'jobseeker' });
+        // Store the leave message in separate field (not in messages array)
+        queueEntry.leaveMessage = {
+            type,
+            content,
+            createdAt: new Date()
+        };
         
         // Mark as left with message
         await queueEntry.leaveQueue(true);
+        await queueEntry.save();
+
+        // Create meeting record for the leave message
+        const MeetingRecord = require('../models/MeetingRecord');
+        
+        // Get booth with administrators populated
+        const Booth = require('../models/Booth');
+        const booth = await Booth.findById(boothId).populate('administrators');
+        
+        // Find recruiter (booth administrator)
+        const recruiterId = booth && booth.administrators && booth.administrators.length > 0 
+            ? booth.administrators[0]._id 
+            : req.user._id; // Fallback to current user
+
+        console.log('Creating meeting record for leave message:', {
+            eventId: queueEntry.event._id,
+            boothId: queueEntry.booth._id,
+            queueId: queueEntry._id,
+            recruiterId,
+            jobseekerId: jobSeekerId,
+            status: 'left_with_message',
+            messageType: type
+        });
+
+        const meetingRecord = new MeetingRecord({
+            eventId: queueEntry.event._id,
+            boothId: queueEntry.booth._id,
+            queueId: queueEntry._id,
+            recruiterId: recruiterId,
+            jobseekerId: jobSeekerId,
+            twilioRoomId: `leave-message-${queueEntry._id}`,
+            startTime: queueEntry.joinedAt,
+            endTime: new Date(),
+            duration: 0,
+            status: 'left_with_message',
+            jobSeekerMessages: [{
+                type: type,
+                content: content,
+                sender: 'jobseeker',
+                createdAt: new Date(),
+                isLeaveMessage: true
+            }]
+        });
+
+        try {
+            await meetingRecord.save();
+            console.log('Meeting record created successfully:', meetingRecord._id);
+            console.log('Meeting record details:', {
+                id: meetingRecord._id,
+                status: meetingRecord.status,
+                jobseekerId: meetingRecord.jobseekerId,
+                recruiterId: meetingRecord.recruiterId
+            });
+        } catch (saveError) {
+            console.error('Error saving meeting record:', saveError);
+            throw saveError;
+        }
+        
+        // Link meeting record to queue entry
+        queueEntry.meetingId = meetingRecord._id;
+        await queueEntry.save();
 
         // Emit socket event to recruiters
         if (req.app.get('io')) {
@@ -392,7 +457,7 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
 
         const queue = await BoothQueue.find({ 
             booth: boothId, 
-            status: { $in: ['waiting', 'invited', 'left_with_message'] }
+            status: { $in: ['waiting', 'invited'] }
         })
         .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
         .populate('interpreterCategory', 'name code')

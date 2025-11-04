@@ -67,8 +67,14 @@
 /* Detail Grid */
 .detail-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+}
+
+@media (max-width: 1024px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .detail-item {
@@ -88,6 +94,8 @@
 .detail-item span {
     color: #333;
     font-size: 16px;
+    word-break: break-all;
+    overflow-wrap: break-word;
 }
 
 /* Status Badges */
@@ -125,6 +133,11 @@
     color: #ef6c00;
 }
 
+.status-left_with_message {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
 /* Participants Grid */
 .participants-grid {
     display: grid;
@@ -137,6 +150,7 @@
     padding: 20px;
     border-radius: 8px;
     border-left: 4px solid #333;
+    min-height: auto;
 }
 
 .participant-card h3 {
@@ -268,6 +282,16 @@
 
 .media-message small {
     font-style: italic;
+}
+
+.media-player {
+    margin-top: 10px;
+}
+
+.media-player audio,
+.media-player video {
+    background: #000;
+    border-radius: 8px;
 }
 
 /* Chat Messages */

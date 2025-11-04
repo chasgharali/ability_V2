@@ -695,15 +695,26 @@ export default function BoothQueueWaiting() {
 
   const handleLeaveWithMessage = async () => {
     try {
-      setIsUploading(true);
       let finalContent = messageContent;
 
-      // Upload audio/video to S3
-      if ((messageType === 'audio' || messageType === 'video') && recordedBlob) {
-        const fileName = `leave_message_${Date.now()}.${messageType === 'audio' ? 'webm' : 'webm'}`;
-        const file = new File([recordedBlob], fileName, {
-          type: messageType === 'audio' ? 'audio/webm' : 'video/webm'
-        });
+      if (messageType === 'text') {
+        if (!messageContent.trim()) {
+          showError('Please enter a message');
+          return;
+        }
+        finalContent = messageContent.trim();
+      } else {
+        if (!recordedBlob) {
+          showError('Please record a message first');
+          return;
+        }
+        
+        setIsUploading(true);
+        const file = new File(
+          [recordedBlob],
+          `leave_message_${Date.now()}.${messageType === 'audio' ? 'webm' : 'webm'}`,
+          { type: recordedBlob.type }
+        );
 
         const uploadResult = messageType === 'audio'
           ? await uploadAudioToS3(file)
@@ -712,22 +723,17 @@ export default function BoothQueueWaiting() {
         finalContent = uploadResult.downloadUrl;
       }
 
-      const messageData = {
+      setIsUploading(true);
+      await boothQueueAPI.leaveWithMessage({
         boothId,
         type: messageType,
         content: finalContent,
         queueToken
-      };
+      });
 
-      await boothQueueAPI.leaveWithMessage(messageData);
-
-      // Reset state
       setShowLeaveMessageModal(false);
-      setShowMessagePreview(false);
-      setMessageContent('');
       setRecordedBlob(null);
-      setMessageType('audio');
-
+      setMessageContent('');
       showSuccess('Message sent! You have left the queue.');
       navigate(`/events/registered/${eventSlug}`);
     } catch (error) {
@@ -1275,10 +1281,20 @@ export default function BoothQueueWaiting() {
 
             <div className="message-form">
               <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
-                Record an audio or video message. You will be removed from the queue after sending.
+                Leave a text, audio, or video message. You will be removed from the queue after sending.
               </p>
               <fieldset className="message-type-selector">
                 <legend className="sr-only">Choose message type</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="leaveMessageType"
+                    value="text"
+                    checked={messageType === 'text'}
+                    onChange={(e) => setMessageType(e.target.value)}
+                  />
+                  Text Message
+                </label>
                 <label>
                   <input
                     type="radio"
@@ -1301,32 +1317,51 @@ export default function BoothQueueWaiting() {
                 </label>
               </fieldset>
 
-              <div className="recording-controls">
-                {!recordedBlob ? (
-                  <div className="recording-section">
-                    {!isRecording ? (
-                      <button onClick={startRecording} className="record-btn">
-                        Start Recording {messageType === 'video' ? 'Video' : 'Audio'}
-                      </button>
-                    ) : (
-                      <button onClick={stopRecording} className="stop-btn">
-                        Stop Recording
-                      </button>
-                    )}
-                    {isRecording && (
-                      <p className="recording-status">Recording in progress...</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="recording-preview-section">
-                    <div className="preview-controls">
-                      <button onClick={handleMessagePreview} className="btn-preview">
-                        Preview {messageType === 'video' ? 'Video' : 'Audio'}
-                      </button>
-                      <button onClick={handleRetakeRecording} className="btn-retake">
-                        Retake Recording
-                      </button>
+              {messageType === 'text' ? (
+                <div className="text-message-section">
+                  <textarea
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                    placeholder="Type your message here..."
+                    rows={6}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      resize: 'vertical',
+                      marginBottom: '1rem'
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="recording-controls">
+                  {!recordedBlob ? (
+                    <div className="recording-section">
+                      {!isRecording ? (
+                        <button onClick={startRecording} className="record-btn">
+                          Start Recording {messageType === 'video' ? 'Video' : 'Audio'}
+                        </button>
+                      ) : (
+                        <button onClick={stopRecording} className="stop-btn">
+                          Stop Recording
+                        </button>
+                      )}
+                      {isRecording && (
+                        <p className="recording-status">Recording in progress...</p>
+                      )}
                     </div>
+                  ) : (
+                    <div className="recording-preview-section">
+                      <div className="preview-controls">
+                        <button onClick={handleMessagePreview} className="btn-preview">
+                          Preview {messageType === 'video' ? 'Video' : 'Audio'}
+                        </button>
+                        <button onClick={handleRetakeRecording} className="btn-retake">
+                          Retake Recording
+                        </button>
+                      </div>
 
                     {showMessagePreview && (
                       <div className="media-preview">
@@ -1343,7 +1378,8 @@ export default function BoothQueueWaiting() {
                     )}
                   </div>
                 )}
-              </div>
+                </div>
+              )}
 
               <div className="modal-actions">
                 <button
@@ -1360,7 +1396,7 @@ export default function BoothQueueWaiting() {
                 </button>
                 <button
                   onClick={handleLeaveWithMessage}
-                  disabled={!recordedBlob || isUploading}
+                  disabled={messageType === 'text' ? (!messageContent.trim() || isUploading) : (!recordedBlob || isUploading)}
                   className="btn-send"
                   type="button"
                 >

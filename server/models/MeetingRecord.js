@@ -104,7 +104,7 @@ const meetingRecordSchema = new mongoose.Schema({
     // Call details
     twilioRoomId: {
         type: String,
-        required: [true, 'Twilio room ID is required']
+        default: null
     },
     twilioRoomSid: {
         type: String,
@@ -113,7 +113,7 @@ const meetingRecordSchema = new mongoose.Schema({
     // Timing
     startTime: {
         type: Date,
-        required: [true, 'Start time is required']
+        default: Date.now
     },
     endTime: {
         type: Date,
@@ -126,7 +126,7 @@ const meetingRecordSchema = new mongoose.Schema({
     // Call status
     status: {
         type: String,
-        enum: ['scheduled', 'active', 'completed', 'cancelled', 'failed'],
+        enum: ['scheduled', 'active', 'completed', 'cancelled', 'failed', 'left_with_message'],
         default: 'scheduled'
     },
     // Call quality metrics

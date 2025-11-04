@@ -205,6 +205,11 @@
     color: #333;
 }
 
+.status-left_with_message {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
 .status-cancelled {
     background: #e0e0e0;
     color: #333;

@@ -42,6 +42,8 @@ router.get('/', authenticateToken, async (req, res) => {
         if (boothId) query.boothId = boothId;
         if (status) query.status = status;
 
+        console.log('Meeting records query:', JSON.stringify(query));
+
         // Date range filtering
         if (startDate || endDate) {
             query.startTime = {};
@@ -66,6 +68,11 @@ router.get('/', authenticateToken, async (req, res) => {
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit));
+
+        console.log(`Found ${meetingRecords.length} meeting records`);
+        if (meetingRecords.length > 0) {
+            console.log('Sample record statuses:', meetingRecords.map(r => r.status));
+        }
 
         // Calculate duration for records that don't have it
         const processedRecords = meetingRecords.map(record => {
