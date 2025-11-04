@@ -246,12 +246,12 @@ export default function BoothQueueWaiting() {
       const oldServing = currentServing;
       setCurrentServing(data.currentServing);
       try { sessionStorage.setItem(`serving_${boothId}`, String(data.currentServing)); } catch (e) { }
-      
+
       // Announce serving number changes to screen readers
       if (oldServing !== data.currentServing) {
         const announcement = `Now serving number ${data.currentServing}`;
         announceToScreenReader(announcement);
-        
+
         // Check if user is next or being called
         if (queuePosition === data.currentServing) {
           const urgentAnnouncement = 'It is now your turn! Please prepare for your meeting invitation.';
@@ -360,42 +360,42 @@ export default function BoothQueueWaiting() {
         console.warn('Speech synthesis not supported');
         return;
       }
-      
+
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       console.log('🗣️ Speaking:', text);
-      
+
       // Create utterance
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       utterance.lang = 'en-US';
-      
+
       // Get voices and set English voice if available
       const voices = window.speechSynthesis.getVoices();
       const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
       if (englishVoice) {
         utterance.voice = englishVoice;
       }
-      
+
       // Event handlers
       utterance.onstart = () => {
         console.log('▶️ Speech started');
       };
-      
+
       utterance.onend = () => {
         console.log('✅ Speech completed');
       };
-      
+
       utterance.onerror = (event) => {
         console.error('❌ Speech error:', event.error);
       };
-      
+
       // Speak immediately
       window.speechSynthesis.speak(utterance);
-      
+
     } catch (e) {
       console.error('Speech error:', e);
     }
@@ -457,16 +457,16 @@ export default function BoothQueueWaiting() {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       oscillator.frequency.value = 800;
       oscillator.type = 'sine';
-      
+
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
+
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.3);
     } catch (err) {
@@ -479,7 +479,7 @@ export default function BoothQueueWaiting() {
       playNotificationSound();
       // Show toast that stays until manually closed
       showInfo('New message from recruiter', 0); // 0 means no auto-dismiss
-      
+
       // If chat modal is open, add message to chat and scroll
       if (showTextMessagingModal) {
         setMessages(prev => [...prev, data.message]);
@@ -640,7 +640,7 @@ export default function BoothQueueWaiting() {
   // Add keyboard event listener and window resize listener
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
-    
+
     const handleResize = () => {
       const mobile = window.innerWidth <= 1199;
       setIsMobile(mobile);
@@ -648,9 +648,9 @@ export default function BoothQueueWaiting() {
         setMobilePanelOpen(false);
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
@@ -660,7 +660,7 @@ export default function BoothQueueWaiting() {
   const handleSendTextMessage = async () => {
     try {
       if (!textMessageContent.trim()) return;
-      
+
       setIsUploading(true);
       const messageData = {
         boothId,
@@ -670,7 +670,7 @@ export default function BoothQueueWaiting() {
       };
 
       await boothQueueAPI.sendMessage(messageData);
-      
+
       // Add message to local state immediately
       const newMessage = {
         type: 'text',
@@ -682,7 +682,7 @@ export default function BoothQueueWaiting() {
       setMessages(prev => [...prev, newMessage]);
       setTextMessageContent('');
       // Removed toast notification for message sent
-      
+
       // Scroll to bottom
       setTimeout(scrollToBottom, 100);
     } catch (error) {
@@ -708,7 +708,7 @@ export default function BoothQueueWaiting() {
           showError('Please record a message first');
           return;
         }
-        
+
         setIsUploading(true);
         const file = new File(
           [recordedBlob],
@@ -900,7 +900,7 @@ export default function BoothQueueWaiting() {
     <div className="booth-queue-waiting">
       {/* Global header with event branding */}
       <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} />
-      
+
       {/* Skip to main content link for screen readers */}
       <a href="#main-content" className="skip-link sr-only sr-only-focusable">
         Skip to main content
@@ -936,9 +936,9 @@ export default function BoothQueueWaiting() {
           <div className="sidebar-header">
             <div className="booth-logo-section">
               {booth?.logoUrl ? (
-                <img 
-                  src={booth.logoUrl} 
-                  alt={`${booth?.name || 'Company'} logo`} 
+                <img
+                  src={booth.logoUrl}
+                  alt={`${booth?.name || 'Company'} logo`}
                   className="booth-logo-modern"
                 />
               ) : (
@@ -956,8 +956,8 @@ export default function BoothQueueWaiting() {
           <div className="queue-numbers" role="region" aria-label="Queue status information">
             <div className="queue-number-card" role="status" aria-live="polite">
               <span className="queue-label" id="user-position-label">Your Meeting Number</span>
-              <span 
-                className="queue-number" 
+              <span
+                className="queue-number"
                 aria-labelledby="user-position-label"
                 aria-describedby="queue-position-desc"
               >
@@ -969,7 +969,7 @@ export default function BoothQueueWaiting() {
             </div>
             <div className="queue-number-card" role="status" aria-live="polite">
               <span className="queue-label" id="serving-number-label">Now Serving Number</span>
-              <span 
+              <span
                 className="queue-number"
                 aria-labelledby="serving-number-label"
                 aria-describedby="serving-number-desc"
@@ -1004,7 +1004,7 @@ export default function BoothQueueWaiting() {
               aria-label="View and send text messages to the recruiter"
               type="button"
             >
-              <FaCommentDots aria-hidden="true" /> Messages {unreadCount > 0 && `(${unreadCount})`}
+              <FaCommentDots aria-hidden="true" />Send Messages {unreadCount > 0 && `(${unreadCount})`}
             </button>
 
             <button
@@ -1056,7 +1056,7 @@ export default function BoothQueueWaiting() {
             aria-label={mobilePanelOpen ? 'Close queue information panel' : 'Open queue information panel'}
             type="button"
           >
-            <FaBars aria-hidden="true" /> 
+            <FaBars aria-hidden="true" />
             {mobilePanelOpen ? 'Close Queue Options' : 'Queue Options'}
           </button>
 
@@ -1109,7 +1109,7 @@ export default function BoothQueueWaiting() {
 
       {/* Message Modal */}
       {showMessageModal && (
-        <div 
+        <div
           className="modal-overlay"
           role="dialog"
           aria-modal="true"
@@ -1363,21 +1363,21 @@ export default function BoothQueueWaiting() {
                         </button>
                       </div>
 
-                    {showMessagePreview && (
-                      <div className="media-preview">
-                        {messageType === 'video' ? (
-                          <video
-                            src={messageContent}
-                            controls
-                            style={{ width: '100%', maxWidth: '300px', borderRadius: '8px', backgroundColor: '#000' }}
-                          />
-                        ) : (
-                          <audio src={messageContent} controls style={{ width: '100%' }} />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                      {showMessagePreview && (
+                        <div className="media-preview">
+                          {messageType === 'video' ? (
+                            <video
+                              src={messageContent}
+                              controls
+                              style={{ width: '100%', maxWidth: '300px', borderRadius: '8px', backgroundColor: '#000' }}
+                            />
+                          ) : (
+                            <audio src={messageContent} controls style={{ width: '100%' }} />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1431,8 +1431,8 @@ export default function BoothQueueWaiting() {
                 ) : (
                   <>
                     {messages.map((msg, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className={`message-bubble ${msg.sender === 'jobseeker' ? 'sent' : 'received'}`}
                       >
                         <div className="message-sender">
@@ -1514,7 +1514,7 @@ export default function BoothQueueWaiting() {
         onChangeVideo={setSelectedVideoId}
         onSave={handleDeviceSave}
       />
-      
+
       {/* Toast Container */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
