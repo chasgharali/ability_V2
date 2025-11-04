@@ -171,8 +171,8 @@ export default function MeetingRecordDetail() {
 
                             <div className="meeting-detail-content">
                                 {/* Basic Information */}
-                                <div className="detail-section">
-                                    <h2>Meeting Information</h2>
+                                <section className="detail-section" aria-labelledby="meeting-info-heading">
+                                    <h2 id="meeting-info-heading">Meeting Information</h2>
                                     <div className="detail-grid">
                                         <div className="detail-item">
                                             <label>Event</label>
@@ -201,18 +201,18 @@ export default function MeetingRecordDetail() {
                                             </span>
                                         </div>
                                     </div>
-                                </div>
+                                </section>
 
                                 {/* Participants */}
-                                <div className="detail-section">
-                                    <h2>Participants</h2>
-                                    <div className="participants-grid">
-                                        <div className="participant-card">
+                                <section className="detail-section" aria-labelledby="participants-heading">
+                                    <h2 id="participants-heading">Participants</h2>
+                                    <div className="participants-grid" role="list">
+                                        <article className="participant-card" role="listitem">
                                             <h3>Recruiter</h3>
                                             <p><strong>Name:</strong> {meetingRecord.recruiterId?.name || 'N/A'}</p>
                                             <p><strong>Email:</strong> {meetingRecord.recruiterId?.email || 'N/A'}</p>
-                                        </div>
-                                        <div className="participant-card">
+                                        </article>
+                                        <article className="participant-card" role="listitem">
                                             <h3>Job Seeker</h3>
                                             <p><strong>Name:</strong> {meetingRecord.jobseekerId?.name || 'N/A'}</p>
                                             <p><strong>Email:</strong> {meetingRecord.jobseekerId?.email || 'N/A'}</p>
@@ -221,16 +221,16 @@ export default function MeetingRecordDetail() {
                                                     ? `${meetingRecord.jobseekerId.city}, ${meetingRecord.jobseekerId.state}`
                                                     : 'N/A'
                                             }</p>
-                                        </div>
+                                        </article>
                                         {meetingRecord.interpreterId && (
-                                            <div className="participant-card">
+                                            <article className="participant-card" role="listitem">
                                                 <h3>Interpreter</h3>
                                                 <p><strong>Name:</strong> {meetingRecord.interpreterId.name}</p>
                                                 <p><strong>Email:</strong> {meetingRecord.interpreterId.email}</p>
-                                            </div>
+                                            </article>
                                         )}
                                     </div>
-                                </div>
+                                </section>
 
                                 {/* Rating and Feedback */}
                                 {(meetingRecord.recruiterRating || meetingRecord.recruiterFeedback) && (
@@ -260,11 +260,11 @@ export default function MeetingRecordDetail() {
 
                                 {/* Job Seeker Messages */}
                                 {meetingRecord.jobSeekerMessages && meetingRecord.jobSeekerMessages.length > 0 && (
-                                    <div className="detail-section">
-                                        <h2>Job Seeker Messages ({meetingRecord.jobSeekerMessages.length})</h2>
-                                        <div className="messages-container">
+                                    <section className="detail-section" aria-labelledby="messages-heading">
+                                        <h2 id="messages-heading">Job Seeker Messages ({meetingRecord.jobSeekerMessages.length})</h2>
+                                        <div className="messages-container" role="list">
                                             {meetingRecord.jobSeekerMessages.map((message, index) => (
-                                                <div key={index} className="message-item">
+                                                <article key={index} className="message-item" role="listitem">
                                                     <div className="message-header">
                                                         <span className="message-type">{renderMessageType(message.type)}</span>
                                                         <span className="message-time">{formatDateTime(message.createdAt)}</span>
@@ -274,7 +274,11 @@ export default function MeetingRecordDetail() {
                                                             <p>{message.content}</p>
                                                         ) : message.type === 'audio' ? (
                                                             <div className="media-player">
-                                                                <audio controls style={{ width: '100%', maxWidth: '500px' }}>
+                                                                <audio 
+                                                                    controls 
+                                                                    aria-label="Audio message from job seeker"
+                                                                    preload="metadata"
+                                                                >
                                                                     <source src={message.content} type="audio/webm" />
                                                                     <source src={message.content} type="audio/mp4" />
                                                                     Your browser does not support the audio element.
@@ -282,7 +286,11 @@ export default function MeetingRecordDetail() {
                                                             </div>
                                                         ) : message.type === 'video' ? (
                                                             <div className="media-player">
-                                                                <video controls style={{ width: '100%', maxWidth: '600px', maxHeight: '400px', borderRadius: '8px' }}>
+                                                                <video 
+                                                                    controls 
+                                                                    aria-label="Video message from job seeker"
+                                                                    preload="metadata"
+                                                                >
                                                                     <source src={message.content} type="video/webm" />
                                                                     <source src={message.content} type="video/mp4" />
                                                                     Your browser does not support the video element.
@@ -294,10 +302,10 @@ export default function MeetingRecordDetail() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                </div>
+                                                </article>
                                             ))}
                                         </div>
-                                    </div>
+                                    </section>
                                 )}
 
                                 {/* Chat Messages */}
