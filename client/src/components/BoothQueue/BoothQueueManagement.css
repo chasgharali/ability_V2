@@ -356,6 +356,9 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .queue-card:hover {
@@ -471,6 +474,7 @@
 .queue-details {
   padding: 0.875rem 1.25rem;
   background: #f9fafb;
+  flex: 1;
 }
 
 /* Waiting row: timer left, button right */
@@ -506,6 +510,8 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  margin-top: auto;
+  background: white;
 }
 
 .queue-actions button {
