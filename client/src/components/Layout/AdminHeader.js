@@ -65,8 +65,8 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
           {brandingLogo && brandingLogo.trim() !== '' && (
             <img src={brandingLogo} alt="Site logo" className="header-logo" />
           )}
-          {/* Secondary (booth) logo if provided - not on left for Recruiters */}
-          {user?.role !== 'Recruiter' && secondaryLogo && secondaryLogo.trim() !== '' && (
+          {/* Secondary (booth) logo if provided - not on left for Recruiters/Interpreters */}
+          {!['Recruiter', 'Interpreter', 'GlobalInterpreter'].includes(user?.role) && secondaryLogo && secondaryLogo.trim() !== '' && (
             <img src={secondaryLogo} alt="Booth logo" className="header-logo" style={{ marginLeft: 8 }} />
           )}
           {/* Fallback text if no logos */}
@@ -75,8 +75,8 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
           )}
         </div>
 
-        {/* Centered booth logo for Recruiter */}
-        {user?.role === 'Recruiter' && secondaryLogo && secondaryLogo.trim() !== '' && (
+        {/* Centered booth logo for Recruiter and Interpreter */}
+        {['Recruiter', 'Interpreter', 'GlobalInterpreter'].includes(user?.role) && secondaryLogo && secondaryLogo.trim() !== '' && (
           <div className="header-center-logo" aria-hidden="true">
             <img src={secondaryLogo} alt="" className="header-logo booth-centered" />
           </div>

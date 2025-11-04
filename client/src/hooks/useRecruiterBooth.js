@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * Custom hook to get recruiter's booth and event information for header logos
+ * Custom hook to get recruiter/interpreter's booth and event information for header logos
  */
 export function useRecruiterBooth() {
     const { user } = useAuth();
@@ -15,8 +15,8 @@ export function useRecruiterBooth() {
 
     useEffect(() => {
         async function fetchRecruiterBooth() {
-            if (!user || user.role !== 'Recruiter') {
-                console.log('useRecruiterBooth: Not a recruiter or no user', { user: user?.role });
+            if (!user || !['Recruiter', 'Interpreter', 'GlobalInterpreter'].includes(user.role)) {
+                console.log('useRecruiterBooth: Not a recruiter/interpreter or no user', { user: user?.role });
                 setBoothInfo({
                     booth: null,
                     event: null,
@@ -27,7 +27,7 @@ export function useRecruiterBooth() {
             }
 
             try {
-                console.log('useRecruiterBooth: Fetching booth for recruiter', user._id);
+                console.log(`useRecruiterBooth: Fetching booth for ${user.role}`, user._id);
                 setBoothInfo(prev => ({ ...prev, loading: true, error: null }));
 
                 // Get booths where this user is an administrator
@@ -79,8 +79,8 @@ export function useRecruiterBooth() {
                         });
                     }
                 } else {
-                    // No booth found for this recruiter - try to get any booth as fallback
-                    console.log('useRecruiterBooth: No booth found for this recruiter, trying fallback');
+                    // No booth found for this user - try to get any booth as fallback
+                    console.log(`useRecruiterBooth: No booth found for this ${user.role}, trying fallback`);
                     
                     // Dynamic fallback: check if user has assignedBooth field
                     let fallbackBooth = null;
@@ -132,7 +132,7 @@ export function useRecruiterBooth() {
                             });
                         }
                     } else {
-                        // No booth found for this recruiter
+                        // No booth found for this user
                         console.log('useRecruiterBooth: No booths available at all');
                         setBoothInfo({
                             booth: null,
