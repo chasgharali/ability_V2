@@ -1,18 +1,36 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './AdminHeader.css';
+import settingsAPI from '../../services/settings';
 
 export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
   
-  const brandingLogo = useMemo(() => {
-    if (brandingLogoProp) return brandingLogoProp;
-    try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
+  // Fetch branding logo from API if not provided as prop
+  useEffect(() => {
+    const fetchBrandingLogo = async () => {
+      try {
+        const response = await settingsAPI.getSetting('branding_logo');
+        if (response.success && response.value) {
+          setBrandingLogoFromAPI(response.value);
+        }
+      } catch (error) {
+        // Setting doesn't exist yet, that's okay
+        console.log('No branding logo set');
+      }
+    };
+
+    if (!brandingLogoProp) {
+      fetchBrandingLogo();
+    }
   }, [brandingLogoProp]);
+
+  const brandingLogo = brandingLogoProp || brandingLogoFromAPI;
 
 
   const handleLogout = async () => {

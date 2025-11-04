@@ -17,6 +17,7 @@ import ViewProfile from './ViewProfile';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import MyAccountInline from '../Account/MyAccountInline';
+import settingsAPI from '../../services/settings';
 
 // Simple error boundary to prevent white screens if a nested view crashes
 class ErrorBoundary extends React.Component {
@@ -47,9 +48,7 @@ const Dashboard = () => {
         'registrations': true,
         'upcoming-events': true
     });
-    const [brandingLogo, setBrandingLogo] = useState(() => {
-        try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
-    });
+    const [brandingLogo, setBrandingLogo] = useState('');
     // Simple monochrome default icon (SVG data URL)
     const DEFAULT_ICON = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="36" viewBox="0 0 180 36" fill="none"><path d="M18 2 L6 22 h8 l-4 12 16-24 h-8 l4-8 z" fill="%23000000"/><text x="34" y="24" fill="%23000000" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">ABILITYJOBFAIR</text></svg>';
     // Booth Management form state (admin)
@@ -176,13 +175,29 @@ const Dashboard = () => {
         }
     }, [user]);
 
+    // Fetch branding logo on mount
+    useEffect(() => {
+        const fetchBrandingLogo = async () => {
+            try {
+                const response = await settingsAPI.getSetting('branding_logo');
+                if (response.success && response.value) {
+                    setBrandingLogo(response.value);
+                }
+            } catch (error) {
+                // Setting doesn't exist yet
+                console.log('No branding logo set');
+            }
+        };
+        fetchBrandingLogo();
+    }, []);
+
     // Admin: branding logo helpers
-    const saveBrandingLogo = (dataUrl) => {
+    const saveBrandingLogo = async (dataUrl) => {
         try {
             if (dataUrl) {
-                localStorage.setItem('ajf_branding_logo', dataUrl);
+                await settingsAPI.setSetting('branding_logo', dataUrl, 'Header logo for the application');
             } else {
-                localStorage.removeItem('ajf_branding_logo');
+                await settingsAPI.deleteSetting('branding_logo');
             }
             setBrandingLogo(dataUrl || '');
             showToast(dataUrl ? 'Header logo updated' : 'Header logo removed', 'success');

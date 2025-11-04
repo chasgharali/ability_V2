@@ -1,27 +1,48 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
+import settingsAPI from '../../services/settings';
 
 const DEFAULT_ICON = 'https://upload.wikimedia.org/wikipedia/commons/7/70/Example.png';
 
 export default function BrandingHeaderLogo() {
-  const [brandingLogo, setBrandingLogo] = useState(() => {
-    try { return localStorage.getItem('ajf_branding_logo') || ''; } catch { return ''; }
-  });
+  const [brandingLogo, setBrandingLogo] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const saveBrandingLogo = (dataUrl) => {
+  // Fetch logo on mount
+  useEffect(() => {
+    fetchLogo();
+  }, []);
+
+  const fetchLogo = async () => {
+    try {
+      setLoading(true);
+      const response = await settingsAPI.getSetting('branding_logo');
+      if (response.success && response.value) {
+        setBrandingLogo(response.value);
+      }
+    } catch (error) {
+      // Setting doesn't exist yet, that's okay
+      console.log('No branding logo set yet');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveBrandingLogo = async (dataUrl) => {
     try {
       if (dataUrl) {
-        localStorage.setItem('ajf_branding_logo', dataUrl);
+        await settingsAPI.setSetting('branding_logo', dataUrl, 'Header logo for the application');
       } else {
-        localStorage.removeItem('ajf_branding_logo');
+        await settingsAPI.deleteSetting('branding_logo');
       }
       setBrandingLogo(dataUrl || '');
       setMessage(dataUrl ? 'Header logo updated' : 'Header logo removed');
       setTimeout(() => setMessage(''), 2000);
     } catch (e) {
+      console.error('Failed to save header logo:', e);
       setMessage('Failed to save header logo');
       setTimeout(() => setMessage(''), 2000);
     }
