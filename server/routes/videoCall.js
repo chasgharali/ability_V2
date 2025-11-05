@@ -429,23 +429,43 @@ router.post('/end', auth, async (req, res) => {
     const { callId } = req.body;
     const userId = req.user._id;
 
+    console.log('🔚 End call request:', {
+      callId,
+      userId: userId.toString(),
+      userEmail: req.user.email,
+      userRole: req.user.role
+    });
+
     const videoCall = await VideoCall.findById(callId);
 
     if (!videoCall) {
+      console.log('❌ Video call not found:', callId);
       return res.status(404).json({ error: 'Video call not found' });
     }
 
     // Authorization: allow direct participants OR privileged roles
     const isParticipant =
-      videoCall.recruiter?.toString() === userId ||
-      videoCall.jobSeeker?.toString() === userId;
+      videoCall.recruiter?.toString() === userId.toString() ||
+      videoCall.jobSeeker?.toString() === userId.toString() ||
+      videoCall.interpreters?.some(i => i.interpreter.toString() === userId.toString());
 
-    const hasPrivilegedRole = ['Recruiter', 'Admin', 'GlobalSupport'].includes(req.user.role);
+    const hasPrivilegedRole = ['Recruiter', 'Admin', 'GlobalSupport', 'Interpreter', 'GlobalInterpreter'].includes(req.user.role);
 
+    console.log('🔐 Authorization check:', {
+      isParticipant,
+      hasPrivilegedRole,
+      recruiter: videoCall.recruiter?.toString(),
+      jobSeeker: videoCall.jobSeeker?.toString(),
+      interpreters: videoCall.interpreters?.map(i => i.interpreter.toString()),
+      userId: userId.toString()
+    });
 
-    /*if (!isParticipant && !hasPrivilegedRole) {
+    if (!isParticipant && !hasPrivilegedRole) {
+      console.log('❌ Authorization failed - not a participant or privileged role');
       return res.status(403).json({ error: 'Unauthorized to end call' });
-    }*/
+    }
+
+    console.log('✅ Authorization passed - ending call');
 
     // End Twilio room
     await endRoom(videoCall.roomName);

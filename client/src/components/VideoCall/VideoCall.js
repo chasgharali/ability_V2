@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { connect, createLocalVideoTrack, createLocalAudioTrack } from 'twilio-video';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
@@ -15,6 +15,7 @@ import './VideoCall.css';
 const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) => {
   const { callId: paramCallId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Use prop callId if provided, otherwise use URL param
   const callId = propCallId || paramCallId;
@@ -517,22 +518,42 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const handleInterpreterDeclined = (data) => {
     console.log('Interpreter declined:', data);
+    
+    // Add message to chat
     setChatMessages(prev => [...prev, {
       sender: { name: data.interpreter.name, role: 'interpreter' },
       message: `${data.interpreter.name} declined interpreter invitation`,
       timestamp: data.timestamp,
       messageType: 'system'
     }]);
+
+    // Announce to recruiter
+    if (user.role === 'Recruiter' || callInfo?.userRole === 'recruiter') {
+      speak(`Interpreter ${data.interpreter.name} declined the invitation`);
+    }
   };
 
   const handleCallEnded = (data) => {
-    // Announce call end for job seekers
+    console.log('📞 Call ended event received:', data);
+    
+    // Announce call end for all participants
     if (user.role === 'JobSeeker') {
       speak("The call has ended. Thank you for participating.");
+    } else if (user.role === 'Recruiter' || callInfo?.userRole === 'recruiter') {
+      speak("The call has ended.");
+    } else if (user.role === 'Interpreter' || user.role === 'GlobalInterpreter' || callInfo?.userRole === 'interpreter') {
+      speak("The call has ended. Thank you for your service.");
     }
     
     cleanup();
-    onCallEnd?.(data);
+    
+    // Role-based navigation when call is ended by another participant
+    if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+      console.log('🏠 Navigating interpreter to dashboard after call ended by another participant');
+      setTimeout(() => navigate('/dashboard'), 500); // Small delay for cleanup
+    } else if (onCallEnd) {
+      onCallEnd(data);
+    }
   };
 
   // Chat functionality
@@ -759,27 +780,56 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const endCall = async () => {
     try {
-      // Only try to end call via API if we have call info and user is recruiter or jobseeker
-      if (callInfo && (callInfo.userRole === 'recruiter' || user.role === 'Recruiter')) {
+      console.log('🔚 End call initiated by user:', {
+        userId: user?._id,
+        userEmail: user?.email,
+        userRole: user?.role,
+        callInfo: callInfo,
+        callId: callInfo?.id || callInfo?.callId
+      });
+
+      // Allow all participants (recruiter, jobseeker, interpreter) to end the call via API
+      if (callInfo && (callInfo.id || callInfo.callId)) {
         try {
-          await videoCallService.endCall(callInfo.id || callInfo.callId);
+          const callIdToEnd = callInfo.id || callInfo.callId;
+          console.log('📞 Calling API to end call:', callIdToEnd);
+          await videoCallService.endCall(callIdToEnd);
+          console.log('✅ API call to end call successful');
         } catch (apiError) {
-          console.warn('API call to end call failed, proceeding with local cleanup:', apiError);
+          console.error('❌ API call to end call failed:', apiError);
+          console.warn('Proceeding with local cleanup despite API error');
         }
+      } else {
+        console.warn('⚠️ No call ID found, skipping API call');
       }
 
       cleanup();
-      onCallEnd?.();
+      
+      // Role-based navigation after call ends
+      if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+        console.log('🏠 Navigating interpreter to dashboard');
+        navigate('/dashboard');
+      } else if (onCallEnd) {
+        onCallEnd();
+      }
     } catch (error) {
-      console.error('Error ending call:', error);
+      console.error('💥 Error ending call:', error);
       cleanup();
-      onCallEnd?.();
+      
+      // Navigate interpreter even on error
+      if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+        navigate('/dashboard');
+      } else if (onCallEnd) {
+        onCallEnd();
+      }
     }
   };
 
   const cleanup = () => {
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
+
+    console.log('🧹 Cleaning up video call...');
 
     // Clear intervals
     if (qualityCheckIntervalRef.current) {
@@ -790,12 +840,21 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       clearTimeout(reconnectTimeoutRef.current);
     }
 
-    // Disconnect from room
+    // Disconnect from room and stop all tracks
     if (roomRef.current) {
       try {
+        // Stop all local participant tracks
+        roomRef.current.localParticipant.tracks.forEach(publication => {
+          if (publication.track) {
+            publication.track.stop();
+            publication.unpublish();
+          }
+        });
+        
+        // Disconnect from room
         roomRef.current.disconnect();
       } catch (e) {
-        // ignore
+        console.warn('Error during room cleanup:', e);
       }
       roomRef.current = null;
     }
@@ -806,11 +865,20 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         try {
           track.stop();
         } catch (error) {
-          // ignore
+          console.warn('Error stopping track:', error);
         }
       }
     });
     setLocalTracks([]);
+
+    // Stop any remaining media tracks from getUserMedia
+    try {
+      navigator.mediaDevices.getUserMedia({ audio: false, video: false }).then(stream => {
+        stream.getTracks().forEach(track => track.stop());
+      }).catch(() => {});
+    } catch (e) {
+      // ignore
+    }
 
     // Leave socket room
     if (socket && callInfo) {
@@ -819,12 +887,14 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           roomName: callInfo.roomName
         });
       } catch (e) {
-        // ignore
+        console.warn('Error leaving socket room:', e);
       }
     }
 
     setRoom(null);
     setParticipants(new Map());
+    
+    console.log('✅ Video call cleanup complete');
   };
 
   // Call duration timer

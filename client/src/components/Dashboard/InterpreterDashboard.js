@@ -36,12 +36,37 @@ const InterpreterDashboard = () => {
       setInvitation(data);
       setShowInvitationModal(true);
       
-      // Play notification sound
+      // Play notification sound (ting)
       try {
-        const audio = new Audio('/sounds/notification.mp3');
-        audio.play().catch(e => console.log('Could not play sound'));
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
       } catch (e) {
-        console.log('Notification sound not available');
+        console.log('Could not play sound:', e);
+      }
+
+      // Text-to-speech announcement
+      try {
+        const announcement = `You have been invited to join a video call`;
+        const utterance = new SpeechSynthesisUtterance(announcement);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.log('Could not play announcement:', e);
       }
     };
 
