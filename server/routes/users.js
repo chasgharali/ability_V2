@@ -367,9 +367,10 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             targetUser.isAvailable = isAvailable;
         }
 
-        // Handle assignedBooth updates and validation for recruiter/booth admin
+        // Handle assignedBooth updates and validation for recruiter/booth admin/interpreter
         const effectiveRole = role !== undefined ? role : targetUser.role;
         if (['Recruiter', 'BoothAdmin'].includes(effectiveRole)) {
+            // Booth is REQUIRED for Recruiter and BoothAdmin
             if (assignedBooth === undefined && !targetUser.assignedBooth) {
                 return res.status(400).json({
                     error: 'Validation failed',
@@ -386,8 +387,26 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
                 }
                 targetUser.assignedBooth = assignedBooth;
             }
+        } else if (effectiveRole === 'Interpreter') {
+            // Booth is OPTIONAL for Interpreter (booth-specific or global)
+            if (assignedBooth !== undefined) {
+                if (assignedBooth === null || assignedBooth === '') {
+                    // Explicitly clear booth (make global interpreter)
+                    targetUser.assignedBooth = null;
+                } else {
+                    // Validate and assign booth (booth-specific interpreter)
+                    const boothExists = await Booth.findById(assignedBooth).select('_id');
+                    if (!boothExists) {
+                        return res.status(400).json({
+                            error: 'Invalid booth',
+                            message: 'Assigned booth does not exist'
+                        });
+                    }
+                    targetUser.assignedBooth = assignedBooth;
+                }
+            }
         } else if (assignedBooth !== undefined) {
-            // Non-recruiter roles should not carry assignedBooth
+            // Other roles should not have assignedBooth
             targetUser.assignedBooth = null;
         }
 

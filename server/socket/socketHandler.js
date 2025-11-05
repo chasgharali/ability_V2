@@ -665,7 +665,7 @@ const socketHandler = (io) => {
          */
         socket.on('interpreter-response', async (data) => {
             try {
-                const { callId, response } = data; // response: 'accept' or 'decline'
+                const { callId, response, devicePreferences } = data; // response: 'accept' or 'decline'
 
                 if (!callId || !response) {
                     socket.emit('error', { message: 'Call ID and response are required' });
@@ -673,7 +673,7 @@ const socketHandler = (io) => {
                 }
 
                 const videoCall = await VideoCall.findById(callId)
-                    .populate('recruiter jobSeeker');
+                    .populate('recruiter jobSeeker booth');
 
                 if (!videoCall) {
                     socket.emit('error', { message: 'Video call not found' });
@@ -684,29 +684,65 @@ const socketHandler = (io) => {
                 const status = response === 'accept' ? 'joined' : 'declined';
                 await videoCall.updateInterpreterStatus(socket.userId, status);
 
-                // Notify call participants
-                const responseData = {
-                    callId: callId,
-                    interpreter: socket.user.getPublicProfile(),
-                    response: response,
-                    timestamp: new Date()
-                };
+                if (response === 'accept') {
+                    // Generate access token for interpreter
+                    const { generateAccessToken } = require('../config/twilio');
+                    const timestamp = Date.now();
+                    const interpreterToken = generateAccessToken(
+                        `interpreter_${socket.userId}_${timestamp}`,
+                        videoCall.roomName
+                    );
 
-                io.to(`call_${videoCall.roomName}`).emit('interpreter-response', responseData);
+                    // Notify call participants that interpreter accepted
+                    const responseData = {
+                        callId: callId,
+                        interpreter: socket.user.getPublicProfile(),
+                        response: response,
+                        timestamp: new Date()
+                    };
 
-                // Add system message to chat
-                const message = response === 'accept' 
-                    ? `${socket.user.name} joined as interpreter`
-                    : `${socket.user.name} declined interpreter invitation`;
-                
-                await videoCall.addChatMessage(
-                    socket.userId,
-                    'interpreter',
-                    message,
-                    'system'
-                );
+                    io.to(`call_${videoCall.roomName}`).emit('interpreter-response', responseData);
 
-                logger.info(`Interpreter ${socket.user.email} ${response}ed call ${callId}`);
+                    // Add system message to chat
+                    await videoCall.addChatMessage(
+                        socket.userId,
+                        'interpreter',
+                        `${socket.user.name} joined as interpreter`,
+                        'system'
+                    );
+
+                    // Join interpreter to call room  
+                    socket.join(`call_${videoCall.roomName}`);
+                    
+                    // Send confirmation back to interpreter with call details and access token
+                    socket.emit('interpreter-accepted-confirmation', {
+                        callId: videoCall._id,
+                        roomName: videoCall.roomName,
+                        accessToken: interpreterToken,
+                        booth: videoCall.booth,
+                        recruiter: videoCall.recruiter,
+                        jobSeeker: videoCall.jobSeeker
+                    });
+
+                    logger.info(`Interpreter ${socket.user.email} accepted call ${callId}`);
+                } else {
+                    // Notify call participants that interpreter declined
+                    io.to(`call_${videoCall.roomName}`).emit('interpreter-declined', {
+                        callId: callId,
+                        interpreter: socket.user.getPublicProfile(),
+                        timestamp: new Date()
+                    });
+
+                    // Add system message to chat
+                    await videoCall.addChatMessage(
+                        socket.userId,
+                        'interpreter',
+                        `${socket.user.name} declined interpreter invitation`,
+                        'system'
+                    );
+
+                    logger.info(`Interpreter ${socket.user.email} declined call ${callId}`);
+                }
             } catch (error) {
                 logger.error('Interpreter response error:', error);
                 socket.emit('error', { message: 'Failed to process interpreter response' });

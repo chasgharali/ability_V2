@@ -97,14 +97,24 @@ router.post('/register', [
             });
         }
 
-        // If recruiter/booth admin, assignedBooth is required and must exist
+        // Validate assignedBooth based on role
         if (['Recruiter', 'BoothAdmin'].includes(role)) {
+            // Booth is REQUIRED for Recruiter and BoothAdmin
             if (!assignedBooth) {
                 return res.status(400).json({
                     error: 'Validation failed',
                     message: 'Assigned booth is required for recruiters and booth admins'
                 });
             }
+            const boothExists = await Booth.findById(assignedBooth).select('_id');
+            if (!boothExists) {
+                return res.status(400).json({
+                    error: 'Invalid booth',
+                    message: 'Assigned booth does not exist'
+                });
+            }
+        } else if (role === 'Interpreter' && assignedBooth) {
+            // Booth is OPTIONAL for Interpreter, but validate if provided
             const boothExists = await Booth.findById(assignedBooth).select('_id');
             if (!boothExists) {
                 return res.status(400).json({
@@ -122,7 +132,7 @@ router.post('/register', [
             role,
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
-            assignedBooth: ['Recruiter', 'BoothAdmin'].includes(role) ? assignedBooth : undefined
+            assignedBooth: ['Recruiter', 'BoothAdmin', 'Interpreter'].includes(role) ? assignedBooth : undefined
         });
 
         // Generate email verification token (24h expiry)

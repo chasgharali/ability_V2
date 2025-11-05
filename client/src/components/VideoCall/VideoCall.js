@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { connect, createLocalVideoTrack, createLocalAudioTrack } from 'twilio-video';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
@@ -11,7 +12,23 @@ import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
 import './VideoCall.css';
 
-const VideoCall = ({ callId, callData, onCallEnd }) => {
+const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) => {
+  const { callId: paramCallId } = useParams();
+  const location = useLocation();
+  
+  // Use prop callId if provided, otherwise use URL param
+  const callId = propCallId || paramCallId;
+  
+  // Use prop callData if provided, otherwise check navigation state
+  const callData = propCallData || location.state?.callData;
+  
+  console.log('🎬 VideoCall initialized:', {
+    callId,
+    hasCallData: !!callData,
+    callData,
+    locationState: location.state
+  });
+  
   const { user } = useAuth();
   const { socket } = useSocket();
 
@@ -138,6 +155,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     socket.on('participant_joined', handleParticipantJoined);
     socket.on('participant_left', handleParticipantLeft);
     socket.on('interpreter_response', handleInterpreterResponse);
+    socket.on('interpreter-declined', handleInterpreterDeclined);
     socket.on('call_ended', handleCallEnded);
     socket.on('error', (error) => {
       console.error('Socket error in video call:', error);
@@ -157,6 +175,7 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
       socket.off('participant_joined', handleParticipantJoined);
       socket.off('participant_left', handleParticipantLeft);
       socket.off('interpreter_response', handleInterpreterResponse);
+      socket.off('interpreter-declined', handleInterpreterDeclined);
       socket.off('participant-joined-video', handleParticipantJoined);
       socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
@@ -496,6 +515,16 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     }
   };
 
+  const handleInterpreterDeclined = (data) => {
+    console.log('Interpreter declined:', data);
+    setChatMessages(prev => [...prev, {
+      sender: { name: data.interpreter.name, role: 'interpreter' },
+      message: `${data.interpreter.name} declined interpreter invitation`,
+      timestamp: data.timestamp,
+      messageType: 'system'
+    }]);
+  };
+
   const handleCallEnded = (data) => {
     // Announce call end for job seekers
     if (user.role === 'JobSeeker') {
@@ -713,9 +742,16 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
     }
   };
 
-  const inviteInterpreter = async (category) => {
+  const inviteInterpreter = async (interpreterId, category) => {
     try {
-      await videoCallService.inviteInterpreter(callInfo.id || callInfo.callId, category);
+      const callId = callInfo.id || callInfo.callId || callInfo._id;
+      console.log('📞 Inviting interpreter:', {
+        callId,
+        interpreterId,
+        category,
+        callInfo
+      });
+      await videoCallService.inviteInterpreter(callId, interpreterId, category);
     } catch (error) {
       console.error('Error inviting interpreter:', error);
     }
@@ -1005,19 +1041,25 @@ const VideoCall = ({ callId, callData, onCallEnd }) => {
         />
       )}
 
-      {isParticipantsOpen && (
-        <ParticipantsList
-          participants={{
-            ...callInfo?.participants,
-            twilioParticipants: Array.from(participants.values()),
-            localUser: user
-          }}
-          onClose={() => setIsParticipantsOpen(false)}
-          onInviteInterpreter={inviteInterpreter}
-          userRole={callInfo?.userRole || user?.role}
-          interpreterRequested={callInfo?.metadata?.interpreterRequested}
-        />
-      )}
+      {isParticipantsOpen && (() => {
+        const boothId = callInfo?.booth?._id || callInfo?.booth;
+        console.log('Rendering ParticipantsList with boothId:', boothId);
+        console.log('Full callInfo.booth:', callInfo?.booth);
+        return (
+          <ParticipantsList
+            participants={{
+              ...callInfo?.participants,
+              twilioParticipants: Array.from(participants.values()),
+              localUser: user
+            }}
+            onClose={() => setIsParticipantsOpen(false)}
+            onInviteInterpreter={inviteInterpreter}
+            userRole={callInfo?.userRole || user?.role}
+            interpreterRequested={callInfo?.metadata?.interpreterRequested}
+            boothId={boothId}
+          />
+        );
+      })()}
       
 
       {isProfileOpen && callInfo?.userRole === 'recruiter' && (() => {

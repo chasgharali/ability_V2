@@ -42,7 +42,8 @@ const videoCallSchema = new mongoose.Schema({
     },
     category: {
       type: String,
-      enum: ['ASL', 'Spanish', 'French', 'German', 'Mandarin', 'Other']
+      enum: ['ASL', 'Spanish', 'French', 'German', 'Mandarin', 'Other', ''],
+      default: ''
     },
     status: {
       type: String,

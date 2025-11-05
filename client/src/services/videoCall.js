@@ -39,13 +39,15 @@ const videoCallService = {
   /**
    * Invite interpreter to call
    * @param {string} callId - Video call ID
-   * @param {string} interpreterCategory - Interpreter category
+   * @param {string} interpreterId - Interpreter user ID
+   * @param {string} interpreterCategory - Interpreter category (optional)
    * @returns {Promise} API response
    */
-  inviteInterpreter: async (callId, interpreterCategory) => {
+  inviteInterpreter: async (callId, interpreterId, interpreterCategory) => {
     try {
       const response = await axios.post('/api/video-call/invite-interpreter', {
         callId,
+        interpreterId,
         interpreterCategory
       }, { headers: authHeaders() });
       return response.data;

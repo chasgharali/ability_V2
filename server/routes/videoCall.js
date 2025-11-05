@@ -196,58 +196,143 @@ router.post('/join', auth, async (req, res) => {
 });
 
 /**
+ * GET /api/video-call/available-interpreters/:boothId
+ * Get list of available interpreters for a booth
+ */
+router.get('/available-interpreters/:boothId', auth, async (req, res) => {
+  try {
+    const { boothId } = req.params;
+
+    // Find booth-assigned interpreters (show all active, regardless of availability)
+    const boothInterpreters = await User.find({
+      role: 'Interpreter',
+      assignedBooth: boothId,
+      isActive: true
+    }).select('_id name email role languages isAvailable');
+
+    // Find global interpreters (show all active, regardless of availability)
+    const globalInterpreters = await User.find({
+      role: 'GlobalInterpreter',
+      isActive: true
+    }).select('_id name email role languages isAvailable');
+
+    // Combine and return - set isAvailable to true by default if undefined
+    const interpreters = [
+      ...boothInterpreters.map(i => ({ 
+        ...i.toObject(), 
+        type: 'booth',
+        isAvailable: i.isAvailable !== undefined ? i.isAvailable : true
+      })),
+      ...globalInterpreters.map(i => ({ 
+        ...i.toObject(), 
+        type: 'global',
+        isAvailable: i.isAvailable !== undefined ? i.isAvailable : true
+      }))
+    ];
+
+    // Sort by availability - available interpreters first
+    interpreters.sort((a, b) => (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0));
+
+    res.json({
+      success: true,
+      interpreters,
+      boothCount: boothInterpreters.length,
+      globalCount: globalInterpreters.length,
+      availableCount: interpreters.filter(i => i.isAvailable).length
+    });
+
+  } catch (error) {
+    console.error('Error fetching available interpreters:', error);
+    res.status(500).json({ error: 'Failed to fetch available interpreters' });
+  }
+});
+
+/**
  * POST /api/video-call/invite-interpreter
  * Invite an interpreter to the call
  */
 router.post('/invite-interpreter', auth, async (req, res) => {
   try {
-    const { callId, interpreterCategory } = req.body;
+    const { callId, interpreterId, interpreterCategory } = req.body;
     const userId = req.user._id;
+    
+    console.log('📨 Invite interpreter request:', {
+      callId,
+      interpreterId,
+      interpreterCategory,
+      requestUserId: userId.toString(),
+      requestUserEmail: req.user.email
+    });
 
     const videoCall = await VideoCall.findById(callId)
-      .populate('recruiter jobSeeker');
+      .populate('recruiter jobSeeker booth');
 
     if (!videoCall) {
       return res.status(404).json({ error: 'Video call not found' });
     }
 
     // Only recruiter can invite interpreters
-    if (videoCall.recruiter._id.toString() !== userId) {
+    console.log('🔐 Authorization check:', {
+      recruiter: videoCall.recruiter._id.toString(),
+      requestUser: userId.toString(),
+      match: videoCall.recruiter._id.toString() === userId.toString()
+    });
+    
+    if (videoCall.recruiter._id.toString() !== userId.toString()) {
       return res.status(403).json({ error: 'Only recruiter can invite interpreters' });
     }
 
-    // Find available interpreters for the category
-    const availableInterpreters = await User.find({
-      role: 'Interpreter',
-      'interpreterProfile.categories': interpreterCategory,
-      'interpreterProfile.isAvailable': true
-    }).limit(5);
-
-    if (availableInterpreters.length === 0) {
-      return res.status(404).json({ error: 'No available interpreters found for this category' });
+    // Validate interpreterId is provided
+    if (!interpreterId) {
+      return res.status(400).json({ error: 'Interpreter ID is required' });
     }
 
-    // For now, invite the first available interpreter
-    // In production, you might want to implement a more sophisticated matching algorithm
-    const selectedInterpreter = availableInterpreters[0];
+    // Find the selected interpreter
+    const selectedInterpreter = await User.findOne({
+      _id: interpreterId,
+      role: { $in: ['Interpreter', 'GlobalInterpreter'] },
+      isActive: true
+    });
 
-    // Add interpreter to call
-    await videoCall.inviteInterpreter(selectedInterpreter._id, interpreterCategory);
+    if (!selectedInterpreter) {
+      return res.status(404).json({ error: 'Selected interpreter not found' });
+    }
+
+    // Add interpreter to call (use empty string if category not provided)
+    await videoCall.inviteInterpreter(selectedInterpreter._id, interpreterCategory || '');
 
     // Generate access token for interpreter
+    const timestamp = Date.now();
     const interpreterToken = generateAccessToken(
-      `interpreter_${selectedInterpreter._id}`,
+      `interpreter_${selectedInterpreter._id}_${timestamp}`,
       videoCall.roomName
     );
 
     // Emit socket event to interpreter
     const io = req.app.get('io');
-    io.to(`user_${selectedInterpreter._id}`).emit('interpreter_invitation', {
+    const interpreterRoomName = `user:${selectedInterpreter._id}`;
+    
+    console.log('📞 Sending invitation to interpreter:', {
+      interpreter: selectedInterpreter.email,
+      room: interpreterRoomName,
+      callId: videoCall._id
+    });
+    
+    io.to(interpreterRoomName).emit('interpreter_invitation', {
       callId: videoCall._id,
       roomName: videoCall.roomName,
       category: interpreterCategory,
-      recruiter: videoCall.recruiter,
-      jobSeeker: videoCall.jobSeeker,
+      recruiter: {
+        _id: videoCall.recruiter._id,
+        name: videoCall.recruiter.name,
+        email: videoCall.recruiter.email
+      },
+      jobSeeker: {
+        _id: videoCall.jobSeeker._id,
+        name: videoCall.jobSeeker.name,
+        email: videoCall.jobSeeker.email
+      },
+      booth: videoCall.booth,
       accessToken: interpreterToken
     });
 
@@ -255,7 +340,7 @@ router.post('/invite-interpreter', auth, async (req, res) => {
     await videoCall.addChatMessage(
       userId,
       'recruiter',
-      `Interpreter invited for ${interpreterCategory}`,
+      `Interpreter invited: ${selectedInterpreter.name}`,
       'system'
     );
 
@@ -264,6 +349,8 @@ router.post('/invite-interpreter', auth, async (req, res) => {
       interpreterInvited: {
         id: selectedInterpreter._id,
         name: selectedInterpreter.name,
+        email: selectedInterpreter.email,
+        role: selectedInterpreter.role,
         category: interpreterCategory
       }
     });

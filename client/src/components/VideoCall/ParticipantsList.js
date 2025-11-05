@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiUsers, FiX, FiMic, FiVideo, FiUserPlus } from 'react-icons/fi';
 import { INTERPRETER_CATEGORIES } from '../../constants/options';
+import InterpreterSelectionModal from './InterpreterSelectionModal';
 import './ParticipantsList.css';
 
 const ParticipantsList = ({
@@ -8,17 +9,17 @@ const ParticipantsList = ({
   onClose,
   onInviteInterpreter,
   userRole,
-  interpreterRequested
+  interpreterRequested,
+  boothId
 }) => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  const handleInviteInterpreter = () => {
-    if (selectedCategory) {
-      onInviteInterpreter(selectedCategory);
-      setShowInviteModal(false);
-      setSelectedCategory('');
-    }
+  const handleInviteInterpreter = (interpreter, category) => {
+    // Pass the selected interpreter and category to parent
+    onInviteInterpreter(interpreter._id, category || selectedCategory);
+    setShowInviteModal(false);
+    setSelectedCategory('');
   };
 
 
@@ -460,56 +461,14 @@ const ParticipantsList = ({
         )}
       </div>
 
-      {/* Invite Interpreter Modal */}
+      {/* Interpreter Selection Modal */}
       {showInviteModal && (
-        <div className="modal-overlay">
-          <div className="invite-modal">
-            <div className="modal-header">
-              <h3>Invite Interpreter</h3>
-              <button
-                className="close-button"
-                onClick={() => setShowInviteModal(false)}
-              >
-                <FiX size={20} />
-              </button>
-            </div>
-
-            <div className="modal-content">
-              <p>Select the type of interpreter needed:</p>
-
-              <div className="category-selection">
-                {INTERPRETER_CATEGORIES.map(category => (
-                  <label key={category.value} className="category-option">
-                    <input
-                      type="radio"
-                      name="interpreterCategory"
-                      value={category.value}
-                      checked={selectedCategory === category.value}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                    />
-                    <span className="category-label">{category.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="modal-actions">
-              <button
-                className="cancel-button"
-                onClick={() => setShowInviteModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="invite-button"
-                onClick={handleInviteInterpreter}
-                disabled={!selectedCategory}
-              >
-                Send Invitation
-              </button>
-            </div>
-          </div>
-        </div>
+        <InterpreterSelectionModal
+          boothId={boothId}
+          interpreterCategory={selectedCategory}
+          onClose={() => setShowInviteModal(false)}
+          onInvite={handleInviteInterpreter}
+        />
       )}
     </div>
   );

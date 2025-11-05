@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MdVideocam, MdMic, MdRefresh } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
+import { useSocket } from '../../contexts/SocketContext';
+import InterpreterInvitationModal from '../VideoCall/InterpreterInvitationModal';
 import './InterpreterDashboard.css';
 
 const InterpreterDashboard = () => {
+  const navigate = useNavigate();
+  const socket = useSocket();
+  
   const [stream, setStream] = useState(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
@@ -12,7 +18,39 @@ const InterpreterDashboard = () => {
   const [videoDevices, setVideoDevices] = useState([]);
   const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
   const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
+  const [invitation, setInvitation] = useState(null);
+  const [showInvitationModal, setShowInvitationModal] = useState(false);
   const videoRef = useRef(null);
+
+  // Socket listener for interpreter invitations
+  useEffect(() => {
+    if (!socket?.socket) {
+      console.log('⚠️ Socket not available for interpreter invitations');
+      return;
+    }
+
+    console.log('✅ Listening for interpreter invitations on socket');
+
+    const handleInvitation = (data) => {
+      console.log('📞 Interpreter invitation received:', data);
+      setInvitation(data);
+      setShowInvitationModal(true);
+      
+      // Play notification sound
+      try {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.play().catch(e => console.log('Could not play sound'));
+      } catch (e) {
+        console.log('Notification sound not available');
+      }
+    };
+
+    socket.socket.on('interpreter_invitation', handleInvitation);
+
+    return () => {
+      socket.socket.off('interpreter_invitation', handleInvitation);
+    };
+  }, [socket]);
 
   useEffect(() => {
     // Cleanup stream when component unmounts
@@ -172,6 +210,67 @@ const InterpreterDashboard = () => {
     }
   };
 
+  // Handle invitation acceptance
+  const handleAcceptInvitation = (invitationData) => {
+    console.log('Accepting invitation:', invitationData);
+    
+    // Send response to server
+    if (socket?.socket) {
+      socket.socket.emit('interpreter-response', {
+        callId: invitationData.callId,
+        response: 'accept',
+        devicePreferences: {
+          audioDeviceId: invitationData.selectedAudioDevice,
+          videoDeviceId: invitationData.selectedVideoDevice,
+          audioEnabled: invitationData.audioEnabled,
+          videoEnabled: invitationData.videoEnabled
+        }
+      });
+
+      // Listen for confirmation
+      socket.socket.once('interpreter-accepted-confirmation', (data) => {
+        console.log('Confirmation received:', data);
+        // Navigate to video call with call data
+        navigate(`/video-call/${data.callId}`, {
+          state: {
+            callData: {
+              callId: data.callId,
+              roomName: data.roomName,
+              accessToken: data.accessToken,
+              userRole: 'interpreter',
+              booth: data.booth,
+              participants: {
+                recruiter: data.recruiter,
+                jobSeeker: data.jobSeeker
+              }
+            }
+          }
+        });
+      });
+    }
+
+    // Close modal
+    setShowInvitationModal(false);
+    setInvitation(null);
+  };
+
+  // Handle invitation rejection
+  const handleRejectInvitation = (invitationData) => {
+    console.log('Rejecting invitation:', invitationData);
+    
+    // Send response to server
+    if (socket?.socket) {
+      socket.socket.emit('interpreter-response', {
+        callId: invitationData.callId,
+        response: 'decline'
+      });
+    }
+
+    // Close modal
+    setShowInvitationModal(false);
+    setInvitation(null);
+  };
+
   return (
     <div className="interpreter-dashboard">
       <div className="interpreter-content">
@@ -315,6 +414,15 @@ const InterpreterDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Interpreter Invitation Modal */}
+      {showInvitationModal && invitation && (
+        <InterpreterInvitationModal
+          invitation={invitation}
+          onAccept={handleAcceptInvitation}
+          onReject={handleRejectInvitation}
+        />
+      )}
     </div>
   );
 };
