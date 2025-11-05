@@ -59,37 +59,37 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
   };
 
   return (
-    <div className="interpreter-selection-overlay">
-      <div className="interpreter-selection-modal">
+    <div className="ism-overlay" role="dialog" aria-modal="true" aria-labelledby="ism-title">
+      <div className="ism-modal">
         {/* Header */}
-        <div className="modal-header">
-          <h3>Invite Interpreter</h3>
+        <div className="ism-header">
+          <h3 id="ism-title">Invite Interpreter</h3>
           <button
-            className="close-button"
+            className="ism-close-btn"
             onClick={onClose}
-            aria-label="Close"
+            aria-label="Close interpreter selection dialog"
           >
-            <FiX size={20} />
+            <FiX size={20} aria-hidden="true" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="modal-content">
+        <div className="ism-content">
           {loading ? (
-            <div className="loading-state">
-              <div className="spinner"></div>
+            <div className="ism-loading" role="status" aria-live="polite">
+              <div className="ism-spinner" aria-hidden="true"></div>
               <p>Loading available interpreters...</p>
             </div>
           ) : error ? (
-            <div className="error-state">
+            <div className="ism-error" role="alert">
               <p>{error}</p>
-              <button onClick={fetchAvailableInterpreters} className="retry-button">
+              <button onClick={fetchAvailableInterpreters} className="ism-retry-btn">
                 Retry
               </button>
             </div>
           ) : interpreters.length === 0 ? (
-            <div className="empty-state">
-              <FiUser size={48} />
+            <div className="ism-empty" role="status">
+              <FiUser size={48} aria-hidden="true" />
               <p>No interpreters are currently available</p>
               {!boothId && (
                 <p style={{ fontSize: '0.875rem', color: '#f44336', marginTop: '0.5rem' }}>
@@ -101,21 +101,21 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
                   Booth ID: {boothId}
                 </p>
               )}
-              <button onClick={fetchAvailableInterpreters} className="refresh-button">
+              <button onClick={fetchAvailableInterpreters} className="ism-refresh-btn">
                 Refresh
               </button>
             </div>
           ) : (
             <>
-              <p className="instruction-text">
+              <p className="ism-instruction">
                 Select an interpreter to invite to the call:
               </p>
 
-              <div className="interpreters-list">
+              <div className="ism-list" role="radiogroup" aria-label="Available interpreters">
                 {interpreters.map((interpreter) => (
                   <div
                     key={interpreter._id}
-                    className={`interpreter-item ${selectedInterpreter?._id === interpreter._id ? 'selected' : ''}`}
+                    className={`ism-item ${selectedInterpreter?._id === interpreter._id ? 'ism-selected' : ''}`}
                     onClick={() => setSelectedInterpreter(interpreter)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -123,33 +123,37 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
                         setSelectedInterpreter(interpreter);
                       }
                     }}
-                    role="button"
+                    role="radio"
                     tabIndex={0}
-                    aria-pressed={selectedInterpreter?._id === interpreter._id}
+                    aria-checked={selectedInterpreter?._id === interpreter._id}
+                    aria-label={`Select ${interpreter.name}, ${interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}, ${interpreter.isAvailable ? 'Online' : 'Offline'}`}
                   >
-                    <div className="interpreter-avatar">
-                      <div className="avatar-circle">
+                    <div className="ism-avatar-wrapper">
+                      <div className="ism-avatar" aria-hidden="true">
                         {interpreter.name?.charAt(0)?.toUpperCase() || 'I'}
                       </div>
-                      <div className={`status-dot ${interpreter.isAvailable ? 'online' : 'offline'}`}></div>
+                      <div 
+                        className={`ism-status-dot ${interpreter.isAvailable ? 'ism-online' : 'ism-offline'}`}
+                        aria-label={interpreter.isAvailable ? 'Online' : 'Offline'}
+                      ></div>
                     </div>
 
-                    <div className="interpreter-info">
-                      <div className="interpreter-name">
+                    <div className="ism-info">
+                      <div className="ism-name">
                         {interpreter.name}
                       </div>
-                      <div className="interpreter-meta">
-                        <span className={`role-badge ${interpreter.role === 'GlobalInterpreter' ? 'global' : 'booth'}`}>
+                      <div className="ism-meta">
+                        <span className={`ism-role-badge ${interpreter.role === 'GlobalInterpreter' ? 'ism-global' : 'ism-booth'}`}>
                           {interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}
                         </span>
                         {interpreter.isAvailable && (
-                          <span className="availability-badge online">
+                          <span className="ism-availability-badge">
                             Online
                           </span>
                         )}
                       </div>
                       {interpreter.languages && interpreter.languages.length > 0 && (
-                        <div className="interpreter-languages">
+                        <div className="ism-languages">
                           {interpreter.languages.slice(0, 3).join(', ')}
                           {interpreter.languages.length > 3 && ` +${interpreter.languages.length - 3} more`}
                         </div>
@@ -157,7 +161,7 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
                     </div>
 
                     {selectedInterpreter?._id === interpreter._id && (
-                      <div className="selected-indicator">
+                      <div className="ism-check" aria-hidden="true">
                         <FiCheck size={20} />
                       </div>
                     )}
@@ -170,17 +174,19 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
 
         {/* Actions */}
         {!loading && !error && interpreters.length > 0 && (
-          <div className="modal-actions">
+          <div className="ism-actions">
             <button
-              className="cancel-button"
+              className="ism-cancel-btn"
               onClick={onClose}
+              aria-label="Cancel interpreter selection"
             >
               Cancel
             </button>
             <button
-              className="invite-button"
+              className="ism-invite-btn"
               onClick={handleInvite}
               disabled={!selectedInterpreter}
+              aria-label={selectedInterpreter ? `Send invitation to ${selectedInterpreter.name}` : 'Select an interpreter first'}
             >
               Send Invitation
             </button>

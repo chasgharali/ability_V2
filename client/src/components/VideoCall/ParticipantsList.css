@@ -1,9 +1,12 @@
-/* ParticipantsList.css - Unique Modern Design */
-.participants-panel {
+/* ParticipantsList.css - Video Call Participants List Unique Styles */
+/* Prefix: vcpl- (Video Call Participants List) */
+
+/* Panel Container */
+.vcpl-panel {
   position: fixed;
   right: 0;
   top: 0;
-  bottom: 70px; /* Leave space for call controls */
+  bottom: 70px;
   width: 380px;
   background: #f5f7fa;
   border-left: 2px solid #e1e8ed;
@@ -15,8 +18,8 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-/* Header - Modern Minimalist Design */
-.participants-header {
+/* Header Section */
+.vcpl-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,7 +29,7 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
-.participants-title {
+.vcpl-title {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -36,11 +39,11 @@
   letter-spacing: -0.02em;
 }
 
-.participants-title svg {
+.vcpl-title svg {
   color: #4a5568;
 }
 
-.participant-count {
+.vcpl-count {
   color: #4a5568;
   font-weight: 600;
   font-size: 13px;
@@ -51,7 +54,7 @@
   text-align: center;
 }
 
-.close-button {
+.vcpl-close-btn {
   background: #f7fafc;
   border: 1px solid #e2e8f0;
   cursor: pointer;
@@ -64,15 +67,15 @@
   justify-content: center;
 }
 
-.close-button:hover {
+.vcpl-close-btn:hover {
   background: #edf2f7;
   color: #2d3748;
   border-color: #cbd5e0;
   transform: scale(1.05);
 }
 
-/* Interpreter Info Banner - Modern Alert Style */
-.interpreter-info-banner {
+/* Interpreter Banner */
+.vcpl-interpreter-banner {
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -85,7 +88,7 @@
   overflow: hidden;
 }
 
-.interpreter-info-banner::before {
+.vcpl-interpreter-banner::before {
   content: '';
   position: absolute;
   top: 0;
@@ -93,15 +96,15 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
-  animation: shimmer 3s ease-in-out infinite;
+  animation: vcpl-shimmer 3s ease-in-out infinite;
 }
 
-@keyframes shimmer {
+@keyframes vcpl-shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
 
-.banner-icon {
+.vcpl-banner-icon {
   font-size: 28px;
   flex-shrink: 0;
   line-height: 1;
@@ -109,13 +112,13 @@
   z-index: 1;
 }
 
-.banner-content {
+.vcpl-banner-content {
   flex: 1;
   min-width: 0;
   z-index: 1;
 }
 
-.banner-content strong {
+.vcpl-banner-content strong {
   display: block;
   color: #ffffff;
   font-size: 15px;
@@ -124,22 +127,22 @@
   letter-spacing: -0.01em;
 }
 
-.banner-content p {
+.vcpl-banner-content p {
   margin: 0;
   color: rgba(255, 255, 255, 0.95);
   font-size: 13px;
   line-height: 1.5;
 }
 
-/* Participants List - Clean Modern Layout */
-.participants-list {
+/* Participants List */
+.vcpl-list {
   flex: 1;
   overflow-y: auto;
   padding: 16px 0;
   max-height: calc(100vh - 200px);
 }
 
-.no-participants {
+.vcpl-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -150,20 +153,20 @@
   padding: 24px;
 }
 
-.no-participants svg {
+.vcpl-empty svg {
   color: #cbd5e0;
   margin-bottom: 16px;
   opacity: 0.6;
 }
 
-.no-participants p {
+.vcpl-empty p {
   font-size: 14px;
   font-weight: 500;
   color: #a0aec0;
 }
 
-/* Participant Item - Modern Card Design */
-.participant-item {
+/* Participant Item Card */
+.vcpl-item {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -178,24 +181,24 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.participant-item:hover {
+.vcpl-item:hover {
   background: #fafbfd;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
   border-color: #cbd5e0;
 }
 
-.participant-item:last-child {
+.vcpl-item:last-child {
   margin-bottom: 14px;
 }
 
-/* Participant Avatar - Modern Profile Picture */
-.participant-avatar {
+/* Participant Avatar */
+.vcpl-avatar {
   position: relative;
   flex-shrink: 0;
 }
 
-.avatar-circle {
+.vcpl-avatar-circle {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -212,7 +215,7 @@
   letter-spacing: 0.3px;
 }
 
-.status-indicator {
+.vcpl-status-indicator {
   position: absolute;
   bottom: -1px;
   right: -1px;
@@ -224,20 +227,20 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
-.status-indicator.connected {
+.vcpl-status-connected {
   background: #48bb78;
 }
 
-.status-indicator.invited {
+.vcpl-status-invited {
   background: #ed8936;
 }
 
-.status-indicator.declined {
+.vcpl-status-declined {
   background: #f56565;
 }
 
-/* Participant Info - Clean Text Layout */
-.participant-info {
+/* Participant Info */
+.vcpl-info {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -246,7 +249,7 @@
   justify-content: center;
 }
 
-.participant-name {
+.vcpl-name-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -254,7 +257,7 @@
   line-height: 1.2;
 }
 
-.name-text {
+.vcpl-name {
   font-weight: 600;
   color: #2d3748;
   font-size: 14px;
@@ -266,7 +269,7 @@
   letter-spacing: -0.01em;
 }
 
-.participant-role {
+.vcpl-role-row {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -274,7 +277,7 @@
   flex-wrap: wrap;
 }
 
-.role-badge {
+.vcpl-role-badge {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
@@ -287,27 +290,27 @@
   border: none;
 }
 
-.role-badge.role-recruiter {
+.vcpl-role-recruiter {
   background: #3182ce;
   color: #ffffff;
 }
 
-.role-badge.role-jobseeker {
+.vcpl-role-jobseeker {
   background: #48bb78;
   color: #ffffff;
 }
 
-.role-badge.role-interpreter {
+.vcpl-role-interpreter {
   background: #ed8936;
   color: #ffffff;
 }
 
-.role-badge.role-participant {
+.vcpl-role-participant {
   background: #e2e8f0;
   color: #4a5568;
 }
 
-.interpreter-category {
+.vcpl-category-badge {
   color: #c05621;
   font-weight: 600;
   font-size: 9px;
@@ -317,7 +320,7 @@
   white-space: nowrap;
 }
 
-.local-indicator {
+.vcpl-you-badge {
   background: #c6f6d5;
   color: #22543d;
   font-weight: 700;
@@ -329,41 +332,8 @@
   white-space: nowrap;
 }
 
-.twilio-only {
-  color: #6c757d;
-  font-style: italic;
-  font-size: 10px;
-}
-
-.participant-email {
-  font-size: 12px;
-  color: #666;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.participant-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.participant-detail-item {
-  font-size: 10px;
-  color: #666;
-  background-color: #f8f9fa;
-  padding: 1px 4px;
-  border-radius: 3px;
-  white-space: nowrap;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Participant Controls - Modern Status Badges */
-.participant-controls {
+/* Participant Controls */
+.vcpl-controls {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -373,7 +343,7 @@
   justify-content: center;
 }
 
-.connection-badge {
+.vcpl-connection-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -384,17 +354,15 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.connection-badge.in-call {
+.vcpl-status-joined {
   background: #48bb78;
-  border-color: #38a169;
 }
 
-.connection-badge.invited {
+.vcpl-status-invited {
   background: #ed8936;
-  border-color: #dd6b20;
 }
 
-.badge-indicator {
+.vcpl-badge-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -403,7 +371,7 @@
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
-@keyframes pulse-indicator {
+@keyframes vcpl-pulse-indicator {
   0%, 100% { 
     opacity: 1; 
     transform: scale(1); 
@@ -414,18 +382,18 @@
   }
 }
 
-.connection-badge.in-call .badge-indicator {
+.vcpl-status-joined .vcpl-badge-dot {
   background-color: #ffffff;
-  animation: pulse-indicator 2s ease-in-out infinite;
+  animation: vcpl-pulse-indicator 2s ease-in-out infinite;
 }
 
-.connection-badge.invited .badge-indicator {
+.vcpl-status-invited .vcpl-badge-dot {
   background-color: #ffffff;
   animation: none;
   opacity: 0.9;
 }
 
-.badge-text {
+.vcpl-badge-label {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -433,20 +401,12 @@
   color: #ffffff;
 }
 
-.connection-badge.in-call .badge-text {
-  color: #ffffff;
-}
-
-.connection-badge.invited .badge-text {
-  color: #ffffff;
-}
-
-.media-status {
+.vcpl-media {
   display: flex;
   gap: 3px;
 }
 
-.media-indicator {
+.vcpl-media-icon {
   width: 18px;
   height: 18px;
   border-radius: 5px;
@@ -458,29 +418,31 @@
   transition: all 0.2s ease;
 }
 
-.media-indicator.enabled {
+.vcpl-audio-on,
+.vcpl-video-on {
   background: #c6f6d5;
   color: #22543d;
 }
 
-.media-indicator.disabled {
+.vcpl-audio-off,
+.vcpl-video-off {
   background: #fed7d7;
   color: #742a2a;
 }
 
-/* Invite Section - Clean Modern Style */
-.invite-section {
+/* Invite Section - Black Theme */
+.vcpl-invite-section {
   border-top: 2px solid #e2e8f0;
   padding: 24px 28px;
   background: #ffffff;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.04);
 }
 
-.section-header {
+.vcpl-section-header {
   margin-bottom: 16px;
 }
 
-.section-header h4 {
+.vcpl-section-header h4 {
   margin: 0;
   font-size: 16px;
   color: #2d3748;
@@ -488,7 +450,7 @@
   letter-spacing: -0.01em;
 }
 
-.interpreter-status {
+.vcpl-interpreter-status {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -500,23 +462,23 @@
   margin-bottom: 12px;
 }
 
-.status-text {
+.vcpl-status-text {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: #744210;
 }
 
-.status-indicator.pending {
+.vcpl-status-pending {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: #f6ad55;
-  animation: pulse 2s ease-in-out infinite;
+  animation: vcpl-pulse 2s ease-in-out infinite;
   box-shadow: 0 0 0 3px rgba(246, 173, 85, 0.2);
 }
 
-@keyframes pulse {
+@keyframes vcpl-pulse {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
@@ -527,11 +489,12 @@
   }
 }
 
-.invite-interpreter-button {
+/* Black Theme Invite Button */
+.vcpl-invite-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
   color: white;
-  border: 2px solid #667eea;
+  border: 2px solid #1a1a1a;
   padding: 14px 18px;
   border-radius: 12px;
   cursor: pointer;
@@ -542,15 +505,15 @@
   font-size: 14px;
   font-weight: 700;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
   letter-spacing: 0.2px;
 }
 
-.invite-interpreter-button:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+.vcpl-invite-btn:hover {
+  background: linear-gradient(135deg, #333333 0%, #1a1a1a 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-  border-color: #764ba2;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  border-color: #333333;
 }
 
 /* Modal - Modern Dialog Design */
@@ -727,8 +690,8 @@
   box-shadow: none;
 }
 
-/* Screen Reader Only */
-.sr-only {
+/* Screen Reader Only - NVDA & JAWS Compatible */
+.vcpl-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -740,74 +703,90 @@
   border: 0;
 }
 
-/* Focus Indicators */
-.close-button:focus,
-.invite-interpreter-button:focus,
-.cancel-button:focus,
-.invite-button:focus {
-  outline: 2px solid #007bff;
+/* Focus Indicators for Accessibility */
+.vcpl-close-btn:focus,
+.vcpl-invite-btn:focus,
+.vcpl-item:focus-within {
+  outline: 3px solid #007bff;
   outline-offset: 2px;
 }
 
-/* High Contrast Support */
+.vcpl-close-btn:focus-visible,
+.vcpl-invite-btn:focus-visible {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Support for Accessibility */
 @media (prefers-contrast: high) {
-  .participant-item {
+  .vcpl-item {
     border: 2px solid #000;
   }
   
-  .status-indicator.connected {
+  .vcpl-status-connected {
     background: #000;
   }
   
-  .media-indicator.enabled {
+  .vcpl-audio-on,
+  .vcpl-video-on {
     background: #000;
     color: #fff;
   }
+  
+  .vcpl-invite-btn {
+    border: 3px solid #000;
+  }
 }
 
-/* Reduced Motion Support */
+/* Reduced Motion Support for Accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .status-indicator.pending {
+  .vcpl-status-pending {
     animation: none;
   }
   
-  .close-button,
-  .invite-interpreter-button {
+  .vcpl-close-btn,
+  .vcpl-invite-btn,
+  .vcpl-item {
     transition: none;
+  }
+  
+  .vcpl-status-joined .vcpl-badge-dot {
+    animation: none;
   }
 }
 
 /* Scrollbar Styling */
-.participants-list::-webkit-scrollbar {
+.vcpl-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.participants-list::-webkit-scrollbar-track {
+.vcpl-list::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
 
-.participants-list::-webkit-scrollbar-thumb {
+.vcpl-list::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 3px;
 }
 
-.participants-list::-webkit-scrollbar-thumb:hover {
+.vcpl-list::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
 
-/* Responsive Design - Tablet */
+/* Responsive Design - Tablet (1024px and below) */
 @media (max-width: 1024px) {
-  .participants-panel {
+  .vcpl-panel {
     width: 340px;
   }
   
-  .participant-item {
+  .vcpl-item {
     margin: 0 12px 10px 12px;
   }
 }
 
+/* Responsive Design - Mobile (768px and below) */
 @media (max-width: 768px) {
-  .participants-panel {
+  .vcpl-panel {
     width: 100%;
     right: 0;
     left: 0;
@@ -815,223 +794,193 @@
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
   }
   
-  .participants-header {
+  .vcpl-header {
     padding: 18px 20px;
   }
   
-  .participants-title {
+  .vcpl-title {
     font-size: 18px;
   }
   
-  .participants-list {
+  .vcpl-list {
     padding: 12px 0;
   }
   
-  .participant-item {
+  .vcpl-item {
     padding: 12px 16px;
     min-height: 68px;
     margin: 0 12px 10px 12px;
   }
   
-  .avatar-circle {
+  .vcpl-avatar-circle {
     width: 40px;
     height: 40px;
     font-size: 16px;
   }
   
-  .name-text {
+  .vcpl-name {
     font-size: 14px;
     max-width: 150px;
   }
   
-  .role-badge {
+  .vcpl-role-badge {
     font-size: 10px;
     padding: 3px 10px;
   }
   
-  .participant-controls {
+  .vcpl-controls {
     min-width: 70px;
   }
   
-  .connection-badge {
+  .vcpl-connection-badge {
     padding: 5px 10px;
     gap: 5px;
   }
   
-  .badge-text {
+  .vcpl-badge-label {
     font-size: 10px;
   }
   
-  .badge-indicator {
+  .vcpl-badge-dot {
     width: 6px;
     height: 6px;
   }
   
-  .media-indicator {
+  .vcpl-media-icon {
     width: 18px;
     height: 18px;
     font-size: 10px;
   }
   
-  .invite-section {
+  .vcpl-invite-section {
     padding: 20px 24px;
   }
   
-  .invite-interpreter-button {
+  .vcpl-invite-btn {
     padding: 12px 16px;
     font-size: 13px;
   }
 }
 
+/* Responsive Design - Small Mobile (480px and below) */
 @media (max-width: 480px) {
-  .participants-header {
+  .vcpl-header {
     padding: 16px 18px;
   }
   
-  .participants-title {
+  .vcpl-title {
     font-size: 17px;
     gap: 10px;
   }
   
-  .participant-count {
+  .vcpl-count {
     font-size: 12px;
     padding: 3px 8px;
   }
   
-  .close-button {
+  .vcpl-close-btn {
     padding: 8px;
   }
   
-  .participants-list {
+  .vcpl-list {
     padding: 10px 0;
   }
   
-  .participant-item {
+  .vcpl-item {
     padding: 12px 14px;
     min-height: 64px;
     margin: 0 10px 8px 10px;
     gap: 12px;
   }
   
-  .avatar-circle {
+  .vcpl-avatar-circle {
     width: 36px;
     height: 36px;
     font-size: 14px;
   }
   
-  .status-indicator {
+  .vcpl-status-indicator {
     width: 12px;
     height: 12px;
     border: 2px solid #ffffff;
   }
   
-  .name-text {
+  .vcpl-name {
     font-size: 13px;
     max-width: 110px;
   }
   
-  .role-badge {
+  .vcpl-role-badge {
     font-size: 9px;
     padding: 3px 8px;
   }
   
-  .local-indicator {
+  .vcpl-you-badge {
     font-size: 9px;
     padding: 3px 8px;
   }
   
-  .interpreter-category {
+  .vcpl-category-badge {
     font-size: 9px;
     padding: 2px 6px;
   }
   
-  .participant-controls {
+  .vcpl-controls {
     min-width: 65px;
   }
   
-  .connection-badge {
+  .vcpl-connection-badge {
     padding: 5px 9px;
     gap: 4px;
   }
   
-  .badge-text {
+  .vcpl-badge-label {
     font-size: 9px;
   }
   
-  .badge-indicator {
+  .vcpl-badge-dot {
     width: 5px;
     height: 5px;
   }
   
-  .media-status {
+  .vcpl-media {
     gap: 3px;
   }
   
-  .media-indicator {
+  .vcpl-media-icon {
     width: 16px;
     height: 16px;
     font-size: 9px;
   }
   
-  .invite-section {
+  .vcpl-invite-section {
     padding: 18px 20px;
   }
   
-  .section-header h4 {
+  .vcpl-section-header h4 {
     font-size: 15px;
   }
   
-  .invite-interpreter-button {
+  .vcpl-invite-btn {
     padding: 12px 14px;
     font-size: 13px;
     gap: 8px;
   }
   
-  .interpreter-info-banner {
+  .vcpl-interpreter-banner {
     padding: 14px 18px;
     gap: 12px;
   }
   
-  .banner-icon {
+  .vcpl-banner-icon {
     font-size: 24px;
   }
   
-  .banner-content strong {
+  .vcpl-banner-content strong {
     font-size: 14px;
   }
   
-  .banner-content p {
+  .vcpl-banner-content p {
     font-size: 12px;
-  }
-  
-  .invite-modal {
-    width: 95%;
-    max-width: 360px;
-  }
-  
-  .modal-header {
-    padding: 20px;
-  }
-  
-  .modal-header h3 {
-    font-size: 17px;
-  }
-  
-  .modal-content {
-    padding: 20px;
-  }
-  
-  .category-option {
-    padding: 12px 14px;
-  }
-  
-  .modal-actions {
-    padding: 18px 20px 20px 20px;
-  }
-  
-  .cancel-button,
-  .invite-button {
-    padding: 11px 20px;
-    font-size: 13px;
   }
 }

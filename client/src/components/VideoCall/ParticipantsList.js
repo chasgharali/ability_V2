@@ -319,18 +319,18 @@ const ParticipantsList = ({
   
 
   return (
-    <div className="participants-panel" role="complementary" aria-label="Call participants">
+    <div className="vcpl-panel" role="complementary" aria-label="Call participants">
       {/* Header */}
-      <div className="participants-header">
-        <div className="participants-title">
+      <div className="vcpl-header">
+        <div className="vcpl-title">
           <FiUsers size={20} aria-hidden="true" />
           <span>Participants</span>
-          <span className="participant-count" aria-label={`${allParticipants.length} participants`}>
+          <span className="vcpl-count" aria-label={`${allParticipants.length} participants in call`}>
             ({allParticipants.length})
           </span>
         </div>
         <button
-          className="close-button"
+          className="vcpl-close-btn"
           onClick={onClose}
           aria-label="Close participants panel"
         >
@@ -340,9 +340,9 @@ const ParticipantsList = ({
 
       {/* Interpreter Request Info - Show for all roles */}
       {interpreterRequested && (
-        <div className="interpreter-info-banner" role="status" aria-live="polite">
-          <div className="banner-icon">ℹ️</div>
-          <div className="banner-content">
+        <div className="vcpl-interpreter-banner" role="status" aria-live="polite" aria-atomic="true">
+          <div className="vcpl-banner-icon" aria-hidden="true">ℹ️</div>
+          <div className="vcpl-banner-content">
             <strong>Interpreter Requested</strong>
             <p>Job seeker has requested interpreter support for this call</p>
           </div>
@@ -351,18 +351,19 @@ const ParticipantsList = ({
 
       {/* Invite Interpreter Section - Recruiter only */}
       {userRole === 'recruiter' && (
-        <div className="invite-section" role="region" aria-labelledby="interpreter-heading">
-          <div className="section-header">
-            <h4 id="interpreter-heading">Interpreter Support</h4>
+        <div className="vcpl-invite-section" role="region" aria-labelledby="vcpl-interpreter-heading">
+          <div className="vcpl-section-header">
+            <h4 id="vcpl-interpreter-heading">Interpreter Support</h4>
           </div>
           
           {interpreterRequested ? (
-            <div className="interpreter-status" role="status" aria-live="polite">
-              <p className="status-text">Interpreter has been requested</p>
+            <div className="vcpl-interpreter-status" role="status" aria-live="polite" aria-atomic="true">
+              <p className="vcpl-status-text">Interpreter has been requested</p>
               <button
-                className="invite-interpreter-button"
+                className="vcpl-invite-btn"
                 onClick={() => setShowInviteModal(true)}
-                aria-describedby="interpreter-help"
+                aria-describedby="vcpl-interpreter-help"
+                aria-label="Invite an interpreter to join this call"
               >
                 <FiUserPlus size={16} aria-hidden="true" />
                 <span>Invite Interpreter</span>
@@ -370,91 +371,106 @@ const ParticipantsList = ({
             </div>
           ) : (
             <button
-              className="invite-interpreter-button"
+              className="vcpl-invite-btn"
               onClick={() => setShowInviteModal(true)}
-              aria-describedby="interpreter-help"
+              aria-describedby="vcpl-interpreter-help"
+              aria-label="Invite an interpreter to join this call"
             >
               <FiUserPlus size={16} aria-hidden="true" />
               <span>Invite Interpreter</span>
             </button>
           )}
-          <div id="interpreter-help" className="sr-only">
+          <div id="vcpl-interpreter-help" className="vcpl-sr-only">
             Request an interpreter to assist with communication during the call
           </div>
         </div>
       )}
 
       {/* Participants List */}
-      <div className="participants-list" role="list" aria-label="List of call participants">
-        {allParticipants.map((participant, index) => (
-          <div
-            key={participant.id || index}
-            className="participant-item"
-            role="listitem"
-            aria-label={`${participant.name}, ${formatRole(participant.role)}, ${participant.status}`}
-          >
-            <div className="participant-avatar">
-              <div
-                className="avatar-circle"
-                aria-label={`Avatar for ${participant.name}`}
-              >
-                {participant.name?.charAt(0)?.toUpperCase() || 'U'}
+      <div className="vcpl-list" role="list" aria-label="List of call participants">
+        {allParticipants.map((participant, index) => {
+          // Determine if interpreter is invited or joined
+          const isInterpreter = participant.role === 'interpreter';
+          const interpreterStatus = isInterpreter 
+            ? (participant.twilioConnected ? 'JOINED' : 'INVITED')
+            : (participant.twilioConnected ? 'IN CALL' : 'INVITED');
+          
+          return (
+            <div
+              key={participant.id || index}
+              className="vcpl-item"
+              role="listitem"
+              aria-label={`${participant.name}, ${formatRole(participant.role)}, status: ${interpreterStatus.toLowerCase()}`}
+            >
+              <div className="vcpl-avatar">
+                <div
+                  className="vcpl-avatar-circle"
+                  aria-hidden="true"
+                >
+                  {participant.name?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+                <div
+                  className={`vcpl-status-indicator vcpl-status-${participant.status}`}
+                  aria-label={`Connection status: ${participant.status}`}
+                ></div>
               </div>
-              <div
-                className={`status-indicator ${participant.status}`}
-                aria-label={`Status: ${participant.status}`}
-              ></div>
-            </div>
 
-            <div className="participant-info">
-              <div className="participant-name">
-                <span className="name-text" title={participant.name}>{participant.name}</span>
-                {participant.isLocal && <span className="local-indicator">You</span>}
-              </div>
-              <div className="participant-role">
-                <span className={`role-badge role-${participant.role}`}>
-                  {formatRole(participant.role)}
-                </span>
-                {participant.category && (
-                  <span className="interpreter-category">
-                    {participant.category}
+              <div className="vcpl-info">
+                <div className="vcpl-name-row">
+                  <span className="vcpl-name" title={participant.name}>{participant.name}</span>
+                  {participant.isLocal && (
+                    <span className="vcpl-you-badge" aria-label="This is you">You</span>
+                  )}
+                </div>
+                <div className="vcpl-role-row">
+                  <span className={`vcpl-role-badge vcpl-role-${participant.role}`} aria-label={`Role: ${formatRole(participant.role)}`}>
+                    {formatRole(participant.role)}
                   </span>
+                  {participant.category && (
+                    <span className="vcpl-category-badge" aria-label={`Interpreter category: ${participant.category}`}>
+                      {participant.category}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="vcpl-controls" aria-label="Participant status and media controls">
+                <div 
+                  className={`vcpl-connection-badge ${participant.twilioConnected ? 'vcpl-status-joined' : 'vcpl-status-invited'}`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="vcpl-badge-dot" aria-hidden="true"></div>
+                  <span className="vcpl-badge-label">
+                    {interpreterStatus}
+                  </span>
+                </div>
+                {participant.twilioConnected && (
+                  <div className="vcpl-media" aria-label="Media status indicators">
+                    <div
+                      className="vcpl-media-icon vcpl-audio-on"
+                      aria-label="Microphone is on"
+                      title="Microphone on"
+                    >
+                      <FiMic size={10} aria-hidden="true" />
+                    </div>
+                    <div
+                      className="vcpl-media-icon vcpl-video-on"
+                      aria-label="Camera is on"
+                      title="Camera on"
+                    >
+                      <FiVideo size={10} aria-hidden="true" />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-
-            <div className="participant-controls">
-              <div className={`connection-badge ${participant.twilioConnected ? 'in-call' : 'invited'}`}>
-                <div className="badge-indicator"></div>
-                <span className="badge-text">
-                  {participant.twilioConnected ? 'In Call' : 'Invited'}
-                </span>
-              </div>
-              {participant.twilioConnected && (
-                <div className="media-status" aria-label="Media status">
-                  <div
-                    className="media-indicator audio enabled"
-                    aria-label="Microphone enabled"
-                    title="Microphone on"
-                  >
-                    <FiMic size={10} aria-hidden="true" />
-                  </div>
-                  <div
-                    className="media-indicator video enabled"
-                    aria-label="Camera enabled"
-                    title="Camera on"
-                  >
-                    <FiVideo size={10} aria-hidden="true" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Empty state */}
         {allParticipants.length === 0 && (
-          <div className="no-participants" role="status" aria-live="polite">
+          <div className="vcpl-empty" role="status" aria-live="polite">
             <FiUsers size={48} aria-hidden="true" />
             <p>No participants yet</p>
           </div>

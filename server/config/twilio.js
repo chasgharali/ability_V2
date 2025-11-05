@@ -77,12 +77,39 @@ const createOrGetRoom = async (roomName, type = 'group') => {
  */
 const endRoom = async (roomName) => {
   try {
-    const room = await client.video.rooms(roomName).update({
+    console.log('📞 Twilio: Attempting to end room:', roomName);
+    
+    // First try to fetch the room to see if it exists
+    let room;
+    try {
+      room = await client.video.rooms(roomName).fetch();
+      console.log('📞 Twilio: Room found, status:', room.status);
+      
+      // If room is already completed, no need to update
+      if (room.status === 'completed') {
+        console.log('📞 Twilio: Room already completed');
+        return room;
+      }
+    } catch (fetchError) {
+      if (fetchError.code === 20404) {
+        console.log('📞 Twilio: Room not found (already ended or never existed)');
+        return null;
+      }
+      throw fetchError;
+    }
+    
+    // Update room status to completed
+    const updatedRoom = await client.video.rooms(roomName).update({
       status: 'completed'
     });
-    return room;
+    console.log('✅ Twilio: Room ended successfully:', updatedRoom.sid);
+    return updatedRoom;
   } catch (error) {
-    console.error('Error ending room:', error);
+    console.error('❌ Twilio: Error ending room:', {
+      message: error.message,
+      code: error.code,
+      status: error.status
+    });
     throw error;
   }
 };

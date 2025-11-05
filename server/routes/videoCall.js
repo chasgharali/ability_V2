@@ -467,8 +467,15 @@ router.post('/end', auth, async (req, res) => {
 
     console.log('✅ Authorization passed - ending call');
 
-    // End Twilio room
-    await endRoom(videoCall.roomName);
+    // End Twilio room first
+    try {
+      console.log('🔚 Ending Twilio room:', videoCall.roomName);
+      await endRoom(videoCall.roomName);
+      console.log('✅ Twilio room ended successfully');
+    } catch (twilioError) {
+      console.error('❌ Error ending Twilio room:', twilioError);
+      // Continue even if Twilio room end fails
+    }
 
     // Update call status
     await videoCall.endCall();
