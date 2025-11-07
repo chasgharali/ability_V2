@@ -84,6 +84,15 @@ export const meetingRecordsAPI = {
             responseType: 'blob'
         });
         return response.data;
+    },
+
+    // Bulk delete meeting records
+    bulkDelete: async (recordIds) => {
+        const response = await axios.delete(`${API_BASE_URL}/meeting-records/bulk-delete`, {
+            headers: authHeaders(),
+            data: { recordIds }
+        });
+        return response.data;
     }
 };
 
