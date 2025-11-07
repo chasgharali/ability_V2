@@ -216,17 +216,17 @@ router.get('/available-interpreters/:boothId', auth, async (req, res) => {
       isActive: true
     }).select('_id name email role languages isAvailable');
 
-    // Combine and return - set isAvailable to true by default if undefined
+    // Combine and return - use actual isAvailable status (don't default to true)
     const interpreters = [
       ...boothInterpreters.map(i => ({ 
         ...i.toObject(), 
         type: 'booth',
-        isAvailable: i.isAvailable !== undefined ? i.isAvailable : true
+        isAvailable: i.isAvailable === true // Explicitly check for true
       })),
       ...globalInterpreters.map(i => ({ 
         ...i.toObject(), 
         type: 'global',
-        isAvailable: i.isAvailable !== undefined ? i.isAvailable : true
+        isAvailable: i.isAvailable === true // Explicitly check for true
       }))
     ];
 
@@ -600,6 +600,60 @@ router.get('/:callId', auth, async (req, res) => {
   } catch (error) {
     console.error('Error getting call details:', error);
     res.status(500).json({ error: 'Failed to get call details' });
+  }
+});
+
+/**
+ * POST /api/video-call/reset-interpreter-availability
+ * ONE-TIME MIGRATION: Reset all interpreters to offline status
+ * This fixes the issue where interpreters were showing as online by default
+ */
+router.post('/reset-interpreter-availability', auth, async (req, res) => {
+  try {
+    // Only allow admins to run this migration
+    if (req.user.role !== 'Admin' && req.user.role !== 'SuperAdmin') {
+      return res.status(403).json({ error: 'Unauthorized. Admin access required.' });
+    }
+
+    console.log('🔄 Starting interpreter availability reset migration...');
+
+    // Find all interpreters before update
+    const interpretersBefore = await User.find({
+      role: { $in: ['Interpreter', 'GlobalInterpreter'] }
+    }).select('name role isAvailable').lean();
+
+    console.log(`Found ${interpretersBefore.length} interpreters`);
+    console.log('Before:', interpretersBefore.filter(i => i.isAvailable === true).length, 'online');
+
+    // Update all interpreters to set isAvailable to false
+    const result = await User.updateMany(
+      { role: { $in: ['Interpreter', 'GlobalInterpreter'] } },
+      { $set: { isAvailable: false } }
+    );
+
+    // Verify the update
+    const interpretersAfter = await User.find({
+      role: { $in: ['Interpreter', 'GlobalInterpreter'] }
+    }).select('name role isAvailable').lean();
+
+    console.log('After:', interpretersAfter.filter(i => i.isAvailable === true).length, 'online');
+    console.log('✅ Migration completed');
+
+    res.json({
+      success: true,
+      message: 'All interpreters have been reset to offline status',
+      stats: {
+        totalInterpreters: interpretersBefore.length,
+        matched: result.matchedCount,
+        modified: result.modifiedCount,
+        onlineBefore: interpretersBefore.filter(i => i.isAvailable === true).length,
+        onlineAfter: interpretersAfter.filter(i => i.isAvailable === true).length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error resetting interpreter availability:', error);
+    res.status(500).json({ error: 'Failed to reset interpreter availability' });
   }
 });
 

@@ -106,7 +106,7 @@ const userSchema = new mongoose.Schema({
     }],
     isAvailable: {
         type: Boolean,
-        default: true
+        default: false // Interpreters are offline by default until they set themselves online
     },
     // Recruiter/BoothAdmin specific: assigned booth
     assignedBooth: {

@@ -16,110 +16,6 @@ const testUsers = [
             department: 'IT',
             phone: '+1-555-0101'
         }
-    },
-    {
-        name: 'Event Admin',
-        email: 'eventadmin@ability.com',
-        password: 'Event123!',
-        role: 'AdminEvent',
-        avatarUrl: null,
-        metadata: {
-            department: 'Events',
-            phone: '+1-555-0102'
-        }
-    },
-    {
-        name: 'Booth Admin',
-        email: 'boothadmin@ability.com',
-        password: 'Booth123!',
-        role: 'BoothAdmin',
-        avatarUrl: null,
-        metadata: {
-            department: 'Recruitment',
-            phone: '+1-555-0103'
-        }
-    },
-    {
-        name: 'John Recruiter',
-        email: 'recruiter@ability.com',
-        password: 'Recruit123!',
-        role: 'Recruiter',
-        avatarUrl: null,
-        metadata: {
-            department: 'HR',
-            phone: '+1-555-0104',
-            company: 'Tech Corp'
-        }
-    },
-    {
-        name: 'Sarah Interpreter',
-        email: 'interpreter@ability.com',
-        password: 'Interp123!',
-        role: 'Interpreter',
-        avatarUrl: null,
-        metadata: {
-            languages: ['English', 'Spanish', 'French'],
-            phone: '+1-555-0105'
-        }
-    },
-    {
-        name: 'Global Interpreter',
-        email: 'globalinterp@ability.com',
-        password: 'Global123!',
-        role: 'GlobalInterpreter',
-        avatarUrl: null,
-        metadata: {
-            languages: ['English', 'Spanish', 'French', 'German', 'Italian'],
-            phone: '+1-555-0106'
-        }
-    },
-    {
-        name: 'Support Agent',
-        email: 'support@ability.com',
-        password: 'Support123!',
-        role: 'Support',
-        avatarUrl: null,
-        metadata: {
-            department: 'Customer Support',
-            phone: '+1-555-0107'
-        }
-    },
-    {
-        name: 'Global Support',
-        email: 'globalsupport@ability.com',
-        password: 'GlobalSup123!',
-        role: 'GlobalSupport',
-        avatarUrl: null,
-        metadata: {
-            department: 'Global Support',
-            phone: '+1-555-0108'
-        }
-    },
-    {
-        name: 'Jane JobSeeker',
-        email: 'jobseeker@ability.com',
-        password: 'JobSeeker123!',
-        role: 'JobSeeker',
-        avatarUrl: null,
-        metadata: {
-            phone: '+1-555-0109',
-            location: 'New York, NY',
-            experience: '5 years',
-            skills: ['JavaScript', 'React', 'Node.js']
-        }
-    },
-    {
-        name: 'Mike Candidate',
-        email: 'candidate@ability.com',
-        password: 'Candidate123!',
-        role: 'JobSeeker',
-        avatarUrl: null,
-        metadata: {
-            phone: '+1-555-0110',
-            location: 'San Francisco, CA',
-            experience: '3 years',
-            skills: ['Python', 'Django', 'PostgreSQL']
-        }
     }
 ];
 
@@ -130,9 +26,7 @@ async function seedUsers() {
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 
-        // Clear existing users to fix password hashing issue
-        await User.deleteMany({});
-        console.log('Cleared existing users');
+
 
         // Hash passwords and create users
         const createdUsers = [];
