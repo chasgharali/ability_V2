@@ -4,7 +4,7 @@ import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
 import { Input, Select } from '../UI/FormComponents';
-import Toast from '../UI/Toast';
+import { useToast } from '../../contexts/ToastContext';
 import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, deleteUserPermanently } from '../../services/users';
 import { listBooths } from '../../services/booths';
 import { listEvents } from '../../services/events';
@@ -15,8 +15,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState('');
-  const [toast, setToast] = useState(null);
-  const toastTimer = useRef(null);
+  const toast = useToast();
   const [editingId, setEditingId] = useState(null);
 
   const [boothOptions, setBoothOptions] = useState([]);
@@ -65,9 +64,7 @@ export default function UserManagement() {
   const fullName = `${form.firstName} ${form.lastName}`.trim();
 
   const showToast = (message, type = 'info', duration = 3000) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ message, type, duration });
-    toastTimer.current = setTimeout(() => setToast(null), duration);
+    toast.show(message, { type, duration });
   };
 
   const handleDelete = async (row) => {
@@ -100,10 +97,8 @@ export default function UserManagement() {
           lastName,
           email: u.email,
           role: u.role,
-          field: u.field || '',
-          booth: u.boothName || '',
+          booth: u.boothName || '-',
           assignedBoothId: u.assignedBooth || '',
-          event: u.eventName || '',
           isActive: u.isActive,
           createdAt: u.createdAt,
         };
@@ -138,9 +133,7 @@ export default function UserManagement() {
     { key: 'lastName', label: 'Last Name' },
     { key: 'email', label: 'Email' },
     { key: 'role', label: 'Role' },
-    { key: 'field', label: 'Field' },
     { key: 'booth', label: 'Booth' },
-    { key: 'event', label: 'Event' },
     { key: 'actions', label: 'Action', render: (row) => (
       <div className="ajf-grid-actions">
         <button className="ajf-btn ajf-btn-outline" onClick={() => startEdit(row)} aria-label={`Edit ${row.firstName} ${row.lastName}`}>Edit</button>
@@ -312,10 +305,6 @@ export default function UserManagement() {
           </div>
         </main>
       </div>
-
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} autoFocusClose={toast.type === 'error'} />
-      )}
 
       <div className="mobile-overlay" aria-hidden="true" />
     </div>

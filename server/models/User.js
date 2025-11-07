@@ -165,7 +165,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 
 // Instance method to generate user summary for API responses
 userSchema.methods.getPublicProfile = function () {
-    return {
+    const profile = {
         _id: this._id,
         name: this.name,
         email: this.email,
@@ -192,6 +192,14 @@ userSchema.methods.getPublicProfile = function () {
         assignedBooth: this.assignedBooth,
         createdAt: this.createdAt
     };
+
+    // If assignedBooth is populated, include booth name
+    if (this.assignedBooth && typeof this.assignedBooth === 'object' && this.assignedBooth.name) {
+        profile.boothName = this.assignedBooth.name || this.assignedBooth.company || 'Unknown Booth';
+        profile.assignedBooth = this.assignedBooth._id; // Keep just the ID
+    }
+
+    return profile;
 };
 
 // Validate recruiter/booth admin must have assignedBooth

@@ -178,9 +178,10 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             ];
         }
 
-        // Find users
+        // Find users and populate booth information
         const users = await User.find(query)
             .select('-hashedPassword -refreshTokens')
+            .populate('assignedBooth', 'name company')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
