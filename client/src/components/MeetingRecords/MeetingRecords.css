@@ -4,6 +4,19 @@
     overflow-x: auto;
 }
 
+/* Hide DataGrid footer since we have custom pagination */
+.meeting-records-container .data-grid-footer {
+    display: none;
+}
+
+/* Black checkboxes */
+.meeting-records-container input[type="checkbox"] {
+    accent-color: #000;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
 .page-header {
     display: flex;
     justify-content: space-between;

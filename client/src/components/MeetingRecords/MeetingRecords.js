@@ -6,6 +6,7 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
 import { Select, DateTimePicker } from '../UI/FormComponents';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
@@ -31,9 +32,12 @@ export default function MeetingRecords() {
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
-    const [toast, setToast] = useState(null);
+    const toast = useToast();
     const [filtersExpanded, setFiltersExpanded] = useState(false);
-    const toastTimer = useRef(null);
+    const [selectedRecords, setSelectedRecords] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [selectAllPages, setSelectAllPages] = useState(false);
+    const [allRecordIds, setAllRecordIds] = useState([]);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -68,9 +72,7 @@ export default function MeetingRecords() {
     });
 
     const showToast = (message, type = 'info') => {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        setToast({ message, type });
-        toastTimer.current = setTimeout(() => setToast(null), 5000);
+        toast.show(message, { type, duration: 3000 });
     };
 
     const loadMeetingRecords = useCallback(async () => {
@@ -79,6 +81,8 @@ export default function MeetingRecords() {
             const response = await meetingRecordsAPI.getMeetingRecords(filters);
             setMeetingRecords(response.meetingRecords);
             setPagination(response.pagination);
+            // Reset select all pages when data changes
+            setSelectAllPages(false);
         } catch (error) {
             console.error('Error loading meeting records:', error);
             showToast('Failed to load meeting records', 'error');
@@ -189,7 +193,89 @@ export default function MeetingRecords() {
         return '★'.repeat(rating) + '☆'.repeat(5 - rating);
     };
 
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            // Select all on current page
+            setSelectedRecords(meetingRecords.map(r => r._id));
+        } else {
+            // Deselect all
+            setSelectedRecords([]);
+            setSelectAllPages(false);
+        }
+    };
+
+    const handleSelectAllPages = async () => {
+        try {
+            // Fetch all record IDs (without pagination)
+            const allFilters = { ...filters, page: 1, limit: 99999 };
+            const response = await meetingRecordsAPI.getMeetingRecords(allFilters);
+            const allIds = response.meetingRecords.map(r => r._id);
+            setAllRecordIds(allIds);
+            setSelectedRecords(allIds);
+            setSelectAllPages(true);
+            showToast(`Selected all ${allIds.length} records across all pages`, 'info');
+        } catch (error) {
+            console.error('Error fetching all records:', error);
+            showToast('Failed to select all records', 'error');
+        }
+    };
+
+    const handleSelectRecord = (recordId) => {
+        setSelectedRecords(prev => {
+            if (prev.includes(recordId)) {
+                return prev.filter(id => id !== recordId);
+            } else {
+                return [...prev, recordId];
+            }
+        });
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedRecords.length === 0) {
+            showToast('Please select records to delete', 'warning');
+            return;
+        }
+
+        const confirmMsg = `Are you sure you want to delete ${selectedRecords.length} meeting record(s)? This action cannot be undone.`;
+        if (!window.confirm(confirmMsg)) {
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            const response = await meetingRecordsAPI.bulkDelete(selectedRecords);
+            showToast(response.message || 'Records deleted successfully', 'success');
+            setSelectedRecords([]);
+            await loadMeetingRecords();
+            await loadStats();
+        } catch (error) {
+            console.error('Error deleting records:', error);
+            showToast(error.response?.data?.message || 'Failed to delete records', 'error');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const columns = [
+        // Checkbox column for Admin/GlobalSupport only
+        ...(['Admin', 'GlobalSupport'].includes(user?.role) ? [{
+            label: (
+                <input
+                    type="checkbox"
+                    checked={selectedRecords.length === meetingRecords.length && meetingRecords.length > 0}
+                    onChange={handleSelectAll}
+                    aria-label="Select all records"
+                />
+            ),
+            render: (row) => (
+                <input
+                    type="checkbox"
+                    checked={selectedRecords.includes(row._id)}
+                    onChange={() => handleSelectRecord(row._id)}
+                    aria-label={`Select record for ${row.jobseekerId?.name || 'Unknown'}`}
+                />
+            )
+        }] : []),
         {
             label: 'Event',
             render: (row) => row.eventId?.name || 'N/A'
@@ -298,6 +384,26 @@ export default function MeetingRecords() {
                         <div className="page-header">
                             <h1>Meeting Records</h1>
                             <div className="header-actions">
+                                {['Admin', 'GlobalSupport'].includes(user?.role) && selectedRecords.length > 0 && (
+                                    <button 
+                                        className="btn-delete-selected"
+                                        onClick={handleBulkDelete}
+                                        disabled={isDeleting}
+                                        style={{
+                                            background: '#dc3545',
+                                            color: 'white',
+                                            padding: '10px 20px',
+                                            borderRadius: '8px',
+                                            border: 'none',
+                                            cursor: isDeleting ? 'not-allowed' : 'pointer',
+                                            fontWeight: '600',
+                                            marginRight: '10px',
+                                            opacity: isDeleting ? 0.6 : 1
+                                        }}
+                                    >
+                                        {isDeleting ? 'Deleting...' : `Delete Selected (${selectedRecords.length})`}
+                                    </button>
+                                )}
                                 <button 
                                     className="btn-export"
                                     onClick={handleExport}
@@ -414,6 +520,53 @@ export default function MeetingRecords() {
                             )}
                         </div>
 
+                        {/* Select All Pages Banner */}
+                        {selectedRecords.length === meetingRecords.length && meetingRecords.length > 0 && !selectAllPages && pagination.totalRecords > meetingRecords.length && (
+                            <div style={{
+                                background: '#e3f2fd',
+                                padding: '12px 20px',
+                                borderRadius: '8px',
+                                marginBottom: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                border: '1px solid #90caf9'
+                            }}>
+                                <span style={{ color: '#1565c0', fontWeight: '500' }}>
+                                    All {meetingRecords.length} records on this page are selected.
+                                </span>
+                                <button
+                                    onClick={handleSelectAllPages}
+                                    style={{
+                                        background: '#1976d2',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        fontSize: '14px'
+                                    }}
+                                >
+                                    Select all {pagination.totalRecords} records
+                                </button>
+                            </div>
+                        )}
+
+                        {selectAllPages && (
+                            <div style={{
+                                background: '#c8e6c9',
+                                padding: '12px 20px',
+                                borderRadius: '8px',
+                                marginBottom: '16px',
+                                border: '1px solid #81c784'
+                            }}>
+                                <span style={{ color: '#2e7d32', fontWeight: '600' }}>
+                                    ✓ All {selectedRecords.length} records across all pages are selected.
+                                </span>
+                            </div>
+                        )}
+
                         {/* Data Grid */}
                         <div className="data-grid-container">
                             <DataGrid
@@ -421,6 +574,7 @@ export default function MeetingRecords() {
                                 data={meetingRecords}
                                 loading={loadingData}
                                 emptyMessage="No meeting records found"
+                                selectable={false}
                             />
                             
                             {/* Pagination Footer */}
@@ -458,12 +612,6 @@ export default function MeetingRecords() {
                 </main>
             </div>
 
-            {/* Toast Notification */}
-            {toast && (
-                <div className={`toast toast-${toast.type}`}>
-                    {toast.message}
-                </div>
-            )}
         </div>
     );
 }

@@ -396,4 +396,31 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
     }
 });
 
+// Bulk delete meeting records (Admin/GlobalSupport only)
+router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { recordIds } = req.body;
+
+        if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
+            return res.status(400).json({ message: 'No record IDs provided' });
+        }
+
+        // Delete the records
+        const result = await MeetingRecord.deleteMany({
+            _id: { $in: recordIds }
+        });
+
+        console.log(`Deleted ${result.deletedCount} meeting records`);
+
+        res.json({
+            message: `Successfully deleted ${result.deletedCount} meeting record(s)`,
+            deletedCount: result.deletedCount
+        });
+
+    } catch (error) {
+        console.error('Error deleting meeting records:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 module.exports = router;
