@@ -94,7 +94,7 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
 
   return (
     <div 
-      className="chat-panel" 
+      className="incall-chat-panel" 
       ref={panelRef}
       role="complementary" 
       aria-label="Chat panel"
@@ -104,16 +104,16 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
       <div id="chat-announcements" className="sr-only" aria-live="assertive"></div>
       
       {/* Header */}
-      <div className="chat-header" role="banner">
-        <div className="chat-title">
+      <div className="incall-chat-header" role="banner">
+        <div className="incall-chat-title">
           <FiMessageCircle size={20} aria-hidden="true" />
           <h2>Chat</h2>
-          <span className="message-count" aria-label={`${messages.length} messages`}>
+          <span className="incall-chat-message-count" aria-label={`${messages.length} messages`}>
             ({messages.length})
           </span>
         </div>
         <button 
-          className="close-button"
+          className="incall-chat-close-button"
           onClick={onClose}
           aria-label="Close chat panel"
           title="Close chat"
@@ -124,51 +124,51 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
 
       {/* Messages */}
       <div 
-        className="chat-messages" 
+        className="incall-chat-messages" 
         role="log" 
         aria-label="Chat messages"
         aria-live="polite"
         tabIndex={0}
       >
         {messages.length === 0 ? (
-          <div className="no-messages" role="status">
+          <div className="incall-chat-no-messages" role="status">
             <FiMessageCircle size={48} aria-hidden="true" />
             <p>No messages yet</p>
-            <p className="subtitle">Start the conversation!</p>
+            <p className="incall-chat-subtitle">Start the conversation!</p>
           </div>
         ) : (
           messages.map((message, index) => (
             <div
               key={index}
-              className={`message ${isOwnMessage(message) ? 'own' : 'other'} ${message.messageType || 'text'}`}
+              className={`incall-chat-message ${isOwnMessage(message) ? 'incall-chat-own' : 'incall-chat-other'} ${message.messageType === 'system' ? 'incall-chat-system' : ''}`}
               role="article"
               aria-label={`Message from ${isOwnMessage(message) ? 'you' : message.sender?.name || 'unknown'}`}
             >
               {message.messageType === 'system' ? (
-                <div className="system-message">
-                  <span className="system-text">{message.message}</span>
-                  <span className="message-time">{formatTime(message.timestamp)}</span>
+                <div className="incall-chat-system-message">
+                  <span className="incall-chat-system-text">{message.message}</span>
+                  <span className="incall-chat-message-time">{formatTime(message.timestamp)}</span>
                 </div>
               ) : (
                 <>
                   {!isOwnMessage(message) && (
-                    <div className="message-sender">
+                    <div className="incall-chat-message-sender">
                       <span 
-                        className="sender-name"
+                        className="incall-chat-sender-name"
                         style={{ color: getRoleColor(message.senderRole || message.sender?.role) }}
                       >
                         {message.sender?.name || 'Unknown'}
                       </span>
-                      <span className="sender-role">
+                      <span className="incall-chat-sender-role">
                         ({message.senderRole || message.sender?.role || 'User'})
                       </span>
                     </div>
                   )}
-                  <div className="message-content">
-                    <div className="message-bubble">
+                  <div className="incall-chat-message-content">
+                    <div className="incall-chat-message-bubble">
                       <p>{message.message}</p>
                     </div>
-                    <span className="message-time">
+                    <span className="incall-chat-message-time">
                       {formatTime(message.timestamp)}
                     </span>
                   </div>
@@ -182,18 +182,18 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
 
       {/* Typing Indicator */}
       {isTyping && (
-        <div className="typing-indicator">
+        <div className="incall-chat-typing-indicator">
           <span>You are typing...</span>
         </div>
       )}
 
       {/* Input */}
       <form 
-        className="chat-input-form" 
+        className="incall-chat-input-form" 
         onSubmit={handleSendMessage}
         aria-label="Send message form"
       >
-        <div className="input-container">
+        <div className="incall-chat-input-container">
           <label htmlFor="message-input" className="sr-only">
             Type your message
           </label>
@@ -204,7 +204,7 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Type a message..."
-            className="message-input"
+            className="incall-chat-message-input"
             rows={1}
             maxLength={500}
             aria-describedby="character-count input-hint"
@@ -212,19 +212,19 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
           />
           <button
             type="submit"
-            className="send-button"
+            className="incall-chat-send-button"
             disabled={!newMessage.trim() || isSending}
             aria-label={isSending ? "Sending message..." : "Send message"}
             title={isSending ? "Sending..." : "Send message"}
           >
-            <FiSend size={18} aria-hidden="true" />
+            <FiSend size={20} aria-hidden="true" />
           </button>
         </div>
-        <div className="input-footer">
-          <span id="character-count" className="character-count" aria-live="polite">
+        <div className="incall-chat-input-footer">
+          <span id="character-count" className="incall-chat-character-count" aria-live="polite">
             {newMessage.length}/500
           </span>
-          <span id="input-hint" className="input-hint">
+          <span id="input-hint" className="incall-chat-input-hint">
             Press Enter to send, Shift+Enter for new line
           </span>
         </div>

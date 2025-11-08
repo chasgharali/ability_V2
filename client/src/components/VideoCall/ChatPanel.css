@@ -1,4 +1,4 @@
-/* ChatPanel.css */
+/* ChatPanel.css - In-call chat with unique class names */
 
 /* Screen Reader Only Content */
 .sr-only {
@@ -13,7 +13,7 @@
   border: 0;
 }
 
-.chat-panel {
+.incall-chat-panel {
   position: fixed;
   right: 0;
   top: 0;
@@ -28,7 +28,7 @@
 }
 
 /* Header */
-.chat-header {
+.incall-chat-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,7 +37,7 @@
   background: #f8f9fa;
 }
 
-.chat-title {
+.incall-chat-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -45,19 +45,19 @@
   color: #333;
 }
 
-.chat-title h2 {
+.incall-chat-title h2 {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
 }
 
-.message-count {
+.incall-chat-message-count {
   color: #666;
   font-weight: normal;
   font-size: 14px;
 }
 
-.close-button {
+.incall-chat-close-button {
   background: none;
   border: none;
   cursor: pointer;
@@ -67,18 +67,18 @@
   transition: background-color 0.2s ease;
 }
 
-.close-button:hover {
+.incall-chat-close-button:hover {
   background: #e9ecef;
   color: #333;
 }
 
-.close-button:focus {
+.incall-chat-close-button:focus {
   outline: 2px solid #007bff;
   outline-offset: 2px;
 }
 
 /* Messages */
-.chat-messages {
+.incall-chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 15px;
@@ -87,7 +87,7 @@
   gap: 15px;
 }
 
-.no-messages {
+.incall-chat-no-messages {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -97,45 +97,45 @@
   text-align: center;
 }
 
-.no-messages svg {
+.incall-chat-no-messages svg {
   color: #ccc;
   margin-bottom: 15px;
 }
 
-.no-messages p {
+.incall-chat-no-messages p {
   margin: 5px 0;
 }
 
-.no-messages .subtitle {
+.incall-chat-subtitle {
   font-size: 14px;
   color: #999;
 }
 
 /* Message Items */
-.message {
+.incall-chat-message {
   display: flex;
   flex-direction: column;
   max-width: 85%;
 }
 
-.message.own {
+.incall-chat-message.incall-chat-own {
   align-self: flex-end;
   align-items: flex-end;
 }
 
-.message.other {
+.incall-chat-message.incall-chat-other {
   align-self: flex-start;
   align-items: flex-start;
 }
 
-.message.system {
+.incall-chat-message.incall-chat-system {
   align-self: center;
   align-items: center;
   max-width: 100%;
 }
 
 /* System Messages */
-.system-message {
+.incall-chat-system-message {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
   border-radius: 15px;
@@ -149,72 +149,72 @@
   gap: 4px;
 }
 
-.system-text {
+.incall-chat-system-text {
   font-style: italic;
 }
 
 /* Regular Messages */
-.message-sender {
+.incall-chat-message-sender {
   margin-bottom: 4px;
   font-size: 12px;
 }
 
-.sender-name {
+.incall-chat-sender-name {
   font-weight: 600;
 }
 
-.sender-role {
+.incall-chat-sender-role {
   color: #666;
   font-weight: normal;
   margin-left: 4px;
 }
 
-.message-content {
+.incall-chat-message-content {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.message-bubble {
+.incall-chat-message-bubble {
   padding: 10px 14px;
   border-radius: 18px;
   word-wrap: break-word;
   line-height: 1.4;
 }
 
-.message.own .message-bubble {
+.incall-chat-message.incall-chat-own .incall-chat-message-bubble {
   background: #007bff;
   color: white;
   border-bottom-right-radius: 6px;
 }
 
-.message.other .message-bubble {
+.incall-chat-message.incall-chat-other .incall-chat-message-bubble {
   background: #f1f3f4;
   color: #333;
   border-bottom-left-radius: 6px;
 }
 
-.message-bubble p {
+.incall-chat-message-bubble p {
   margin: 0;
   font-size: 14px;
 }
 
-.message-time {
+.incall-chat-message-time {
   font-size: 11px;
   color: #999;
   margin-top: 2px;
 }
 
-.message.own .message-time {
+.incall-chat-message.incall-chat-own .incall-chat-message-time {
   text-align: right;
 }
 
-.message.other .message-time {
+.incall-chat-message.incall-chat-other .incall-chat-message-time {
   text-align: left;
 }
 
 /* Typing Indicator */
-.typing-indicator {
+.incall-chat-typing-indicator {
   padding: 8px 15px;
   font-size: 12px;
   color: #666;
@@ -224,19 +224,19 @@
 }
 
 /* Input Form */
-.chat-input-form {
+.incall-chat-input-form {
   border-top: 1px solid #eee;
   background: white;
 }
 
-.input-container {
+.incall-chat-input-container {
   display: flex;
   align-items: flex-end;
   padding: 15px;
   gap: 10px;
 }
 
-.message-input {
+.incall-chat-message-input {
   flex: 1;
   border: 1px solid #ddd;
   border-radius: 20px;
@@ -249,45 +249,52 @@
   min-height: 40px;
 }
 
-.message-input:focus {
+.incall-chat-message-input:focus {
   border-color: #007bff;
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
 }
 
-.send-button {
+.incall-chat-send-button {
   background: #007bff;
   color: white;
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
-.send-button:hover:not(:disabled) {
-  background: #0056b3;
+.incall-chat-send-button svg {
+  transition: transform 0.2s ease;
 }
 
-.send-button:disabled {
+.incall-chat-send-button:hover:not(:disabled) {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+.incall-chat-send-button:hover:not(:disabled) svg {
+  transform: translateX(2px);
+}
+
+.incall-chat-send-button:disabled {
   background: #ccc;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.send-button:focus {
+.incall-chat-send-button:focus {
   outline: 2px solid #007bff;
   outline-offset: 2px;
 }
 
-.message-input:focus {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
-}
-
-.input-footer {
+.incall-chat-input-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -296,83 +303,83 @@
   color: #999;
 }
 
-.character-count {
+.incall-chat-character-count {
   font-weight: 500;
 }
 
-.input-hint {
+.incall-chat-input-hint {
   font-style: italic;
 }
 
 /* Scrollbar Styling */
-.chat-messages::-webkit-scrollbar {
+.incall-chat-messages::-webkit-scrollbar {
   width: 6px;
 }
 
-.chat-messages::-webkit-scrollbar-track {
+.incall-chat-messages::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
 
-.chat-messages::-webkit-scrollbar-thumb {
+.incall-chat-messages::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 3px;
 }
 
-.chat-messages::-webkit-scrollbar-thumb:hover {
+.incall-chat-messages::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .chat-panel {
+  .incall-chat-panel {
     width: 100%;
     right: 0;
     left: 0;
   }
   
-  .chat-header {
+  .incall-chat-header {
     padding: 12px 15px;
   }
   
-  .chat-messages {
+  .incall-chat-messages {
     padding: 12px;
   }
   
-  .input-container {
+  .incall-chat-input-container {
     padding: 12px;
   }
   
-  .message {
+  .incall-chat-message {
     max-width: 90%;
   }
 }
 
 @media (max-width: 480px) {
-  .chat-header {
+  .incall-chat-header {
     padding: 10px 12px;
   }
   
-  .chat-messages {
+  .incall-chat-messages {
     padding: 10px;
     gap: 12px;
   }
   
-  .input-container {
+  .incall-chat-input-container {
     padding: 10px;
     gap: 8px;
   }
   
-  .message-input {
+  .incall-chat-message-input {
     padding: 8px 12px;
     font-size: 13px;
   }
   
-  .send-button {
-    width: 36px;
-    height: 36px;
+  .incall-chat-send-button {
+    width: 40px;
+    height: 40px;
   }
   
-  .input-footer {
+  .incall-chat-input-footer {
     padding: 0 10px 8px;
     font-size: 10px;
   }
