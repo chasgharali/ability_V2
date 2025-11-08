@@ -183,8 +183,11 @@ export default function RegistrationWizard() {
       }
     });
 
-    // Check if resume is uploaded (required)
-    if (!user?.resumeUrl) {
+    // Check if resume is uploaded (check both form data and user object)
+    const hasResumeInForm = currentFormData.hasResume || currentFormData.resumeUrl;
+    const hasResumeInUser = user?.resumeUrl;
+    
+    if (!hasResumeInForm && !hasResumeInUser) {
       errors.resume = 'Resume upload is required';
       isValid = false;
     }

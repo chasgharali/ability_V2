@@ -128,12 +128,16 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     return res.json();
   };
 
-  // Notify parent of form data changes
+  // Notify parent of form data changes (including resume status)
   useEffect(() => {
     if (onFormDataChange) {
-      onFormDataChange(form);
+      onFormDataChange({
+        ...form,
+        resumeUrl: resumeUrl,
+        hasResume: !!resumeUrl || !!resumeFileName
+      });
     }
-  }, [form, onFormDataChange]);
+  }, [form, resumeUrl, resumeFileName, onFormDataChange]);
 
   // Prefill from backend on mount
   useEffect(() => {
