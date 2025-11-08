@@ -180,11 +180,20 @@ const meetingRecordSchema = new mongoose.Schema({
             type: String,
             required: true
         },
+        sender: {
+            type: String,
+            enum: ['jobseeker', 'recruiter'],
+            default: 'jobseeker'
+        },
         createdAt: {
             type: Date,
             default: Date.now
         },
         isRead: {
+            type: Boolean,
+            default: false
+        },
+        isLeaveMessage: {
             type: Boolean,
             default: false
         }

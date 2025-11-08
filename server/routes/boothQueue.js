@@ -311,15 +311,23 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
 
         // Create meeting record for the leave message
         const MeetingRecord = require('../models/MeetingRecord');
+        const User = require('../models/User');
         
-        // Get booth with administrators populated
-        const Booth = require('../models/Booth');
-        const booth = await Booth.findById(boothId).populate('administrators');
+        // Find recruiter assigned to this booth
+        const recruiter = await User.findOne({
+            assignedBooth: boothId,
+            role: 'Recruiter'
+        });
         
-        // Find recruiter (booth administrator)
-        const recruiterId = booth && booth.administrators && booth.administrators.length > 0 
-            ? booth.administrators[0]._id 
-            : req.user._id; // Fallback to current user
+        if (!recruiter) {
+            console.error('No recruiter found for booth:', boothId);
+            return res.status(400).json({
+                success: false,
+                message: 'No recruiter assigned to this booth'
+            });
+        }
+        
+        const recruiterId = recruiter._id;
 
         console.log('Creating meeting record for leave message:', {
             eventId: queueEntry.event._id,
