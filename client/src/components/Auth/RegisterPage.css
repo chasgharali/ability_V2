@@ -148,6 +148,10 @@
 .register-checkbox-input {
     margin-top: -0.5em;
     flex-shrink: 0;
+    accent-color: #000;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
 }
 
 .register-terms-link {
