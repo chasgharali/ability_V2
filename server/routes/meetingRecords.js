@@ -155,7 +155,8 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             .populate('recruiter')
             .populate('jobSeeker')
             .populate('event')
-            .populate('booth');
+            .populate('booth')
+            .populate('interpreters.interpreter', 'name email');
 
         if (!videoCall) {
             return res.status(404).json({ message: 'Video call not found' });
@@ -179,6 +180,10 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             messageType: msg.messageType || 'text'
         }));
 
+        // Get interpreter if one joined the call (status: 'joined')
+        const joinedInterpreter = videoCall.interpreters?.find(i => i.status === 'joined');
+        const interpreterId = joinedInterpreter?.interpreter?._id || null;
+
         // Create meeting record
         const meetingRecord = new MeetingRecord({
             eventId: videoCall.event._id,
@@ -187,7 +192,7 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             videoCallId: videoCall._id,
             recruiterId: videoCall.recruiter._id,
             jobseekerId: videoCall.jobSeeker._id,
-            interpreterId: videoCall.interpreter || null,
+            interpreterId: interpreterId,
             twilioRoomId: videoCall.roomName,
             twilioRoomSid: videoCall.roomSid,
             startTime: videoCall.startedAt,
