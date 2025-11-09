@@ -170,6 +170,15 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
         // Get job seeker messages from queue entry
         const jobSeekerMessages = videoCall.queueEntry?.messages || [];
 
+        // Transform chat messages from VideoCall schema to MeetingRecord schema
+        // VideoCall uses 'sender' field, MeetingRecord uses 'userId' field
+        const transformedChatMessages = (videoCall.chatMessages || []).map(msg => ({
+            userId: msg.sender,
+            message: msg.message,
+            timestamp: msg.timestamp,
+            messageType: msg.messageType || 'text'
+        }));
+
         // Create meeting record
         const meetingRecord = new MeetingRecord({
             eventId: videoCall.event._id,
@@ -178,6 +187,7 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             videoCallId: videoCall._id,
             recruiterId: videoCall.recruiter._id,
             jobseekerId: videoCall.jobSeeker._id,
+            interpreterId: videoCall.interpreter || null,
             twilioRoomId: videoCall.roomName,
             twilioRoomSid: videoCall.roomSid,
             startTime: videoCall.startedAt,
@@ -187,7 +197,7 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
                       Math.floor((new Date(videoCall.endedAt) - new Date(videoCall.startedAt)) / (1000 * 60)) : null),
             status: videoCall.status === 'ended' ? 'completed' : videoCall.status,
             jobSeekerMessages: jobSeekerMessages,
-            chatMessages: videoCall.chatMessages || []
+            chatMessages: transformedChatMessages
         });
 
         await meetingRecord.save();

@@ -422,23 +422,23 @@ export default function BoothQueueManagement() {
         const videoCallId = activeCall.id || activeCall.callId;
         await meetingRecordsAPI.createFromVideoCall(videoCallId);
       }
-
-      // Show rating modal for recruiters
-      if (user.role === 'Recruiter' && activeCall) {
-        const jobSeekerName = activeCall.jobSeekerName || 
-                             activeCall.jobSeeker?.name || 
-                             'Job Seeker';
-        
-        setRatingModalData({
-          meetingId: null, // Will be set after meeting record is created
-          videoCallId: activeCall.id || activeCall.callId,
-          jobSeekerName: jobSeekerName
-        });
-        setShowRatingModal(true);
-      }
     } catch (error) {
-      console.error('Error handling call end:', error);
-      showToast('Error processing call end', 'error');
+      console.error('Error creating meeting record:', error);
+      // Don't show error toast - we'll still show rating modal
+    }
+
+    // Always show rating modal for recruiters, regardless of meeting record creation success
+    if (user.role === 'Recruiter' && activeCall) {
+      const jobSeekerName = activeCall.jobSeekerName || 
+                           activeCall.jobSeeker?.name || 
+                           'Job Seeker';
+      
+      setRatingModalData({
+        meetingId: null, // Will be set after meeting record is created
+        videoCallId: activeCall.id || activeCall.callId,
+        jobSeekerName: jobSeekerName
+      });
+      setShowRatingModal(true);
     }
 
     setActiveCall(null);
