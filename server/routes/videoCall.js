@@ -216,22 +216,49 @@ router.get('/available-interpreters/:boothId', auth, async (req, res) => {
       isActive: true
     }).select('_id name email role languages isAvailable');
 
-    // Combine and return - use actual isAvailable status (don't default to true)
+    // Get all interpreters currently in active meetings
+    const activeCallsWithInterpreters = await VideoCall.find({
+      status: 'active',
+      'interpreters.status': 'joined'
+    }).select('interpreters');
+
+    // Extract interpreter IDs that are currently in meetings
+    const busyInterpreterIds = new Set();
+    activeCallsWithInterpreters.forEach(call => {
+      call.interpreters.forEach(i => {
+        if (i.status === 'joined') {
+          busyInterpreterIds.add(i.interpreter.toString());
+        }
+      });
+    });
+
+    console.log('Busy interpreters in active meetings:', Array.from(busyInterpreterIds));
+
+    // Combine and return - check both isAvailable status AND if they're in an active meeting
     const interpreters = [
       ...boothInterpreters.map(i => ({ 
         ...i.toObject(), 
         type: 'booth',
-        isAvailable: i.isAvailable === true // Explicitly check for true
+        isAvailable: (i.isAvailable === true) && !busyInterpreterIds.has(i._id.toString()),
+        inMeeting: busyInterpreterIds.has(i._id.toString()) // Add flag for UI display
       })),
       ...globalInterpreters.map(i => ({ 
         ...i.toObject(), 
         type: 'global',
-        isAvailable: i.isAvailable === true // Explicitly check for true
+        isAvailable: (i.isAvailable === true) && !busyInterpreterIds.has(i._id.toString()),
+        inMeeting: busyInterpreterIds.has(i._id.toString()) // Add flag for UI display
       }))
     ];
 
-    // Sort by availability - available interpreters first
-    interpreters.sort((a, b) => (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0));
+    // Sort by availability - available interpreters first, then by type (booth first)
+    interpreters.sort((a, b) => {
+      // First sort by availability
+      if (b.isAvailable !== a.isAvailable) {
+        return (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0);
+      }
+      // Then sort by type (booth interpreters before global)
+      return a.type === 'booth' ? -1 : 1;
+    });
 
     res.json({
       success: true,
@@ -296,6 +323,38 @@ router.post('/invite-interpreter', auth, async (req, res) => {
 
     if (!selectedInterpreter) {
       return res.status(404).json({ error: 'Selected interpreter not found' });
+    }
+
+    // Check if interpreter is already in an active meeting
+    const interpreterInActiveMeeting = await VideoCall.findOne({
+      status: 'active',
+      'interpreters.interpreter': interpreterId,
+      'interpreters.status': 'joined'
+    }).populate('recruiter booth');
+
+    if (interpreterInActiveMeeting) {
+      console.log('❌ Interpreter already in active meeting:', {
+        interpreter: selectedInterpreter.email,
+        existingCall: interpreterInActiveMeeting._id,
+        booth: interpreterInActiveMeeting.booth?.name || 'Unknown'
+      });
+      
+      return res.status(409).json({ 
+        error: 'Interpreter is already in another meeting',
+        message: `${selectedInterpreter.name} is currently in another meeting. Please try again later.`
+      });
+    }
+
+    // Check if interpreter is already invited to this call
+    const alreadyInvited = videoCall.interpreters.some(
+      i => i.interpreter.toString() === interpreterId.toString()
+    );
+
+    if (alreadyInvited) {
+      return res.status(409).json({ 
+        error: 'Interpreter already invited',
+        message: 'This interpreter has already been invited to this call.'
+      });
     }
 
     // Add interpreter to call (use empty string if category not provided)

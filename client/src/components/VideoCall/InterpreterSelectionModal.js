@@ -115,18 +115,23 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
                 {interpreters.map((interpreter) => (
                   <div
                     key={interpreter._id}
-                    className={`ism-item ${selectedInterpreter?._id === interpreter._id ? 'ism-selected' : ''}`}
-                    onClick={() => setSelectedInterpreter(interpreter)}
+                    className={`ism-item ${selectedInterpreter?._id === interpreter._id ? 'ism-selected' : ''} ${interpreter.inMeeting ? 'ism-disabled' : ''}`}
+                    onClick={() => {
+                      if (!interpreter.inMeeting) {
+                        setSelectedInterpreter(interpreter);
+                      }
+                    }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if ((e.key === 'Enter' || e.key === ' ') && !interpreter.inMeeting) {
                         e.preventDefault();
                         setSelectedInterpreter(interpreter);
                       }
                     }}
                     role="radio"
-                    tabIndex={0}
+                    tabIndex={interpreter.inMeeting ? -1 : 0}
                     aria-checked={selectedInterpreter?._id === interpreter._id}
-                    aria-label={`Select ${interpreter.name}, ${interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}, ${interpreter.isAvailable ? 'Online' : 'Offline'}`}
+                    aria-disabled={interpreter.inMeeting}
+                    aria-label={`${interpreter.name}, ${interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}, ${interpreter.inMeeting ? 'In Meeting' : interpreter.isAvailable ? 'Online' : 'Offline'}`}
                   >
                     <div className="ism-avatar-wrapper">
                       <div className="ism-avatar" aria-hidden="true">
@@ -146,11 +151,15 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
                         <span className={`ism-role-badge ${interpreter.role === 'GlobalInterpreter' ? 'ism-global' : 'ism-booth'}`}>
                           {interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}
                         </span>
-                        {interpreter.isAvailable && (
+                        {interpreter.inMeeting ? (
+                          <span className="ism-availability-badge ism-in-meeting">
+                            In Meeting
+                          </span>
+                        ) : interpreter.isAvailable ? (
                           <span className="ism-availability-badge">
                             Online
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       {interpreter.languages && interpreter.languages.length > 0 && (
                         <div className="ism-languages">

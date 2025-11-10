@@ -773,8 +773,22 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         callInfo
       });
       await videoCallService.inviteInterpreter(callId, interpreterId, category);
+      
+      // Show success message
+      alert('Interpreter invitation sent successfully!');
     } catch (error) {
       console.error('Error inviting interpreter:', error);
+      
+      // Handle specific error cases
+      const errorMessage = error.response?.data?.message || error.response?.data?.error;
+      
+      if (error.response?.status === 409) {
+        // Interpreter is busy or already invited
+        alert(errorMessage || 'This interpreter is not available at the moment.');
+      } else {
+        // General error
+        alert('Failed to invite interpreter. Please try again.');
+      }
     }
   };
 

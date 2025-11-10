@@ -137,6 +137,20 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Disabled state for interpreters in meetings */
+.ism-item.ism-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #f5f5f5;
+}
+
+.ism-item.ism-disabled:hover {
+  border-color: #e2e8f0;
+  background: #f5f5f5;
+  transform: none;
+}
+
 /* Interpreter Avatar */
 .ism-avatar-wrapper {
   position: relative;
@@ -231,6 +245,12 @@
   font-weight: 600;
   background: rgba(72, 187, 120, 0.12);
   color: #38a169;
+}
+
+/* In Meeting badge */
+.ism-availability-badge.ism-in-meeting {
+  background: rgba(244, 67, 54, 0.12);
+  color: #d32f2f;
 }
 
 .ism-languages {
