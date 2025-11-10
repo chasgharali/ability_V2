@@ -546,7 +546,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     // The Twilio SDK will automatically handle removing their video/audio tracks
   };
 
-  const handleCallEnded = (data) => {
+  const handleCallEnded = async (data) => {
     console.log('📞 Call ended event received:', data);
     
     // Announce call end for all participants
@@ -558,14 +558,47 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       speak("The call has ended. Thank you for your service.");
     }
     
-    cleanup();
+    // Disconnect from Twilio room FIRST to stop camera/mic immediately
+    if (roomRef.current) {
+      try {
+        console.log('🔌 Disconnecting from Twilio room (call ended by recruiter)...');
+        
+        // Stop and unpublish all local tracks
+        roomRef.current.localParticipant.tracks.forEach(publication => {
+          if (publication.track) {
+            try {
+              console.log('Unpublishing track:', publication.track.kind);
+              publication.unpublish();
+              if (typeof publication.track.stop === 'function') {
+                publication.track.stop();
+              }
+            } catch (e) {
+              console.warn('Error unpublishing track:', e);
+            }
+          }
+        });
+        
+        // Disconnect from room
+        roomRef.current.disconnect();
+        console.log('✅ Disconnected from Twilio room');
+        roomRef.current = null;
+      } catch (e) {
+        console.warn('Error disconnecting from room:', e);
+      }
+    }
+
+    // Wait a moment for disconnect to complete
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Final cleanup
+    cleanupRemainingResources();
     
     // Role-based navigation when call is ended by another participant
     if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
-      console.log('🏠 Navigating interpreter to dashboard after call ended by another participant');
-      setTimeout(() => navigate('/dashboard'), 500); // Small delay for cleanup
+      console.log('🏠 Navigating interpreter to dashboard after call ended by recruiter');
+      setTimeout(() => navigate('/dashboard'), 100);
     } else if (onCallEnd) {
-      onCallEnd(data);
+      setTimeout(() => onCallEnd(data), 100);
     }
   };
 
@@ -901,7 +934,39 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         callId: callInfo?.id || callInfo?.callId
       });
 
-      // Only recruiters can end call for everyone
+      // Step 1: Disconnect from Twilio room FIRST to stop camera/mic
+      if (roomRef.current) {
+        try {
+          console.log('🔌 Disconnecting from Twilio room...');
+          
+          // Stop and unpublish all local tracks
+          roomRef.current.localParticipant.tracks.forEach(publication => {
+            if (publication.track) {
+              try {
+                console.log('Unpublishing track:', publication.track.kind);
+                publication.unpublish();
+                if (typeof publication.track.stop === 'function') {
+                  publication.track.stop();
+                }
+              } catch (e) {
+                console.warn('Error unpublishing track:', e);
+              }
+            }
+          });
+          
+          // Disconnect from room - this notifies other participants
+          roomRef.current.disconnect();
+          console.log('✅ Disconnected from Twilio room');
+          roomRef.current = null;
+        } catch (e) {
+          console.warn('Error disconnecting from room:', e);
+        }
+      }
+
+      // Step 2: Wait a moment for disconnect to propagate
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 3: Call end API to notify backend and all participants
       if (callInfo && (callInfo.id || callInfo.callId)) {
         try {
           const callIdToEnd = callInfo.id || callInfo.callId;
@@ -910,21 +975,22 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           console.log('✅ API call to end call successful');
         } catch (apiError) {
           console.error('❌ API call to end call failed:', apiError);
-          console.warn('Proceeding with local cleanup despite API error');
+          console.warn('Proceeding with cleanup despite API error');
         }
       } else {
         console.warn('⚠️ No call ID found, skipping API call');
       }
 
-      cleanup();
+      // Step 4: Final cleanup (stop remaining tracks, leave socket room)
+      cleanupRemainingResources();
       
-      // Recruiter navigation after call ends
+      // Step 5: Recruiter navigation after call ends
       if (onCallEnd) {
-        onCallEnd();
+        setTimeout(() => onCallEnd(), 100);
       }
     } catch (error) {
       console.error('💥 Error ending call:', error);
-      cleanup();
+      cleanupRemainingResources();
       
       if (onCallEnd) {
         onCallEnd();
@@ -933,6 +999,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const cleanupRemainingResources = () => {
+    if (isCleaningUpRef.current) {
+      console.log('⚠️ Cleanup already in progress, skipping...');
+      return;
+    }
+    isCleaningUpRef.current = true;
+
     console.log('🧹 Final cleanup of remaining resources...');
 
     // Clear intervals
