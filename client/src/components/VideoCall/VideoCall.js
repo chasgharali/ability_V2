@@ -1070,10 +1070,24 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         <div className="header-status">
           {/* Interpreter Requested Badge */}
           {callInfo?.metadata?.interpreterRequested && (
-            <div className="interpreter-requested-badge" role="status" aria-live="polite" aria-label="Interpreter has been requested">
+            <button 
+              className="interpreter-requested-badge clickable" 
+              onClick={() => {
+                // Open participants panel for recruiters to invite interpreter
+                if (user?.role === 'Recruiter') {
+                  setIsParticipantsOpen(true);
+                  setIsChatOpen(false);
+                  setIsProfileOpen(false);
+                }
+              }}
+              disabled={user?.role !== 'Recruiter'}
+              aria-live="polite" 
+              aria-label={user?.role === 'Recruiter' ? "Interpreter has been requested. Click to open participants panel and invite an interpreter." : "Interpreter has been requested"}
+              title={user?.role === 'Recruiter' ? "Click to invite interpreter" : "Interpreter requested"}
+            >
               <span className="badge-icon">🗣️</span>
               <span className="badge-text">Interpreter Requested</span>
-            </div>
+            </button>
           )}
           
           <div className="call-duration" aria-live="polite" aria-label={`Call duration: ${Math.floor(callDuration / 60)} minutes ${callDuration % 60} seconds`}>
