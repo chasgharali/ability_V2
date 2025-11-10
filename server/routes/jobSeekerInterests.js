@@ -36,7 +36,7 @@ router.post('/', authenticateToken, requireRole(['JobSeeker']), async (req, res)
             interest.notes = notes !== undefined ? notes : interest.notes;
             interest.company = company;
             interest.companyLogo = companyLogo || interest.companyLogo;
-            
+
             await interest.save();
         } else {
             // Create new interest
@@ -50,7 +50,7 @@ router.post('/', authenticateToken, requireRole(['JobSeeker']), async (req, res)
                 interestLevel: interestLevel || 'medium',
                 notes
             });
-            
+
             await interest.save();
         }
 
@@ -72,14 +72,14 @@ router.post('/', authenticateToken, requireRole(['JobSeeker']), async (req, res)
         });
     } catch (error) {
         logger.error('Create/Update job seeker interest error:', error);
-        
+
         if (error.code === 11000) {
             return res.status(409).json({
                 error: 'Duplicate interest',
                 message: 'Interest for this booth already exists'
             });
         }
-        
+
         res.status(500).json({
             error: 'Failed to save interest',
             message: 'An error occurred while saving your interest'
@@ -137,13 +137,13 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         if (req.user.role === 'Recruiter') {
             // Recruiters can only see interests for their booths
             const Booth = require('../models/Booth');
-            const recruiterBooths = await Booth.find({ 
-                administrators: req.user._id 
+            const recruiterBooths = await Booth.find({
+                administrators: req.user._id
             }).select('_id');
-            
+
             const boothIds = recruiterBooths.map(booth => booth._id);
             console.log('Recruiter booths found:', recruiterBooths.length, 'IDs:', boothIds);
-            
+
             // If recruiter has no booths, return empty result
             if (boothIds.length === 0) {
                 console.log('Recruiter has no assigned booths, returning empty result');
@@ -158,16 +158,16 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
                     }
                 });
             }
-            
+
             query.booth = { $in: boothIds };
         } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
             // Admins can filter by recruiter or see all
             if (recruiterId) {
                 const Booth = require('../models/Booth');
-                const recruiterBooths = await Booth.find({ 
-                    administrators: recruiterId 
+                const recruiterBooths = await Booth.find({
+                    administrators: recruiterId
                 }).select('_id');
-                
+
                 const boothIds = recruiterBooths.map(booth => booth._id);
                 query.booth = { $in: boothIds };
             }
@@ -195,7 +195,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
 
         // Get total count for pagination
         const totalInterests = await JobSeekerInterest.countDocuments(query);
-        
+
         console.log('Found interests:', interests.length, 'Total in DB:', totalInterests);
 
         res.json({

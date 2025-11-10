@@ -8,14 +8,14 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 // Get meeting records with filtering
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const { 
-            recruiterId, 
-            eventId, 
-            boothId, 
-            status, 
-            startDate, 
-            endDate, 
-            page = 1, 
+        const {
+            recruiterId,
+            eventId,
+            boothId,
+            status,
+            startDate,
+            endDate,
+            page = 1,
             limit = 10,
             sortBy = 'startTime',
             sortOrder = 'desc'
@@ -121,11 +121,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
 
         // Check access permissions
-        const canAccess = req.user.role === 'Admin' || 
-                         req.user.role === 'GlobalSupport' ||
-                         meetingRecord.recruiterId._id.toString() === req.user._id.toString() ||
-                         meetingRecord.jobseekerId._id.toString() === req.user._id.toString() ||
-                         (meetingRecord.interpreterId && meetingRecord.interpreterId._id.toString() === req.user._id.toString());
+        const canAccess = req.user.role === 'Admin' ||
+            req.user.role === 'GlobalSupport' ||
+            meetingRecord.recruiterId._id.toString() === req.user._id.toString() ||
+            meetingRecord.jobseekerId._id.toString() === req.user._id.toString() ||
+            (meetingRecord.interpreterId && meetingRecord.interpreterId._id.toString() === req.user._id.toString());
 
         if (!canAccess) {
             return res.status(403).json({ message: 'Access denied' });
@@ -197,9 +197,9 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             twilioRoomSid: videoCall.roomSid,
             startTime: videoCall.startedAt,
             endTime: videoCall.endedAt,
-            duration: videoCall.duration ? Math.floor(videoCall.duration / 60) : 
-                     (videoCall.startedAt && videoCall.endedAt ? 
-                      Math.floor((new Date(videoCall.endedAt) - new Date(videoCall.startedAt)) / (1000 * 60)) : null),
+            duration: videoCall.duration ? Math.floor(videoCall.duration / 60) :
+                (videoCall.startedAt && videoCall.endedAt ?
+                    Math.floor((new Date(videoCall.endedAt) - new Date(videoCall.startedAt)) / (1000 * 60)) : null),
             status: videoCall.status === 'ended' ? 'completed' : videoCall.status,
             jobSeekerMessages: jobSeekerMessages,
             chatMessages: transformedChatMessages
@@ -238,9 +238,9 @@ router.post('/:id/rating', authenticateToken, requireRole(['Recruiter', 'Admin',
         }
 
         // Check if user is the recruiter or admin
-        const canRate = req.user.role === 'Admin' || 
-                       req.user.role === 'GlobalSupport' ||
-                       meetingRecord.recruiterId.toString() === req.user._id.toString();
+        const canRate = req.user.role === 'Admin' ||
+            req.user.role === 'GlobalSupport' ||
+            meetingRecord.recruiterId.toString() === req.user._id.toString();
 
         if (!canRate) {
             return res.status(403).json({ message: 'Only the recruiter can rate this meeting' });
@@ -248,7 +248,7 @@ router.post('/:id/rating', authenticateToken, requireRole(['Recruiter', 'Admin',
 
         await meetingRecord.submitRecruiterRating(rating, feedback);
 
-        res.json({ 
+        res.json({
             message: 'Rating submitted successfully',
             rating: meetingRecord.recruiterRating,
             feedback: meetingRecord.recruiterFeedback
@@ -377,7 +377,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             if (!duration && record.startTime && record.endTime) {
                 duration = Math.round((new Date(record.endTime) - new Date(record.startTime)) / (1000 * 60));
             }
-            
+
             return [
                 record.eventId?.name || '',
                 record.boothId?.name || '',
