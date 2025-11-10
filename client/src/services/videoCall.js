@@ -77,7 +77,22 @@ const videoCallService = {
   },
 
   /**
-   * End video call
+   * Leave video call (participant leaves, call continues for others)
+   * @param {string} callId - Video call ID
+   * @returns {Promise} API response
+   */
+  leaveCall: async (callId) => {
+    try {
+      const response = await axios.post('/api/video-call/leave', { callId }, { headers: authHeaders() });
+      return response.data;
+    } catch (error) {
+      console.error('Error leaving video call:', error);
+      throw error.response?.data || error;
+    }
+  },
+
+  /**
+   * End video call for everyone (recruiter only)
    * @param {string} callId - Video call ID
    * @returns {Promise} API response
    */

@@ -22,6 +22,7 @@ const CallControls = ({
   onToggleParticipants,
   onToggleProfile,
   onEndCall,
+  onLeaveCall,
   userRole,
   participantCount,
   chatUnreadCount = 0
@@ -255,26 +256,38 @@ const CallControls = ({
           )}
         </div>
 
-        {/* End Call Button */}
+        {/* End Call / Leave Call Button */}
         <div className="end-call-controls" role="toolbar" aria-label="End call controls">
-          <div className="control-wrapper">
-            <button
-              className="end-call-button"
-              onClick={onEndCall}
-              title="End call"
-              aria-label="End call"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onEndCall();
-                }
-              }}
-            >
-              <FiPhoneOff size={20} aria-hidden="true" />
-            </button>
-            <span className="control-label">End call</span>
-          </div>
+          {(() => {
+            // Determine if user is recruiter or not
+            const isRecruiter = userRole === 'recruiter' || userRole === 'Recruiter';
+            const isJobSeeker = userRole === 'jobseeker' || userRole === 'JobSeeker';
+            const isInterpreter = userRole === 'interpreter' || userRole === 'Interpreter' || userRole === 'GlobalInterpreter';
+            
+            const buttonLabel = isRecruiter ? 'End call' : 'Leave call';
+            const handleClick = isRecruiter ? onEndCall : onLeaveCall;
+            
+            return (
+              <div className="control-wrapper">
+                <button
+                  className="end-call-button"
+                  onClick={handleClick}
+                  title={buttonLabel}
+                  aria-label={buttonLabel}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleClick();
+                    }
+                  }}
+                >
+                  <FiPhoneOff size={20} aria-hidden="true" />
+                </button>
+                <span className="control-label">{buttonLabel}</span>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

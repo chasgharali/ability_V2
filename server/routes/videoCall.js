@@ -480,8 +480,78 @@ router.post('/send-message', auth, async (req, res) => {
 });
 
 /**
+ * POST /api/video-call/leave
+ * Leave video call (individual participant leaves, call continues for others)
+ */
+router.post('/leave', auth, async (req, res) => {
+  try {
+    const { callId } = req.body;
+    const userId = req.user._id;
+
+    console.log('🚪 Leave call request:', {
+      callId,
+      userId: userId.toString(),
+      userEmail: req.user.email,
+      userRole: req.user.role
+    });
+
+    const videoCall = await VideoCall.findById(callId);
+
+    if (!videoCall) {
+      console.log('❌ Video call not found:', callId);
+      return res.status(404).json({ error: 'Video call not found' });
+    }
+
+    // Check if user is a participant
+    const isJobSeeker = videoCall.jobSeeker?.toString() === userId.toString();
+    const isInterpreter = videoCall.interpreters?.some(i => i.interpreter.toString() === userId.toString());
+
+    if (!isJobSeeker && !isInterpreter) {
+      console.log('❌ Authorization failed - not a job seeker or interpreter');
+      return res.status(403).json({ error: 'Only job seekers and interpreters can leave call' });
+    }
+
+    console.log('✅ Authorization passed - participant leaving call');
+
+    // Emit socket event to notify others that this participant left
+    const io = req.app.get('io');
+    io.to(`call_${videoCall.roomName}`).emit('participant_left_call', {
+      callId: callId,
+      userId: userId.toString(),
+      userName: req.user.name,
+      userRole: req.user.role
+    });
+
+    // If job seeker leaves, update queue status
+    if (isJobSeeker) {
+      const queueEntry = await BoothQueue.findById(videoCall.queueEntry);
+      if (queueEntry && queueEntry.status !== 'completed' && queueEntry.status !== 'left_with_message') {
+        await queueEntry.leaveQueue();
+        // Notify booth management
+        io.to(`booth_${queueEntry.booth}`).emit('queue-updated', {
+          boothId: queueEntry.booth,
+          action: 'left',
+          queueEntry: queueEntry.toJSON()
+        });
+        io.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', {
+          boothId: queueEntry.booth,
+          action: 'left',
+          queueEntry: queueEntry.toJSON()
+        });
+      }
+    }
+
+    res.json({ success: true, action: 'left' });
+
+  } catch (error) {
+    console.error('Error leaving video call:', error);
+    res.status(500).json({ error: 'Failed to leave video call' });
+  }
+});
+
+/**
  * POST /api/video-call/end
- * End video call
+ * End video call for everyone (recruiter only)
  */
 router.post('/end', auth, async (req, res) => {
   try {
@@ -502,29 +572,23 @@ router.post('/end', auth, async (req, res) => {
       return res.status(404).json({ error: 'Video call not found' });
     }
 
-    // Authorization: allow direct participants OR privileged roles
-    const isParticipant =
-      videoCall.recruiter?.toString() === userId.toString() ||
-      videoCall.jobSeeker?.toString() === userId.toString() ||
-      videoCall.interpreters?.some(i => i.interpreter.toString() === userId.toString());
-
-    const hasPrivilegedRole = ['Recruiter', 'Admin', 'GlobalSupport', 'Interpreter', 'GlobalInterpreter'].includes(req.user.role);
+    // Authorization: Only recruiter, admin, or global support can end call for everyone
+    const isRecruiter = videoCall.recruiter?.toString() === userId.toString();
+    const hasPrivilegedRole = ['Admin', 'GlobalSupport'].includes(req.user.role);
 
     console.log('🔐 Authorization check:', {
-      isParticipant,
+      isRecruiter,
       hasPrivilegedRole,
       recruiter: videoCall.recruiter?.toString(),
-      jobSeeker: videoCall.jobSeeker?.toString(),
-      interpreters: videoCall.interpreters?.map(i => i.interpreter.toString()),
       userId: userId.toString()
     });
 
-    if (!isParticipant && !hasPrivilegedRole) {
-      console.log('❌ Authorization failed - not a participant or privileged role');
-      return res.status(403).json({ error: 'Unauthorized to end call' });
+    if (!isRecruiter && !hasPrivilegedRole) {
+      console.log('❌ Authorization failed - only recruiter can end call for everyone');
+      return res.status(403).json({ error: 'Only recruiter can end call for everyone' });
     }
 
-    console.log('✅ Authorization passed - ending call');
+    console.log('✅ Authorization passed - ending call for everyone');
 
     // End Twilio room first
     try {

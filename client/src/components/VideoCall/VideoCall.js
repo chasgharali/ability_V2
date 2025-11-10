@@ -155,6 +155,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     });
     socket.on('participant_joined', handleParticipantJoined);
     socket.on('participant_left', handleParticipantLeft);
+    socket.on('participant_left_call', handleParticipantLeftCall);
     socket.on('interpreter_response', handleInterpreterResponse);
     socket.on('interpreter-declined', handleInterpreterDeclined);
     socket.on('call_ended', handleCallEnded);
@@ -175,6 +176,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       socket.off('video-call-message-direct');
       socket.off('participant_joined', handleParticipantJoined);
       socket.off('participant_left', handleParticipantLeft);
+      socket.off('participant_left_call', handleParticipantLeftCall);
       socket.off('interpreter_response', handleInterpreterResponse);
       socket.off('interpreter-declined', handleInterpreterDeclined);
       socket.off('participant-joined-video', handleParticipantJoined);
@@ -533,6 +535,17 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   };
 
+  const handleParticipantLeftCall = (data) => {
+    console.log('🚪 Participant left call event received:', data);
+    
+    // Announce to remaining participants that someone left
+    const leftUserRole = data.userRole?.toLowerCase() || 'participant';
+    speak(`${leftUserRole} has left the call.`);
+    
+    // Update UI - remove participant from participants list
+    // The Twilio SDK will automatically handle removing their video/audio tracks
+  };
+
   const handleCallEnded = (data) => {
     console.log('📞 Call ended event received:', data);
     
@@ -792,6 +805,92 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   };
 
+  const leaveCall = async () => {
+    try {
+      console.log('🚪 Leave call initiated by user:', {
+        userId: user?._id,
+        userEmail: user?.email,
+        userRole: user?.role,
+        callInfo: callInfo,
+        callId: callInfo?.id || callInfo?.callId
+      });
+
+      // Announce leaving first
+      speak("You have left the call.");
+
+      // Step 1: Disconnect from Twilio room FIRST so other participants see you leave
+      if (roomRef.current) {
+        try {
+          console.log('🔌 Disconnecting from Twilio room...');
+          
+          // Stop and unpublish all local tracks
+          roomRef.current.localParticipant.tracks.forEach(publication => {
+            if (publication.track) {
+              try {
+                console.log('Unpublishing track:', publication.track.kind);
+                publication.unpublish();
+                if (typeof publication.track.stop === 'function') {
+                  publication.track.stop();
+                }
+              } catch (e) {
+                console.warn('Error unpublishing track:', e);
+              }
+            }
+          });
+          
+          // Disconnect from room - this notifies other participants
+          roomRef.current.disconnect();
+          console.log('✅ Disconnected from Twilio room');
+          roomRef.current = null;
+        } catch (e) {
+          console.warn('Error disconnecting from room:', e);
+        }
+      }
+
+      // Step 2: Wait a moment for disconnect to propagate
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Step 3: Call leave API to update backend
+      if (callInfo && (callInfo.id || callInfo.callId)) {
+        try {
+          const callIdToLeave = callInfo.id || callInfo.callId;
+          console.log('📞 Calling API to leave call:', callIdToLeave);
+          await videoCallService.leaveCall(callIdToLeave);
+          console.log('✅ API call to leave call successful');
+        } catch (apiError) {
+          console.error('❌ API call to leave call failed:', apiError);
+          console.warn('Proceeding with cleanup despite API error');
+        }
+      } else {
+        console.warn('⚠️ No call ID found, skipping API call');
+      }
+
+      // Step 4: Final cleanup (stop remaining tracks, leave socket room)
+      cleanupRemainingResources();
+      
+      // Step 5: Role-based navigation after leaving
+      if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+        console.log('🏠 Navigating interpreter to dashboard');
+        setTimeout(() => navigate('/dashboard'), 100);
+      } else if (user?.role === 'JobSeeker') {
+        console.log('🏠 Navigating job seeker back');
+        if (onCallEnd) {
+          setTimeout(() => onCallEnd(), 100);
+        }
+      }
+    } catch (error) {
+      console.error('💥 Error leaving call:', error);
+      cleanupRemainingResources();
+      
+      // Navigate even on error
+      if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+        navigate('/dashboard');
+      } else if (onCallEnd) {
+        onCallEnd();
+      }
+    }
+  };
+
   const endCall = async () => {
     try {
       console.log('🔚 End call initiated by user:', {
@@ -802,11 +901,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         callId: callInfo?.id || callInfo?.callId
       });
 
-      // Allow all participants (recruiter, jobseeker, interpreter) to end the call via API
+      // Only recruiters can end call for everyone
       if (callInfo && (callInfo.id || callInfo.callId)) {
         try {
           const callIdToEnd = callInfo.id || callInfo.callId;
-          console.log('📞 Calling API to end call:', callIdToEnd);
+          console.log('📞 Calling API to end call for everyone:', callIdToEnd);
           await videoCallService.endCall(callIdToEnd);
           console.log('✅ API call to end call successful');
         } catch (apiError) {
@@ -819,24 +918,78 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       cleanup();
       
-      // Role-based navigation after call ends
-      if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
-        console.log('🏠 Navigating interpreter to dashboard');
-        navigate('/dashboard');
-      } else if (onCallEnd) {
+      // Recruiter navigation after call ends
+      if (onCallEnd) {
         onCallEnd();
       }
     } catch (error) {
       console.error('💥 Error ending call:', error);
       cleanup();
       
-      // Navigate interpreter even on error
-      if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
-        navigate('/dashboard');
-      } else if (onCallEnd) {
+      if (onCallEnd) {
         onCallEnd();
       }
     }
+  };
+
+  const cleanupRemainingResources = () => {
+    console.log('🧹 Final cleanup of remaining resources...');
+
+    // Clear intervals
+    if (qualityCheckIntervalRef.current) {
+      clearInterval(qualityCheckIntervalRef.current);
+    }
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    // Stop all local tracks
+    localTracks.forEach(track => {
+      if (track && typeof track.stop === 'function') {
+        try {
+          console.log('Stopping remaining local track:', track.kind);
+          track.stop();
+        } catch (error) {
+          console.warn('Error stopping local track:', error);
+        }
+      }
+    });
+
+    // Stop all media stream tracks directly from browser
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const videoElements = document.querySelectorAll('video');
+        videoElements.forEach(video => {
+          if (video.srcObject) {
+            const stream = video.srcObject;
+            stream.getTracks().forEach(track => {
+              console.log('Stopping media stream track:', track.kind, track.label);
+              track.stop();
+            });
+            video.srcObject = null;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Error stopping media stream tracks:', e);
+    }
+
+    setLocalTracks([]);
+
+    // Leave socket room
+    if (socket && callInfo) {
+      try {
+        const roomName = callInfo.roomName || `call_${callInfo.id || callInfo.callId}`;
+        console.log('👋 Leaving socket room:', roomName);
+        socket.emit('leave-video-room', { roomName });
+      } catch (e) {
+        console.warn('Error leaving socket room:', e);
+      }
+    }
+
+    setRoom(null);
+    setParticipants(new Map());
   };
 
   const cleanup = () => {
@@ -1238,7 +1391,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           onToggleParticipants={handleToggleParticipants}
           onToggleProfile={handleToggleProfile}
           onEndCall={endCall}
-          userRole={callInfo?.userRole}
+          onLeaveCall={leaveCall}
+          userRole={callInfo?.userRole || user?.role}
           participantCount={participants.size + 1}
           chatUnreadCount={unreadChatCount}
         />
