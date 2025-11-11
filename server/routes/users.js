@@ -368,14 +368,14 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             targetUser.isAvailable = isAvailable;
         }
 
-        // Handle assignedBooth updates and validation for recruiter/booth admin/interpreter
+        // Handle assignedBooth updates and validation for recruiter/booth admin/support/interpreter
         const effectiveRole = role !== undefined ? role : targetUser.role;
-        if (['Recruiter', 'BoothAdmin'].includes(effectiveRole)) {
-            // Booth is REQUIRED for Recruiter and BoothAdmin
+        if (['Recruiter', 'BoothAdmin', 'Support'].includes(effectiveRole)) {
+            // Booth is REQUIRED for Recruiter, BoothAdmin, and Support
             if (assignedBooth === undefined && !targetUser.assignedBooth) {
                 return res.status(400).json({
                     error: 'Validation failed',
-                    message: 'Assigned booth is required for recruiters and booth admins'
+                    message: 'Assigned booth is required for recruiters, booth admins, and booth support'
                 });
             }
             if (assignedBooth !== undefined) {

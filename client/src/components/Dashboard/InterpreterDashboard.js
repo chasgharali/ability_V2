@@ -3,6 +3,7 @@ import { MdVideocam, MdMic, MdRefresh } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../contexts/SocketContext';
 import InterpreterInvitationModal from '../VideoCall/InterpreterInvitationModal';
+import ChatPanel from '../Chat/ChatPanel';
 import './InterpreterDashboard.css';
 
 const InterpreterDashboard = () => {
@@ -439,6 +440,9 @@ const InterpreterDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Team Chat Panel */}
+      <ChatPanel />
 
       {/* Interpreter Invitation Modal */}
       {showInvitationModal && invitation && (

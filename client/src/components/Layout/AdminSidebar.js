@@ -115,6 +115,38 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
         </>
       );
+    } else if (user?.role === 'Support' || user?.role === 'GlobalSupport') {
+      // Support view: Dashboard, Instructions, Analytics, Troubleshooting, and Chat
+      return (
+        <>
+          <div className="sidebar-section">
+            <button 
+              className={itemClass('dashboard')} 
+              onClick={() => handleItemClick('/dashboard')}
+            >
+              Dashboard
+            </button>
+            <button 
+              className={itemClass('instructions')} 
+              onClick={closeMobileMenu}
+            >
+              Instructions
+            </button>
+            <button 
+              className={itemClass('analytics')} 
+              onClick={closeMobileMenu}
+            >
+              Analytics
+            </button>
+            <button 
+              className={itemClass('troubleshooting')} 
+              onClick={closeMobileMenu}
+            >
+              Troubleshooting
+            </button>
+          </div>
+        </>
+      );
     } else if (user?.role === 'JobSeeker') {
       return (
         <>

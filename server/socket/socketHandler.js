@@ -4,6 +4,8 @@ const Queue = require('../models/Queue');
 const BoothQueue = require('../models/BoothQueue');
 const MeetingRecord = require('../models/MeetingRecord');
 const VideoCall = require('../models/VideoCall');
+const Chat = require('../models/Chat');
+const Message = require('../models/Message');
 const logger = require('../utils/logger');
 
 /**
@@ -830,6 +832,180 @@ const socketHandler = (io) => {
                 } catch (error) {
                     logger.error('Error cleaning up queue on disconnect:', error);
                 }
+            }
+        });
+
+        /**
+         * Chat Socket Handlers
+         */
+        
+        // Join chat room
+        socket.on('join-chat', async (data) => {
+            try {
+                const { chatId } = data;
+                
+                if (!chatId) {
+                    socket.emit('error', { message: 'Chat ID is required' });
+                    return;
+                }
+
+                // Verify user is participant in chat
+                const chat = await Chat.findOne({
+                    _id: chatId,
+                    'participants.user': socket.userId
+                });
+
+                if (!chat) {
+                    socket.emit('error', { message: 'You are not a participant in this chat' });
+                    return;
+                }
+
+                socket.join(`chat:${chatId}`);
+                socket.currentChatId = chatId;
+
+                // Update last read timestamp
+                await chat.updateLastRead(socket.userId);
+
+                logger.info(`User ${socket.user.email} joined chat ${chatId}`);
+                socket.emit('chat-joined', { chatId });
+            } catch (error) {
+                logger.error('Join chat error:', error);
+                socket.emit('error', { message: 'Failed to join chat' });
+            }
+        });
+
+        // Leave chat room
+        socket.on('leave-chat', (data) => {
+            try {
+                const { chatId } = data;
+                if (chatId) {
+                    socket.leave(`chat:${chatId}`);
+                    if (socket.currentChatId === chatId) {
+                        socket.currentChatId = null;
+                    }
+                    logger.info(`User ${socket.user.email} left chat ${chatId}`);
+                }
+            } catch (error) {
+                logger.error('Leave chat error:', error);
+            }
+        });
+
+        // Send message in chat
+        socket.on('send-message', async (data) => {
+            try {
+                const { chatId, content, type = 'text', fileUrl, fileName, fileSize } = data;
+
+                if (!chatId || !content) {
+                    socket.emit('error', { message: 'Chat ID and content are required' });
+                    return;
+                }
+
+                // Verify user is participant in chat
+                const chat = await Chat.findOne({
+                    _id: chatId,
+                    'participants.user': socket.userId
+                });
+
+                if (!chat) {
+                    socket.emit('error', { message: 'You are not a participant in this chat' });
+                    return;
+                }
+
+                // Create message
+                const message = await Message.create({
+                    chat: chatId,
+                    sender: socket.userId,
+                    content,
+                    type,
+                    fileUrl,
+                    fileName,
+                    fileSize
+                });
+
+                const populatedMessage = await Message.findById(message._id)
+                    .populate('sender', 'name email avatarUrl role');
+
+                // Update chat's last message
+                chat.lastMessage = {
+                    content: content.substring(0, 100),
+                    sender: socket.userId,
+                    timestamp: message.createdAt
+                };
+                await chat.save();
+
+                // Broadcast to all participants in chat
+                io.to(`chat:${chatId}`).emit('new-message', {
+                    chatId,
+                    message: populatedMessage
+                });
+
+                // Send notification to offline participants
+                const onlineUsers = Array.from(io.sockets.adapter.rooms.get(`chat:${chatId}`) || []);
+                const offlineParticipants = chat.participants.filter(p => 
+                    p.user.toString() !== socket.userId.toString() && 
+                    !onlineUsers.includes(`user:${p.user}`)
+                );
+
+                offlineParticipants.forEach(participant => {
+                    io.to(`user:${participant.user}`).emit('chat-notification', {
+                        chatId,
+                        message: populatedMessage,
+                        unreadCount: 1 // Will be calculated on client side
+                    });
+                });
+
+                logger.info(`Message sent in chat ${chatId} by ${socket.user.email}`);
+            } catch (error) {
+                logger.error('Send message error:', error);
+                socket.emit('error', { message: 'Failed to send message' });
+            }
+        });
+
+        // Typing indicator
+        socket.on('typing', (data) => {
+            try {
+                const { chatId, isTyping } = data;
+                if (chatId) {
+                    socket.to(`chat:${chatId}`).emit('user-typing', {
+                        chatId,
+                        userId: socket.userId,
+                        userName: socket.user.name,
+                        isTyping
+                    });
+                }
+            } catch (error) {
+                logger.error('Typing indicator error:', error);
+            }
+        });
+
+        // Mark messages as read
+        socket.on('mark-read', async (data) => {
+            try {
+                const { chatId } = data;
+                
+                if (!chatId) {
+                    return;
+                }
+
+                const chat = await Chat.findOne({
+                    _id: chatId,
+                    'participants.user': socket.userId
+                });
+
+                if (!chat) {
+                    return;
+                }
+
+                await chat.updateLastRead(socket.userId);
+
+                // Notify other participants
+                socket.to(`chat:${chatId}`).emit('messages-read', {
+                    chatId,
+                    userId: socket.userId,
+                    timestamp: new Date()
+                });
+            } catch (error) {
+                logger.error('Mark read error:', error);
             }
         });
     });

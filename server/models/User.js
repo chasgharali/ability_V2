@@ -202,11 +202,11 @@ userSchema.methods.getPublicProfile = function () {
     return profile;
 };
 
-// Validate recruiter/booth admin must have assignedBooth
+// Validate recruiter/booth admin/booth support/booth interpreter must have assignedBooth
 userSchema.pre('validate', function (next) {
     const role = this.role;
-    if (['Recruiter', 'BoothAdmin'].includes(role) && !this.assignedBooth) {
-        this.invalidate('assignedBooth', 'Assigned booth is required for recruiters and booth admins');
+    if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) && !this.assignedBooth) {
+        this.invalidate('assignedBooth', 'Assigned booth is required for recruiters, booth admins, booth support, and booth interpreters');
     }
     next();
 });

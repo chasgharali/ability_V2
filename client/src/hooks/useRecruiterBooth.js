@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * Custom hook to get recruiter/interpreter's booth and event information for header logos
+ * Custom hook to get recruiter/interpreter/support's booth and event information for header logos
  */
 export function useRecruiterBooth() {
     const { user } = useAuth();
@@ -15,8 +15,8 @@ export function useRecruiterBooth() {
 
     useEffect(() => {
         async function fetchRecruiterBooth() {
-            if (!user || !['Recruiter', 'Interpreter', 'GlobalInterpreter'].includes(user.role)) {
-                console.log('useRecruiterBooth: Not a recruiter/interpreter or no user', { user: user?.role });
+            if (!user || !['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support'].includes(user.role)) {
+                console.log('useRecruiterBooth: Not a recruiter/interpreter/support or no user', { user: user?.role });
                 setBoothInfo({
                     booth: null,
                     event: null,

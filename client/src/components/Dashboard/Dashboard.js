@@ -18,6 +18,8 @@ import InterpreterDashboard from './InterpreterDashboard';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import MyAccountInline from '../Account/MyAccountInline';
+import Chat from '../Chat/Chat';
+import ChatPanel from '../Chat/ChatPanel';
 import settingsAPI from '../../services/settings';
 
 // Simple error boundary to prevent white screens if a nested view crashes
@@ -395,6 +397,29 @@ const Dashboard = () => {
             case 'Interpreter':
             case 'GlobalInterpreter':
                 return <InterpreterDashboard />;
+            case 'Support':
+            case 'GlobalSupport':
+                return (
+                    <div className="dashboard-content support-dashboard">
+                        <h2>Support Dashboard</h2>
+                        <p className="support-subtitle">Welcome to your support workspace. Use team chat to collaborate with recruiters and interpreters.</p>
+                        <div className="support-info-cards">
+                            <div className="dashboard-card">
+                                <h3>Team Communication</h3>
+                                <p>Access team chat to communicate with recruiters and interpreters</p>
+                                <div className="support-hint">Click the "Team Chat" button in the bottom right to open chat</div>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>Active Support Sessions</h3>
+                                <p>Monitor ongoing support requests and assist team members</p>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>Quick Actions</h3>
+                                <p>Manage booth operations and support recruitment activities</p>
+                            </div>
+                        </div>
+                    </div>
+                );
             case 'JobSeeker':
                 if (activeSection === 'survey') {
                     return <SurveyForm />;
@@ -711,6 +736,9 @@ const Dashboard = () => {
                     )}
                 </main>
             </div>
+
+            {/* Chat Panel for Recruiter/BoothAdmin/Support on all views */}
+            {(user?.role === 'Recruiter' || user?.role === 'BoothAdmin' || user?.role === 'Support' || user?.role === 'GlobalSupport') && <ChatPanel />}
 
             {/* Mobile overlay */}
             <div className="mobile-overlay" aria-hidden="true" />

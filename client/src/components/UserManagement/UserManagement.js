@@ -212,8 +212,8 @@ export default function UserManagement() {
           email: form.email || undefined,
           role: form.role || undefined,
         };
-        // Assign booth for Recruiter, BoothAdmin, and Interpreter roles
-        if (['Recruiter', 'BoothAdmin', 'Interpreter'].includes(form.role)) {
+        // Assign booth for Recruiter, BoothAdmin, Support, and Interpreter roles
+        if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
           payload.assignedBooth = form.boothId || undefined;
         }
         await updateUser(editingId, payload);
@@ -229,8 +229,8 @@ export default function UserManagement() {
           password: form.password,
           role: form.role,
         };
-        // Assign booth for Recruiter, BoothAdmin, and Interpreter roles
-        if (['Recruiter', 'BoothAdmin', 'Interpreter'].includes(form.role)) {
+        // Assign booth for Recruiter, BoothAdmin, Support, and Interpreter roles
+        if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
           if (!form.boothId) {
             showToast('Please select a booth for this role', 'error');
             return;
@@ -296,7 +296,7 @@ export default function UserManagement() {
                     </div>
                   </>
                 )}
-                <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Interpreter'].includes(form.role)} />
+                <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} />
                 <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} />
                 <Select label="Select Event (Enable only for Event Admin)" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={form.role !== 'AdminEvent'} />
                 <button type="submit" className="dashboard-button" disabled={loading}>{editingId ? 'Update User' : 'Create User'}</button>

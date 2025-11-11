@@ -332,3 +332,5 @@
     font-size: 0.95rem;
   }
 }
+
+/* Chat is now handled by ChatPanel component */

@@ -1636,3 +1636,41 @@
         margin-right: 6px;
     }
 }
+
+/* Support Dashboard Styles */
+.support-dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.support-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.support-info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 2rem;
+}
+
+.support-hint {
+    margin-top: 12px;
+    padding: 12px;
+    background: #e3f2fd;
+    border-left: 3px solid #2196f3;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: #1976d2;
+    font-weight: 500;
+}
+
+/* Responsive Support Dashboard */
+@media (max-width: 768px) {
+    .support-info-cards {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}

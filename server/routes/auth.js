@@ -98,12 +98,12 @@ router.post('/register', [
         }
 
         // Validate assignedBooth based on role
-        if (['Recruiter', 'BoothAdmin'].includes(role)) {
-            // Booth is REQUIRED for Recruiter and BoothAdmin
+        if (['Recruiter', 'BoothAdmin', 'Support'].includes(role)) {
+            // Booth is REQUIRED for Recruiter, BoothAdmin, and Support
             if (!assignedBooth) {
                 return res.status(400).json({
                     error: 'Validation failed',
-                    message: 'Assigned booth is required for recruiters and booth admins'
+                    message: 'Assigned booth is required for recruiters, booth admins, and booth support'
                 });
             }
             const boothExists = await Booth.findById(assignedBooth).select('_id');
@@ -132,7 +132,7 @@ router.post('/register', [
             role,
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
-            assignedBooth: ['Recruiter', 'BoothAdmin', 'Interpreter'].includes(role) ? assignedBooth : undefined
+            assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined
         });
 
         // Generate email verification token (24h expiry)
@@ -142,8 +142,8 @@ router.post('/register', [
 
         await user.save();
 
-        // If recruiter/booth admin, add them to the booth's administrators array
-        if (['Recruiter', 'BoothAdmin'].includes(role) && assignedBooth) {
+        // If recruiter/booth admin/support, add them to the booth's administrators array
+        if (['Recruiter', 'BoothAdmin', 'Support'].includes(role) && assignedBooth) {
             try {
                 const booth = await Booth.findById(assignedBooth);
                 if (booth && !booth.administrators.includes(user._id)) {

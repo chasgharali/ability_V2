@@ -27,6 +27,7 @@ const boothQueueRoutes = require('./routes/boothQueue');
 const videoCallRoutes = require('./routes/videoCall');
 const meetingRecordsRoutes = require('./routes/meetingRecords');
 const settingsRoutes = require('./routes/settings');
+const chatRoutes = require('./routes/chat');
 
 // Import socket handlers
 const socketHandler = require('./socket/socketHandler');
@@ -116,6 +117,7 @@ app.use('/api/booth-queue', boothQueueRoutes);
 app.use('/api/video-call', videoCallRoutes);
 app.use('/api/meeting-records', meetingRecordsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/chats', chatRoutes);
 
 // Socket.IO connection handling
 socketHandler(io);
