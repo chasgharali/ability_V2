@@ -7,6 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { AccessibilityAnnouncer } from './components/Accessibility/AccessibilityAnnouncer';
 import { FocusManager } from './components/Accessibility/FocusManager';
+import ChatPanel from './components/Chat/ChatPanel';
 import LoginPage from './components/Auth/LoginPage';
 import RegisterPage from './components/Auth/RegisterPage';
 import VerifyEmailSent from './components/Auth/VerifyEmailSent';
@@ -39,11 +40,20 @@ import './App.css';
 
 // Component to conditionally render header and footer
 const AppLayout = ({ children }) => {
+    const { user } = useAuth();
+    
+    // Roles that should have access to Team Chat
+    const chatEnabledRoles = ['Recruiter', 'BoothAdmin', 'Support', 'GlobalSupport', 'Admin', 'Interpreter'];
+    const showChat = user && chatEnabledRoles.includes(user.role);
+    
     return (
         <div className="App">
             <main id="main-content" role="main">
                 {children}
             </main>
+
+            {/* Show ChatPanel for authenticated users (excluding JobSeekers) */}
+            {showChat && <ChatPanel />}
 
             <AccessibilityAnnouncer />
             <FocusManager />

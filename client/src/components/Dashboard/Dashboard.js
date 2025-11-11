@@ -19,7 +19,6 @@ import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import MyAccountInline from '../Account/MyAccountInline';
 import Chat from '../Chat/Chat';
-import ChatPanel from '../Chat/ChatPanel';
 import settingsAPI from '../../services/settings';
 
 // Simple error boundary to prevent white screens if a nested view crashes
@@ -736,9 +735,6 @@ const Dashboard = () => {
                     )}
                 </main>
             </div>
-
-            {/* Chat Panel for Recruiter/BoothAdmin/Support on all views */}
-            {(user?.role === 'Recruiter' || user?.role === 'BoothAdmin' || user?.role === 'Support' || user?.role === 'GlobalSupport') && <ChatPanel />}
 
             {/* Mobile overlay */}
             <div className="mobile-overlay" aria-hidden="true" />

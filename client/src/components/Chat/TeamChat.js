@@ -5,6 +5,48 @@ import * as chatAPI from '../../services/chat';
 import { ChatUIComponent } from '@syncfusion/ej2-react-interactive-chat';
 import './Chat.css';
 
+// Play notification sound - double beep
+const playNotificationSound = () => {
+    try {
+        console.log('🔔 Playing notification sound');
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // First beep
+        const oscillator1 = audioContext.createOscillator();
+        const gainNode1 = audioContext.createGain();
+        
+        oscillator1.connect(gainNode1);
+        gainNode1.connect(audioContext.destination);
+        
+        oscillator1.frequency.value = 600;
+        oscillator1.type = 'sine';
+        
+        gainNode1.gain.setValueAtTime(0.4, audioContext.currentTime);
+        gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+        
+        oscillator1.start(audioContext.currentTime);
+        oscillator1.stop(audioContext.currentTime + 0.15);
+        
+        // Second beep (slightly higher pitch)
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode2 = audioContext.createGain();
+        
+        oscillator2.connect(gainNode2);
+        gainNode2.connect(audioContext.destination);
+        
+        oscillator2.frequency.value = 800;
+        oscillator2.type = 'sine';
+        
+        gainNode2.gain.setValueAtTime(0.4, audioContext.currentTime + 0.2);
+        gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.35);
+        
+        oscillator2.start(audioContext.currentTime + 0.2);
+        oscillator2.stop(audioContext.currentTime + 0.35);
+    } catch (error) {
+        console.error('Failed to play notification sound:', error);
+    }
+};
+
 const TeamChat = () => {
     const { user } = useAuth();
     const [chats, setChats] = useState([]);
@@ -17,6 +59,8 @@ const TeamChat = () => {
     const [onlineUsers, setOnlineUsers] = useState(new Set());
     const [typingUsers, setTypingUsers] = useState(new Map());
     const typingTimeoutRef = useRef(new Map());
+    const typingIndicatorTimeoutRef = useRef(null);
+    const lastMessageLengthRef = useRef(0);
     
     const socketRef = useRef(null);
     const chatRef = useRef(null);
@@ -36,10 +80,17 @@ const TeamChat = () => {
         });
 
         socketRef.current.on('new-message', (data) => {
+            console.log('📩 New message received:', data);
+            
             if (data.chatId === selectedChat?._id) {
                 const newMsg = convertToSyncfusionMessage(data.message);
                 setMessages(prev => [...prev, newMsg]);
+            } else if (data.message.sender._id !== user._id) {
+                // Play notification sound for messages in other chats (but not own messages)
+                console.log('🔔 Message from other user in different chat - playing sound');
+                playNotificationSound();
             }
+            
             // Update chat list
             setChats(prevChats => prevChats.map(chat => 
                 chat._id === data.chatId 
@@ -117,6 +168,35 @@ const TeamChat = () => {
         loadParticipants();
     }, []);
 
+    // Typing detection via keyboard events
+    useEffect(() => {
+        const handleKeyPress = (e) => {
+            if (selectedChat && document.activeElement?.closest('.e-chat-ui')) {
+                // User is typing in the chat input
+                handleTyping(true);
+                
+                // Clear existing timeout
+                if (typingIndicatorTimeoutRef.current) {
+                    clearTimeout(typingIndicatorTimeoutRef.current);
+                }
+                
+                // Set new timeout to stop typing indicator
+                typingIndicatorTimeoutRef.current = setTimeout(() => {
+                    handleTyping(false);
+                }, 1000);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyPress);
+        
+        return () => {
+            document.removeEventListener('keydown', handleKeyPress);
+            if (typingIndicatorTimeoutRef.current) {
+                clearTimeout(typingIndicatorTimeoutRef.current);
+            }
+        };
+    }, [selectedChat]);
+
     const convertToSyncfusionMessage = (msg) => ({
         text: msg.content,
         author: {
@@ -171,32 +251,10 @@ const TeamChat = () => {
             setChats(prevChats => prevChats.map(chat => 
                 chat._id === chatId ? { ...chat, unreadCount: 0 } : chat
             ));
-            
-            // Set up typing detection
-            setTimeout(() => {
-                const messageInput = document.querySelector('.e-chat-ui .e-input-group input, .e-chat-ui textarea');
-                if (messageInput) {
-                    let typingTimeout;
-                    
-                    messageInput.addEventListener('input', () => {
-                        handleTyping(true);
-                        
-                        clearTimeout(typingTimeout);
-                        typingTimeout = setTimeout(() => {
-                            handleTyping(false);
-                        }, 1000);
-                    });
-                    
-                    messageInput.addEventListener('blur', () => {
-                        clearTimeout(typingTimeout);
-                        handleTyping(false);
-                    });
-                }
-            }, 500);
         } catch (error) {
             console.error('Error loading messages:', error);
         }
-    }, [handleTyping]);
+    }, []);
 
     const handleSelectChat = (chat) => {
         setSelectedChat(chat);
