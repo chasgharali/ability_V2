@@ -55,6 +55,13 @@ const socketHandler = (io) => {
         // Join role-specific room
         socket.join(`role:${socket.user.role}`);
 
+        // Broadcast user online status
+        socket.broadcast.emit('user-online', {
+            userId: socket.userId,
+            userName: socket.user.name,
+            timestamp: new Date()
+        });
+
         /**
          * Join queue room for real-time updates
          */
@@ -768,6 +775,13 @@ const socketHandler = (io) => {
          */
         socket.on('disconnect', async (reason) => {
             logger.info(`User ${socket.user.email} disconnected: ${reason}`);
+
+            // Broadcast user offline status
+            socket.broadcast.emit('user-offline', {
+                userId: socket.userId,
+                userName: socket.user.name,
+                timestamp: new Date()
+            });
 
             // Notify call participants if user was in a call
             if (socket.currentMeetingId) {

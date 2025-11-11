@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Chat from './Chat';
+import TeamChat from './TeamChat';
 import './ChatPanel.css';
 
 /**
@@ -39,7 +39,7 @@ export default function ChatPanel() {
                     </button>
                 </div>
                 <div className="team-chat-panel-content">
-                    <Chat />
+                    <TeamChat />
                 </div>
             </div>
 
