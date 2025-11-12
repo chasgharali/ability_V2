@@ -298,7 +298,10 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         if (isPanelOpen === false) {
             console.log('🔇 Chat panel closed - clearing selected chat ref for sound alerts');
             selectedChatRef.current = null;
-            // Don't clear selectedChat state to preserve UI state when reopening
+            // On mobile, also clear selected chat to show list when reopening
+            if (window.innerWidth <= 768) {
+                setSelectedChat(null);
+            }
         } else if (isPanelOpen === true && selectedChat) {
             console.log('🔊 Chat panel opened - restoring selected chat ref:', selectedChat._id);
             selectedChatRef.current = selectedChat;
@@ -394,6 +397,11 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         selectedChatRef.current = chat;
         setShowNewChat(false);
         loadMessages(chat._id);
+    };
+    
+    const handleBackToList = () => {
+        setSelectedChat(null);
+        selectedChatRef.current = null;
     };
 
     const handleSendMessage = (args) => {
@@ -537,7 +545,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     }
 
     return (
-        <div className="team-chat-container" data-unread-count={totalUnreadCount}>
+        <div className={`team-chat-container ${selectedChat ? 'chat-open' : ''}`} data-unread-count={totalUnreadCount}>
             {/* Notification Toast */}
             {notification && (
                 <div 
@@ -714,6 +722,15 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                 {selectedChat ? (
                     <div className="syncfusion-chat-wrapper">
                         <div className="team-chat-header">
+                            <button 
+                                className="team-chat-mobile-back"
+                                onClick={handleBackToList}
+                                aria-label="Back to chat list"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                                </svg>
+                            </button>
                             <div className="team-chat-header-info">
                                 <div className="team-chat-avatar">
                                     {getChatAvatar(selectedChat) ? (

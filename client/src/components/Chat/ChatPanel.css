@@ -72,15 +72,15 @@
 .team-chat-panel {
     position: fixed;
     right: 0;
-    top: 60px;
-    bottom: 0;
-    width: 620px;
-    max-width: 90vw;
+    top: 0;
+    height: 100vh;
+    width: 650px;
+    max-width: 100%;
     background: white;
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
-    z-index: 102;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
     transform: translateX(100%);
     transition: transform 0.3s ease;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
 }
@@ -146,17 +146,24 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .team-chat-panel {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
 @media (max-width: 1024px) {
     .team-chat-panel {
-        width: 380px;
+        width: 100%;
+        max-width: 100%;
     }
 }
 
 @media (max-width: 768px) {
     .team-chat-panel {
         width: 100%;
-        max-width: 100vw;
-        top: 0;
+        max-width: 100%;
     }
 
     .team-chat-panel-toggle {
