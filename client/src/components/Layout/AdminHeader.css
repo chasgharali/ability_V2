@@ -82,3 +82,34 @@
   .admin-connection .connection-text { display: inline; }
   .admin-connection .connection-text-mobile { display: none; }
 }
+
+/* Mobile header adjustments */
+@media (max-width: 768px) {
+  .admin-header-content {
+    gap: 0.5rem;
+  }
+
+  .admin-user-info {
+    gap: 0.5rem;
+  }
+
+  .admin-user-name {
+    font-size: 0.75rem;
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header-content {
+    gap: 0.25rem;
+  }
+
+  .admin-user-info {
+    gap: 0.25rem;
+  }
+
+  .admin-user-name {
+    font-size: 0.7rem;
+    max-width: 80px;
+  }
+}

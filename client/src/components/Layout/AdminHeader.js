@@ -54,19 +54,47 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
     }
   };
 
+  const isBoothUser = ['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support'].includes(user?.role);
+
+  // Add body class for booth users on mobile (for sidebar positioning)
+  useEffect(() => {
+    if (typeof document !== 'undefined' && isBoothUser && (brandingLogo || secondaryLogo)) {
+      document.body.classList.add('has-mobile-logo-bar');
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('has-mobile-logo-bar');
+      }
+    };
+  }, [isBoothUser, brandingLogo, secondaryLogo]);
+
   return (
     <header className="dashboard-header admin-header">
+      {/* Mobile logo bar for booth users - shows on mobile/tablet only */}
+      {isBoothUser && (brandingLogo || secondaryLogo) && (
+        <div className="mobile-logo-bar">
+          <div className="mobile-logo-container">
+            {brandingLogo && brandingLogo.trim() !== '' && (
+              <img src={brandingLogo} alt="Event logo" className="mobile-event-logo" />
+            )}
+            {secondaryLogo && secondaryLogo.trim() !== '' && (
+              <img src={secondaryLogo} alt="Booth logo" className="mobile-booth-logo" />
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-header-content admin-header-content">
         <div className="header-left">
           <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
             {mobileOpen ? <MdClose /> : <MdMenu />}
           </button>
-          {/* Primary (event) logo */}
+          {/* Primary (event) logo - hide on mobile for booth users */}
           {brandingLogo && brandingLogo.trim() !== '' && (
-            <img src={brandingLogo} alt="Site logo" className="header-logo" />
+            <img src={brandingLogo} alt="Site logo" className={`header-logo ${isBoothUser ? 'hide-on-mobile-booth' : ''}`} />
           )}
           {/* Secondary (booth) logo if provided - not on left for Recruiters/Interpreters/Support */}
-          {!['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support'].includes(user?.role) && secondaryLogo && secondaryLogo.trim() !== '' && (
+          {!isBoothUser && secondaryLogo && secondaryLogo.trim() !== '' && (
             <img src={secondaryLogo} alt="Booth logo" className="header-logo" style={{ marginLeft: 8 }} />
           )}
           {/* Fallback text if no logos */}
@@ -75,9 +103,9 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
           )}
         </div>
 
-        {/* Centered booth logo for Recruiter, Interpreter, and Support */}
-        {['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support'].includes(user?.role) && secondaryLogo && secondaryLogo.trim() !== '' && (
-          <div className="header-center-logo" aria-hidden="true">
+        {/* Centered booth logo for Recruiter, Interpreter, and Support - hide on mobile */}
+        {isBoothUser && secondaryLogo && secondaryLogo.trim() !== '' && (
+          <div className="header-center-logo hide-on-mobile-booth" aria-hidden="true">
             <img src={secondaryLogo} alt="" className="header-logo booth-centered" />
           </div>
         )}

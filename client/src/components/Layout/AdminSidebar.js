@@ -350,8 +350,16 @@ export default function AdminSidebar({ active = 'booths' }) {
   };
 
   return (
-    <nav className={`dashboard-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
-      {renderSidebarContent()}
-    </nav>
+    <>
+      {/* Mobile overlay - click to close sidebar */}
+      <div 
+        className="mobile-overlay" 
+        onClick={closeMobileMenu}
+        aria-hidden="true"
+      />
+      <nav className={`dashboard-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+        {renderSidebarContent()}
+      </nav>
+    </>
   );
 }

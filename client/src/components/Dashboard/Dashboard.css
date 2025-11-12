@@ -508,6 +508,39 @@
     /* above the mobile sidebar (z-index: 999) */
 }
 
+/* Mobile logo bar for booth users - hidden by default, shown on mobile/tablet */
+.mobile-logo-bar {
+    display: none;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 12px 1rem;
+    min-height: 80px;
+}
+
+.mobile-logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.mobile-event-logo {
+    height: 64px;
+    max-width: 360px;
+    object-fit: contain;
+}
+
+.mobile-booth-logo {
+    height: 64px;
+    max-width: 360px;
+    object-fit: contain;
+}
+
+/* Hide specific elements on mobile for booth users */
+.hide-on-mobile-booth {
+    display: block;
+}
+
 .dashboard-header-content {
     max-width: 100%;
     margin: 0;
@@ -526,6 +559,12 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-shrink: 1;
+    /* prevent wrapping to next line */
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    /* contain logo overflow */
 }
 
 .mobile-menu-toggle {
@@ -547,6 +586,18 @@
     outline-offset: 2px;
 }
 
+/* Highlight hamburger/close button when sidebar is open */
+body.sidebar-open .mobile-menu-toggle {
+    background: #f3f4f6;
+    color: #dc2626;
+    /* red color to indicate close action */
+}
+
+body.sidebar-open .mobile-menu-toggle:hover {
+    background: #fecaca;
+    color: #991b1b;
+}
+
 .dashboard-header h1 {
     font-size: 1.5rem;
     font-weight: 700;
@@ -560,6 +611,8 @@
     max-width: 220px;
     object-fit: contain;
     display: block;
+    flex-shrink: 1;
+    /* allow logo to shrink if needed */
 }
 
 /* Centered booth logo wrapper (overlay, doesn't affect layout) */
@@ -1416,6 +1469,13 @@
         transition: left 0.25s ease;
     }
 
+    /* Adjust sidebar for booth users with mobile logo bar */
+    body.has-mobile-logo-bar .dashboard-sidebar {
+        top: 152px;
+        /* 72px header + 80px mobile logo bar */
+        height: calc(100vh - 152px);
+    }
+
     .dashboard-sidebar.mobile-open {
         left: 0;
     }
@@ -1430,8 +1490,59 @@
         /* keep hidden unless sidebar is open */
     }
 
+    /* Show overlay when sidebar is open */
+    body.sidebar-open .mobile-overlay {
+        display: block;
+        position: fixed;
+        top: 72px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        /* below sidebar but above content */
+    }
+
+    /* Adjust overlay for booth users with mobile logo bar */
+    body.has-mobile-logo-bar.sidebar-open .mobile-overlay {
+        top: 152px;
+        /* 72px header + 80px mobile logo bar */
+    }
+
     .dashboard-main {
         width: 100%;
+    }
+
+    /* Mid-size device header adjustments */
+    .header-left {
+        max-width: calc(100% - 220px);
+        gap: 0.625rem;
+    }
+
+    .header-logo {
+        max-width: 160px;
+        height: 28px;
+    }
+
+    .header-center-logo .booth-centered {
+        height: 24px;
+        max-width: 200px;
+    }
+
+    /* Show mobile logo bar for booth users on tablets */
+    .mobile-logo-bar {
+        display: block;
+    }
+
+    /* Hide regular logos on tablets for booth users */
+    .hide-on-mobile-booth {
+        display: none !important;
+    }
+
+    .mobile-event-logo,
+    .mobile-booth-logo {
+        height: 56px;
+        max-width: 320px;
     }
 }
 
@@ -1444,6 +1555,17 @@
         padding: 0 0.75rem;
         height: 72px;
         flex-wrap: nowrap;
+    }
+
+    /* Adjust sidebar for mobile with logo bar */
+    body.has-mobile-logo-bar .dashboard-sidebar {
+        top: 140px;
+        /* 72px header + 68px mobile logo bar */
+        height: calc(100vh - 140px);
+    }
+
+    body.has-mobile-logo-bar.sidebar-open .mobile-overlay {
+        top: 140px;
     }
 
     .user-info {
@@ -1483,13 +1605,41 @@
         height: 6px;
     }
 
+    .header-left {
+        /* Ensure logo doesn't wrap on mobile */
+        flex-shrink: 1;
+        min-width: 0;
+        max-width: calc(100% - 170px);
+        /* Reserve space for user info */
+        gap: 0.5rem;
+    }
+
     .header-logo {
-        max-width: 160px;
-        height: 28px;
+        max-width: 120px;
+        height: 22px;
+        flex-shrink: 1;
     }
 
     .header-center-logo {
         display: flex;
+    }
+
+    .header-center-logo .booth-centered {
+        height: 22px;
+        max-width: 180px;
+    }
+
+    /* Mobile logo bar adjustments */
+    .mobile-logo-bar {
+        display: block;
+        padding: 10px 0.75rem;
+        min-height: 68px;
+    }
+
+    .mobile-event-logo,
+    .mobile-booth-logo {
+        height: 48px;
+        max-width: 280px;
     }
 
     .form-row-4 {
@@ -1616,14 +1766,52 @@
         padding: 0 0.5rem;
     }
 
+    .header-left {
+        max-width: calc(100% - 140px);
+        /* More space for user info on small screens */
+        gap: 0.375rem;
+    }
+
     .header-logo {
-        max-width: 140px;
-        height: 24px;
+        max-width: 100px;
+        height: 20px;
+    }
+
+    .header-center-logo .booth-centered {
+        height: 20px;
+        max-width: 160px;
+    }
+
+    /* Mobile logo bar for small screens */
+    .mobile-logo-bar {
+        padding: 8px 0.5rem;
+        min-height: 56px;
+    }
+
+    .mobile-logo-container {
+        gap: 0.5rem;
+    }
+
+    .mobile-event-logo,
+    .mobile-booth-logo {
+        height: 40px;
+        max-width: 240px;
+    }
+
+    /* Adjust sidebar for small mobile with logo bar */
+    body.has-mobile-logo-bar .dashboard-sidebar {
+        top: 128px;
+        /* 72px header + 56px mobile logo bar */
+        height: calc(100vh - 128px);
+    }
+
+    body.has-mobile-logo-bar.sidebar-open .mobile-overlay {
+        top: 128px;
     }
 
     .user-name {
-        max-width: 100px;
-        font-size: 0.75rem;
+        max-width: 80px;
+        font-size: 0.7rem;
     }
 
     .connection-status {
@@ -1633,14 +1821,11 @@
     .mobile-menu-toggle {
         width: 32px;
         height: 32px;
-        margin-right: 6px;
+        margin-right: 4px;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        /* never shrink hamburger */
     }
-}
-
-/* Support Dashboard Styles */
-.support-dashboard {
-    max-width: 1400px;
-    margin: 0 auto;
 }
 
 .support-subtitle {
