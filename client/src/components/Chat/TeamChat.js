@@ -47,7 +47,7 @@ const playNotificationSound = () => {
     }
 };
 
-const TeamChat = () => {
+const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     const { user } = useAuth();
     const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
@@ -58,17 +58,43 @@ const TeamChat = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [onlineUsers, setOnlineUsers] = useState(new Set());
     const [typingUsers, setTypingUsers] = useState(new Map());
+    const [notification, setNotification] = useState(null);
     const typingTimeoutRef = useRef(new Map());
     const typingIndicatorTimeoutRef = useRef(null);
-    const lastMessageLengthRef = useRef(0);
+    const notificationTimeoutRef = useRef(null);
     
     const socketRef = useRef(null);
     const chatRef = useRef(null);
+    const selectedChatRef = useRef(null);
+
+    // Define handleTyping before effects that use it
+    const handleTyping = useCallback((isTyping) => {
+        if (selectedChat && socketRef.current) {
+            socketRef.current.emit('typing', {
+                chatId: selectedChat._id,
+                isTyping
+            });
+        }
+    }, [selectedChat]);
 
     // Initialize socket connection
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (!token) return;
+        if (!token || !user) {
+            console.log('⚠️ Skipping socket connection - no token or user');
+            return;
+        }
+
+        // Don't create socket if it already exists
+        if (socketRef.current?.connected) {
+            console.log('✅ Socket already connected');
+            return;
+        }
+
+        console.log('🔌 Initializing socket connection...');
+        
+        // Capture ref value for cleanup
+        const typingTimeouts = typingTimeoutRef.current;
 
         socketRef.current = io(process.env.REACT_APP_API_URL || 'http://localhost:5001', {
             auth: { token: `Bearer ${token}` },
@@ -76,43 +102,107 @@ const TeamChat = () => {
         });
 
         socketRef.current.on('connect', () => {
-            console.log('Chat socket connected');
+            console.log('✅ Chat socket connected successfully');
+            
+            // Request list of currently online users
+            socketRef.current.emit('request-online-users');
         });
 
         socketRef.current.on('new-message', (data) => {
             console.log('📩 New message received:', data);
             
-            if (data.chatId === selectedChat?._id) {
-                const newMsg = convertToSyncfusionMessage(data.message);
-                setMessages(prev => [...prev, newMsg]);
-            } else if (data.message.sender._id !== user._id) {
-                // Play notification sound for messages in other chats (but not own messages)
-                console.log('🔔 Message from other user in different chat - playing sound');
-                playNotificationSound();
+            // Verify user exists
+            if (!user || !user._id) {
+                console.warn('User not loaded, skipping message processing');
+                return;
             }
             
-            // Update chat list
-            setChats(prevChats => prevChats.map(chat => 
-                chat._id === data.chatId 
-                    ? { ...chat, lastMessage: data.message }
-                    : chat
-            ));
+            // Use ref for current chat to avoid stale closure
+            const currentChatId = selectedChatRef.current?._id;
+            const isCurrentChat = data.chatId === currentChatId;
+            const isOwnMessage = data.message.sender._id === user._id;
+            
+            console.log('📌 Current chat ID:', currentChatId);
+            console.log('📌 Message chat ID:', data.chatId);
+            console.log('📌 isCurrentChat:', isCurrentChat);
+            console.log('📌 isOwnMessage:', isOwnMessage);
+            
+            if (isCurrentChat) {
+                console.log('✅ Adding message to current chat view');
+                // Add message to current chat view
+                const newMsg = convertToSyncfusionMessage(data.message);
+                setMessages(prev => {
+                    console.log('📝 Previous messages count:', prev.length);
+                    const newMessages = [...prev, newMsg];
+                    console.log('📝 New messages count:', newMessages.length);
+                    return newMessages;
+                });
+                
+                // Mark as read if it's the current chat
+                if (socketRef.current) {
+                    socketRef.current.emit('mark-read', { chatId: data.chatId });
+                }
+            }
+            
+            // Play notification sound for messages in OTHER chats from OTHER users
+            if (!isCurrentChat && !isOwnMessage) {
+                console.log('🔔 Playing notification sound - other chat, other user');
+                playNotificationSound();
+                
+                // Show notification toast
+                const senderName = data.message.sender.name;
+                setNotification({
+                    sender: senderName,
+                    message: data.message.content
+                });
+                
+                // Auto-hide notification after 4 seconds
+                if (notificationTimeoutRef.current) {
+                    clearTimeout(notificationTimeoutRef.current);
+                }
+                notificationTimeoutRef.current = setTimeout(() => {
+                    setNotification(null);
+                }, 4000);
+            } else if (!isCurrentChat && isOwnMessage) {
+                console.log('ℹ️ Own message in different chat - no sound');
+            }
+            
+            // Update chat list with unread count
+            setChats(prevChats => prevChats.map(chat => {
+                if (chat._id === data.chatId) {
+                    return {
+                        ...chat,
+                        lastMessage: data.message,
+                        // Only increment unread if: not current chat AND not own message
+                        unreadCount: isCurrentChat ? 0 : (isOwnMessage ? (chat.unreadCount || 0) : (chat.unreadCount || 0) + 1)
+                    };
+                }
+                return chat;
+            }));
+        });
+
+        // Receive initial online users list
+        socketRef.current.on('online-users-list', (data) => {
+            console.log('👥 Received online users list:', data.userIds);
+            setOnlineUsers(new Set(data.userIds));
         });
 
         socketRef.current.on('user-online', (data) => {
-            console.log('User online:', data);
+            console.log('🟢 User online:', data.userId, data.userName);
             setOnlineUsers(prev => {
                 const newSet = new Set(prev);
                 newSet.add(data.userId);
+                console.log('👥 Updated online users:', newSet.size);
                 return newSet;
             });
         });
 
         socketRef.current.on('user-offline', (data) => {
-            console.log('User offline:', data);
+            console.log('⚫ User offline:', data.userId, data.userName);
             setOnlineUsers(prev => {
                 const newSet = new Set(prev);
                 newSet.delete(data.userId);
+                console.log('👥 Updated online users:', newSet.size);
                 return newSet;
             });
         });
@@ -154,19 +244,66 @@ const TeamChat = () => {
 
         return () => {
             // Clear all typing timeouts
-            typingTimeoutRef.current.forEach(timeout => clearTimeout(timeout));
-            typingTimeoutRef.current.clear();
+            typingTimeouts.forEach(timeout => clearTimeout(timeout));
+            typingTimeouts.clear();
             
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
+            // Don't disconnect socket in cleanup - keep it alive
+            console.log('🧹 Cleaning up socket effect (but keeping connection alive)');
         };
-    }, [selectedChat?._id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     useEffect(() => {
         loadChats();
         loadParticipants();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Cleanup socket on component unmount
+    useEffect(() => {
+        return () => {
+            console.log('🔌 Component unmounting - disconnecting socket');
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
+    }, []);
+
+    // Join all chat rooms when chats are loaded
+    useEffect(() => {
+        if (chats.length > 0 && socketRef.current) {
+            chats.forEach(chat => {
+                socketRef.current.emit('join-chat', { chatId: chat._id });
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chats.length]);
+
+    // Monitor messages changes
+    useEffect(() => {
+        console.log('💬 Messages state updated:', messages.length, 'messages');
+        if (messages.length > 0) {
+            console.log('💬 Latest message:', messages[messages.length - 1]);
+        }
+    }, [messages]);
+
+    // Monitor online users changes
+    useEffect(() => {
+        console.log('👥 Online users state updated:', onlineUsers.size, 'users online');
+        console.log('👥 Online user IDs:', Array.from(onlineUsers));
+    }, [onlineUsers]);
+
+    // Clear selected chat when panel closes
+    useEffect(() => {
+        if (isPanelOpen === false) {
+            console.log('🔇 Chat panel closed - clearing selected chat ref for sound alerts');
+            selectedChatRef.current = null;
+            // Don't clear selectedChat state to preserve UI state when reopening
+        } else if (isPanelOpen === true && selectedChat) {
+            console.log('🔊 Chat panel opened - restoring selected chat ref:', selectedChat._id);
+            selectedChatRef.current = selectedChat;
+        }
+    }, [isPanelOpen, selectedChat]);
 
     // Typing detection via keyboard events
     useEffect(() => {
@@ -195,7 +332,7 @@ const TeamChat = () => {
                 clearTimeout(typingIndicatorTimeoutRef.current);
             }
         };
-    }, [selectedChat]);
+    }, [selectedChat, handleTyping]);
 
     const convertToSyncfusionMessage = (msg) => ({
         text: msg.content,
@@ -211,7 +348,12 @@ const TeamChat = () => {
         try {
             setLoading(true);
             const data = await chatAPI.getChats();
-            setChats(data);
+            // Initialize unread counts if not present
+            const chatsWithUnreadCount = data.map(chat => ({
+                ...chat,
+                unreadCount: chat.unreadCount || 0
+            }));
+            setChats(chatsWithUnreadCount);
         } catch (error) {
             console.error('Error loading chats:', error);
         } finally {
@@ -228,15 +370,6 @@ const TeamChat = () => {
         }
     };
 
-    const handleTyping = useCallback((isTyping) => {
-        if (selectedChat && socketRef.current) {
-            socketRef.current.emit('typing', {
-                chatId: selectedChat._id,
-                isTyping
-            });
-        }
-    }, [selectedChat]);
-
     const loadMessages = useCallback(async (chatId) => {
         try {
             const data = await chatAPI.getMessages(chatId);
@@ -245,7 +378,7 @@ const TeamChat = () => {
             
             if (socketRef.current) {
                 socketRef.current.emit('mark-read', { chatId });
-                socketRef.current.emit('join-chat', { chatId });
+                // No need to join here - already joined all chats on mount
             }
             
             setChats(prevChats => prevChats.map(chat => 
@@ -258,6 +391,7 @@ const TeamChat = () => {
 
     const handleSelectChat = (chat) => {
         setSelectedChat(chat);
+        selectedChatRef.current = chat;
         setShowNewChat(false);
         loadMessages(chat._id);
     };
@@ -265,12 +399,19 @@ const TeamChat = () => {
     const handleSendMessage = (args) => {
         const messageText = args?.message?.text || args?.text || '';
         
-        if (!selectedChat || !messageText.trim()) return;
+        console.log('📤 Sending message:', messageText);
+        console.log('📤 Selected chat:', selectedChat?._id);
+        
+        if (!selectedChat || !messageText.trim()) {
+            console.warn('⚠️ Cannot send message - no chat selected or empty message');
+            return;
+        }
 
         const content = messageText.trim();
 
         try {
             if (socketRef.current) {
+                console.log('📤 Emitting send-message via socket');
                 // Stop typing indicator
                 socketRef.current.emit('typing', {
                     chatId: selectedChat._id,
@@ -282,6 +423,9 @@ const TeamChat = () => {
                     content,
                     type: 'text'
                 });
+                console.log('✅ Message sent to server');
+            } else {
+                console.error('❌ Socket not connected');
             }
         } catch (error) {
             console.error('Error sending message:', error);
@@ -294,6 +438,13 @@ const TeamChat = () => {
             setChats(prev => [chat, ...prev]);
             setSelectedChat(chat);
             setShowNewChat(false);
+            
+            // Join the new chat room immediately
+            if (socketRef.current) {
+                socketRef.current.emit('join-chat', { chatId: chat._id });
+            }
+            
+            selectedChatRef.current = chat;
             loadMessages(chat._id);
         } catch (error) {
             console.error('Error creating chat:', error);
@@ -303,7 +454,7 @@ const TeamChat = () => {
     const getChatTitle = (chat) => {
         if (chat.type === 'direct') {
             const otherParticipant = chat.participants.find(
-                p => p.user._id !== user._id
+                p => p.user._id !== user?._id
             );
             return otherParticipant?.user?.name || 'Unknown';
         }
@@ -313,7 +464,7 @@ const TeamChat = () => {
     const getChatRole = (chat) => {
         if (chat.type === 'direct') {
             const otherParticipant = chat.participants.find(
-                p => p.user._id !== user._id
+                p => p.user._id !== user?._id
             );
             return otherParticipant?.user?.role || '';
         }
@@ -323,7 +474,7 @@ const TeamChat = () => {
     const getChatAvatar = (chat) => {
         if (chat.type === 'direct') {
             const otherParticipant = chat.participants.find(
-                p => p.user._id !== user._id
+                p => p.user._id !== user?._id
             );
             return otherParticipant?.user?.avatarUrl || null;
         }
@@ -333,7 +484,7 @@ const TeamChat = () => {
     const getOtherParticipantId = (chat) => {
         if (chat.type === 'direct') {
             const otherParticipant = chat.participants.find(
-                p => p.user._id !== user._id
+                p => p.user._id !== user?._id
             );
             return otherParticipant?.user?._id;
         }
@@ -353,27 +504,73 @@ const TeamChat = () => {
     );
 
     const filteredParticipants = participants.filter(p =>
-        p._id !== user._id && // Exclude current user
+        p._id !== user?._id && // Exclude current user
         !existingChatUserIds.has(p._id) && // Exclude users already in chat list
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const currentUser = {
+    const currentUser = user ? {
         id: user._id,
         user: user.name,
         avatarUrl: user.avatarUrl || ''
-    };
+    } : null;
 
-    if (loading) {
+    // Calculate total unread count
+    const totalUnreadCount = chats.reduce((total, chat) => total + (chat.unreadCount || 0), 0);
+
+    // Notify parent of unread count changes
+    useEffect(() => {
+        console.log('📊 Total unread count:', totalUnreadCount);
+        if (onUnreadCountChange) {
+            onUnreadCountChange(totalUnreadCount);
+        }
+    }, [totalUnreadCount, onUnreadCountChange]);
+
+    if (loading || !user) {
         return (
             <div className="team-chat-container">
-                <div className="team-chat-loading">Loading chats...</div>
+                <div className="team-chat-loading">
+                    {loading ? 'Loading chats...' : 'Loading user...'}
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="team-chat-container">
+        <div className="team-chat-container" data-unread-count={totalUnreadCount}>
+            {/* Notification Toast */}
+            {notification && (
+                <div 
+                    className="team-chat-notification-toast" 
+                    onClick={() => setNotification(null)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                            e.preventDefault();
+                            setNotification(null);
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Close notification"
+                >
+                    <div className="notification-icon">💬</div>
+                    <div className="notification-content">
+                        <div className="notification-title">{notification.sender}</div>
+                        <div className="notification-message">{notification.message}</div>
+                    </div>
+                    <button 
+                        className="notification-close" 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setNotification(null);
+                        }}
+                        aria-label="Close notification"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+            
             {/* Sidebar - Chat List */}
             <div className="team-chat-sidebar">
                 <div className="team-chat-sidebar-header">
@@ -558,6 +755,7 @@ const TeamChat = () => {
                             </div>
                         )}
                         <ChatUIComponent
+                            key={selectedChat._id}
                             ref={chatRef}
                             user={currentUser}
                             messages={messages}
@@ -565,7 +763,6 @@ const TeamChat = () => {
                             placeholder="Type your message..."
                             showHeader={false}
                             showFooter={true}
-                            typingUsers={Array.from(typingUsers.values())}
                         />
                     </div>
                 ) : (

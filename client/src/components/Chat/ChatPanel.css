@@ -17,6 +17,40 @@
     transition: all 0.3s ease;
     font-size: 14px;
     font-weight: 500;
+    width: auto;
+    max-width: 200px;
+}
+
+/* Unread Badge on Toggle Button */
+.team-chat-toggle-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 12px;
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+    animation: pulse-toggle-badge 2s infinite;
+    border: 2px solid white;
+}
+
+@keyframes pulse-toggle-badge {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.8);
+    }
 }
 
 .team-chat-panel-toggle:hover {

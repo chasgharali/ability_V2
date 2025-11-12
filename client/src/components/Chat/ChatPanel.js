@@ -7,11 +7,12 @@ import './ChatPanel.css';
  */
 export default function ChatPanel() {
     const [isOpen, setIsOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     return (
         <>
             {/* Chat Toggle Button */}
-            <button 
+            <button
                 className={`team-chat-panel-toggle ${isOpen ? 'open' : ''}`}
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={isOpen ? 'Close chat panel' : 'Open chat panel'}
@@ -21,13 +22,16 @@ export default function ChatPanel() {
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 <span>Team Chat</span>
+                {unreadCount > 0 && (
+                    <span className="team-chat-toggle-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                )}
             </button>
 
             {/* Collapsible Panel */}
             <div className={`team-chat-panel ${isOpen ? 'open' : ''}`}>
                 <div className="team-chat-panel-header">
                     <h3>Team Chat</h3>
-                    <button 
+                    <button
                         className="team-chat-panel-close"
                         onClick={() => setIsOpen(false)}
                         aria-label="Close chat panel"
@@ -39,13 +43,13 @@ export default function ChatPanel() {
                     </button>
                 </div>
                 <div className="team-chat-panel-content">
-                    <TeamChat />
+                    <TeamChat onUnreadCountChange={setUnreadCount} isPanelOpen={isOpen} />
                 </div>
             </div>
 
             {/* Overlay for mobile */}
             {isOpen && (
-                <div 
+                <div
                     className="team-chat-panel-overlay"
                     onClick={() => setIsOpen(false)}
                     aria-hidden="true"

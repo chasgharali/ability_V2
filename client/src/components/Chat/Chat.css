@@ -246,6 +246,112 @@
     color: #94a3b8;
 }
 
+/* Unread Badge in Chat List */
+.team-chat-unread-badge {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 12px;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% {
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    }
+    50% {
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
+    }
+}
+
+/* Notification Toast */
+.team-chat-notification-toast {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1000;
+    min-width: 300px;
+    max-width: 400px;
+    animation: slideDown 0.3s ease-out;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.notification-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.notification-message {
+    color: #64748b;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notification-close {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.notification-close:hover {
+    background: #f1f5f9;
+    color: #1a1a1a;
+}
+
 /* Typing Indicator */
 .team-chat-typing-indicator {
     padding: 8px 24px;
@@ -254,6 +360,7 @@
     gap: 4px;
     background: #f8f9fa;
     border-top: 1px solid #e5e7eb;
+    flex-shrink: 0; /* Don't shrink */
 }
 
 .typing-dot {
@@ -378,26 +485,30 @@
     flex-direction: column;
     background: white;
     overflow: hidden;
+    min-height: 0; /* Important for flexbox scrolling */
 }
 
 /* Syncfusion Chat Wrapper */
 .syncfusion-chat-wrapper {
     display: flex;
     flex-direction: column;
-    height: 88%;
+    height: 100%;
     width: 100%;
+    min-height: 0; /* Important for flexbox scrolling */
 }
 
 .syncfusion-chat-wrapper .e-chat-ui {
-    height: calc(100% - 70px);
+    flex: 1;
     border: none;
     box-shadow: none;
     display: flex;
     flex-direction: column;
+    min-height: 0; /* Important for flexbox scrolling */
+    overflow: hidden;
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-chat-footer {
-    margin-top: auto;
+    flex-shrink: 0; /* Never shrink the footer */
     padding: 16px;
     border-top: 1px solid #e5e7eb;
     background: white;
@@ -407,6 +518,7 @@
     padding: 20px;
     flex: 1;
     overflow-y: auto;
+    min-height: 0; /* Important for flexbox scrolling */
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-message {
@@ -435,13 +547,46 @@
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-btn {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    color: white;
+    background: transparent !important;
+    color: #64748b !important;
     border: none;
+    transition: all 0.2s ease;
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-btn:hover {
-    background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%);
+    background: rgba(100, 116, 139, 0.1) !important;
+    color: #1a1a1a !important;
+    transform: scale(1.1);
+}
+
+/* Message action icons (edit, delete, etc.) */
+.syncfusion-chat-wrapper .e-chat-ui .e-message .e-btn {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #64748b !important;
+    border-radius: 6px;
+    padding: 6px;
+    min-width: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.syncfusion-chat-wrapper .e-chat-ui .e-message .e-btn:hover {
+    background: #4f46e5 !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+/* Send button in footer */
+.syncfusion-chat-wrapper .e-chat-ui .e-chat-footer .e-btn {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    color: white !important;
+    border-radius: 12px;
+    padding: 8px 16px;
+}
+
+.syncfusion-chat-wrapper .e-chat-ui .e-chat-footer .e-btn:hover {
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    transform: translateY(-1px);
 }
 
 .team-chat-header {

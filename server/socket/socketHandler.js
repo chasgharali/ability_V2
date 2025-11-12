@@ -62,6 +62,25 @@ const socketHandler = (io) => {
             timestamp: new Date()
         });
 
+        // Handle request for online users list
+        socket.on('request-online-users', () => {
+            // Get all connected socket IDs
+            const connectedSockets = io.sockets.sockets;
+            const onlineUserIds = [];
+            
+            connectedSockets.forEach((connectedSocket) => {
+                if (connectedSocket.userId && connectedSocket.userId !== socket.userId) {
+                    onlineUserIds.push(connectedSocket.userId);
+                }
+            });
+            
+            logger.info(`Sending online users list to ${socket.user.email}: ${onlineUserIds.length} users`);
+            socket.emit('online-users-list', {
+                userIds: onlineUserIds,
+                timestamp: new Date()
+            });
+        });
+
         /**
          * Join queue room for real-time updates
          */
