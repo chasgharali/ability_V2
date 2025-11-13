@@ -283,14 +283,21 @@
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-.event-total-row {
+.event-total-row,
+.totals-row {
     background-color: rgba(0, 0, 0, 0.08);
     font-weight: 700;
 }
 
-.event-total-row td {
+.event-total-row td,
+.totals-row td {
     border-top: 2px solid rgba(0, 0, 0, 0.12);
     padding: 16px;
+    color: #000000;
+}
+
+.totals-row:hover {
+    background-color: rgba(0, 0, 0, 0.12) !important;
 }
 
 .analytics-empty-state {
@@ -317,6 +324,17 @@
     font-size: 1.45rem;
     margin-bottom: 22px;
     color: #251126;
+}
+
+/* Table wrapper for responsive scroll */
+.booth-report-table {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.booth-report-table .data-table {
+    min-width: 100%;
 }
 
 .live-stats-section {
@@ -389,12 +407,50 @@
     }
 
     .data-table {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
     }
 
     .data-table th,
     .data-table td {
-        padding: 10px;
+        padding: 10px 8px;
+        white-space: nowrap;
+    }
+
+    .booth-report-table .data-table {
+        min-width: 1200px; /* Force horizontal scroll on mobile */
+    }
+
+    .event-total-row td,
+    .totals-row td {
+        padding: 12px 8px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    .analytics-container {
+        padding: 12px;
+    }
+
+    .page-header,
+    .analytics-filters,
+    .analytics-event-report,
+    .analytics-booth-report,
+    .analytics-live-stats {
+        padding: 16px;
+    }
+
+    .data-table {
+        font-size: 0.75rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 8px 6px;
+    }
+
+    .booth-report-table .data-table {
+        min-width: 1400px; /* Wider table on very small screens */
     }
 }
 

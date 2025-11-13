@@ -37,11 +37,8 @@ export default function Analytics() {
     // Overview data
     const [overview, setOverview] = useState(null);
 
-    // Event report data
-    const [eventReport, setEventReport] = useState(null);
-
-    // Booth report data
-    const [boothReport, setBoothReport] = useState(null);
+    // Report data
+    const [reportData, setReportData] = useState(null);
 
     // Live stats
     const [liveStats, setLiveStats] = useState(null);
@@ -137,33 +134,15 @@ export default function Analytics() {
         }
     }, [filters, showToast]);
 
-    // Load event report
-    const loadEventReport = useCallback(async () => {
-        if (!filters.eventId) {
-            setEventReport(null);
-            return;
-        }
-        try {
-            setLoadingData(true);
-            const data = await analyticsAPI.getFullEventReport(filters.eventId, filters);
-            setEventReport(data);
-        } catch (error) {
-            console.error('Error loading event report:', error);
-            showToast('Failed to load event report', 'error');
-        } finally {
-            setLoadingData(false);
-        }
-    }, [filters, showToast]);
-
-    // Load booth report
-    const loadBoothReport = useCallback(async () => {
+    // Load report data
+    const loadReport = useCallback(async () => {
         try {
             setLoadingData(true);
             const data = await analyticsAPI.getBooths(filters);
-            setBoothReport(data);
+            setReportData(data);
         } catch (error) {
-            console.error('Error loading booth report:', error);
-            showToast('Failed to load booth report', 'error');
+            console.error('Error loading report:', error);
+            showToast('Failed to load report', 'error');
         } finally {
             setLoadingData(false);
         }
@@ -193,10 +172,8 @@ export default function Analytics() {
     useEffect(() => {
         if (activeTab === 'overview') {
             loadOverview();
-        } else if (activeTab === 'event-report') {
-            loadEventReport();
-        } else if (activeTab === 'booth-report') {
-            loadBoothReport();
+        } else if (activeTab === 'report') {
+            loadReport();
         } else if (activeTab === 'live-stats') {
             loadLiveStats(true);
         }
@@ -241,13 +218,7 @@ export default function Analytics() {
 
     const handleExport = async () => {
         try {
-            if (activeTab === 'event-report' && filters.eventId) {
-                await analyticsAPI.exportCSV('full-event', {
-                    eventId: filters.eventId,
-                    ...filters
-                });
-                showToast('Export started', 'success');
-            } else if (activeTab === 'booth-report') {
+            if (activeTab === 'report') {
                 await analyticsAPI.exportCSV('booths', filters);
                 showToast('Export started', 'success');
             }
@@ -311,16 +282,10 @@ export default function Analytics() {
                                     Overview
                                 </button>
                                 <button
-                                    className={`analytics-tab ${activeTab === 'event-report' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('event-report')}
+                                    className={`analytics-tab ${activeTab === 'report' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('report')}
                                 >
-                                    Event Report
-                                </button>
-                                <button
-                                    className={`analytics-tab ${activeTab === 'booth-report' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('booth-report')}
-                                >
-                                    Booth Report
+                                    Report
                                 </button>
                                 <button
                                     className={`analytics-tab ${activeTab === 'live-stats' ? 'active' : ''}`}
@@ -382,7 +347,7 @@ export default function Analytics() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className={`filters-row bottom-row ${activeTab === 'event-report' || activeTab === 'booth-report' ? 'with-button' : ''}`}>
+                                        <div className={`filters-row bottom-row ${activeTab === 'report' ? 'with-button' : ''}`}>
                                             <div className="filter-group">
                                                 <label htmlFor="start-date">Start Date:</label>
                                                 <input
@@ -401,7 +366,7 @@ export default function Analytics() {
                                                     onChange={(e) => handleFilterChange('endDate', e.target.value)}
                                                 />
                                             </div>
-                                            {(activeTab === 'event-report' || activeTab === 'booth-report') && (
+                                            {activeTab === 'report' && (
                                                 <button className="btn-export" onClick={handleExport} disabled={loadingData}>
                                                     Export Filtered Results
                                                 </button>
@@ -497,83 +462,12 @@ export default function Analytics() {
                                         </div>
                                     )}
 
-                                    {/* Event Report Tab */}
-                                    {activeTab === 'event-report' && (
-                                        <div className="analytics-event-report">
-                                            {!filters.eventId ? (
-                                                <div className="analytics-empty-state">
-                                                    <p>Please select an event to view the report</p>
-                                                </div>
-                                            ) : eventReport ? (
-                                                <div className="event-report-table">
-                                                    <h2>Full Event Report</h2>
-                                                    <table className="data-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Booth</th>
-                                                                <th>Job Seeker Interest</th>
-                                                                <th>Unique Queue Visits</th>
-                                                                <th>Total Queue Visits</th>
-                                                                <th>Unique Meetings</th>
-                                                                <th>Total Job Seeker Meetings</th>
-                                                                <th># Dropped Meetings</th>
-                                                                <th>Meetings &gt; 3 Min</th>
-                                                                <th>Average Meeting Time</th>
-                                                                <th>Avg Meetings per Recruiter</th>
-                                                                <th>Interpreter Meetings</th>
-                                                                <th>Interpreter Time</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {eventReport.booths?.map((booth, index) => (
-                                                                <tr key={booth.boothId || index}>
-                                                                    <td>{booth.boothName}</td>
-                                                                    <td>{booth.jobSeekerInterest || 0}</td>
-                                                                    <td>{booth.uniqueQueueVisits || 0}</td>
-                                                                    <td>{booth.totalQueueVisits || 0}</td>
-                                                                    <td>{booth.uniqueMeetings || 0}</td>
-                                                                    <td>{booth.totalJobSeekerMeetings || 0}</td>
-                                                                    <td>{booth.droppedMeetings || 0}</td>
-                                                                    <td>{booth.meetingsOver3Min || 0}</td>
-                                                                    <td>{formatDuration(booth.averageMeetingTime || 0)}</td>
-                                                                    <td>{booth.avgMeetingsPerRecruiter?.toFixed(2) || '0.00'}</td>
-                                                                    <td>{booth.interpreterMeetings || 0}</td>
-                                                                    <td>{formatDuration(booth.interpreterTime || 0)}</td>
-                                                                </tr>
-                                                            ))}
-                                                            {eventReport.eventTotal && (
-                                                                <tr className="event-total-row">
-                                                                    <td><strong>Event Total</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.jobSeekerInterest || 0}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.uniqueQueueVisits || 0}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.totalQueueVisits || 0}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.uniqueMeetings || 0}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.totalJobSeekerMeetings || 0}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.droppedMeetings || 0}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.meetingsOver3Min || 0}</strong></td>
-                                                                    <td><strong>{formatDuration(eventReport.eventTotal.averageMeetingTime || 0)}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.avgMeetingsPerRecruiter?.toFixed(2) || '0.00'}</strong></td>
-                                                                    <td><strong>{eventReport.eventTotal.interpreterMeetings || 0}</strong></td>
-                                                                    <td><strong>{formatDuration(eventReport.eventTotal.interpreterTime || 0)}</strong></td>
-                                                                </tr>
-                                                            )}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            ) : (
-                                                <div className="analytics-empty-state">
-                                                    <p>No data available for this event</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Booth Report Tab */}
-                                    {activeTab === 'booth-report' && (
+                                    {/* Report Tab */}
+                                    {activeTab === 'report' && (
                                         <div className="analytics-booth-report">
-                                            {boothReport?.booths && boothReport.booths.length > 0 ? (
+                                            {reportData?.booths && reportData.booths.length > 0 ? (
                                                 <div className="booth-report-table">
-                                                    <h2>Booth Report</h2>
+                                                    <h2>Report</h2>
                                                     <table className="data-table">
                                                         <thead>
                                                             <tr>
@@ -593,7 +487,7 @@ export default function Analytics() {
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {boothReport.booths.map((booth, index) => (
+                                                            {reportData.booths.map((booth, index) => (
                                                                 <tr key={booth._id || index}>
                                                                     <td>{booth.name}</td>
                                                                     <td>{booth.eventName || 'N/A'}</td>
@@ -610,6 +504,28 @@ export default function Analytics() {
                                                                     <td>{formatDuration(booth.interpreterTime || 0)}</td>
                                                                 </tr>
                                                             ))}
+                                                            {/* Totals Row */}
+                                                            <tr className="totals-row">
+                                                                <td><strong>TOTAL</strong></td>
+                                                                <td>—</td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.jobSeekerInterest || 0), 0)}</strong></td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.uniqueQueueVisits || 0), 0)}</strong></td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.totalQueueVisits || 0), 0)}</strong></td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.uniqueMeetings || 0), 0)}</strong></td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.totalJobSeekerMeetings || 0), 0)}</strong></td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.droppedMeetings || 0), 0)}</strong></td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.meetingsOver3Min || 0), 0)}</strong></td>
+                                                                <td><strong>{formatDuration(
+                                                                    reportData.booths.reduce((sum, b) => sum + ((b.averageMeetingTime || 0) * (b.totalJobSeekerMeetings || 0)), 0) / 
+                                                                    Math.max(reportData.booths.reduce((sum, b) => sum + (b.totalJobSeekerMeetings || 0), 0), 1)
+                                                                )}</strong></td>
+                                                                <td><strong>{(
+                                                                    reportData.booths.reduce((sum, b) => sum + ((b.avgMeetingsPerRecruiter || 0) * (b.totalJobSeekerMeetings || 0)), 0) / 
+                                                                    Math.max(reportData.booths.reduce((sum, b) => sum + (b.totalJobSeekerMeetings || 0), 0), 1)
+                                                                ).toFixed(2)}</strong></td>
+                                                                <td><strong>{reportData.booths.reduce((sum, b) => sum + (b.interpreterMeetings || 0), 0)}</strong></td>
+                                                                <td><strong>{formatDuration(reportData.booths.reduce((sum, b) => sum + (b.interpreterTime || 0), 0))}</strong></td>
+                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
