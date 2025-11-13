@@ -7,6 +7,7 @@ const VideoCall = require('../models/VideoCall');
 const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const logger = require('../utils/logger');
+const liveStatsStore = require('../utils/liveStatsStore');
 
 /**
  * Socket.IO connection handler with authentication and real-time features
@@ -48,6 +49,8 @@ const socketHandler = (io) => {
 
     io.on('connection', (socket) => {
         logger.info(`User ${socket.user.email} connected via socket`);
+
+        liveStatsStore.userConnected(socket.user);
 
         // Join user-specific room
         socket.join(`user:${socket.userId}`);
@@ -173,6 +176,12 @@ const socketHandler = (io) => {
                 socket.join(`call:${meetingId}`);
                 socket.currentMeetingId = meetingId;
 
+                liveStatsStore.userJoinedCall({
+                    sessionId: `meeting:${meetingId}`,
+                    boothId: meeting.boothId,
+                    eventId: meeting.eventId
+                }, socket.user);
+
                 // Notify other participants that user joined
                 socket.to(`call:${meetingId}`).emit('participant-joined', {
                     userId: socket.userId,
@@ -198,6 +207,7 @@ const socketHandler = (io) => {
             const { meetingId } = data;
             if (meetingId) {
                 socket.leave(`call:${meetingId}`);
+                liveStatsStore.userLeftCall(socket.userId);
 
                 // Notify other participants that user left
                 socket.to(`call:${meetingId}`).emit('participant-left', {
@@ -609,6 +619,12 @@ const socketHandler = (io) => {
                 socket.currentVideoCallId = callId;
                 socket.currentVideoCallRoom = roomName;
 
+                liveStatsStore.userJoinedCall({
+                    sessionId: `video:${callId}`,
+                    boothId: videoCall.booth,
+                    eventId: videoCall.event
+                }, socket.user);
+
                 // Debug: Log room joining
                 console.log(`DEBUG: User ${socket.user.email} joined room call_${roomName}`);
                 console.log(`DEBUG: Socket rooms after join:`, Array.from(socket.rooms));
@@ -635,6 +651,7 @@ const socketHandler = (io) => {
             const { roomName } = data;
             if (roomName) {
                 socket.leave(`call_${roomName}`);
+                liveStatsStore.userLeftCall(socket.userId);
 
                 // Notify other participants that user left
                 socket.to(`call_${roomName}`).emit('participant-left-video', {
@@ -866,6 +883,8 @@ const socketHandler = (io) => {
                     logger.error('Error cleaning up queue on disconnect:', error);
                 }
             }
+
+            liveStatsStore.userDisconnected(socket.userId);
         });
 
         /**

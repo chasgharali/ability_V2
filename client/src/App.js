@@ -36,6 +36,7 @@ import BoothQueueManagement from './components/BoothQueue/BoothQueueManagement';
 import VideoCall from './components/VideoCall/VideoCall';
 import QueueInviteResolver from './components/BoothQueue/QueueInviteResolver';
 import LandingPage from './components/Landing/LandingPage';
+import Analytics from './components/Analytics/Analytics';
 import './App.css';
 
 // Component to conditionally render header and footer
@@ -106,6 +107,7 @@ function App() {
                                 <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />
                                 <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                 <Route path="/interpreter-categories" element={<RequireAuth><InterpreterCategories /></RequireAuth>} />
+                                <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
                                 {/* Booth Queue Routes */}
                                 <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
                                 <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />

@@ -134,7 +134,7 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             <button 
               className={itemClass('analytics')} 
-              onClick={closeMobileMenu}
+              onClick={() => handleItemClick('/analytics')}
             >
               Analytics
             </button>
@@ -335,7 +335,7 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded.tools && (
               <div className="sidebar-items">
-                <button className={itemClass('analytics')} onClick={() => handleItemClick('/dashboard')}>Analytics</button>
+                <button className={itemClass('analytics')} onClick={() => handleItemClick('/analytics')}>Analytics</button>
               </div>
             )}
           </div>
