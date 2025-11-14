@@ -137,13 +137,23 @@ chatSchema.methods.updateLastRead = async function(userId) {
 // Instance method to get unread count for a user
 chatSchema.methods.getUnreadCount = async function(userId) {
     const Message = mongoose.model('Message');
-    const participant = this.participants.find(p => p.user.toString() === userId.toString());
+    const targetId = userId?.toString?.();
+
+    if (!targetId) return 0;
+
+    const participant = this.participants.find(p => {
+        if (!p || !p.user) return false;
+        const participantId = p.user.toString();
+        return participantId === targetId;
+    });
     
     if (!participant) return 0;
 
+    const lastRead = participant.lastRead || new Date(0);
+
     const count = await Message.countDocuments({
         chat: this._id,
-        timestamp: { $gt: participant.lastRead },
+        createdAt: { $gt: lastRead },
         sender: { $ne: userId }
     });
 

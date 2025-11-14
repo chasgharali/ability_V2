@@ -37,6 +37,10 @@ import VideoCall from './components/VideoCall/VideoCall';
 import QueueInviteResolver from './components/BoothQueue/QueueInviteResolver';
 import LandingPage from './components/Landing/LandingPage';
 import Analytics from './components/Analytics/Analytics';
+import NoteManagement from './components/Notes/NoteManagement';
+import NoteForm from './components/Notes/NoteForm';
+import NoteView from './components/Notes/NoteView';
+import NoteViewUser from './components/Notes/NoteViewUser';
 import './App.css';
 
 // Component to conditionally render header and footer
@@ -111,6 +115,13 @@ function App() {
                                     <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
                                     <Route path="/interpreter-categories" element={<RequireAuth><InterpreterCategories /></RequireAuth>} />
                                     <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
+                                    {/* Notes Routes */}
+                                    <Route path="/notes" element={<RequireAuth><NoteManagement /></RequireAuth>} />
+                                    <Route path="/notes/create" element={<RequireAuth><NoteForm /></RequireAuth>} />
+                                    <Route path="/notes/:id" element={<RequireAuth><NoteView /></RequireAuth>} />
+                                    <Route path="/notes/:id/edit" element={<RequireAuth><NoteForm /></RequireAuth>} />
+                                    <Route path="/troubleshooting" element={<RequireAuth><NoteViewUser type="troubleshooting" /></RequireAuth>} />
+                                    <Route path="/instructions" element={<RequireAuth><NoteViewUser type="instruction" /></RequireAuth>} />
                                     {/* Booth Queue Routes */}
                                     <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
                                     <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />

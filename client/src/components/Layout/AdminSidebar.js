@@ -100,15 +100,15 @@ export default function AdminSidebar({ active = 'booths' }) {
       return (
         <>
           <div className="sidebar-section">
-            <button 
-              className={itemClass('dashboard')} 
+            <button
+              className={itemClass('dashboard')}
               onClick={() => handleItemClick('/dashboard')}
             >
               Dashboard
             </button>
-            <button 
-              className={itemClass('troubleshooting')} 
-              onClick={closeMobileMenu}
+            <button
+              className={itemClass('troubleshooting')}
+              onClick={() => handleItemClick('/troubleshooting')}
             >
               Trouble Shooting
             </button>
@@ -120,27 +120,27 @@ export default function AdminSidebar({ active = 'booths' }) {
       return (
         <>
           <div className="sidebar-section">
-            <button 
-              className={itemClass('dashboard')} 
+            <button
+              className={itemClass('dashboard')}
               onClick={() => handleItemClick('/dashboard')}
             >
               Dashboard
             </button>
-            <button 
-              className={itemClass('instructions')} 
-              onClick={closeMobileMenu}
-            >
-              Instructions
-            </button>
-            <button 
-              className={itemClass('analytics')} 
+            <button
+              className={itemClass('analytics')}
               onClick={() => handleItemClick('/analytics')}
             >
               Analytics
             </button>
-            <button 
-              className={itemClass('troubleshooting')} 
-              onClick={closeMobileMenu}
+            <button
+              className={itemClass('instructions')}
+              onClick={() => handleItemClick('/instructions')}
+            >
+              Instructions
+            </button>
+            <button
+              className={itemClass('troubleshooting')}
+              onClick={() => handleItemClick('/troubleshooting')}
             >
               Troubleshooting
             </button>
@@ -249,8 +249,8 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button className="sidebar-item" onClick={closeMobileMenu}>Trouble Shooting</button>
-            <button className="sidebar-item" onClick={closeMobileMenu}>Instructions</button>
+            <button className="sidebar-item" onClick={() => handleItemClick('/troubleshooting')}>Trouble Shooting</button>
+            <button className="sidebar-item" onClick={() => handleItemClick('/instructions')}>Instructions</button>
           </div>
         </>
       );
@@ -286,8 +286,8 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded.tools && (
               <div className="sidebar-items">
-                <button className={itemClass('troubleshooting')} onClick={closeMobileMenu}>Trouble Shooting</button>
-                <button className={itemClass('instructions')} onClick={closeMobileMenu}>Instructions</button>
+                <button className={itemClass('troubleshooting')} onClick={() => handleItemClick('/troubleshooting')}>Trouble Shooting</button>
+                <button className={itemClass('instructions')} onClick={() => handleItemClick('/instructions')}>Instructions</button>
               </div>
             )}
           </div>
@@ -324,6 +324,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('interpreter-categories')} onClick={() => handleItemClick('/interpreter-categories')}>Interpreter Categories</button>
                 <button className={itemClass('branding')} onClick={() => handleItemClick('/branding')}>Branding – Header Logo</button>
                 <button className={itemClass('terms-conditions')} onClick={() => handleItemClick('/terms-conditions')}>Terms & Conditions</button>
+                <button className={itemClass('notes')} onClick={() => handleItemClick('/notes')}>Notes Management</button>
               </div>
             )}
           </div>
@@ -352,8 +353,8 @@ export default function AdminSidebar({ active = 'booths' }) {
   return (
     <>
       {/* Mobile overlay - click to close sidebar */}
-      <div 
-        className="mobile-overlay" 
+      <div
+        className="mobile-overlay"
         onClick={closeMobileMenu}
         aria-hidden="true"
       />
