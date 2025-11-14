@@ -466,9 +466,10 @@ export default function Analytics() {
                                     {activeTab === 'report' && (
                                         <div className="analytics-booth-report">
                                             {reportData?.booths && reportData.booths.length > 0 ? (
-                                                <div className="booth-report-table">
+                                                <>
                                                     <h2>Report</h2>
-                                                    <table className="data-table">
+                                                    <div className="booth-report-table">
+                                                        <table className="data-table">
                                                         <thead>
                                                             <tr>
                                                                 <th>Booth</th>
@@ -529,6 +530,7 @@ export default function Analytics() {
                                                         </tbody>
                                                     </table>
                                                 </div>
+                                                </>
                                             ) : (
                                                 <div className="analytics-empty-state">
                                                     <p>No booth data available</p>

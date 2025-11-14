@@ -831,7 +831,7 @@ router.get('/full-event-report', authenticateToken, requireRole(['Admin', 'Globa
  */
 router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support']), async (req, res) => {
     try {
-        const { type, eventId, startDate, endDate } = req.query;
+        const { type, eventId, boothId, startDate, endDate } = req.query;
 
         if (!type || !['booths', 'events', 'full-event'].includes(type)) {
             return res.status(400).json({ error: 'Invalid export type' });
@@ -840,7 +840,177 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         let data = [];
         let filename = 'analytics-export.csv';
 
-        if (type === 'full-event') {
+        if (type === 'booths') {
+            // Get booth filter based on user role
+            const boothFilter = await buildBoothFilter(req.user);
+            if (boothFilter === null) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+
+            // Build date filter
+            let dateFilter = {};
+            if (startDate || endDate) {
+                dateFilter.startTime = {};
+                if (startDate) dateFilter.startTime.$gte = new Date(startDate);
+                if (endDate) dateFilter.startTime.$lte = new Date(endDate);
+            }
+
+            // Build booth match query
+            let boothMatchQuery = {};
+            if (boothFilter.boothId) {
+                boothMatchQuery._id = boothFilter.boothId;
+            } else if (boothId) {
+                if (!mongoose.Types.ObjectId.isValid(boothId)) {
+                    return res.status(400).json({ error: 'Invalid boothId format' });
+                }
+                boothMatchQuery._id = new mongoose.Types.ObjectId(boothId);
+            }
+            if (eventId) {
+                if (!mongoose.Types.ObjectId.isValid(eventId)) {
+                    return res.status(400).json({ error: 'Invalid eventId format' });
+                }
+                boothMatchQuery.eventId = new mongoose.Types.ObjectId(eventId);
+            }
+
+            // Fetch booths
+            const booths = await Booth.find(boothMatchQuery)
+                .populate('eventId', 'name')
+                .select('name eventId');
+            
+            const boothIds = booths.map(b => b._id);
+
+            // Build match query for statistics
+            let matchQuery = { ...dateFilter, boothId: { $in: boothIds } };
+            if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+                matchQuery.eventId = new mongoose.Types.ObjectId(eventId);
+            }
+
+            // Get meeting statistics
+            const boothStats = await MeetingRecord.aggregate([
+                { $match: matchQuery },
+                {
+                    $group: {
+                        _id: '$boothId',
+                        uniqueMeetings: { $addToSet: '$userId' },
+                        totalMeetings: { $sum: 1 },
+                        totalJobSeekerMeetings: {
+                            $sum: { $cond: [{ $ne: ['$interpreterId', null] }, 0, 1] }
+                        },
+                        droppedMeetings: {
+                            $sum: { $cond: [{ $eq: ['$endReason', 'dropped'] }, 1, 0] }
+                        },
+                        meetingsOver3Min: {
+                            $sum: { $cond: [{ $gte: ['$duration', 3] }, 1, 0] }
+                        },
+                        totalDuration: { $sum: '$duration' },
+                        totalWithInterpreter: {
+                            $sum: { $cond: [{ $ne: ['$interpreterId', null] }, 1, 0] }
+                        },
+                        interpreterTime: {
+                            $sum: {
+                                $cond: [
+                                    { $ne: ['$interpreterId', null] },
+                                    '$duration',
+                                    0
+                                ]
+                            }
+                        },
+                        uniqueRecruiters: { $addToSet: '$recruiterId' }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        uniqueMeetings: { $size: '$uniqueMeetings' },
+                        totalMeetings: 1,
+                        totalJobSeekerMeetings: 1,
+                        droppedMeetings: 1,
+                        meetingsOver3Min: 1,
+                        averageDuration: {
+                            $cond: [
+                                { $gt: ['$totalMeetings', 0] },
+                                { $divide: ['$totalDuration', '$totalMeetings'] },
+                                0
+                            ]
+                        },
+                        totalWithInterpreter: 1,
+                        interpreterTime: 1,
+                        uniqueRecruiters: 1
+                    }
+                }
+            ]);
+
+            // Get queue statistics
+            let queueMatchQuery = { booth: { $in: boothIds } };
+            if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+                queueMatchQuery.event = new mongoose.Types.ObjectId(eventId);
+            }
+
+            const queueStats = await BoothQueue.aggregate([
+                { $match: queueMatchQuery },
+                {
+                    $group: {
+                        _id: '$booth',
+                        uniqueQueueVisits: { $addToSet: '$user' },
+                        totalQueueVisits: { $sum: 1 }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        uniqueQueueVisits: { $size: '$uniqueQueueVisits' },
+                        totalQueueVisits: 1
+                    }
+                }
+            ]);
+
+            // Get interest statistics
+            const JobSeekerInterest = require('../models/JobSeekerInterest');
+            let interestMatchQuery = { booth: { $in: boothIds } };
+            if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+                interestMatchQuery.event = new mongoose.Types.ObjectId(eventId);
+            }
+
+            const interestStats = await JobSeekerInterest.aggregate([
+                { $match: interestMatchQuery },
+                {
+                    $group: {
+                        _id: '$booth',
+                        jobSeekerInterest: { $sum: 1 }
+                    }
+                }
+            ]);
+
+            // Build CSV data
+            data = booths.map(booth => {
+                const stats = boothStats.find(s => s._id.toString() === booth._id.toString()) || {};
+                const queue = queueStats.find(q => q._id.toString() === booth._id.toString()) || {};
+                const interest = interestStats.find(i => i._id.toString() === booth._id.toString()) || {};
+                
+                const uniqueRecruiters = stats.uniqueRecruiters ? stats.uniqueRecruiters.length : 0;
+                const avgMeetingsPerRecruiter = uniqueRecruiters > 0 
+                    ? (stats.totalJobSeekerMeetings / uniqueRecruiters).toFixed(2) 
+                    : '0.00';
+
+                return [
+                    booth.name,
+                    booth.eventId?.name || 'N/A',
+                    interest.jobSeekerInterest || 0,
+                    queue.uniqueQueueVisits || 0,
+                    queue.totalQueueVisits || 0,
+                    stats.uniqueMeetings || 0,
+                    stats.totalJobSeekerMeetings || 0,
+                    stats.droppedMeetings || 0,
+                    stats.meetingsOver3Min || 0,
+                    formatDuration(stats.averageDuration || 0),
+                    avgMeetingsPerRecruiter,
+                    stats.totalWithInterpreter || 0,
+                    formatDuration(stats.interpreterTime || 0)
+                ];
+            });
+
+            filename = 'booths-report.csv';
+        } else if (type === 'full-event') {
             if (!eventId) {
                 return res.status(400).json({ error: 'eventId is required for full-event export' });
             }
@@ -936,6 +1106,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         // Convert to CSV
         const csvHeaders = [
             'Booth',
+            'Event',
             'Job Seeker Interest',
             'Unique Queue Visits',
             'Total Queue Visits',
