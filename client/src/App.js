@@ -42,18 +42,21 @@ import './App.css';
 // Component to conditionally render header and footer
 const AppLayout = ({ children }) => {
     const { user } = useAuth();
-    
+
     // Roles that should have access to Team Chat
-    const chatEnabledRoles = ['Recruiter', 'BoothAdmin', 'Support', 'GlobalSupport', 'Admin', 'Interpreter'];
-    const showChat = user && chatEnabledRoles.includes(user.role);
-    
+    const chatEnabledRoles = new Set(
+        ['Recruiter', 'BoothAdmin', 'Support', 'GlobalSupport', 'Interpreter', 'GlobalInterpreter']
+            .map(role => role.toLowerCase())
+    );
+    const showChat = user && user.role && chatEnabledRoles.has(user.role.toLowerCase());
+
     return (
         <div className="App">
             <main id="main-content" role="main">
                 {children}
             </main>
 
-            {/* Show ChatPanel for authenticated users (excluding JobSeekers) */}
+            {/* Show ChatPanel for authenticated users with chat-enabled roles */}
             {showChat && <ChatPanel />}
 
             <AccessibilityAnnouncer />
@@ -77,43 +80,43 @@ function App() {
                         <Router>
                             <AppLayout>
                                 <Routes>
-                                <Route path="/" element={<LandingPage />} />
-                                <Route path="/login" element={<LoginPage />} />
-                                <Route path="/register" element={<RegisterPage />} />
-                                <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
-                                <Route path="/email-verified" element={<VerifyEmailSuccess />} />
-                                <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                <Route path="/dashboard/my-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                <Route path="/dashboard/survey" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                <Route path="/dashboard/edit-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
-                                <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
-                                <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
-                                <Route path="/usermanagement" element={<RequireAuth><UserManagement /></RequireAuth>} />
-                                <Route path="/jobseekermanagement" element={<RequireAuth><JobSeekerManagement /></RequireAuth>} />
-                                <Route path="/meeting-records" element={<RequireAuth><MeetingRecords /></RequireAuth>} />
-                                <Route path="/meeting-records/:id" element={<RequireAuth><MeetingRecordDetail /></RequireAuth>} />
-                                <Route path="/jobseeker-interests" element={<RequireAuth><JobSeekerInterests /></RequireAuth>} />
-                                {/* Job Seeker event flow */}
-                                <Route path="/events/upcoming" element={<RequireAuth><UpcomingEvents /></RequireAuth>} />
-                                <Route path="/events/registered" element={<RequireAuth><RegisteredEvents /></RequireAuth>} />
-                                <Route path="/events/registered/:slug" element={<RequireAuth><RegisteredEventDetail /></RequireAuth>} />
-                                <Route path="/event/:slug" element={<RequireAuth><EventDetail /></RequireAuth>} />
-                                <Route path="/event/:slug/register" element={<RegistrationWizard />} />
-                                <Route path="/terms-conditions" element={<RequireAuth><TermsConditionsList /></RequireAuth>} />
-                                <Route path="/terms-conditions/create" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
-                                <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />
-                                <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
-                                <Route path="/interpreter-categories" element={<RequireAuth><InterpreterCategories /></RequireAuth>} />
-                                <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
-                                {/* Booth Queue Routes */}
-                                <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
-                                <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />
-                                <Route path="/booth-queue/:eventSlug/:boothId/waiting" element={<RequireAuth><BoothQueueWaiting /></RequireAuth>} />
-                                <Route path="/booth-queue/manage/:boothId" element={<RequireAuth><BoothQueueManagement /></RequireAuth>} />
-                                <Route path="/video-call/:callId" element={<RequireAuth><VideoCall /></RequireAuth>} />
+                                    <Route path="/" element={<LandingPage />} />
+                                    <Route path="/login" element={<LoginPage />} />
+                                    <Route path="/register" element={<RegisterPage />} />
+                                    <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
+                                    <Route path="/email-verified" element={<VerifyEmailSuccess />} />
+                                    <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                    <Route path="/dashboard/my-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                    <Route path="/dashboard/survey" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                    <Route path="/dashboard/edit-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                    <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                    <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                    <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
+                                    <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
+                                    <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
+                                    <Route path="/usermanagement" element={<RequireAuth><UserManagement /></RequireAuth>} />
+                                    <Route path="/jobseekermanagement" element={<RequireAuth><JobSeekerManagement /></RequireAuth>} />
+                                    <Route path="/meeting-records" element={<RequireAuth><MeetingRecords /></RequireAuth>} />
+                                    <Route path="/meeting-records/:id" element={<RequireAuth><MeetingRecordDetail /></RequireAuth>} />
+                                    <Route path="/jobseeker-interests" element={<RequireAuth><JobSeekerInterests /></RequireAuth>} />
+                                    {/* Job Seeker event flow */}
+                                    <Route path="/events/upcoming" element={<RequireAuth><UpcomingEvents /></RequireAuth>} />
+                                    <Route path="/events/registered" element={<RequireAuth><RegisteredEvents /></RequireAuth>} />
+                                    <Route path="/events/registered/:slug" element={<RequireAuth><RegisteredEventDetail /></RequireAuth>} />
+                                    <Route path="/event/:slug" element={<RequireAuth><EventDetail /></RequireAuth>} />
+                                    <Route path="/event/:slug/register" element={<RegistrationWizard />} />
+                                    <Route path="/terms-conditions" element={<RequireAuth><TermsConditionsList /></RequireAuth>} />
+                                    <Route path="/terms-conditions/create" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
+                                    <Route path="/terms-conditions/:id" element={<RequireAuth><TermsConditionsView /></RequireAuth>} />
+                                    <Route path="/terms-conditions/:id/edit" element={<RequireAuth><TermsConditionsForm /></RequireAuth>} />
+                                    <Route path="/interpreter-categories" element={<RequireAuth><InterpreterCategories /></RequireAuth>} />
+                                    <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
+                                    {/* Booth Queue Routes */}
+                                    <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
+                                    <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />
+                                    <Route path="/booth-queue/:eventSlug/:boothId/waiting" element={<RequireAuth><BoothQueueWaiting /></RequireAuth>} />
+                                    <Route path="/booth-queue/manage/:boothId" element={<RequireAuth><BoothQueueManagement /></RequireAuth>} />
+                                    <Route path="/video-call/:callId" element={<RequireAuth><VideoCall /></RequireAuth>} />
                                 </Routes>
                             </AppLayout>
                         </Router>

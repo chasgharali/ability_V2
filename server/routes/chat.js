@@ -10,6 +10,38 @@ router.get('/', authenticateToken, async (req, res) => {
     try {
         const chats = await Chat.findUserChats(req.user._id);
 
+        const dedupeDirectChats = (chatList) => {
+            const directChatsMap = new Map();
+            const nonDirectChats = [];
+
+            chatList.forEach(chat => {
+                if (chat.type !== 'direct') {
+                    nonDirectChats.push(chat);
+                    return;
+                }
+
+                const otherParticipant = chat.participants.find(
+                    participant => participant?.user?._id.toString() !== req.user._id.toString()
+                );
+
+                if (!otherParticipant) {
+                    return;
+                }
+
+                const key = otherParticipant.user._id.toString();
+                const existingChat = directChatsMap.get(key);
+
+                if (!existingChat || new Date(chat.updatedAt) > new Date(existingChat.updatedAt)) {
+                    directChatsMap.set(key, chat);
+                }
+            });
+
+            return [
+                ...nonDirectChats,
+                ...Array.from(directChatsMap.values())
+            ].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        };
+
         // Get unread count for each chat
         const chatsWithUnread = await Promise.all(
             chats.map(async (chat) => {
@@ -21,7 +53,7 @@ router.get('/', authenticateToken, async (req, res) => {
             })
         );
 
-        res.json(chatsWithUnread);
+        res.json(dedupeDirectChats(chatsWithUnread));
     } catch (error) {
         console.error('Error fetching chats:', error);
         res.status(500).json({ message: 'Failed to fetch chats', error: error.message });
@@ -35,10 +67,23 @@ router.get('/participants', authenticateToken, async (req, res) => {
         const participants = [];
 
         // Define roles that can chat
-        const chatEnabledRoles = ['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
+        const chatEnabledRoles = ['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'Admin', 'BoothAdmin', 'JobSeeker'];
 
         if (!chatEnabledRoles.includes(currentUser.role)) {
             return res.status(403).json({ message: 'Your role does not have chat access' });
+        }
+
+        // Global Support & Global Interpreter can reach all key operational roles
+        if (['GlobalSupport', 'GlobalInterpreter'].includes(currentUser.role)) {
+            const targetRoles = ['GlobalSupport', 'GlobalInterpreter', 'Interpreter', 'Support', 'Recruiter'];
+
+            const globalReachUsers = await User.find({
+                role: { $in: targetRoles },
+                isActive: true,
+                _id: { $ne: currentUser._id }
+            }).select('name email avatarUrl role assignedBooth');
+
+            return res.json(globalReachUsers);
         }
 
         // For booth-specific roles (Recruiter, Interpreter, Support)
