@@ -39,12 +39,24 @@ const app = express();
 const server = http.createServer(app);
 
 // Initialize Socket.IO with CORS configuration
+// Support multiple origins if CORS_ORIGIN is a comma-separated string
+const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
+const allowedOrigins = corsOrigin.split(',').map(origin => origin.trim());
+
 const io = socketIo(server, {
     cors: {
-        origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+        origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
         methods: ["GET", "POST"],
         credentials: true
-    }
+    },
+    // Configuration for running behind a proxy/load balancer (Elastic Beanstalk)
+    allowUpgrades: true,
+    transports: ['websocket', 'polling'],
+    // Increase ping timeout for load balancers
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    // Important: allow Socket.IO to work behind proxies
+    allowEIO3: true
 });
 
 // Security middleware
@@ -52,11 +64,12 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             scriptSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "wss:", "https:"],
+            connectSrc: ["'self'", "wss:", "https:", "ws:"],
             mediaSrc: ["'self'", "blob:", "https:"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
@@ -65,8 +78,9 @@ app.use(helmet({
 
 // If running behind a proxy (e.g., CRA dev server, reverse proxy, or load balancer),
 // let Express know so req.ip and rate limit can read X-Forwarded-For safely.
+// Elastic Beanstalk uses a load balancer, so trust proxy is important
 // Use 1 hop in dev; can be made configurable via env.
-app.set('trust proxy', parseInt(process.env.TRUST_PROXY_HOPS || '1'));
+app.set('trust proxy', parseInt(process.env.TRUST_PROXY_HOPS || (process.env.NODE_ENV === 'production' ? '2' : '1')));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -83,8 +97,17 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
+// Using allowedOrigins already declared above for Socket.IO
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: allowedOrigins.length === 1 ? allowedOrigins[0] : (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -186,10 +209,12 @@ const startServer = async () => {
         }
 
         const PORT = process.env.PORT || 5001;
-        const HOST = process.env.HOST || 'localhost';
+        // Use 0.0.0.0 for production to accept connections from outside the container
+        // Elastic Beanstalk sets PORT automatically, but we need to listen on all interfaces
+        const HOST = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost');
 
         server.listen(PORT, HOST, () => {
-            logger.info(`Server running on ${HOST}:${PORT} in ${process.env.NODE_ENV} mode`);
+            logger.info(`Server running on ${HOST}:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
             logger.info('Server is ready to accept connections');
 
             // Start queue cleanup job
