@@ -1,3 +1,6 @@
 client/node_modules
 server/node_modules
 server/logs
+server/build
+client/build
+server/be.zip

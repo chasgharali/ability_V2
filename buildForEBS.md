@@ -1,0 +1,1 @@
+zip -r be.zip . -x "node_modules/\*"

@@ -22,7 +22,7 @@ const testUsers = [
 async function seedUsers() {
     try {
         // Connect to MongoDB
-        const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://alidev1525:UW99QLF8wiqgJwmZ@cluster0.ik2v2ci.mongodb.net/ab_V2';
+        const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://daniotech:JHogHMs8nvUmvWHO@cluster-ability.okhfe.mongodb.net/Ability_v2_dev';
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 

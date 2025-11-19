@@ -131,7 +131,7 @@ socketHandler(io);
 app.set('io', io);
 
 // Serve static files from the React app build directory
-const buildPath = path.join(__dirname, '..', 'client', 'build');
+const buildPath = path.join(__dirname, 'build');
 app.use(express.static(buildPath));
 
 // Serve React app for all non-API routes (React Router support)
@@ -191,7 +191,7 @@ const startServer = async () => {
         server.listen(PORT, HOST, () => {
             logger.info(`Server running on ${HOST}:${PORT} in ${process.env.NODE_ENV} mode`);
             logger.info('Server is ready to accept connections');
-            
+
             // Start queue cleanup job
             const { startQueueCleanup } = require('./utils/queueCleanup');
             startQueueCleanup();
