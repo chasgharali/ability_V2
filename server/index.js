@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./config/database');
@@ -129,16 +130,45 @@ socketHandler(io);
 // Make io available to routes
 app.set('io', io);
 
-// Error handling middleware (must be last)
-app.use(errorHandler);
+// Serve static files from the React app build directory
+const buildPath = path.join(__dirname, '..', 'client', 'build');
+app.use(express.static(buildPath));
 
-// 404 handler
-app.use('*', (req, res) => {
-    res.status(404).json({
-        error: 'Route not found',
-        message: `Cannot ${req.method} ${req.originalUrl}`
-    });
+// Serve React app for all non-API routes (React Router support)
+// This must come after API routes but before error handler
+app.get('*', (req, res, next) => {
+    // Skip if it's an API route
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+    // Skip if it's the health check endpoint
+    if (req.path === '/health') {
+        return next();
+    }
+    // Serve index.html for all other routes (React Router)
+    res.sendFile(path.join(buildPath, 'index.html'));
 });
+
+// 404 handler for unmatched API routes
+app.use('*', (req, res) => {
+    // Only handle API routes that weren't matched
+    if (req.path.startsWith('/api')) {
+        res.status(404).json({
+            error: 'Route not found',
+            message: `Cannot ${req.method} ${req.originalUrl}`
+        });
+    } else {
+        // For non-API routes that aren't GET, also return 404
+        // (GET requests are handled by React Router catch-all above)
+        res.status(404).json({
+            error: 'Route not found',
+            message: `Cannot ${req.method} ${req.originalUrl}`
+        });
+    }
+});
+
+// Error handling middleware (must be absolutely last)
+app.use(errorHandler);
 
 // Database and Redis connection
 const startServer = async () => {
