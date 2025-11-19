@@ -107,3 +107,7 @@ noteSchema.statics.findByTypeAndRole = function (type, role) {
 
 module.exports = mongoose.model('Note', noteSchema);
 
+
+
+
+
