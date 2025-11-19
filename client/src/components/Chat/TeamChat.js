@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { io } from 'socket.io-client';
 import * as chatAPI from '../../services/chat';
 import { ChatUIComponent } from '@syncfusion/ej2-react-interactive-chat';
+import { getSocketUrl } from '../../utils/apiConfig';
 import './Chat.css';
 
 // Play notification sound - double beep
@@ -98,7 +99,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         // Capture ref value for cleanup
         const typingTimeouts = typingTimeoutRef.current;
 
-        socketRef.current = io(process.env.REACT_APP_API_URL || 'http://localhost:5001', {
+        socketRef.current = io(getSocketUrl(), {
             auth: { token: `Bearer ${token}` },
             transports: ['websocket', 'polling']
         });

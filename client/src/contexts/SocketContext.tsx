@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { getSocketUrl } from '../utils/apiConfig';
 import toast from 'react-hot-toast';
 
 // Types
@@ -108,7 +109,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     // Initialize socket connection
     useEffect(() => {
         if (user && token) {
-            const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+            const newSocket = io(getSocketUrl(), {
                 auth: {
                     token: token,
                 },

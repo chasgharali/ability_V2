@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { io } from 'socket.io-client';
 import * as chatAPI from '../../services/chat';
 import { ChatUIComponent, MessageSendEventArgs } from '@syncfusion/ej2-react-interactive-chat';
+import { getSocketUrl } from '../../utils/apiConfig';
 import './Chat.css';
 
 const Chat = () => {
@@ -16,7 +17,7 @@ const Chat = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [typingUsers, setTypingUsers] = useState(new Set());
     const [onlineUsers, setOnlineUsers] = useState(new Set());
-    
+
     const socketRef = useRef(null);
     const chatRef = useRef(null);
 
@@ -25,7 +26,7 @@ const Chat = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        socketRef.current = io(process.env.REACT_APP_API_URL || 'http://localhost:5001', {
+        socketRef.current = io(getSocketUrl(), {
             auth: { token: `Bearer ${token}` },
             transports: ['websocket', 'polling']
         });
@@ -40,8 +41,8 @@ const Chat = () => {
                 setMessages(prev => [...prev, newMsg]);
             }
             // Update chat list
-            setChats(prevChats => prevChats.map(chat => 
-                chat._id === data.chatId 
+            setChats(prevChats => prevChats.map(chat =>
+                chat._id === data.chatId
                     ? { ...chat, lastMessage: data.message }
                     : chat
             ));
@@ -107,13 +108,13 @@ const Chat = () => {
             const data = await chatAPI.getMessages(chatId);
             const syncfusionMessages = data.map(convertToSyncfusionMessage);
             setMessages(syncfusionMessages);
-            
+
             if (socketRef.current) {
                 socketRef.current.emit('mark-read', { chatId });
                 socketRef.current.emit('join-chat', { chatId });
             }
-            
-            setChats(prevChats => prevChats.map(chat => 
+
+            setChats(prevChats => prevChats.map(chat =>
                 chat._id === chatId ? { ...chat, unreadCount: 0 } : chat
             ));
         } catch (error) {
@@ -130,7 +131,7 @@ const Chat = () => {
     const handleSendMessage = (args) => {
         // Syncfusion passes message text in args.message.text property
         const messageText = args?.message?.text || args?.text || '';
-        
+
         if (!selectedChat || !messageText.trim()) return;
 
         const content = messageText.trim();
@@ -180,7 +181,7 @@ const Chat = () => {
         return chat.booth?.logoUrl || null;
     };
 
-    const filteredChats = chats.filter(chat => 
+    const filteredChats = chats.filter(chat =>
         getChatTitle(chat).toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -208,7 +209,7 @@ const Chat = () => {
             <div className="team-chat-sidebar">
                 <div className="team-chat-sidebar-header">
                     <h2>Chats</h2>
-                    <button 
+                    <button
                         className="team-chat-new-btn"
                         onClick={() => setShowNewChat(!showNewChat)}
                         aria-label="Start new chat"

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { getSocketUrl } from '../utils/apiConfig';
 
 const SocketContext = createContext();
 
@@ -21,7 +22,7 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         // Initialize socket connection with auth token in handshake
         const token = localStorage.getItem('token');
-        const newSocket = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:5001', {
+        const newSocket = io(getSocketUrl(), {
             transports: ['websocket', 'polling'],
             timeout: 20000,
             forceNew: true,

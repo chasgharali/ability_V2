@@ -1,6 +1,9 @@
 import axios from 'axios';
+import { getApiUrl } from '../utils/apiConfig';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL 
+  ? `${process.env.REACT_APP_API_URL}/api` 
+  : `${getApiUrl()}/api`;
 
 function authHeaders() {
     const token = localStorage.getItem('token');
