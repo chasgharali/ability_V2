@@ -4,3 +4,12 @@ server/logs
 server/build
 client/build
 server/be.zip
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+server/.env
+client/.env
+*.env
