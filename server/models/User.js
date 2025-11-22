@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
         unique: true,
         lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/, 'Please enter a valid email']
     },
     hashedPassword: {
         type: String,
@@ -52,6 +52,23 @@ const userSchema = new mongoose.Schema({
             message: 'Invalid role specified'
         },
         default: 'JobSeeker'
+    },
+    // Legacy ID from V1 database for migration tracking
+    legacyId: {
+        type: String,
+        default: null,
+        index: true
+    },
+    // Legacy password support for V1 users (dual password validation)
+    legacyPassword: {
+        hash: { type: String, default: null },
+        salt: { type: String, default: null },
+        algorithm: { type: String, default: 'pbkdf2' }
+    },
+    // Registration date (for migrated users)
+    registrationDate: {
+        type: Date,
+        default: null
     },
     avatarUrl: {
         type: String,
@@ -134,6 +151,8 @@ const userSchema = new mongoose.Schema({
         transform: function (doc, ret) {
             delete ret.hashedPassword;
             delete ret.refreshTokens;
+            // Keep legacyPassword in JSON (it's needed for debugging during migration)
+            // delete ret.legacyPassword; // Commented out - keep for migration period
             return ret;
         }
     }
@@ -146,7 +165,13 @@ userSchema.index({ isActive: 1 });
 // Pre-save middleware to hash password
 userSchema.pre('save', async function (next) {
     // Only hash the password if it has been modified (or is new)
+    // Skip if password is already a bcrypt hash (starts with $2)
     if (!this.isModified('hashedPassword')) return next();
+    
+    // Don't re-hash if it's already a bcrypt hash (from migration)
+    if (this.hashedPassword && this.hashedPassword.startsWith('$2')) {
+        return next();
+    }
 
     try {
         // Hash password with cost of 12
@@ -158,9 +183,109 @@ userSchema.pre('save', async function (next) {
     }
 });
 
-// Instance method to check password
+// Instance method to check password (supports both bcrypt and legacy pbkdf2)
+// Matches V1's validPassword method exactly:
+// V1: const hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, "sha512").toString("hex");
+// V1: return this.hash_password === hash;
 userSchema.methods.comparePassword = async function (candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.hashedPassword);
+    const crypto = require('crypto');
+    
+    // Try new bcrypt password first (for new V2 users)
+    if (this.hashedPassword && this.hashedPassword.startsWith('$2')) {
+        try {
+            const bcryptMatch = await bcrypt.compare(candidatePassword, this.hashedPassword);
+            if (bcryptMatch) {
+                return true;
+            }
+        } catch (error) {
+            // Bcrypt comparison failed, continue to legacy password check
+        }
+    }
+
+    // If legacy password exists, try pbkdf2 (for migrated V1 users)
+    // Access legacyPassword - handle both mongoose document and plain object from database
+    let legacyPassword = null;
+    
+    // Try multiple ways to access legacyPassword field
+    if (this.legacyPassword) {
+        legacyPassword = this.legacyPassword;
+    } else if (this._doc && this._doc.legacyPassword) {
+        legacyPassword = this._doc.legacyPassword;
+    } else if (typeof this.toObject === 'function') {
+        try {
+            const userObj = this.toObject({ getters: false, virtuals: false });
+            legacyPassword = userObj.legacyPassword;
+        } catch (e) {
+            // Try accessing directly from document
+            legacyPassword = this.get ? this.get('legacyPassword') : null;
+        }
+    }
+    
+    // Check if legacy password exists and has required fields
+    if (!legacyPassword || typeof legacyPassword !== 'object') {
+        return false;
+    }
+    
+    const legacyHash = legacyPassword.hash || legacyPassword.Hash;
+    const legacySalt = legacyPassword.salt || legacyPassword.Salt;
+    
+    if (!legacyHash || !legacySalt) {
+        return false;
+    }
+    
+    // Use EXACT same logic as V1 validPassword method
+    // V1 Code:
+    // schema.methods.validPassword = function (password: string): boolean {
+    //   const hash = crypto.pbkdf2Sync(password, this.salt, 10000, 512, "sha512").toString("hex");
+    //   return this.hash_password === hash;
+    // };
+    try {
+        const computedHash = crypto.pbkdf2Sync(
+            candidatePassword,
+            legacySalt,
+            10000, // iterations - MUST match V1 exactly
+            512,   // key length - MUST match V1 exactly
+            'sha512' // algorithm - MUST match V1 exactly
+        ).toString('hex');
+
+        // Compare hashes (exact string comparison like V1)
+        if (computedHash === legacyHash) {
+            // Password matches! Auto-migrate to bcrypt and clear legacy password
+            const newBcryptHash = await bcrypt.hash(candidatePassword, 12);
+            
+            // Update directly in database using native MongoDB driver to bypass Mongoose validation
+            // This avoids validation errors when the document has fields that don't match current schema
+            try {
+                const collection = this.constructor.collection;
+                await collection.updateOne(
+                    { _id: this._id },
+                    {
+                        $set: {
+                            hashedPassword: newBcryptHash,
+                            legacyPassword: null,
+                            updatedAt: new Date()
+                        }
+                    }
+                );
+                
+                // Update local instance
+                this.hashedPassword = newBcryptHash;
+                this.legacyPassword = null;
+                
+                return true;
+            } catch (updateError) {
+                // If update fails, log but don't fail authentication
+                console.error(`[comparePassword] Error updating password for ${this.email}:`, updateError.message);
+                // Still return true since password was validated correctly
+                return true;
+            }
+        }
+        
+        return false;
+    } catch (error) {
+        console.error(`[comparePassword] Error validating legacy password for ${this.email}:`, error.message);
+        return false;
+    }
 };
 
 // Instance method to generate user summary for API responses

@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const connectDB = require('./config/database');
@@ -153,24 +154,27 @@ socketHandler(io);
 // Make io available to routes
 app.set('io', io);
 
-// Serve static files from the React app build directory
+// Serve static files from the React app build directory (only if build directory exists)
 const buildPath = path.join(__dirname, 'build');
-app.use(express.static(buildPath));
 
-// Serve React app for all non-API routes (React Router support)
-// This must come after API routes but before error handler
-app.get('*', (req, res, next) => {
-    // Skip if it's an API route
-    if (req.path.startsWith('/api')) {
-        return next();
-    }
-    // Skip if it's the health check endpoint
-    if (req.path === '/health') {
-        return next();
-    }
-    // Serve index.html for all other routes (React Router)
-    res.sendFile(path.join(buildPath, 'index.html'));
-});
+if (fs.existsSync(buildPath) && fs.existsSync(path.join(buildPath, 'index.html'))) {
+    app.use(express.static(buildPath));
+
+    // Serve React app for all non-API routes (React Router support)
+    // This must come after API routes but before error handler
+    app.get('*', (req, res, next) => {
+        // Skip if it's an API route
+        if (req.path.startsWith('/api')) {
+            return next();
+        }
+        // Skip if it's the health check endpoint
+        if (req.path === '/health') {
+            return next();
+        }
+        // Serve index.html for all other routes (React Router)
+        res.sendFile(path.join(buildPath, 'index.html'));
+    });
+}
 
 // 404 handler for unmatched API routes
 app.use('*', (req, res) => {

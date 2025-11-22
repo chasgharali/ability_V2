@@ -52,9 +52,45 @@ router.get('/me', authenticateToken, async (req, res) => {
             });
         }
 
+        // Get profile data - check both metadata.profile (new format) and metadata.resume (migrated format)
+        let profile = targetUser.metadata?.profile || null;
+        
+        // If profile doesn't exist but resume data exists (migrated user), transform it
+        if (!profile && targetUser.metadata?.resume) {
+            const resumeData = targetUser.metadata.resume;
+            profile = {
+                headline: resumeData.headline || null,
+                keywords: Array.isArray(resumeData.keywords) ? resumeData.keywords.join(', ') : (resumeData.keywords || null),
+                primaryExperience: resumeData.primaryJobExperiences || [],
+                workLevel: resumeData.workExperienceLevel || null,
+                educationLevel: resumeData.highestEducationLevel || null,
+                languages: resumeData.languages || [],
+                employmentTypes: resumeData.employmentTypes || [],
+                clearance: resumeData.securityClearance || null,
+                veteranStatus: resumeData.veteranStatus || resumeData.militaryStatus || null
+            };
+            
+            // Remove null/empty values
+            Object.keys(profile).forEach(key => {
+                if (profile[key] === null || profile[key] === undefined || 
+                    (Array.isArray(profile[key]) && profile[key].length === 0)) {
+                    delete profile[key];
+                }
+            });
+            
+            // If profile has data, save it to metadata.profile for future use
+            if (Object.keys(profile).length > 0) {
+                targetUser.metadata = {
+                    ...(targetUser.metadata || {}),
+                    profile: profile
+                };
+                await targetUser.save();
+            }
+        }
+
         res.json({
             user: targetUser.getPublicProfile(),
-            profile: targetUser.metadata?.profile || null
+            profile: profile
         });
     } catch (error) {
         logger.error('Get current user error:', error);

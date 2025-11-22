@@ -20217,3 +20217,577 @@
 2025-10-04 15:07:54:754 [32minfo[39m: [32mUser my-test-js2@maildrop.cc left booth queue room 68dbac04c53da0640bdc5512[39m
 2025-10-04 15:07:59:759 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759572315122[39m
 2025-10-04 15:08:00:80 [32minfo[39m: [32mUser my-test-js2@maildrop.cc joined video call room booth_68dbac04c53da0640bdc5512_68d91ec9123b4be761f24115_1759572315122[39m
+2025-11-22 17:15:49:1549 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:15:49:1549 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:15:49:1549 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:15:49:1549 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:15:49:1549 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:15:49:1549 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:15:49:1549 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:15:57:1557 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:15:57:1557 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:15:57:1557 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:15:57:1557 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:15:57:1557 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:15:57:1557 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:15:57:1557 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:16:10:1610 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-22 17:16:10:1610 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:16:10:1610 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:16:10:1610 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:16:10:1610 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:16:10:1610 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:16:10:1610 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:16:24:1624 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:16:24:1624 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:16:24:1624 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:16:24:1624 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:16:24:1624 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:16:24:1624 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:16:24:1624 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:17:29:1729 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:17:29:1729 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:17:29:1729 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:17:29:1729 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:17:29:1729 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:17:29:1729 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:17:29:1729 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:17:46:1746 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-22 17:17:46:1746 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:17:46:1746 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:17:46:1746 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:17:46:1746 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:17:46:1746 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:17:46:1746 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:18:23:1823 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:18:23:1823 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:18:23:1823 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:18:23:1823 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:18:23:1823 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:18:23:1823 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:18:23:1823 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:19:16:1916 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:19:16:1916 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:19:16:1916 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:19:16:1916 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:19:16:1916 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:19:16:1916 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:19:16:1916 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:19:25:1925 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:19:25:1925 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:19:25:1925 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:19:25:1925 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:19:25:1925 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:19:25:1925 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:19:25:1925 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:19:39:1939 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:19:39:1939 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:19:39:1939 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:19:39:1939 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:19:39:1939 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:19:39:1939 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:19:39:1939 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:20:09:209 [32minfo[39m: [32mUser logged in: c200901052@gmail.com[39m
+2025-11-22 17:20:10:2010 [31merror[39m: [31mENOENT: no such file or directory, stat 'C:\Users\Mohsin\Desktop\ab\ability_V2\server\build\index.html'[39m
+2025-11-22 17:21:07:217 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:21:07:217 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:21:07:217 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:21:07:217 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:21:07:217 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:21:07:217 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:21:07:217 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:21:17:2117 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:21:17:2117 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:21:17:2117 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:21:17:2117 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:21:17:2117 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:21:17:2117 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:21:17:2117 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:21:44:2144 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:21:44:2144 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:21:44:2144 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:21:44:2144 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:21:44:2144 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:21:44:2144 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:21:44:2144 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:21:48:2148 [32minfo[39m: [32mUser logged in: c200901052@gmail.com[39m
+2025-11-22 17:29:49:2949 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-22 17:29:49:2949 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:29:49:2949 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:29:49:2949 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:29:49:2949 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:29:49:2949 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:29:49:2949 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:30:18:3018 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:30:18:3018 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:30:18:3018 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:30:18:3018 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:30:18:3018 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:30:18:3018 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:30:18:3018 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:30:45:3045 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:30:45:3045 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:30:45:3045 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:30:45:3045 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:30:45:3045 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:30:45:3045 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:30:45:3045 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:31:36:3136 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:31:36:3136 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:31:36:3136 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:31:36:3136 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:31:36:3136 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:31:36:3136 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:31:36:3136 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:32:24:3224 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:32:24:3224 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:32:24:3224 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:32:24:3224 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:32:24:3224 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:32:24:3224 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:32:24:3224 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:32:33:3233 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-22 17:32:33:3233 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:32:33:3233 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:32:33:3233 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:32:33:3233 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:32:33:3233 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:32:33:3233 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:32:54:3254 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:32:54:3254 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:32:54:3254 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:32:54:3254 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:32:54:3254 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:32:54:3254 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:32:54:3254 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:33:06:336 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-22 17:33:06:336 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:33:06:336 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:33:06:336 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:33:06:336 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:33:06:336 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:33:06:336 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:34:36:3436 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:34:36:3436 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:34:36:3436 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:34:36:3436 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:34:36:3436 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:34:36:3436 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:34:36:3436 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:34:53:3453 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-22 17:34:53:3453 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:34:53:3453 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:34:53:3453 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:34:53:3453 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:34:53:3453 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:34:53:3453 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:34:59:3459 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-22 17:34:59:3459 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:34:59:3459 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:34:59:3459 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:34:59:3459 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:34:59:3459 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:34:59:3459 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:35:08:358 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-22 17:35:08:358 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:35:08:358 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:35:08:358 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:35:08:358 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:35:08:358 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:35:08:358 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:39:17:3917 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-22 17:39:17:3917 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 17:39:17:3917 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 17:39:17:3917 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 17:39:17:3917 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 17:39:17:3917 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 17:39:17:3917 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 17:44:49:4449 [32minfo[39m: [32mUser logged in: c200901052@gmail.com[39m
+2025-11-22 17:47:52:4752 [32minfo[39m: [32mUser logged in: c200901052@gmail.com[39m
+2025-11-22 20:47:36:4736 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 20:47:36:4736 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 20:47:36:4736 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 20:47:36:4736 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 20:47:36:4736 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 20:47:36:4736 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 20:47:36:4736 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 20:53:18:5318 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 20:53:18:5318 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 20:53:18:5318 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 20:53:18:5318 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 20:53:18:5318 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 20:53:18:5318 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 20:53:18:5318 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 21:28:16:2816 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 21:28:16:2816 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 21:28:16:2816 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 21:28:16:2816 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 21:28:16:2816 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 21:28:16:2816 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 21:28:16:2816 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 21:28:29:2829 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 21:28:29:2829 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 21:28:29:2829 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 21:28:29:2829 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 21:28:29:2829 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 21:28:29:2829 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 21:28:29:2829 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 21:33:45:3345 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 21:33:45:3345 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 21:33:46:3346 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 21:33:46:3346 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 21:33:46:3346 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 21:33:46:3346 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 21:33:46:3346 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:27:56:2756 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 23:27:56:2756 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:27:56:2756 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:27:56:2756 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:27:56:2756 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:27:56:2756 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:27:56:2756 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:28:11:2811 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 23:28:11:2811 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:28:11:2811 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:28:11:2811 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:28:11:2811 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:28:11:2811 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:28:11:2811 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:28:31:2831 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:28:31:2831 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:28:31:2831 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:28:31:2831 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:28:31:2831 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:28:31:2831 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:28:31:2831 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:28:44:2844 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 23:28:44:2844 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:28:44:2844 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:28:44:2844 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:28:44:2844 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:28:44:2844 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:28:44:2844 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:29:32:2932 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 23:29:32:2932 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:29:33:2933 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:29:33:2933 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:29:33:2933 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:29:33:2933 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:29:33:2933 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:30:18:3018 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:30:18:3018 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:30:18:3018 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:30:18:3018 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:30:18:3018 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:30:18:3018 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:30:18:3018 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:30:43:3043 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 23:30:43:3043 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:30:43:3043 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:30:43:3043 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:30:43:3043 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:30:43:3043 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:30:43:3043 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:31:06:316 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:31:06:316 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:31:06:316 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:31:06:316 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:31:06:316 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:31:06:316 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:31:06:316 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:31:20:3120 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:31:20:3120 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:31:20:3120 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:31:20:3120 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:31:20:3120 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:31:20:3120 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:31:20:3120 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:31:29:3129 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:31:29:3129 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:31:29:3129 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:31:29:3129 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:31:29:3129 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:31:29:3129 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:31:29:3129 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:32:54:3254 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 23:32:54:3254 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:32:54:3254 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:32:54:3254 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:32:54:3254 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:32:54:3254 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:32:54:3254 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:33:05:335 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 23:33:05:335 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:33:05:335 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:33:05:335 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:33:05:335 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:33:05:335 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:33:05:335 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:38:52:3852 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:38:52:3852 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:38:52:3852 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:38:52:3852 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:38:52:3852 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:38:52:3852 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:38:52:3852 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:41:26:4126 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 23:41:26:4126 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:41:26:4126 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:41:26:4126 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:41:26:4126 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:41:26:4126 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:41:26:4126 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:41:53:4153 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 23:41:53:4153 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:41:53:4153 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:41:53:4153 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:41:53:4153 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:41:53:4153 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:41:53:4153 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:48:10:4810 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:48:10:4810 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:48:10:4810 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:48:10:4810 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:48:10:4810 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:48:10:4810 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:48:10:4810 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:48:26:4826 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 23:48:26:4826 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:48:26:4826 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:48:26:4826 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:48:26:4826 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:48:26:4826 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:48:26:4826 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:48:36:4836 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:48:36:4836 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:48:36:4836 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:48:36:4836 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:48:36:4836 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:48:36:4836 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:48:36:4836 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:52:26:5226 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-22 23:52:26:5226 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:52:26:5226 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:52:26:5226 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:52:26:5226 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:52:26:5226 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:52:26:5226 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:52:45:5245 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:52:45:5245 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:52:45:5245 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:52:45:5245 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:52:45:5245 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:52:45:5245 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:52:45:5245 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:52:54:5254 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 23:52:54:5254 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:52:54:5254 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:52:54:5254 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:52:54:5254 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:52:54:5254 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:52:54:5254 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:58:31:5831 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:58:31:5831 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:58:31:5831 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:58:31:5831 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:58:31:5831 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:58:31:5831 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:58:31:5831 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:58:47:5847 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:58:47:5847 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:58:47:5847 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:58:47:5847 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:58:47:5847 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:58:47:5847 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:58:47:5847 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:59:03:593 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-22 23:59:03:593 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:59:03:593 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:59:04:594 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:59:04:594 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:59:04:594 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:59:04:594 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-22 23:59:19:5919 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-22 23:59:19:5919 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-22 23:59:19:5919 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-22 23:59:19:5919 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-22 23:59:19:5919 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-22 23:59:19:5919 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-22 23:59:20:5920 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:01:09:19 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-11-23 00:01:21:121 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-23 00:01:21:121 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:01:21:121 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:01:21:121 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:01:21:121 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:01:21:121 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:01:21:121 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:04:59:459 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-23 00:04:59:459 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:04:59:459 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:04:59:459 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:04:59:459 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:04:59:459 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:04:59:459 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:05:10:510 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-23 00:05:10:510 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:05:10:510 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:05:10:510 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:05:10:510 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:05:10:510 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:05:10:510 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:05:15:515 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-23 00:05:15:515 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:05:15:515 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:05:16:516 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:05:16:516 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:05:16:516 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:05:16:516 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:05:21:521 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:05:21:521 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:05:21:521 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:05:21:521 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:05:21:521 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:05:21:521 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:05:21:521 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:06:24:624 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-23 00:06:24:624 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:06:24:624 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:06:24:624 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:06:24:624 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:06:24:624 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:06:24:624 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:06:34:634 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:06:34:634 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:06:34:634 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:06:34:634 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:06:34:634 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:06:34:634 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:06:34:634 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:06:56:656 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-23 00:06:56:656 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:06:56:656 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:06:56:656 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:06:56:656 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:06:56:656 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:06:56:656 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:07:07:77 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-23 00:07:07:77 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:07:07:77 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:07:07:77 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:07:07:77 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:07:07:77 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:07:07:77 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:07:51:751 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-01.ik2v2ci.mongodb.net[39m
+2025-11-23 00:07:51:751 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:07:51:751 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:07:51:751 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:07:51:751 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:07:51:751 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:07:51:751 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:07:59:759 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:07:59:759 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:07:59:759 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:07:59:759 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:07:59:759 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:07:59:759 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:07:59:759 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:08:07:87 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:08:07:87 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:08:07:87 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:08:07:87 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:08:07:87 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:08:07:87 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:08:07:87 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:08:19:819 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:08:19:819 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:08:19:819 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:08:19:819 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:08:19:819 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:08:19:819 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:08:19:819 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:10:05:105 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:10:05:105 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:10:05:105 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:10:05:105 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:10:05:105 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:10:05:105 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:10:05:105 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:10:17:1017 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-11-23 00:10:17:1017 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:10:17:1017 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:10:17:1017 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:10:17:1017 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:10:17:1017 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:10:17:1017 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:11:15:1115 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:11:15:1115 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:11:15:1115 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:11:15:1115 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:11:15:1115 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:11:15:1115 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:11:15:1115 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:11:23:1123 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-02.ik2v2ci.mongodb.net[39m
+2025-11-23 00:11:23:1123 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:11:23:1123 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:11:23:1123 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:11:23:1123 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:11:23:1123 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:11:23:1123 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:12:39:1239 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-11-23 00:12:44:1244 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-23 00:12:44:1244 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:12:44:1244 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:12:44:1244 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:12:44:1244 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:12:44:1244 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:12:44:1244 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:12:50:1250 [32minfo[39m: [32mUser logged in: c200901052@gmail.com[39m
+2025-11-23 00:13:16:1316 [31merror[39m: [31mLogin error: User validation failed: email: Please enter a valid email[39m
+2025-11-23 00:17:56:1756 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-23 00:17:56:1756 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:17:56:1756 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:17:56:1756 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:17:56:1756 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:17:56:1756 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:17:56:1756 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:24:36:2436 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-23 00:24:36:2436 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:24:36:2436 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:24:36:2436 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:24:36:2436 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:24:36:2436 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:24:36:2436 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:24:50:2450 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-23 00:24:50:2450 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:24:50:2450 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:24:50:2450 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:24:50:2450 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:24:50:2450 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:24:50:2450 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:24:59:2459 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-11-23 00:24:59:2459 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:24:59:2459 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:24:59:2459 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:24:59:2459 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:24:59:2459 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:24:59:2459 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:25:19:2519 [32minfo[39m: [32mUser logged in: c200901052@gmail.com[39m
+2025-11-23 00:26:07:267 [31merror[39m: [31mLogin error: User validation failed: email: Please enter a valid email[39m
+2025-11-23 00:27:08:278 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-23 00:27:08:278 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:27:08:278 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:27:08:278 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:27:08:278 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:27:08:278 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:27:08:278 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:27:18:2718 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-23 00:27:25:2725 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-23 00:27:26:2726 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-23 00:27:26:2726 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-23 00:27:26:2726 [32minfo[39m: [32mServer running on localhost:5001 in development mode[39m
+2025-11-23 00:27:26:2726 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-23 00:27:26:2726 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-23 00:27:26:2726 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-23 00:27:43:2743 [32minfo[39m: [32mUser logged in: ali@ability.email[39m
+2025-11-23 00:40:49:4049 [32minfo[39m: [32mUser logged in: marge@abilityjobs.com[39m

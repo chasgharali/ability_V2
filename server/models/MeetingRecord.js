@@ -264,6 +264,13 @@ const meetingRecordSchema = new mongoose.Schema({
     metadata: {
         type: mongoose.Schema.Types.Mixed,
         default: {}
+    },
+    // Legacy ID for tracking migrated meetings from V1
+    legacyId: {
+        type: String,
+        default: null,
+        index: true,
+        sparse: true
     }
 }, {
     timestamps: true,

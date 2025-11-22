@@ -23,5 +23,9 @@
     "license": "MIT",
     "devDependencies": {
         "concurrently": "^8.2.2"
+    },
+    "dependencies": {
+        "bcryptjs": "^3.0.3",
+        "mongoose": "^9.0.0"
     }
 }
