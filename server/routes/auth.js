@@ -73,7 +73,12 @@ router.post('/register', [
     body('assignedBooth')
         .optional()
         .isMongoId()
-        .withMessage('assignedBooth must be a valid ID')
+        .withMessage('assignedBooth must be a valid ID'),
+    body('subscribeAnnouncements')
+        .optional()
+        .isBoolean()
+        .withMessage('subscribeAnnouncements must be boolean')
+        .toBoolean()
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -86,7 +91,7 @@ router.post('/register', [
             });
         }
 
-        const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth } = req.body;
+        const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth, subscribeAnnouncements } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
@@ -132,7 +137,8 @@ router.post('/register', [
             role,
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
-            assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined
+            assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined,
+            subscribeAnnouncements: subscribeAnnouncements !== undefined ? subscribeAnnouncements : false
         });
 
         // Generate email verification token (24h expiry)

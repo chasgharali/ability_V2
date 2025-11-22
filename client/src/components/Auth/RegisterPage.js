@@ -126,7 +126,7 @@ const RegisterPage = () => {
                 password: formData.password,
                 role: 'JobSeeker',
                 phoneNumber: (formData.phone || '').trim(),
-                // announcements is not part of /auth/register schema; we can persist it later via profile update
+                subscribeAnnouncements: formData.announcements || false
             };
 
             await register(userData);
