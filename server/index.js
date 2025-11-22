@@ -69,7 +69,7 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "https:"],
             connectSrc: ["'self'", "wss:", "https:", "ws:"],
             mediaSrc: ["'self'", "blob:", "https:"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },

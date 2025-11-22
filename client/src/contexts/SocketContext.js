@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { getSocketUrl } from '../utils/apiConfig';
@@ -18,17 +18,31 @@ export const SocketProvider = ({ children }) => {
     const [connected, setConnected] = useState(false);
     const [error, setError] = useState(null);
     const { user } = useAuth();
+    const socketRef = useRef(null);
 
     useEffect(() => {
-        // Initialize socket connection with auth token in handshake
+        // Only connect if user is authenticated
         const token = localStorage.getItem('token');
+        
+        if (!token || !user) {
+            // Clean up any existing socket connection
+            if (socketRef.current) {
+                socketRef.current.close();
+                socketRef.current = null;
+                setSocket(null);
+                setConnected(false);
+            }
+            return;
+        }
+
+        // Initialize socket connection with auth token in handshake
         const newSocket = io(getSocketUrl(), {
             transports: ['websocket', 'polling'],
             timeout: 20000,
             forceNew: true,
             withCredentials: true,
             // Send raw token; server will also handle optional 'Bearer ' prefix defensively
-            auth: token ? { token } : {}
+            auth: { token }
         });
 
         // Connection event handlers
@@ -54,11 +68,15 @@ export const SocketProvider = ({ children }) => {
             setError(error.message || 'Socket error');
         });
 
+        socketRef.current = newSocket;
         setSocket(newSocket);
 
         // Cleanup on unmount
         return () => {
-            newSocket.close();
+            if (socketRef.current) {
+                socketRef.current.close();
+                socketRef.current = null;
+            }
         };
         // Recreate socket whenever auth state changes (login/logout)
     }, [user]);
