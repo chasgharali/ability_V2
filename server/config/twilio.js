@@ -1,8 +1,8 @@
 const twilio = require('twilio');
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID || 'process.env.TWILIO_ACCOUNT_SID';
-const apiKeySid = process.env.TWILIO_API_KEY_SID || 'process.env.TWILIO_API_KEY_SID';
-const apiKeySecret = process.env.TWILIO_API_KEY_SECRET || 'process.env.TWILIO_API_KEY_SECRET';
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const apiKeySid = process.env.TWILIO_API_KEY_SID;
+const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
 
 // Initialize Twilio client
 const client = twilio(apiKeySid, apiKeySecret, { accountSid });
@@ -78,13 +78,13 @@ const createOrGetRoom = async (roomName, type = 'group') => {
 const endRoom = async (roomName) => {
   try {
     console.log('📞 Twilio: Attempting to end room:', roomName);
-    
+
     // First try to fetch the room to see if it exists
     let room;
     try {
       room = await client.video.rooms(roomName).fetch();
       console.log('📞 Twilio: Room found, status:', room.status);
-      
+
       // If room is already completed, no need to update
       if (room.status === 'completed') {
         console.log('📞 Twilio: Room already completed');
@@ -97,7 +97,7 @@ const endRoom = async (roomName) => {
       }
       throw fetchError;
     }
-    
+
     // Update room status to completed
     const updatedRoom = await client.video.rooms(roomName).update({
       status: 'completed'
