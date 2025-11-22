@@ -16320,3 +16320,6 @@
 2025-10-03 14:23:08:238 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
 2025-10-03 14:23:10:2310 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
 2025-10-03 14:23:12:2312 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-11-22 17:20:10:2010 [31merror[39m: [31mENOENT: no such file or directory, stat 'C:\Users\Mohsin\Desktop\ab\ability_V2\server\build\index.html'[39m
+2025-11-23 00:13:16:1316 [31merror[39m: [31mLogin error: User validation failed: email: Please enter a valid email[39m
+2025-11-23 00:26:07:267 [31merror[39m: [31mLogin error: User validation failed: email: Please enter a valid email[39m

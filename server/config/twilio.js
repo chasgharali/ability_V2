@@ -1,11 +1,21 @@
 const twilio = require('twilio');
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const apiKeySid = process.env.TWILIO_API_KEY_SID;
-const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
+const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
+const apiKeySid = process.env.TWILIO_API_KEY_SID?.trim();
+const apiKeySecret = process.env.TWILIO_API_KEY_SECRET?.trim();
 
-// Initialize Twilio client
-const client = twilio(apiKeySid, apiKeySecret, { accountSid });
+// Initialize Twilio client only if credentials are provided
+let client = null;
+if (accountSid && apiKeySid && apiKeySecret && accountSid.startsWith('AC')) {
+    try {
+        client = twilio(apiKeySid, apiKeySecret, { accountSid: accountSid });
+    } catch (error) {
+        console.warn('⚠️  Twilio initialization failed:', error.message);
+        console.warn('   Video calls will not be available. Set TWILIO_ACCOUNT_SID, TWILIO_API_KEY_SID, and TWILIO_API_KEY_SECRET in .env');
+    }
+} else {
+    console.warn('⚠️  Twilio credentials not configured. Video calls will not be available.');
+}
 
 // Access Token for Video
 const AccessToken = twilio.jwt.AccessToken;
@@ -18,6 +28,10 @@ const VideoGrant = AccessToken.VideoGrant;
  * @returns {string} Access token
  */
 const generateAccessToken = (identity, roomName) => {
+  if (!accountSid || !apiKeySid || !apiKeySecret) {
+    throw new Error('Twilio credentials not configured');
+  }
+  
   // Create an access token
   const token = new AccessToken(accountSid, apiKeySid, apiKeySecret, {
     identity: identity,
@@ -43,6 +57,10 @@ const generateAccessToken = (identity, roomName) => {
  * @returns {Promise} Room object
  */
 const createOrGetRoom = async (roomName, type = 'group') => {
+  if (!client) {
+    throw new Error('Twilio client not initialized. Please configure Twilio credentials.');
+  }
+  
   try {
     console.log('Attempting to fetch existing room:', roomName);
     // Try to fetch existing room
@@ -76,6 +94,11 @@ const createOrGetRoom = async (roomName, type = 'group') => {
  * @returns {Promise} Room object
  */
 const endRoom = async (roomName) => {
+  if (!client) {
+    console.warn('⚠️  Twilio client not initialized. Cannot end room:', roomName);
+    return null;
+  }
+  
   try {
     console.log('📞 Twilio: Attempting to end room:', roomName);
 
@@ -120,6 +143,10 @@ const endRoom = async (roomName) => {
  * @returns {Promise} Array of participants
  */
 const getRoomParticipants = async (roomName) => {
+  if (!client) {
+    throw new Error('Twilio client not initialized');
+  }
+  
   try {
     const participants = await client.video.rooms(roomName).participants.list();
     return participants;
@@ -136,6 +163,10 @@ const getRoomParticipants = async (roomName) => {
  * @returns {Promise} Participant object
  */
 const removeParticipant = async (roomName, participantSid) => {
+  if (!client) {
+    throw new Error('Twilio client not initialized');
+  }
+  
   try {
     const participant = await client.video.rooms(roomName)
       .participants(participantSid)
