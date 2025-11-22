@@ -229,8 +229,8 @@ router.post('/login', [
 
         const { email, password, loginType } = req.body;
 
-        // Find user by email
-        const user = await User.findOne({ email });
+        // Find user by email (include legacyPassword for migrated users)
+        const user = await User.findOne({ email }).select('+legacyPassword');
         if (!user) {
             return res.status(401).json({
                 error: 'Invalid credentials',
@@ -275,10 +275,25 @@ router.post('/login', [
         // Store refresh token
         user.refreshTokens.push({ token: refreshToken });
 
-        // Update last login
-        user.lastLogin = new Date();
-
-        await user.save();
+        // Update last login - use updateOne to bypass validation for migrated users
+        // This is necessary because some migrated users may have validation issues
+        try {
+            await User.updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        lastLogin: new Date(),
+                        updatedAt: new Date()
+                    },
+                    $push: {
+                        refreshTokens: { token: refreshToken, createdAt: new Date() }
+                    }
+                }
+            );
+        } catch (updateError) {
+            // If update fails, log but don't fail login (user is already authenticated)
+            logger.warn(`Failed to update last login and refresh token for ${email}:`, updateError.message);
+        }
 
         logger.info(`User logged in: ${email}`);
 
