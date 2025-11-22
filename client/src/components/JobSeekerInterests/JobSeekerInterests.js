@@ -7,9 +7,11 @@ import { listUsers } from '../../services/users';
 import AdminHeader from '../Layout/AdminHeader';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import AdminSidebar from '../Layout/AdminSidebar';
-import DataGrid from '../UI/DataGrid';
-import { Select, Input } from '../UI/FormComponents';
-import Toast from '../common/Toast';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { ToastComponent } from '@syncfusion/ej2-react-notifications';
+import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
+import { Input } from '../UI/FormComponents';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
 
@@ -33,9 +35,8 @@ const JobSeekerInterests = () => {
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
-    const [toast, setToast] = useState(null);
+    const toastRef = useRef(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
-    const toastTimer = useRef(null);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -56,16 +57,17 @@ const JobSeekerInterests = () => {
         averageInterestsPerJobSeeker: 0
     });
 
-    const showToast = useCallback((message, type = 'info') => {
-        if (toastTimer.current) {
-            clearTimeout(toastTimer.current);
+    // Syncfusion Toast
+    const showToast = useCallback((message, type = 'Success', duration = 3000) => {
+        if (toastRef.current) {
+            toastRef.current.show({
+                title: type,
+                content: message,
+                cssClass: `e-toast-${type.toLowerCase()}`,
+                showProgressBar: true,
+                timeOut: duration
+            });
         }
-        
-        setToast({ message, type });
-        
-        toastTimer.current = setTimeout(() => {
-            setToast(null);
-        }, 5000);
     }, []);
 
     const loadInterests = useCallback(async () => {
@@ -98,7 +100,7 @@ const JobSeekerInterests = () => {
             }
         } catch (error) {
             console.error('Error loading interests:', error);
-            showToast(`Failed to load job seeker interests: ${error.message}`, 'error');
+            showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
         } finally {
             setLoadingData(false);
         }
@@ -162,60 +164,63 @@ const JobSeekerInterests = () => {
         return level.charAt(0).toUpperCase() + level.slice(1);
     };
 
-    const columns = [
-        {
-            label: 'Job Seeker',
-            render: (row) => (
-                <div>
-                    <div className="job-seeker-name">{row.jobSeeker?.name || 'N/A'}</div>
-                    <div className="job-seeker-email">{row.jobSeeker?.email || 'N/A'}</div>
-                </div>
-            )
-        },
-        {
-            label: 'Event',
-            render: (row) => row.event?.name || 'N/A'
-        },
-        {
-            label: 'Booth',
-            render: (row) => row.booth?.name || 'N/A'
-        },
-        {
-            label: 'Location',
-            render: (row) => {
-                if (row.jobSeeker?.city && row.jobSeeker?.state) {
-                    return `${row.jobSeeker.city}, ${row.jobSeeker.state}`;
-                }
-                return 'N/A';
-            }
-        },
-        {
-            label: 'Interest Level',
-            render: (row) => (
-                <span className={`interest-level interest-level-${row.interestLevel}`}>
-                    {formatInterestLevel(row.interestLevel)}
-                </span>
-            )
-        },
-        {
-            label: 'Date Expressed',
-            render: (row) => formatDateTime(row.createdAt)
-        },
-        {
-            label: 'Notes',
-            render: (row) => (
-                <div className="notes-cell">
-                    {row.notes ? (
-                        <span title={row.notes}>
-                            {row.notes.length > 50 ? `${row.notes.substring(0, 50)}...` : row.notes}
-                        </span>
-                    ) : (
-                        <span className="no-notes">No notes</span>
-                    )}
-                </div>
-            )
+    // Grid template functions for custom column renders
+    const jobSeekerTemplate = (props) => {
+        const row = props;
+        return (
+            <div>
+                <div className="job-seeker-name">{row.jobSeeker?.name || 'N/A'}</div>
+                <div className="job-seeker-email">{row.jobSeeker?.email || 'N/A'}</div>
+            </div>
+        );
+    };
+
+    const eventTemplate = (props) => {
+        const row = props;
+        return row.event?.name || 'N/A';
+    };
+
+    const boothTemplate = (props) => {
+        const row = props;
+        return row.booth?.name || 'N/A';
+    };
+
+    const locationTemplate = (props) => {
+        const row = props;
+        if (row.jobSeeker?.city && row.jobSeeker?.state) {
+            return `${row.jobSeeker.city}, ${row.jobSeeker.state}`;
         }
-    ];
+        return 'N/A';
+    };
+
+    const interestLevelTemplate = (props) => {
+        const row = props;
+        return (
+            <span className={`interest-level interest-level-${row.interestLevel}`}>
+                {formatInterestLevel(row.interestLevel)}
+            </span>
+        );
+    };
+
+    const dateExpressedTemplate = (props) => {
+        const row = props;
+        return formatDateTime(row.createdAt);
+    };
+
+    const notesTemplate = (props) => {
+        const row = props;
+        return (
+            <div className="notes-cell">
+                {row.notes ? (
+                    <span title={row.notes}>
+                        {row.notes.length > 50 ? `${row.notes.substring(0, 50)}...` : row.notes}
+                    </span>
+                ) : (
+                    <span className="no-notes">No notes</span>
+                )}
+            </div>
+        );
+    };
 
     if (loading) {
         return (
@@ -302,25 +307,39 @@ const JobSeekerInterests = () => {
                                 {filtersExpanded && (
                                     <div id="filters-content" className="filters-grid">
                                         {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                            <Select
-                                                label="Recruiter"
-                                                value={filters.recruiterId}
-                                                onChange={(e) => handleFilterChange('recruiterId', e.target.value)}
-                                                options={[
-                                                    { value: '', label: 'All Recruiters' },
-                                                    ...recruiters.map(r => ({ value: r._id, label: r.name }))
-                                                ]}
-                                            />
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label htmlFor="recruiter-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
+                                                    Recruiter
+                                                </label>
+                                                <DropDownListComponent
+                                                    id="recruiter-filter-dropdown"
+                                                    dataSource={[{ value: '', text: 'All Recruiters' }, ...recruiters.map(r => ({ value: r._id, text: r.name }))]}
+                                                    fields={{ value: 'value', text: 'text' }}
+                                                    value={filters.recruiterId}
+                                                    change={(e) => handleFilterChange('recruiterId', e.value || '')}
+                                                    placeholder="Select Recruiter"
+                                                    cssClass="filter-dropdown"
+                                                    popupHeight="300px"
+                                                    width="100%"
+                                                />
+                                            </div>
                                         )}
-                                        <Select
-                                            label="Event"
-                                            value={filters.eventId}
-                                            onChange={(e) => handleFilterChange('eventId', e.target.value)}
-                                            options={[
-                                                { value: '', label: 'All Events' },
-                                                ...events.map(e => ({ value: e._id, label: e.name }))
-                                            ]}
-                                        />
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label htmlFor="event-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
+                                                Event
+                                            </label>
+                                            <DropDownListComponent
+                                                id="event-filter-dropdown"
+                                                dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
+                                                fields={{ value: 'value', text: 'text' }}
+                                                value={filters.eventId}
+                                                change={(e) => handleFilterChange('eventId', e.value || '')}
+                                                placeholder="Select Event"
+                                                cssClass="filter-dropdown"
+                                                popupHeight="300px"
+                                                width="100%"
+                                            />
+                                        </div>
                                         {['Admin', 'GlobalSupport'].includes(user.role) && (
                                             <Input
                                                 label="Booth ID"
@@ -330,12 +349,12 @@ const JobSeekerInterests = () => {
                                             />
                                         )}
                                         <div className="filter-actions">
-                                            <button 
-                                                className="btn-clear-filters"
+                                            <ButtonComponent 
+                                                cssClass="e-outline e-primary"
                                                 onClick={clearFilters}
                                             >
                                                 Clear Filters
-                                            </button>
+                                            </ButtonComponent>
                                         </div>
                                     </div>
                                 )}
@@ -343,30 +362,47 @@ const JobSeekerInterests = () => {
 
                             {/* Data Grid */}
                             <div className="data-grid-container">
-                                <DataGrid
-                                    columns={columns}
-                                    data={interests}
-                                    loading={loadingData}
-                                    emptyMessage={
-                                        user?.role === 'Recruiter' 
-                                            ? "No job seekers have expressed interest in your booths yet"
-                                            : "No job seeker interests found. Job seekers need to express interest in booths first."
-                                    }
-                                />
+                                {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                                <GridComponent
+                                    dataSource={interests}
+                                    allowPaging={false}
+                                    allowSorting={true}
+                                    allowFiltering={true}
+                                    filterSettings={{ type: 'Menu' }}
+                                    showColumnMenu={true}
+                                    showColumnChooser={true}
+                                    allowResizing={true}
+                                    allowReordering={true}
+                                    toolbar={['Search', 'ColumnChooser']}
+                                    selectionSettings={{ type: 'None' }}
+                                    enableHover={true}
+                                    allowRowDragAndDrop={false}
+                                >
+                                    <ColumnsDirective>
+                                        <ColumnDirective headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowSorting={false} />
+                                        <ColumnDirective headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowSorting={false} />
+                                        <ColumnDirective headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowSorting={false} />
+                                        <ColumnDirective headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowSorting={false} />
+                                        <ColumnDirective headerText='Interest Level' width='130' textAlign='Center' template={interestLevelTemplate} allowSorting={false} />
+                                        <ColumnDirective headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} />
+                                        <ColumnDirective headerText='Notes' width='250' clipMode='EllipsisWithTooltip' template={notesTemplate} allowSorting={false} />
+                                    </ColumnsDirective>
+                                    <GridInject services={[Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                                </GridComponent>
                             </div>
                         </div>
                     </div>
                 </main>
             </div>
-            
-            {/* Toast Notifications */}
-            {toast && (
-                <Toast
-                    message={toast.message}
-                    type={toast.type}
-                    onClose={() => setToast(null)}
-                />
-            )}
+
+            {/* Syncfusion ToastComponent */}
+            <ToastComponent 
+                ref={(toast) => toastRef.current = toast}
+                position={{ X: 'Right', Y: 'Bottom' }}
+                showProgressBar={true}
+                timeOut={3000}
+                newestOnTop={true}
+            />
         </div>
     );
 };

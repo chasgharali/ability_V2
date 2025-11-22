@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
 import './InterpreterCategories.css';
 import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
 import { useAuth } from '../../contexts/AuthContext';
+import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { DialogComponent } from '@syncfusion/ej2-react-popups';
+import { ToastComponent } from '@syncfusion/ej2-react-notifications';
+import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 
 export default function InterpreterCategories() {
   const { user, loading } = useAuth();
@@ -29,6 +33,9 @@ export default function InterpreterCategories() {
     total: 0,
     pages: 0
   });
+  const toastRef = useRef(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [categoryPendingDelete, setCategoryPendingDelete] = useState(null);
 
   // Fetch categories
   const fetchCategories = async (page = 1) => {
@@ -72,10 +79,11 @@ export default function InterpreterCategories() {
       setShowForm(false);
       setEditingCategory(null);
       resetForm();
+      showToast(`Category ${editingCategory ? 'updated' : 'created'} successfully`, 'Success');
       fetchCategories(pagination.page);
     } catch (error) {
       console.error('Error saving interpreter category:', error);
-      alert(error.response?.data?.message || 'Failed to save interpreter category');
+      showToast(error.response?.data?.message || 'Failed to save interpreter category', 'Error', 5000);
     } finally {
       setSaving(false);
     }
@@ -95,29 +103,54 @@ export default function InterpreterCategories() {
     setShowForm(true);
   };
 
-  // Handle delete
-  const handleDelete = async (category) => {
-    if (!window.confirm(`Are you sure you want to delete "${category.name}"?`)) {
-      return;
+  // Syncfusion Toast
+  const showToast = (message, type = 'Success', duration = 3000) => {
+    if (toastRef.current) {
+      toastRef.current.show({
+        title: type,
+        content: message,
+        cssClass: `e-toast-${type.toLowerCase()}`,
+        showProgressBar: true,
+        timeOut: duration
+      });
     }
+  };
+
+  // Handle delete
+  const handleDelete = (category) => {
+    setCategoryPendingDelete(category);
+    setConfirmDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!categoryPendingDelete) return;
     
     try {
-      await interpreterCategoriesAPI.delete(category._id);
+      await interpreterCategoriesAPI.delete(categoryPendingDelete._id);
+      setConfirmDeleteOpen(false);
+      setCategoryPendingDelete(null);
+      showToast(`Category "${categoryPendingDelete.name}" deleted successfully`, 'Success');
       fetchCategories(pagination.page);
     } catch (error) {
       console.error('Error deleting interpreter category:', error);
-      alert(error.response?.data?.message || 'Failed to delete interpreter category');
+      showToast(error.response?.data?.message || 'Failed to delete interpreter category', 'Error', 5000);
     }
+  };
+
+  const cancelDelete = () => {
+    setConfirmDeleteOpen(false);
+    setCategoryPendingDelete(null);
   };
 
   // Handle toggle status
   const handleToggleStatus = async (category) => {
     try {
       await interpreterCategoriesAPI.toggleStatus(category._id);
+      showToast(`Category "${category.name}" ${category.isActive ? 'deactivated' : 'activated'} successfully`, 'Success');
       fetchCategories(pagination.page);
     } catch (error) {
       console.error('Error toggling interpreter category status:', error);
-      alert(error.response?.data?.message || 'Failed to toggle interpreter category status');
+      showToast(error.response?.data?.message || 'Failed to toggle interpreter category status', 'Error', 5000);
     }
   };
 
@@ -165,8 +198,8 @@ export default function InterpreterCategories() {
           <div className="dashboard-content">
             <div className="bm-header">
               <h2>Interpreter Categories</h2>
-              <button 
-                className="dashboard-button" 
+              <ButtonComponent 
+                cssClass="e-primary"
                 onClick={() => {
                   setEditingCategory(null);
                   resetForm();
@@ -174,7 +207,7 @@ export default function InterpreterCategories() {
                 }}
               >
                 Add New Category
-              </button>
+              </ButtonComponent>
             </div>
 
             {/* Filters */}
@@ -189,15 +222,20 @@ export default function InterpreterCategories() {
                 />
               </div>
               <div className="status-filter">
-                <select
+                <DropDownListComponent
+                  dataSource={[
+                    { value: 'all', text: 'All Categories' },
+                    { value: 'active', text: 'Active Only' },
+                    { value: 'inactive', text: 'Inactive Only' }
+                  ]}
+                  fields={{ value: 'value', text: 'text' }}
                   value={activeFilter}
-                  onChange={(e) => setActiveFilter(e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="active">Active Only</option>
-                  <option value="inactive">Inactive Only</option>
-                </select>
+                  change={(e) => setActiveFilter(e.value || 'all')}
+                  placeholder="Select Status"
+                  cssClass="filter-dropdown"
+                  popupHeight="200px"
+                  width="100%"
+                />
               </div>
             </div>
 
@@ -239,24 +277,24 @@ export default function InterpreterCategories() {
                       </div>
                       
                       <div className="category-actions">
-                        <button 
-                          className="btn-edit"
+                        <ButtonComponent 
+                          cssClass="e-primary e-small"
                           onClick={() => handleEdit(category)}
                         >
                           Edit
-                        </button>
-                        <button 
-                          className={`btn-toggle ${category.isActive ? 'deactivate' : 'activate'}`}
+                        </ButtonComponent>
+                        <ButtonComponent 
+                          cssClass={`e-small ${category.isActive ? 'e-warning' : 'e-success'}`}
                           onClick={() => handleToggleStatus(category)}
                         >
                           {category.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                        <button 
-                          className="btn-delete"
+                        </ButtonComponent>
+                        <ButtonComponent 
+                          cssClass="e-outline e-danger e-small"
                           onClick={() => handleDelete(category)}
                         >
                           Delete
-                        </button>
+                        </ButtonComponent>
                       </div>
                     </div>
                   ))}
@@ -267,19 +305,21 @@ export default function InterpreterCategories() {
             {/* Pagination */}
             {pagination.pages > 1 && (
               <div className="pagination">
-                <button 
+                <ButtonComponent 
+                  cssClass="e-outline e-primary"
                   disabled={pagination.page <= 1}
                   onClick={() => fetchCategories(pagination.page - 1)}
                 >
                   Previous
-                </button>
+                </ButtonComponent>
                 <span>Page {pagination.page} of {pagination.pages}</span>
-                <button 
+                <ButtonComponent 
+                  cssClass="e-outline e-primary"
                   disabled={pagination.page >= pagination.pages}
                   onClick={() => fetchCategories(pagination.page + 1)}
                 >
                   Next
-                </button>
+                </ButtonComponent>
               </div>
             )}
           </div>
@@ -299,6 +339,7 @@ export default function InterpreterCategories() {
                   setEditingCategory(null);
                   resetForm();
                 }}
+                aria-label="Close"
               >
                 ×
               </button>
@@ -383,29 +424,56 @@ export default function InterpreterCategories() {
               </div>
               
               <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="btn-cancel"
-                  onClick={() => {
+                <ButtonComponent 
+                  cssClass="e-outline e-primary"
+                  onClick={(e) => {
+                    e.preventDefault();
                     setShowForm(false);
                     setEditingCategory(null);
                     resetForm();
                   }}
                 >
                   Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn-save"
+                </ButtonComponent>
+                <ButtonComponent 
+                  cssClass="e-primary"
                   disabled={saving}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }}
                 >
                   {saving ? 'Saving...' : (editingCategory ? 'Update' : 'Create')}
-                </button>
+                </ButtonComponent>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <DialogComponent
+        width='400px'
+        visible={confirmDeleteOpen}
+        header='Confirm Delete'
+        content={categoryPendingDelete ? `Are you sure you want to delete "${categoryPendingDelete.name}"? This action cannot be undone.` : ''}
+        showCloseIcon={true}
+        buttons={[
+          { buttonModel: { content: 'Cancel', cssClass: 'e-outline e-primary' }, click: cancelDelete },
+          { buttonModel: { content: 'Delete', cssClass: 'e-danger', isPrimary: true }, click: confirmDelete }
+        ]}
+        animationSettings={{ effect: 'Zoom' }}
+        close={cancelDelete}
+      />
+
+      {/* Syncfusion ToastComponent */}
+      <ToastComponent 
+        ref={(toast) => toastRef.current = toast}
+        position={{ X: 'Right', Y: 'Bottom' }}
+        showProgressBar={true}
+        timeOut={3000}
+        newestOnTop={true}
+      />
     </div>
   );
 }

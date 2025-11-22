@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import '../Dashboard/Dashboard.css';
+import './UserManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import DataGrid from '../UI/DataGrid';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { DialogComponent } from '@syncfusion/ej2-react-popups';
+import { ToastComponent } from '@syncfusion/ej2-react-notifications';
+import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input, Select } from '../UI/FormComponents';
-import { useToast } from '../../contexts/ToastContext';
 import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, deleteUserPermanently } from '../../services/users';
 import { listBooths } from '../../services/booths';
 import { listEvents } from '../../services/events';
@@ -15,7 +19,6 @@ export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState('');
-  const toast = useToast();
   const [editingId, setEditingId] = useState(null);
 
   const [boothOptions, setBoothOptions] = useState([]);
@@ -25,6 +28,11 @@ export default function UserManagement() {
   // Password visibility toggles
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  // Syncfusion Toast ref
+  const toastRef = useRef(null);
+  // Delete confirmation dialog
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [rowPendingDelete, setRowPendingDelete] = useState(null);
 
   const roleOptionsAll = useMemo(() => [
     { value: 'Admin', label: 'Admin' },
@@ -63,23 +71,44 @@ export default function UserManagement() {
 
   const fullName = `${form.firstName} ${form.lastName}`.trim();
 
-  const showToast = (message, type = 'info', duration = 3000) => {
-    toast.show(message, { type, duration });
+  // Syncfusion Toast
+  const showToast = (message, type = 'Success', duration = 3000) => {
+    if (toastRef.current) {
+      toastRef.current.show({
+        title: type,
+        content: message,
+        cssClass: `e-toast-${type.toLowerCase()}`,
+        showProgressBar: true,
+        timeOut: duration
+      });
+    }
   };
 
-  const handleDelete = async (row) => {
-    if (row.isActive) return; // safety
-    const ok = window.confirm(`Permanently delete ${row.firstName} ${row.lastName}? This cannot be undone.`);
-    if (!ok) return;
+  const handleDelete = (row) => {
+    if (row.isActive) return; // safety - can't delete active users
+    setRowPendingDelete(row);
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!rowPendingDelete) return;
     try {
-      await deleteUserPermanently(row.id);
-      showToast('User deleted', 'success');
+      await deleteUserPermanently(rowPendingDelete.id);
+      showToast('User deleted', 'Success');
       await loadUsers();
     } catch (e) {
       console.error('Delete failed', e);
       const msg = e?.response?.data?.message || 'Permanent delete is not available on the server yet.';
-      showToast(msg, 'error');
+      showToast(msg, 'Error');
+    } finally {
+      setConfirmOpen(false);
+      setRowPendingDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setConfirmOpen(false);
+    setRowPendingDelete(null);
   };
 
   const loadUsers = useCallback(async () => {
@@ -108,7 +137,7 @@ export default function UserManagement() {
       setLiveMsg(`${count} user${count === 1 ? '' : 's'} loaded`);
     } catch (e) {
       console.error('Failed to load users', e);
-      showToast('Failed to load users', 'error');
+      showToast('Failed to load users', 'Error');
     } finally { setLoading(false); }
   }, [roleFilter]);
 
@@ -128,26 +157,47 @@ export default function UserManagement() {
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
 
-  const gridColumns = [
-    { key: 'firstName', label: 'First Name' },
-    { key: 'lastName', label: 'Last Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'role', label: 'Role' },
-    { key: 'booth', label: 'Booth' },
-    { key: 'actions', label: 'Action', render: (row) => (
-      <div className="ajf-grid-actions">
-        <button className="ajf-btn ajf-btn-outline" onClick={() => startEdit(row)} aria-label={`Edit ${row.firstName} ${row.lastName}`}>Edit</button>
+  // Grid template functions for custom column renders - using Syncfusion ButtonComponent
+  const actionsTemplate = (props) => {
+    const row = props;
+    return (
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <ButtonComponent 
+          cssClass="e-outline e-primary e-small" 
+          onClick={() => startEdit(row)}
+          aria-label={`Edit ${row.firstName} ${row.lastName}`}
+        >
+          Edit
+        </ButtonComponent>
         {row.isActive ? (
-          <button className="ajf-btn ajf-btn-outline" onClick={() => handleDeactivate(row)} aria-label={`Deactivate ${row.firstName} ${row.lastName}`}>Deactivate</button>
+          <ButtonComponent 
+            cssClass="e-outline e-primary e-small" 
+            onClick={() => handleDeactivate(row)}
+            aria-label={`Deactivate ${row.firstName} ${row.lastName}`}
+          >
+            Deactivate
+          </ButtonComponent>
         ) : (
           <>
-            <button className="ajf-btn ajf-btn-dark" onClick={() => handleReactivate(row)} aria-label={`Reactivate ${row.firstName} ${row.lastName}`}>Reactivate</button>
-            <button className="ajf-btn ajf-btn-danger" onClick={() => handleDelete(row)} aria-label={`Delete ${row.firstName} ${row.lastName}`}>Delete</button>
+            <ButtonComponent 
+              cssClass="e-primary e-small" 
+              onClick={() => handleReactivate(row)}
+              aria-label={`Reactivate ${row.firstName} ${row.lastName}`}
+            >
+              Reactivate
+            </ButtonComponent>
+            <ButtonComponent 
+              cssClass="e-outline e-danger e-small" 
+              onClick={() => handleDelete(row)}
+              aria-label={`Delete ${row.firstName} ${row.lastName}`}
+            >
+              Delete
+            </ButtonComponent>
           </>
         )}
       </div>
-    ) }
-  ];
+    );
+  };
 
   const startEdit = (row) => {
     const firstName = row.firstName || '';
@@ -171,22 +221,22 @@ export default function UserManagement() {
   const handleDeactivate = async (row) => {
     try {
       await deactivateUser(row.id);
-      showToast('User deactivated', 'success');
+      showToast('User deactivated', 'Success');
       await loadUsers();
     } catch (e) {
       console.error('Deactivate failed', e);
-      showToast('Failed to deactivate user', 'error');
+      showToast('Failed to deactivate user', 'Error');
     }
   };
 
   const handleReactivate = async (row) => {
     try {
       await reactivateUser(row.id);
-      showToast('User reactivated', 'success');
+      showToast('User reactivated', 'Success');
       await loadUsers();
     } catch (e) {
       console.error('Reactivate failed', e);
-      showToast('Failed to reactivate user', 'error');
+      showToast('Failed to reactivate user', 'Error');
     }
   };
 
@@ -196,11 +246,11 @@ export default function UserManagement() {
     e.preventDefault();
     if (!editingId) {
       if (!form.password || form.password.length < 8) {
-        showToast('Password must be at least 8 characters', 'error');
+        showToast('Password must be at least 8 characters', 'Error');
         return;
       }
       if (form.password !== form.confirmPassword) {
-        showToast('Passwords do not match', 'error');
+        showToast('Passwords do not match', 'Error');
         return;
       }
     }
@@ -217,10 +267,10 @@ export default function UserManagement() {
           payload.assignedBooth = form.boothId || undefined;
         }
         await updateUser(editingId, payload);
-        showToast('User updated', 'success');
+        showToast('User updated', 'Success');
       } else {
         if (!form.role) {
-          showToast('Please select a role', 'error');
+          showToast('Please select a role', 'Error');
           return;
         }
         const payload = {
@@ -232,13 +282,13 @@ export default function UserManagement() {
         // Assign booth for Recruiter, BoothAdmin, Support, and Interpreter roles
         if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
           if (!form.boothId) {
-            showToast('Please select a booth for this role', 'error');
+            showToast('Please select a booth for this role', 'Error');
             return;
           }
           payload.assignedBooth = form.boothId;
         }
         await createUser(payload);
-        showToast('User created', 'success');
+        showToast('User created', 'Success');
       }
       setMode('list');
       setEditingId(null);
@@ -247,7 +297,7 @@ export default function UserManagement() {
     } catch (e) {
       console.error('Save user failed', e);
       const msg = e?.response?.data?.message || 'Failed to save user';
-      showToast(msg, 'error', 5000);
+      showToast(msg, 'Error', 5000);
     }
   };
 
@@ -262,21 +312,72 @@ export default function UserManagement() {
               <h2>User Management</h2>
               <div className="bm-header-actions">
                 {mode === 'list' ? (
-                  <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setMode('create')} aria-label="Create new user">Create User</button>
+                  <ButtonComponent cssClass="e-primary" onClick={() => setMode('create')} aria-label="Create new user">
+                    Create User
+                  </ButtonComponent>
                 ) : (
-                  <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => { setMode('list'); setEditingId(null); }} aria-label="Back to user list">Back to List</button>
+                  <ButtonComponent cssClass="e-outline e-primary" onClick={() => { setMode('list'); setEditingId(null); }} aria-label="Back to user list">
+                    Back to List
+                  </ButtonComponent>
                 )}
               </div>
             </div>
 
             {mode === 'list' ? (
               <div className="bm-grid-wrap">
-                <div className="form-row" style={{ marginBottom: 12 }}>
-                  <Select label="Role" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} options={[{ value: '', label: 'All Roles' }, ...roleOptionsNoJobSeeker]} />
+                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* <label htmlFor="role-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
+                      Role
+                    </label> */}
+                    <DropDownListComponent
+                      id="role-filter-dropdown"
+                      dataSource={[{ value: '', text: 'All Roles' }, ...roleOptionsNoJobSeeker.map(r => ({ value: r.value, text: r.label }))]}
+                      fields={{ value: 'value', text: 'text' }}
+                      value={roleFilter}
+                      change={(e) => setRoleFilter(e.value || '')}
+                      placeholder="Select Role"
+                      cssClass="role-filter-dropdown"
+                      popupHeight="300px"
+                      width="200px"
+                    />
+                  </div>
                 </div>
                 <div aria-live="polite" className="sr-only">{liveMsg}</div>
-                <DataGrid data={users} columns={gridColumns} selectable searchable sortable aria-label="Users table" />
-                {loading && <div style={{ marginTop: 12 }}>Loading…</div>}
+                {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                <GridComponent
+                  dataSource={users}
+                  allowPaging={true}
+                  pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+                  allowSorting={true}
+                  allowFiltering={true}
+                  filterSettings={{ type: 'Menu' }}
+                  showColumnMenu={true}
+                  showColumnChooser={true}
+                  allowResizing={true}
+                  allowReordering={true}
+                  toolbar={['Search', 'ColumnChooser']}
+                  selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
+                  enableHover={true}
+                  allowRowDragAndDrop={false}
+                >
+                  <ColumnsDirective>
+                    <ColumnDirective type='checkbox' width='50' />
+                    <ColumnDirective field='firstName' headerText='First Name' width='150' clipMode='EllipsisWithTooltip' />
+                    <ColumnDirective field='lastName' headerText='Last Name' width='150' clipMode='EllipsisWithTooltip' />
+                    <ColumnDirective field='email' headerText='Email' width='250' clipMode='EllipsisWithTooltip' />
+                    <ColumnDirective field='role' headerText='Role' width='150' />
+                    <ColumnDirective field='booth' headerText='Booth' width='180' template={(props) => props.booth || '-'} />
+                    <ColumnDirective 
+                      headerText='Action' 
+                      width='350' 
+                      allowSorting={false} 
+                      allowFiltering={false}
+                      template={actionsTemplate}
+                    />
+                  </ColumnsDirective>
+                  <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                </GridComponent>
               </div>
             ) : (
               <form className="account-form" onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
@@ -288,18 +389,39 @@ export default function UserManagement() {
                   <>
                     <div className="password-field-container">
                       <Input label="Password" type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setField('password', e.target.value)} required />
-                      <button type="button" className="ajf-btn ajf-btn-outline password-toggle-btn" aria-pressed={showPwd} aria-label={showPwd ? 'Hide password' : 'Show password'} onClick={() => setShowPwd(s => !s)}> {showPwd ? 'Hide' : 'Show'} </button>
+                      <ButtonComponent 
+                        cssClass="e-outline e-primary e-small password-toggle-btn" 
+                        aria-pressed={showPwd} 
+                        aria-label={showPwd ? 'Hide password' : 'Show password'} 
+                        onClick={() => setShowPwd(s => !s)}
+                      >
+                        {showPwd ? 'Hide' : 'Show'}
+                      </ButtonComponent>
                     </div>
                     <div className="password-field-container">
                       <Input label="Confirm Password" type={showConfirmPwd ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required />
-                      <button type="button" className="ajf-btn ajf-btn-outline password-toggle-btn" aria-pressed={showConfirmPwd} aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} onClick={() => setShowConfirmPwd(s => !s)}> {showConfirmPwd ? 'Hide' : 'Show'} </button>
+                      <ButtonComponent 
+                        cssClass="e-outline e-primary e-small password-toggle-btn" 
+                        aria-pressed={showConfirmPwd} 
+                        aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
+                        onClick={() => setShowConfirmPwd(s => !s)}
+                      >
+                        {showConfirmPwd ? 'Hide' : 'Show'}
+                      </ButtonComponent>
                     </div>
                   </>
                 )}
                 <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} />
                 <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} />
                 <Select label="Select Event (Enable only for Event Admin)" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={form.role !== 'AdminEvent'} />
-                <button type="submit" className="dashboard-button" disabled={loading}>{editingId ? 'Update User' : 'Create User'}</button>
+                <ButtonComponent 
+                  cssClass="e-primary" 
+                  disabled={loading}
+                  isPrimary={true}
+                  onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
+                >
+                  {editingId ? 'Update User' : 'Create User'}
+                </ButtonComponent>
               </form>
             )}
           </div>
@@ -307,6 +429,52 @@ export default function UserManagement() {
       </div>
 
       <div className="mobile-overlay" aria-hidden="true" />
+
+      {/* Delete confirm modal - Syncfusion DialogComponent */}
+      <DialogComponent
+        width="450px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={confirmOpen}
+        header="Delete User"
+        closeOnEscape={true}
+        close={cancelDelete}
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelDelete();
+            }
+          },
+          {
+            buttonModel: {
+              content: 'Delete',
+              isPrimary: true,
+              cssClass: 'e-danger'
+            },
+            click: () => {
+              confirmDelete();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Are you sure you want to permanently delete <strong>{rowPendingDelete?.firstName} {rowPendingDelete?.lastName}</strong>? This action cannot be undone.
+        </p>
+      </DialogComponent>
+
+      {/* Syncfusion ToastComponent */}
+      <ToastComponent 
+        ref={(toast) => toastRef.current = toast}
+        position={{ X: 'Right', Y: 'Bottom' }}
+        showProgressBar={true}
+        timeOut={3000}
+        newestOnTop={true}
+      />
     </div>
   );
 }

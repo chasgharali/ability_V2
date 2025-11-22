@@ -86,6 +86,49 @@
     transition: all 0.15s ease !important;
 }
 
+/* Header action buttons (CREATE EVENT button) */
+.bm-header-actions .e-btn,
+.bm-header .e-btn {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    min-height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+}
+
+.bm-header-actions .e-btn.e-primary {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.bm-header-actions .e-btn.e-primary:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.bm-header-actions .e-btn.e-outline.e-primary {
+    background-color: transparent !important;
+    border-color: #111111 !important;
+    color: #111111 !important;
+}
+
+.bm-header-actions .e-btn.e-outline.e-primary:hover {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+}
+
 /* Dialog buttons */
 .e-dialog .e-footer-content .e-btn.e-primary {
     background-color: #111111 !important;
@@ -300,6 +343,45 @@
 }
 
 /* ========================================
+   Grid Horizontal Scrolling Support
+   ======================================== */
+
+/* Grid containers - allow horizontal scrolling for wide tables */
+.bm-grid-wrap,
+.data-grid-container {
+  position: relative !important;
+  width: 100% !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling for wide tables */
+  overflow-y: visible !important; /* Allow ColumnChooser to overflow vertically */
+  min-height: 400px !important; /* Ensure minimum height for content */
+  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+}
+
+/* Syncfusion Grid - allow horizontal scrolling */
+.bm-grid-wrap .e-grid,
+.data-grid-container .e-grid {
+  position: relative !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling when table is wide */
+  overflow-y: visible !important; /* Allow ColumnChooser to show */
+  min-width: 100% !important; /* Ensure grid takes full width at minimum */
+}
+
+/* Grid content area - allow horizontal scrolling */
+.bm-grid-wrap .e-grid .e-content,
+.data-grid-container .e-grid .e-content {
+  position: relative !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling for wide content */
+  overflow-y: visible !important; /* Allow ColumnChooser to overflow */
+}
+
+/* Grid table wrapper - ensure horizontal scrolling works */
+.bm-grid-wrap .e-grid .e-gridcontent,
+.data-grid-container .e-grid .e-gridcontent {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* ========================================
    Professional ColumnChooser Dialog Styling
    ======================================== */
 
@@ -428,11 +510,20 @@ html body div[class*="column-chooser"] .e-header {
     transform: rotate(90deg) scale(1.1) !important;
 }
 
-/* ColumnChooser Content Area */
+/* ColumnChooser Content Area - Increased padding */
 body .e-column-chooser .e-dlg-content,
 body .e-popup.e-column-chooser .e-dlg-content,
-body .e-dialog.e-column-chooser .e-dlg-content {
-    padding: 16px 18px !important;
+body .e-dialog.e-column-chooser .e-dlg-content,
+html body .e-column-chooser .e-dlg-content,
+html body .e-popup.e-column-chooser .e-dlg-content,
+html body .e-dialog.e-column-chooser .e-dlg-content,
+body div[class*="column-chooser"] .e-dlg-content,
+body .e-popup:has(.e-column-chooser) .e-dlg-content,
+body .e-popup[class*="column-chooser"] .e-dlg-content {
+    padding-left: 24px !important; /* Increased left padding */
+    padding-right: 24px !important; /* Increased right padding */
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
     background: #ffffff !important;
     max-height: 420px !important;
     overflow-y: auto !important;
@@ -568,31 +659,103 @@ body .e-dialog.e-column-chooser .e-dlg-content {
     transform: translateX(2px) !important;
 }
 
-/* Checkboxes - Professional Styling */
-.e-column-chooser input[type="checkbox"] {
+/* Checkboxes - Professional Styling - Black Theme - Maximum Specificity */
+body .e-column-chooser input[type="checkbox"],
+body .e-popup.e-column-chooser input[type="checkbox"],
+body .e-dialog.e-column-chooser input[type="checkbox"],
+html body .e-column-chooser input[type="checkbox"],
+html body .e-popup.e-column-chooser input[type="checkbox"],
+html body .e-dialog.e-column-chooser input[type="checkbox"],
+body div[class*="column-chooser"] input[type="checkbox"],
+body .e-popup:has(.e-column-chooser) input[type="checkbox"],
+body .e-popup[class*="column-chooser"] input[type="checkbox"],
+.e-column-chooser .e-column-list-item input[type="checkbox"],
+.e-column-chooser li input[type="checkbox"],
+.e-popup.e-column-chooser .e-column-list-item input[type="checkbox"],
+.e-popup.e-column-chooser li input[type="checkbox"] {
     width: 18px !important;
     height: 18px !important;
-    accent-color: #111111 !important;
+    accent-color: #111111 !important; /* Black accent color */
     cursor: pointer !important;
     border-radius: 5px !important;
     border: 2px solid #d1d5db !important;
     transition: all 0.2s ease !important;
     flex-shrink: 0 !important;
+    appearance: none !important; /* Remove default styling */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: #ffffff !important;
+    position: relative !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-.e-column-chooser input[type="checkbox"]:checked {
-    accent-color: #111111 !important;
-    background-color: #111111 !important;
+body .e-column-chooser input[type="checkbox"]:checked,
+body .e-popup.e-column-chooser input[type="checkbox"]:checked,
+body .e-dialog.e-column-chooser input[type="checkbox"]:checked,
+html body .e-column-chooser input[type="checkbox"]:checked,
+html body .e-popup.e-column-chooser input[type="checkbox"]:checked,
+html body .e-dialog.e-column-chooser input[type="checkbox"]:checked,
+body div[class*="column-chooser"] input[type="checkbox"]:checked,
+body .e-popup:has(.e-column-chooser) input[type="checkbox"]:checked,
+body .e-popup[class*="column-chooser"] input[type="checkbox"]:checked,
+.e-column-chooser .e-column-list-item input[type="checkbox"]:checked,
+.e-column-chooser li input[type="checkbox"]:checked,
+.e-popup.e-column-chooser .e-column-list-item input[type="checkbox"]:checked,
+.e-popup.e-column-chooser li input[type="checkbox"]:checked {
+    accent-color: #111111 !important; /* Black accent color */
+    background-color: #111111 !important; /* Black background when checked */
+    border-color: #111111 !important; /* Black border when checked */
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+/* Custom black checkmark for checked checkboxes - Maximum Specificity */
+body .e-column-chooser input[type="checkbox"]:checked::after,
+body .e-popup.e-column-chooser input[type="checkbox"]:checked::after,
+body .e-dialog.e-column-chooser input[type="checkbox"]:checked::after,
+html body .e-column-chooser input[type="checkbox"]:checked::after,
+html body .e-popup.e-column-chooser input[type="checkbox"]:checked::after,
+html body .e-dialog.e-column-chooser input[type="checkbox"]:checked::after,
+body div[class*="column-chooser"] input[type="checkbox"]:checked::after,
+body .e-popup:has(.e-column-chooser) input[type="checkbox"]:checked::after,
+body .e-popup[class*="column-chooser"] input[type="checkbox"]:checked::after,
+.e-column-chooser .e-column-list-item input[type="checkbox"]:checked::after,
+.e-column-chooser li input[type="checkbox"]:checked::after,
+.e-popup.e-column-chooser .e-column-list-item input[type="checkbox"]:checked::after,
+.e-popup.e-column-chooser li input[type="checkbox"]:checked::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 3px !important;
+    top: 1px !important;
+    width: 4px !important;
+    height: 9px !important;
+    border: solid #ffffff !important; /* White checkmark on black background */
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+
+body .e-column-chooser input[type="checkbox"]:hover,
+body .e-popup.e-column-chooser input[type="checkbox"]:hover,
+body .e-dialog.e-column-chooser input[type="checkbox"]:hover {
     border-color: #111111 !important;
 }
 
-.e-column-chooser input[type="checkbox"]:hover {
-    border-color: #111111 !important;
-}
-
-.e-column-chooser input[type="checkbox"]:focus {
+body .e-column-chooser input[type="checkbox"]:focus,
+body .e-popup.e-column-chooser input[type="checkbox"]:focus,
+body .e-dialog.e-column-chooser input[type="checkbox"]:focus {
     outline: 2px solid #111111 !important;
     outline-offset: 2px !important;
+}
+
+/* Override any Syncfusion default checkbox styling */
+body .e-column-chooser input[type="checkbox"]::-webkit-appearance,
+body .e-column-chooser input[type="checkbox"]::-moz-appearance,
+body .e-popup.e-column-chooser input[type="checkbox"]::-webkit-appearance,
+body .e-popup.e-column-chooser input[type="checkbox"]::-moz-appearance {
+    accent-color: #111111 !important;
 }
 
 /* Column Labels - Professional */
