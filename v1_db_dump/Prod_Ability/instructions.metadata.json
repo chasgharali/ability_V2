@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"pageType":{"$numberInt":"1"},"isActive":{"$numberInt":"1"}},"name":"pageType_1_isActive_1","background":true}],"uuid":"f01d9d6b0d424986a020c0b52c7296dd","collectionName":"instructions","type":"collection"}
