@@ -5,11 +5,31 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function listUsers({ page = 1, limit = 50, search = '', role = '', isActive } = {}) {
+export async function listUsers({ page = 1, limit = 50, search, role, isActive } = {}) {
   const params = { page, limit };
-  if (search) params.search = search;
-  if (role) params.role = role;
-  if (typeof isActive === 'boolean') params.isActive = String(isActive);
+  
+  // Only add parameters if they have valid values (following pattern from analytics service)
+  if (search !== undefined && search !== null && search !== '') {
+    const searchStr = String(search).trim();
+    if (searchStr) {
+      params.search = searchStr;
+    }
+  }
+  
+  // Only add role if it's explicitly provided and not empty
+  // When role is undefined (not passed), don't add it to params
+  // Server will exclude JobSeekers by default when no role is provided
+  if (role !== undefined && role !== null && role !== '') {
+    const roleStr = String(role).trim();
+    if (roleStr) {
+      params.role = roleStr;
+    }
+  }
+  
+  if (typeof isActive === 'boolean') {
+    params.isActive = String(isActive);
+  }
+  
   const res = await axios.get('/api/users', { params, headers: authHeaders() });
   return res.data;
 }

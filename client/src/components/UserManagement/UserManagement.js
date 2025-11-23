@@ -114,7 +114,19 @@ export default function UserManagement() {
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await listUsers({ page: 1, limit: 100, role: roleFilter || '' });
+      // Only pass role parameter if roleFilter has a value
+      // When "All Roles" is selected, don't pass role parameter at all
+      // The server will exclude JobSeekers by default
+      // Fetch a large number of users (5000) to ensure all users are loaded
+      // The grid will handle client-side pagination
+      const params = { page: 1, limit: 5000 };
+      if (roleFilter && roleFilter.trim()) {
+        params.role = roleFilter.trim();
+      }
+      
+      const res = await listUsers(params);
+      // Server already excludes JobSeekers when no role filter is provided
+      // But keep this filter as a safety measure
       const items = (res?.users || []).filter(u => u.role !== 'JobSeeker');
       setUsers(items.map(u => {
         const parts = (u.name || '').trim().split(/\s+/);
