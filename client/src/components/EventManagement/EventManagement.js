@@ -373,7 +373,22 @@ export default function EventManagement() {
                                 >
                                     <ColumnsDirective>
                                         <ColumnDirective type='checkbox' width='50' />
-                                        <ColumnDirective field='name' headerText='Event Name' width='200' clipMode='EllipsisWithTooltip' />
+                                        <ColumnDirective 
+                                            field='name' 
+                                            headerText='Event Name' 
+                                            width='200' 
+                                            template={(props) => (
+                                                <div style={{ 
+                                                    wordWrap: 'break-word', 
+                                                    wordBreak: 'break-word', 
+                                                    whiteSpace: 'normal',
+                                                    lineHeight: '1.5',
+                                                    padding: '4px 0'
+                                                }}>
+                                                    {props.name || '-'}
+                                                </div>
+                                            )}
+                                        />
                                         <ColumnDirective 
                                             field='startTime' 
                                             headerText='Event Start Time' 

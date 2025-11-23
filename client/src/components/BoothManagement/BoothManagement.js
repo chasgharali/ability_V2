@@ -526,19 +526,44 @@ export default function BoothManagement() {
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />
-                    <ColumnDirective field='name' headerText='Booth Name' width='200' clipMode='EllipsisWithTooltip' />
+                    <ColumnDirective 
+                      field='name' 
+                      headerText='Booth Name' 
+                      width='200' 
+                      template={(props) => (
+                        <div style={{ 
+                          wordWrap: 'break-word', 
+                          wordBreak: 'break-word', 
+                          whiteSpace: 'normal',
+                          lineHeight: '1.5',
+                          padding: '4px 0'
+                        }}>
+                          {props.name || '-'}
+                        </div>
+                      )}
+                    />
                     <ColumnDirective 
                       field='logo' 
                       headerText='Logo' 
                       width='100' 
                       textAlign='Center'
-                      template={(props) => props.logo ? <img src={props.logo} alt="Booth logo" style={{ height: 28, borderRadius: 4 }} /> : '-'}
+                      template={(props) => props.logo ? <img src={props.logo} alt="Booth logo" style={{ width: 80, height: 28, objectFit: 'contain', borderRadius: 4 }} /> : '-'}
                     />
                     <ColumnDirective 
                       field='events' 
                       headerText='Event Title' 
                       width='200' 
-                      template={(props) => (props.events && props.events.length > 0) ? props.events.join(', ') : 'No events'}
+                      template={(props) => (
+                        <div style={{ 
+                          wordWrap: 'break-word', 
+                          wordBreak: 'break-word', 
+                          whiteSpace: 'normal',
+                          lineHeight: '1.5',
+                          padding: '4px 0'
+                        }}>
+                          {(props.events && props.events.length > 0) ? props.events.join(', ') : 'No events'}
+                        </div>
+                      )}
                     />
                     <ColumnDirective field='recruitersCount' headerText='Recruiters' width='120' textAlign='Center' />
                     <ColumnDirective 
