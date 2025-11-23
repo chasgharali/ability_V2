@@ -46,11 +46,50 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
   };
 
   try {
+    // Check if AWS credentials are configured
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      logger.error('AWS SES credentials not configured', {
+        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+        toEmail
+      });
+      return false;
+    }
+
+    // Log configuration before sending
+    logger.info(`Attempting to send email to ${toEmail}`, {
+      fromEmail,
+      hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION || 'us-east-1'
+    });
+
     const resp = await ses.sendEmail(params).promise();
     logger.info(`SES verification email sent to ${toEmail}: ${resp.MessageId}`);
     return true;
   } catch (err) {
-    logger.error('SES sendVerificationEmail error:', err);
+    // Provide more detailed error information
+    const errorDetails = {
+      message: err.message,
+      code: err.code,
+      statusCode: err.statusCode,
+      requestId: err.requestId,
+      toEmail,
+      fromEmail
+    };
+
+    // Common error messages and solutions
+    if (err.code === 'InvalidClientTokenId' || err.message.includes('security token')) {
+      errorDetails.solution = 'AWS credentials are invalid or expired. Please check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file.';
+    } else if (err.code === 'SignatureDoesNotMatch') {
+      errorDetails.solution = 'AWS secret access key is incorrect. Please verify AWS_SECRET_ACCESS_KEY in your .env file.';
+    } else if (err.code === 'AccessDenied' || err.message.includes('not authorized')) {
+      errorDetails.solution = 'AWS credentials do not have permission to send emails via SES. Please verify IAM permissions.';
+    } else if (err.code === 'MessageRejected' || err.message.includes('Email address not verified')) {
+      errorDetails.solution = 'The sender email address is not verified in AWS SES. Please verify the email address in AWS SES console.';
+    }
+
+    logger.error('SES sendVerificationEmail error:', errorDetails);
     return false;
   }
 }

@@ -125,8 +125,8 @@ const RegisterPage = () => {
                 email: formData.email,
                 password: formData.password,
                 role: 'JobSeeker',
-                phoneNumber: (formData.phone || '').trim(),
-                subscribeAnnouncements: formData.announcements || false
+                phoneNumber: (formData.phone || '').trim() || undefined,
+                subscribeAnnouncements: !!formData.announcements
             };
 
             await register(userData);

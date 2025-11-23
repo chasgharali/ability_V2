@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Booth = require('../models/Booth');
@@ -163,16 +164,21 @@ router.post('/register', [
             }
         }
 
-        // Send verification email (best-effort)
+        // Send verification email (always send, regardless of phone number or announcements preference)
         try {
             const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
             const apiBase = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5001}`;
             // Verification link points to API endpoint which will redirect to app
             const verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
             const ok = await sendVerificationEmail(user.email, verifyLink);
-            if (!ok) logger.warn(`Failed to send verification email to ${user.email}`);
+            if (!ok) {
+                logger.warn(`Failed to send verification email to ${user.email} (phoneNumber: ${phoneNumber ? 'provided' : 'not provided'}, subscribeAnnouncements: ${subscribeAnnouncements})`);
+            } else {
+                logger.info(`Verification email sent successfully to ${user.email} (phoneNumber: ${phoneNumber ? 'provided' : 'not provided'}, subscribeAnnouncements: ${subscribeAnnouncements})`);
+            }
         } catch (e) {
-            logger.warn('sendVerificationEmail error:', e);
+            logger.error(`sendVerificationEmail error for ${user.email} (phoneNumber: ${phoneNumber ? 'provided' : 'not provided'}, subscribeAnnouncements: ${subscribeAnnouncements}):`, e);
+            // Don't fail registration if email fails, but log the error
         }
 
         // Generate tokens
@@ -223,6 +229,15 @@ router.post('/login', [
         .withMessage('Invalid login type')
 ], async (req, res) => {
     try {
+        // Check if MongoDB is connected
+        if (mongoose.connection.readyState !== 1) {
+            logger.error('MongoDB not connected. ReadyState:', mongoose.connection.readyState);
+            return res.status(503).json({
+                error: 'Service unavailable',
+                message: 'Database connection is not available. Please try again later.'
+            });
+        }
+
         // Check for validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -236,7 +251,8 @@ router.post('/login', [
         const { email, password, loginType } = req.body;
 
         // Find user by email (include legacyPassword for migrated users)
-        const user = await User.findOne({ email }).select('+legacyPassword');
+        // Populate assignedBooth to avoid issues in getPublicProfile()
+        const user = await User.findOne({ email }).select('+legacyPassword').populate('assignedBooth', 'name company');
         if (!user) {
             return res.status(401).json({
                 error: 'Invalid credentials',
@@ -313,9 +329,11 @@ router.post('/login', [
         });
     } catch (error) {
         logger.error('Login error:', error);
+        logger.error('Login error stack:', error.stack);
         res.status(500).json({
             error: 'Login failed',
-            message: 'An error occurred during login'
+            message: 'An error occurred during login',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
