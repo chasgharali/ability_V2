@@ -11,11 +11,18 @@ import '@syncfusion/ej2-react-calendars/styles/material.css';
 import '@syncfusion/ej2-react-navigations/styles/material.css';
 import '@syncfusion/ej2-react-grids/styles/material.css';
 import '@syncfusion/ej2-react-interactive-chat/styles/material.css';
+import '@syncfusion/ej2-react-buttons/styles/material.css';
+import '@syncfusion/ej2-react-popups/styles/material.css';
+import '@syncfusion/ej2-react-notifications/styles/material.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-// Register Syncfusion license
-registerLicense('Ngo9BigBOggjHTQxAR8/V1JFaF5cXGRCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWH5fcXRWRWRcWURxX0VWYEg=');
+const syncfusionLicense = process.env.REACT_APP_SYNCFUSION_LICENSE || 'Ngo9BigBOggjHTQxAR8/V1JFaF5cXGRCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWH5fcXRWRWRcWURxX0VWYEg=';
+try {
+    registerLicense(syncfusionLicense);
+} catch (err) {
+    console.warn('Failed to register Syncfusion license:', err);
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

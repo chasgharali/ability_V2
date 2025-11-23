@@ -1,11 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
+import './BoothManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import DataGrid from '../UI/DataGrid';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { DialogComponent } from '@syncfusion/ej2-react-popups';
+import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
-import Toast from '../UI/Toast';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections } from '../../services/booths';
 import { uploadBoothLogoToS3, uploadImageToS3 } from '../../services/uploads';
@@ -36,8 +39,7 @@ export default function BoothManagement() {
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
-  const [toast, setToast] = useState(null); // { message, type: 'success'|'info'|'error', duration }
-  const toastTimer = React.useRef(null);
+  const toastRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
   // RTE image upload helpers
   const rteFirstRef = React.useRef(null);
@@ -87,10 +89,10 @@ export default function BoothManagement() {
       } catch {
         activeRteRef.current.executeCommand('insertHTML', `<img src="${downloadUrl}" alt="${file.name}" />`);
       }
-      showToast('Image inserted', 'success', 2000);
+      showToast('Image inserted', 'Success', 2000);
     } catch (err) {
       console.error('RTE image upload failed', err);
-      showToast('Failed to upload image', 'error', 4000);
+      showToast('Failed to upload image', 'Error', 4000);
     } finally {
       setBoothSaving(false);
       setActiveRteRef(null);
@@ -214,90 +216,72 @@ export default function BoothManagement() {
 
   // (Focus management moved into reusable Toast component)
 
-  // Data grid columns configuration
-  const gridColumns = [
-    {
-      key: 'name',
-      label: 'Booth Name',
-      render: (row) => row.name || 'Unnamed Booth'
-    },
-    {
-      key: 'logo',
-      label: 'Logo',
-      render: (row) => row.logo ? <img src={row.logo} alt="Booth logo" style={{ height: 28, borderRadius: 4 }} /> : null
-    },
-    {
-      key: 'events',
-      label: 'Event Title',
-      render: (row) => (row.events || []).join(', ') || 'No events'
-    },
-    {
-      key: 'recruitersCount',
-      label: 'Recruiters',
-      render: (row) => row.recruitersCount ?? 0
-    },
-    {
-      key: 'customInviteText',
-      label: 'Custom Invite Text',
-      render: (row) => {
-        if (row.customInviteSlug) {
-          return <span>{row.customInviteSlug}</span>;
-        }
-        return 'Not set';
-      }
-    },
-    {
-      key: 'expireLinkTime',
-      label: 'Expire Date',
-      render: (row) => {
-        if (!row.expireLinkTime) return 'No expiry';
-        try {
-          const date = new Date(row.expireLinkTime);
-          if (isNaN(date.getTime())) return 'Invalid date';
-          return date.toLocaleString();
-        } catch (e) {
-          return 'Invalid date';
-        }
-      }
-    },
-    {
-      key: 'companyPage',
-      label: 'Company Page',
-      render: (row) => {
-        if (row.companyPage) {
-          return (
-            <a className="ajf-btn ajf-btn-outline" href={row.companyPage} target="_blank" rel="noreferrer">
-              <MdBusiness style={{ marginRight: '4px' }} />
-              Company Page
-            </a>
-          );
-        }
-        return <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not set</span>;
-      }
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      render: (row) => (
-        <div className="ajf-grid-actions">
-          <button className="ajf-btn ajf-btn-dark">Job Seekers Report</button>
-          <button className="ajf-btn ajf-btn-outline" onClick={() => setPreviewBooth(row)}>Placeholder</button>
-          <button className="ajf-btn ajf-btn-dark" onClick={() => copyInvite(row)}>
-            <MdLink style={{ marginRight: '4px' }} />
-            Invite Link
-          </button>
-          <button className="ajf-btn ajf-btn-dark" onClick={() => startEdit(row)}>
-            <MdEdit style={{ marginRight: '4px' }} />
-            Edit
-          </button>
-          <button className="ajf-btn ajf-btn-outline" onClick={() => handleDelete(row)}>
-            <MdDelete style={{ marginRight: '4px' }} />
-            Delete
-          </button>
+  // Grid template functions for custom column renders - using Syncfusion ButtonComponent
+  const companyPageTemplate = (props) => {
+    if (props.companyPage) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '4px 0' }}>
+          <ButtonComponent 
+            cssClass="e-outline e-primary e-small" 
+            onClick={() => window.open(props.companyPage, '_blank')}
+            style={{ 
+              whiteSpace: 'nowrap',
+              padding: '8px 24px',
+              paddingLeft: '16px',
+              paddingRight: '20px',
+              borderWidth: '2px',
+              minHeight: '36px'
+            }}
+          >
+            <MdBusiness style={{ marginRight: '8px', verticalAlign: 'middle', flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap' }}>Company Page</span>
+          </ButtonComponent>
         </div>
-      )
+      );
     }
-  ];
+    return <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not set</span>;
+  };
+
+  const actionsTemplate = (props) => {
+    const row = props;
+    return (
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <ButtonComponent 
+          cssClass="e-primary e-small" 
+          onClick={() => {}}
+        >
+          Job Seekers Report
+        </ButtonComponent>
+        <ButtonComponent 
+          cssClass="e-outline e-primary e-small" 
+          onClick={() => setPreviewBooth(row)}
+        >
+          Placeholder
+        </ButtonComponent>
+        <ButtonComponent 
+          cssClass="e-primary e-small" 
+          onClick={() => copyInvite(row)}
+        >
+          <MdLink style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+          Invite Link
+        </ButtonComponent>
+        <ButtonComponent 
+          cssClass="e-primary e-small" 
+          onClick={() => startEdit(row)}
+        >
+          <MdEdit style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+          Edit
+        </ButtonComponent>
+        <ButtonComponent 
+          cssClass="e-outline e-danger e-small" 
+          onClick={() => handleDelete(row)}
+        >
+          <MdDelete style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+          Delete
+        </ButtonComponent>
+      </div>
+    );
+  };
 
   const setBoothField = (k, v) => setBoothForm(prev => ({ ...prev, [k]: v }));
   const onPickBoothLogo = async (file) => {
@@ -321,7 +305,7 @@ export default function BoothManagement() {
       const exceeded = validateRecruiterLimits();
       if (exceeded.length) {
         const lines = exceeded.map(x => `• ${x.name}: ${x.existing} + ${x.adding} > ${x.max}`).join('\n');
-        showToast(`Max number of recruiters reached for selected event(s):\n\n${lines}`, 'error', 7000);
+        showToast(`Max number of recruiters reached for selected event(s):\n\n${lines}`, 'Error', 7000);
         return; // block submit
       }
       const payload = {
@@ -357,7 +341,7 @@ export default function BoothManagement() {
         await loadEvents();
         setBoothMode('list');
         setEditingBoothId(null);
-        showToast('Booth updated', 'success', 2500);
+          showToast('Booth updated', 'Success', 2500);
       } else {
         const res = await createBooths(payload);
         const createdCount = Array.isArray(res?.created) ? res.created.length : 0;
@@ -374,15 +358,15 @@ export default function BoothManagement() {
             return `• ${label} — ${reasonNormalized}`;
           }).join('\n');
           if (createdCount === 0) {
-            showToast(`No booths were created.\n\n${skippedList}`, 'error', 6000);
+            showToast(`No booths were created.\n\n${skippedList}`, 'Error', 6000);
           } else {
-            showToast(`Booth created for some events, but others were skipped due to limits:\n\n${skippedList}`, 'error', 6000);
+            showToast(`Booth created for some events, but others were skipped due to limits:\n\n${skippedList}`, 'Warning', 6000);
           }
         } else if (createdCount === 0) {
           // Safety: backend responded but nothing created and no skips array
-          showToast('No booths were created.', 'error', 5000);
+          showToast('No booths were created.', 'Error', 5000);
         } else {
-          showToast('Booth created', 'success', 2500);
+          showToast('Booth created', 'Success', 2500);
         }
         await loadBooths();
         // Reload events to update booth counts in dropdown
@@ -412,7 +396,7 @@ export default function BoothManagement() {
       setLoadingBooths(true);
       const res = await listBooths({ page: 1, limit: 50 });
       const items = res?.booths || [];
-      // Map to grid rows expected by DataGrid
+      // Map to grid rows expected by Syncfusion GridComponent
       setBooths(items.map(b => ({
         id: b._id,
         name: b.name,
@@ -459,7 +443,7 @@ export default function BoothManagement() {
       setBoothSaving(true);
       await deleteBooth(rowPendingDelete.id);
       await loadBooths();
-      showToast('Booth deleted');
+        showToast('Booth deleted', 'Success');
     } catch (e) {
       console.error('Delete booth failed', e);
       showToast('Failed to delete');
@@ -471,11 +455,17 @@ export default function BoothManagement() {
   };
   const cancelDelete = () => { setConfirmOpen(false); setRowPendingDelete(null); };
 
-  // Invite link copy
-  const showToast = (message, type = 'info', duration = 3000) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ message, type, duration });
-    toastTimer.current = setTimeout(() => setToast(null), duration);
+  // Invite link copy - Syncfusion Toast
+  const showToast = (message, type = 'Success', duration = 3000) => {
+    if (toastRef.current) {
+      toastRef.current.show({
+        title: type,
+        content: message,
+        cssClass: `e-toast-${type.toLowerCase()}`,
+        showProgressBar: true,
+        timeOut: duration
+      });
+    }
   };
   const copyInvite = async (row) => {
     const custom = row.customInviteSlug && sanitizeInvite(row.customInviteSlug);
@@ -484,7 +474,7 @@ export default function BoothManagement() {
       : `${baseUrl}/queue/${slugify(row.name || 'booth')}-${queueToken}`;
     try {
       await navigator.clipboard.writeText(url);
-      showToast('Invite link copied');
+        showToast('Invite link copied', 'Success');
     } catch (e) {
       window.prompt('Copy to clipboard: Ctrl+C, Enter', url);
       showToast('Copy failed. Link shown.');
@@ -504,25 +494,94 @@ export default function BoothManagement() {
               <h2>Booth Management</h2>
               <div className="bm-header-actions">
                 {boothMode === 'list' ? (
-                  <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('create')}>Create Booth</button>
+                  <ButtonComponent cssClass="e-primary" onClick={() => setBoothMode('create')}>
+                    Create Booth
+                  </ButtonComponent>
                 ) : (
-                  <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setBoothMode('list')}>Back to List</button>
+                  <ButtonComponent cssClass="e-outline e-primary" onClick={() => setBoothMode('list')}>
+                    Back to List
+                  </ButtonComponent>
                 )}
               </div>
             </div>
 
             {boothMode === 'list' ? (
               <div className="bm-grid-wrap">
-                <DataGrid
-                  data={booths}
-                  columns={gridColumns}
-                  selectable={true}
-                  searchable={true}
-                  sortable={true}
-                  onRowSelect={(selectedRows) => console.log('Selected rows:', selectedRows)}
-                  onRowClick={(row) => console.log('Row clicked:', row)}
-                  aria-label="Booth management table"
-                />
+                {loadingBooths && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                <GridComponent
+                  dataSource={booths}
+                  allowPaging={true}
+                  pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+                  allowSorting={true}
+                  allowFiltering={true}
+                  filterSettings={{ type: 'Menu' }}
+                  showColumnMenu={true}
+                  showColumnChooser={true}
+                  allowResizing={true}
+                  allowReordering={true}
+                  toolbar={['Search', 'ColumnChooser']}
+                  selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
+                  enableHover={true}
+                  allowRowDragAndDrop={false}
+                >
+                  <ColumnsDirective>
+                    <ColumnDirective type='checkbox' width='50' />
+                    <ColumnDirective field='name' headerText='Booth Name' width='200' clipMode='EllipsisWithTooltip' />
+                    <ColumnDirective 
+                      field='logo' 
+                      headerText='Logo' 
+                      width='100' 
+                      textAlign='Center'
+                      template={(props) => props.logo ? <img src={props.logo} alt="Booth logo" style={{ height: 28, borderRadius: 4 }} /> : '-'}
+                    />
+                    <ColumnDirective 
+                      field='events' 
+                      headerText='Event Title' 
+                      width='200' 
+                      template={(props) => (props.events && props.events.length > 0) ? props.events.join(', ') : 'No events'}
+                    />
+                    <ColumnDirective field='recruitersCount' headerText='Recruiters' width='120' textAlign='Center' />
+                    <ColumnDirective 
+                      field='customInviteSlug' 
+                      headerText='Custom Invite Text' 
+                      width='180' 
+                      template={(props) => props.customInviteSlug ? <span>{props.customInviteSlug}</span> : 'Not set'}
+                    />
+                    <ColumnDirective 
+                      field='expireLinkTime' 
+                      headerText='Expire Date' 
+                      width='180' 
+                      template={(props) => {
+                        if (!props.expireLinkTime) return 'No expiry';
+                        try {
+                          const date = new Date(props.expireLinkTime);
+                          if (isNaN(date.getTime())) return 'Invalid date';
+                          return date.toLocaleString();
+                        } catch (e) {
+                          return 'Invalid date';
+                        }
+                      }}
+                    />
+                    <ColumnDirective 
+                      field='companyPage' 
+                      headerText='Company Page' 
+                      width='180' 
+                      minWidth='170'
+                      allowSorting={false} 
+                      allowFiltering={false}
+                      clipMode='EllipsisWithTooltip'
+                      template={companyPageTemplate}
+                    />
+                    <ColumnDirective 
+                      headerText='Actions' 
+                      width='500' 
+                      allowSorting={false} 
+                      allowFiltering={false}
+                      template={actionsTemplate}
+                    />
+                  </ColumnsDirective>
+                  <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                </GridComponent>
               </div>
             ) : (
               <form className="account-form" onSubmit={handleCreateBooth} style={{ maxWidth: 720 }}>
@@ -537,10 +596,18 @@ export default function BoothManagement() {
                 <div className="form-group">
                   <label className="form-label">Booth Logo</label>
                   <div className="upload-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <label className="dashboard-button" style={{ width: 'auto', cursor: 'pointer' }}>
-                      Choose file
-                      <input type="file" accept="image/*" onChange={(e) => onPickBoothLogo(e.target.files?.[0])} style={{ display: 'none' }} />
+                    <label htmlFor="booth-logo-upload" style={{ margin: 0 }}>
+                      <ButtonComponent cssClass="e-outline e-primary e-small">
+                        Choose file
+                      </ButtonComponent>
                     </label>
+                    <input 
+                      id="booth-logo-upload"
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => onPickBoothLogo(e.target.files?.[0])} 
+                      style={{ display: 'none' }} 
+                    />
                     {boothForm.boothLogo && <img src={boothForm.boothLogo} alt="Booth logo" style={{ height: 40, border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 4 }} />}
                   </div>
                 </div>
@@ -653,9 +720,14 @@ export default function BoothManagement() {
                   placeholder="Auto-generated link"
                 />
 
-                <button type="submit" className="dashboard-button" disabled={boothSaving}>
+                <ButtonComponent 
+                  cssClass="e-primary" 
+                  disabled={boothSaving}
+                  isPrimary={true}
+                  onClick={(e) => { e.preventDefault(); handleCreateBooth(e); }}
+                >
                   {boothSaving ? 'Saving…' : (editingBoothId ? 'Update Booth' : 'Create Booth')}
-                </button>
+                </ButtonComponent>
               </form>
             )}
           </div>
@@ -671,7 +743,9 @@ export default function BoothManagement() {
           <div className="modal-card" style={{ background: '#fff', borderRadius: 8, padding: 20, width: '90%', maxWidth: 1100, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0 }}>Placeholder Preview - {previewBooth.name}</h3>
-              <button className="ajf-btn ajf-btn-outline" onClick={() => setPreviewBooth(null)}>Close</button>
+              <ButtonComponent cssClass="e-outline e-primary" onClick={() => setPreviewBooth(null)}>
+                Close
+              </ButtonComponent>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               {[0, 1, 2].map(i => (
@@ -684,29 +758,51 @@ export default function BoothManagement() {
         </div>
       )}
 
-      {/* Delete confirm modal */}
-      {confirmOpen && (
-        <div role="dialog" aria-modal="true" aria-labelledby="confirm-title" className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 70 }}>
-          <div className="modal-card" style={{ background: '#fff', borderRadius: 8, padding: 20, width: 420, boxShadow: '0 10px 30px rgba(0,0,0,0.2)', border: '1px solid #e5e7eb' }}>
-            <h3 id="confirm-title" style={{ marginTop: 0, marginBottom: 8 }}>Delete Booth</h3>
-            <p style={{ marginTop: 0, marginBottom: 16 }}>Are you sure you want to delete <strong>{rowPendingDelete?.name}</strong>? This action cannot be undone.</p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button type="button" className="ajf-btn ajf-btn-outline" onClick={cancelDelete} disabled={boothSaving}>Cancel</button>
-              <button type="button" className="ajf-btn ajf-btn-dark" onClick={confirmDelete} disabled={boothSaving}>{boothSaving ? 'Deleting…' : 'Delete'}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete confirm modal - Syncfusion DialogComponent */}
+      <DialogComponent
+        width="450px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={confirmOpen}
+        header="Delete Booth"
+        closeOnEscape={true}
+        close={cancelDelete}
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelDelete();
+            }
+          },
+          {
+            buttonModel: {
+              content: boothSaving ? 'Deleting…' : 'Delete',
+              isPrimary: true,
+              cssClass: 'e-danger'
+            },
+            click: () => {
+              confirmDelete();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Are you sure you want to delete <strong>{rowPendingDelete?.name}</strong>? This action cannot be undone.
+        </p>
+      </DialogComponent>
 
-      {/* Toast */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-          autoFocusClose={toast.type === 'error'}
-        />
-      )}
+      {/* Syncfusion ToastComponent */}
+      <ToastComponent 
+        ref={(toast) => toastRef.current = toast}
+        position={{ X: 'Right', Y: 'Bottom' }}
+        showProgressBar={true}
+        timeOut={3000}
+        newestOnTop={true}
+      />
 
       {/* hidden input for S3 image insert */}
       <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />

@@ -148,3 +148,36 @@ a:focus {
         font-size: 1.125rem;
     }
 }
+
+/* ========================================
+   Syncfusion ColumnChooser Checkbox Override
+   Force black checkboxes - Exact selector from browser inspect
+   ======================================== */
+
+/* Exact selector that works in browser inspect */
+.e-checkbox-wrapper .e-frame.e-check,
+.e-css.e-checkbox-wrapper .e-frame.e-check {
+    background-color: #000000 !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+}
+
+/* Maximum specificity */
+html body .e-checkbox-wrapper .e-frame.e-check,
+html body .e-css.e-checkbox-wrapper .e-frame.e-check,
+body .e-checkbox-wrapper .e-frame.e-check,
+body .e-css.e-checkbox-wrapper .e-frame.e-check {
+    background-color: #000000 !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+}
+
+/* Specifically in ColumnChooser */
+html body .e-column-chooser .e-checkbox-wrapper .e-frame.e-check,
+html body .e-column-chooser .e-css.e-checkbox-wrapper .e-frame.e-check,
+html body .e-popup.e-column-chooser .e-checkbox-wrapper .e-frame.e-check,
+html body .e-popup.e-column-chooser .e-css.e-checkbox-wrapper .e-frame.e-check {
+    background-color: #000000 !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+}

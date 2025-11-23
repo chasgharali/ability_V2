@@ -1,0 +1,998 @@
+/* Syncfusion Button Customizations for Event Management */
+
+/* Primary buttons - Black theme to match app design */
+.e-btn.e-primary {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+.e-btn.e-primary:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+.e-btn.e-primary:focus,
+.e-btn.e-primary:active {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Outline primary buttons */
+.e-btn.e-outline.e-primary {
+    background-color: transparent !important;
+    border-color: #111111 !important;
+    color: #111111 !important;
+}
+
+.e-btn.e-outline.e-primary:hover {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+.e-btn.e-outline.e-primary:focus,
+.e-btn.e-outline.e-primary:active {
+    background-color: #f3f4f6 !important;
+    border-color: #111111 !important;
+    color: #111111 !important;
+}
+
+/* Small buttons */
+.e-btn.e-small {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    min-height: 32px !important;
+}
+
+/* Danger buttons - Red for delete actions */
+.e-btn.e-danger,
+.e-btn.e-outline.e-danger {
+    background-color: transparent !important;
+    border-color: #dc2626 !important;
+    color: #dc2626 !important;
+}
+
+.e-btn.e-danger:hover,
+.e-btn.e-outline.e-danger:hover {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+/* Disabled buttons */
+.e-btn.e-primary:disabled,
+.e-btn.e-outline.e-primary:disabled {
+    background-color: #f3f4f6 !important;
+    border-color: #d1d5db !important;
+    color: #9ca3af !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* Button inside grid actions */
+.ajf-grid-actions .e-btn {
+    margin: 0 !important;
+}
+
+/* Ensure buttons in grid templates are styled correctly */
+.e-grid .e-content .e-btn {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease !important;
+}
+
+/* Header action buttons (CREATE EVENT button) */
+.bm-header-actions .e-btn,
+.bm-header .e-btn {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    min-height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+}
+
+.bm-header-actions .e-btn.e-primary {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.bm-header-actions .e-btn.e-primary:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.bm-header-actions .e-btn.e-outline.e-primary {
+    background-color: transparent !important;
+    border-color: #111111 !important;
+    color: #111111 !important;
+}
+
+.bm-header-actions .e-btn.e-outline.e-primary:hover {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Dialog buttons */
+.e-dialog .e-footer-content .e-btn.e-primary {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-primary:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-outline.e-primary {
+    background-color: transparent !important;
+    border-color: #111111 !important;
+    color: #111111 !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-outline.e-primary:hover {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-danger {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-danger:hover {
+    background-color: #b91c1c !important;
+    border-color: #b91c1c !important;
+}
+
+/* ========================================
+   Beautiful Search Field Styling
+   ======================================== */
+
+/* Syncfusion Grid Toolbar - ensure it's visible */
+.e-grid .e-toolbar {
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 16px 20px !important;
+    border-radius: 8px 8px 0 0 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Toolbar items container */
+.e-grid .e-toolbar .e-toolbar-items {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    visibility: visible !important;
+}
+
+/* Toolbar items - ensure all are visible */
+.e-grid .e-toolbar .e-toolbar-item {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Search input field in toolbar */
+.e-grid .e-toolbar .e-search-wrapper,
+.e-grid .e-toolbar .e-search {
+    display: inline-flex !important;
+    position: relative !important;
+    min-width: 250px !important;
+    max-width: 400px !important;
+    flex: 0 1 auto !important;
+    visibility: visible !important;
+}
+
+.e-grid .e-toolbar .e-search input.e-input,
+.e-grid .e-toolbar .e-search input.e-input-search,
+.e-grid .e-toolbar .e-toolbar-items .e-toolbar-item.e-search-item input,
+.e-grid .e-toolbar .e-toolbar-item input[type="text"] {
+    min-width: 200px !important;
+    width: 100% !important;
+    padding: 12px 16px 12px 44px !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    background: #ffffff !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    color: #111827 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    font-weight: 400 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* ColumnChooser button - ensure it's visible */
+.e-grid .e-toolbar .e-toolbar-item.e-columnchooser-btn,
+.e-grid .e-toolbar .e-columnchooser-btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin-left: 12px !important;
+}
+
+.e-grid .e-toolbar .e-search input.e-input::placeholder,
+.e-grid .e-toolbar .e-search input.e-input-search::placeholder,
+.e-grid .e-toolbar .e-toolbar-items .e-toolbar-item.e-search-item input::placeholder {
+    color: #9ca3af !important;
+    font-weight: 400 !important;
+}
+
+/* Search icon styling */
+.e-grid .e-toolbar .e-search::before,
+.e-grid .e-toolbar .e-search .e-search-icon,
+.e-grid .e-toolbar .e-search-icon::before {
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #6b7280 !important;
+    font-size: 16px !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    transition: color 0.3s ease !important;
+}
+
+/* Focus state - beautiful animation */
+.e-grid .e-toolbar .e-search input.e-input:focus,
+.e-grid .e-toolbar .e-search input.e-input-search:focus,
+.e-grid .e-toolbar .e-toolbar-items .e-toolbar-item.e-search-item input:focus {
+    outline: none !important;
+    border-color: #111111 !important;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    background: #ffffff !important;
+    transform: translateY(-1px) !important;
+}
+
+.e-grid .e-toolbar .e-search input.e-input:focus + .e-search-icon::before,
+.e-grid .e-toolbar .e-search input.e-input:focus ~ .e-search-icon::before {
+    color: #111111 !important;
+}
+
+/* Hover state */
+.e-grid .e-toolbar .e-search input.e-input:hover,
+.e-grid .e-toolbar .e-search input.e-input-search:hover {
+    border-color: #d1d5db !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Active state when typing */
+.e-grid .e-toolbar .e-search input.e-input:not(:placeholder-shown),
+.e-grid .e-toolbar .e-search input.e-input-search:not(:placeholder-shown) {
+    border-color: #111111 !important;
+}
+
+/* Column Chooser search input - same beautiful styling */
+.e-grid .e-column-chooser .e-search-wrapper input,
+.e-grid .e-column-chooser .e-search input,
+.e-column-chooser .e-search-wrapper input.e-input,
+.e-column-chooser .e-search input.e-input {
+    padding: 10px 14px 10px 40px !important;
+    font-size: 0.875rem !important;
+    background: #ffffff !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    color: #111827 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    width: 100% !important;
+}
+
+.e-grid .e-column-chooser .e-search-wrapper input:focus,
+.e-grid .e-column-chooser .e-search input:focus,
+.e-column-chooser .e-search-wrapper input.e-input:focus,
+.e-column-chooser .e-search input.e-input:focus {
+    outline: none !important;
+    border-color: #111111 !important;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1) !important;
+}
+
+.e-grid .e-column-chooser .e-search-wrapper input::placeholder,
+.e-grid .e-column-chooser .e-search input::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Search icon in column chooser */
+.e-column-chooser .e-search::before,
+.e-column-chooser .e-search-icon::before {
+    color: #6b7280 !important;
+    left: 12px !important;
+}
+
+/* Make toolbar look more polished */
+.e-grid .e-toolbar-items {
+    gap: 12px !important;
+}
+
+/* Responsive search field */
+@media (max-width: 768px) {
+    .e-grid .e-toolbar .e-search-wrapper,
+    .e-grid .e-toolbar .e-search {
+        max-width: 100% !important;
+    }
+    
+    .e-grid .e-toolbar .e-search input.e-input {
+        padding: 10px 14px 10px 40px !important;
+        font-size: 0.875rem !important;
+    }
+}
+
+/* ========================================
+   Grid Horizontal Scrolling Support
+   ======================================== */
+
+/* Grid containers - allow horizontal scrolling for wide tables */
+.bm-grid-wrap,
+.data-grid-container {
+  position: relative !important;
+  width: 100% !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling for wide tables */
+  overflow-y: visible !important; /* Allow ColumnChooser to overflow vertically */
+  min-height: 400px !important; /* Ensure minimum height for content */
+  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+}
+
+/* Syncfusion Grid - allow horizontal scrolling */
+.bm-grid-wrap .e-grid,
+.data-grid-container .e-grid {
+  position: relative !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling when table is wide */
+  overflow-y: visible !important; /* Allow ColumnChooser to show */
+  min-width: 100% !important; /* Ensure grid takes full width at minimum */
+}
+
+/* Grid content area - allow horizontal scrolling */
+.bm-grid-wrap .e-grid .e-content,
+.data-grid-container .e-grid .e-content {
+  position: relative !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling for wide content */
+  overflow-y: visible !important; /* Allow ColumnChooser to overflow */
+}
+
+/* Grid table wrapper - ensure horizontal scrolling works */
+.bm-grid-wrap .e-grid .e-gridcontent,
+.data-grid-container .e-grid .e-gridcontent {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* ========================================
+   Professional ColumnChooser Dialog Styling
+   ======================================== */
+
+/* ColumnChooser Dialog Container - Professional Design */
+/* Maximum specificity targeting - target all possible Syncfusion popup structures */
+body .e-column-chooser,
+body .e-popup.e-column-chooser,
+body .e-dialog.e-column-chooser,
+body div[id*="columnChooser"],
+body .e-popup[class*="column-chooser"],
+body .e-popup[class*="columnChooser"],
+body .e-dlg-container .e-column-chooser,
+/* Target the actual popup wrapper that Syncfusion uses */
+body .e-popup[class*="e-column-chooser"],
+body div[class*="e-column-chooser"]:not(.e-grid),
+/* Target the popup content wrapper */
+body .e-popup-content.e-column-chooser,
+body .e-popup .e-column-chooser,
+/* Most aggressive - target ANY popup containing column chooser text */
+body .e-popup:has([class*="column"]):has([class*="chooser"]),
+body .e-popup:has(.e-column-chooser),
+body .e-popup:has([id*="columnChooser"]) {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden !important;
+    width: 260px !important;
+    min-width: 240px !important;
+    max-width: 280px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    box-sizing: border-box !important;
+}
+
+/* Animation for smooth appearance */
+body .e-popup.e-column-chooser,
+body .e-dialog.e-column-chooser,
+body .e-popup:has(.e-column-chooser) {
+    animation: slideInUp 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Ensure popup root element has rounded corners */
+html body .e-popup.e-column-chooser,
+html body .e-popup:has(.e-column-chooser),
+html body .e-dialog.e-column-chooser {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+/* Ensure all child elements respect rounded corners */
+body .e-popup.e-column-chooser > *,
+body .e-popup[class*="column-chooser"] > *,
+body .e-popup:has(.e-column-chooser) > * {
+    border-radius: inherit !important;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ColumnChooser Header - Professional - Maximum specificity */
+html body .e-column-chooser .e-dlg-header,
+html body .e-column-chooser .e-header,
+html body .e-popup.e-column-chooser .e-dlg-header,
+html body .e-popup.e-column-chooser .e-header,
+html body .e-dialog.e-column-chooser .e-dlg-header,
+html body .e-popup:has(.e-column-chooser) .e-dlg-header,
+html body .e-popup:has(.e-column-chooser) .e-header,
+/* Target any header inside column chooser */
+html body .e-popup .e-column-chooser .e-dlg-header,
+html body .e-popup .e-column-chooser .e-header,
+html body div[class*="column-chooser"] .e-dlg-header,
+html body div[class*="column-chooser"] .e-header {
+    background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%) !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 14px 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-radius: 16px 16px 0 0 !important;
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.e-column-chooser .e-dlg-header .e-dialog-title,
+.e-column-chooser .e-header .e-dialog-title,
+.e-popup.e-column-chooser .e-dlg-header .e-dialog-title {
+    margin: 0 !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    letter-spacing: -0.01em !important;
+    line-height: 1.4 !important;
+}
+
+/* Close button - Professional */
+.e-column-chooser .e-dlg-closeicon-btn,
+.e-column-chooser .e-close-icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    color: #6b7280 !important;
+    background: transparent !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 18px !important;
+}
+
+.e-column-chooser .e-dlg-closeicon-btn:hover,
+.e-column-chooser .e-close-icon-btn:hover {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+    transform: rotate(90deg) scale(1.1) !important;
+}
+
+/* ColumnChooser Content Area - Increased padding */
+body .e-column-chooser .e-dlg-content,
+body .e-popup.e-column-chooser .e-dlg-content,
+body .e-dialog.e-column-chooser .e-dlg-content,
+html body .e-column-chooser .e-dlg-content,
+html body .e-popup.e-column-chooser .e-dlg-content,
+html body .e-dialog.e-column-chooser .e-dlg-content,
+body div[class*="column-chooser"] .e-dlg-content,
+body .e-popup:has(.e-column-chooser) .e-dlg-content,
+body .e-popup[class*="column-chooser"] .e-dlg-content {
+    padding-left: 24px !important; /* Increased left padding */
+    padding-right: 24px !important; /* Increased right padding */
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    background: #ffffff !important;
+    max-height: 420px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Custom scrollbar for content */
+.e-column-chooser .e-dlg-content::-webkit-scrollbar,
+.e-popup.e-column-chooser .e-dlg-content::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.e-column-chooser .e-dlg-content::-webkit-scrollbar-track {
+    background: #f9fafb !important;
+    border-radius: 4px !important;
+}
+
+.e-column-chooser .e-dlg-content::-webkit-scrollbar-thumb {
+    background: #d1d5db !important;
+    border-radius: 4px !important;
+    transition: background 0.2s ease !important;
+}
+
+.e-column-chooser .e-dlg-content::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af !important;
+}
+
+/* Search input in ColumnChooser - Enhanced */
+.e-column-chooser .e-search-wrapper,
+.e-column-chooser .e-search,
+.e-popup.e-column-chooser .e-search-wrapper {
+    position: relative !important;
+    margin-bottom: 16px !important;
+    border: none !important;
+}
+
+.e-column-chooser .e-search-wrapper input,
+.e-column-chooser .e-search input,
+.e-popup.e-column-chooser .e-search-wrapper input,
+.e-popup.e-column-chooser .e-search input {
+    padding: 12px 16px 12px 44px !important;
+    font-size: 0.875rem !important;
+    background: #f8f9fa !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    color: #111827 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    width: 100% !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.e-column-chooser .e-search-wrapper input:focus,
+.e-column-chooser .e-search input:focus {
+    outline: none !important;
+    border-color: #111111 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-1px) !important;
+}
+
+.e-column-chooser .e-search-wrapper input::placeholder {
+    color: #9ca3af !important;
+    font-weight: 400 !important;
+}
+
+/* Select All Button - Professional */
+.e-column-chooser .e-selectall,
+.e-column-chooser .e-select-all-btn {
+    width: 100% !important;
+    padding: 10px 16px !important;
+    margin-bottom: 12px !important;
+    background: #f8f9fa !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    color: #111827 !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-align: center !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.e-column-chooser .e-selectall:hover,
+.e-column-chooser .e-select-all-btn:hover {
+    background: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+.e-column-chooser .e-selectall:active,
+.e-column-chooser .e-select-all-btn:active {
+    transform: translateY(0) !important;
+}
+
+/* Column List Container */
+.e-column-chooser .e-column-list,
+.e-column-chooser ul {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    max-height: 320px !important;
+    overflow-y: auto !important;
+    padding-right: 4px !important;
+    margin: 0 !important;
+    list-style: none !important;
+}
+
+/* Column List Items - Professional */
+.e-column-chooser .e-column-list-item,
+.e-column-chooser li {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+}
+
+.e-column-chooser .e-column-list-item:hover,
+.e-column-chooser li:hover {
+    background: #f8f9fa !important;
+    border-color: #e5e7eb !important;
+    transform: translateX(2px) !important;
+}
+
+/* Checkboxes - Professional Styling - Black Theme - Maximum Specificity */
+body .e-column-chooser input[type="checkbox"],
+body .e-popup.e-column-chooser input[type="checkbox"],
+body .e-dialog.e-column-chooser input[type="checkbox"],
+html body .e-column-chooser input[type="checkbox"],
+html body .e-popup.e-column-chooser input[type="checkbox"],
+html body .e-dialog.e-column-chooser input[type="checkbox"],
+body div[class*="column-chooser"] input[type="checkbox"],
+body .e-popup:has(.e-column-chooser) input[type="checkbox"],
+body .e-popup[class*="column-chooser"] input[type="checkbox"],
+.e-column-chooser .e-column-list-item input[type="checkbox"],
+.e-column-chooser li input[type="checkbox"],
+.e-popup.e-column-chooser .e-column-list-item input[type="checkbox"],
+.e-popup.e-column-chooser li input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    accent-color: #111111 !important; /* Black accent color */
+    cursor: pointer !important;
+    border-radius: 5px !important;
+    border: 2px solid #d1d5db !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+    appearance: none !important; /* Remove default styling */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: #ffffff !important;
+    position: relative !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body .e-column-chooser input[type="checkbox"]:checked,
+body .e-popup.e-column-chooser input[type="checkbox"]:checked,
+body .e-dialog.e-column-chooser input[type="checkbox"]:checked,
+html body .e-column-chooser input[type="checkbox"]:checked,
+html body .e-popup.e-column-chooser input[type="checkbox"]:checked,
+html body .e-dialog.e-column-chooser input[type="checkbox"]:checked,
+body div[class*="column-chooser"] input[type="checkbox"]:checked,
+body .e-popup:has(.e-column-chooser) input[type="checkbox"]:checked,
+body .e-popup[class*="column-chooser"] input[type="checkbox"]:checked,
+.e-column-chooser .e-column-list-item input[type="checkbox"]:checked,
+.e-column-chooser li input[type="checkbox"]:checked,
+.e-popup.e-column-chooser .e-column-list-item input[type="checkbox"]:checked,
+.e-popup.e-column-chooser li input[type="checkbox"]:checked {
+    accent-color: #111111 !important; /* Black accent color */
+    background-color: #111111 !important; /* Black background when checked */
+    border-color: #111111 !important; /* Black border when checked */
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+/* Custom black checkmark for checked checkboxes - Maximum Specificity */
+body .e-column-chooser input[type="checkbox"]:checked::after,
+body .e-popup.e-column-chooser input[type="checkbox"]:checked::after,
+body .e-dialog.e-column-chooser input[type="checkbox"]:checked::after,
+html body .e-column-chooser input[type="checkbox"]:checked::after,
+html body .e-popup.e-column-chooser input[type="checkbox"]:checked::after,
+html body .e-dialog.e-column-chooser input[type="checkbox"]:checked::after,
+body div[class*="column-chooser"] input[type="checkbox"]:checked::after,
+body .e-popup:has(.e-column-chooser) input[type="checkbox"]:checked::after,
+body .e-popup[class*="column-chooser"] input[type="checkbox"]:checked::after,
+.e-column-chooser .e-column-list-item input[type="checkbox"]:checked::after,
+.e-column-chooser li input[type="checkbox"]:checked::after,
+.e-popup.e-column-chooser .e-column-list-item input[type="checkbox"]:checked::after,
+.e-popup.e-column-chooser li input[type="checkbox"]:checked::after {
+    content: '' !important;
+    position: absolute !important;
+    left: 3px !important;
+    top: 1px !important;
+    width: 4px !important;
+    height: 9px !important;
+    border: solid #ffffff !important; /* White checkmark on black background */
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+
+body .e-column-chooser input[type="checkbox"]:hover,
+body .e-popup.e-column-chooser input[type="checkbox"]:hover,
+body .e-dialog.e-column-chooser input[type="checkbox"]:hover {
+    border-color: #111111 !important;
+}
+
+body .e-column-chooser input[type="checkbox"]:focus,
+body .e-popup.e-column-chooser input[type="checkbox"]:focus,
+body .e-dialog.e-column-chooser input[type="checkbox"]:focus {
+    outline: 2px solid #111111 !important;
+    outline-offset: 2px !important;
+}
+
+/* Override any Syncfusion default checkbox styling */
+body .e-column-chooser input[type="checkbox"]::-webkit-appearance,
+body .e-column-chooser input[type="checkbox"]::-moz-appearance,
+body .e-popup.e-column-chooser input[type="checkbox"]::-webkit-appearance,
+body .e-popup.e-column-chooser input[type="checkbox"]::-moz-appearance {
+    accent-color: #111111 !important;
+}
+
+/* Column Labels - Professional */
+.e-column-chooser .e-column-list-item label,
+.e-column-chooser li label,
+.e-column-chooser .e-column-label {
+    font-size: 0.875rem !important;
+    color: #374151 !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    flex: 1 !important;
+    margin: 0 !important;
+    line-height: 1.5 !important;
+    user-select: none !important;
+}
+
+.e-column-chooser .e-column-list-item:hover label,
+.e-column-chooser li:hover label {
+    color: #111827 !important;
+}
+
+/* Footer - Professional - Maximum specificity */
+html body .e-column-chooser .e-dlg-footer,
+html body .e-popup.e-column-chooser .e-dlg-footer,
+html body .e-dialog.e-column-chooser .e-dlg-footer,
+html body .e-popup:has(.e-column-chooser) .e-dlg-footer,
+html body .e-popup .e-column-chooser .e-dlg-footer,
+html body div[class*="column-chooser"] .e-dlg-footer {
+    background: linear-gradient(to top, #ffffff 0%, #fafafa 100%) !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 14px 18px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: flex-end !important;
+    border-radius: 0 0 16px 16px !important;
+    border-bottom-left-radius: 16px !important;
+    border-bottom-right-radius: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Footer Buttons - Professional */
+.e-column-chooser .e-dlg-footer .e-btn {
+    padding: 10px 20px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    min-width: 80px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    border: 2px solid !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+/* OK Button */
+.e-column-chooser .e-dlg-footer .e-btn.e-primary {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.e-column-chooser .e-dlg-footer .e-btn.e-primary:hover {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Cancel Button */
+.e-column-chooser .e-dlg-footer .e-btn.e-outline,
+.e-column-chooser .e-dlg-footer .e-btn:not(.e-primary) {
+    background-color: transparent !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+}
+
+.e-column-chooser .e-dlg-footer .e-btn.e-outline:hover,
+.e-column-chooser .e-dlg-footer .e-btn:not(.e-primary):hover {
+    background-color: #f3f4f6 !important;
+    border-color: #111111 !important;
+    color: #111827 !important;
+}
+
+/* Overlay backdrop - Professional */
+.e-overlay {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(4px) !important;
+    transition: opacity 0.25s ease !important;
+}
+
+/* Remove any Material theme pink/red underlines or borders */
+.e-column-chooser .e-input-group::after,
+.e-column-chooser .e-input-group::before,
+.e-column-chooser .e-search::after,
+.e-column-chooser .e-search::before,
+.e-popup.e-column-chooser .e-input-group::after,
+.e-popup.e-column-chooser .e-input-group::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* Ensure smooth edges - remove any sharp corners */
+.e-column-chooser *,
+.e-popup.e-column-chooser *,
+.e-popup:has(.e-column-chooser) *,
+div[class*="column-chooser"] * {
+    box-sizing: border-box !important;
+}
+
+/* Prevent horizontal overflow in ColumnChooser */
+html body .e-popup.e-popup-open:has(.e-selectall),
+html body .e-popup.e-popup-open:has(.e-column-list),
+html body .e-popup.e-column-chooser,
+html body .e-popup:has(.e-column-chooser) {
+    overflow-x: hidden !important;
+    max-width: 280px !important;
+    width: 260px !important;
+}
+
+html body .e-popup.e-popup-open:has(.e-selectall) *,
+html body .e-popup.e-popup-open:has(.e-column-list) *,
+html body .e-popup.e-column-chooser *,
+html body .e-popup:has(.e-column-chooser) * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+}
+
+/* AGGRESSIVE GLOBAL OVERRIDE - Target Syncfusion ColumnChooser popup structure */
+/* This ensures styles apply no matter what Syncfusion's DOM structure is */
+html body .e-popup.e-popup-open[class*="column"],
+html body .e-popup.e-popup-open:has([class*="column-chooser"]),
+html body .e-popup.e-popup-open:has([id*="columnChooser"]),
+html body div.e-popup.e-popup-open:has([class*="column"]) {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Force rounded corners on ALL popups that might be ColumnChooser */
+html body .e-popup.e-popup-open:has(.e-dlg-header:has-text("Column")),
+html body .e-popup.e-popup-open:has(.e-dlg-header:has-text("Choose")) {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+/* Empty state message */
+.e-column-chooser .e-no-record,
+.e-column-chooser [class*="no-match"] {
+    padding: 24px !important;
+    text-align: center !important;
+    color: #6b7280 !important;
+    font-size: 0.875rem !important;
+    font-style: italic !important;
+}
+
+
+/* Target ANY popup that contains "Choose Column" or "Column" in title */
+html body .e-popup.e-popup-open[aria-label*="Column"],
+html body .e-popup.e-popup-open[aria-label*="column"],
+html body .e-popup.e-popup-open[aria-label*="Choose"],
+html body .e-popup.e-popup-open[title*="Column"] {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+/* Universal popup container override - catch ColumnChooser by content */
+html body .e-popup.e-popup-open:has(.e-selectall),
+html body .e-popup.e-popup-open:has([class*="selectall"]),
+html body .e-popup.e-popup-open:has(.e-column-list) {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    width: 260px !important;
+    min-width: 240px !important;
+    max-width: 280px !important;
+    box-sizing: border-box !important;
+}
+
+/* Override popup content area */
+html body .e-popup.e-popup-open:has(.e-selectall) .e-popup-content,
+html body .e-popup.e-popup-open:has(.e-column-list) .e-popup-content {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Override popup header */
+html body .e-popup.e-popup-open:has(.e-selectall) .e-dlg-header,
+html body .e-popup.e-popup-open:has(.e-column-list) .e-dlg-header {
+    border-radius: 16px 16px 0 0 !important;
+    background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%) !important;
+    padding: 14px 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Override popup footer */
+html body .e-popup.e-popup-open:has(.e-selectall) .e-dlg-footer,
+html body .e-popup.e-popup-open:has(.e-column-list) .e-dlg-footer {
+    border-radius: 0 0 16px 16px !important;
+    background: linear-gradient(to top, #ffffff 0%, #fafafa 100%) !important;
+    padding: 14px 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Override all buttons in ColumnChooser footer */
+html body .e-popup.e-popup-open:has(.e-selectall) .e-dlg-footer .e-btn,
+html body .e-popup.e-popup-open:has(.e-column-list) .e-dlg-footer .e-btn {
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+}
+
+/* Override search input in ColumnChooser */
+html body .e-popup.e-popup-open:has(.e-selectall) .e-search input,
+html body .e-popup.e-popup-open:has(.e-column-list) .e-search input,
+html body .e-popup.e-popup-open:has(.e-selectall) input[type="text"],
+html body .e-popup.e-popup-open:has(.e-column-list) input[type="text"] {
+    border-radius: 10px !important;
+    padding: 12px 16px 12px 44px !important;
+    border: 2px solid #e5e7eb !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+html body .e-popup.e-popup-open:has(.e-selectall) .e-search input:focus,
+html body .e-popup.e-popup-open:has(.e-column-list) .e-search input:focus {
+    border-color: #111111 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+

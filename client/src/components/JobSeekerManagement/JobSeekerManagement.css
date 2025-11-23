@@ -1,3 +1,403 @@
+/* Syncfusion Button Customizations for Job Seeker Management */
+
+/* Primary buttons - Black theme to match app design */
+.e-btn.e-primary {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+.e-btn.e-primary:hover {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.e-btn.e-primary:focus,
+.e-btn.e-primary:active {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Outline primary buttons */
+.e-btn.e-outline.e-primary {
+  background-color: transparent !important;
+  border-color: #111111 !important;
+  color: #111111 !important;
+}
+
+.e-btn.e-outline.e-primary:hover {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+.e-btn.e-outline.e-primary:focus,
+.e-btn.e-outline.e-primary:active {
+  background-color: #f3f4f6 !important;
+  border-color: #111111 !important;
+  color: #111111 !important;
+}
+
+/* Small buttons */
+.e-btn.e-small {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  min-height: 32px !important;
+}
+
+/* Danger buttons - Red for delete actions */
+.e-btn.e-danger,
+.e-btn.e-outline.e-danger {
+  background-color: transparent !important;
+  border-color: #dc2626 !important;
+  color: #dc2626 !important;
+}
+
+.e-btn.e-danger:hover,
+.e-btn.e-outline.e-danger:hover {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* Disabled buttons */
+.e-btn.e-primary:disabled,
+.e-btn.e-outline.e-primary:disabled {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+/* Button inside grid actions */
+.action-buttons .e-btn,
+.ajf-grid-actions .e-btn {
+  margin: 0 !important;
+}
+
+/* Ensure buttons in grid templates are styled correctly */
+.e-grid .e-content .e-btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease !important;
+}
+
+/* Header action buttons (Back to List button) */
+.form-header .e-btn,
+.bm-header-actions .e-btn,
+.bm-header .e-btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  min-height: 40px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+.form-header .e-btn.e-outline.e-primary,
+.bm-header-actions .e-btn.e-outline.e-primary {
+  background-color: transparent !important;
+  border-color: #111111 !important;
+  color: #111111 !important;
+}
+
+.form-header .e-btn.e-outline.e-primary:hover,
+.bm-header-actions .e-btn.e-outline.e-primary:hover {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Dialog buttons */
+.e-dialog .e-footer-content .e-btn.e-primary {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-primary:hover {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-outline.e-primary {
+  background-color: transparent !important;
+  border-color: #111111 !important;
+  color: #111111 !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-outline.e-primary:hover {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-danger {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.e-dialog .e-footer-content .e-btn.e-danger:hover {
+  background-color: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+
+/* ========================================
+   Beautiful Search Field Styling
+   ======================================== */
+
+/* Syncfusion Grid Toolbar - ensure it's visible */
+.e-grid .e-toolbar {
+  background: #f8f9fa !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 16px 20px !important;
+  border-radius: 8px 8px 0 0 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Toolbar items container */
+.e-grid .e-toolbar .e-toolbar-items {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  visibility: visible !important;
+}
+
+/* Toolbar items - ensure all are visible */
+.e-grid .e-toolbar .e-toolbar-item {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Search input field in toolbar */
+.e-grid .e-toolbar .e-search-wrapper,
+.e-grid .e-toolbar .e-search {
+  display: inline-flex !important;
+  position: relative !important;
+  min-width: 250px !important;
+  max-width: 400px !important;
+  flex: 0 1 auto !important;
+  visibility: visible !important;
+}
+
+.e-grid .e-toolbar .e-search input.e-input,
+.e-grid .e-toolbar .e-search input.e-input-search,
+.e-grid .e-toolbar .e-toolbar-items .e-toolbar-item.e-search-item input,
+.e-grid .e-toolbar .e-toolbar-item input[type="text"] {
+  min-width: 200px !important;
+  width: 100% !important;
+  padding: 12px 16px 12px 44px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  background: #ffffff !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  color: #111827 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-weight: 400 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
+.e-grid .e-toolbar .e-search input.e-input::placeholder,
+.e-grid .e-toolbar .e-search input.e-input-search::placeholder {
+  color: #9ca3af !important;
+  font-weight: 400 !important;
+}
+
+/* Search icon styling */
+.e-grid .e-toolbar .e-search::before,
+.e-grid .e-toolbar .e-search .e-search-icon,
+.e-grid .e-toolbar .e-search-icon::before {
+  position: absolute !important;
+  left: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #6b7280 !important;
+  font-size: 16px !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  transition: color 0.3s ease !important;
+}
+
+/* Focus state - beautiful animation */
+.e-grid .e-toolbar .e-search input.e-input:focus,
+.e-grid .e-toolbar .e-search input.e-input-search:focus {
+  outline: none !important;
+  border-color: #111111 !important;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  background: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Status Filter Dropdown Styling */
+.status-filter-dropdown.e-dropdownlist {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  width: 100% !important;
+  max-width: 200px !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+/* Remove ALL borders from nested elements - be very aggressive */
+.status-filter-dropdown .e-input-group,
+.status-filter-dropdown .e-input-group-wrap *,
+.status-filter-dropdown .e-input,
+.status-filter-dropdown .e-input-wrapper,
+.status-filter-dropdown .e-input-group .e-input-group-wrap,
+.status-filter-dropdown .e-dropdownlist .e-input-group,
+.status-filter-dropdown .e-dropdownlist .e-input {
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* Single border ONLY on the outermost wrapper - Match Edit/Delete button style */
+.status-filter-dropdown .e-input-group-wrap,
+.status-filter-dropdown.e-dropdownlist .e-input-group-wrap {
+  border: 1px solid #111111 !important;
+  border-radius: 6px !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  color: #111111 !important;
+}
+
+/* ========================================
+   Grid Horizontal Scrolling Support
+   ======================================== */
+
+/* Grid containers - allow horizontal scrolling for wide tables */
+.bm-grid-wrap,
+.data-grid-container {
+  position: relative !important;
+  width: 100% !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling for wide tables */
+  overflow-y: visible !important; /* Allow ColumnChooser to overflow vertically */
+  min-height: 400px !important; /* Ensure minimum height for content */
+  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+}
+
+/* Syncfusion Grid - allow horizontal scrolling */
+.bm-grid-wrap .e-grid,
+.data-grid-container .e-grid {
+  position: relative !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling when table is wide */
+  overflow-y: visible !important; /* Allow ColumnChooser to show */
+  min-width: 100% !important; /* Ensure grid takes full width at minimum */
+}
+
+/* Grid content area - allow horizontal scrolling */
+.bm-grid-wrap .e-grid .e-content,
+.data-grid-container .e-grid .e-content {
+  position: relative !important;
+  overflow-x: auto !important; /* Allow horizontal scrolling for wide content */
+  overflow-y: visible !important; /* Allow ColumnChooser to overflow */
+}
+
+/* Grid table wrapper - ensure horizontal scrolling works */
+.bm-grid-wrap .e-grid .e-gridcontent,
+.data-grid-container .e-grid .e-gridcontent {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Hover state - match button hover (Edit/Delete buttons) */
+.status-filter-dropdown .e-input-group-wrap:hover,
+.status-filter-dropdown.e-dropdownlist:hover .e-input-group-wrap {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+/* Focus state - match button focus */
+.status-filter-dropdown.e-input-focus .e-input-group-wrap,
+.status-filter-dropdown .e-input-group-wrap.e-input-focus,
+.status-filter-dropdown.e-dropdownlist.e-input-focus .e-input-group-wrap {
+  background-color: #f3f4f6 !important;
+  border-color: #111111 !important;
+  color: #111111 !important;
+  outline: none !important;
+}
+
+/* Input text styling - match small button text */
+.status-filter-dropdown .e-input {
+  padding: 6px 12px !important;
+  color: inherit !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  font-weight: 500 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  flex: 1 !important;
+  height: auto !important;
+  min-height: 20px !important;
+}
+
+.status-filter-dropdown .e-input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+.status-filter-dropdown .e-input-group-wrap:hover .e-input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Dropdown icon styling - match button colors, inherit from wrapper */
+.status-filter-dropdown .e-input-group-icon,
+.status-filter-dropdown .e-ddl-icon {
+  color: inherit !important;
+  transition: color 0.15s ease, transform 0.15s ease !important;
+  right: 12px !important;
+  width: 16px !important;
+  height: 16px !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  font-size: 12px !important;
+}
+
+.status-filter-dropdown .e-input-group-wrap:hover .e-input-group-icon,
+.status-filter-dropdown.e-dropdownlist:hover .e-input-group-wrap .e-input-group-icon {
+  color: #ffffff !important;
+}
+
+/* Note: ColumnChooser dialog styling is already in EventManagement.css 
+   and will apply globally since it uses global selectors */
+
 /* Job Seeker Management Styles */
 .profile-sections {
   display: flex;

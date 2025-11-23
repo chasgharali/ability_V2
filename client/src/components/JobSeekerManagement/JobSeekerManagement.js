@@ -3,9 +3,12 @@ import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import DataGrid from '../UI/DataGrid';
-import { Input, Select } from '../UI/FormComponents';
-import Toast from '../UI/Toast';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { DialogComponent } from '@syncfusion/ej2-react-popups';
+import { ToastComponent } from '@syncfusion/ej2-react-notifications';
+import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
+import { Input } from '../UI/FormComponents';
 import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail } from '../../services/users';
 import { 
   JOB_CATEGORY_LIST, 
@@ -37,9 +40,14 @@ export default function JobSeekerManagement() {
   const [loading, setLoading] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [toast, setToast] = useState(null);
-  const toastTimer = useRef(null);
+  const toastRef = useRef(null);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
+  // Delete confirmation dialog
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [rowPendingDelete, setRowPendingDelete] = useState(null);
+  // Verify email confirmation dialog
+  const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
+  const [rowPendingVerify, setRowPendingVerify] = useState(null);
 
   // Accessibility live region message
   const [liveMsg, setLiveMsg] = useState('');
@@ -50,25 +58,44 @@ export default function JobSeekerManagement() {
     { value: 'inactive', label: 'Inactive' },
   ], []);
 
-  const showToast = (message, type = 'info', duration = 3000) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ message, type, duration });
-    toastTimer.current = setTimeout(() => setToast(null), duration);
+  // Syncfusion Toast
+  const showToast = (message, type = 'Success', duration = 3000) => {
+    if (toastRef.current) {
+      toastRef.current.show({
+        title: type,
+        content: message,
+        cssClass: `e-toast-${type.toLowerCase()}`,
+        showProgressBar: true,
+        timeOut: duration
+      });
+    }
   };
 
-  const handleDelete = async (row) => {
-    if (row.isActive) return; // safety
-    const ok = window.confirm(`Permanently delete ${row.firstName} ${row.lastName}? This cannot be undone.`);
-    if (!ok) return;
+  const handleDelete = (row) => {
+    if (row.isActive) return; // safety - can't delete active users
+    setRowPendingDelete(row);
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!rowPendingDelete) return;
     try {
-      await deleteUserPermanently(row.id);
-      showToast('Job seeker deleted', 'success');
+      await deleteUserPermanently(rowPendingDelete.id);
+      showToast('Job seeker deleted', 'Success');
       await loadJobSeekers();
     } catch (e) {
       console.error('Delete failed', e);
       const msg = e?.response?.data?.message || 'Delete failed';
-      showToast(msg, 'error');
+      showToast(msg, 'Error');
+    } finally {
+      setConfirmOpen(false);
+      setRowPendingDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setConfirmOpen(false);
+    setRowPendingDelete(null);
   };
 
   const loadJobSeekers = useCallback(async () => {
@@ -107,7 +134,7 @@ export default function JobSeekerManagement() {
       setLiveMsg(`Loaded ${items.length} job seekers`);
     } catch (e) {
       console.error('Load failed', e);
-      showToast('Failed to load job seekers', 'error');
+      showToast('Failed to load job seekers', 'Error');
     } finally {
       setLoading(false);
     }
@@ -121,15 +148,15 @@ export default function JobSeekerManagement() {
     try {
       if (row.isActive) {
         await deactivateUser(row.id);
-        showToast(`${row.firstName} ${row.lastName} deactivated`, 'success');
+        showToast(`${row.firstName} ${row.lastName} deactivated`, 'Success');
       } else {
         await reactivateUser(row.id);
-        showToast(`${row.firstName} ${row.lastName} reactivated`, 'success');
+        showToast(`${row.firstName} ${row.lastName} reactivated`, 'Success');
       }
       await loadJobSeekers();
     } catch (e) {
       console.error('Toggle active failed', e);
-      showToast('Failed to update status', 'error');
+      showToast('Failed to update status', 'Error');
     }
   };
 
@@ -138,19 +165,31 @@ export default function JobSeekerManagement() {
     setMode('view');
   };
 
-  const handleVerifyEmail = async (row) => {
+  const handleVerifyEmail = (row) => {
     if (row.emailVerified) return; // safety check
-    const ok = window.confirm(`Verify email for ${row.firstName} ${row.lastName}?`);
-    if (!ok) return;
+    setRowPendingVerify(row);
+    setVerifyEmailOpen(true);
+  };
+
+  const confirmVerifyEmail = async () => {
+    if (!rowPendingVerify) return;
     try {
-      await verifyUserEmail(row.id);
-      showToast(`Email verified for ${row.firstName} ${row.lastName}`, 'success');
+      await verifyUserEmail(rowPendingVerify.id);
+      showToast(`Email verified for ${rowPendingVerify.firstName} ${rowPendingVerify.lastName}`, 'Success');
       await loadJobSeekers(); // Refresh the list
     } catch (e) {
       console.error('Verify email failed', e);
       const msg = e?.response?.data?.message || 'Failed to verify email';
-      showToast(msg, 'error');
+      showToast(msg, 'Error');
+    } finally {
+      setVerifyEmailOpen(false);
+      setRowPendingVerify(null);
     }
+  };
+
+  const cancelVerifyEmail = () => {
+    setVerifyEmailOpen(false);
+    setRowPendingVerify(null);
   };
 
   const filteredJobSeekers = useMemo(() => {
@@ -168,77 +207,69 @@ export default function JobSeekerManagement() {
     });
   }, [jobSeekers, searchFilter, statusFilter]);
 
-  const columns = [
-    { key: 'firstName', label: 'First Name', sortable: true },
-    { key: 'lastName', label: 'Last Name', sortable: true },
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'phone', label: 'Phone' },
-    { key: 'city', label: 'City' },
-    { key: 'state', label: 'State' },
-    { 
-      key: 'isActive', 
-      label: 'Status', 
-      render: (row) => (
-        <span className={`status-badge ${row.isActive ? 'active' : 'inactive'}`}>
-          {row.isActive ? 'Active' : 'Inactive'}
-        </span>
-      )
-    },
-    { 
-      key: 'emailVerified', 
-      label: 'Email Verified', 
-      render: (row) => (
-        <span className={`status-badge ${row.emailVerified ? 'verified' : 'unverified'}`}>
-          {row.emailVerified ? 'Yes' : 'No'}
-        </span>
-      )
-    },
-    { 
-      key: 'lastLogin', 
-      label: 'Last Login', 
-      render: (row) => row.lastLogin ? new Date(row.lastLogin).toLocaleDateString() : 'Never'
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      render: (row) => (
-        <div className="action-buttons">
-          <button
-            className="btn-sm btn-primary"
-            onClick={() => handleViewProfile(row)}
-            title="View Profile"
+  // Grid template functions for custom column renders - using Syncfusion ButtonComponent
+  const statusTemplate = (props) => {
+    const row = props;
+    return (
+      <span className={`status-badge ${row.isActive ? 'active' : 'inactive'}`}>
+        {row.isActive ? 'Active' : 'Inactive'}
+      </span>
+    );
+  };
+
+  const emailVerifiedTemplate = (props) => {
+    const row = props;
+    return (
+      <span className={`status-badge ${row.emailVerified ? 'verified' : 'unverified'}`}>
+        {row.emailVerified ? 'Yes' : 'No'}
+      </span>
+    );
+  };
+
+  const lastLoginTemplate = (props) => {
+    const row = props;
+    return row.lastLogin ? new Date(row.lastLogin).toLocaleDateString() : 'Never';
+  };
+
+  const actionsTemplate = (props) => {
+    const row = props;
+    return (
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <ButtonComponent 
+          cssClass="e-primary e-small" 
+          onClick={() => handleViewProfile(row)}
+          title="View Profile"
+        >
+          View
+        </ButtonComponent>
+        {!row.emailVerified && (
+          <ButtonComponent 
+            cssClass="e-outline e-primary e-small" 
+            onClick={() => handleVerifyEmail(row)}
+            title="Verify Email"
           >
-            View
-          </button>
-          {!row.emailVerified && (
-            <button
-              className="btn-sm btn-info"
-              onClick={() => handleVerifyEmail(row)}
-              title="Verify Email"
-            >
-              Verify Email
-            </button>
-          )}
-          <button
-            className={`btn-sm ${row.isActive ? 'btn-warning' : 'btn-success'}`}
-            onClick={() => handleToggleActive(row)}
-            title={row.isActive ? 'Deactivate' : 'Activate'}
+            Verify Email
+          </ButtonComponent>
+        )}
+        <ButtonComponent 
+          cssClass={row.isActive ? "e-outline e-primary e-small" : "e-primary e-small"}
+          onClick={() => handleToggleActive(row)}
+          title={row.isActive ? 'Deactivate' : 'Activate'}
+        >
+          {row.isActive ? 'Deactivate' : 'Activate'}
+        </ButtonComponent>
+        {!row.isActive && (
+          <ButtonComponent 
+            cssClass="e-outline e-danger e-small" 
+            onClick={() => handleDelete(row)}
+            title="Delete Permanently"
           >
-            {row.isActive ? 'Deactivate' : 'Activate'}
-          </button>
-          {!row.isActive && (
-            <button
-              className="btn-sm btn-danger"
-              onClick={() => handleDelete(row)}
-              title="Delete Permanently"
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      )
-    }
-  ];
+            Delete
+          </ButtonComponent>
+        )}
+      </div>
+    );
+  };
 
   const renderJobSeekerProfile = () => {
     if (!selectedJobSeeker) return null;
@@ -256,13 +287,12 @@ export default function JobSeekerManagement() {
     return (
       <div className="dashboard-content">
         <div className="form-header">
-          <button 
-            type="button" 
-            className="btn-secondary"
+          <ButtonComponent 
+            cssClass="e-outline e-primary"
             onClick={() => setMode('list')}
           >
             ← Back to List
-          </button>
+          </ButtonComponent>
           <h2>Job Seeker Profile: {js.firstName} {js.lastName}</h2>
         </div>
 
@@ -520,7 +550,14 @@ export default function JobSeekerManagement() {
             {renderJobSeekerProfile()}
           </main>
         </div>
-        {toast && <Toast {...toast} />}
+        {/* Syncfusion ToastComponent */}
+        <ToastComponent 
+          ref={(toast) => toastRef.current = toast}
+          position={{ X: 'Right', Y: 'Bottom' }}
+          showProgressBar={true}
+          timeOut={3000}
+          newestOnTop={true}
+        />
       </div>
     );
   }
@@ -545,12 +582,22 @@ export default function JobSeekerManagement() {
                 onChange={(e) => setSearchFilter(e.target.value)}
                 placeholder="Search job seekers..."
               />
-              <Select
-                label="Status Filter"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                options={statusOptions}
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label htmlFor="status-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
+                  Status Filter
+                </label>
+                <DropDownListComponent
+                  id="status-filter-dropdown"
+                  dataSource={statusOptions.map(s => ({ value: s.value, text: s.label }))}
+                  fields={{ value: 'value', text: 'text' }}
+                  value={statusFilter}
+                  change={(e) => setStatusFilter(e.value || '')}
+                  placeholder="Select Status"
+                  cssClass="status-filter-dropdown"
+                  popupHeight="300px"
+                  width="200px"
+                />
+              </div>
             </div>
 
             {/* Stats */}
@@ -574,19 +621,151 @@ export default function JobSeekerManagement() {
             </div>
 
             {/* Data Grid */}
-            <DataGrid
-              data={filteredJobSeekers}
-              columns={columns}
-              loading={loading}
-              emptyMessage="No job seekers found"
-            />
+            {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
+            <GridComponent
+              dataSource={filteredJobSeekers}
+              allowPaging={true}
+              pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+              allowSorting={true}
+              allowFiltering={true}
+              filterSettings={{ type: 'Menu' }}
+              showColumnMenu={true}
+              showColumnChooser={true}
+              allowResizing={true}
+              allowReordering={true}
+              toolbar={['Search', 'ColumnChooser']}
+              selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
+              enableHover={true}
+              allowRowDragAndDrop={false}
+            >
+              <ColumnsDirective>
+                <ColumnDirective type='checkbox' width='50' />
+                <ColumnDirective field='firstName' headerText='First Name' width='150' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective field='lastName' headerText='Last Name' width='150' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective field='email' headerText='Email' width='250' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective field='phone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective field='city' headerText='City' width='120' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective field='state' headerText='State' width='120' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective 
+                  field='isActive' 
+                  headerText='Status' 
+                  width='120' 
+                  textAlign='Center'
+                  template={statusTemplate}
+                />
+                <ColumnDirective 
+                  field='emailVerified' 
+                  headerText='Email Verified' 
+                  width='130' 
+                  textAlign='Center'
+                  template={emailVerifiedTemplate}
+                />
+                <ColumnDirective 
+                  field='lastLogin' 
+                  headerText='Last Login' 
+                  width='150' 
+                  clipMode='EllipsisWithTooltip'
+                  template={lastLoginTemplate}
+                />
+                <ColumnDirective 
+                  headerText='Actions' 
+                  width='450' 
+                  allowSorting={false} 
+                  allowFiltering={false}
+                  template={actionsTemplate}
+                />
+              </ColumnsDirective>
+              <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+            </GridComponent>
           </div>
         </main>
       </div>
-      {toast && <Toast {...toast} />}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {liveMsg}
       </div>
+
+      {/* Delete confirm modal - Syncfusion DialogComponent */}
+      <DialogComponent
+        width="450px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={confirmOpen}
+        header="Delete Job Seeker"
+        closeOnEscape={true}
+        close={cancelDelete}
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelDelete();
+            }
+          },
+          {
+            buttonModel: {
+              content: 'Delete',
+              isPrimary: true,
+              cssClass: 'e-danger'
+            },
+            click: () => {
+              confirmDelete();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Are you sure you want to permanently delete <strong>{rowPendingDelete?.firstName} {rowPendingDelete?.lastName}</strong>? This action cannot be undone.
+        </p>
+      </DialogComponent>
+
+      {/* Verify Email confirm modal - Syncfusion DialogComponent */}
+      <DialogComponent
+        width="450px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={verifyEmailOpen}
+        header="Verify Email"
+        closeOnEscape={true}
+        close={cancelVerifyEmail}
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelVerifyEmail();
+            }
+          },
+          {
+            buttonModel: {
+              content: 'Verify',
+              isPrimary: true,
+              cssClass: 'e-primary'
+            },
+            click: () => {
+              confirmVerifyEmail();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Verify email for <strong>{rowPendingVerify?.firstName} {rowPendingVerify?.lastName}</strong> ({rowPendingVerify?.email})?
+        </p>
+      </DialogComponent>
+
+      {/* Syncfusion ToastComponent */}
+      <ToastComponent 
+        ref={(toast) => toastRef.current = toast}
+        position={{ X: 'Right', Y: 'Bottom' }}
+        showProgressBar={true}
+        timeOut={3000}
+        newestOnTop={true}
+      />
     </div>
   );
 }

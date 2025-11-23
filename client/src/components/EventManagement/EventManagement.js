@@ -1,9 +1,13 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../Dashboard/Dashboard.css';
+import './EventManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import DataGrid from '../UI/DataGrid';
-import { Input, DateTimePicker, Checkbox, TextArea, Select, MultiSelect } from '../UI/FormComponents';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { DialogComponent } from '@syncfusion/ej2-react-popups';
+import { ToastComponent } from '@syncfusion/ej2-react-notifications';
+import { Input, DateTimePicker, Checkbox, Select, MultiSelect } from '../UI/FormComponents';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
 import { uploadImageToS3 } from '../../services/uploads';
 import { listEvents, createEvent, updateEvent, deleteEvent } from '../../services/events';
@@ -29,8 +33,7 @@ export default function EventManagement() {
     const [saving, setSaving] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [rowPendingDelete, setRowPendingDelete] = useState(null);
-    const [toast, setToast] = useState(null);
-    const toastTimer = useRef(null);
+    const toastRef = useRef(null);
 
     // RTE image upload helpers (Event Information editor)
     const rteInfoRef = useRef(null);
@@ -153,12 +156,16 @@ export default function EventManagement() {
 
     useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading]);
 
-    const showToast = (message) => {
-        if (toastTimer.current) {
-            clearTimeout(toastTimer.current);
+    const showToast = (message, type = 'Success') => {
+        if (toastRef.current) {
+            toastRef.current.show({
+                title: type,
+                content: message,
+                cssClass: `e-toast-${type.toLowerCase()}`,
+                showProgressBar: true,
+                timeOut: 3000
+            });
         }
-        setToast(message);
-        toastTimer.current = setTimeout(() => setToast(null), 2000);
     };
 
     const copyText = async (text) => {
@@ -176,35 +183,38 @@ export default function EventManagement() {
 
     const eventPageUrlFor = (row) => row.link || `${window.location.origin}/event/${row.slug}`;
 
-    const gridColumns = [
-        { key: 'name', label: 'Event Name' },
-        { key: 'startTime', label: 'Event Start Time', render: (row) => row.startTime ? new Date(row.startTime).toLocaleString() : '-' },
-        { key: 'endTime', label: 'Event End Time', render: (row) => row.endTime ? new Date(row.endTime).toLocaleString() : '-' },
-        { key: 'date', label: 'Event Date' },
-        { key: 'createdAt', label: 'Created Time' },
-        { key: 'status', label: 'Status' },
-        { key: 'maxRecruitersPerEvent', label: 'Max Recruiters' },
-        { key: 'maxBooths', label: 'Max Booths' },
-        { key: 'sendyId', label: 'Sendy Event Id', render: (row) => row.sendyId || '-' },
-        {
-            key: 'eventPage',
-            label: 'Event Page',
-            render: (row) => (
-                <a className="ajf-btn ajf-btn-outline" href={eventPageUrlFor(row)} target="_blank" rel="noreferrer">
-                    Event Page
-                </a>
-            )
-        },
-        {
-            key: 'actions', label: 'Action', render: (row) => (
-                <div className="ajf-grid-actions">
-                    <button type="button" className="ajf-btn ajf-btn-dark" onClick={() => copyText(registrationUrlFor(row))}>Registration Link</button>
-                    <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => startEdit(row)}>Edit</button>
-                    <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => handleDelete(row)}>Delete</button>
-                </div>
-            )
-        },
-    ];
+    // Grid template functions for custom column renders - using Syncfusion ButtonComponent
+    const eventPageTemplate = (props) => (
+        <ButtonComponent 
+            cssClass="e-outline e-primary e-small" 
+            onClick={() => window.open(eventPageUrlFor(props), '_blank')}
+        >
+            Event Page
+        </ButtonComponent>
+    );
+
+    const actionsTemplate = (props) => (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <ButtonComponent 
+                cssClass="e-primary e-small" 
+                onClick={() => copyText(registrationUrlFor(props))}
+            >
+                Registration Link
+            </ButtonComponent>
+            <ButtonComponent 
+                cssClass="e-outline e-primary e-small" 
+                onClick={() => startEdit(props)}
+            >
+                Edit
+            </ButtonComponent>
+            <ButtonComponent 
+                cssClass="e-outline e-danger e-small" 
+                onClick={() => handleDelete(props)}
+            >
+                Delete
+            </ButtonComponent>
+        </div>
+    );
 
     const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -266,7 +276,9 @@ export default function EventManagement() {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
         setSaving(true);
         try {
             const payload = {
@@ -329,27 +341,82 @@ export default function EventManagement() {
                             <h2>Event Management</h2>
                             <div className="bm-header-actions">
                                 {mode === 'list' ? (
-                                    <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setMode('create')}>Create Event</button>
+                                    <ButtonComponent cssClass="e-primary" onClick={() => setMode('create')}>
+                                        Create Event
+                                    </ButtonComponent>
                                 ) : (
-                                    <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => setMode('list')}>Back to List</button>
+                                    <ButtonComponent cssClass="e-outline e-primary" onClick={() => setMode('list')}>
+                                        Back to List
+                                    </ButtonComponent>
                                 )}
                             </div>
                         </div>
 
                         {mode === 'list' ? (
                             <div className="bm-grid-wrap">
-                                <DataGrid
-                                    data={events}
-                                    columns={gridColumns}
-                                    selectable
-                                    searchable
-                                    sortable
-                                    aria-label="Event management table"
-                                />
-                                {loadingList && <div style={{ marginTop: 12 }}>Loading…</div>}
+                                {loadingList && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                                <GridComponent
+                                    dataSource={events}
+                                    allowPaging={true}
+                                    pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+                                    allowSorting={true}
+                                    allowFiltering={true}
+                                    filterSettings={{ type: 'Menu' }}
+                                    showColumnMenu={true}
+                                    showColumnChooser={true}
+                                    allowResizing={true}
+                                    allowReordering={true}
+                                    toolbar={['Search', 'ColumnChooser']}
+                                    selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
+                                    enableHover={true}
+                                    allowRowDragAndDrop={false}
+                                >
+                                    <ColumnsDirective>
+                                        <ColumnDirective type='checkbox' width='50' />
+                                        <ColumnDirective field='name' headerText='Event Name' width='200' clipMode='EllipsisWithTooltip' />
+                                        <ColumnDirective 
+                                            field='startTime' 
+                                            headerText='Event Start Time' 
+                                            width='200' 
+                                            template={(props) => props.startTime ? new Date(props.startTime).toLocaleString() : '-'}
+                                        />
+                                        <ColumnDirective 
+                                            field='endTime' 
+                                            headerText='Event End Time' 
+                                            width='200' 
+                                            template={(props) => props.endTime ? new Date(props.endTime).toLocaleString() : '-'}
+                                        />
+                                        <ColumnDirective field='date' headerText='Event Date' width='180' />
+                                        <ColumnDirective field='createdAt' headerText='Created Time' width='150' />
+                                        <ColumnDirective field='status' headerText='Status' width='120' />
+                                        <ColumnDirective field='maxRecruitersPerEvent' headerText='Max Recruiters' width='130' textAlign='Center' />
+                                        <ColumnDirective field='maxBooths' headerText='Max Booths' width='110' textAlign='Center' />
+                                        <ColumnDirective 
+                                            field='sendyId' 
+                                            headerText='Sendy Event Id' 
+                                            width='150' 
+                                            template={(props) => props.sendyId || '-'}
+                                        />
+                                        <ColumnDirective 
+                                            headerText='Event Page' 
+                                            width='130' 
+                                            allowSorting={false} 
+                                            allowFiltering={false}
+                                            template={eventPageTemplate}
+                                        />
+                                        <ColumnDirective 
+                                            headerText='Action' 
+                                            width='360' 
+                                            allowSorting={false} 
+                                            allowFiltering={false}
+                                            template={actionsTemplate}
+                                        />
+                                    </ColumnsDirective>
+                                    <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                                </GridComponent>
                             </div>
                         ) : (
-                            <form className="account-form" onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
+                            <form className="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} style={{ maxWidth: 720 }}>
                                 <Input label="Event Sendy Id" value={form.sendyId} onChange={(e) => setField('sendyId', e.target.value)} placeholder="" />
                                 <Input label="Event Name" value={form.name} onChange={(e) => setField('name', e.target.value)} required placeholder="" />
                                 <Input label="Event Link" value={form.link} onChange={(e) => setField('link', e.target.value)} placeholder="https://..." />
@@ -370,10 +437,18 @@ export default function EventManagement() {
                                 <div className="form-group">
                                     <label className="form-label">Event Logo</label>
                                     <div className="upload-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <label className="dashboard-button" style={{ width: 'auto', cursor: 'pointer' }}>
-                                            Choose file
-                                            <input type="file" accept="image/*" onChange={(e) => onPickLogo(e.target.files?.[0])} style={{ display: 'none' }} />
+                                        <label htmlFor="logo-upload" style={{ margin: 0 }}>
+                                            <ButtonComponent cssClass="e-outline e-primary e-small">
+                                                Choose file
+                                            </ButtonComponent>
                                         </label>
+                                        <input 
+                                            id="logo-upload"
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={(e) => onPickLogo(e.target.files?.[0])} 
+                                            style={{ display: 'none' }} 
+                                        />
                                         {form.logoUrl && <img src={form.logoUrl} alt="Event logo" style={{ height: 40, border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 4 }} />}
                                     </div>
                                 </div>
@@ -439,31 +514,62 @@ export default function EventManagement() {
 
                                 <Checkbox label="Add Event Footer" checked={form.addFooter} onChange={(e) => setField('addFooter', e.target.checked)} />
 
-                                <button type="submit" className="dashboard-button" disabled={saving}>
+                                <ButtonComponent 
+                                    cssClass="e-primary" 
+                                    disabled={saving}
+                                    isPrimary={true}
+                                    onClick={() => handleSubmit({ preventDefault: () => {} })}
+                                >
                                     {saving ? 'Saving…' : (mode === 'edit' ? 'Update' : 'Create')}
-                                </button>
+                                </ButtonComponent>
                             </form>
                         )}
                     </div>
                 </main>
             </div>
-            {confirmOpen && (
-                <div role="dialog" aria-modal="true" aria-labelledby="confirm-title" className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-                    <div className="modal-card" style={{ background: '#fff', borderRadius: 8, padding: 20, width: 420, boxShadow: '0 10px 30px rgba(0,0,0,0.2)', border: '1px solid #e5e7eb' }}>
-                        <h3 id="confirm-title" style={{ marginTop: 0, marginBottom: 8 }}>Delete Event</h3>
-                        <p style={{ marginTop: 0, marginBottom: 16 }}>Are you sure you want to delete <strong>{rowPendingDelete?.name}</strong>? This action cannot be undone.</p>
-                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                            <button type="button" className="ajf-btn ajf-btn-outline" onClick={cancelDelete} disabled={saving}>Cancel</button>
-                            <button type="button" className="ajf-btn ajf-btn-dark" onClick={confirmDelete} disabled={saving}>{saving ? 'Deleting…' : 'Delete'}</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {toast && (
-                <div role="status" aria-live="polite" style={{ position: 'fixed', right: 16, bottom: 16, background: '#111', color: '#fff', padding: '10px 14px', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.2)', zIndex: 60 }}>
-                    {toast}
-                </div>
-            )}
+            <DialogComponent
+                width="450px"
+                isModal={true}
+                showCloseIcon={true}
+                visible={confirmOpen}
+                header="Delete Event"
+                closeOnEscape={true}
+                close={cancelDelete}
+                buttons={[
+                    {
+                        buttonModel: {
+                            content: 'Cancel',
+                            isPrimary: false,
+                            cssClass: 'e-outline e-primary'
+                        },
+                        click: () => {
+                            cancelDelete();
+                        }
+                    },
+                    {
+                        buttonModel: {
+                            content: saving ? 'Deleting…' : 'Delete',
+                            isPrimary: true,
+                            cssClass: 'e-danger'
+                        },
+                        click: () => {
+                            confirmDelete();
+                        }
+                    }
+                ]}
+            >
+                <p style={{ margin: 0, lineHeight: '1.5' }}>
+                    Are you sure you want to delete <strong>{rowPendingDelete?.name}</strong>? This action cannot be undone.
+                </p>
+            </DialogComponent>
+
+            <ToastComponent 
+                ref={(toast) => toastRef.current = toast}
+                position={{ X: 'Right', Y: 'Bottom' }}
+                showProgressBar={true}
+                timeOut={3000}
+                newestOnTop={true}
+            />
             {/* hidden input for S3 image insert */}
             <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
         </div>
