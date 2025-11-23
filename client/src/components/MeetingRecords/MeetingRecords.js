@@ -279,41 +279,70 @@ export default function MeetingRecords() {
     // Grid template functions for custom column renders - using Syncfusion ButtonComponent
     const eventTemplate = (props) => {
         const row = props;
-        return row.eventId?.name || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {row.eventId?.name || 'N/A'}
+            </div>
+        );
     };
 
     const boothTemplate = (props) => {
         const row = props;
-        return row.boothId?.name || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {row.boothId?.name || 'N/A'}
+            </div>
+        );
     };
 
     const recruiterTemplate = (props) => {
         const row = props;
-        return row.recruiterId?.name || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {row.recruiterId?.name || 'N/A'}
+            </div>
+        );
     };
 
     const jobSeekerTemplate = (props) => {
         const row = props;
-        return row.jobseekerId?.name || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {row.jobseekerId?.name || 'N/A'}
+            </div>
+        );
     };
 
     const locationTemplate = (props) => {
         const row = props;
         const jobSeeker = row.jobseekerId;
+        let locationText = 'N/A';
         if (jobSeeker?.city && jobSeeker?.state) {
-            return `${jobSeeker.city}, ${jobSeeker.state}`;
+            locationText = `${jobSeeker.city}, ${jobSeeker.state}`;
         }
-        return 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {locationText}
+            </div>
+        );
     };
 
     const startTimeTemplate = (props) => {
         const row = props;
-        return formatDateTime(row.startTime);
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {formatDateTime(row.startTime)}
+            </div>
+        );
     };
 
     const durationTemplate = (props) => {
         const row = props;
-        return formatDuration(row.duration);
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                {formatDuration(row.duration)}
+            </div>
+        );
     };
 
     const statusTemplate = (props) => {
@@ -347,12 +376,20 @@ export default function MeetingRecords() {
 
     const messagesTemplate = (props) => {
         const row = props;
-        return row.jobSeekerMessages?.length || 0;
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                {row.jobSeekerMessages?.length || 0}
+            </div>
+        );
     };
 
     const interpreterTemplate = (props) => {
         const row = props;
-        return row.interpreterId?.name || 'None';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {row.interpreterId?.name || 'None'}
+            </div>
+        );
     };
 
     const actionsTemplate = (props) => {

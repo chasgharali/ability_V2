@@ -716,12 +716,66 @@ export default function JobSeekerManagement() {
                 >
               <ColumnsDirective>
                 <ColumnDirective type='checkbox' width='50' />
-                <ColumnDirective field='firstName' headerText='First Name' width='150' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='lastName' headerText='Last Name' width='150' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='email' headerText='Email' width='250' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='phone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='city' headerText='City' width='120' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='state' headerText='State' width='120' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective 
+                  field='firstName' 
+                  headerText='First Name' 
+                  width='150' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.firstName || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='lastName' 
+                  headerText='Last Name' 
+                  width='150' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.lastName || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='email' 
+                  headerText='Email' 
+                  width='250' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.email || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='phone' 
+                  headerText='Phone' 
+                  width='150' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.phone || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='city' 
+                  headerText='City' 
+                  width='120' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.city || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='state' 
+                  headerText='State' 
+                  width='120' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.state || ''}
+                    </div>
+                  )}
+                />
                 <ColumnDirective 
                   field='isActive' 
                   headerText='Status' 
@@ -740,8 +794,11 @@ export default function JobSeekerManagement() {
                   field='lastLogin' 
                   headerText='Last Login' 
                   width='150' 
-                  clipMode='EllipsisWithTooltip'
-                  template={lastLoginTemplate}
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {lastLoginTemplate(props)}
+                    </div>
+                  )}
                 />
                 <ColumnDirective 
                   headerText='Actions' 

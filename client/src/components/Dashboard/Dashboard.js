@@ -621,13 +621,68 @@ const Dashboard = () => {
                                     >
                                         <ColumnsDirective>
                                             <ColumnDirective type='checkbox' width='40' />
-                                            <ColumnDirective field='name' headerText='Booth Name' width='220' clipMode='EllipsisWithTooltip' />
+                                            <ColumnDirective 
+                                                field='name' 
+                                                headerText='Booth Name' 
+                                                width='220' 
+                                                template={(props) => (
+                                                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                        {props.name || '-'}
+                                                    </div>
+                                                )}
+                                            />
                                             <ColumnDirective headerText='Logo' width='110' template={(props) => props.logo ? (<img src={props.logo} alt="logo" style={{ height: 28 }} />) : null} />
-                                            <ColumnDirective field='recruitersCount' headerText='Recruiters' width='120' textAlign='Center' />
-                                            <ColumnDirective field='events' headerText='Event Title' width='200' template={(p) => (p.events || []).join(', ')} />
-                                            <ColumnDirective field='eventDate' headerText='Event Date' width='190' template={(p) => p.eventDate ? new Date(p.eventDate).toLocaleString() : ''} />
-                                            <ColumnDirective field='customInviteText' headerText='Custom URL' width='200' />
-                                            <ColumnDirective field='expireLinkTime' headerText='Expire Date' width='190' template={(p) => p.expireLinkTime ? new Date(p.expireLinkTime).toLocaleString() : ''} />
+                                            <ColumnDirective 
+                                                field='recruitersCount' 
+                                                headerText='Recruiters' 
+                                                width='120' 
+                                                textAlign='Center'
+                                                template={(props) => (
+                                                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                                                        {props.recruitersCount ?? 0}
+                                                    </div>
+                                                )}
+                                            />
+                                            <ColumnDirective 
+                                                field='events' 
+                                                headerText='Event Title' 
+                                                width='200' 
+                                                template={(p) => (
+                                                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                        {(p.events || []).join(', ')}
+                                                    </div>
+                                                )}
+                                            />
+                                            <ColumnDirective 
+                                                field='eventDate' 
+                                                headerText='Event Date' 
+                                                width='190' 
+                                                template={(p) => (
+                                                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                        {p.eventDate ? new Date(p.eventDate).toLocaleString() : ''}
+                                                    </div>
+                                                )}
+                                            />
+                                            <ColumnDirective 
+                                                field='customInviteText' 
+                                                headerText='Custom URL' 
+                                                width='200' 
+                                                template={(props) => (
+                                                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                        {props.customInviteText || '-'}
+                                                    </div>
+                                                )}
+                                            />
+                                            <ColumnDirective 
+                                                field='expireLinkTime' 
+                                                headerText='Expire Date' 
+                                                width='190' 
+                                                template={(p) => (
+                                                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                        {p.expireLinkTime ? new Date(p.expireLinkTime).toLocaleString() : ''}
+                                                    </div>
+                                                )}
+                                            />
                                             <ColumnDirective headerText='Action' width='360' allowSorting={false} allowFiltering={false} template={(p) => (
                                                 <div className='ajf-grid-actions'>
                                                     <button className='ajf-btn ajf-btn-dark'>Job Seekers Report</button>

@@ -375,11 +375,56 @@ export default function UserManagement() {
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />
-                    <ColumnDirective field='firstName' headerText='First Name' width='150' clipMode='EllipsisWithTooltip' />
-                    <ColumnDirective field='lastName' headerText='Last Name' width='150' clipMode='EllipsisWithTooltip' />
-                    <ColumnDirective field='email' headerText='Email' width='250' clipMode='EllipsisWithTooltip' />
-                    <ColumnDirective field='role' headerText='Role' width='150' />
-                    <ColumnDirective field='booth' headerText='Booth' width='180' template={(props) => props.booth || '-'} />
+                    <ColumnDirective 
+                      field='firstName' 
+                      headerText='First Name' 
+                      width='150' 
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.firstName || ''}
+                        </div>
+                      )}
+                    />
+                    <ColumnDirective 
+                      field='lastName' 
+                      headerText='Last Name' 
+                      width='150' 
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.lastName || ''}
+                        </div>
+                      )}
+                    />
+                    <ColumnDirective 
+                      field='email' 
+                      headerText='Email' 
+                      width='250' 
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.email || ''}
+                        </div>
+                      )}
+                    />
+                    <ColumnDirective 
+                      field='role' 
+                      headerText='Role' 
+                      width='150' 
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.role || ''}
+                        </div>
+                      )}
+                    />
+                    <ColumnDirective 
+                      field='booth' 
+                      headerText='Booth' 
+                      width='180' 
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.booth || '-'}
+                        </div>
+                      )}
+                    />
                     <ColumnDirective 
                       headerText='Action' 
                       width='350' 

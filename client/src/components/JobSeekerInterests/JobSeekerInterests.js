@@ -168,7 +168,7 @@ const JobSeekerInterests = () => {
     const jobSeekerTemplate = (props) => {
         const row = props;
         return (
-            <div>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                 <div className="job-seeker-name">{row.jobSeeker?.name || 'N/A'}</div>
                 <div className="job-seeker-email">{row.jobSeeker?.email || 'N/A'}</div>
             </div>
@@ -177,20 +177,33 @@ const JobSeekerInterests = () => {
 
     const eventTemplate = (props) => {
         const row = props;
-        return row.event?.name || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {row.event?.name || 'N/A'}
+            </div>
+        );
     };
 
     const boothTemplate = (props) => {
         const row = props;
-        return row.booth?.name || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {row.booth?.name || 'N/A'}
+            </div>
+        );
     };
 
     const locationTemplate = (props) => {
         const row = props;
+        let locationText = 'N/A';
         if (row.jobSeeker?.city && row.jobSeeker?.state) {
-            return `${row.jobSeeker.city}, ${row.jobSeeker.state}`;
+            locationText = `${row.jobSeeker.city}, ${row.jobSeeker.state}`;
         }
-        return 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {locationText}
+            </div>
+        );
     };
 
     const interestLevelTemplate = (props) => {
@@ -204,13 +217,17 @@ const JobSeekerInterests = () => {
 
     const dateExpressedTemplate = (props) => {
         const row = props;
-        return formatDateTime(row.createdAt);
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {formatDateTime(row.createdAt)}
+            </div>
+        );
     };
 
     const notesTemplate = (props) => {
         const row = props;
         return (
-            <div className="notes-cell">
+            <div className="notes-cell" style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                 {row.notes ? (
                     <span title={row.notes}>
                         {row.notes.length > 50 ? `${row.notes.substring(0, 50)}...` : row.notes}

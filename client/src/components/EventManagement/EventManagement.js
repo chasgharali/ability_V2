@@ -393,24 +393,83 @@ export default function EventManagement() {
                                             field='startTime' 
                                             headerText='Event Start Time' 
                                             width='200' 
-                                            template={(props) => props.startTime ? new Date(props.startTime).toLocaleString() : '-'}
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                    {props.startTime ? new Date(props.startTime).toLocaleString() : '-'}
+                                                </div>
+                                            )}
                                         />
                                         <ColumnDirective 
                                             field='endTime' 
                                             headerText='Event End Time' 
                                             width='200' 
-                                            template={(props) => props.endTime ? new Date(props.endTime).toLocaleString() : '-'}
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                    {props.endTime ? new Date(props.endTime).toLocaleString() : '-'}
+                                                </div>
+                                            )}
                                         />
-                                        <ColumnDirective field='date' headerText='Event Date' width='180' />
-                                        <ColumnDirective field='createdAt' headerText='Created Time' width='150' />
-                                        <ColumnDirective field='status' headerText='Status' width='120' />
-                                        <ColumnDirective field='maxRecruitersPerEvent' headerText='Max Recruiters' width='130' textAlign='Center' />
-                                        <ColumnDirective field='maxBooths' headerText='Max Booths' width='110' textAlign='Center' />
+                                        <ColumnDirective 
+                                            field='date' 
+                                            headerText='Event Date' 
+                                            width='180' 
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                    {props.date || '-'}
+                                                </div>
+                                            )}
+                                        />
+                                        <ColumnDirective 
+                                            field='createdAt' 
+                                            headerText='Created Time' 
+                                            width='150' 
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                    {props.createdAt || '-'}
+                                                </div>
+                                            )}
+                                        />
+                                        <ColumnDirective 
+                                            field='status' 
+                                            headerText='Status' 
+                                            width='120' 
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                    {props.status || '-'}
+                                                </div>
+                                            )}
+                                        />
+                                        <ColumnDirective 
+                                            field='maxRecruitersPerEvent' 
+                                            headerText='Max Recruiters' 
+                                            width='130' 
+                                            textAlign='Center'
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                                                    {props.maxRecruitersPerEvent ?? 0}
+                                                </div>
+                                            )}
+                                        />
+                                        <ColumnDirective 
+                                            field='maxBooths' 
+                                            headerText='Max Booths' 
+                                            width='110' 
+                                            textAlign='Center'
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                                                    {props.maxBooths ?? 0}
+                                                </div>
+                                            )}
+                                        />
                                         <ColumnDirective 
                                             field='sendyId' 
                                             headerText='Sendy Event Id' 
                                             width='150' 
-                                            template={(props) => props.sendyId || '-'}
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                                                    {props.sendyId || '-'}
+                                                </div>
+                                            )}
                                         />
                                         <ColumnDirective 
                                             headerText='Event Page' 
