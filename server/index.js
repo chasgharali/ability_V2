@@ -104,6 +104,11 @@ app.use(cors({
     origin: allowedOrigins.length === 1 ? allowedOrigins[0] : (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
+        // Always allow localhost origins (for development and local testing)
+        const localhostPatterns = ['http://localhost', 'http://127.0.0.1'];
+        if (localhostPatterns.some(pattern => origin.startsWith(pattern))) {
+            return callback(null, true);
+        }
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
@@ -199,6 +204,23 @@ app.use('*', (req, res) => {
 // Error handling middleware (must be absolutely last)
 app.use(errorHandler);
 
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    logger.error('Stack:', error.stack);
+    process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection at:', promise);
+    logger.error('Reason:', reason);
+    // Don't exit in development, but log the error
+    if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+    }
+});
+
 // Database and Redis connection
 const startServer = async () => {
     try {
@@ -214,7 +236,7 @@ const startServer = async () => {
             logger.info('Redis connection skipped');
         }
 
-        const PORT = process.env.PORT || 5001;
+        const PORT = process.env.PORT || 5000;
         // Use 0.0.0.0 for production to accept connections from outside the container
         // Elastic Beanstalk sets PORT automatically, but we need to listen on all interfaces
         const HOST = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost');
@@ -222,13 +244,25 @@ const startServer = async () => {
         server.listen(PORT, HOST, () => {
             logger.info(`Server running on ${HOST}:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
             logger.info('Server is ready to accept connections');
+            logger.info(`API endpoints available at http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}/api`);
 
             // Start queue cleanup job
             const { startQueueCleanup } = require('./utils/queueCleanup');
             startQueueCleanup();
         });
+
+        // Handle server errors
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                logger.error(`Port ${PORT} is already in use. Please use a different port or stop the process using port ${PORT}.`);
+            } else {
+                logger.error('Server error:', error);
+            }
+            process.exit(1);
+        });
     } catch (error) {
         logger.error('Failed to start server:', error);
+        logger.error('Error stack:', error.stack);
         process.exit(1);
     }
 };

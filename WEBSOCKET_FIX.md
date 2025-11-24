@@ -26,7 +26,7 @@ Make sure all your other environment variables are set (MongoDB URI, JWT secrets
 
 ## Critical: Client Rebuild Required
 
-The client is currently connecting to `http://localhost:5001` because it was built with development settings. You need to rebuild the client with production environment variables:
+The client is currently connecting to `http://localhost:5000` because it was built with development settings. You need to rebuild the client with production environment variables:
 
 ### Steps to Fix Client:
 

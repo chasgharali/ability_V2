@@ -44,7 +44,7 @@ const JobSeekerInterests = () => {
         eventId: '',
         boothId: '',
         page: 1,
-        limit: 10,
+        limit: 50,
         sortBy: 'createdAt',
         sortOrder: 'desc'
     });
@@ -55,6 +55,15 @@ const JobSeekerInterests = () => {
         uniqueJobSeekers: 0,
         uniqueBooths: 0,
         averageInterestsPerJobSeeker: 0
+    });
+
+    // Pagination state
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 0,
+        totalInterests: 0,
+        hasNext: false,
+        hasPrev: false
     });
 
     // Syncfusion Toast
@@ -69,42 +78,6 @@ const JobSeekerInterests = () => {
             });
         }
     }, []);
-
-    const loadInterests = useCallback(async () => {
-        try {
-            setLoadingData(true);
-            console.log('Loading interests with filters:', filters);
-            const response = await jobSeekerInterestsAPI.getInterests(filters);
-            console.log('API Response:', response);
-            
-            const interests = response.interests || [];
-            setInterests(interests);
-            
-            // Calculate stats
-            const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id)).size;
-            const uniqueBooths = new Set(interests.map(i => i.booth?._id)).size;
-            const avgInterests = uniqueJobSeekers > 0 ? (interests.length / uniqueJobSeekers).toFixed(1) : 0;
-            
-            setStats({
-                totalInterests: interests.length,
-                uniqueJobSeekers,
-                uniqueBooths,
-                averageInterestsPerJobSeeker: avgInterests
-            });
-
-            if (interests.length === 0) {
-                console.log('No interests found. This could be because:');
-                console.log('1. No job seekers have expressed interest in booths yet');
-                console.log('2. User role restrictions are filtering out data');
-                console.log('3. Current filters are too restrictive');
-            }
-        } catch (error) {
-            console.error('Error loading interests:', error);
-            showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
-        } finally {
-            setLoadingData(false);
-        }
-    }, [filters, showToast]);
 
     const loadRecruiters = useCallback(async () => {
         if (user?.role !== 'Recruiter') {
@@ -126,13 +99,81 @@ const JobSeekerInterests = () => {
         }
     }, []);
 
+    // Load recruiters and events only once when user is available
     useEffect(() => {
         if (user) {
-            loadInterests();
             loadRecruiters();
             loadEvents();
         }
-    }, [user, loadInterests, loadRecruiters, loadEvents]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.role]);
+
+    // Load interests only when filters change or user changes - single request
+    useEffect(() => {
+        if (!user) return;
+        
+        // Only make request if user role is valid
+        if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) {
+            return;
+        }
+
+        // Use a ref to prevent duplicate requests
+        let cancelled = false;
+
+        const fetchData = async () => {
+            try {
+                setLoadingData(true);
+                console.log('Loading interests with filters:', filters);
+                const response = await jobSeekerInterestsAPI.getInterests(filters);
+                
+                if (cancelled) return;
+                
+                console.log('API Response:', response);
+                
+                const interests = response.interests || [];
+                setInterests(interests);
+                
+                // Update pagination from API response
+                if (response.pagination) {
+                    setPagination(response.pagination);
+                }
+                
+                // Calculate stats - use totalInterests from pagination for accurate count
+                const totalInterests = response.pagination?.totalInterests || interests.length;
+                const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
+                const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
+                const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
+                
+                setStats({
+                    totalInterests: totalInterests,
+                    uniqueJobSeekers,
+                    uniqueBooths,
+                    averageInterestsPerJobSeeker: avgInterests
+                });
+
+                if (interests.length === 0) {
+                    console.log('No interests found. This could be because:');
+                    console.log('1. No job seekers have expressed interest in booths yet');
+                    console.log('2. User role restrictions are filtering out data');
+                    console.log('3. Current filters are too restrictive');
+                }
+            } catch (error) {
+                if (cancelled) return;
+                console.error('Error loading interests:', error);
+                showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
+            } finally {
+                if (!cancelled) {
+                    setLoadingData(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [user, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, filters.sortBy, filters.sortOrder, showToast]);
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({
@@ -148,10 +189,24 @@ const JobSeekerInterests = () => {
             eventId: '',
             boothId: '',
             page: 1,
-            limit: 10,
+            limit: 50,
             sortBy: 'createdAt',
             sortOrder: 'desc'
         });
+    };
+
+    // Handle Syncfusion pagination change
+    const handleActionComplete = (args) => {
+        // Check if the action is pagination
+        if (args.requestType === 'paging') {
+            const newPage = args.currentPage;
+            if (newPage !== filters.page) {
+                setFilters(prev => ({
+                    ...prev,
+                    page: newPage
+                }));
+            }
+        }
     };
 
     const formatDateTime = (dateString) => {
@@ -167,28 +222,35 @@ const JobSeekerInterests = () => {
     // Grid template functions for custom column renders
     const jobSeekerTemplate = (props) => {
         const row = props;
+        // Show actual data if available (from populate or legacy lookup), otherwise show fallback
+        const jobSeekerName = row.jobSeeker?.name || (row.legacyJobSeekerId ? 'Legacy User' : 'N/A');
+        const jobSeekerEmail = row.jobSeeker?.email || (row.legacyJobSeekerId ? 'N/A' : 'N/A');
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                <div className="job-seeker-name">{row.jobSeeker?.name || 'N/A'}</div>
-                <div className="job-seeker-email">{row.jobSeeker?.email || 'N/A'}</div>
+                <div className="job-seeker-name">{jobSeekerName}</div>
+                <div className="job-seeker-email">{jobSeekerEmail}</div>
             </div>
         );
     };
 
     const eventTemplate = (props) => {
         const row = props;
+        // Show actual event name if available (from populate or legacy lookup), otherwise show fallback
+        const eventName = row.event?.name || (row.legacyEventId ? 'Legacy Event' : 'N/A');
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                {row.event?.name || 'N/A'}
+                {eventName}
             </div>
         );
     };
 
     const boothTemplate = (props) => {
         const row = props;
+        // Use booth name if available, otherwise use company name (which is stored for legacy data)
+        const boothName = row.booth?.name || row.company || (row.legacyBoothId ? 'Legacy Booth' : 'N/A');
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                {row.booth?.name || 'N/A'}
+                {boothName}
             </div>
         );
     };
@@ -196,8 +258,13 @@ const JobSeekerInterests = () => {
     const locationTemplate = (props) => {
         const row = props;
         let locationText = 'N/A';
+        // Handle legacy data - check if jobSeeker exists and has location data
         if (row.jobSeeker?.city && row.jobSeeker?.state) {
             locationText = `${row.jobSeeker.city}, ${row.jobSeeker.state}`;
+        } else if (row.jobSeeker?.city) {
+            locationText = row.jobSeeker.city;
+        } else if (row.jobSeeker?.state) {
+            locationText = row.jobSeeker.state;
         }
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -381,8 +448,15 @@ const JobSeekerInterests = () => {
                             <div className="data-grid-container">
                                 {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
                                 <GridComponent
+                                    key={`grid-${filters.page}-${filters.eventId}-${filters.boothId}-${filters.recruiterId}`}
                                     dataSource={interests}
-                                    allowPaging={false}
+                                    allowPaging={true}
+                                    pageSettings={{
+                                        pageSize: 50,
+                                        currentPage: filters.page,
+                                        pageSizes: [25, 50, 100],
+                                        pageCount: pagination.totalPages || 1
+                                    }}
                                     allowSorting={true}
                                     allowFiltering={true}
                                     filterSettings={{ type: 'Menu' }}
@@ -394,6 +468,7 @@ const JobSeekerInterests = () => {
                                     selectionSettings={{ type: 'None' }}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
+                                    actionComplete={handleActionComplete}
                                 >
                                     <ColumnsDirective>
                                         <ColumnDirective headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowSorting={false} />
@@ -404,7 +479,7 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} />
                                         <ColumnDirective headerText='Notes' width='250' clipMode='EllipsisWithTooltip' template={notesTemplate} allowSorting={false} />
                                     </ColumnsDirective>
-                                    <GridInject services={[Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                                    <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>
                             </div>
                         </div>
