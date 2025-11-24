@@ -5,6 +5,7 @@ import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
 import { boothQueueAPI } from '../../services/boothQueue';
 import './BoothQueueEntry.css';
 import AdminHeader from '../Layout/AdminHeader';
+import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css'; // Import header styles
 
 export default function BoothQueueEntry() {
@@ -152,11 +153,16 @@ export default function BoothQueueEntry() {
   }
 
   return (
-    <div className="booth-queue-entry">
+    <div className="dashboard">
       {/* Standard header with user status; override branding with event logo */}
       <AdminHeader brandingLogo={event?.logoUrl || ''} />
-
-      <div className="entry-modal">
+      
+      <div className="dashboard-layout">
+        <AdminSidebar />
+        
+        <main className="dashboard-main">
+          <div className="booth-queue-entry">
+            <div className="entry-modal">
         <div className="modal-header">
           <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
           <div className="company-branding">
@@ -234,6 +240,9 @@ export default function BoothQueueEntry() {
             Exit
           </button>
         </div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
