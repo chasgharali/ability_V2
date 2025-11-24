@@ -1,41 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
-
-// Create axios instance with default config
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// Add request interceptor to include auth token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-// Add response interceptor to handle errors
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            // Token expired or invalid
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        }
-        return Promise.reject(error);
-    }
-);
+// Helper function to get auth headers
+function authHeaders() {
+  const token = localStorage.getItem('token');
+  return { Authorization: `Bearer ${token}` };
+}
 
 export const jobSeekerInterestsAPI = {
     // Get all job seeker interests with filtering (for admins/recruiters)
@@ -48,37 +17,37 @@ export const jobSeekerInterestsAPI = {
             }
         });
 
-        const response = await api.get(`/api/job-seeker-interests?${params.toString()}`);
+        const response = await axios.get(`/api/job-seeker-interests?${params.toString()}`, { headers: authHeaders() });
         return response.data;
     },
 
     // Create or update interest in a booth
     createOrUpdateInterest: async (data) => {
-        const response = await api.post('/api/job-seeker-interests', data);
+        const response = await axios.post('/api/job-seeker-interests', data, { headers: authHeaders() });
         return response.data;
     },
 
     // Get job seeker's interests for a specific event
     getMyInterests: async (eventId) => {
-        const response = await api.get(`/api/job-seeker-interests/my-interests/${eventId}`);
+        const response = await axios.get(`/api/job-seeker-interests/my-interests/${eventId}`, { headers: authHeaders() });
         return response.data;
     },
 
     // Get all job seekers interested in a specific booth (for recruiters/admins)
     getBoothInterests: async (boothId) => {
-        const response = await api.get(`/api/job-seeker-interests/booth/${boothId}`);
+        const response = await axios.get(`/api/job-seeker-interests/booth/${boothId}`, { headers: authHeaders() });
         return response.data;
     },
 
     // Remove interest
     removeInterest: async (interestId) => {
-        const response = await api.delete(`/api/job-seeker-interests/${interestId}`);
+        const response = await axios.delete(`/api/job-seeker-interests/${interestId}`, { headers: authHeaders() });
         return response.data;
     },
 
     // Toggle interest status
     toggleInterest: async (interestId) => {
-        const response = await api.put(`/api/job-seeker-interests/${interestId}/toggle`);
+        const response = await axios.put(`/api/job-seeker-interests/${interestId}/toggle`, {}, { headers: authHeaders() });
         return response.data;
     },
 };

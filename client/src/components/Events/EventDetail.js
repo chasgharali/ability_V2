@@ -5,6 +5,7 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
 import { getEvent, getEventBooths, listRegisteredEvents } from '../../services/events';
 import { useAuth } from '../../contexts/AuthContext';
+import roleMessagesAPI from '../../services/roleMessages';
 
 export default function EventDetail() {
   const { slug } = useParams();
@@ -13,6 +14,7 @@ export default function EventDetail() {
   const [booths, setBooths] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [serverIsRegistered, setServerIsRegistered] = useState(false);
+  const [registrationInstruction, setRegistrationInstruction] = useState('To register for this upcoming event, click the "Register for the Job Fair" button at the bottom of the page. To find out more about each employer, click the employer link below to visit their portal.');
   const navigate = useNavigate();
 
   // Determine if current user is already registered for this event
@@ -64,6 +66,24 @@ export default function EventDetail() {
     })();
   }, [slug, loading]);
 
+  // Fetch role message for registration instruction
+  useEffect(() => {
+    const fetchRegistrationInstruction = async () => {
+      if (user?.role === 'JobSeeker') {
+        try {
+          const response = await roleMessagesAPI.getMessage('JobSeeker', 'event-registration', 'registration-instruction');
+          if (response.success && response.content) {
+            setRegistrationInstruction(response.content);
+          }
+        } catch (error) {
+          // Use default message if not found
+          console.log('No registration instruction message found, using default');
+        }
+      }
+    };
+    fetchRegistrationInstruction();
+  }, [user?.role]);
+
   if (loading) return null;
 
   return (
@@ -85,7 +105,7 @@ export default function EventDetail() {
                   {isRegistered ? (
                     <p>You are registered for this event. You can manage your registration and mark employer interest below.</p>
                   ) : (
-                    <p>To register for this upcoming event, click the “Register for the Job Fair” button at the bottom of the page. To find out more about each employer, click the employer link below to visit their portal.</p>
+                    <p>{registrationInstruction}</p>
                   )}
                 </div>
 

@@ -43,6 +43,7 @@ import NoteManagement from './components/Notes/NoteManagement';
 import NoteForm from './components/Notes/NoteForm';
 import NoteView from './components/Notes/NoteView';
 import NoteViewUser from './components/Notes/NoteViewUser';
+import RoleMessageManagement from './components/RoleMessages/RoleMessageManagement';
 import './App.css';
 
 // Component to conditionally render header and footer
@@ -126,6 +127,7 @@ function App() {
                                     <Route path="/notes/:id/edit" element={<RequireAuth><NoteForm /></RequireAuth>} />
                                     <Route path="/troubleshooting" element={<RequireAuth><NoteViewUser type="troubleshooting" /></RequireAuth>} />
                                     <Route path="/instructions" element={<RequireAuth><NoteViewUser type="instruction" /></RequireAuth>} />
+                                    <Route path="/role-messages" element={<RequireAuth><RoleMessageManagement /></RequireAuth>} />
                                     {/* Booth Queue Routes */}
                                     <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
                                     <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />
