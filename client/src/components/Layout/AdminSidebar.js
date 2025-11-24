@@ -206,7 +206,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   <div className="sidebar-empty">No registrations yet.</div>
                 )}
                 {myRegistrations.map((e) => (
-                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/event/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
+                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
                 ))}
               </div>
             )}
