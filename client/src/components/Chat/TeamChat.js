@@ -95,7 +95,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         }
 
         console.log('🔌 Initializing socket connection...');
-        
+
         const socketUrl = getSocketUrl();
         console.log('🔌 Socket URL:', socketUrl);
 
@@ -104,7 +104,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
 
         // Determine if we're connecting to localhost (development)
         const isLocalhost = socketUrl.includes('localhost') || socketUrl.includes('127.0.0.1');
-        
+
         socketRef.current = io(socketUrl, {
             auth: { token: `Bearer ${token}` },
             transports: ['websocket', 'polling'],
