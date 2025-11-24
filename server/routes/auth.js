@@ -82,24 +82,37 @@ router.post('/register', [
         .toBoolean()
 ], async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                error: 'Validation failed',
-                message: 'Please check your input data',
-                details: errors.array()
-            });
-        }
-
         const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth, subscribeAnnouncements } = req.body;
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(409).json({
-                error: 'User already exists',
-                message: 'An account with this email address already exists'
+        // Check for validation errors, but separate email format validation
+        const errors = validationResult(req);
+        const emailErrors = errors.array().filter(err => err.path === 'email');
+        
+        // If email format is valid (no email validation errors), check if user already exists BEFORE other validations
+        // This ensures "user already exists" error takes priority over password/other validation errors
+        if (email && emailErrors.length === 0) {
+            // Normalize email for checking (same as validator does)
+            const normalizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : email;
+            const existingUser = await User.findOne({ email: normalizedEmail });
+            if (existingUser) {
+                return res.status(409).json({
+                    error: 'User already exists',
+                    message: 'An account with this email address already exists'
+                });
+            }
+        }
+
+        // Now check for all validation errors (including email format errors if any)
+        if (!errors.isEmpty()) {
+            const errorArray = errors.array();
+            // Get the first error message as the main message for better UX
+            const firstError = errorArray[0];
+            const mainMessage = firstError?.msg || 'Please check your input data';
+            
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: mainMessage,
+                details: errorArray
             });
         }
 
@@ -204,9 +217,30 @@ router.post('/register', [
         });
     } catch (error) {
         logger.error('Registration error:', error);
+        
+        // Handle duplicate email error (MongoDB unique constraint)
+        if (error.code === 11000) {
+            return res.status(409).json({
+                error: 'User already exists',
+                message: 'An account with this email address already exists'
+            });
+        }
+        
+        // Handle Mongoose validation errors
+        if (error.name === 'ValidationError') {
+            const validationMessages = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: validationMessages[0] || 'Invalid input data',
+                details: validationMessages
+            });
+        }
+        
+        // Handle other specific errors with their actual messages
+        const errorMessage = error.message || 'An error occurred during registration';
         res.status(500).json({
             error: 'Registration failed',
-            message: 'An error occurred during registration'
+            message: errorMessage
         });
     }
 });

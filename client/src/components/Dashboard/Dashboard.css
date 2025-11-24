@@ -1142,6 +1142,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
 .password-field-container .form-field {
     margin-bottom: 0;
+    width: -webkit-fill-available;
 }
 
 .password-toggle-btn {

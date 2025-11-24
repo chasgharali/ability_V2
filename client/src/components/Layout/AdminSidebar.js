@@ -96,7 +96,7 @@ export default function AdminSidebar({ active = 'booths' }) {
   // Render role-specific sidebar content
   const renderSidebarContent = () => {
     if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
-      // Interpreter view: minimal menu with only Dashboard and Troubleshoot
+      // Interpreter view: Dashboard, Troubleshooting, and Instructions
       return (
         <>
           <div className="sidebar-section">
@@ -111,6 +111,12 @@ export default function AdminSidebar({ active = 'booths' }) {
               onClick={() => handleItemClick('/troubleshooting')}
             >
               Trouble Shooting
+            </button>
+            <button
+              className={itemClass('instructions')}
+              onClick={() => handleItemClick('/instructions')}
+            >
+              Instructions
             </button>
           </div>
         </>
@@ -206,7 +212,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   <div className="sidebar-empty">No registrations yet.</div>
                 )}
                 {myRegistrations.map((e) => (
-                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/event/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
+                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
                 ))}
               </div>
             )}
@@ -325,6 +331,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('branding')} onClick={() => handleItemClick('/branding')}>Branding – Header Logo</button>
                 <button className={itemClass('terms-conditions')} onClick={() => handleItemClick('/terms-conditions')}>Terms & Conditions</button>
                 <button className={itemClass('notes')} onClick={() => handleItemClick('/notes')}>Notes Management</button>
+                <button className={itemClass('role-messages')} onClick={() => handleItemClick('/role-messages')}>Page Instructions</button>
               </div>
             )}
           </div>
@@ -342,8 +349,8 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button className="sidebar-item" onClick={closeMobileMenu}>Trouble Shooting</button>
-            <button className="sidebar-item" onClick={closeMobileMenu}>Instructions</button>
+            <button className={itemClass('troubleshooting')} onClick={() => handleItemClick('/troubleshooting')}>Trouble Shooting</button>
+            <button className={itemClass('instructions')} onClick={() => handleItemClick('/instructions')}>Instructions</button>
           </div>
         </>
       );

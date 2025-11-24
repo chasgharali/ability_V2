@@ -84,6 +84,8 @@
 
 .register-form-group {
     flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .register-form-label {
@@ -97,6 +99,8 @@
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Phone number with country code container - combined appearance */
@@ -160,6 +164,7 @@
     width: 100%;
     border: none !important;
     border-radius: 0 !important;
+    box-sizing: border-box;
 }
 
 .register-phone-input:focus {
@@ -542,6 +547,7 @@
     background-color: var(--register-card-background);
     font-size: 1rem;
     transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
 }
 
 .register-form-input:focus {
