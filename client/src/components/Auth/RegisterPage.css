@@ -99,6 +99,433 @@
     align-items: center;
 }
 
+/* Phone number with country code container - combined appearance */
+.register-phone-container {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    width: 100%;
+    border: 1px solid var(--register-border-color);
+    border-radius: 0.5rem;
+    background-color: var(--register-card-background);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.register-phone-container:focus-within {
+    border-color: var(--register-accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.register-phone-container:hover {
+    border-color: var(--register-accent-color);
+}
+
+.register-phone-country-code-wrapper {
+    flex: 0 0 20%;
+    width: 20%;
+    border-right: 1px solid var(--register-border-color);
+}
+
+.register-phone-country-code-wrapper .register-input-container {
+    width: 100%;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.register-phone-country-code-wrapper .register-input-container:focus-within {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.register-phone-input-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.register-phone-input-wrapper .register-input-container {
+    width: 100%;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.register-phone-input-wrapper .register-input-container:focus-within {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.register-phone-input {
+    width: 100%;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+.register-phone-input:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Syncfusion DropDownList styling for country code - match other inputs */
+.register-country-code-dropdown.e-dropdownlist {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-input-group {
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-input-group .e-input {
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    transition: none !important;
+    width: 100% !important;
+    line-height: 1 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-input-group .e-input:focus,
+.register-country-code-dropdown.e-dropdownlist .e-input-group .e-input:focus-visible,
+.register-country-code-dropdown.e-dropdownlist .e-input-group .e-input:active {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-input-group-icon {
+    display: none !important; /* Hide Syncfusion's default icon since we have our own */
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-input-group .e-ddl-icon {
+    right: 1rem !important;
+    color: var(--register-secondary-text) !important;
+}
+
+/* Make the dropdown wrapper match input container styling - no border since parent has it */
+.register-phone-country-code-wrapper .register-input-container {
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: transparent;
+    transition: none;
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.register-phone-country-code-wrapper .register-input-container:focus-within,
+.register-phone-country-code-wrapper .register-input-container:focus,
+.register-phone-country-code-wrapper .register-input-container:active {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.register-phone-country-code-wrapper .register-input-container:hover {
+    border: none !important;
+}
+
+/* Remove any default Syncfusion borders that might show */
+.register-country-code-dropdown.e-dropdownlist {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-input-group {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-input-group .e-input {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist.e-input-focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist.e-input-focus .e-input-group {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist.e-input-focus .e-input-group .e-input {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Override any Syncfusion focus states */
+.register-country-code-dropdown.e-dropdownlist:focus,
+.register-country-code-dropdown.e-dropdownlist:focus-within,
+.register-country-code-dropdown.e-dropdownlist.e-focus,
+.register-country-code-dropdown.e-dropdownlist.e-input-focus,
+.register-country-code-dropdown.e-dropdownlist.e-control-wrapper,
+.register-country-code-dropdown.e-dropdownlist.e-control-wrapper:focus,
+.register-country-code-dropdown.e-dropdownlist.e-control-wrapper.e-input-focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove all possible black borders from Syncfusion elements inside container */
+.register-phone-country-code-wrapper .register-input-container .e-dropdownlist,
+.register-phone-country-code-wrapper .register-input-container .e-input-group,
+.register-phone-country-code-wrapper .register-input-container .e-input {
+    border-color: transparent !important;
+}
+
+.register-phone-country-code-wrapper .register-input-container:focus-within .e-dropdownlist,
+.register-phone-country-code-wrapper .register-input-container:focus-within .e-input-group,
+.register-phone-country-code-wrapper .register-input-container:focus-within .e-input {
+    border-color: transparent !important;
+}
+
+/* Ensure dropdown popup styling - maintain original width */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase {
+    border: 1px solid var(--register-border-color);
+    border-radius: 0.5rem;
+    min-width: 160px !important;
+    width: auto !important;
+}
+
+/* Ensure dropdown popup doesn't shrink with container - override all possible selectors */
+.register-country-code-dropdown.e-dropdownlist ~ .e-popup,
+.register-country-code-dropdown.e-dropdownlist .e-popup,
+.e-popup[data-uid*="phoneCountryCode"],
+.e-popup[id*="phoneCountryCode"],
+#phoneCountryCode_popup {
+    min-width: 200px !important;
+    width: 200px !important;
+    max-width: none !important;
+}
+
+/* Ensure the popup content also maintains width */
+.register-country-code-dropdown.e-dropdownlist ~ .e-popup .e-dropdownbase,
+.register-country-code-dropdown.e-dropdownlist .e-popup .e-dropdownbase,
+.e-popup[data-uid*="phoneCountryCode"] .e-dropdownbase,
+.e-popup[id*="phoneCountryCode"] .e-dropdownbase,
+#phoneCountryCode_popup .e-dropdownbase {
+    min-width: 200px !important;
+    width: 200px !important;
+    max-width: none !important;
+}
+
+/* Ensure list parent maintains width */
+.register-country-code-dropdown.e-dropdownlist ~ .e-popup .e-list-parent,
+.register-country-code-dropdown.e-dropdownlist .e-popup .e-list-parent,
+.e-popup[data-uid*="phoneCountryCode"] .e-list-parent,
+.e-popup[id*="phoneCountryCode"] .e-list-parent,
+#phoneCountryCode_popup .e-list-parent {
+    min-width: 200px !important;
+    width: 200px !important;
+    max-width: none !important;
+}
+
+/* Ensure search/filter field matches dropdown width */
+.register-country-code-dropdown.e-dropdownlist ~ .e-popup .e-filter-parent,
+.register-country-code-dropdown.e-dropdownlist .e-popup .e-filter-parent,
+.e-popup[data-uid*="phoneCountryCode"] .e-filter-parent,
+.e-popup[id*="phoneCountryCode"] .e-filter-parent,
+#phoneCountryCode_popup .e-filter-parent {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist ~ .e-popup .e-filter-parent .e-input-group,
+.register-country-code-dropdown.e-dropdownlist .e-popup .e-filter-parent .e-input-group,
+.e-popup[data-uid*="phoneCountryCode"] .e-filter-parent .e-input-group,
+.e-popup[id*="phoneCountryCode"] .e-filter-parent .e-input-group,
+#phoneCountryCode_popup .e-filter-parent .e-input-group {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist ~ .e-popup .e-filter-parent .e-input-group .e-input,
+.register-country-code-dropdown.e-dropdownlist .e-popup .e-filter-parent .e-input-group .e-input,
+.e-popup[data-uid*="phoneCountryCode"] .e-filter-parent .e-input-group .e-input,
+.e-popup[id*="phoneCountryCode"] .e-filter-parent .e-input-group .e-input,
+#phoneCountryCode_popup .e-filter-parent .e-input-group .e-input {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    box-sizing: border-box !important;
+}
+
+/* Selected item in dropdown - white text on black background */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Force white color on all child elements - highest priority - override inline styles */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active [style*="color"],
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus [style*="color"],
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover [style*="color"] {
+    color: #ffffff !important;
+}
+
+/* Force white on template elements even with inline styles */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active .register-country-code-item,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus .register-country-code-item,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover .register-country-code-item,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active .register-country-code-text,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus .register-country-code-text,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover .register-country-code-text,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active .register-country-flag,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus .register-country-flag,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover .register-country-flag {
+    color: #ffffff !important;
+}
+
+/* Make all text white in selected/hovered items - use more specific selectors */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active *,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus *,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover *,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active *::before,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus *::before,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover *::before,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active *::after,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus *::after,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover *::after {
+    color: #ffffff !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active .register-country-code-item,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus .register-country-code-item,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover .register-country-code-item {
+    color: #ffffff !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active .register-country-code-text,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus .register-country-code-text,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover .register-country-code-text {
+    color: #ffffff !important;
+}
+
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active .register-country-flag,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus .register-country-flag,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover .register-country-flag {
+    color: #ffffff !important;
+    filter: none !important;
+}
+
+/* Also target Syncfusion's default text elements and divs */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active span,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus span,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover span,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active div,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus div,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover div {
+    color: #ffffff !important;
+}
+
+/* Target the list item content directly */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active .e-list-text,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus .e-list-text,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover .e-list-text {
+    color: #ffffff !important;
+}
+
+/* Override any inline styles Syncfusion might add */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active[style],
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus[style],
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover[style] {
+    color: #ffffff !important;
+}
+
+/* Ensure the template divs are white */
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-active > div,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item.e-item-focus > div,
+.register-country-code-dropdown.e-dropdownlist .e-dropdownbase .e-list-item:hover > div {
+    color: #ffffff !important;
+}
+
+/* Country code item and value templates styling */
+.register-country-code-item,
+.register-country-code-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    height: 100%;
+    margin-bottom: 11px;
+    line-height: 1;
+    width: 100%;
+}
+
+.register-country-flag {
+    font-size: 1.25rem;
+    line-height: 1;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.register-country-code-text {
+    font-size: 1rem;
+    color: var(--register-primary-text);
+    line-height: 1;
+}
+
+/* Responsive design for phone input */
+@media (max-width: 640px) {
+    .register-phone-container {
+        flex-direction: column;
+        gap: 0;
+        border-radius: 0.5rem;
+    }
+    
+    .register-phone-country-code-wrapper {
+        width: 100%;
+        min-width: 100%;
+        border-right: none !important;
+        border-bottom: 1px solid var(--register-border-color);
+    }
+    
+    .register-phone-input-wrapper {
+        width: 100%;
+    }
+}
+
 .register-input-icon {
     position: absolute;
     left: 1rem;
