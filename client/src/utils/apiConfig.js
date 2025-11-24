@@ -16,7 +16,7 @@ export const getApiUrl = () => {
     }
 
     // Fallback for server-side rendering or tests
-    return 'http://localhost:5001';
+    return 'http://localhost:5000';
 };
 
 /**
@@ -34,6 +34,12 @@ export const getSocketUrl = () => {
         return process.env.REACT_APP_API_URL;
     }
 
+    // In development, always use http://localhost:5000 explicitly
+    // This prevents Socket.IO from trying to use wss:// when page is in secure context
+    if (process.env.NODE_ENV === 'development' || (!process.env.NODE_ENV && typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
+        return 'http://localhost:5000';
+    }
+
     // Fallback to current origin (works at runtime in production)
     // This allows the same build to work in dev and production
     // Only use this in browser environment (not SSR)
@@ -42,6 +48,6 @@ export const getSocketUrl = () => {
     }
 
     // Fallback for server-side rendering or tests
-    return 'http://localhost:5001';
+    return 'http://localhost:5000';
 };
 
