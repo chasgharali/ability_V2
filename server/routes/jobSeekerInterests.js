@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const JobSeekerInterest = require('../models/JobSeekerInterest');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
@@ -122,7 +123,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             boothId,
             recruiterId,
             page = 1,
-            limit = 10,
+            limit = 50,
             sortBy = 'createdAt',
             sortOrder = 'desc'
         } = req.query;
@@ -191,12 +192,93 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             .populate('booth', 'name description')
             .sort(sortOptions)
             .skip(skip)
-            .limit(parseInt(limit));
+            .limit(parseInt(limit))
+            .lean(); // Use lean() for better performance and to work with the data directly
 
         // Get total count for pagination
         const totalInterests = await JobSeekerInterest.countDocuments(query);
 
         console.log('Found interests:', interests.length, 'Total in DB:', totalInterests);
+
+        // Handle legacy data - fetch actual user/event/booth data when populate returns null
+        const User = require('../models/User');
+        const Event = require('../models/Event');
+        const Booth = require('../models/Booth');
+
+        // Collect all legacy IDs that need to be looked up
+        const legacyJobSeekerIds = [];
+        const legacyEventIds = [];
+        const legacyBoothIds = [];
+
+        for (const interest of interests) {
+            if (!interest.jobSeeker && interest.legacyJobSeekerId) {
+                legacyJobSeekerIds.push(interest.legacyJobSeekerId);
+            }
+            if (!interest.event && interest.legacyEventId && mongoose.Types.ObjectId.isValid(interest.legacyEventId)) {
+                legacyEventIds.push(new mongoose.Types.ObjectId(interest.legacyEventId));
+            }
+            if (!interest.booth && interest.legacyBoothId && mongoose.Types.ObjectId.isValid(interest.legacyBoothId)) {
+                legacyBoothIds.push(new mongoose.Types.ObjectId(interest.legacyBoothId));
+            }
+        }
+
+        // Batch fetch legacy users
+        let legacyUsersMap = {};
+        if (legacyJobSeekerIds.length > 0) {
+            try {
+                const legacyUsers = await User.find({ legacyId: { $in: legacyJobSeekerIds } })
+                    .select('name email city state legacyId')
+                    .lean();
+                legacyUsers.forEach(user => {
+                    legacyUsersMap[user.legacyId] = user;
+                });
+            } catch (error) {
+                console.error('Error batch fetching legacy users:', error);
+            }
+        }
+
+        // Batch fetch legacy events
+        let legacyEventsMap = {};
+        if (legacyEventIds.length > 0) {
+            try {
+                const legacyEvents = await Event.find({ _id: { $in: legacyEventIds } })
+                    .select('name slug')
+                    .lean();
+                legacyEvents.forEach(event => {
+                    legacyEventsMap[event._id.toString()] = event;
+                });
+            } catch (error) {
+                console.error('Error batch fetching legacy events:', error);
+            }
+        }
+
+        // Batch fetch legacy booths
+        let legacyBoothsMap = {};
+        if (legacyBoothIds.length > 0) {
+            try {
+                const legacyBooths = await Booth.find({ _id: { $in: legacyBoothIds } })
+                    .select('name description')
+                    .lean();
+                legacyBooths.forEach(booth => {
+                    legacyBoothsMap[booth._id.toString()] = booth;
+                });
+            } catch (error) {
+                console.error('Error batch fetching legacy booths:', error);
+            }
+        }
+
+        // Populate legacy data in interests
+        for (const interest of interests) {
+            if (!interest.jobSeeker && interest.legacyJobSeekerId && legacyUsersMap[interest.legacyJobSeekerId]) {
+                interest.jobSeeker = legacyUsersMap[interest.legacyJobSeekerId];
+            }
+            if (!interest.event && interest.legacyEventId && legacyEventsMap[interest.legacyEventId]) {
+                interest.event = legacyEventsMap[interest.legacyEventId];
+            }
+            if (!interest.booth && interest.legacyBoothId && legacyBoothsMap[interest.legacyBoothId]) {
+                interest.booth = legacyBoothsMap[interest.legacyBoothId];
+            }
+        }
 
         res.json({
             interests,

@@ -180,7 +180,7 @@ router.post('/register', [
         // Send verification email (always send, regardless of phone number or announcements preference)
         try {
             const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
-            const apiBase = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5001}`;
+            const apiBase = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
             // Verification link points to API endpoint which will redirect to app
             const verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
             const ok = await sendVerificationEmail(user.email, verifyLink);
@@ -362,8 +362,21 @@ router.post('/login', [
             }
         });
     } catch (error) {
-        logger.error('Login error:', error);
-        logger.error('Login error stack:', error.stack);
+        // Enhanced error logging
+        logger.error('Login error:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            code: error.code,
+            email: req.body?.email || 'unknown'
+        });
+        
+        // Log to console as well for immediate visibility
+        console.error('=== LOGIN ERROR ===');
+        console.error('Error:', error.message);
+        console.error('Stack:', error.stack);
+        console.error('==================');
+        
         res.status(500).json({
             error: 'Login failed',
             message: 'An error occurred during login',
