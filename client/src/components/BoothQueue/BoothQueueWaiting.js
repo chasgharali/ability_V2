@@ -11,8 +11,6 @@ import DeviceTestModal from './DeviceTestModal';
 import { useToast, ToastContainer } from '../common/Toast';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
-import AdminSidebar from '../Layout/AdminSidebar';
-import '../Dashboard/Dashboard.css';
 
 export default function BoothQueueWaiting() {
   const { eventSlug, boothId } = useParams();
@@ -899,22 +897,17 @@ export default function BoothQueueWaiting() {
   }
 
   return (
-    <div className="dashboard">
+    <div className="booth-queue-waiting">
       {/* Global header with event branding */}
-      <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} />
+      <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} hideMenuToggle={true} />
 
-      <div className="dashboard-layout">
-        <AdminSidebar />
-        
-        <main className="dashboard-main">
-          <div className="booth-queue-waiting">
-            {/* Skip to main content link for screen readers */}
-            <a href="#main-content" className="skip-link sr-only sr-only-focusable">
-              Skip to main content
-            </a>
+      {/* Skip to main content link for screen readers */}
+      <a href="#main-content" className="skip-link sr-only sr-only-focusable">
+        Skip to main content
+      </a>
 
-            {/* Main content area */}
-            <div className="waiting-layout">
+      {/* Main content area */}
+      <div className="waiting-layout">
         {/* Mobile backdrop overlay */}
         {mobilePanelOpen && (
           <div
@@ -1111,9 +1104,10 @@ export default function BoothQueueWaiting() {
         </div>
 
         {/* Removed old right sidebar */}
-            </div>
+      </div>
 
-            {/* Message Modal */}
+
+      {/* Message Modal */}
       {showMessageModal && (
         <div
           className="modal-overlay"
@@ -1521,11 +1515,8 @@ export default function BoothQueueWaiting() {
         onSave={handleDeviceSave}
       />
 
-            {/* Toast Container */}
-            <ToastContainer toasts={toasts} removeToast={removeToast} />
-          </div>
-        </main>
-      </div>
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

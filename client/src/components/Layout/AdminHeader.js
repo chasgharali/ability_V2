@@ -6,7 +6,7 @@ import '../Dashboard/Dashboard.css';
 import './AdminHeader.css';
 import settingsAPI from '../../services/settings';
 
-export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo }) {
+export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo, hideMenuToggle = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
@@ -131,9 +131,11 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
 
       <div className="dashboard-header-content admin-header-content">
         <div className="header-left">
-          <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
-            {mobileOpen ? <MdClose /> : <MdMenu />}
-          </button>
+          {!hideMenuToggle && (
+            <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
+              {mobileOpen ? <MdClose /> : <MdMenu />}
+            </button>
+          )}
           {/* Primary (event) logo - hide on mobile for booth users */}
           {brandingLogo && brandingLogo.trim() !== '' && (
             <img src={brandingLogo} alt="Site logo" className={`header-logo ${isBoothUser ? 'hide-on-mobile-booth' : ''}`} />
