@@ -349,14 +349,14 @@
 
 /* Role filter dropdown container - ensure no double borders and proper layout */
 .form-row {
-  display: flex !important;
+  /* display: flex !important; */
   align-items: flex-start !important;
   gap: 12px !important;
 }
 
 .form-row > div {
   width: 100%;
-  max-width: 200px;
+  /* max-width: 200px; */
   min-width: 200px;
   flex-shrink: 0;
 }

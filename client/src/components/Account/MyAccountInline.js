@@ -428,7 +428,7 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
         </fieldset>
 
         <div className="form-actions">
-          <button type="submit" className="ajf-btn ajf-btn-dark" disabled={saving} aria-label="Save and go to next step">{saving ? 'Saving…' : 'Next'}</button>
+          <button type="submit" className="ajf-btn ajf-btn-dark" disabled={saving} aria-label="Save account information">{saving ? 'Saving…' : 'Save'}</button>
         </div>
       </form>
     </section>

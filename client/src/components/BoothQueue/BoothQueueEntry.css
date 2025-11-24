@@ -1,7 +1,7 @@
 /* Booth Queue Entry Styles */
 
 .booth-queue-entry {
-  min-height: 100vh;
+  min-height: calc(100vh - 72px);
   background: #f8fafc;
   display: flex;
   flex-direction: column;
@@ -9,6 +9,7 @@
   justify-content: flex-start;
   padding: 0;
   position: relative;
+  width: 100%;
 }
 
 .booth-queue-entry .entry-modal {
@@ -17,7 +18,7 @@
 }
 
 /* Ensure AdminHeader spans full width when used inside this page */
-.booth-queue-entry>.dashboard-header {
+.dashboard .dashboard-header {
   width: 100%;
   align-self: stretch;
   position: sticky;

@@ -445,10 +445,8 @@ const Dashboard = () => {
                     );
                 }
                 return (
-                    <div className="dashboard-content">
-                        <h2>My Account</h2>
-
-                        <div className="alert-box">
+                    <div className="dashboard-content" style={{ paddingTop: '0.5rem', width: '100%', maxWidth: '100%', margin: 0 }}>
+                        <div className="alert-box" style={{ marginBottom: '1rem', marginTop: 0 }}>
                             <p>• Welcome to your job seeker dashboard</p>
                         </div>
 
