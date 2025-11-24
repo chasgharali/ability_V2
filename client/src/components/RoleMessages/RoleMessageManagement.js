@@ -185,7 +185,7 @@ export default function RoleMessageManagement() {
       <div className="dashboard">
         <AdminHeader />
         <div className="dashboard-layout">
-          <AdminSidebar active="instructions" />
+          <AdminSidebar active="role-messages" />
           <main id="dashboard-main" className="dashboard-main">
             <div className="loading">Loading role messages...</div>
           </main>
@@ -199,10 +199,10 @@ export default function RoleMessageManagement() {
     <div className="dashboard">
       <AdminHeader />
       <div className="dashboard-layout">
-        <AdminSidebar active="instructions" />
+        <AdminSidebar active="role-messages" />
         <main id="dashboard-main" className="dashboard-main">
           <div className="bm-header">
-            <h2>Role Message Management</h2>
+            <h2>Page Instructions</h2>
             <div className="bm-header-actions">
               <button
                 onClick={() => navigate('/instructions')}

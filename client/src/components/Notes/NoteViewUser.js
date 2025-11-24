@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { notesAPI } from '../../services/notes';
-import { MdArrowBack, MdSettings } from 'react-icons/md';
+import { MdArrowBack } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './Notes.css';
 
@@ -13,7 +12,6 @@ const NoteViewUser = ({ type }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
-    const { user } = useAuth();
 
     // Fetch notes for current user's role
     const fetchNotes = useCallback(async () => {
@@ -78,16 +76,6 @@ const NoteViewUser = ({ type }) => {
                     <div className="bm-header">
                         <h2>{title}</h2>
                         <div className="bm-header-actions">
-                            {type === 'instruction' && ['Admin', 'GlobalSupport'].includes(user?.role) && (
-                                <button
-                                    onClick={() => navigate('/role-messages')}
-                                    className="dashboard-button"
-                                    style={{ width: 'auto', marginRight: '1rem' }}
-                                >
-                                    <MdSettings />
-                                    Manage Role Messages
-                                </button>
-                            )}
                             <button
                                 onClick={() => navigate('/dashboard')}
                                 className="dashboard-button"

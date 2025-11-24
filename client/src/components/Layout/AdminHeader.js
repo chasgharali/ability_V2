@@ -6,7 +6,7 @@ import '../Dashboard/Dashboard.css';
 import './AdminHeader.css';
 import settingsAPI from '../../services/settings';
 
-export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo }) {
+export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo, hideMenuToggle = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
@@ -45,12 +45,57 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
     }
   };
 
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const toggleMobile = () => {
-    const next = !mobileOpen;
-    setMobileOpen(next);
+  // Simple state for mobile menu toggle - sync with body class
+  const [mobileOpen, setMobileOpen] = useState(false);
+  
+  // Sync icon with body class state (so it updates when sidebar closes via overlay or other methods)
+  useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.body.classList.toggle('sidebar-open', next);
+      const updateState = () => {
+        setMobileOpen(document.body.classList.contains('sidebar-open'));
+      };
+      
+      // Check initial state
+      updateState();
+      
+      // Watch for body class changes
+      const observer = new MutationObserver(updateState);
+      observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      
+      return () => observer.disconnect();
+    }
+  }, []);
+  
+  // Close sidebar on mount for small screens (fresh start on each page)
+  useEffect(() => {
+    if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+      // Always start with sidebar closed on small screens
+      if (window.innerWidth <= 1024) {
+        document.body.classList.remove('sidebar-open');
+      }
+      
+      // Handle window resize - close sidebar when switching to desktop
+      const handleResize = () => {
+        if (window.innerWidth > 1024) {
+          document.body.classList.remove('sidebar-open');
+        }
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+  
+  // Simple toggle function - just add/remove body class
+  const toggleMobile = () => {
+    if (typeof document !== 'undefined') {
+      const isOpen = document.body.classList.contains('sidebar-open');
+      if (isOpen) {
+        document.body.classList.remove('sidebar-open');
+      } else {
+        document.body.classList.add('sidebar-open');
+      }
+      // State will update automatically via MutationObserver
     }
   };
 
@@ -86,9 +131,11 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
 
       <div className="dashboard-header-content admin-header-content">
         <div className="header-left">
-          <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
-            {mobileOpen ? <MdClose /> : <MdMenu />}
-          </button>
+          {!hideMenuToggle && (
+            <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
+              {mobileOpen ? <MdClose /> : <MdMenu />}
+            </button>
+          )}
           {/* Primary (event) logo - hide on mobile for booth users */}
           {brandingLogo && brandingLogo.trim() !== '' && (
             <img src={brandingLogo} alt="Site logo" className={`header-logo ${isBoothUser ? 'hide-on-mobile-booth' : ''}`} />

@@ -221,10 +221,10 @@ export default function BoothManagement() {
     if (props.companyPage) {
       return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '4px 0' }}>
-          <ButtonComponent 
-            cssClass="e-outline e-primary e-small" 
+          <ButtonComponent
+            cssClass="e-outline e-primary e-small"
             onClick={() => window.open(props.companyPage, '_blank')}
-            style={{ 
+            style={{
               whiteSpace: 'nowrap',
               padding: '8px 24px',
               paddingLeft: '16px',
@@ -246,34 +246,34 @@ export default function BoothManagement() {
     const row = props;
     return (
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        <ButtonComponent 
-          cssClass="e-primary e-small" 
-          onClick={() => {}}
+        <ButtonComponent
+          cssClass="e-primary e-small"
+          onClick={() => { }}
         >
           Job Seekers Report
         </ButtonComponent>
-        <ButtonComponent 
-          cssClass="e-outline e-primary e-small" 
+        <ButtonComponent
+          cssClass="e-outline e-primary e-small"
           onClick={() => setPreviewBooth(row)}
         >
           Placeholder
         </ButtonComponent>
-        <ButtonComponent 
-          cssClass="e-primary e-small" 
+        <ButtonComponent
+          cssClass="e-primary e-small"
           onClick={() => copyInvite(row)}
         >
           <MdLink style={{ marginRight: '4px', verticalAlign: 'middle' }} />
           Invite Link
         </ButtonComponent>
-        <ButtonComponent 
-          cssClass="e-primary e-small" 
+        <ButtonComponent
+          cssClass="e-primary e-small"
           onClick={() => startEdit(row)}
         >
           <MdEdit style={{ marginRight: '4px', verticalAlign: 'middle' }} />
           Edit
         </ButtonComponent>
-        <ButtonComponent 
-          cssClass="e-outline e-danger e-small" 
+        <ButtonComponent
+          cssClass="e-outline e-danger e-small"
           onClick={() => handleDelete(row)}
         >
           <MdDelete style={{ marginRight: '4px', verticalAlign: 'middle' }} />
@@ -316,7 +316,7 @@ export default function BoothManagement() {
         companyPage: boothForm.companyPage || undefined,
         recruitersCount: boothForm.recruitersCount || 1,
         expireLinkTime: boothForm.expireLinkTime || undefined,
-        customInviteSlug: sanitizeInvite(boothForm.customInviteText || '') || undefined,
+        customInviteSlug: sanitizeInvite(boothForm.customInviteText || ''),
         richSections: [
           { title: 'First Placeholder', contentHtml: boothForm.firstHtml || '' },
           { title: 'Second Placeholder', contentHtml: boothForm.secondHtml || '' },
@@ -333,6 +333,7 @@ export default function BoothManagement() {
           recruitersCount: payload.recruitersCount,
           expireLinkTime: payload.expireLinkTime,
           customInviteSlug: payload.customInviteSlug,
+          eventId: boothForm.eventIds && boothForm.eventIds.length > 0 ? boothForm.eventIds[0] : undefined,
         });
         // Update rich sections via dedicated endpoint
         await updateBoothRichSections(editingBoothId, payload.richSections);
@@ -341,7 +342,7 @@ export default function BoothManagement() {
         await loadEvents();
         setBoothMode('list');
         setEditingBoothId(null);
-          showToast('Booth updated', 'Success', 2500);
+        showToast('Booth updated', 'Success', 2500);
       } else {
         const res = await createBooths(payload);
         const createdCount = Array.isArray(res?.created) ? res.created.length : 0;
@@ -443,7 +444,7 @@ export default function BoothManagement() {
       setBoothSaving(true);
       await deleteBooth(rowPendingDelete.id);
       await loadBooths();
-        showToast('Booth deleted', 'Success');
+      showToast('Booth deleted', 'Success');
     } catch (e) {
       console.error('Delete booth failed', e);
       showToast('Failed to delete');
@@ -474,7 +475,7 @@ export default function BoothManagement() {
       : `${baseUrl}/queue/${slugify(row.name || 'booth')}-${queueToken}`;
     try {
       await navigator.clipboard.writeText(url);
-        showToast('Invite link copied', 'Success');
+      showToast('Invite link copied', 'Success');
     } catch (e) {
       window.prompt('Copy to clipboard: Ctrl+C, Enter', url);
       showToast('Copy failed. Link shown.');
@@ -526,14 +527,14 @@ export default function BoothManagement() {
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />
-                    <ColumnDirective 
-                      field='name' 
-                      headerText='Booth Name' 
-                      width='200' 
+                    <ColumnDirective
+                      field='name'
+                      headerText='Booth Name'
+                      width='200'
                       template={(props) => (
-                        <div style={{ 
-                          wordWrap: 'break-word', 
-                          wordBreak: 'break-word', 
+                        <div style={{
+                          wordWrap: 'break-word',
+                          wordBreak: 'break-word',
                           whiteSpace: 'normal',
                           lineHeight: '1.5',
                           padding: '4px 0'
@@ -542,21 +543,21 @@ export default function BoothManagement() {
                         </div>
                       )}
                     />
-                    <ColumnDirective 
-                      field='logo' 
-                      headerText='Logo' 
-                      width='100' 
+                    <ColumnDirective
+                      field='logo'
+                      headerText='Logo'
+                      width='100'
                       textAlign='Center'
                       template={(props) => props.logo ? <img src={props.logo} alt="Booth logo" style={{ width: 80, height: 28, objectFit: 'contain', borderRadius: 4 }} /> : '-'}
                     />
-                    <ColumnDirective 
-                      field='events' 
-                      headerText='Event Title' 
-                      width='200' 
+                    <ColumnDirective
+                      field='events'
+                      headerText='Event Title'
+                      width='200'
                       template={(props) => (
-                        <div style={{ 
-                          wordWrap: 'break-word', 
-                          wordBreak: 'break-word', 
+                        <div style={{
+                          wordWrap: 'break-word',
+                          wordBreak: 'break-word',
                           whiteSpace: 'normal',
                           lineHeight: '1.5',
                           padding: '4px 0'
@@ -565,10 +566,10 @@ export default function BoothManagement() {
                         </div>
                       )}
                     />
-                    <ColumnDirective 
-                      field='recruitersCount' 
-                      headerText='Recruiters' 
-                      width='120' 
+                    <ColumnDirective
+                      field='recruitersCount'
+                      headerText='Recruiters'
+                      width='120'
                       textAlign='Center'
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
@@ -576,20 +577,20 @@ export default function BoothManagement() {
                         </div>
                       )}
                     />
-                    <ColumnDirective 
-                      field='customInviteSlug' 
-                      headerText='Custom Invite Text' 
-                      width='180' 
+                    <ColumnDirective
+                      field='customInviteSlug'
+                      headerText='Custom Invite Text'
+                      width='180'
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.customInviteSlug ? props.customInviteSlug : <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not set</span>}
                         </div>
                       )}
                     />
-                    <ColumnDirective 
-                      field='expireLinkTime' 
-                      headerText='Expire Date' 
-                      width='180' 
+                    <ColumnDirective
+                      field='expireLinkTime'
+                      headerText='Expire Date'
+                      width='180'
                       template={(props) => {
                         let displayText = 'No expiry';
                         if (props.expireLinkTime) {
@@ -611,20 +612,20 @@ export default function BoothManagement() {
                         );
                       }}
                     />
-                    <ColumnDirective 
-                      field='companyPage' 
-                      headerText='Company Page' 
-                      width='180' 
+                    <ColumnDirective
+                      field='companyPage'
+                      headerText='Company Page'
+                      width='180'
                       minWidth='170'
-                      allowSorting={false} 
+                      allowSorting={false}
                       allowFiltering={false}
                       clipMode='EllipsisWithTooltip'
                       template={companyPageTemplate}
                     />
-                    <ColumnDirective 
-                      headerText='Actions' 
-                      width='500' 
-                      allowSorting={false} 
+                    <ColumnDirective
+                      headerText='Actions'
+                      width='500'
+                      allowSorting={false}
                       allowFiltering={false}
                       template={actionsTemplate}
                     />
@@ -650,12 +651,12 @@ export default function BoothManagement() {
                         Choose file
                       </ButtonComponent>
                     </label>
-                    <input 
+                    <input
                       id="booth-logo-upload"
-                      type="file" 
-                      accept="image/*" 
-                      onChange={(e) => onPickBoothLogo(e.target.files?.[0])} 
-                      style={{ display: 'none' }} 
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => onPickBoothLogo(e.target.files?.[0])}
+                      style={{ display: 'none' }}
                     />
                     {boothForm.boothLogo && <img src={boothForm.boothLogo} alt="Booth logo" style={{ height: 40, border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 4 }} />}
                   </div>
@@ -769,8 +770,8 @@ export default function BoothManagement() {
                   placeholder="Auto-generated link"
                 />
 
-                <ButtonComponent 
-                  cssClass="e-primary" 
+                <ButtonComponent
+                  cssClass="e-primary"
                   disabled={boothSaving}
                   isPrimary={true}
                   onClick={(e) => { e.preventDefault(); handleCreateBooth(e); }}
@@ -845,7 +846,7 @@ export default function BoothManagement() {
       </DialogComponent>
 
       {/* Syncfusion ToastComponent */}
-      <ToastComponent 
+      <ToastComponent
         ref={(toast) => toastRef.current = toast}
         position={{ X: 'Right', Y: 'Bottom' }}
         showProgressBar={true}

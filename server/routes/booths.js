@@ -251,8 +251,15 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .optional()
         .isString()
         .toLowerCase()
-        .matches(/^[a-z0-9-]+$/)
+        .custom((value) => {
+            if (value === '' || value === null || value === undefined) return true;
+            return /^[a-z0-9-]+$/.test(value);
+        })
         .withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
+    body('eventId')
+        .optional()
+        .isMongoId()
+        .withMessage('Event ID must be a valid MongoDB ObjectId'),
     body('status')
         .optional()
         .isIn(['active', 'inactive', 'maintenance'])
@@ -269,8 +276,9 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             });
         }
 
-        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug } = req.body;
+        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug, eventId } = req.body;
         const { booth, user } = req;
+        const Event = require('../models/Event');
 
         // Update allowed fields
         if (name !== undefined) booth.name = name;
@@ -287,6 +295,14 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
                 }
             }
             booth.customInviteSlug = customInviteSlug || undefined;
+        }
+        if (eventId !== undefined) {
+            // Verify event exists
+            const event = await Event.findById(eventId);
+            if (!event) {
+                return res.status(404).json({ error: 'Event not found' });
+            }
+            booth.eventId = eventId;
         }
         if (status !== undefined) booth.status = status;
 

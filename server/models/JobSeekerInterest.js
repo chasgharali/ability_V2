@@ -36,6 +36,25 @@ const jobSeekerInterestSchema = new mongoose.Schema({
         type: String,
         maxlength: 500
     },
+    // Legacy IDs for tracking migrated interests from V1
+    legacyEventId: {
+        type: String,
+        default: null,
+        index: true,
+        sparse: true
+    },
+    legacyBoothId: {
+        type: String,
+        default: null,
+        index: true,
+        sparse: true
+    },
+    legacyJobSeekerId: {
+        type: String,
+        default: null,
+        index: true,
+        sparse: true
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -32,6 +32,7 @@ const settingsRoutes = require('./routes/settings');
 const chatRoutes = require('./routes/chat');
 const analyticsRoutes = require('./routes/analytics');
 const notesRoutes = require('./routes/notes');
+const roleMessagesRoutes = require('./routes/roleMessages');
 
 // Import socket handlers
 const socketHandler = require('./socket/socketHandler');
@@ -147,6 +148,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/role-messages', roleMessagesRoutes);
 
 // Socket.IO connection handling
 socketHandler(io);

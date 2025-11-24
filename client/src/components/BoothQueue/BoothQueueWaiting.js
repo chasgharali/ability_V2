@@ -899,7 +899,7 @@ export default function BoothQueueWaiting() {
   return (
     <div className="booth-queue-waiting">
       {/* Global header with event branding */}
-      <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} />
+      <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} hideMenuToggle={true} />
 
       {/* Skip to main content link for screen readers */}
       <a href="#main-content" className="skip-link sr-only sr-only-focusable">
