@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdPerson, MdPhone, MdLocationOn, MdWork, MdBuild } from 'react-icons/md';
+import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdPerson, MdPhone } from 'react-icons/md';
+import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
+import '@syncfusion/ej2-base/styles/material.css';
+import '@syncfusion/ej2-react-dropdowns/styles/material.css';
+import { countryCodes } from './countryCodes';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -12,6 +16,7 @@ const RegisterPage = () => {
         password: '',
         confirmPassword: '',
         phone: '',
+        phoneCountryCode: '+1',
         announcements: false,
         agreeToTerms: false
     });
@@ -25,6 +30,7 @@ const RegisterPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const formRef = useRef(null);
+    const countryCodeDropdownRef = useRef(null);
 
     // Get redirect parameter from URL
     const urlParams = new URLSearchParams(location.search);
@@ -53,6 +59,20 @@ const RegisterPage = () => {
             setValidationErrors(prev => ({
                 ...prev,
                 [name]: ''
+            }));
+        }
+    };
+
+    const handleCountryCodeChange = (args) => {
+        setFormData(prev => ({
+            ...prev,
+            phoneCountryCode: args.value
+        }));
+        // Clear any validation errors for phone country code
+        if (validationErrors.phoneCountryCode) {
+            setValidationErrors(prev => ({
+                ...prev,
+                phoneCountryCode: ''
             }));
         }
     };
@@ -120,13 +140,18 @@ const RegisterPage = () => {
         setIsLoading(true);
 
         try {
+            // Combine country code and phone number
+            const phoneNumber = formData.phone 
+                ? `${formData.phoneCountryCode}${formData.phone.replace(/^\+/, '')}`.trim()
+                : undefined;
+
             const userData = {
                 name: `${formData.firstName} ${formData.lastName}`,
                 email: formData.email,
                 password: formData.password,
                 role: 'JobSeeker',
-                phoneNumber: (formData.phone || '').trim(),
-                subscribeAnnouncements: formData.announcements || false
+                phoneNumber: phoneNumber,
+                subscribeAnnouncements: !!formData.announcements
             };
 
             await register(userData);
@@ -304,19 +329,64 @@ const RegisterPage = () => {
                                     <label htmlFor="phone" className="register-form-label">
                                         Phone
                                     </label>
-                                    <div className="register-input-container">
-                                        <MdPhone className="register-input-icon" aria-hidden="true" />
-                                        <input
-                                            type="tel"
-                                            id="phone"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            placeholder="Phone"
-                                            className={`register-form-input ${validationErrors.phone ? 'error' : ''}`}
-                                            autoComplete="tel"
-                                            aria-describedby={validationErrors.phone ? "phone-error" : undefined}
-                                        />
+                                    <div className="register-phone-container">
+                                        <div className="register-phone-country-code-wrapper">
+                                            <div className="register-input-container register-country-code-container">
+                                                <DropDownListComponent
+                                                    ref={countryCodeDropdownRef}
+                                                    id="phoneCountryCode"
+                                                    key={`country-code-${formData.phoneCountryCode}`}
+                                                    dataSource={countryCodes}
+                                                    fields={{ text: 'display', value: 'dialCode' }}
+                                                    value={formData.phoneCountryCode}
+                                                    change={handleCountryCodeChange}
+                                                    placeholder="Code"
+                                                    width="100%"
+                                                    popupHeight="300px"
+                                                    allowFiltering={true}
+                                                    filterBarPlaceholder="Search..."
+                                                    cssClass="register-country-code-dropdown"
+                                                    itemTemplate={(data) => {
+                                                        if (!data || typeof data !== 'object') return <span>Code</span>;
+                                                        return (
+                                                            <div className="register-country-code-item" style={{ color: 'inherit' }}>
+                                                                <span className="register-country-flag" style={{ color: 'inherit' }}>{data.flag || ''}</span>
+                                                                <span className="register-country-code-text" style={{ color: 'inherit' }}>{data.dialCode || ''}</span>
+                                                            </div>
+                                                        );
+                                                    }}
+                                                    valueTemplate={() => {
+                                                        // Always use formData.phoneCountryCode to ensure it updates
+                                                        const selectedCountry = countryCodes.find(c => c.dialCode === formData.phoneCountryCode);
+                                                        if (selectedCountry) {
+                                                            return (
+                                                                <div className="register-country-code-value">
+                                                                    <span className="register-country-flag">{selectedCountry.flag}</span>
+                                                                    <span className="register-country-code-text">{selectedCountry.dialCode}</span>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return <span>Code</span>;
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="register-phone-input-wrapper">
+                                            <div className="register-input-container">
+                                                <MdPhone className="register-input-icon" aria-hidden="true" />
+                                                <input
+                                                    type="tel"
+                                                    id="phone"
+                                                    name="phone"
+                                                    value={formData.phone}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Phone number"
+                                                    className={`register-form-input register-phone-input ${validationErrors.phone ? 'error' : ''}`}
+                                                    autoComplete="tel-national"
+                                                    aria-describedby={validationErrors.phone ? "phone-error" : undefined}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                     {validationErrors.phone && (
                                         <div id="phone-error" className="register-field-error" role="alert" aria-live="polite">

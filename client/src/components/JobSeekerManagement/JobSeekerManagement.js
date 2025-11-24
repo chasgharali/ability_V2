@@ -40,7 +40,9 @@ export default function JobSeekerManagement() {
   const [loading, setLoading] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const toastRef = useRef(null);
+  const gridRef = useRef(null);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -144,6 +146,35 @@ export default function JobSeekerManagement() {
     loadJobSeekers();
   }, [loadJobSeekers]);
 
+  // Cleanup grid and toast when mode changes to prevent DOM manipulation errors
+  useEffect(() => {
+    // When switching to view mode, ensure grid and toast are cleaned up
+    if (mode === 'view') {
+      // Cleanup grid
+      if (gridRef.current) {
+        const grid = gridRef.current;
+        try {
+          if (typeof grid.destroy === 'function') {
+            grid.destroy();
+          }
+          gridRef.current = null;
+        } catch (e) {
+          console.warn('Grid cleanup (non-critical):', e.message);
+        }
+      }
+      
+      // Clear any active toasts to prevent DOM errors when switching ToastComponents
+      if (toastRef.current) {
+        try {
+          // Hide all active toasts before component unmounts
+          toastRef.current.hideAll();
+        } catch (e) {
+          // Ignore toast cleanup errors
+        }
+      }
+    }
+  }, [mode]);
+
   const handleToggleActive = async (row) => {
     try {
       if (row.isActive) {
@@ -161,8 +192,44 @@ export default function JobSeekerManagement() {
   };
 
   const handleViewProfile = (row) => {
+    console.log('View Profile clicked for:', row);
+    
+    // Clear any active toasts before switching modes to prevent DOM errors
+    if (toastRef.current) {
+      try {
+        toastRef.current.hideAll();
+      } catch (e) {
+        // Ignore toast cleanup errors
+      }
+    }
+    
+    // Set transitioning first to hide the grid
+    setIsTransitioning(true);
+    
+    // Set the selected job seeker
     setSelectedJobSeeker(row);
-    setMode('view');
+    
+    // Destroy the grid after a brief moment
+    setTimeout(() => {
+      if (gridRef.current) {
+        try {
+          const grid = gridRef.current;
+          if (typeof grid.destroy === 'function') {
+            grid.destroy();
+          }
+          gridRef.current = null;
+        } catch (e) {
+          console.warn('Grid cleanup warning:', e);
+        }
+      }
+      
+      // Change mode after grid is destroyed
+      // Use a small additional delay to ensure all cleanup completes
+      setTimeout(() => {
+        setMode('view');
+        setIsTransitioning(false);
+      }, 50);
+    }, 100); // Delay to allow grid to be hidden first
   };
 
   const handleVerifyEmail = (row) => {
@@ -272,7 +339,31 @@ export default function JobSeekerManagement() {
   };
 
   const renderJobSeekerProfile = () => {
-    if (!selectedJobSeeker) return null;
+    console.log('renderJobSeekerProfile called, selectedJobSeeker:', selectedJobSeeker);
+    console.log('Current mode:', mode);
+    console.log('isTransitioning:', isTransitioning);
+    
+    if (!selectedJobSeeker) {
+      console.warn('No selectedJobSeeker, returning null');
+      return (
+        <div className="dashboard-content">
+          <div className="form-header">
+            <ButtonComponent 
+              cssClass="e-outline e-primary"
+              onClick={() => {
+                setMode('list');
+                setSelectedJobSeeker(null);
+                setIsTransitioning(false);
+              }}
+            >
+              ← Back to List
+            </ButtonComponent>
+            <h2>No Job Seeker Selected</h2>
+          </div>
+          <p>Please select a job seeker from the list to view their profile.</p>
+        </div>
+      );
+    }
 
     const js = selectedJobSeeker;
     const survey = js.survey || {};
@@ -540,34 +631,15 @@ export default function JobSeekerManagement() {
     );
   };
 
-  if (mode === 'view') {
-    return (
-      <div className="dashboard">
-        <AdminHeader />
-        <div className="dashboard-layout">
-          <AdminSidebar active="jobseekers" />
-          <main className="dashboard-main">
-            {renderJobSeekerProfile()}
-          </main>
-        </div>
-        {/* Syncfusion ToastComponent */}
-        <ToastComponent 
-          ref={(toast) => toastRef.current = toast}
-          position={{ X: 'Right', Y: 'Bottom' }}
-          showProgressBar={true}
-          timeOut={3000}
-          newestOnTop={true}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard">
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="jobseekers" />
         <main className="dashboard-main">
+          {mode === 'view' ? (
+            renderJobSeekerProfile()
+          ) : (
           <div className="dashboard-content">
             <div className="page-header">
               <h2>Job Seeker Management</h2>
@@ -622,30 +694,88 @@ export default function JobSeekerManagement() {
 
             {/* Data Grid */}
             {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
-            <GridComponent
-              dataSource={filteredJobSeekers}
-              allowPaging={true}
-              pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
-              allowSorting={true}
-              allowFiltering={true}
-              filterSettings={{ type: 'Menu' }}
-              showColumnMenu={true}
-              showColumnChooser={true}
-              allowResizing={true}
-              allowReordering={true}
-              toolbar={['Search', 'ColumnChooser']}
-              selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
-              enableHover={true}
-              allowRowDragAndDrop={false}
-            >
+            {mode === 'list' && !isTransitioning && (
+              <div style={{ display: isTransitioning ? 'none' : 'block' }}>
+                <GridComponent
+                  key="job-seekers-grid"
+                  ref={gridRef}
+                  dataSource={filteredJobSeekers}
+                  allowPaging={true}
+                  pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+                  allowSorting={true}
+                  allowFiltering={true}
+                  filterSettings={{ type: 'Menu' }}
+                  showColumnMenu={true}
+                  showColumnChooser={true}
+                  allowResizing={true}
+                  allowReordering={true}
+                  toolbar={['Search', 'ColumnChooser']}
+                  selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
+                  enableHover={true}
+                  allowRowDragAndDrop={false}
+                >
               <ColumnsDirective>
                 <ColumnDirective type='checkbox' width='50' />
-                <ColumnDirective field='firstName' headerText='First Name' width='150' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='lastName' headerText='Last Name' width='150' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='email' headerText='Email' width='250' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='phone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='city' headerText='City' width='120' clipMode='EllipsisWithTooltip' />
-                <ColumnDirective field='state' headerText='State' width='120' clipMode='EllipsisWithTooltip' />
+                <ColumnDirective 
+                  field='firstName' 
+                  headerText='First Name' 
+                  width='150' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.firstName || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='lastName' 
+                  headerText='Last Name' 
+                  width='150' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.lastName || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='email' 
+                  headerText='Email' 
+                  width='250' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.email || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='phone' 
+                  headerText='Phone' 
+                  width='150' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.phone || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='city' 
+                  headerText='City' 
+                  width='120' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.city || ''}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='state' 
+                  headerText='State' 
+                  width='120' 
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.state || ''}
+                    </div>
+                  )}
+                />
                 <ColumnDirective 
                   field='isActive' 
                   headerText='Status' 
@@ -664,8 +794,11 @@ export default function JobSeekerManagement() {
                   field='lastLogin' 
                   headerText='Last Login' 
                   width='150' 
-                  clipMode='EllipsisWithTooltip'
-                  template={lastLoginTemplate}
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {lastLoginTemplate(props)}
+                    </div>
+                  )}
                 />
                 <ColumnDirective 
                   headerText='Actions' 
@@ -676,8 +809,11 @@ export default function JobSeekerManagement() {
                 />
               </ColumnsDirective>
               <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
-            </GridComponent>
+                </GridComponent>
+              </div>
+            )}
           </div>
+          )}
         </main>
       </div>
       <div aria-live="polite" aria-atomic="true" className="sr-only">
@@ -758,7 +894,7 @@ export default function JobSeekerManagement() {
         </p>
       </DialogComponent>
 
-      {/* Syncfusion ToastComponent */}
+      {/* Syncfusion ToastComponent - shared across all modes to prevent DOM errors */}
       <ToastComponent 
         ref={(toast) => toastRef.current = toast}
         position={{ X: 'Right', Y: 'Bottom' }}

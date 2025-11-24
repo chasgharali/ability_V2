@@ -527,40 +527,89 @@ export default function BoothManagement() {
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />
-                    <ColumnDirective field='name' headerText='Booth Name' width='200' clipMode='EllipsisWithTooltip' />
+                    <ColumnDirective
+                      field='name'
+                      headerText='Booth Name'
+                      width='200'
+                      template={(props) => (
+                        <div style={{
+                          wordWrap: 'break-word',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.5',
+                          padding: '4px 0'
+                        }}>
+                          {props.name || '-'}
+                        </div>
+                      )}
+                    />
                     <ColumnDirective
                       field='logo'
                       headerText='Logo'
                       width='100'
                       textAlign='Center'
-                      template={(props) => props.logo ? <img src={props.logo} alt="Booth logo" style={{ height: 28, borderRadius: 4 }} /> : '-'}
+                      template={(props) => props.logo ? <img src={props.logo} alt="Booth logo" style={{ width: 80, height: 28, objectFit: 'contain', borderRadius: 4 }} /> : '-'}
                     />
                     <ColumnDirective
                       field='events'
                       headerText='Event Title'
                       width='200'
-                      template={(props) => (props.events && props.events.length > 0) ? props.events.join(', ') : 'No events'}
+                      template={(props) => (
+                        <div style={{
+                          wordWrap: 'break-word',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.5',
+                          padding: '4px 0'
+                        }}>
+                          {(props.events && props.events.length > 0) ? props.events.join(', ') : 'No events'}
+                        </div>
+                      )}
                     />
-                    <ColumnDirective field='recruitersCount' headerText='Recruiters' width='120' textAlign='Center' />
+                    <ColumnDirective
+                      field='recruitersCount'
+                      headerText='Recruiters'
+                      width='120'
+                      textAlign='Center'
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                          {props.recruitersCount ?? 0}
+                        </div>
+                      )}
+                    />
                     <ColumnDirective
                       field='customInviteSlug'
                       headerText='Custom Invite Text'
                       width='180'
-                      template={(props) => props.customInviteSlug ? <span>{props.customInviteSlug}</span> : 'Not set'}
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.customInviteSlug ? props.customInviteSlug : <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not set</span>}
+                        </div>
+                      )}
                     />
                     <ColumnDirective
                       field='expireLinkTime'
                       headerText='Expire Date'
                       width='180'
                       template={(props) => {
-                        if (!props.expireLinkTime) return 'No expiry';
-                        try {
-                          const date = new Date(props.expireLinkTime);
-                          if (isNaN(date.getTime())) return 'Invalid date';
-                          return date.toLocaleString();
-                        } catch (e) {
-                          return 'Invalid date';
+                        let displayText = 'No expiry';
+                        if (props.expireLinkTime) {
+                          try {
+                            const date = new Date(props.expireLinkTime);
+                            if (!isNaN(date.getTime())) {
+                              displayText = date.toLocaleString();
+                            } else {
+                              displayText = 'Invalid date';
+                            }
+                          } catch (e) {
+                            displayText = 'Invalid date';
+                          }
                         }
+                        return (
+                          <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                            {displayText}
+                          </div>
+                        );
                       }}
                     />
                     <ColumnDirective

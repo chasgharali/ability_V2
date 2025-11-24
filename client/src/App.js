@@ -10,6 +10,8 @@ import { FocusManager } from './components/Accessibility/FocusManager';
 import ChatPanel from './components/Chat/ChatPanel';
 import LoginPage from './components/Auth/LoginPage';
 import RegisterPage from './components/Auth/RegisterPage';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import ResetPassword from './components/Auth/ResetPassword';
 import VerifyEmailSent from './components/Auth/VerifyEmailSent';
 import VerifyEmailSuccess from './components/Auth/VerifyEmailSuccess';
 import Dashboard from './components/Dashboard/Dashboard';
@@ -87,6 +89,8 @@ function App() {
                                     <Route path="/" element={<LandingPage />} />
                                     <Route path="/login" element={<LoginPage />} />
                                     <Route path="/register" element={<RegisterPage />} />
+                                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                                    <Route path="/reset-password" element={<ResetPassword />} />
                                     <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
                                     <Route path="/email-verified" element={<VerifyEmailSuccess />} />
                                     <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />

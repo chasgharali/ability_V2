@@ -46,15 +46,138 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
   };
 
   try {
+    // Check if AWS credentials are configured
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      logger.error('AWS SES credentials not configured', {
+        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+        toEmail
+      });
+      return false;
+    }
+
+    // Log configuration before sending
+    logger.info(`Attempting to send email to ${toEmail}`, {
+      fromEmail,
+      hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION || 'us-east-1'
+    });
+
     const resp = await ses.sendEmail(params).promise();
     logger.info(`SES verification email sent to ${toEmail}: ${resp.MessageId}`);
     return true;
   } catch (err) {
-    logger.error('SES sendVerificationEmail error:', err);
+    // Provide more detailed error information
+    const errorDetails = {
+      message: err.message,
+      code: err.code,
+      statusCode: err.statusCode,
+      requestId: err.requestId,
+      toEmail,
+      fromEmail
+    };
+
+    // Common error messages and solutions
+    if (err.code === 'InvalidClientTokenId' || err.message.includes('security token')) {
+      errorDetails.solution = 'AWS credentials are invalid or expired. Please check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file.';
+    } else if (err.code === 'SignatureDoesNotMatch') {
+      errorDetails.solution = 'AWS secret access key is incorrect. Please verify AWS_SECRET_ACCESS_KEY in your .env file.';
+    } else if (err.code === 'AccessDenied' || err.message.includes('not authorized')) {
+      errorDetails.solution = 'AWS credentials do not have permission to send emails via SES. Please verify IAM permissions.';
+    } else if (err.code === 'MessageRejected' || err.message.includes('Email address not verified')) {
+      errorDetails.solution = 'The sender email address is not verified in AWS SES. Please verify the email address in AWS SES console.';
+    }
+
+    logger.error('SES sendVerificationEmail error:', errorDetails);
+    return false;
+  }
+}
+
+async function sendPasswordResetEmail(toEmail, resetLink) {
+  const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
+  const subject = 'Reset your password - abilityconnect.com';
+
+  const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
+  const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
+  const cardStyle = 'background:#ececec;border-radius:6px;padding:16px;margin:auto;max-width:640px';
+
+  const html = `
+    <div style="${containerStyle}">
+      <div style="${cardStyle}">
+        <p style="margin:0 0 8px 0; color:#111">Reset your password</p>
+        <p style="margin:12px 0">You requested to reset your password. Please click the button below to reset it:</p>
+        <p style="margin:16px 0"><a href="${resetLink}" target="_blank" rel="noopener" style="${buttonStyle}">Reset Password</a></p>
+        <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
+        <p style="margin:8px 0"><a href="${resetLink}" target="_blank" rel="noopener" style="color:#1d4ed8">${resetLink}</a></p>
+        <p style="margin-top:16px; color:#666; font-size:12px;">This link will expire in 1 hour. If you didn't request a password reset, please ignore this email.</p>
+      </div>
+    </div>
+  `;
+  const text = `Reset your password\n\nYou requested to reset your password. Please use the following link to reset it:\n\n${resetLink}\n\nThis link will expire in 1 hour. If you didn't request a password reset, please ignore this email.`;
+
+  const params = {
+    Destination: { ToAddresses: [toEmail] },
+    Message: {
+      Body: {
+        Html: { Charset: 'UTF-8', Data: html },
+        Text: { Charset: 'UTF-8', Data: text }
+      },
+      Subject: { Charset: 'UTF-8', Data: subject }
+    },
+    Source: fromEmail
+  };
+
+  try {
+    // Check if AWS credentials are configured
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      logger.error('AWS SES credentials not configured', {
+        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+        toEmail
+      });
+      return false;
+    }
+
+    // Log configuration before sending
+    logger.info(`Attempting to send password reset email to ${toEmail}`, {
+      fromEmail,
+      hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION || 'us-east-1'
+    });
+
+    const resp = await ses.sendEmail(params).promise();
+    logger.info(`SES password reset email sent to ${toEmail}: ${resp.MessageId}`);
+    return true;
+  } catch (err) {
+    // Provide more detailed error information
+    const errorDetails = {
+      message: err.message,
+      code: err.code,
+      statusCode: err.statusCode,
+      requestId: err.requestId,
+      toEmail,
+      fromEmail
+    };
+
+    // Common error messages and solutions
+    if (err.code === 'InvalidClientTokenId' || err.message.includes('security token')) {
+      errorDetails.solution = 'AWS credentials are invalid or expired. Please check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file.';
+    } else if (err.code === 'SignatureDoesNotMatch') {
+      errorDetails.solution = 'AWS secret access key is incorrect. Please verify AWS_SECRET_ACCESS_KEY in your .env file.';
+    } else if (err.code === 'AccessDenied' || err.message.includes('not authorized')) {
+      errorDetails.solution = 'AWS credentials do not have permission to send emails via SES. Please verify IAM permissions.';
+    } else if (err.code === 'MessageRejected' || err.message.includes('Email address not verified')) {
+      errorDetails.solution = 'The sender email address is not verified in AWS SES. Please verify the email address in AWS SES console.';
+    }
+
+    logger.error('SES sendPasswordResetEmail error:', errorDetails);
     return false;
   }
 }
 
 module.exports = {
-  sendVerificationEmail
+  sendVerificationEmail,
+  sendPasswordResetEmail
 };

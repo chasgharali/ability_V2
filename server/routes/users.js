@@ -201,6 +201,10 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
 
         if (role) {
             query.role = role;
+        } else {
+            // When no role filter is provided, exclude JobSeekers by default
+            // JobSeekers have their own management page
+            query.role = { $ne: 'JobSeeker' };
         }
 
         if (isActive !== undefined) {
