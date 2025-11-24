@@ -192,12 +192,12 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
     
     // Try new bcrypt password first (for new V2 users)
     if (this.hashedPassword && this.hashedPassword.startsWith('$2')) {
-        try {
+    try {
             const bcryptMatch = await bcrypt.compare(candidatePassword, this.hashedPassword);
             if (bcryptMatch) {
                 return true;
             }
-        } catch (error) {
+    } catch (error) {
             // Bcrypt comparison failed, continue to legacy password check
         }
     }
@@ -241,13 +241,13 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
     // };
     try {
         const computedHash = crypto.pbkdf2Sync(
-            candidatePassword,
+                candidatePassword,
             legacySalt,
             10000, // iterations - MUST match V1 exactly
             512,   // key length - MUST match V1 exactly
             'sha512' // algorithm - MUST match V1 exactly
-        ).toString('hex');
-
+            ).toString('hex');
+            
         // Compare hashes (exact string comparison like V1)
         if (computedHash === legacyHash) {
             // Password matches! Auto-migrate to bcrypt and clear legacy password
@@ -278,10 +278,10 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
                 console.error(`[comparePassword] Error updating password for ${this.email}:`, updateError.message);
                 // Still return true since password was validated correctly
                 return true;
-            }
         }
-        
-        return false;
+    }
+    
+    return false;
     } catch (error) {
         console.error(`[comparePassword] Error validating legacy password for ${this.email}:`, error.message);
         return false;
