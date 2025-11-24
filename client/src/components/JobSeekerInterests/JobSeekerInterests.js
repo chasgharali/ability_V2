@@ -475,9 +475,7 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowSorting={false} />
                                         <ColumnDirective headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowSorting={false} />
                                         <ColumnDirective headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Interest Level' width='130' textAlign='Center' template={interestLevelTemplate} allowSorting={false} />
                                         <ColumnDirective headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} />
-                                        <ColumnDirective headerText='Notes' width='250' clipMode='EllipsisWithTooltip' template={notesTemplate} allowSorting={false} />
                                     </ColumnsDirective>
                                     <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>
