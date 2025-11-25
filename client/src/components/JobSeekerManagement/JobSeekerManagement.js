@@ -43,6 +43,8 @@ export default function JobSeekerManagement() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const toastRef = useRef(null);
   const gridRef = useRef(null);
+  const searchFilterRef = useRef('');
+  const statusFilterRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -50,6 +52,17 @@ export default function JobSeekerManagement() {
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
   const [rowPendingVerify, setRowPendingVerify] = useState(null);
+
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNext: false,
+    hasPrev: false
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // Accessibility live region message
   const [liveMsg, setLiveMsg] = useState('');
@@ -84,7 +97,7 @@ export default function JobSeekerManagement() {
     try {
       await deleteUserPermanently(rowPendingDelete.id);
       showToast('Job seeker deleted', 'Success');
-      await loadJobSeekers();
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
     } catch (e) {
       console.error('Delete failed', e);
       const msg = e?.response?.data?.message || 'Delete failed';
@@ -100,11 +113,32 @@ export default function JobSeekerManagement() {
     setRowPendingDelete(null);
   };
 
-  const loadJobSeekers = useCallback(async () => {
+  const loadJobSeekers = useCallback(async (page, limit, search, isActive) => {
     try {
       setLoading(true);
-      const res = await listUsers({ page: 1, limit: 1000, role: 'JobSeeker' });
+      
+      // Build query parameters
+      const params = {
+        page: page || 1,
+        limit: limit || 50,
+        role: 'JobSeeker'
+      };
+      
+      // Add search parameter if provided
+      if (search && search.trim()) {
+        params.search = search.trim();
+      }
+      
+      // Add status filter if provided
+      if (isActive === 'active') {
+        params.isActive = 'true';
+      } else if (isActive === 'inactive') {
+        params.isActive = 'false';
+      }
+      
+      const res = await listUsers(params);
       const items = (res?.users || []).filter(u => u.role === 'JobSeeker');
+      
       setJobSeekers(items.map(u => {
         const parts = (u.name || '').trim().split(/\s+/);
         const firstName = parts[0] || '';
@@ -133,7 +167,19 @@ export default function JobSeekerManagement() {
           needsOther: u.needsOther,
         };
       }));
-      setLiveMsg(`Loaded ${items.length} job seekers`);
+      
+      // Update pagination state
+      if (res?.pagination) {
+        setPagination({
+          currentPage: res.pagination.currentPage,
+          totalPages: res.pagination.totalPages,
+          totalCount: res.pagination.totalCount,
+          hasNext: res.pagination.hasNext,
+          hasPrev: res.pagination.hasPrev
+        });
+      }
+      
+      setLiveMsg(`Loaded ${items.length} of ${res?.pagination?.totalCount || 0} job seekers`);
     } catch (e) {
       console.error('Load failed', e);
       showToast('Failed to load job seekers', 'Error');
@@ -142,9 +188,58 @@ export default function JobSeekerManagement() {
     }
   }, []);
 
+  // Track previous values to detect actual changes
+  const isFirstRender = useRef(true);
+  const prevSearchFilter = useRef(searchFilter);
+  const prevStatusFilter = useRef(statusFilter);
+
+  // Update refs when filters change
   useEffect(() => {
-    loadJobSeekers();
-  }, [loadJobSeekers]);
+    searchFilterRef.current = searchFilter;
+  }, [searchFilter]);
+
+  useEffect(() => {
+    statusFilterRef.current = statusFilter;
+  }, [statusFilter]);
+
+  // Initial load on mount - only runs once
+  useEffect(() => {
+    loadJobSeekers(1, pageSize, '', '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle status filter changes (immediate, not debounced)
+  useEffect(() => {
+    // Skip on first render
+    if (isFirstRender.current) return;
+    
+    // Only trigger if status actually changed
+    if (prevStatusFilter.current !== statusFilter) {
+      prevStatusFilter.current = statusFilter;
+      setCurrentPage(1);
+      loadJobSeekers(1, pageSize, searchFilterRef.current, statusFilter);
+    }
+  }, [statusFilter, pageSize, loadJobSeekers]);
+
+  // Debounced search effect
+  useEffect(() => {
+    // Skip on first render
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // Only trigger if search actually changed
+    if (prevSearchFilter.current === searchFilter) return;
+
+    const searchTimer = setTimeout(() => {
+      prevSearchFilter.current = searchFilter;
+      setCurrentPage(1);
+      loadJobSeekers(1, pageSize, searchFilter, statusFilterRef.current);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(searchTimer);
+  }, [searchFilter, pageSize, loadJobSeekers]);
 
   // Cleanup grid and toast when mode changes to prevent DOM manipulation errors
   useEffect(() => {
@@ -184,7 +279,7 @@ export default function JobSeekerManagement() {
         await reactivateUser(row.id);
         showToast(`${row.firstName} ${row.lastName} reactivated`, 'Success');
       }
-      await loadJobSeekers();
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
     } catch (e) {
       console.error('Toggle active failed', e);
       showToast('Failed to update status', 'Error');
@@ -243,7 +338,7 @@ export default function JobSeekerManagement() {
     try {
       await verifyUserEmail(rowPendingVerify.id);
       showToast(`Email verified for ${rowPendingVerify.firstName} ${rowPendingVerify.lastName}`, 'Success');
-      await loadJobSeekers(); // Refresh the list
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current); // Refresh the list
     } catch (e) {
       console.error('Verify email failed', e);
       const msg = e?.response?.data?.message || 'Failed to verify email';
@@ -259,20 +354,6 @@ export default function JobSeekerManagement() {
     setRowPendingVerify(null);
   };
 
-  const filteredJobSeekers = useMemo(() => {
-    return jobSeekers.filter(js => {
-      const matchesSearch = !searchFilter || 
-        js.firstName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-        js.lastName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-        js.email.toLowerCase().includes(searchFilter.toLowerCase());
-      
-      const matchesStatus = !statusFilter || 
-        (statusFilter === 'active' && js.isActive) ||
-        (statusFilter === 'inactive' && !js.isActive);
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [jobSeekers, searchFilter, statusFilter]);
 
   // Grid template functions for custom column renders - using Syncfusion ButtonComponent
   const statusTemplate = (props) => {
@@ -676,7 +757,7 @@ export default function JobSeekerManagement() {
             <div className="stats-row">
               <div className="stat-card">
                 <h4>Total Job Seekers</h4>
-                <span className="stat-number">{jobSeekers.length}</span>
+                <span className="stat-number">{pagination.totalCount || 0}</span>
               </div>
               <div className="stat-card">
                 <h4>Active</h4>
@@ -697,19 +778,17 @@ export default function JobSeekerManagement() {
             {mode === 'list' && !isTransitioning && (
               <div style={{ display: isTransitioning ? 'none' : 'block' }}>
                 <GridComponent
-                  key="job-seekers-grid"
+                  key={`job-seekers-grid-${currentPage}-${pageSize}`}
                   ref={gridRef}
-                  dataSource={filteredJobSeekers}
-                  allowPaging={true}
-                  pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+                  dataSource={jobSeekers}
+                  allowPaging={false}
                   allowSorting={true}
-                  allowFiltering={true}
-                  filterSettings={{ type: 'Menu' }}
+                  allowFiltering={false}
                   showColumnMenu={true}
                   showColumnChooser={true}
                   allowResizing={true}
                   allowReordering={true}
-                  toolbar={['Search', 'ColumnChooser']}
+                  toolbar={['ColumnChooser']}
                   selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
                   enableHover={true}
                   allowRowDragAndDrop={false}
@@ -810,6 +889,165 @@ export default function JobSeekerManagement() {
               </ColumnsDirective>
               <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                 </GridComponent>
+
+                {/* Custom Server-Side Pagination */}
+                <div className="custom-pagination" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px',
+                  backgroundColor: '#f9fafb',
+                  borderTop: '1px solid #e5e7eb',
+                  marginTop: '0'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '14px', color: '#374151' }}>
+                      Rows per page:
+                    </span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        const newSize = parseInt(e.target.value);
+                        setPageSize(newSize);
+                        setCurrentPage(1);
+                        loadJobSeekers(1, newSize, searchFilterRef.current, statusFilterRef.current);
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={200}>200</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '14px', color: '#374151' }}>
+                      Page {currentPage} of {pagination.totalPages || 1} ({pagination.totalCount || 0} total)
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      onClick={() => {
+                        if (currentPage > 1) {
+                          const newPage = 1;
+                          setCurrentPage(newPage);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                        }
+                      }}
+                      disabled={currentPage <= 1 || loading}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        backgroundColor: currentPage <= 1 ? '#f3f4f6' : '#fff',
+                        cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        color: currentPage <= 1 ? '#9ca3af' : '#374151'
+                      }}
+                      title="First Page"
+                    >
+                      ⟨⟨
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (currentPage > 1) {
+                          const newPage = currentPage - 1;
+                          setCurrentPage(newPage);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                        }
+                      }}
+                      disabled={currentPage <= 1 || loading}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        backgroundColor: currentPage <= 1 ? '#f3f4f6' : '#fff',
+                        cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        color: currentPage <= 1 ? '#9ca3af' : '#374151'
+                      }}
+                      title="Previous Page"
+                    >
+                      ⟨ Prev
+                    </button>
+                    
+                    <input
+                      type="number"
+                      min="1"
+                      max={pagination.totalPages || 1}
+                      value={currentPage}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (val >= 1 && val <= (pagination.totalPages || 1)) {
+                          setCurrentPage(val);
+                          loadJobSeekers(val, pageSize, searchFilterRef.current, statusFilterRef.current);
+                        }
+                      }}
+                      style={{
+                        width: '60px',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '14px',
+                        textAlign: 'center'
+                      }}
+                    />
+                    
+                    <button
+                      onClick={() => {
+                        if (currentPage < (pagination.totalPages || 1)) {
+                          const newPage = currentPage + 1;
+                          setCurrentPage(newPage);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                        }
+                      }}
+                      disabled={currentPage >= (pagination.totalPages || 1) || loading}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        backgroundColor: currentPage >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
+                        cursor: currentPage >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        color: currentPage >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
+                      }}
+                      title="Next Page"
+                    >
+                      Next ⟩
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (currentPage < (pagination.totalPages || 1)) {
+                          const newPage = pagination.totalPages || 1;
+                          setCurrentPage(newPage);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                        }
+                      }}
+                      disabled={currentPage >= (pagination.totalPages || 1) || loading}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        backgroundColor: currentPage >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
+                        cursor: currentPage >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        color: currentPage >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
+                      }}
+                      title="Last Page"
+                    >
+                      ⟩⟩
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
