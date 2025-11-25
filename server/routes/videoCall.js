@@ -202,6 +202,7 @@ router.post('/join', auth, async (req, res) => {
 router.get('/available-interpreters/:boothId', auth, async (req, res) => {
   try {
     const { boothId } = req.params;
+    const io = req.app.get('io');
 
     // Find booth-assigned interpreters (show all active, regardless of availability)
     const boothInterpreters = await User.find({
@@ -232,22 +233,43 @@ router.get('/available-interpreters/:boothId', auth, async (req, res) => {
       });
     });
 
-    console.log('Busy interpreters in active meetings:', Array.from(busyInterpreterIds));
+    // Get socket-based online status for interpreters
+    const onlineInterpreterIds = new Set();
+    if (io) {
+      const connectedSockets = io.sockets.sockets;
+      connectedSockets.forEach((connectedSocket) => {
+        if (connectedSocket.userId &&
+          (connectedSocket.user?.role === 'Interpreter' || connectedSocket.user?.role === 'GlobalInterpreter')) {
+          onlineInterpreterIds.add(connectedSocket.userId.toString());
+        }
+      });
+    }
 
-    // Combine and return - check both isAvailable status AND if they're in an active meeting
+    console.log('Busy interpreters in active meetings:', Array.from(busyInterpreterIds));
+    console.log('Online interpreters (socket-based):', Array.from(onlineInterpreterIds));
+
+    // Combine and return - check socket-based online status AND if they're in an active meeting
     const interpreters = [
-      ...boothInterpreters.map(i => ({ 
-        ...i.toObject(), 
-        type: 'booth',
-        isAvailable: (i.isAvailable === true) && !busyInterpreterIds.has(i._id.toString()),
-        inMeeting: busyInterpreterIds.has(i._id.toString()) // Add flag for UI display
-      })),
-      ...globalInterpreters.map(i => ({ 
-        ...i.toObject(), 
-        type: 'global',
-        isAvailable: (i.isAvailable === true) && !busyInterpreterIds.has(i._id.toString()),
-        inMeeting: busyInterpreterIds.has(i._id.toString()) // Add flag for UI display
-      }))
+      ...boothInterpreters.map(i => {
+        const isOnline = onlineInterpreterIds.has(i._id.toString());
+        const isInMeeting = busyInterpreterIds.has(i._id.toString());
+        return {
+          ...i.toObject(),
+          type: 'booth',
+          isAvailable: isOnline && !isInMeeting, // Use socket-based online status
+          inMeeting: isInMeeting
+        };
+      }),
+      ...globalInterpreters.map(i => {
+        const isOnline = onlineInterpreterIds.has(i._id.toString());
+        const isInMeeting = busyInterpreterIds.has(i._id.toString());
+        return {
+          ...i.toObject(),
+          type: 'global',
+          isAvailable: isOnline && !isInMeeting, // Use socket-based online status
+          inMeeting: isInMeeting
+        };
+      })
     ];
 
     // Sort by availability - available interpreters first, then by type (booth first)
@@ -282,7 +304,7 @@ router.post('/invite-interpreter', auth, async (req, res) => {
   try {
     const { callId, interpreterId, interpreterCategory } = req.body;
     const userId = req.user._id;
-    
+
     console.log('📨 Invite interpreter request:', {
       callId,
       interpreterId,
@@ -304,7 +326,7 @@ router.post('/invite-interpreter', auth, async (req, res) => {
       requestUser: userId.toString(),
       match: videoCall.recruiter._id.toString() === userId.toString()
     });
-    
+
     if (videoCall.recruiter._id.toString() !== userId.toString()) {
       return res.status(403).json({ error: 'Only recruiter can invite interpreters' });
     }
@@ -338,8 +360,8 @@ router.post('/invite-interpreter', auth, async (req, res) => {
         existingCall: interpreterInActiveMeeting._id,
         booth: interpreterInActiveMeeting.booth?.name || 'Unknown'
       });
-      
-      return res.status(409).json({ 
+
+      return res.status(409).json({
         error: 'Interpreter is already in another meeting',
         message: `${selectedInterpreter.name} is currently in another meeting. Please try again later.`
       });
@@ -351,7 +373,7 @@ router.post('/invite-interpreter', auth, async (req, res) => {
     );
 
     if (alreadyInvited) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         error: 'Interpreter already invited',
         message: 'This interpreter has already been invited to this call.'
       });
@@ -370,13 +392,13 @@ router.post('/invite-interpreter', auth, async (req, res) => {
     // Emit socket event to interpreter
     const io = req.app.get('io');
     const interpreterRoomName = `user:${selectedInterpreter._id}`;
-    
+
     console.log('📞 Sending invitation to interpreter:', {
       interpreter: selectedInterpreter.email,
       room: interpreterRoomName,
       callId: videoCall._id
     });
-    
+
     io.to(interpreterRoomName).emit('interpreter_invitation', {
       callId: videoCall._id,
       roomName: videoCall.roomName,

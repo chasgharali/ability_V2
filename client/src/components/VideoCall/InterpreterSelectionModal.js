@@ -17,16 +17,16 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
     try {
       setLoading(true);
       setError('');
-      
+
       console.log('Fetching interpreters for booth:', boothId);
-      
+
       if (!boothId) {
         console.error('No boothId provided');
         setError('Booth information not available');
         setLoading(false);
         return;
       }
-      
+
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/video-call/available-interpreters/${boothId}`, {
         headers: {
@@ -35,13 +35,19 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
       });
 
       console.log('Interpreters response:', response.data);
-      
+
       const fetchedInterpreters = response.data.interpreters || [];
+      // Filter to only show online interpreters (available and not in a meeting)
+      const onlineInterpreters = fetchedInterpreters.filter(
+        interpreter => interpreter.isAvailable === true && !interpreter.inMeeting
+      );
+
       console.log('Found interpreters:', fetchedInterpreters.length);
+      console.log('Online interpreters:', onlineInterpreters.length);
       console.log('Booth interpreters:', response.data.boothCount);
       console.log('Global interpreters:', response.data.globalCount);
-      
-      setInterpreters(fetchedInterpreters);
+
+      setInterpreters(onlineInterpreters);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching interpreters:', err);
@@ -52,7 +58,7 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
   };
 
   const handleInvite = () => {
-    if (selectedInterpreter) {
+    if (selectedInterpreter && selectedInterpreter.isAvailable && !selectedInterpreter.inMeeting) {
       onInvite(selectedInterpreter, interpreterCategory);
       onClose();
     }
@@ -90,15 +96,13 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
           ) : interpreters.length === 0 ? (
             <div className="ism-empty" role="status">
               <FiUser size={48} aria-hidden="true" />
-              <p>No interpreters are currently available</p>
+              <p>No online interpreters are currently available</p>
+              <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}>
+                Please wait for an interpreter to come online or try again later.
+              </p>
               {!boothId && (
                 <p style={{ fontSize: '0.875rem', color: '#f44336', marginTop: '0.5rem' }}>
                   Missing booth information - cannot load interpreters
-                </p>
-              )}
-              {boothId && (
-                <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem' }}>
-                  Booth ID: {boothId}
                 </p>
               )}
               <button onClick={fetchAvailableInterpreters} className="ism-refresh-btn">
@@ -115,29 +119,29 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
                 {interpreters.map((interpreter) => (
                   <div
                     key={interpreter._id}
-                    className={`ism-item ${selectedInterpreter?._id === interpreter._id ? 'ism-selected' : ''} ${interpreter.inMeeting ? 'ism-disabled' : ''}`}
+                    className={`ism-item ${selectedInterpreter?._id === interpreter._id ? 'ism-selected' : ''}`}
                     onClick={() => {
-                      if (!interpreter.inMeeting) {
+                      if (interpreter.isAvailable && !interpreter.inMeeting) {
                         setSelectedInterpreter(interpreter);
                       }
                     }}
                     onKeyDown={(e) => {
-                      if ((e.key === 'Enter' || e.key === ' ') && !interpreter.inMeeting) {
+                      if ((e.key === 'Enter' || e.key === ' ') && interpreter.isAvailable && !interpreter.inMeeting) {
                         e.preventDefault();
                         setSelectedInterpreter(interpreter);
                       }
                     }}
                     role="radio"
-                    tabIndex={interpreter.inMeeting ? -1 : 0}
+                    tabIndex={interpreter.isAvailable && !interpreter.inMeeting ? 0 : -1}
                     aria-checked={selectedInterpreter?._id === interpreter._id}
-                    aria-disabled={interpreter.inMeeting}
-                    aria-label={`${interpreter.name}, ${interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}, ${interpreter.inMeeting ? 'In Meeting' : interpreter.isAvailable ? 'Online' : 'Offline'}`}
+                    aria-disabled={!interpreter.isAvailable || interpreter.inMeeting}
+                    aria-label={`${interpreter.name}, ${interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}, Online`}
                   >
                     <div className="ism-avatar-wrapper">
                       <div className="ism-avatar" aria-hidden="true">
                         {interpreter.name?.charAt(0)?.toUpperCase() || 'I'}
                       </div>
-                      <div 
+                      <div
                         className={`ism-status-dot ${interpreter.isAvailable ? 'ism-online' : 'ism-offline'}`}
                         aria-label={interpreter.isAvailable ? 'Online' : 'Offline'}
                       ></div>
@@ -151,15 +155,9 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
                         <span className={`ism-role-badge ${interpreter.role === 'GlobalInterpreter' ? 'ism-global' : 'ism-booth'}`}>
                           {interpreter.role === 'GlobalInterpreter' ? 'Global Interpreter' : 'Booth Interpreter'}
                         </span>
-                        {interpreter.inMeeting ? (
-                          <span className="ism-availability-badge ism-in-meeting">
-                            In Meeting
-                          </span>
-                        ) : interpreter.isAvailable ? (
-                          <span className="ism-availability-badge">
-                            Online
-                          </span>
-                        ) : null}
+                        <span className="ism-availability-badge">
+                          Online
+                        </span>
                       </div>
                       {interpreter.languages && interpreter.languages.length > 0 && (
                         <div className="ism-languages">
