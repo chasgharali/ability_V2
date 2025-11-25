@@ -80,8 +80,12 @@ const CallControls = ({
       className: 'control-button',
       badge: chatUnreadCount > 0 ? chatUnreadCount : null,
       primary: false
-    },
-    {
+    }
+  ];
+
+  // Add participants button for recruiters only
+  if (userRole === 'recruiter') {
+    controlButtons.push({
       id: 'participants',
       icon: FiUsers,
       label: 'Participants',
@@ -90,8 +94,8 @@ const CallControls = ({
       className: 'control-button',
       badge: participantCount,
       primary: false
-    }
-  ];
+    });
+  }
 
   // Add profile button for recruiters
   if (userRole === 'recruiter') {
