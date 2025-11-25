@@ -111,7 +111,7 @@ const JobSeekerInterests = () => {
     // Load interests only when filters change or user changes - single request
     useEffect(() => {
         if (!user) return;
-        
+
         // Only make request if user role is valid
         if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) {
             return;
@@ -125,25 +125,25 @@ const JobSeekerInterests = () => {
                 setLoadingData(true);
                 console.log('Loading interests with filters:', filters);
                 const response = await jobSeekerInterestsAPI.getInterests(filters);
-                
+
                 if (cancelled) return;
-                
+
                 console.log('API Response:', response);
-                
+
                 const interests = response.interests || [];
                 setInterests(interests);
-                
+
                 // Update pagination from API response
                 if (response.pagination) {
                     setPagination(response.pagination);
                 }
-                
+
                 // Calculate stats - use totalInterests from pagination for accurate count
                 const totalInterests = response.pagination?.totalInterests || interests.length;
                 const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
                 const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
                 const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
-                
+
                 setStats({
                     totalInterests: totalInterests,
                     uniqueJobSeekers,
@@ -309,7 +309,7 @@ const JobSeekerInterests = () => {
     if (loading) {
         return (
             <div className="dashboard">
-                <AdminHeader 
+                <AdminHeader
                     brandingLogo={event?.logoUrl || event?.logo || ''}
                     secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
                 />
@@ -328,7 +328,7 @@ const JobSeekerInterests = () => {
 
     return (
         <div className="dashboard">
-            <AdminHeader 
+            <AdminHeader
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
             />
@@ -364,8 +364,8 @@ const JobSeekerInterests = () => {
 
                             {/* Filters */}
                             <div className="filters-section">
-                                <div 
-                                    className="filters-header" 
+                                <div
+                                    className="filters-header"
                                     onClick={() => setFiltersExpanded(!filtersExpanded)}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' || e.key === ' ') {
@@ -433,7 +433,7 @@ const JobSeekerInterests = () => {
                                             />
                                         )}
                                         <div className="filter-actions">
-                                            <ButtonComponent 
+                                            <ButtonComponent
                                                 cssClass="e-outline e-primary"
                                                 onClick={clearFilters}
                                             >
@@ -486,7 +486,7 @@ const JobSeekerInterests = () => {
             </div>
 
             {/* Syncfusion ToastComponent */}
-            <ToastComponent 
+            <ToastComponent
                 ref={(toast) => toastRef.current = toast}
                 position={{ X: 'Right', Y: 'Bottom' }}
                 showProgressBar={true}

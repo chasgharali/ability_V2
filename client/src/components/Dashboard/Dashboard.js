@@ -490,19 +490,19 @@ const Dashboard = () => {
                         )}
                         <div className="dashboard-cards">
                             <div className="dashboard-card">
-                                <h3>Active Booths</h3>
-                                <p>Manage your recruitment booths</p>
-                                <button className="dashboard-button" onClick={() => navigate('/boothmanagement')}>View Booths</button>
-                            </div>
-                            <div className="dashboard-card">
-                                <h3>Queue Management</h3>
+                                <h3>Meeting Queue</h3>
                                 <p>View and manage job seeker queues</p>
-                                <button className="dashboard-button" disabled={!assignedBoothId} onClick={() => assignedBoothId && navigate(`/booth-queue/manage/${assignedBoothId}`)}>Manage Queue</button>
+                                <button className="dashboard-button" disabled={!assignedBoothId} onClick={() => assignedBoothId ? navigate(`/booth-queue/manage/${assignedBoothId}`) : navigate('/boothmanagement')}>Manage Queue</button>
                             </div>
                             <div className="dashboard-card">
-                                <h3>Interview Schedule</h3>
-                                <p>Schedule and conduct interviews</p>
-                                <button className="dashboard-button" onClick={() => navigate('/meetings')}>Schedule Interview</button>
+                                <h3>Meeting Records</h3>
+                                <p>View and manage meeting records</p>
+                                <button className="dashboard-button" onClick={() => navigate('/meeting-records')}>View Records</button>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>JobSeeker Interests</h3>
+                                <p>View job seeker interests in your booths</p>
+                                <button className="dashboard-button" onClick={() => navigate('/jobseeker-interests')}>View Interests</button>
                             </div>
                         </div>
                     </div>
