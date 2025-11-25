@@ -14,7 +14,7 @@ import roleMessagesAPI from '../../services/roleMessages';
 // Use centralized JOB_TYPE_LIST for employment types
 const VETERAN_STATUS = ['None', 'Veteran', 'Active Duty', 'Reservist', 'Military Spouse'];
 
-export default function EditProfileResume({ onValidationChange, onFormDataChange }) {
+export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev }) {
   const { user } = useAuth();
   const [form, setForm] = useState({
     headline: '',
@@ -357,6 +357,10 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         body: JSON.stringify(payload)
       });
       showToast('Profile saved', 'success');
+      // Call onDone callback if provided (for wizard navigation)
+      if (onDone) {
+        onDone();
+      }
     } catch (e) {
       showToast('Failed to save', 'error');
     } finally {
@@ -555,9 +559,16 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           </div>
         </div>
 
-        <button type="submit" className="update-button" disabled={saving}>
-          {saving ? 'Saving…' : 'Submit'}
-        </button>
+        <div className="form-actions" style={{ display: 'flex', justifyContent: onPrev ? 'space-between' : 'flex-start', gap: '1rem', marginTop: '1.5rem', marginBottom: '3rem' }}>
+          {onPrev && (
+            <button type="button" className="ajf-btn ajf-btn-outline" onClick={onPrev} aria-label="Go to previous step">
+              Previous
+            </button>
+          )}
+          <button type="submit" className={onDone ? "ajf-btn ajf-btn-dark" : "update-button"} disabled={saving}>
+            {saving ? 'Saving…' : (onDone ? 'Save and Next' : 'Submit')}
+          </button>
+        </div>
       </form>
 
       {cameraOpen && (

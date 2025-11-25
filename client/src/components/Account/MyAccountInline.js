@@ -250,10 +250,8 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
   };
 
   return (
-    <section className="account-section">
-      <div className="section-header">
-        <p className="section-note">An asterisk (*) indicates a required field.</p>
-      </div>
+    <div className="dashboard-content">
+      <p className="section-note">An asterisk (*) indicates a required field.</p>
 
       {message && <div className="alert-box" role="status" aria-live="polite">{message}</div>}
       {error && <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{error}</div>}
@@ -429,7 +427,7 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
           </div>
         </fieldset>
 
-        <div className="form-actions">
+        <div className="form-actions" style={{ marginBottom: '3rem' }}>
           <button 
             type="submit" 
             className="ajf-btn ajf-btn-dark" 
@@ -440,6 +438,6 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
           </button>
         </div>
       </form>
-    </section>
+    </div>
   );
 }

@@ -193,7 +193,7 @@ export default function RegistrationWizard() {
     // Check if resume is uploaded (check both form data and user object)
     const hasResumeInForm = currentFormData.hasResume || currentFormData.resumeUrl;
     const hasResumeInUser = user?.resumeUrl;
-    
+
     if (!hasResumeInForm && !hasResumeInUser) {
       errors.resume = 'Resume upload is required';
       isValid = false;
@@ -523,18 +523,9 @@ export default function RegistrationWizard() {
                 <EditProfileResume
                   onValidationChange={() => validateStep2()}
                   onFormDataChange={setCurrentFormData}
+                  onDone={next}
+                  onPrev={prev}
                 />
-                <div className="form-actions form-actions-split">
-                  <button className="ajf-btn ajf-btn-outline" onClick={prev} aria-label="Go to previous step">Previous</button>
-                  <button
-                    className={`ajf-btn ${stepValidation.step2 ? 'ajf-btn-dark' : 'ajf-btn-disabled'}`}
-                    onClick={next}
-                    disabled={!stepValidation.step2}
-                    aria-label="Go to next step"
-                  >
-                    Next
-                  </button>
-                </div>
               </section>
             )}
 
@@ -622,7 +613,7 @@ export default function RegistrationWizard() {
                     </label>
                   </div>
                 </div>
-                <div className="form-actions form-actions-split">
+                <div className="form-actions form-actions-split" style={{ marginBottom: '3rem' }}>
                   <button className="ajf-btn ajf-btn-outline" onClick={prev} disabled={isAlreadyRegistered} aria-label="Go to previous step">Previous</button>
                   <button
                     className={`ajf-btn ${isAlreadyRegistered ? 'ajf-btn-disabled' : 'ajf-btn-dark'}`}
