@@ -36,7 +36,10 @@ const JobSeekerInterests = () => {
     const [events, setEvents] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
+    const gridRef = useRef(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
+    const initialLoadDone = useRef(false);
+    const fetchInProgress = useRef(false);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -79,71 +82,79 @@ const JobSeekerInterests = () => {
         }
     }, []);
 
-    const loadRecruiters = useCallback(async () => {
-        if (user?.role !== 'Recruiter') {
-            try {
-                const response = await listUsers({ role: 'Recruiter', limit: 1000 });
-                setRecruiters(response.users || []);
-            } catch (error) {
-                console.error('Error loading recruiters:', error);
-            }
-        }
-    }, [user?.role]);
 
-    const loadEvents = useCallback(async () => {
-        try {
-            const response = await listEvents({ limit: 1000 });
-            setEvents(response.events || []);
-        } catch (error) {
-            console.error('Error loading events:', error);
-        }
-    }, []);
 
-    // Load recruiters and events only once when user is available
-    useEffect(() => {
-        if (user) {
-            loadRecruiters();
-            loadEvents();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user?.role]);
-
-    // Load interests only when filters change or user changes - single request
+    // Load all data when component mounts or filters change
     useEffect(() => {
         if (!user) return;
-        
+
         // Only make request if user role is valid
         if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) {
             return;
         }
 
-        // Use a ref to prevent duplicate requests
+        // Prevent duplicate requests
+        if (fetchInProgress.current) {
+            console.log('Fetch already in progress, skipping...');
+            return;
+        }
+
         let cancelled = false;
 
-        const fetchData = async () => {
+        const fetchAllData = async () => {
+            fetchInProgress.current = true;
+            
             try {
                 setLoadingData(true);
-                console.log('Loading interests with filters:', filters);
-                const response = await jobSeekerInterestsAPI.getInterests(filters);
                 
-                if (cancelled) return;
-                
-                console.log('API Response:', response);
-                
-                const interests = response.interests || [];
-                setInterests(interests);
-                
-                // Update pagination from API response
-                if (response.pagination) {
-                    setPagination(response.pagination);
+                // Load recruiters and events only on initial load
+                if (!initialLoadDone.current) {
+                    if (user.role !== 'Recruiter') {
+                        try {
+                            const recruiterResponse = await listUsers({ role: 'Recruiter', limit: 1000 });
+                            if (!cancelled) {
+                                setRecruiters(recruiterResponse.users || []);
+                            }
+                        } catch (error) {
+                            console.error('Error loading recruiters:', error);
+                        }
+                    }
+                    
+                    try {
+                        const eventsResponse = await listEvents({ limit: 1000 });
+                        if (!cancelled) {
+                            setEvents(eventsResponse.events || []);
+                        }
+                    } catch (error) {
+                        console.error('Error loading events:', error);
+                    }
+                    
+                    initialLoadDone.current = true;
                 }
                 
+                // Load interests with current filters
+                console.log('Loading interests with filters:', filters);
+                const response = await jobSeekerInterestsAPI.getInterests(filters);
+
+                if (cancelled) return;
+
+                console.log('API Response:', response);
+
+                const interests = response.interests || [];
+                setInterests(interests);
+
+                // Update pagination from API response
+                if (response.pagination) {
+                    console.log('Setting pagination:', response.pagination);
+                    setPagination(response.pagination);
+                }
+
                 // Calculate stats - use totalInterests from pagination for accurate count
                 const totalInterests = response.pagination?.totalInterests || interests.length;
                 const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
                 const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
                 const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
-                
+
                 setStats({
                     totalInterests: totalInterests,
                     uniqueJobSeekers,
@@ -159,21 +170,23 @@ const JobSeekerInterests = () => {
                 }
             } catch (error) {
                 if (cancelled) return;
-                console.error('Error loading interests:', error);
+                console.error('Error loading data:', error);
                 showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
             } finally {
                 if (!cancelled) {
                     setLoadingData(false);
+                    fetchInProgress.current = false;
                 }
             }
         };
 
-        fetchData();
+        fetchAllData();
 
         return () => {
             cancelled = true;
+            fetchInProgress.current = false;
         };
-    }, [user, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, filters.sortBy, filters.sortOrder, showToast]);
+    }, [user, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, showToast]);
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({
@@ -195,18 +208,23 @@ const JobSeekerInterests = () => {
         });
     };
 
-    // Handle Syncfusion pagination change
-    const handleActionComplete = (args) => {
-        // Check if the action is pagination
-        if (args.requestType === 'paging') {
-            const newPage = args.currentPage;
-            if (newPage !== filters.page) {
-                setFilters(prev => ({
-                    ...prev,
-                    page: newPage
-                }));
-            }
-        }
+    const handlePageSizeChange = (newSize) => {
+        if (!newSize || newSize === filters.limit) return;
+        setFilters(prev => ({
+            ...prev,
+            limit: newSize,
+            page: 1
+        }));
+    };
+
+    const goToPage = (targetPage) => {
+        if (!targetPage || targetPage === filters.page) return;
+        if (targetPage < 1) return;
+        if (pagination.totalPages && targetPage > pagination.totalPages) return;
+        setFilters(prev => ({
+            ...prev,
+            page: targetPage
+        }));
     };
 
     const formatDateTime = (dateString) => {
@@ -222,7 +240,6 @@ const JobSeekerInterests = () => {
     // Grid template functions for custom column renders
     const jobSeekerTemplate = (props) => {
         const row = props;
-        // Show actual data if available (from populate or legacy lookup), otherwise show fallback
         const jobSeekerName = row.jobSeeker?.name || (row.legacyJobSeekerId ? 'Legacy User' : 'N/A');
         const jobSeekerEmail = row.jobSeeker?.email || (row.legacyJobSeekerId ? 'N/A' : 'N/A');
         return (
@@ -235,7 +252,6 @@ const JobSeekerInterests = () => {
 
     const eventTemplate = (props) => {
         const row = props;
-        // Show actual event name if available (from populate or legacy lookup), otherwise show fallback
         const eventName = row.event?.name || (row.legacyEventId ? 'Legacy Event' : 'N/A');
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -246,7 +262,6 @@ const JobSeekerInterests = () => {
 
     const boothTemplate = (props) => {
         const row = props;
-        // Use booth name if available, otherwise use company name (which is stored for legacy data)
         const boothName = row.booth?.name || row.company || (row.legacyBoothId ? 'Legacy Booth' : 'N/A');
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -258,7 +273,6 @@ const JobSeekerInterests = () => {
     const locationTemplate = (props) => {
         const row = props;
         let locationText = 'N/A';
-        // Handle legacy data - check if jobSeeker exists and has location data
         if (row.jobSeeker?.city && row.jobSeeker?.state) {
             locationText = `${row.jobSeeker.city}, ${row.jobSeeker.state}`;
         } else if (row.jobSeeker?.city) {
@@ -309,7 +323,7 @@ const JobSeekerInterests = () => {
     if (loading) {
         return (
             <div className="dashboard">
-                <AdminHeader 
+                <AdminHeader
                     brandingLogo={event?.logoUrl || event?.logo || ''}
                     secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
                 />
@@ -328,7 +342,7 @@ const JobSeekerInterests = () => {
 
     return (
         <div className="dashboard">
-            <AdminHeader 
+            <AdminHeader
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
             />
@@ -364,8 +378,8 @@ const JobSeekerInterests = () => {
 
                             {/* Filters */}
                             <div className="filters-section">
-                                <div 
-                                    className="filters-header" 
+                                <div
+                                    className="filters-header"
                                     onClick={() => setFiltersExpanded(!filtersExpanded)}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' || e.key === ' ') {
@@ -433,7 +447,7 @@ const JobSeekerInterests = () => {
                                             />
                                         )}
                                         <div className="filter-actions">
-                                            <ButtonComponent 
+                                            <ButtonComponent
                                                 cssClass="e-outline e-primary"
                                                 onClick={clearFilters}
                                             >
@@ -448,15 +462,9 @@ const JobSeekerInterests = () => {
                             <div className="data-grid-container">
                                 {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
                                 <GridComponent
-                                    key={`grid-${filters.page}-${filters.eventId}-${filters.boothId}-${filters.recruiterId}`}
+                                    ref={gridRef}
                                     dataSource={interests}
-                                    allowPaging={true}
-                                    pageSettings={{
-                                        pageSize: 50,
-                                        currentPage: filters.page,
-                                        pageSizes: [25, 50, 100],
-                                        pageCount: pagination.totalPages || 1
-                                    }}
+                                    allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}
                                     filterSettings={{ type: 'Menu' }}
@@ -468,19 +476,65 @@ const JobSeekerInterests = () => {
                                     selectionSettings={{ type: 'None' }}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
-                                    actionComplete={handleActionComplete}
                                 >
                                     <ColumnsDirective>
                                         <ColumnDirective headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowSorting={false} />
                                         <ColumnDirective headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowSorting={false} />
                                         <ColumnDirective headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowSorting={false} />
                                         <ColumnDirective headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Interest Level' width='130' textAlign='Center' template={interestLevelTemplate} allowSorting={false} />
                                         <ColumnDirective headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} />
-                                        <ColumnDirective headerText='Notes' width='250' clipMode='EllipsisWithTooltip' template={notesTemplate} allowSorting={false} />
                                     </ColumnsDirective>
                                     <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>
+                                
+                                <div className="pagination-controls">
+                                    <div className="pagination-info">
+                                        Page {pagination.currentPage || filters.page} of {pagination.totalPages || 1} ({pagination.totalInterests || interests.length} items)
+                                    </div>
+                                    <div className="pagination-actions">
+                                        <label>
+                                            Items per page:
+                                            <select
+                                                value={filters.limit}
+                                                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                                            >
+                                                {[25, 50, 100, 200].map(size => (
+                                                    <option key={size} value={size}>{size}</option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                        <div className="pagination-buttons">
+                                            <button
+                                                type="button"
+                                                onClick={() => goToPage(1)}
+                                                disabled={filters.page <= 1}
+                                            >
+                                                « First
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => goToPage(filters.page - 1)}
+                                                disabled={filters.page <= 1}
+                                            >
+                                                ‹ Prev
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => goToPage(filters.page + 1)}
+                                                disabled={!pagination.hasNext}
+                                            >
+                                                Next ›
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => goToPage(pagination.totalPages || filters.page)}
+                                                disabled={!pagination.hasNext}
+                                            >
+                                                Last »
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -488,7 +542,7 @@ const JobSeekerInterests = () => {
             </div>
 
             {/* Syncfusion ToastComponent */}
-            <ToastComponent 
+            <ToastComponent
                 ref={(toast) => toastRef.current = toast}
                 position={{ X: 'Right', Y: 'Bottom' }}
                 showProgressBar={true}

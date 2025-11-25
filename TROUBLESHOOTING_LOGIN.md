@@ -42,8 +42,8 @@ MongoDB connection attempted
 - **Client proxy**: Configured to proxy to `http://localhost:5000` (in `client/package.json`)
 
 If you need to change the port:
-1. Set `PORT=5001` in your `.env` file in the `server` directory
-2. Update `client/package.json` proxy to `"proxy": "http://localhost:5001"`
+1. Set `PORT=5000` in your `.env` file in the `server` directory
+2. Update `client/package.json` proxy to `"proxy": "http://localhost:5000"`
 
 ### Step 4: Check Environment Variables
 

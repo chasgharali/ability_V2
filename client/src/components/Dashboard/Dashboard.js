@@ -490,19 +490,19 @@ const Dashboard = () => {
                         )}
                         <div className="dashboard-cards">
                             <div className="dashboard-card">
-                                <h3>Active Booths</h3>
-                                <p>Manage your recruitment booths</p>
-                                <button className="dashboard-button" onClick={() => navigate('/boothmanagement')}>View Booths</button>
-                            </div>
-                            <div className="dashboard-card">
-                                <h3>Queue Management</h3>
+                                <h3>Meeting Queue</h3>
                                 <p>View and manage job seeker queues</p>
-                                <button className="dashboard-button" disabled={!assignedBoothId} onClick={() => assignedBoothId && navigate(`/booth-queue/manage/${assignedBoothId}`)}>Manage Queue</button>
+                                <button className="dashboard-button" disabled={!assignedBoothId} onClick={() => assignedBoothId ? navigate(`/booth-queue/manage/${assignedBoothId}`) : navigate('/boothmanagement')}>Manage Queue</button>
                             </div>
                             <div className="dashboard-card">
-                                <h3>Interview Schedule</h3>
-                                <p>Schedule and conduct interviews</p>
-                                <button className="dashboard-button" onClick={() => navigate('/meetings')}>Schedule Interview</button>
+                                <h3>Meeting Records</h3>
+                                <p>View and manage meeting records</p>
+                                <button className="dashboard-button" onClick={() => navigate('/meeting-records')}>View Records</button>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>JobSeeker Interests</h3>
+                                <p>View job seeker interests in your booths</p>
+                                <button className="dashboard-button" onClick={() => navigate('/jobseeker-interests')}>View Interests</button>
                             </div>
                         </div>
                     </div>
@@ -574,7 +574,7 @@ const Dashboard = () => {
             >
                 Skip to main content
             </a>
-            <AdminHeader 
+            <AdminHeader
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
             />
@@ -643,10 +643,10 @@ const Dashboard = () => {
                                     >
                                         <ColumnsDirective>
                                             <ColumnDirective type='checkbox' width='40' />
-                                            <ColumnDirective 
-                                                field='name' 
-                                                headerText='Booth Name' 
-                                                width='220' 
+                                            <ColumnDirective
+                                                field='name'
+                                                headerText='Booth Name'
+                                                width='220'
                                                 template={(props) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                                                         {props.name || '-'}
@@ -654,10 +654,10 @@ const Dashboard = () => {
                                                 )}
                                             />
                                             <ColumnDirective headerText='Logo' width='110' template={(props) => props.logo ? (<img src={props.logo} alt="logo" style={{ height: 28 }} />) : null} />
-                                            <ColumnDirective 
-                                                field='recruitersCount' 
-                                                headerText='Recruiters' 
-                                                width='120' 
+                                            <ColumnDirective
+                                                field='recruitersCount'
+                                                headerText='Recruiters'
+                                                width='120'
                                                 textAlign='Center'
                                                 template={(props) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
@@ -665,40 +665,40 @@ const Dashboard = () => {
                                                     </div>
                                                 )}
                                             />
-                                            <ColumnDirective 
-                                                field='events' 
-                                                headerText='Event Title' 
-                                                width='200' 
+                                            <ColumnDirective
+                                                field='events'
+                                                headerText='Event Title'
+                                                width='200'
                                                 template={(p) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                                                         {(p.events || []).join(', ')}
                                                     </div>
                                                 )}
                                             />
-                                            <ColumnDirective 
-                                                field='eventDate' 
-                                                headerText='Event Date' 
-                                                width='190' 
+                                            <ColumnDirective
+                                                field='eventDate'
+                                                headerText='Event Date'
+                                                width='190'
                                                 template={(p) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                                                         {p.eventDate ? new Date(p.eventDate).toLocaleString() : ''}
                                                     </div>
                                                 )}
                                             />
-                                            <ColumnDirective 
-                                                field='customInviteText' 
-                                                headerText='Custom URL' 
-                                                width='200' 
+                                            <ColumnDirective
+                                                field='customInviteText'
+                                                headerText='Custom URL'
+                                                width='200'
                                                 template={(props) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                                                         {props.customInviteText || '-'}
                                                     </div>
                                                 )}
                                             />
-                                            <ColumnDirective 
-                                                field='expireLinkTime' 
-                                                headerText='Expire Date' 
-                                                width='190' 
+                                            <ColumnDirective
+                                                field='expireLinkTime'
+                                                headerText='Expire Date'
+                                                width='190'
                                                 template={(p) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                                                         {p.expireLinkTime ? new Date(p.expireLinkTime).toLocaleString() : ''}

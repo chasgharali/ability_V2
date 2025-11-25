@@ -36,11 +36,19 @@ export const SocketProvider = ({ children }) => {
         }
 
         // Initialize socket connection with auth token in handshake
-        const newSocket = io(getSocketUrl(), {
+        const socketUrl = getSocketUrl();
+        // Determine if we're connecting to localhost (development)
+        const isLocalhost = socketUrl.includes('localhost') || socketUrl.includes('127.0.0.1');
+        
+        const newSocket = io(socketUrl, {
             transports: ['websocket', 'polling'],
             timeout: 20000,
             forceNew: true,
             withCredentials: true,
+            // In development, explicitly use non-secure WebSocket
+            secure: !isLocalhost,
+            // Reject unauthorized SSL certificates in production only
+            rejectUnauthorized: !isLocalhost,
             // Send raw token; server will also handle optional 'Bearer ' prefix defensively
             auth: { token }
         });

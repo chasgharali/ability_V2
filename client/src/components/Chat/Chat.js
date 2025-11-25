@@ -26,9 +26,17 @@ const Chat = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        socketRef.current = io(getSocketUrl(), {
+        const socketUrl = getSocketUrl();
+        // Determine if we're connecting to localhost (development)
+        const isLocalhost = socketUrl.includes('localhost') || socketUrl.includes('127.0.0.1');
+
+        socketRef.current = io(socketUrl, {
             auth: { token: `Bearer ${token}` },
-            transports: ['websocket', 'polling']
+            transports: ['websocket', 'polling'],
+            // In development, explicitly use non-secure WebSocket
+            secure: !isLocalhost,
+            // Reject unauthorized SSL certificates in production only
+            rejectUnauthorized: !isLocalhost
         });
 
         socketRef.current.on('connect', () => {

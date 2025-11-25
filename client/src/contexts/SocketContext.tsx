@@ -109,11 +109,19 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     // Initialize socket connection
     useEffect(() => {
         if (user && token) {
-            const newSocket = io(getSocketUrl(), {
+            const socketUrl = getSocketUrl();
+            // Determine if we're connecting to localhost (development)
+            const isLocalhost = socketUrl.includes('localhost') || socketUrl.includes('127.0.0.1');
+            
+            const newSocket = io(socketUrl, {
                 auth: {
                     token: token,
                 },
                 transports: ['websocket', 'polling'],
+                // In development, explicitly use non-secure WebSocket
+                secure: !isLocalhost,
+                // Reject unauthorized SSL certificates in production only
+                rejectUnauthorized: !isLocalhost,
             });
 
             // Connection event handlers
