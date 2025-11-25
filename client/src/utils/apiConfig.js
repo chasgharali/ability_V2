@@ -16,7 +16,7 @@ export const getApiUrl = () => {
     }
 
     // Fallback for server-side rendering or tests
-    return 'http://localhost:5001';
+    return 'http://localhost:5000';
 };
 
 /**
@@ -42,6 +42,6 @@ export const getSocketUrl = () => {
     }
 
     // Fallback for server-side rendering or tests
-    return 'http://localhost:5001';
+    return 'http://localhost:5000';
 };
 
