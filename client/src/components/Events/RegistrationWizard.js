@@ -412,7 +412,7 @@ export default function RegistrationWizard() {
         <AdminSidebar active="events" />
         <main id="dashboard-main" className="dashboard-main">
           <div className="dashboard-content">
-            <h2>{event?.name || 'Event Registration'}</h2>
+            <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{event?.name || 'Event Registration'}</h2>
             {isAlreadyRegistered ? (
               <div className="alert-box" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>
                 <p><strong>You are already registered for this event.</strong> You can view your registration details in "My Current Registrations".</p>

@@ -227,7 +227,8 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
 
   const toggle = (key) => (e) => setA11y(prev => ({ ...prev, [key]: !!e.target.checked }));
 
-  const handleNext = async () => {
+  const handleNext = async (e) => {
+    if (e) e.preventDefault();
     setSaving(true); setError(''); setMessage('');
     try {
       const payload = {
@@ -240,7 +241,9 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
       };
       await updateProfile(payload);
       setMessage('Saved');
-      onDone?.();
+      if (onDone) {
+        onDone();
+      }
     } catch (e) {
       setError('Failed to save');
     } finally { setSaving(false); }
