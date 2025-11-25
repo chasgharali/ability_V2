@@ -125,6 +125,13 @@ export default function RegistrationWizard() {
     if (liveRef.current) {
       liveRef.current.textContent = `Step ${step} of 3`;
     }
+    // Scroll to top whenever step changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Also scroll main content area if it exists
+    const mainContent = document.getElementById('dashboard-main') || document.querySelector('.dashboard-main');
+    if (mainContent) {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [step]);
 
   // Validate step 2 when form data changes
@@ -251,6 +258,13 @@ export default function RegistrationWizard() {
     if (canProceed) {
       setStep(s => Math.min(3, s + 1));
       setValidationErrors(prev => ({ ...prev, [`step${step}`]: {} }));
+      // Scroll to top when moving to next step
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Also scroll main content area if it exists
+      const mainContent = document.getElementById('dashboard-main') || document.querySelector('.dashboard-main');
+      if (mainContent) {
+        mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } else {
       // Announce validation errors to screen readers
       if (liveRef.current) {
@@ -263,7 +277,15 @@ export default function RegistrationWizard() {
     }
   };
 
-  const prev = () => setStep(s => Math.max(1, s - 1));
+  const prev = () => {
+    setStep(s => Math.max(1, s - 1));
+    // Scroll to top when going back
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const mainContent = document.getElementById('dashboard-main') || document.querySelector('.dashboard-main');
+    if (mainContent) {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const handleAnnouncementsToggle = async (checked) => {
     setAnnouncementsOptIn(checked);

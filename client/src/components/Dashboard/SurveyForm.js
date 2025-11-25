@@ -229,7 +229,7 @@ export default function SurveyForm({ onValidationChange }) {
       <form className="account-form survey-form" onSubmit={handleSubmit}>
         <div className="form-row form-row-3">
           <div className="form-group">
-            <label>Race (check all that apply) *</label>
+            <label>Race (check all that apply) </label>
             <MultiSelectComponent
               dataSource={RACE_OPTIONS}
               value={form.race}
@@ -252,7 +252,7 @@ export default function SurveyForm({ onValidationChange }) {
             <div className="field-help">Race selection is required</div>
           </div>
           <div className="form-group">
-            <label htmlFor="genderIdentity">I identify my gender as *</label>
+            <label htmlFor="genderIdentity">I identify my gender as </label>
             <select
               id="genderIdentity"
               name="genderIdentity"
@@ -271,7 +271,7 @@ export default function SurveyForm({ onValidationChange }) {
             <div id="gender-help" className="field-help">Gender identity is required</div>
           </div>
           <div className="form-group">
-            <label htmlFor="ageGroup">Age Group *</label>
+            <label htmlFor="ageGroup">Age Group </label>
             <select
               id="ageGroup"
               name="ageGroup"
@@ -289,7 +289,7 @@ export default function SurveyForm({ onValidationChange }) {
 
         <div className="form-row">
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label htmlFor="countryOfOrigin">Country of Origin *</label>
+            <label htmlFor="countryOfOrigin">Country of Origin </label>
             <select
               id="countryOfOrigin"
               name="countryOfOrigin"
