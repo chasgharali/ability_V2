@@ -16,14 +16,8 @@ const RatingModal = ({ isOpen, onClose, onSubmit, jobSeekerName, loading = false
         onSubmit({ rating, feedback });
     };
 
-    const handleClose = () => {
-        if (!loading) {
-            setRating(0);
-            setFeedback('');
-            setHoveredRating(0);
-            onClose();
-        }
-    };
+    // Note: handleClose is kept for potential future use, but closing is disabled
+    // The modal can only be closed after successful submission
 
     const handleStarClick = (starRating) => {
         setRating(starRating);
@@ -48,10 +42,15 @@ const RatingModal = ({ isOpen, onClose, onSubmit, jobSeekerName, loading = false
     return (
         <div 
             className="rating-modal-overlay" 
-            onClick={handleClose}
+            onClick={(e) => {
+                // Prevent closing by clicking outside - modal can only be closed after submission
+                e.stopPropagation();
+            }}
             onKeyDown={(e) => {
+                // Prevent closing with Escape key - modal can only be closed after submission
                 if (e.key === 'Escape') {
-                    handleClose();
+                    e.preventDefault();
+                    e.stopPropagation();
                 }
             }}
             role="dialog"
@@ -70,14 +69,6 @@ const RatingModal = ({ isOpen, onClose, onSubmit, jobSeekerName, loading = false
             >
                 <div className="rating-modal-header">
                     <h2 id="modal-title">Rate Your Meeting</h2>
-                    <button 
-                        className="close-button" 
-                        onClick={handleClose}
-                        disabled={loading}
-                        aria-label="Close rating modal"
-                    >
-                        ×
-                    </button>
                 </div>
 
                 <div className="rating-modal-content">
@@ -133,14 +124,6 @@ const RatingModal = ({ isOpen, onClose, onSubmit, jobSeekerName, loading = false
                         </div>
 
                         <div className="modal-actions">
-                            <button
-                                type="button"
-                                className="btn-cancel"
-                                onClick={handleClose}
-                                disabled={loading}
-                            >
-                                Cancel
-                            </button>
                             <button
                                 type="submit"
                                 className="btn-submit"
