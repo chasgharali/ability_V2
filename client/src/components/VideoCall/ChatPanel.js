@@ -153,15 +153,28 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
                 <>
                   {!isOwnMessage(message) && (
                     <div className="incall-chat-message-sender">
-                      <span 
-                        className="incall-chat-sender-name"
-                        style={{ color: getRoleColor(message.senderRole || message.sender?.role) }}
-                      >
-                        {message.sender?.name || 'Unknown'}
-                      </span>
-                      <span className="incall-chat-sender-role">
-                        ({message.senderRole || message.sender?.role || 'User'})
-                      </span>
+                      {user?.role === 'JobSeeker' ? (
+                        // For job seekers, only show the role
+                        <span 
+                          className="incall-chat-sender-name"
+                          style={{ color: getRoleColor(message.senderRole || message.sender?.role) }}
+                        >
+                          {message.senderRole || message.sender?.role || 'User'}
+                        </span>
+                      ) : (
+                        // For other roles, show name and role
+                        <>
+                          <span 
+                            className="incall-chat-sender-name"
+                            style={{ color: getRoleColor(message.senderRole || message.sender?.role) }}
+                          >
+                            {message.sender?.name || 'Unknown'}
+                          </span>
+                          <span className="incall-chat-sender-role">
+                            ({message.senderRole || message.sender?.role || 'User'})
+                          </span>
+                        </>
+                      )}
                     </div>
                   )}
                   <div className="incall-chat-message-content">
