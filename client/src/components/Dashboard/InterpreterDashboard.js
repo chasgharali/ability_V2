@@ -8,7 +8,7 @@ import './InterpreterDashboard.css';
 const InterpreterDashboard = () => {
   const navigate = useNavigate();
   const socket = useSocket();
-  
+
   const [stream, setStream] = useState(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
@@ -35,22 +35,22 @@ const InterpreterDashboard = () => {
       console.log('📞 Interpreter invitation received:', data);
       setInvitation(data);
       setShowInvitationModal(true);
-      
+
       // Play notification sound (ting)
       try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         oscillator.frequency.value = 800;
         oscillator.type = 'sine';
-        
+
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-        
+
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.5);
       } catch (e) {
@@ -96,10 +96,10 @@ const InterpreterDashboard = () => {
 
         // Now enumerate devices
         const devices = await navigator.mediaDevices.enumerateDevices();
-        
+
         const audioInputs = devices.filter(device => device.kind === 'audioinput');
         const videoInputs = devices.filter(device => device.kind === 'videoinput');
-        
+
         setAudioDevices(audioInputs);
         setVideoDevices(videoInputs);
 
@@ -115,7 +115,7 @@ const InterpreterDashboard = () => {
         setError('Could not load devices. Please grant camera/microphone permissions.');
       }
     };
-    
+
     loadDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -144,7 +144,7 @@ const InterpreterDashboard = () => {
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
 
       setStream(mediaStream);
-      
+
       // Attach stream to video element
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
@@ -153,7 +153,7 @@ const InterpreterDashboard = () => {
       // Check which tracks are enabled
       const videoTrack = mediaStream.getVideoTracks()[0];
       const audioTrack = mediaStream.getAudioTracks()[0];
-      
+
       if (videoTrack) {
         setVideoEnabled(true);
       }
@@ -203,7 +203,7 @@ const InterpreterDashboard = () => {
 
   const handleAudioDeviceChange = async (deviceId) => {
     setSelectedAudioDevice(deviceId);
-    
+
     // If testing, restart with new device
     if (testing && stream) {
       const wasAudioEnabled = audioEnabled;
@@ -220,7 +220,7 @@ const InterpreterDashboard = () => {
 
   const handleVideoDeviceChange = async (deviceId) => {
     setSelectedVideoDevice(deviceId);
-    
+
     // If testing, restart with new device
     if (testing && stream) {
       const wasVideoEnabled = videoEnabled;
@@ -238,7 +238,7 @@ const InterpreterDashboard = () => {
   // Handle invitation acceptance
   const handleAcceptInvitation = (invitationData) => {
     console.log('Accepting invitation:', invitationData);
-    
+
     // Send response to server
     if (socket?.socket) {
       socket.socket.emit('interpreter-response', {
@@ -282,7 +282,7 @@ const InterpreterDashboard = () => {
   // Handle invitation rejection
   const handleRejectInvitation = (invitationData) => {
     console.log('Rejecting invitation:', invitationData);
-    
+
     // Send response to server
     if (socket?.socket) {
       socket.socket.emit('interpreter-response', {
@@ -308,134 +308,140 @@ const InterpreterDashboard = () => {
 
         <div className="camera-test-section">
           <h2>Camera & Microphone Test</h2>
-          
+
           {error && (
             <div className="error-message" role="alert">
               {error}
             </div>
           )}
 
-          <div className="device-selectors">
-            <div className="device-selector">
-              <label htmlFor="video-device-select">
-                <MdVideocam size={18} />
-                Camera:
-              </label>
-              <select 
-                id="video-device-select"
-                value={selectedVideoDevice} 
-                onChange={(e) => handleVideoDeviceChange(e.target.value)}
-                className="device-select"
-              >
-                {videoDevices.length === 0 && (
-                  <option value="">No cameras found</option>
-                )}
-                {videoDevices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Camera ${videoDevices.indexOf(device) + 1}`}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="camera-test-layout">
+            <div className="camera-test-left">
+              <div className="device-selectors">
+                <div className="device-selector">
+                  <label htmlFor="video-device-select">
+                    <MdVideocam size={18} />
+                    Camera:
+                  </label>
+                  <select
+                    id="video-device-select"
+                    value={selectedVideoDevice}
+                    onChange={(e) => handleVideoDeviceChange(e.target.value)}
+                    className="device-select"
+                  >
+                    {videoDevices.length === 0 && (
+                      <option value="">No cameras found</option>
+                    )}
+                    {videoDevices.map((device) => (
+                      <option key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Camera ${videoDevices.indexOf(device) + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="device-selector">
-              <label htmlFor="audio-device-select">
-                <MdMic size={18} />
-                Microphone:
-              </label>
-              <select 
-                id="audio-device-select"
-                value={selectedAudioDevice} 
-                onChange={(e) => handleAudioDeviceChange(e.target.value)}
-                className="device-select"
-              >
-                {audioDevices.length === 0 && (
-                  <option value="">No microphones found</option>
-                )}
-                {audioDevices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Microphone ${audioDevices.indexOf(device) + 1}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="video-preview-container">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`video-preview ${!testing || !videoEnabled ? 'disabled' : ''}`}
-            />
-            {!testing && (
-              <div className="video-placeholder">
-                <MdVideocam size={64} />
-                <p>Click "Start Test" to preview your camera</p>
+                <div className="device-selector">
+                  <label htmlFor="audio-device-select">
+                    <MdMic size={18} />
+                    Microphone:
+                  </label>
+                  <select
+                    id="audio-device-select"
+                    value={selectedAudioDevice}
+                    onChange={(e) => handleAudioDeviceChange(e.target.value)}
+                    className="device-select"
+                  >
+                    {audioDevices.length === 0 && (
+                      <option value="">No microphones found</option>
+                    )}
+                    {audioDevices.map((device) => (
+                      <option key={device.deviceId} value={device.deviceId}>
+                        {device.label || `Microphone ${audioDevices.indexOf(device) + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            )}
-          </div>
 
-          <div className="test-controls">
-            {!testing ? (
-              <button 
-                className="test-button primary"
-                onClick={startCameraTest}
-              >
-                <MdRefresh size={20} />
-                Start Test
-              </button>
-            ) : (
-              <>
-                <button
-                  className={`test-button ${audioEnabled ? 'active' : 'inactive'}`}
-                  onClick={toggleAudio}
-                  title={audioEnabled ? 'Mute' : 'Unmute'}
-                >
-                  <MdMic size={20} />
-                  {audioEnabled ? 'Mute' : 'Unmute'}
-                </button>
+              <div className="test-controls">
+                {!testing ? (
+                  <button
+                    className="test-button primary"
+                    onClick={startCameraTest}
+                  >
+                    <MdRefresh size={20} />
+                    Start Test
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className={`test-button ${audioEnabled ? 'active' : 'inactive'}`}
+                      onClick={toggleAudio}
+                      title={audioEnabled ? 'Mute' : 'Unmute'}
+                    >
+                      <MdMic size={20} />
+                      {audioEnabled ? 'Mute' : 'Unmute'}
+                    </button>
 
-                <button
-                  className={`test-button ${videoEnabled ? 'active' : 'inactive'}`}
-                  onClick={toggleVideo}
-                  title={videoEnabled ? 'Stop Video' : 'Start Video'}
-                >
-                  <MdVideocam size={20} />
-                  {videoEnabled ? 'Stop Video' : 'Start Video'}
-                </button>
+                    <button
+                      className={`test-button ${videoEnabled ? 'active' : 'inactive'}`}
+                      onClick={toggleVideo}
+                      title={videoEnabled ? 'Stop Video' : 'Start Video'}
+                    >
+                      <MdVideocam size={20} />
+                      {videoEnabled ? 'Stop Video' : 'Start Video'}
+                    </button>
 
-                <button 
-                  className="test-button danger"
-                  onClick={stopCameraTest}
-                >
-                  Stop Test
-                </button>
-              </>
-            )}
-          </div>
+                    <button
+                      className="test-button danger"
+                      onClick={stopCameraTest}
+                    >
+                      Stop Test
+                    </button>
+                  </>
+                )}
+              </div>
 
-          <div className="test-status">
-            <div className={`status-item ${videoEnabled ? 'enabled' : 'disabled'}`}>
-              <MdVideocam size={18} />
-              <span>Camera: {videoEnabled ? 'Working' : 'Not Active'}</span>
+              <div className="test-status">
+                <div className={`status-item ${videoEnabled ? 'enabled' : 'disabled'}`}>
+                  <MdVideocam size={18} />
+                  <span>Camera: {videoEnabled ? 'Working' : 'Not Active'}</span>
+                </div>
+                <div className={`status-item ${audioEnabled ? 'enabled' : 'disabled'}`}>
+                  <MdMic size={18} />
+                  <span>Microphone: {audioEnabled ? 'Working' : 'Not Active'}</span>
+                </div>
+              </div>
+
+              <div className="instructions">
+                <h3>Instructions:</h3>
+                <ul>
+                  <li>Click "Start Test" to check your camera and microphone</li>
+                  <li>Make sure your camera shows a clear picture</li>
+                  <li>Speak to test your microphone (check the browser's permission prompt)</li>
+                  <li>You can toggle audio/video during the test</li>
+                  <li>Once you're ready, wait for the interviewer to invite you</li>
+                </ul>
+              </div>
             </div>
-            <div className={`status-item ${audioEnabled ? 'enabled' : 'disabled'}`}>
-              <MdMic size={18} />
-              <span>Microphone: {audioEnabled ? 'Working' : 'Not Active'}</span>
-            </div>
-          </div>
 
-          <div className="instructions">
-            <h3>Instructions:</h3>
-            <ul>
-              <li>Click "Start Test" to check your camera and microphone</li>
-              <li>Make sure your camera shows a clear picture</li>
-              <li>Speak to test your microphone (check the browser's permission prompt)</li>
-              <li>You can toggle audio/video during the test</li>
-              <li>Once you're ready, wait for the interviewer to invite you</li>
-            </ul>
+            <div className="camera-test-right">
+              <div className="video-preview-container">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`video-preview ${!testing || !videoEnabled ? 'disabled' : ''}`}
+                />
+                {!testing && (
+                  <div className="video-placeholder">
+                    <MdVideocam size={64} />
+                    <p>Click "Start Test" to preview your camera</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,50 +1,86 @@
 .interpreter-dashboard {
-  padding: 2rem;
+  padding: 1rem 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  min-height: calc(100vh - 80px);
+  height: calc(100vh - 80px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .interpreter-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
+  flex: 1;
+  overflow: hidden;
 }
 
 .waiting-section {
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  padding: 2rem;
+  padding: 1.25rem 1.5rem;
   border-radius: 12px;
   text-align: center;
   border: 2px solid #3a3a3a;
+  flex-shrink: 0;
 }
 
 .waiting-section h1 {
   color: #ffffff;
-  font-size: 2rem;
-  margin: 0 0 1rem 0;
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem 0;
   font-weight: 700;
 }
 
 .waiting-message {
   color: #e0e0e0;
-  font-size: 1.125rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.4;
   margin: 0;
 }
 
 .camera-test-section {
   background: #ffffff;
-  padding: 2rem;
+  padding: 1rem 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .camera-test-section h2 {
   color: #1a1a1a;
-  font-size: 1.5rem;
-  margin: 0 0 1.5rem 0;
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem 0;
   font-weight: 600;
+  flex-shrink: 0;
+}
+
+.camera-test-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.camera-test-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.camera-test-right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
 }
 
 .error-message {
@@ -59,14 +95,13 @@
 
 .device-selectors {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .device-selector {
-  flex: 1;
-  min-width: 280px;
+  width: 100%;
 }
 
 .device-selector label {
@@ -104,13 +139,13 @@
 .video-preview-container {
   position: relative;
   width: 100%;
-  max-width: 800px;
-  aspect-ratio: 16 / 9;
-  margin: 0 auto 1.5rem;
+  aspect-ratio: 4 / 3;
   background: #000000;
   border-radius: 12px;
   overflow: hidden;
   border: 2px solid #2d2d2d;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .video-preview {
@@ -150,10 +185,13 @@
 
 .test-controls {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.test-controls .test-button {
+  width: 100%;
 }
 
 .test-button {
@@ -211,12 +249,13 @@
 
 .test-status {
   display: flex;
-  justify-content: center;
-  gap: 2rem;
-  padding: 1rem;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
   background: #f8f9fa;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
+  flex-shrink: 0;
   flex-wrap: wrap;
 }
 
@@ -224,8 +263,9 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-item.enabled {
@@ -238,27 +278,29 @@
 
 .instructions {
   background: #f8f9fa;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
   border-left: 4px solid #1a1a1a;
+  flex-shrink: 0;
 }
 
 .instructions h3 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   color: #1a1a1a;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .instructions ul {
   margin: 0;
-  padding-left: 1.5rem;
+  padding-left: 1.25rem;
 }
 
 .instructions li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   color: #495057;
-  line-height: 1.6;
+  line-height: 1.4;
+  font-size: 0.9rem;
 }
 
 .instructions li:last-child {
@@ -266,9 +308,44 @@
 }
 
 /* Responsive styles */
+@media (max-width: 968px) {
+  .camera-test-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .camera-test-right {
+    order: -1;
+  }
+
+  .video-preview-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .camera-test-left {
+    overflow-y: visible;
+  }
+}
+
 @media (max-width: 768px) {
   .interpreter-dashboard {
+    padding: 0.25rem 0.75rem 0.5rem;
+    height: auto;
+    min-height: calc(100vh - 80px);
+    overflow-y: auto;
+    margin-top: 0;
+  }
+
+  .interpreter-content {
+    overflow: visible;
+    gap: 0.75rem;
+    margin-top: 0;
+  }
+
+  .waiting-section {
     padding: 1rem;
+    margin-top: 0;
   }
 
   .waiting-section h1 {
@@ -280,34 +357,38 @@
   }
 
   .camera-test-section {
-    padding: 1.5rem;
+    padding: 1rem;
+    overflow: visible;
   }
 
   .camera-test-section h2 {
     font-size: 1.25rem;
   }
 
-  .device-selectors {
-    flex-direction: column;
-    gap: 1rem;
+  .camera-test-layout {
+    overflow: visible;
   }
 
-  .device-selector {
-    min-width: 100%;
+  .camera-test-left {
+    overflow-y: visible;
+  }
+
+  .device-selectors {
+    gap: 0.5rem;
   }
 
   .test-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .test-button {
-    width: 100%;
+    gap: 0.5rem;
   }
 
   .test-status {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .status-item {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .instructions {
@@ -316,6 +397,46 @@
 
   .instructions ul {
     padding-left: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .interpreter-dashboard {
+    padding: 0.5rem;
+  }
+
+  .interpreter-content {
+    gap: 0.5rem;
+  }
+
+  .waiting-section {
+    padding: 0.75rem;
+    margin-top: 0;
+  }
+
+  .camera-test-section {
+    padding: 0.75rem;
+    margin-top: 0;
+  }
+
+  .waiting-section h1 {
+    font-size: 1.25rem;
+  }
+
+  .waiting-message {
+    font-size: 0.95rem;
+  }
+
+  .camera-test-section {
+    padding: 0.75rem;
+  }
+
+  .camera-test-section h2 {
+    font-size: 1.125rem;
+  }
+
+  .video-preview-container {
+    aspect-ratio: 16 / 9;
   }
 }
 

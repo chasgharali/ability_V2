@@ -523,6 +523,7 @@
     z-index: 1001;
     /* above the mobile sidebar (z-index: 999) */
 }
+
 /* Mobile logo bar for booth users - hidden by default, shown on mobile/tablet */
 .mobile-logo-bar {
     display: none;
@@ -809,7 +810,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
     display: flex;
     min-height: calc(100vh - 72px);
     height: calc(100vh - 72px);
-    overflow: hidden; /* Prevent entire layout from scrolling */
+    overflow: hidden;
+    /* Prevent entire layout from scrolling */
     /* margin-top: 72px !important;  */
 }
 
@@ -818,14 +820,20 @@ body.sidebar-open .mobile-menu-toggle:hover {
     background: #1f2937;
     color: #ffffff;
     padding: 1rem 0;
-    overflow-y: hidden !important; /* Sidebar should NOT scroll */
+    overflow-y: hidden !important;
+    /* Sidebar should NOT scroll */
     overflow-x: hidden !important;
-    position: fixed !important; /* Fix sidebar position */
-    top: 72px !important; /* Below fixed header (72px height) */
+    position: fixed !important;
+    /* Fix sidebar position */
+    top: 72px !important;
+    /* Below fixed header (72px height) */
     left: 0 !important;
-    height: calc(100vh - 72px) !important; /* Full height minus header */
-    flex-shrink: 0 !important; /* Don't shrink */
-    z-index: 100 !important; /* Above content but below dialogs and header - overridden on mobile */
+    height: calc(100vh - 72px) !important;
+    /* Full height minus header */
+    flex-shrink: 0 !important;
+    /* Don't shrink */
+    z-index: 100 !important;
+    /* Above content but below dialogs and header - overridden on mobile */
     transition: transform 0.3s ease;
 }
 
@@ -999,13 +1007,18 @@ body.sidebar-open .mobile-menu-toggle:hover {
     flex: 1;
     background: #ffffff;
     padding: 2rem;
-    overflow-y: auto !important; /* Only main content scrolls */
+    overflow-y: auto !important;
+    /* Only main content scrolls */
     overflow-x: hidden !important;
-    height: calc(100vh - 72px) !important; /* Full height minus fixed header (72px) */
+    height: calc(100vh - 72px) !important;
+    /* Full height minus fixed header (72px) */
     max-height: calc(100vh - 72px) !important;
-    margin-left: 260px !important; /* Offset for fixed sidebar */
-    margin-top: 0 !important; /* No top margin needed, layout already has margin-top */
-    -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+    margin-left: 260px !important;
+    /* Offset for fixed sidebar */
+    margin-top: 0 !important;
+    /* No top margin needed, layout already has margin-top */
+    -webkit-overflow-scrolling: touch !important;
+    /* Smooth scrolling on iOS */
     position: relative !important;
 }
 
@@ -1052,7 +1065,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 /* Reduce spacing when account section is present */
-.dashboard-content > .alert-box + .account-section {
+.dashboard-content>.alert-box+.account-section {
     margin-top: 0;
 }
 
@@ -1150,7 +1163,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    margin-top: 12px; /* Account for label height */
+    margin-top: 12px;
+    /* Account for label height */
     height: 36px;
     padding: 6px 12px;
     font-size: 0.75rem;
@@ -1518,20 +1532,27 @@ body.sidebar-open .mobile-menu-toggle:hover {
         /* margin-top: 72px !important;  */
     }
 
-    /* Adjust layout for mobile logo bar */
+    /* Adjust layout for mobile logo bar
+       Reduced margin-top so content sits closer to the top on small screens
+       while still clearing the fixed header + logo bar. */
     body.has-mobile-logo-bar .dashboard-layout {
-        margin-top: 152px !important; /* 72px header + 80px mobile logo bar */
+        margin-top: 112px !important;
+        /* Previously 152px (72px header + 80px mobile logo bar).
+           112px keeps content visible but reduces the perceived gap. */
     }
 
     .dashboard-sidebar {
         position: fixed;
         top: 72px;
-        left: -280px !important; /* Hide sidebar by default on mobile */
+        left: -280px !important;
+        /* Hide sidebar by default on mobile */
         width: 280px;
         height: calc(100vh - 72px);
-        z-index: 1000 !important; /* Above overlay and content, below header */
+        z-index: 1000 !important;
+        /* Above overlay and content, below header */
         transition: left 0.25s ease;
-        overflow-y: auto !important; /* Allow scrolling on mobile if content is too long */
+        overflow-y: auto !important;
+        /* Allow scrolling on mobile if content is too long */
         overflow-x: hidden !important;
     }
 
@@ -1577,16 +1598,22 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
     .dashboard-main {
         width: 100%;
-        margin-left: 0 !important; /* No sidebar offset on mobile */
+        margin-left: 0 !important;
+        /* No sidebar offset on mobile */
+        padding: 0.5rem 1rem !important;
+        padding-top: 0.25rem !important;
         height: calc(100vh - 72px) !important;
         max-height: calc(100vh - 72px) !important;
         position: relative;
-        z-index: 1; /* Below sidebar when it's open */
+        z-index: 1;
+        /* Below sidebar when it's open */
     }
 
     /* Adjust main content for mobile logo bar */
     body.has-mobile-logo-bar .dashboard-main {
-        height: calc(100vh - 152px) !important; /* 72px header + 80px mobile logo bar */
+        padding-top: 0.25rem !important;
+        height: calc(100vh - 152px) !important;
+        /* 72px header + 80px mobile logo bar */
         max-height: calc(100vh - 152px) !important;
     }
 
@@ -1951,8 +1978,10 @@ html body .e-dialog.e-column-chooser .e-dlg-content,
 body div[class*="column-chooser"] .e-dlg-content,
 body .e-popup:has(.e-column-chooser) .e-dlg-content,
 body .e-popup[class*="column-chooser"] .e-dlg-content {
-    padding-left: 24px !important; /* Increased left padding */
-    padding-right: 24px !important; /* Increased right padding */
+    padding-left: 24px !important;
+    /* Increased left padding */
+    padding-right: 24px !important;
+    /* Increased right padding */
     padding-top: 16px !important;
     padding-bottom: 16px !important;
     background: #ffffff !important;
@@ -1983,13 +2012,15 @@ body .e-popup[class*="column-chooser"] input[type="checkbox"],
 .e-dialog.e-column-chooser input[type="checkbox"] {
     width: 18px !important;
     height: 18px !important;
-    accent-color: #111111 !important; /* Black accent color */
+    accent-color: #111111 !important;
+    /* Black accent color */
     cursor: pointer !important;
     border-radius: 5px !important;
     border: 2px solid #d1d5db !important;
     transition: all 0.2s ease !important;
     flex-shrink: 0 !important;
-    appearance: none !important; /* Remove default styling */
+    appearance: none !important;
+    /* Remove default styling */
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
     background-color: #ffffff !important;
@@ -2018,9 +2049,12 @@ body .e-popup[class*="column-chooser"] input[type="checkbox"]:checked,
 .e-column-chooser input[type="checkbox"]:checked,
 .e-popup.e-column-chooser input[type="checkbox"]:checked,
 .e-dialog.e-column-chooser input[type="checkbox"]:checked {
-    accent-color: #111111 !important; /* Black accent color */
-    background-color: #111111 !important; /* Black background when checked */
-    border-color: #111111 !important; /* Black border when checked */
+    accent-color: #111111 !important;
+    /* Black accent color */
+    background-color: #111111 !important;
+    /* Black background when checked */
+    border-color: #111111 !important;
+    /* Black border when checked */
     background-image: none !important;
     color: #ffffff !important;
     /* Remove any Material theme filters that add red/pink */
@@ -2055,7 +2089,8 @@ body .e-popup[class*="column-chooser"] input[type="checkbox"]:checked::after,
     top: 1px !important;
     width: 4px !important;
     height: 9px !important;
-    border: solid #ffffff !important; /* White checkmark on black background */
+    border: solid #ffffff !important;
+    /* White checkmark on black background */
     border-width: 0 2px 2px 0 !important;
     transform: rotate(45deg) !important;
     box-sizing: border-box !important;
@@ -2080,7 +2115,8 @@ body .e-popup.e-column-chooser input[type="checkbox"]:hover,
 body .e-dialog.e-column-chooser input[type="checkbox"]:hover,
 .e-column-chooser input[type="checkbox"]:hover {
     border-color: #111111 !important;
-    filter: none !important; /* Reset filter on hover */
+    filter: none !important;
+    /* Reset filter on hover */
 }
 
 body .e-column-chooser input[type="checkbox"]:focus,
@@ -2252,22 +2288,29 @@ div.e-popup.e-column-chooser .e-css.e-checkbox-wrapper .e-frame.e-check,
 .e-column-chooser .e-css.e-checkbox-wrapper .e-frame.e-check,
 .e-popup.e-column-chooser .e-checkbox-wrapper .e-frame.e-check,
 .e-popup.e-column-chooser .e-css.e-checkbox-wrapper .e-frame.e-check {
-    background-color: #000000 !important; /* Black background */
-    background: #000000 !important; /* Black background (shorthand) */
-    border-color: transparent !important; /* Transparent border */
-    border: 2px solid transparent !important; /* Transparent border */
-    color: #ffffff !important; /* White checkmark */
-    fill: #ffffff !important; /* White for SVG icons */
-    stroke: #ffffff !important; /* White for SVG strokes */
+    background-color: #000000 !important;
+    /* Black background */
+    background: #000000 !important;
+    /* Black background (shorthand) */
+    border-color: transparent !important;
+    /* Transparent border */
+    border: 2px solid transparent !important;
+    /* Transparent border */
+    color: #ffffff !important;
+    /* White checkmark */
+    fill: #ffffff !important;
+    /* White for SVG icons */
+    stroke: #ffffff !important;
+    /* White for SVG strokes */
 }
 
 /* Also target the checkbox wrapper to ensure black applies */
-.e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked + .e-frame,
-.e-column-chooser .e-css.e-checkbox-wrapper input[type="checkbox"]:checked + .e-frame,
-.e-popup.e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked + .e-frame,
-.e-popup.e-column-chooser .e-css.e-checkbox-wrapper input[type="checkbox"]:checked + .e-frame,
-body .e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked + .e-frame.e-check,
-body .e-popup.e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked + .e-frame.e-check {
+.e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked+.e-frame,
+.e-column-chooser .e-css.e-checkbox-wrapper input[type="checkbox"]:checked+.e-frame,
+.e-popup.e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked+.e-frame,
+.e-popup.e-column-chooser .e-css.e-checkbox-wrapper input[type="checkbox"]:checked+.e-frame,
+body .e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked+.e-frame.e-check,
+body .e-popup.e-column-chooser .e-checkbox-wrapper input[type="checkbox"]:checked+.e-frame.e-check {
     background-color: #000000 !important;
     background: #000000 !important;
     border-color: transparent !important;
