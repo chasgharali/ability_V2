@@ -260,6 +260,20 @@
   background: #ffffff;
 }
 
+.form-group input[aria-invalid="true"],
+.form-group select[aria-invalid="true"] {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.form-group input[aria-invalid="true"]:focus,
+.form-group select[aria-invalid="true"]:focus {
+  border-color: #dc2626;
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+  background: #ffffff;
+}
+
 /* Focus styles moved above */
 
 .form-group input[readonly] {

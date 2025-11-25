@@ -219,21 +219,75 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const toggle = (key) => (e) => setA11y(prev => ({ ...prev, [key]: !!e.target.checked }));
 
-  const handleNext = async () => {
-    setSaving(true); setError(''); setMessage('');
+  const validate = () => {
+    const errors = {};
+    
+    if (!form.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+    if (!form.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+    if (!form.state.trim()) {
+      errors.state = 'State is required for event registration';
+    }
+    if (!form.city.trim()) {
+      errors.city = 'City is required for event registration';
+    }
+    if (!form.country) {
+      errors.country = 'Country is required for event registration';
+    }
+    
+    setValidationErrors(errors);
+    return { isValid: Object.keys(errors).length === 0, errors };
+  };
+
+  const handleNext = async (e) => {
+    e.preventDefault();
+    
+    // Validate before submitting
+    const validation = validate();
+    if (!validation.isValid) {
+      // Focus on first error field
+      const firstErrorField = Object.keys(validation.errors)[0];
+      if (firstErrorField) {
+        // Use setTimeout to ensure state is updated and DOM is ready
+        setTimeout(() => {
+          const field = document.getElementById(firstErrorField);
+          if (field) {
+            field.focus();
+            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 0);
+      }
+      return;
+    }
+    
+    setSaving(true); 
+    setError(''); 
+    setMessage('');
     try {
       const payload = {
         name: `${form.firstName} ${form.lastName}`.trim(),
-        state: form.state || '',
-        city: form.city || '',
+        state: form.state.trim(),
+        city: form.city.trim(),
         country: form.country || 'US',
         phoneNumber: (form.phone || '').trim() || undefined,
         ...a11y,
@@ -243,28 +297,51 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
       onDone?.();
     } catch (e) {
       setError('Failed to save');
-    } finally { setSaving(false); }
+    } finally { 
+      setSaving(false); 
+    }
   };
 
   return (
-    <section aria-labelledby="acc-h" className="account-section">
+    <section className="account-section">
       <div className="section-header">
-        <h3 id="acc-h" className="section-title">My Account</h3>
         <p className="section-note">An asterisk (*) indicates a required field.</p>
       </div>
 
       {message && <div className="alert-box" role="status" aria-live="polite">{message}</div>}
       {error && <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{error}</div>}
 
-      <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="account-form" aria-describedby="acc-help">
+      <form onSubmit={handleNext} className="account-form" aria-describedby="acc-help">
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">First Name *</label>
-            <input id="firstName" name="firstName" value={form.firstName} onChange={onChange} required />
+            <input 
+              id="firstName" 
+              name="firstName" 
+              value={form.firstName} 
+              onChange={onChange} 
+              required 
+              aria-invalid={!!validationErrors.firstName}
+              aria-describedby={validationErrors.firstName ? 'firstName-error' : undefined}
+            />
+            {validationErrors.firstName && (
+              <div id="firstName-error" className="field-error" role="alert">{validationErrors.firstName}</div>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="lastName">Last Name *</label>
-            <input id="lastName" name="lastName" value={form.lastName} onChange={onChange} required />
+            <input 
+              id="lastName" 
+              name="lastName" 
+              value={form.lastName} 
+              onChange={onChange} 
+              required 
+              aria-invalid={!!validationErrors.lastName}
+              aria-describedby={validationErrors.lastName ? 'lastName-error' : undefined}
+            />
+            {validationErrors.lastName && (
+              <div id="lastName-error" className="field-error" role="alert">{validationErrors.lastName}</div>
+            )}
           </div>
         </div>
         <div className="form-row">
@@ -286,10 +363,14 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
               value={form.state}
               onChange={onChange}
               required
-              aria-describedby="state-help"
-              aria-invalid={!form.state}
+              aria-describedby={validationErrors.state ? 'state-error' : 'state-help'}
+              aria-invalid={!!validationErrors.state || !form.state.trim()}
             />
-            <div id="state-help" className="field-help">State is required for event registration</div>
+            {validationErrors.state ? (
+              <div id="state-error" className="field-error" role="alert">{validationErrors.state}</div>
+            ) : (
+              <div id="state-help" className="field-help">State is required for event registration</div>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="city">City *</label>
@@ -299,10 +380,14 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
               value={form.city}
               onChange={onChange}
               required
-              aria-describedby="city-help"
-              aria-invalid={!form.city}
+              aria-describedby={validationErrors.city ? 'city-error' : 'city-help'}
+              aria-invalid={!!validationErrors.city || !form.city.trim()}
             />
-            <div id="city-help" className="field-help">City is required for event registration</div>
+            {validationErrors.city ? (
+              <div id="city-error" className="field-error" role="alert">{validationErrors.city}</div>
+            ) : (
+              <div id="city-help" className="field-help">City is required for event registration</div>
+            )}
           </div>
         </div>
         <div className="form-group">
@@ -313,8 +398,8 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
             value={form.country}
             onChange={onChange}
             required
-            aria-describedby="country-help"
-            aria-invalid={!form.country}
+            aria-describedby={validationErrors.country ? 'country-error' : 'country-help'}
+            aria-invalid={!!validationErrors.country || !form.country}
           >
             <option value="">Select Country</option>
             {COUNTRIES.map(country => (
@@ -323,7 +408,11 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
               </option>
             ))}
           </select>
-          <div id="country-help" className="field-help">Country is required for event registration</div>
+          {validationErrors.country ? (
+            <div id="country-error" className="field-error" role="alert">{validationErrors.country}</div>
+          ) : (
+            <div id="country-help" className="field-help">Country is required for event registration</div>
+          )}
         </div>
 
         <fieldset className="accessibility-fieldset">
@@ -428,7 +517,7 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
         </fieldset>
 
         <div className="form-actions">
-          <button type="submit" className="ajf-btn ajf-btn-dark" disabled={saving} aria-label="Save account information">{saving ? 'Saving…' : 'Save'}</button>
+          <button type="submit" className="ajf-btn ajf-btn-dark" disabled={saving} aria-label="Save account information and continue">{saving ? 'Saving…' : 'Save and Next'}</button>
         </div>
       </form>
     </section>
