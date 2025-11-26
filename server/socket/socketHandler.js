@@ -795,6 +795,69 @@ const socketHandler = (io) => {
         });
 
         /**
+         * Handle interpreter status changes (online/away/busy)
+         */
+        socket.on('set-interpreter-status', (data) => {
+            try {
+                const { status } = data; // status: 'online', 'away', or 'busy'
+                
+                if (!['online', 'away', 'busy'].includes(status)) {
+                    socket.emit('error', { message: 'Invalid status. Must be online, away, or busy.' });
+                    return;
+                }
+
+                // Only interpreters can set their status
+                if (socket.user.role !== 'Interpreter' && socket.user.role !== 'GlobalInterpreter') {
+                    socket.emit('error', { message: 'Only interpreters can set their status' });
+                    return;
+                }
+
+                // Update status in liveStatsStore
+                const success = liveStatsStore.setInterpreterStatus(socket.userId, status);
+                
+                if (success) {
+                    // Confirm status change to interpreter
+                    socket.emit('interpreter-status-updated', {
+                        status: status,
+                        timestamp: new Date()
+                    });
+
+                    // Broadcast status change to all recruiters so they can see updated availability
+                    io.to('role:Recruiter').emit('interpreter-status-changed', {
+                        interpreterId: socket.userId,
+                        interpreterName: socket.user.name,
+                        status: status,
+                        timestamp: new Date()
+                    });
+
+                    logger.info(`Interpreter ${socket.user.email} set status to: ${status}`);
+                } else {
+                    socket.emit('error', { message: 'Failed to update status' });
+                }
+            } catch (error) {
+                logger.error('Interpreter status update error:', error);
+                socket.emit('error', { message: 'Failed to update interpreter status' });
+            }
+        });
+
+        /**
+         * Get interpreter's current status
+         */
+        socket.on('get-interpreter-status', () => {
+            try {
+                if (socket.user.role !== 'Interpreter' && socket.user.role !== 'GlobalInterpreter') {
+                    socket.emit('error', { message: 'Only interpreters can get their status' });
+                    return;
+                }
+
+                const status = liveStatsStore.getInterpreterStatus(socket.userId) || 'online';
+                socket.emit('interpreter-status', { status, timestamp: new Date() });
+            } catch (error) {
+                logger.error('Get interpreter status error:', error);
+            }
+        });
+
+        /**
          * Test connection handler
          */
         socket.on('test-connection', (data) => {

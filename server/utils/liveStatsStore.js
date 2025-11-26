@@ -2,6 +2,7 @@ class LiveStatsStore {
     constructor() {
         this.onlineUsers = new Map(); // userId -> user info
         this.callParticipants = new Map(); // userId -> participant info
+        this.interpreterStatuses = new Map(); // userId -> status (online, away, busy)
     }
 
     userConnected(user) {
@@ -19,12 +20,46 @@ class LiveStatsStore {
             connectedAt: now,
             lastOnline: now
         });
+
+        // If interpreter, set default status to 'online'
+        if (user.role === 'Interpreter' || user.role === 'GlobalInterpreter') {
+            if (!this.interpreterStatuses.has(userId)) {
+                this.interpreterStatuses.set(userId, 'online');
+            }
+        }
     }
 
     userDisconnected(userId) {
         if (!userId) return;
         this.callParticipants.delete(userId.toString());
         this.onlineUsers.delete(userId.toString());
+        this.interpreterStatuses.delete(userId.toString());
+    }
+
+    // Interpreter status management
+    setInterpreterStatus(userId, status) {
+        if (!userId) return false;
+        const validStatuses = ['online', 'away', 'busy'];
+        if (!validStatuses.includes(status)) return false;
+        
+        this.interpreterStatuses.set(userId.toString(), status);
+        return true;
+    }
+
+    getInterpreterStatus(userId) {
+        if (!userId) return null;
+        return this.interpreterStatuses.get(userId.toString()) || null;
+    }
+
+    getAllInterpreterStatuses() {
+        return Object.fromEntries(this.interpreterStatuses);
+    }
+
+    isInterpreterAvailable(userId) {
+        if (!userId) return false;
+        const status = this.interpreterStatuses.get(userId.toString());
+        // Must be online (in the store) AND have 'online' status (not away or busy)
+        return this.onlineUsers.has(userId.toString()) && status === 'online';
     }
 
     userJoinedCall({ sessionId, boothId, eventId }, user) {

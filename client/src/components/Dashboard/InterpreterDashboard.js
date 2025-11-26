@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MdVideocam, MdMic, MdRefresh } from 'react-icons/md';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MdVideocam, MdMic, MdRefresh, MdCircle } from 'react-icons/md';
+import { FiRefreshCw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../contexts/SocketContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
@@ -23,10 +24,61 @@ const InterpreterDashboard = () => {
   const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
   const [invitation, setInvitation] = useState(null);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
+  const [interpreterStatus, setInterpreterStatus] = useState('online');
+  const [statusUpdating, setStatusUpdating] = useState(false);
   const videoRef = useRef(null);
 
   // Get role message from context
   const infoBannerMessage = getMessage('interpreter-dashboard', 'welcome') || '';
+
+  // Status options with colors
+  const statusOptions = [
+    { value: 'online', label: 'Online', color: '#48bb78', description: 'Available for calls' },
+    { value: 'away', label: 'Away', color: '#ed8936', description: 'Temporarily unavailable' },
+    { value: 'busy', label: 'Busy', color: '#f56565', description: 'Do not disturb' }
+  ];
+
+  // Get current status
+  const fetchCurrentStatus = useCallback(() => {
+    if (socket?.socket) {
+      socket.socket.emit('get-interpreter-status');
+    }
+  }, [socket]);
+
+  // Set interpreter status
+  const setStatus = useCallback((newStatus) => {
+    if (!socket?.socket) return;
+    
+    setStatusUpdating(true);
+    socket.socket.emit('set-interpreter-status', { status: newStatus });
+  }, [socket]);
+
+  // Listen for status updates
+  useEffect(() => {
+    if (!socket?.socket) return;
+
+    const handleStatusUpdated = (data) => {
+      console.log('✅ Status updated:', data);
+      setInterpreterStatus(data.status);
+      setStatusUpdating(false);
+    };
+
+    const handleCurrentStatus = (data) => {
+      console.log('📊 Current status:', data);
+      setInterpreterStatus(data.status);
+    };
+
+    socket.socket.on('interpreter-status-updated', handleStatusUpdated);
+    socket.socket.on('interpreter-status', handleCurrentStatus);
+
+    // Fetch current status on mount
+    fetchCurrentStatus();
+
+    return () => {
+      socket.socket.off('interpreter-status-updated', handleStatusUpdated);
+      socket.socket.off('interpreter-status', handleCurrentStatus);
+    };
+  }, [socket, fetchCurrentStatus]);
 
   // Socket listener for interpreter invitations
   useEffect(() => {
@@ -330,6 +382,43 @@ const InterpreterDashboard = () => {
           <div className="camera-test-layout">
             <div className="camera-test-left">
               <div className="device-selectors">
+                {/* Status Selector - Compact Dropdown */}
+                <div className="device-selector status-selector-compact">
+                  <label htmlFor="status-select">
+                    <MdCircle 
+                      size={12} 
+                      style={{ color: statusOptions.find(s => s.value === interpreterStatus)?.color || '#48bb78' }} 
+                    />
+                    Status:
+                  </label>
+                  <div className="status-select-wrapper">
+                    <select
+                      id="status-select"
+                      value={interpreterStatus}
+                      onChange={(e) => setStatus(e.target.value)}
+                      disabled={statusUpdating}
+                      className="device-select status-select"
+                      style={{
+                        borderColor: statusOptions.find(s => s.value === interpreterStatus)?.color || '#48bb78'
+                      }}
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label} - {option.description}
+                        </option>
+                      ))}
+                    </select>
+                    <button 
+                      className="status-refresh-btn"
+                      onClick={fetchCurrentStatus}
+                      disabled={statusUpdating}
+                      title="Refresh status"
+                    >
+                      <FiRefreshCw size={14} className={statusUpdating ? 'spinning' : ''} />
+                    </button>
+                  </div>
+                </div>
+
                 <div className="device-selector">
                   <label htmlFor="video-device-select">
                     <MdVideocam size={18} />

@@ -6,6 +6,7 @@ const User = require('../models/User');
 const { generateAccessToken, createOrGetRoom, endRoom, getRoomParticipants } = require('../config/twilio');
 const { authenticateToken: auth } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
+const liveStatsStore = require('../utils/liveStatsStore');
 
 /**
  * POST /api/video-call/create
@@ -218,10 +219,32 @@ router.get('/available-interpreters/:boothId', auth, async (req, res) => {
     }).select('_id name email role languages isAvailable');
 
     // Get all interpreters currently in active meetings
+    // Only consider calls that are truly active (started less than 1 hour ago)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+    // First, cleanup any stale calls (calls marked active but started > 1 hour ago)
+    const staleCalls = await VideoCall.find({
+      status: 'active',
+      startedAt: { $lt: oneHourAgo }
+    });
+    if (staleCalls.length > 0) {
+      console.log(`🧹 Cleaning up ${staleCalls.length} stale active calls`);
+      for (const call of staleCalls) {
+        call.status = 'ended';
+        call.endedAt = new Date();
+        call.interpreters.forEach(i => {
+          if (i.status === 'joined') i.status = 'left';
+        });
+        await call.save();
+      }
+    }
+
+    // Now get active calls with interpreters
     const activeCallsWithInterpreters = await VideoCall.find({
       status: 'active',
-      'interpreters.status': 'joined'
-    }).select('interpreters');
+      'interpreters.status': 'joined',
+      startedAt: { $gte: oneHourAgo } // Only recent active calls
+    }).select('interpreters startedAt');
 
     // Extract interpreter IDs that are currently in meetings
     const busyInterpreterIds = new Set();
@@ -233,41 +256,62 @@ router.get('/available-interpreters/:boothId', auth, async (req, res) => {
       });
     });
 
-    // Get socket-based online status for interpreters
+    // Get socket-based online status for interpreters using liveStatsStore
     const onlineInterpreterIds = new Set();
-    if (io) {
-      const connectedSockets = io.sockets.sockets;
-      connectedSockets.forEach((connectedSocket) => {
-        if (connectedSocket.userId &&
-          (connectedSocket.user?.role === 'Interpreter' || connectedSocket.user?.role === 'GlobalInterpreter')) {
-          onlineInterpreterIds.add(connectedSocket.userId.toString());
-        }
-      });
-    }
+    const onlineUsers = liveStatsStore.getOnlineUsers();
+    onlineUsers.forEach((onlineUser) => {
+      if (onlineUser.role === 'Interpreter' || onlineUser.role === 'GlobalInterpreter') {
+        onlineInterpreterIds.add(onlineUser.userId.toString());
+      }
+    });
 
-    console.log('Busy interpreters in active meetings:', Array.from(busyInterpreterIds));
-    console.log('Online interpreters (socket-based):', Array.from(onlineInterpreterIds));
+    // Get interpreter statuses
+    const interpreterStatuses = liveStatsStore.getAllInterpreterStatuses();
+    
+    console.log('📊 Interpreter Status Check:');
+    console.log('  - Booth interpreters found:', boothInterpreters.length);
+    console.log('  - Global interpreters found:', globalInterpreters.length);
+    console.log('  - Busy interpreters in active meetings:', Array.from(busyInterpreterIds));
+    console.log('  - Online interpreters (liveStatsStore):', Array.from(onlineInterpreterIds));
+    console.log('  - Interpreter statuses:', interpreterStatuses);
+    console.log('  - Total online users:', onlineUsers.length);
+    
+    // Debug: Check each booth interpreter's status
+    boothInterpreters.forEach(i => {
+      const isOnline = onlineInterpreterIds.has(i._id.toString());
+      const isInMeeting = busyInterpreterIds.has(i._id.toString());
+      const status = interpreterStatuses[i._id.toString()] || 'offline';
+      console.log(`  - Booth Interpreter ${i.name} (${i._id}): online=${isOnline}, status=${status}, inMeeting=${isInMeeting}`);
+    });
 
-    // Combine and return - check socket-based online status AND if they're in an active meeting
+    // Combine and return - check socket-based online status AND status setting
     const interpreters = [
       ...boothInterpreters.map(i => {
         const isOnline = onlineInterpreterIds.has(i._id.toString());
         const isInMeeting = busyInterpreterIds.has(i._id.toString());
+        const status = isOnline ? (interpreterStatuses[i._id.toString()] || 'online') : 'offline';
+        // Available only if online, status is 'online' (not away/busy), and not in a meeting
+        const isAvailable = isOnline && status === 'online' && !isInMeeting;
         return {
           ...i.toObject(),
           type: 'booth',
-          isAvailable: isOnline && !isInMeeting, // Use socket-based online status
-          inMeeting: isInMeeting
+          isAvailable,
+          inMeeting: isInMeeting,
+          status: isInMeeting ? 'busy' : status // Override status if in meeting
         };
       }),
       ...globalInterpreters.map(i => {
         const isOnline = onlineInterpreterIds.has(i._id.toString());
         const isInMeeting = busyInterpreterIds.has(i._id.toString());
+        const status = isOnline ? (interpreterStatuses[i._id.toString()] || 'online') : 'offline';
+        // Available only if online, status is 'online' (not away/busy), and not in a meeting
+        const isAvailable = isOnline && status === 'online' && !isInMeeting;
         return {
           ...i.toObject(),
           type: 'global',
-          isAvailable: isOnline && !isInMeeting, // Use socket-based online status
-          inMeeting: isInMeeting
+          isAvailable,
+          inMeeting: isInMeeting,
+          status: isInMeeting ? 'busy' : status // Override status if in meeting
         };
       })
     ];

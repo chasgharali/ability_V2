@@ -16,6 +16,58 @@
   overflow: hidden;
 }
 
+/* Compact Status Selector (in testing area) */
+.status-selector-compact {
+  background: #f0fdf4;
+  border-radius: 8px;
+  padding: 0.5rem;
+  border: 1px solid #86efac;
+}
+
+.status-select-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.status-select {
+  flex: 1;
+  border-width: 2px !important;
+}
+
+.status-refresh-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #4a5568;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-refresh-btn:hover {
+  background: #edf2f7;
+  color: #2d3748;
+}
+
+.status-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-refresh-btn .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .waiting-section {
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   padding: 1.25rem 1.5rem;

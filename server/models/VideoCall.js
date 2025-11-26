@@ -47,7 +47,7 @@ const videoCallSchema = new mongoose.Schema({
     },
     status: {
       type: String,
-      enum: ['invited', 'joined', 'declined'],
+      enum: ['invited', 'joined', 'declined', 'left'],
       default: 'invited'
     },
     invitedAt: {
@@ -214,6 +214,16 @@ videoCallSchema.methods.endCall = function() {
   this.status = 'ended';
   this.endedAt = new Date();
   this.duration = Math.floor((this.endedAt - this.startedAt) / 1000);
+  
+  // Update all interpreter statuses to 'left' when call ends
+  if (this.interpreters && this.interpreters.length > 0) {
+    this.interpreters.forEach(interpreter => {
+      if (interpreter.status === 'joined') {
+        interpreter.status = 'left';
+      }
+    });
+  }
+  
   return this.save();
 };
 
