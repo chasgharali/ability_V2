@@ -3,15 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { notesAPI } from '../../services/notes';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { MdArrowBack } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './Notes.css';
 
 const NoteViewUser = ({ type }) => {
+    const { getMessage } = useRoleMessages();
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    
+    // Get role message from context
+    const screenName = type === 'troubleshooting' ? 'troubleshooting' : 'instructions';
+    const infoBannerMessage = getMessage(screenName, 'info-banner') || '';
 
     // Fetch notes for current user's role
     const fetchNotes = useCallback(async () => {
@@ -30,6 +36,7 @@ const NoteViewUser = ({ type }) => {
     useEffect(() => {
         fetchNotes();
     }, [fetchNotes]);
+
 
     if (loading) {
         return (
@@ -88,6 +95,11 @@ const NoteViewUser = ({ type }) => {
                     </div>
 
                     <div className="dashboard-content-area">
+                        {infoBannerMessage && (
+                            <div className="info-banner" style={{ marginBottom: '1.5rem' }}>
+                                <span>{infoBannerMessage}</span>
+                            </div>
+                        )}
                         {notes.length === 0 ? (
                             <div className="muted" style={{ marginTop: '2rem', textAlign: 'center' }}>
                                 <p>No {title.toLowerCase()} available at this time.</p>

@@ -3,6 +3,8 @@ import axios from 'axios';
 import './Dashboard.css';
 import { registerLicense } from '@syncfusion/ej2-base';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
+import { useAuth } from '../../contexts/AuthContext';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 // Syncfusion styles
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
@@ -44,9 +46,12 @@ const COUNTRIES_RAW = [
 const COUNTRIES = Array.from(new Set(COUNTRIES_RAW)).sort((a, b) => a.localeCompare(b));
 
 export default function SurveyForm({ onValidationChange }) {
+  const { user } = useAuth();
+  const { getMessage } = useRoleMessages();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const infoBannerMessage = getMessage('survey', 'info-banner') || '';
   const [form, setForm] = useState({
     race: [],
     genderIdentity: '',
@@ -125,6 +130,7 @@ export default function SurveyForm({ onValidationChange }) {
     };
     fetchSurvey();
   }, []);
+
 
   const persistPartial = async (partial) => {
     try {
@@ -224,7 +230,12 @@ export default function SurveyForm({ onValidationChange }) {
         <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
       )}
       <h2>Survey – Tell us about yourself</h2>
-      <p className="section-note">This survey helps us learn about and better support all job seekers with disabilities. We may share summary group data analytics, but we will never share individual survey information.</p>
+      
+      {infoBannerMessage && (
+        <div className="info-banner">
+          <span>{infoBannerMessage}</span>
+        </div>
+      )}
 
       <form className="account-form survey-form" onSubmit={handleSubmit}>
         <div className="form-row form-row-3">

@@ -5,16 +5,17 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
 import { getEvent, getEventBooths, listRegisteredEvents } from '../../services/events';
 import { useAuth } from '../../contexts/AuthContext';
-import roleMessagesAPI from '../../services/roleMessages';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 
 export default function EventDetail() {
   const { slug } = useParams();
   const { user, loading } = useAuth();
+  const { getMessage } = useRoleMessages();
   const [event, setEvent] = useState(null);
   const [booths, setBooths] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [serverIsRegistered, setServerIsRegistered] = useState(false);
-  const [registrationInstruction, setRegistrationInstruction] = useState('To register for this upcoming event, click the "Register for the Job Fair" button at the bottom of the page. To find out more about each employer, click the employer link below to visit their portal.');
+  const registrationInstruction = getMessage('event-registration', 'registration-instruction') || '';
   const navigate = useNavigate();
 
   // Determine if current user is already registered for this event
@@ -66,23 +67,6 @@ export default function EventDetail() {
     })();
   }, [slug, loading]);
 
-  // Fetch role message for registration instruction
-  useEffect(() => {
-    const fetchRegistrationInstruction = async () => {
-      if (user?.role === 'JobSeeker') {
-        try {
-          const response = await roleMessagesAPI.getMessage('JobSeeker', 'event-registration', 'registration-instruction');
-          if (response.success && response.content) {
-            setRegistrationInstruction(response.content);
-          }
-        } catch (error) {
-          // Use default message if not found
-          console.log('No registration instruction message found, using default');
-        }
-      }
-    };
-    fetchRegistrationInstruction();
-  }, [user?.role]);
 
   if (loading) return null;
 
@@ -101,13 +85,16 @@ export default function EventDetail() {
                 <h1 style={{ textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 }}>{event.name}</h1>
 
                 {/* Banner note */}
-                <div className="alert-box" role="status" aria-live="polite" style={{ maxWidth: 860, margin: '0 auto 16px' }}>
-                  {isRegistered ? (
-                    <p>You are registered for this event. You can manage your registration and mark employer interest below.</p>
-                  ) : (
+                {!isRegistered && registrationInstruction && (
+                  <div className="alert-box" role="status" aria-live="polite" style={{ maxWidth: 860, margin: '0 auto 16px' }}>
                     <p>{registrationInstruction}</p>
-                  )}
-                </div>
+                  </div>
+                )}
+                {isRegistered && (
+                  <div className="alert-box" role="status" aria-live="polite" style={{ maxWidth: 860, margin: '0 auto 16px' }}>
+                    <p>You are registered for this event. You can manage your registration and mark employer interest below.</p>
+                  </div>
+                )}
 
                 {/* Content card */}
                 <section aria-labelledby="evt-info" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, maxWidth: 860, margin: '0 auto' }}>

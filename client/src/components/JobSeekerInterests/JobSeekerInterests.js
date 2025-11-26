@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useNavigate } from 'react-router-dom';
 import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { listEvents } from '../../services/events';
@@ -17,8 +18,12 @@ import './JobSeekerInterests.css';
 
 const JobSeekerInterests = () => {
     const { user, loading } = useAuth();
+    const { getMessage } = useRoleMessages();
     const navigate = useNavigate();
     const { booth, event } = useRecruiterBooth();
+    
+    // Get role message from context
+    const infoBannerMessage = getMessage('jobseeker-interests', 'info-banner') || '';
 
     // Redirect if not authenticated or not authorized
     useEffect(() => {
@@ -354,6 +359,11 @@ const JobSeekerInterests = () => {
                             {/* Page Header */}
                             <div className="page-header">
                                 <h1>Job Seeker Interests</h1>
+                                {infoBannerMessage && (
+                                    <div className="info-banner" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
+                                        <span>{infoBannerMessage}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Statistics Cards */}

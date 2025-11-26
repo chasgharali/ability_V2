@@ -9,17 +9,11 @@ import { MdAdd, MdEdit, MdDelete, MdSave, MdCancel, MdDone, MdClear } from 'reac
 import '../Dashboard/Dashboard.css';
 import './RoleMessageManagement.css';
 
-const ROLES = ['JobSeeker', 'Recruiter', 'BoothAdmin', 'Admin', 'AdminEvent', 'Support', 'GlobalSupport', 'Interpreter', 'GlobalInterpreter'];
+const ROLES = ['JobSeeker', 'Recruiter', 'Interpreter'];
 const SCREENS = {
-  'JobSeeker': ['my-account', 'delete-account', 'edit-profile', 'view-profile', 'event-registration'],
-  'Recruiter': ['dashboard'],
-  'BoothAdmin': ['dashboard'],
-  'Admin': ['dashboard'],
-  'AdminEvent': ['dashboard'],
-  'Support': ['dashboard'],
-  'GlobalSupport': ['dashboard'],
-  'Interpreter': ['dashboard'],
-  'GlobalInterpreter': ['dashboard']
+  'JobSeeker': ['my-account', 'delete-account', 'edit-profile', 'view-profile', 'event-registration', 'survey'],
+  'Recruiter': ['dashboard', 'meeting-queue', 'meeting-records', 'jobseeker-interests'],
+  'Interpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions']
 };
 
 const MESSAGE_KEYS = {
@@ -28,7 +22,14 @@ const MESSAGE_KEYS = {
   'edit-profile': ['info-banner'],
   'view-profile': ['profile-notice'],
   'event-registration': ['registration-instruction'],
-  'dashboard': ['welcome']
+  'survey': ['info-banner'],
+  'dashboard': ['welcome'],
+  'interpreter-dashboard': ['welcome'],
+  'troubleshooting': ['info-banner'],
+  'instructions': ['info-banner'],
+  'meeting-queue': ['info-banner'],
+  'meeting-records': ['info-banner'],
+  'jobseeker-interests': ['info-banner']
 };
 
 export default function RoleMessageManagement() {
@@ -148,6 +149,19 @@ export default function RoleMessageManagement() {
       return;
     }
     
+    // Check for duplicate message (same role, screen, messageKey)
+    const duplicate = messages.find(
+      msg => 
+        msg.role === createForm.role && 
+        msg.screen === createForm.screen && 
+        msg.messageKey === createForm.messageKey
+    );
+    
+    if (duplicate) {
+      showToast('A message with this role, screen, and message key already exists. Please edit the existing message instead.', { type: 'error', duration: 4000 });
+      return;
+    }
+    
     try {
       setSaving(true);
       await roleMessagesAPI.setMessage(
@@ -240,7 +254,17 @@ export default function RoleMessageManagement() {
             <div className="role-message-filters">
               <select
                 value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
+                onChange={(e) => {
+                  const newRole = e.target.value;
+                  setFilterRole(newRole);
+                  // Reset screen filter when role changes, or set to first available screen
+                  if (newRole !== 'all') {
+                    const availableScreens = getAvailableScreens(newRole);
+                    setFilterScreen(availableScreens.length > 0 ? availableScreens[0] : 'all');
+                  } else {
+                    setFilterScreen('all');
+                  }
+                }}
                 className="dashboard-select"
               >
                 <option value="all">All Roles</option>
@@ -254,9 +278,14 @@ export default function RoleMessageManagement() {
                 className="dashboard-select"
               >
                 <option value="all">All Screens</option>
-                {[...new Set(messages.map(m => m.screen))].map(screen => (
-                  <option key={screen} value={screen}>{screen}</option>
-                ))}
+                {filterRole === 'all' 
+                  ? [...new Set(messages.map(m => m.screen))].map(screen => (
+                      <option key={screen} value={screen}>{screen}</option>
+                    ))
+                  : getAvailableScreens(filterRole).map(screen => (
+                      <option key={screen} value={screen}>{screen}</option>
+                    ))
+                }
               </select>
             </div>
 
@@ -350,18 +379,6 @@ export default function RoleMessageManagement() {
                       : `No messages match your current filters (Role: ${filterRole}, Screen: ${filterScreen}). Try changing the filters or create a new message.`
                     }
                   </p>
-                  {(filterRole === 'all' || filterRole === 'JobSeeker') && messages.length === 0 ? (
-                    <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fff', borderRadius: '4px' }}>
-                      <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Quick Start - Create these JobSeeker messages:</p>
-                      <ul style={{ marginLeft: '1.5rem', lineHeight: '1.8', marginBottom: 0 }}>
-                        <li><strong>my-account / welcome:</strong> "• Welcome to your job seeker dashboard"</li>
-                        <li><strong>delete-account / warning:</strong> "Warning: Deleting your account will deactivate your access. This action cannot be undone."</li>
-                        <li><strong>edit-profile / info-banner:</strong> "job seeker edit profile page"</li>
-                        <li><strong>view-profile / profile-notice:</strong> "This is the profile that recruiters will see..."</li>
-                        <li><strong>event-registration / registration-instruction:</strong> "To register for this upcoming event..."</li>
-                      </ul>
-                    </div>
-                  ) : null}
                 </div>
               ) : (
                 <table className="role-messages-table">
