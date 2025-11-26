@@ -65,6 +65,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     const notificationTimeoutRef = useRef(null);
 
     const socketRef = useRef(null);
+    const chatsRef = useRef([]);
     const chatRef = useRef(null);
     const selectedChatRef = useRef(null);
     const joinedChatsRef = useRef(new Set());
@@ -79,6 +80,11 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
             });
         }
     }, [selectedChat]);
+
+    // Keep a live ref of chats for use inside socket handlers
+    useEffect(() => {
+        chatsRef.current = chats;
+    }, [chats]);
 
     // Initialize socket connection
     useEffect(() => {
@@ -187,18 +193,115 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                 console.log('ℹ️ Own message in different chat - no sound');
             }
 
-            // Update chat list with unread count
-            setChats(prevChats => prevChats.map(chat => {
-                if (chat._id === data.chatId) {
-                    return {
-                        ...chat,
-                        lastMessage: data.message,
-                        // Only increment unread if: not current chat AND not own message
-                        unreadCount: isCurrentChat ? 0 : (isOwnMessage ? (chat.unreadCount || 0) : (chat.unreadCount || 0) + 1)
-                    };
+            // Update chat list with unread count; if the chat doesn't exist yet, create a minimal entry
+            setChats(prevChats => {
+                const idx = prevChats.findIndex(chat => chat._id === data.chatId);
+
+                // Existing chat: update lastMessage + unreadCount
+                if (idx !== -1) {
+                    return prevChats.map(chat => {
+                        if (chat._id !== data.chatId) return chat;
+                        return {
+                            ...chat,
+                            lastMessage: data.message,
+                            // Only increment unread if: not current chat AND not own message
+                            unreadCount: isCurrentChat
+                                ? 0
+                                : (isOwnMessage ? (chat.unreadCount || 0) : (chat.unreadCount || 0) + 1)
+                        };
+                    });
                 }
-                return chat;
-            }));
+
+                // New chat (not yet in recent list) and message is from someone else:
+                // create a minimal direct chat entry so it appears immediately with unread badge.
+                if (!isOwnMessage) {
+                    console.log('🆕 Creating local chat stub for new incoming chat');
+                    const sender = data.message?.sender;
+                    const minimalChat = {
+                        _id: data.chatId,
+                        type: 'direct',
+                        participants: sender && user ? [
+                            { user: { _id: user._id, name: user.name, avatarUrl: user.avatarUrl || '', role: user.role } },
+                            { user: { _id: sender._id, name: sender.name, avatarUrl: sender.avatarUrl || '', role: sender.role } }
+                        ] : [],
+                        lastMessage: data.message,
+                        unreadCount: 1
+                    };
+                    return [minimalChat, ...prevChats];
+                }
+
+                // Own message in a brand-new chat that we don't know about yet – let future loads handle it
+                return prevChats;
+            });
+        });
+
+        // Notification for chats when user was offline or not in the room
+        socketRef.current.on('chat-notification', (data) => {
+            console.log('📨 Chat notification received:', data);
+
+            const currentChatId = selectedChatRef.current?._id;
+            const isCurrentChat = data.chatId && data.chatId === currentChatId;
+            const isOwnMessage = data.message?.sender?._id && user && data.message.sender._id === user._id;
+
+            // Only play sound when it's from another user AND not for the chat currently open
+            if (!isCurrentChat && !isOwnMessage) {
+                try {
+                    playNotificationSound();
+                } catch (e) {
+                    console.error('Failed to play notification sound from chat-notification:', e);
+                }
+            }
+
+            const senderName = data.message?.sender?.name;
+            const content = data.message?.content;
+            if (senderName && content) {
+                setNotification({
+                    sender: senderName,
+                    message: content
+                });
+
+                if (notificationTimeoutRef.current) {
+                    clearTimeout(notificationTimeoutRef.current);
+                }
+                notificationTimeoutRef.current = setTimeout(() => {
+                    setNotification(null);
+                }, 4000);
+            }
+
+            // Mirror unread state: if this chat isn't in the list yet, add a minimal entry with unreadCount
+            setChats(prevChats => {
+                const idx = prevChats.findIndex(chat => chat._id === data.chatId);
+                const sender = data.message?.sender;
+
+                if (idx !== -1) {
+                    return prevChats.map(chat => {
+                        if (chat._id !== data.chatId) return chat;
+                        return {
+                            ...chat,
+                            lastMessage: data.message,
+                            // Avoid double-counting when a new-message already incremented unreadCount;
+                            // use the max of existing and server-provided unread value.
+                            unreadCount: Math.max(chat.unreadCount || 0, data.unreadCount || 1)
+                        };
+                    });
+                }
+
+                if (sender && user) {
+                    const minimalChat = {
+                        _id: data.chatId,
+                        type: 'direct',
+                        participants: [
+                            { user: { _id: user._id, name: user.name, avatarUrl: user.avatarUrl || '', role: user.role } },
+                            { user: { _id: sender._id, name: sender.name, avatarUrl: sender.avatarUrl || '', role: sender.role } }
+                        ],
+                        lastMessage: data.message,
+                        unreadCount: data.unreadCount || 1
+                    };
+                    return [minimalChat, ...prevChats];
+                }
+
+                return prevChats;
+            });
         });
 
 
@@ -546,11 +649,22 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
             .filter(Boolean)
     );
 
-    const filteredParticipants = participants.filter(p =>
-        p._id !== user?._id && // Exclude current user
-        !existingChatUserIds.has(p._id) && // Exclude users already in chat list
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Filter participants: exclude current user and users already in chat list,
+    // then sort so online users appear at the top
+    const filteredParticipants = participants
+        .filter(p =>
+            p._id !== user?._id && // Exclude current user
+            !existingChatUserIds.has(p._id) && // Exclude users already in chat list
+            p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => {
+            const aOnline = onlineUsers.has(a._id);
+            const bOnline = onlineUsers.has(b._id);
+            if (aOnline === bOnline) {
+                return a.name.localeCompare(b.name);
+            }
+            return aOnline ? -1 : 1;
+        });
 
     const currentUser = user ? {
         id: user._id,

@@ -68,6 +68,7 @@ export default function EventManagement() {
         chatHeaderColor: '#eeeeee',
         chatSidebarColor: '#000000',
         addFooter: false,
+        isDemo: false,
     });
 
     // RichTextEditor toolbar settings: MultiRow with floating toolbar and comprehensive items
@@ -134,6 +135,7 @@ export default function EventManagement() {
                 maxRecruitersPerEvent: e.limits?.maxRecruitersPerEvent ?? 0,
                 maxBooths: e.limits?.maxBooths ?? 0,
                 status: e.status || 'draft',
+                isDemo: e.isDemo || false,
                 addFooter: Boolean((e.addFooter !== undefined ? e.addFooter : e.theme?.addFooter)),
                 termsIds: e.termsIds || [],
             })));
@@ -247,6 +249,7 @@ export default function EventManagement() {
             information: row.description || '',
             status: row.status || 'draft',
             addFooter: row.addFooter || false,
+            isDemo: row.isDemo || false,
             termsIds: row.termsIds || [],
         }));
         setMode('edit');
@@ -313,6 +316,7 @@ export default function EventManagement() {
                     chatSidebarColor: form.chatSidebarColor,
                     addFooter: !!form.addFooter,
                 },
+                isDemo: !!form.isDemo,
             };
 
             if (mode === 'edit' && editingId) {
@@ -531,9 +535,27 @@ export default function EventManagement() {
                                 <Input label="Maximum Recruiters Per Event" type="number" min="0" value={form.maxRecruitersPerEvent} onChange={(e) => setField('maxRecruitersPerEvent', Number(e.target.value))} />
 
                                 <div className="form-row">
-                                    <DateTimePicker label="Event Start Time" value={form.startTime} onChange={(e) => setField('startTime', e.target.value)} placeholder="Select start" />
-                                    <DateTimePicker label="Event End Time" value={form.endTime} onChange={(e) => setField('endTime', e.target.value)} placeholder="Select end" />
+                                    <DateTimePicker
+                                        label="Event Start Time"
+                                        value={form.startTime}
+                                        onChange={(e) => setField('startTime', e.target.value)}
+                                        placeholder="Select start"
+                                        disabled={form.isDemo}
+                                    />
+                                    <DateTimePicker
+                                        label="Event End Time"
+                                        value={form.endTime}
+                                        onChange={(e) => setField('endTime', e.target.value)}
+                                        placeholder="Select end"
+                                        disabled={form.isDemo}
+                                    />
                                 </div>
+
+                                <Checkbox
+                                    label="Demo Event (always available, no specific start/end date)"
+                                    checked={form.isDemo}
+                                    onChange={(e) => setField('isDemo', e.target.checked)}
+                                />
 
                                 <div className="form-group">
                                     <label className="form-label">Event Information</label>

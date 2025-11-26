@@ -137,6 +137,10 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
     body('end')
         .isISO8601()
         .withMessage('End time must be a valid ISO 8601 date'),
+    body('isDemo')
+        .optional()
+        .isBoolean()
+        .withMessage('isDemo must be a boolean'),
     body('timezone')
         .optional()
         .isLength({ max: 50 })
@@ -166,10 +170,10 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             });
         }
 
-        const { name, description, start, end, timezone = 'UTC', logoUrl, sendyId, link, limits, theme, termsId, termsIds } = req.body;
+        const { name, description, start, end, timezone = 'UTC', logoUrl, sendyId, link, limits, theme, termsId, termsIds, isDemo } = req.body;
         const { user } = req;
 
-        // Validate date range
+        // Validate date range (demo events still get a long-running default window)
         const startDate = new Date(start);
         const endDate = new Date(end);
 
@@ -282,7 +286,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             });
         }
 
-        const { name, description, start, end, timezone, logoUrl, status, sendyId, limits, theme } = req.body;
+        const { name, description, start, end, timezone, logoUrl, status, sendyId, limits, theme, isDemo } = req.body;
         const { event, user } = req;
 
         // Update allowed fields
@@ -294,6 +298,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         if (logoUrl !== undefined) event.logoUrl = logoUrl;
         if (sendyId !== undefined) event.sendyId = sendyId || null;
         if (status !== undefined) event.status = status;
+        if (isDemo !== undefined) event.isDemo = isDemo;
 
         // Update limits if provided
         if (limits !== undefined) {
@@ -328,6 +333,11 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
                     message: 'End time must be after start time'
                 });
             }
+        }
+
+        // Backward compatibility: some old events may not have createdBy set
+        if (!event.createdBy) {
+            event.createdBy = user._id;
         }
 
         await event.save();
@@ -501,10 +511,14 @@ router.get('/upcoming', authenticateToken, async (req, res) => {
         const { user } = req;
         const { page = 1, limit = 20 } = req.query;
 
-        // Only show published/active events that are in the future
+        // Only show published/active events that are in the future OR demo events
+        const now = new Date();
         const query = {
             status: { $in: ['published', 'active'] },
-            start: { $gt: new Date() }
+            $or: [
+                { start: { $gt: now } },
+                { isDemo: true }
+            ]
         };
 
         const skip = (parseInt(page) - 1) * parseInt(limit);

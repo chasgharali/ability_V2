@@ -54,6 +54,10 @@ export default function UpcomingEvents() {
   };
 
   const getEventStatus = (event) => {
+    if (event.isDemo) {
+      return { text: 'Demo', color: '#6366f1', className: 'demo' };
+    }
+
     const now = new Date();
     const start = new Date(event.start);
     const end = new Date(event.end);

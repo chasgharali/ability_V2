@@ -78,6 +78,11 @@ const eventSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // Demo events are always available and not tied to a fixed schedule for admins
+    isDemo: {
+        type: Boolean,
+        default: false
+    },
     start: {
         type: Date,
         required: [true, 'Event start time is required']
@@ -222,12 +227,20 @@ eventSchema.virtual('duration').get(function () {
 // Virtual for checking if event is currently active
 eventSchema.virtual('isActive').get(function () {
     const now = new Date();
+    // Demo events are considered always active as long as they are published/active
+    if (this.isDemo) {
+        return ['published', 'active'].includes(this.status);
+    }
     return this.status === 'active' && now >= this.start && now <= this.end;
 });
 
 // Virtual for checking if event is upcoming
 eventSchema.virtual('isUpcoming').get(function () {
     const now = new Date();
+    if (this.isDemo) {
+        // Demo events are not time-bound; treat them as not-upcoming (they are simply available)
+        return false;
+    }
     return this.status === 'published' && now < this.start;
 });
 
@@ -275,6 +288,7 @@ eventSchema.methods.getSummary = function () {
         end: this.end,
         timezone: this.timezone,
         status: this.status,
+        isDemo: this.isDemo || false,
         isActive: this.isActive,
         isUpcoming: this.isUpcoming,
         limits: this.limits,
