@@ -54,9 +54,17 @@ export default function AdminSidebar({ active = 'booths' }) {
 
           // Filter out registered events from upcoming events
           const registeredSlugs = new Set(registered.map(e => e.slug));
-          const filteredUpcoming = upcoming.filter(e => !registeredSlugs.has(e.slug));
+          const filteredUpcoming = upcoming
+            .filter(e => !registeredSlugs.has(e.slug))
+            // Exclude the permanent demo event from the Upcoming Events list
+            .filter(e => !(e?.isDemo || e?.slug === 'demonstration'));
 
-          setMyRegistrations(registered);
+          // Also hide the demo event from "Current Registrations"
+          const filteredRegistrations = registered.filter(
+            e => !(e?.isDemo || e?.slug === 'demonstration')
+          );
+
+          setMyRegistrations(filteredRegistrations);
           setUpcomingEvents(filteredUpcoming);
         }
       } catch (e) {
@@ -77,6 +85,43 @@ export default function AdminSidebar({ active = 'booths' }) {
     // Close mobile menu when item is clicked
     if (window.innerWidth <= 1024) {
       document.body.classList.remove('sidebar-open');
+    }
+  };
+
+  // Special handler for the permanent demo event: fetch its first booth and
+  // send the job seeker directly into the queue entry flow.
+  const handleDemoEventClick = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/events/slug/demonstration', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      const event = data.event || data.data || data;
+      const slug = event?.slug || 'demonstration';
+
+      // Safely extract the first booth id (can be an ObjectId string or a populated object)
+      let firstBooth = Array.isArray(event?.booths) && event.booths.length > 0
+        ? event.booths[0]
+        : null;
+      const boothId = typeof firstBooth === 'string' ? firstBooth : firstBooth?._id || null;
+
+      if (slug && boothId) {
+        navigate(`/booth-queue/${encodeURIComponent(slug)}/${encodeURIComponent(boothId)}/entry`);
+      } else {
+        // Fallback: just open the event detail page if queue info isn't available
+        navigate(`/event/${encodeURIComponent(slug)}`);
+      }
+
+      if (window.innerWidth <= 1024) {
+        document.body.classList.remove('sidebar-open');
+      }
+    } catch (e) {
+      // On any error, fall back to the standard event page so the user isn't stuck
+      navigate('/event/demonstration');
+      if (window.innerWidth <= 1024) {
+        document.body.classList.remove('sidebar-open');
+      }
     }
   };
 
@@ -252,6 +297,15 @@ export default function AdminSidebar({ active = 'booths' }) {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="sidebar-section">
+            <button
+              className="sidebar-item"
+              onClick={handleDemoEventClick}
+            >
+              Demonstration
+            </button>
           </div>
 
           <div className="sidebar-section">
