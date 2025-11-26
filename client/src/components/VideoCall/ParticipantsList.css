@@ -80,10 +80,10 @@
   align-items: flex-start;
   gap: 14px;
   padding: 18px 24px;
-  background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
-  border-bottom: 2px solid #2c5aa0;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border-bottom: 2px solid #c82333;
   margin: 0;
-  box-shadow: 0 4px 16px rgba(49, 130, 206, 0.15);
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.15);
   position: relative;
   overflow: hidden;
 }
@@ -100,8 +100,13 @@
 }
 
 @keyframes vcpl-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .vcpl-banner-icon {
@@ -372,13 +377,16 @@
 }
 
 @keyframes vcpl-pulse-indicator {
-  0%, 100% { 
-    opacity: 1; 
-    transform: scale(1); 
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
-  50% { 
-    opacity: 0.7; 
-    transform: scale(1.3); 
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.3);
   }
 }
 
@@ -479,10 +487,13 @@
 }
 
 @keyframes vcpl-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.6;
     transform: scale(1.1);
@@ -533,8 +544,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .invite-modal {
@@ -549,11 +565,12 @@
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  to { 
+
+  to {
     opacity: 1;
     transform: translateY(0);
   }
@@ -624,7 +641,7 @@
   cursor: pointer;
 }
 
-.category-option input[type="radio"]:checked + .category-label {
+.category-option input[type="radio"]:checked+.category-label {
   color: #667eea;
   font-weight: 600;
 }
@@ -722,17 +739,17 @@
   .vcpl-item {
     border: 2px solid #000;
   }
-  
+
   .vcpl-status-connected {
     background: #000;
   }
-  
+
   .vcpl-audio-on,
   .vcpl-video-on {
     background: #000;
     color: #fff;
   }
-  
+
   .vcpl-invite-btn {
     border: 3px solid #000;
   }
@@ -743,13 +760,13 @@
   .vcpl-status-pending {
     animation: none;
   }
-  
+
   .vcpl-close-btn,
   .vcpl-invite-btn,
   .vcpl-item {
     transition: none;
   }
-  
+
   .vcpl-status-joined .vcpl-badge-dot {
     animation: none;
   }
@@ -778,7 +795,7 @@
   .vcpl-panel {
     width: 340px;
   }
-  
+
   .vcpl-item {
     margin: 0 12px 10px 12px;
   }
@@ -793,69 +810,69 @@
     z-index: 1500;
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
   }
-  
+
   .vcpl-header {
     padding: 18px 20px;
   }
-  
+
   .vcpl-title {
     font-size: 18px;
   }
-  
+
   .vcpl-list {
     padding: 12px 0;
   }
-  
+
   .vcpl-item {
     padding: 12px 16px;
     min-height: 68px;
     margin: 0 12px 10px 12px;
   }
-  
+
   .vcpl-avatar-circle {
     width: 40px;
     height: 40px;
     font-size: 16px;
   }
-  
+
   .vcpl-name {
     font-size: 14px;
     max-width: 150px;
   }
-  
+
   .vcpl-role-badge {
     font-size: 10px;
     padding: 3px 10px;
   }
-  
+
   .vcpl-controls {
     min-width: 70px;
   }
-  
+
   .vcpl-connection-badge {
     padding: 5px 10px;
     gap: 5px;
   }
-  
+
   .vcpl-badge-label {
     font-size: 10px;
   }
-  
+
   .vcpl-badge-dot {
     width: 6px;
     height: 6px;
   }
-  
+
   .vcpl-media-icon {
     width: 18px;
     height: 18px;
     font-size: 10px;
   }
-  
+
   .vcpl-invite-section {
     padding: 20px 24px;
   }
-  
+
   .vcpl-invite-btn {
     padding: 12px 16px;
     font-size: 13px;
@@ -867,119 +884,119 @@
   .vcpl-header {
     padding: 16px 18px;
   }
-  
+
   .vcpl-title {
     font-size: 17px;
     gap: 10px;
   }
-  
+
   .vcpl-count {
     font-size: 12px;
     padding: 3px 8px;
   }
-  
+
   .vcpl-close-btn {
     padding: 8px;
   }
-  
+
   .vcpl-list {
     padding: 10px 0;
   }
-  
+
   .vcpl-item {
     padding: 12px 14px;
     min-height: 64px;
     margin: 0 10px 8px 10px;
     gap: 12px;
   }
-  
+
   .vcpl-avatar-circle {
     width: 36px;
     height: 36px;
     font-size: 14px;
   }
-  
+
   .vcpl-status-indicator {
     width: 12px;
     height: 12px;
     border: 2px solid #ffffff;
   }
-  
+
   .vcpl-name {
     font-size: 13px;
     max-width: 110px;
   }
-  
+
   .vcpl-role-badge {
     font-size: 9px;
     padding: 3px 8px;
   }
-  
+
   .vcpl-you-badge {
     font-size: 9px;
     padding: 3px 8px;
   }
-  
+
   .vcpl-category-badge {
     font-size: 9px;
     padding: 2px 6px;
   }
-  
+
   .vcpl-controls {
     min-width: 65px;
   }
-  
+
   .vcpl-connection-badge {
     padding: 5px 9px;
     gap: 4px;
   }
-  
+
   .vcpl-badge-label {
     font-size: 9px;
   }
-  
+
   .vcpl-badge-dot {
     width: 5px;
     height: 5px;
   }
-  
+
   .vcpl-media {
     gap: 3px;
   }
-  
+
   .vcpl-media-icon {
     width: 16px;
     height: 16px;
     font-size: 9px;
   }
-  
+
   .vcpl-invite-section {
     padding: 18px 20px;
   }
-  
+
   .vcpl-section-header h4 {
     font-size: 15px;
   }
-  
+
   .vcpl-invite-btn {
     padding: 12px 14px;
     font-size: 13px;
     gap: 8px;
   }
-  
+
   .vcpl-interpreter-banner {
     padding: 14px 18px;
     gap: 12px;
   }
-  
+
   .vcpl-banner-icon {
     font-size: 24px;
   }
-  
+
   .vcpl-banner-content strong {
     font-size: 14px;
   }
-  
+
   .vcpl-banner-content p {
     font-size: 12px;
   }
