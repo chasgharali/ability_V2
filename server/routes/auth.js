@@ -179,8 +179,23 @@ router.post('/register', [
 
         // Send verification email (always send, regardless of phone number or announcements preference)
         try {
-            const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
-            const apiBase = process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+            // Determine the correct base URLs
+            let appBase = process.env.APP_BASE_URL;
+            if (!appBase) {
+                appBase = process.env.CORS_ORIGIN;
+            }
+            if (!appBase) {
+                appBase = 'http://localhost:3000';
+                if (process.env.NODE_ENV === 'production') {
+                    logger.warn('⚠️ APP_BASE_URL not set in production! Using localhost fallback.');
+                }
+            }
+            
+            let apiBase = process.env.API_BASE_URL;
+            if (!apiBase) {
+                apiBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || `http://localhost:${process.env.PORT || 5000}`;
+            }
+            
             // Verification link points to API endpoint which will redirect to app
             const verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
             const ok = await sendVerificationEmail(user.email, verifyLink);
@@ -714,7 +729,20 @@ router.get('/verify-email', async (req, res) => {
         user.emailVerificationExpires = null;
         await user.save();
 
-        const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+        // Determine the correct base URL for redirect
+        let appBase = process.env.APP_BASE_URL;
+        if (!appBase) {
+            appBase = process.env.CORS_ORIGIN;
+        }
+        if (!appBase) {
+            // Try to construct from request (for production)
+            if (req.headers.host && process.env.NODE_ENV !== 'development') {
+                const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+                appBase = `${protocol}://${req.headers.host.replace(/:\d+$/, '')}`;
+            } else {
+                appBase = 'http://localhost:3000';
+            }
+        }
         const redirectUrl = `${appBase}/email-verified`;
         return res.redirect(302, redirectUrl);
     } catch (error) {
@@ -759,8 +787,33 @@ router.post('/forgot-password', [
             await user.save();
 
             // Send password reset email
-            const appBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+            // Determine the correct base URL for the reset link
+            let appBase = process.env.APP_BASE_URL;
+            
+            // If APP_BASE_URL is not set, try CORS_ORIGIN
+            if (!appBase) {
+                appBase = process.env.CORS_ORIGIN;
+            }
+            
+            // If still not set, try to construct from request (for production)
+            if (!appBase && req.headers.host) {
+                const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+                // Only use request-based URL if we're not in development
+                if (process.env.NODE_ENV !== 'development') {
+                    appBase = `${protocol}://${req.headers.host.replace(/:\d+$/, '')}`;
+                }
+            }
+            
+            // Last resort: use localhost (only for development)
+            if (!appBase) {
+                appBase = 'http://localhost:3000';
+                if (process.env.NODE_ENV === 'production') {
+                    logger.warn('⚠️ APP_BASE_URL not set in production! Using localhost fallback. Please set APP_BASE_URL environment variable.');
+                }
+            }
+            
             const resetLink = `${appBase}/reset-password?token=${encodeURIComponent(resetToken)}`;
+            logger.info(`Password reset link generated: ${resetLink} (appBase: ${appBase})`);
             
             try {
                 const ok = await sendPasswordResetEmail(user.email, resetLink);
