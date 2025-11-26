@@ -23,13 +23,22 @@ const generateTokens = (user) => {
         role: user.role
     };
 
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN || '15m'
-    });
+    // Generate lifetime tokens (no expiry)
+    // Tokens will never expire unless explicitly set via environment variables
+    const accessTokenOptions = {};
+    const refreshTokenOptions = {};
+    
+    // Only set expiry if explicitly configured via environment variables
+    if (process.env.JWT_EXPIRES_IN) {
+        accessTokenOptions.expiresIn = process.env.JWT_EXPIRES_IN;
+    }
+    
+    if (process.env.JWT_REFRESH_EXPIRES_IN) {
+        refreshTokenOptions.expiresIn = process.env.JWT_REFRESH_EXPIRES_IN;
+    }
 
-    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
-    });
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, accessTokenOptions);
+    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, refreshTokenOptions);
 
     return { accessToken, refreshToken };
 };
