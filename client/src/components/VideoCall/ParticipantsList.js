@@ -190,8 +190,12 @@ const ParticipantsList = ({
                 participant.id === twilioIdentity ||
                 id === twilioIdentity ||
                 // Also check if Twilio identity contains the participant ID
-                twilioIdentity.includes(id) ||
-                twilioIdentity.includes(participant.email)) {
+                (id && twilioIdentity.includes(id)) ||
+                (participant.email && twilioIdentity.includes(participant.email)) ||
+                // Check for role-prefixed identity patterns (e.g., interpreter_userId_timestamp)
+                (participant.role === 'interpreter' && twilioIdentity.startsWith('interpreter_') && twilioIdentity.includes(id)) ||
+                (participant.role === 'recruiter' && twilioIdentity.startsWith('recruiter_') && twilioIdentity.includes(id)) ||
+                (participant.role === 'jobseeker' && twilioIdentity.startsWith('jobseeker_') && twilioIdentity.includes(id))) {
                 matchedId = id;
                 console.log('Matched by search:', { matchedId, participant });
                 break;
@@ -209,37 +213,57 @@ const ParticipantsList = ({
               status: 'connected'
             });
           } else {
-            // Check if this Twilio participant is an interpreter
-            let interpreterRole = null;
+            // Detect role from Twilio identity prefix (e.g., interpreter_xxx, recruiter_xxx, jobseeker_xxx)
+            let detectedRole = null;
             let interpreterCategory = '';
-            if (participants && participants.interpreters && Array.isArray(participants.interpreters) && twilioIdentity) {
-              const matchingInterpreter = participants.interpreters.find(entry => {
-                if (!entry || !entry.interpreter) return false;
-                const interpreterEmail = entry.interpreter.email;
-                const interpreterId = entry.interpreter._id || entry.interpreter.id;
-                if (!interpreterEmail && !interpreterId) return false;
-                return twilioIdentity === interpreterEmail ||
-                  twilioIdentity === interpreterId ||
-                  (interpreterEmail && twilioIdentity.includes && twilioIdentity.includes(interpreterEmail)) ||
-                  (interpreterId && twilioIdentity.includes && twilioIdentity.includes(interpreterId));
-              });
-              if (matchingInterpreter) {
-                interpreterRole = 'interpreter';
-                interpreterCategory = matchingInterpreter.category || '';
+            let participantName = twilioIdentity; // Default to identity
+            let participantEmail = '';
+            
+            if (twilioIdentity) {
+              // Check identity prefix to determine role and find actual name
+              if (twilioIdentity.startsWith('interpreter_')) {
+                detectedRole = 'interpreter';
+                // Try to find matching interpreter for name and category
+                if (participants && participants.interpreters && Array.isArray(participants.interpreters)) {
+                  const matchingInterpreter = participants.interpreters.find(entry => {
+                    if (!entry || !entry.interpreter) return false;
+                    const interpreterId = entry.interpreter._id || entry.interpreter.id;
+                    return interpreterId && twilioIdentity.includes(interpreterId);
+                  });
+                  if (matchingInterpreter && matchingInterpreter.interpreter) {
+                    participantName = matchingInterpreter.interpreter.name || participantName;
+                    participantEmail = matchingInterpreter.interpreter.email || '';
+                    interpreterCategory = matchingInterpreter.category || '';
+                  }
+                }
+              } else if (twilioIdentity.startsWith('recruiter_')) {
+                detectedRole = 'recruiter';
+                // Try to get recruiter name
+                if (participants && participants.recruiter) {
+                  participantName = participants.recruiter.name || participantName;
+                  participantEmail = participants.recruiter.email || '';
+                }
+              } else if (twilioIdentity.startsWith('jobseeker_')) {
+                detectedRole = 'jobseeker';
+                // Try to get job seeker name
+                if (participants && participants.jobSeeker) {
+                  participantName = participants.jobSeeker.name || participantName;
+                  participantEmail = participants.jobSeeker.email || '';
+                }
               }
             }
 
             // Only add as new participant if no match found
-            console.warn('No match found for Twilio participant, adding as new:', twilioIdentity, 'role:', interpreterRole || 'participant');
+            console.warn('No match found for Twilio participant, adding as new:', twilioIdentity, 'role:', detectedRole || 'participant', 'name:', participantName);
             const transformedParticipant = {
               identity: twilioIdentity,
-              email: twilioIdentity,
+              email: participantEmail || twilioIdentity,
               sid: twilioParticipant.sid,
-              name: twilioIdentity,
-              role: interpreterRole || undefined,
+              name: participantName,
+              role: detectedRole || undefined,
               category: interpreterCategory
             };
-            addParticipant(transformedParticipant, 'twilio', interpreterRole);
+            addParticipant(transformedParticipant, 'twilio', detectedRole);
           }
         });
       }

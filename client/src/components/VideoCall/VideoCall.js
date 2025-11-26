@@ -16,20 +16,20 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const { callId: paramCallId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Use prop callId if provided, otherwise use URL param
   const callId = propCallId || paramCallId;
-  
+
   // Use prop callData if provided, otherwise check navigation state
   const callData = propCallData || location.state?.callData;
-  
+
   console.log('🎬 VideoCall initialized:', {
     callId,
     hasCallData: !!callData,
     callData,
     locationState: location.state
   });
-  
+
   const { user } = useAuth();
   const { socket } = useSocket();
 
@@ -149,7 +149,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     socket.on('video-call-message', (data) => {
       handleNewChatMessage(data);
     });
-    
+
     socket.on('video-call-message-direct', (data) => {
       handleNewChatMessage(data);
     });
@@ -162,7 +162,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     socket.on('error', (error) => {
       console.error('Socket error in video call:', error);
     });
-    
+
     // Add success handler for room joining
     socket.on('participant-joined-video', (data) => {
       // Handle participant joined
@@ -256,17 +256,17 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         callId: data.id || data.callId,
         roomName: data.roomName
       };
-      
+
       socket?.emit('join-video-call', socketPayload);
-      
+
       // Test socket connection
       socket?.emit('test-connection', { message: 'Testing from video call' });
-      
+
       // Add success/error handlers for room joining
       socket?.on('error', (error) => {
         console.error('Socket error during room join:', error);
       });
-      
+
       socket?.on('test-connection-response', (data) => {
         // Handle test connection response
       });
@@ -414,42 +414,42 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         console.warn('Speech synthesis not supported');
         return;
       }
-      
+
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       console.log('🗣️ Speaking:', text);
-      
+
       // Create utterance
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       utterance.lang = 'en-US';
-      
+
       // Get voices and set English voice if available
       const voices = window.speechSynthesis.getVoices();
       const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
       if (englishVoice) {
         utterance.voice = englishVoice;
       }
-      
+
       // Event handlers
       utterance.onstart = () => {
         console.log('▶️ Speech started');
       };
-      
+
       utterance.onend = () => {
         console.log('✅ Speech completed');
       };
-      
+
       utterance.onerror = (event) => {
         console.error('❌ Speech error:', event.error);
       };
-      
+
       // Speak immediately
       window.speechSynthesis.speak(utterance);
-      
+
     } catch (e) {
       console.error('Speech error:', e);
     }
@@ -462,11 +462,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setInviteData(data);
       setShowInviteModal(true);
       setLoading(false);
-      
+
       // Play notification sound
       try {
         const audio = new Audio('/sounds/notification.mp3');
-        audio.play().catch(e => {/* Could not play notification sound */});
+        audio.play().catch(e => {/* Could not play notification sound */ });
       } catch (e) {
         /* Notification sound not available */
       }
@@ -481,10 +481,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setCallInfo(inviteData);
       setShowInviteModal(false);
       setInviteData(null);
-      
+
       // Announce call joining
       speak("Joining the call now. Please wait while we connect you.");
-      
+
       // Initialize call with the invitation data
       await initializeCallWithData(inviteData);
     }
@@ -509,6 +509,33 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const handleInterpreterResponse = (data) => {
     if (data.response === 'accept') {
+      // Add interpreter to callInfo.participants.interpreters so their name shows correctly
+      setCallInfo(prev => {
+        if (!prev) return prev;
+        const currentInterpreters = prev.participants?.interpreters || [];
+        // Check if interpreter is already in the list
+        const exists = currentInterpreters.some(i =>
+          (i.interpreter?._id || i.interpreter?.id || i._id || i.id) === (data.interpreter._id || data.interpreter.id)
+        );
+        if (!exists) {
+          return {
+            ...prev,
+            participants: {
+              ...prev.participants,
+              interpreters: [
+                ...currentInterpreters,
+                {
+                  interpreter: data.interpreter,
+                  status: 'joined',
+                  category: data.category || ''
+                }
+              ]
+            }
+          };
+        }
+        return prev;
+      });
+
       setChatMessages(prev => [...prev, {
         sender: { name: data.interpreter.name, role: 'interpreter' },
         message: `${data.interpreter.name} joined as interpreter`,
@@ -520,7 +547,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const handleInterpreterDeclined = (data) => {
     console.log('Interpreter declined:', data);
-    
+
     // Add message to chat
     setChatMessages(prev => [...prev, {
       sender: { name: data.interpreter.name, role: 'interpreter' },
@@ -537,18 +564,18 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const handleParticipantLeftCall = (data) => {
     console.log('🚪 Participant left call event received:', data);
-    
+
     // Announce to remaining participants that someone left
     const leftUserRole = data.userRole?.toLowerCase() || 'participant';
     speak(`${leftUserRole} has left the call.`);
-    
+
     // Update UI - remove participant from participants list
     // The Twilio SDK will automatically handle removing their video/audio tracks
   };
 
   const handleCallEnded = async (data) => {
     console.log('📞 Call ended event received:', data);
-    
+
     // Announce call end for all participants
     if (user.role === 'JobSeeker') {
       speak("The call has ended. Thank you for participating.");
@@ -557,12 +584,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     } else if (user.role === 'Interpreter' || user.role === 'GlobalInterpreter' || callInfo?.userRole === 'interpreter') {
       speak("The call has ended. Thank you for your service.");
     }
-    
+
     // Disconnect from Twilio room FIRST to stop camera/mic immediately
     if (roomRef.current) {
       try {
         console.log('🔌 Disconnecting from Twilio room (call ended by recruiter)...');
-        
+
         // Stop and unpublish all local tracks
         roomRef.current.localParticipant.tracks.forEach(publication => {
           if (publication.track) {
@@ -577,7 +604,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             }
           }
         });
-        
+
         // Disconnect from room
         roomRef.current.disconnect();
         console.log('✅ Disconnected from Twilio room');
@@ -589,10 +616,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     // Wait a moment for disconnect to complete
     await new Promise(resolve => setTimeout(resolve, 300));
-    
+
     // Final cleanup
     cleanupRemainingResources();
-    
+
     // Role-based navigation when call is ended by another participant
     if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
       console.log('🏠 Navigating interpreter to dashboard after call ended by recruiter');
@@ -627,10 +654,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           callId: callInfo?.id || callInfo?.callId || callId,
           message: messageData
         };
-        
+
         // Send using original method
         socket.emit('video-call-message', chatPayload);
-        
+
         // Also try direct method as backup
         const directPayload = {
           roomName: callInfo?.roomName,
@@ -658,7 +685,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       const newMessages = [...prev, messageData];
       return newMessages;
     });
-    
+
     // Play sound and increment unread count if chat is closed
     if (!isChatOpen) {
       playChatSound();
@@ -819,15 +846,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         callInfo
       });
       await videoCallService.inviteInterpreter(callId, interpreterId, category);
-      
+
       // Show success message
       alert('Interpreter invitation sent successfully!');
     } catch (error) {
       console.error('Error inviting interpreter:', error);
-      
+
       // Handle specific error cases
       const errorMessage = error.response?.data?.message || error.response?.data?.error;
-      
+
       if (error.response?.status === 409) {
         // Interpreter is busy or already invited
         alert(errorMessage || 'This interpreter is not available at the moment.');
@@ -855,7 +882,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       if (roomRef.current) {
         try {
           console.log('🔌 Disconnecting from Twilio room...');
-          
+
           // Stop and unpublish all local tracks
           roomRef.current.localParticipant.tracks.forEach(publication => {
             if (publication.track) {
@@ -870,7 +897,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               }
             }
           });
-          
+
           // Disconnect from room - this notifies other participants
           roomRef.current.disconnect();
           console.log('✅ Disconnected from Twilio room');
@@ -900,7 +927,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       // Step 4: Final cleanup (stop remaining tracks, leave socket room)
       cleanupRemainingResources();
-      
+
       // Step 5: Role-based navigation after leaving
       if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
         console.log('🏠 Navigating interpreter to dashboard');
@@ -914,7 +941,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     } catch (error) {
       console.error('💥 Error leaving call:', error);
       cleanupRemainingResources();
-      
+
       // Navigate even on error
       if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
         navigate('/dashboard');
@@ -938,7 +965,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       if (roomRef.current) {
         try {
           console.log('🔌 Disconnecting from Twilio room...');
-          
+
           // Stop and unpublish all local tracks
           roomRef.current.localParticipant.tracks.forEach(publication => {
             if (publication.track) {
@@ -953,7 +980,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               }
             }
           });
-          
+
           // Disconnect from room - this notifies other participants
           roomRef.current.disconnect();
           console.log('✅ Disconnected from Twilio room');
@@ -983,7 +1010,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       // Step 4: Final cleanup (stop remaining tracks, leave socket room)
       cleanupRemainingResources();
-      
+
       // Step 5: Recruiter navigation after call ends
       if (onCallEnd) {
         setTimeout(() => onCallEnd(), 100);
@@ -991,7 +1018,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     } catch (error) {
       console.error('💥 Error ending call:', error);
       cleanupRemainingResources();
-      
+
       if (onCallEnd) {
         onCallEnd();
       }
@@ -1109,7 +1136,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             }
           }
         });
-        
+
         // Disconnect from room
         console.log('Disconnecting from Twilio room');
         roomRef.current.disconnect();
@@ -1154,7 +1181,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     setRoom(null);
     setParticipants(new Map());
-    
+
     console.log('✅ Video call cleanup complete - all tracks stopped');
   };
 
@@ -1235,7 +1262,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     <div className="video-call-container-new" role="main" aria-label="Video call interface">
       {/* Skip to main content link for accessibility */}
       <a href="#call-controls" className="skip-link">Skip to call controls</a>
-      
+
       <header className="video-call-header" role="banner">
         <div className="header-info">
           {/* Event Logo and Name */}
@@ -1295,8 +1322,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         <div className="header-status">
           {/* Interpreter Requested Badge */}
           {callInfo?.metadata?.interpreterRequested && (
-            <button 
-              className="interpreter-requested-badge clickable" 
+            <button
+              className="interpreter-requested-badge clickable"
               onClick={() => {
                 // Open participants panel for recruiters to invite interpreter
                 if (user?.role === 'Recruiter') {
@@ -1306,7 +1333,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
                 }
               }}
               disabled={user?.role !== 'Recruiter'}
-              aria-live="polite" 
+              aria-live="polite"
               aria-label={user?.role === 'Recruiter' ? "Interpreter has been requested. Click to open participants panel and invite an interpreter." : "Interpreter has been requested"}
               title={user?.role === 'Recruiter' ? "Click to invite interpreter" : "Interpreter requested"}
             >
@@ -1314,7 +1341,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               <span className="badge-text">Interpreter Requested</span>
             </button>
           )}
-          
+
           <div className="call-duration" aria-live="polite" aria-label={`Call duration: ${Math.floor(callDuration / 60)} minutes ${callDuration % 60} seconds`}>
             <span className="duration-label" aria-hidden="true">Duration:</span>
             <span className="duration-time">
@@ -1322,7 +1349,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               {String(callDuration % 60).padStart(2, '0')}
             </span>
           </div>
-          
+
           <div className={`connection-quality ${connectionQuality}`} role="status" aria-live="polite" aria-label={`Connection quality: ${connectionQuality}`}>
             <div className="signal-bars" aria-hidden="true">
               <span className="signal-bar bar-1"></span>
@@ -1343,7 +1370,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       <div className="video-main-area" role="region" aria-label="Video participants">
         {/* Screen reader announcements */}
         <div className="sr-only" aria-live="polite" id="participant-announcements"></div>
-        
+
         {/* All Participants Grid */}
         <div className="participants-grid" role="group" aria-label={`${participants.size} remote participants`}>
           {/* Remote Participants */}
@@ -1354,7 +1381,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               isLocal={false}
             />
           ))}
-          
+
           {/* No participants message */}
           {participants.size === 0 && (
             <div className="no-participants" role="status" aria-live="polite">
@@ -1405,17 +1432,17 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           />
         );
       })()}
-      
+
 
       {isProfileOpen && callInfo?.userRole === 'recruiter' && (() => {
         // Try to get job seeker data from multiple sources
         let jobSeekerData = null;
-        
+
         // First, try to get from callInfo.participants.jobSeeker
         if (callInfo.participants?.jobSeeker) {
           jobSeekerData = callInfo.participants.jobSeeker;
         }
-        
+
         // If not found, try to find from the participants array
         if (!jobSeekerData && callInfo.participants) {
           // Check if there's a direct user object
@@ -1424,19 +1451,19 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             callInfo.participants.jobSeeker,
             ...(callInfo.participants.interpreters || []).map(i => i.interpreter || i.user || i)
           ].filter(Boolean);
-          
-          jobSeekerData = allParticipants.find(p => 
-            p.role === 'jobseeker' || 
-            p.role === 'JobSeeker' || 
+
+          jobSeekerData = allParticipants.find(p =>
+            p.role === 'jobseeker' ||
+            p.role === 'JobSeeker' ||
             p.role === 'jobSeeker'
           );
         }
-        
+
         // If still not found, try to find from booth/event data
         if (!jobSeekerData && callInfo.jobSeeker) {
           jobSeekerData = callInfo.jobSeeker;
         }
-        
+
         // Try to get job seeker ID from call participants
         if (!jobSeekerData || (!jobSeekerData._id && !jobSeekerData.id)) {
           const jobSeekerId = callInfo.jobSeekerId || callInfo.participants?.jobSeeker?._id || callInfo.participants?.jobSeeker?.id;
@@ -1444,7 +1471,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             jobSeekerData = { ...jobSeekerData, _id: jobSeekerId, id: jobSeekerId };
           }
         }
-        
+
         return (
           <JobSeekerProfileCall
             jobSeeker={jobSeekerData}
@@ -1488,8 +1515,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           videoInputs={[]} // TODO: Get actual device list
           selectedAudioId=""
           selectedVideoId=""
-          onChangeAudio={() => {}} // TODO: Implement device selection
-          onChangeVideo={() => {}} // TODO: Implement device selection
+          onChangeAudio={() => { }} // TODO: Implement device selection
+          onChangeVideo={() => { }} // TODO: Implement device selection
           onAccept={handleAcceptInvitation}
           onDecline={handleDeclineInvitation}
         />
