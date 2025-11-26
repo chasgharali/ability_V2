@@ -20,7 +20,7 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import MyAccountInline from '../Account/MyAccountInline';
 import Chat from '../Chat/Chat';
 import settingsAPI from '../../services/settings';
-import roleMessagesAPI from '../../services/roleMessages';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 
 // Simple error boundary to prevent white screens if a nested view crashes
 class ErrorBoundary extends React.Component {
@@ -45,6 +45,7 @@ const Dashboard = () => {
     const { socket } = useSocket();
     const { showToast } = useToast();
     const { booth, event } = useRecruiterBooth();
+    const { getMessage } = useRoleMessages();
     const [activeSection, setActiveSection] = useState('my-account');
     const [expandedSections, setExpandedSections] = useState({
         'my-account': true,
@@ -52,7 +53,6 @@ const Dashboard = () => {
         'upcoming-events': true
     });
     const [brandingLogo, setBrandingLogo] = useState('');
-    const [roleMessages, setRoleMessages] = useState({});
     // Simple monochrome default icon (SVG data URL)
     const DEFAULT_ICON = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="36" viewBox="0 0 180 36" fill="none"><path d="M18 2 L6 22 h8 l-4 12 16-24 h-8 l4-8 z" fill="%23000000"/><text x="34" y="24" fill="%23000000" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">ABILITYJOBFAIR</text></svg>';
     // Booth Management form state (admin)
@@ -195,23 +195,6 @@ const Dashboard = () => {
         fetchBrandingLogo();
     }, []);
 
-    // Fetch role messages on mount
-    useEffect(() => {
-        const fetchRoleMessages = async () => {
-            if (user?.role) {
-                try {
-                    const response = await roleMessagesAPI.getMessagesByRole(user.role);
-                    if (response.success && response.messages) {
-                        setRoleMessages(response.messages);
-                    }
-                } catch (error) {
-                    // Messages might not exist yet, use defaults
-                    console.log('No role messages found, using defaults');
-                }
-            }
-        };
-        fetchRoleMessages();
-    }, [user?.role]);
 
     // Admin: branding logo helpers
     const saveBrandingLogo = async (dataUrl) => {
@@ -454,25 +437,29 @@ const Dashboard = () => {
                     );
                 }
                 if (activeSection === 'delete-account') {
-                    const deleteWarning = roleMessages['delete-account']?.['warning'] || 'Warning: Deleting your account will deactivate your access. This action cannot be undone.';
+                    const deleteWarning = getMessage('delete-account', 'warning') || '';
                     return (
                         <div className="dashboard-content">
                             <h2>Delete My Account</h2>
-                            <div className="alert-box" style={{ background: '#fff3cd', borderColor: '#ffeeba' }}>
-                                <p><strong>Warning:</strong> {deleteWarning}</p>
-                            </div>
+                            {deleteWarning && (
+                                <div className="alert-box" style={{ background: '#fff3cd', borderColor: '#ffeeba' }}>
+                                    <p><strong>Warning:</strong> {deleteWarning}</p>
+                                </div>
+                            )}
                             <DeleteAccountPanel onDeleted={() => { logout(); navigate('/'); }} />
                         </div>
                     );
                 }
-                const welcomeMessage = roleMessages['my-account']?.['welcome'] || '• Welcome to your job seeker dashboard';
+                const welcomeMessage = getMessage('my-account', 'welcome') || '';
                 return (
                     <div className="dashboard-content">
                         <h2>My Account</h2>
 
-                        <div className="alert-box">
-                            <p>{welcomeMessage}</p>
-                        </div>
+                        {welcomeMessage && (
+                            <div className="alert-box">
+                                <p>{welcomeMessage}</p>
+                            </div>
+                        )}
 
                         <MyAccountInline user={user} updateProfile={updateProfile} />
                     </div>
@@ -480,9 +467,15 @@ const Dashboard = () => {
             case 'Recruiter':
             case 'BoothAdmin': {
                 const assignedBoothId = user?.assignedBooth;
+                const welcomeMessage = getMessage('dashboard', 'welcome') || '';
                 return (
                     <div className="dashboard-content">
                         <h2>Recruiter Dashboard</h2>
+                        {welcomeMessage && (
+                            <div className="info-banner" style={{ marginBottom: '1.5rem' }}>
+                                <span>{welcomeMessage}</span>
+                            </div>
+                        )}
                         {!assignedBoothId && (
                             <div className="alert-box" style={{ background: '#fff3cd', borderColor: '#ffeeba' }}>
                                 <p><strong>Action required:</strong> No booth is assigned to your account yet. Please ask an administrator to assign a booth so you can manage your meeting queue.</p>

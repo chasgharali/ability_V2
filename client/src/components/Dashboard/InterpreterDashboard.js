@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MdVideocam, MdMic, MdRefresh } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../contexts/SocketContext';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import InterpreterInvitationModal from '../VideoCall/InterpreterInvitationModal';
 import './InterpreterDashboard.css';
+import './Dashboard.css';
 
 const InterpreterDashboard = () => {
   const navigate = useNavigate();
   const socket = useSocket();
+  const { getMessage } = useRoleMessages();
 
   const [stream, setStream] = useState(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
@@ -21,6 +24,9 @@ const InterpreterDashboard = () => {
   const [invitation, setInvitation] = useState(null);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const videoRef = useRef(null);
+
+  // Get role message from context
+  const infoBannerMessage = getMessage('interpreter-dashboard', 'welcome') || '';
 
   // Socket listener for interpreter invitations
   useEffect(() => {
@@ -119,6 +125,7 @@ const InterpreterDashboard = () => {
     loadDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const startCameraTest = async () => {
     try {
@@ -299,6 +306,11 @@ const InterpreterDashboard = () => {
   return (
     <div className="interpreter-dashboard">
       <div className="interpreter-content">
+        {infoBannerMessage && (
+          <div className="info-banner" style={{ marginBottom: '1.5rem' }}>
+            <span>{infoBannerMessage}</span>
+          </div>
+        )}
         <div className="waiting-section">
           <h1>Interpreter Waiting Section</h1>
           <p className="waiting-message">

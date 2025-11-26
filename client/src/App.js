@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { RoleMessagesProvider } from './contexts/RoleMessagesContext';
 import { AccessibilityAnnouncer } from './components/Accessibility/AccessibilityAnnouncer';
 import { FocusManager } from './components/Accessibility/FocusManager';
 import ChatPanel from './components/Chat/ChatPanel';
@@ -82,8 +83,9 @@ function App() {
     return (
         <ThemeProvider>
             <AuthProvider>
-                <SocketProvider>
-                    <ToastProvider>
+                <RoleMessagesProvider>
+                    <SocketProvider>
+                        <ToastProvider>
                         <Router>
                             <AppLayout>
                                 <Routes>
@@ -137,8 +139,9 @@ function App() {
                                 </Routes>
                             </AppLayout>
                         </Router>
-                    </ToastProvider>
-                </SocketProvider>
+                        </ToastProvider>
+                    </SocketProvider>
+                </RoleMessagesProvider>
             </AuthProvider>
         </ThemeProvider>
     );

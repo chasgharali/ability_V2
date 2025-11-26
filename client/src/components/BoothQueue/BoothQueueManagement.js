@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useToast, ToastContainer } from '../common/Toast';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
@@ -13,11 +14,16 @@ import { meetingRecordsAPI } from '../../services/meetingRecords';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import './BoothQueueManagement.css';
+import '../Dashboard/Dashboard.css';
 
 export default function BoothQueueManagement() {
   const { boothId } = useParams();
   const { user } = useAuth();
+  const { getMessage } = useRoleMessages();
   const { socket } = useSocket();
+  
+  // Get role message from context
+  const infoBannerMessage = getMessage('meeting-queue', 'info-banner') || '';
 
   const [booth, setBooth] = useState(null);
   const [event, setEvent] = useState(null);
@@ -558,6 +564,11 @@ export default function BoothQueueManagement() {
         <main className="dashboard-main">
           <div className="booth-queue-management">
             {/* Header */}
+            {infoBannerMessage && (
+              <div className="info-banner" style={{ marginBottom: '1.5rem' }}>
+                <span>{infoBannerMessage}</span>
+              </div>
+            )}
             <div className="management-header">
               <div className="booth-info">
                 <div className="booth-logo">

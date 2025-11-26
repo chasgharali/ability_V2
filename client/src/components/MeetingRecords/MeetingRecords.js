@@ -10,6 +10,7 @@ import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useNavigate } from 'react-router-dom';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
@@ -18,8 +19,12 @@ import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 
 export default function MeetingRecords() {
     const { user, loading } = useAuth();
+    const { getMessage } = useRoleMessages();
     const navigate = useNavigate();
     const { booth, event } = useRecruiterBooth();
+    
+    // Get role message from context
+    const infoBannerMessage = getMessage('meeting-records', 'info-banner') || '';
     
     useEffect(() => {
         if (!loading) {
@@ -427,6 +432,11 @@ export default function MeetingRecords() {
                         <div className="meeting-records-container">
                         <div className="page-header">
                             <h1>Meeting Records</h1>
+                            {infoBannerMessage && (
+                                <div className="info-banner" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
+                                    <span>{infoBannerMessage}</span>
+                                </div>
+                            )}
                             <div className="header-actions">
                                 {['Admin', 'GlobalSupport'].includes(user?.role) && selectedRecords.length > 0 && (
                                     <ButtonComponent 

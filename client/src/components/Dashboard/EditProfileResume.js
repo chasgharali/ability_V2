@@ -6,7 +6,7 @@ import '@syncfusion/ej2-buttons/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { LANGUAGE_LIST, SECURITY_CLEARANCE_LIST, MILITARY_EXPERIENCE_LIST, EDUCATION_LEVEL_LIST, EXPERIENCE_LEVEL_LIST, JOB_CATEGORY_LIST, JOB_TYPE_LIST } from '../../constants/options';
 import { useAuth } from '../../contexts/AuthContext';
-import roleMessagesAPI from '../../services/roleMessages';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 
 // Using centralized job categories for Primary Job Experience
 // Using centralized EXPERIENCE_LEVEL_LIST for work levels
@@ -16,6 +16,7 @@ const VETERAN_STATUS = ['None', 'Veteran', 'Active Duty', 'Reservist', 'Military
 
 export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev }) {
   const { user } = useAuth();
+  const { getMessage } = useRoleMessages();
   const [form, setForm] = useState({
     headline: '',
     keywords: '',
@@ -27,7 +28,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     clearance: '',
     veteranStatus: ''
   });
-  const [infoBannerMessage, setInfoBannerMessage] = useState('job seeker edit profile page');
+  const infoBannerMessage = getMessage('edit-profile', 'info-banner') || '';
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -185,23 +186,6 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch role message for info banner
-  useEffect(() => {
-    const fetchInfoBanner = async () => {
-      if (user?.role === 'JobSeeker') {
-        try {
-          const response = await roleMessagesAPI.getMessage('JobSeeker', 'edit-profile', 'info-banner');
-          if (response.success && response.content) {
-            setInfoBannerMessage(response.content);
-          }
-        } catch (error) {
-          // Use default message if not found
-          console.log('No info banner message found, using default');
-        }
-      }
-    };
-    fetchInfoBanner();
-  }, [user?.role]);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -376,9 +360,11 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       <h2>My Profile</h2>
       <p className="section-note">Edit the form below to update your profile information.</p>
 
-      <div className="info-banner">
-        <span>{infoBannerMessage}</span>
-      </div>
+        {infoBannerMessage && (
+          <div className="info-banner">
+            <span>{infoBannerMessage}</span>
+          </div>
+        )}
 
       <div className="upload-row">
         <div className="upload-card">

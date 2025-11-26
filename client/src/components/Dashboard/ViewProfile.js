@@ -10,15 +10,16 @@ import {
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 import { useAuth } from '../../contexts/AuthContext';
-import roleMessagesAPI from '../../services/roleMessages';
+import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 
 export default function ViewProfile() {
   const { user: authUser } = useAuth();
+  const { getMessage } = useRoleMessages();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [profileNotice, setProfileNotice] = useState('This is the profile that recruiters will see. It will only be shared with companies you show interest in and the booths you visit.');
+  const profileNotice = getMessage('view-profile', 'profile-notice') || '';
 
   const getToken = () => localStorage.getItem('token');
 
@@ -47,23 +48,6 @@ export default function ViewProfile() {
     run();
   }, []);
 
-  // Fetch role message for profile notice
-  useEffect(() => {
-    const fetchProfileNotice = async () => {
-      if (authUser?.role === 'JobSeeker') {
-        try {
-          const response = await roleMessagesAPI.getMessage('JobSeeker', 'view-profile', 'profile-notice');
-          if (response.success && response.content) {
-            setProfileNotice(response.content);
-          }
-        } catch (error) {
-          // Use default message if not found
-          console.log('No profile notice message found, using default');
-        }
-      }
-    };
-    fetchProfileNotice();
-  }, [authUser?.role]);
 
   if (loading) {
     return (
@@ -133,9 +117,11 @@ export default function ViewProfile() {
     <div className="dashboard-content profile-view">
       <div className="profile-header-section">
         <h1 className="profile-title">Job Seeker Profile</h1>
-        <div className="profile-notice">
-          <p>{profileNotice}</p>
-        </div>
+        {profileNotice && (
+          <div className="profile-notice">
+            <p>{profileNotice}</p>
+          </div>
+        )}
       </div>
 
       <div className="profile-container">
