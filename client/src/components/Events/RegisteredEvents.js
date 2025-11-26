@@ -19,7 +19,12 @@ export default function RegisteredEvents() {
     (async () => {
       try {
         const res = await listRegisteredEvents({ page: 1, limit: 50 });
-        setEvents(res?.events || []);
+        const registered = res?.events || [];
+        // Hide the permanent demo event from the registered events list
+        const filtered = registered.filter(
+          e => !(e?.isDemo || e?.slug === 'demonstration')
+        );
+        setEvents(filtered);
       } finally {
         setFetching(false);
       }

@@ -33,6 +33,13 @@ const LoginPage = () => {
         }
     }, [user, loading, redirectPath, navigate]);
 
+    // If user is authenticated but no explicit redirect, send them to dashboard
+    useEffect(() => {
+        if (!loading && user && !redirectPath) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [user, loading, redirectPath, navigate]);
+
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
@@ -135,9 +142,9 @@ const LoginPage = () => {
         );
     }
 
-    // If user is authenticated and has redirect, don't show the form
-    if (user && redirectPath) {
-        return null; // The useEffect will handle the redirect
+    // If user is authenticated, don't show the form - useEffect will redirect them
+    if (user) {
+        return null;
     }
 
     return (

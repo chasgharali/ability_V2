@@ -29,7 +29,10 @@ export default function UpcomingEvents() {
 
         // Filter out events user is already registered for
         const registeredSlugs = new Set(registered.map(e => e.slug));
-        const filteredUpcoming = upcoming.filter(e => !registeredSlugs.has(e.slug));
+        const filteredUpcoming = upcoming
+          .filter(e => !registeredSlugs.has(e.slug))
+          // Exclude the permanent demo event from the Upcoming Events list
+          .filter(e => !(e?.isDemo || e?.slug === 'demonstration'));
 
         setEvents(filteredUpcoming);
       } finally {
@@ -54,6 +57,10 @@ export default function UpcomingEvents() {
   };
 
   const getEventStatus = (event) => {
+    if (event.isDemo) {
+      return { text: 'Demo', color: '#6366f1', className: 'demo' };
+    }
+
     const now = new Date();
     const start = new Date(event.start);
     const end = new Date(event.end);

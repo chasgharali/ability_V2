@@ -20,11 +20,16 @@ router.get('/', authenticateToken, async (req, res) => {
                     return;
                 }
 
-                const otherParticipant = chat.participants.find(
-                    participant => participant?.user?._id.toString() !== req.user._id.toString()
+                // Find the "other" participant, skipping any malformed/null entries
+                const otherParticipant = (chat.participants || []).find(participant =>
+                    participant &&
+                    participant.user &&
+                    participant.user._id &&
+                    participant.user._id.toString() !== req.user._id.toString()
                 );
 
-                if (!otherParticipant) {
+                if (!otherParticipant || !otherParticipant.user || !otherParticipant.user._id) {
+                    // Skip chats that don't have a valid second participant (legacy/invalid data)
                     return;
                 }
 
