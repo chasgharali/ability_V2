@@ -863,7 +863,7 @@ export default function BoothManagement() {
                     border: '1px solid #e5e7eb', 
                     borderRadius: 8, 
                     padding: 12, 
-                    minHeight: 200, 
+                    minHeight: 500, 
                     overflow: 'auto' 
                   }}
                 >
