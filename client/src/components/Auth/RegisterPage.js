@@ -25,6 +25,8 @@ const RegisterPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorModalMessage, setErrorModalMessage] = useState('');
 
     const { register, user, loading } = useAuth();
     const navigate = useNavigate();
@@ -154,20 +156,77 @@ const RegisterPage = () => {
                 subscribeAnnouncements: !!formData.announcements
             };
 
-            await register(userData);
-            // Store redirect path in localStorage for persistence through email verification
-            if (redirectPath) {
-                localStorage.setItem('eventRegistrationRedirect', redirectPath);
-            }
-            // Store redirect path in state to use after email verification
-            navigate('/verify-email-sent', {
-                state: {
-                    email: formData.email,
-                    redirectPath: redirectPath
+            const result = await register(userData);
+            
+            // Check if registration was successful
+            if (result && result.success) {
+                // Only navigate if registration was successful
+                if (redirectPath) {
+                    localStorage.setItem('eventRegistrationRedirect', redirectPath);
                 }
-            });
+                // Store redirect path in state to use after email verification
+                navigate('/verify-email-sent', {
+                    state: {
+                        email: formData.email,
+                        redirectPath: redirectPath
+                    }
+                });
+            } else {
+                // Registration failed - get error message from result or use default
+                const errorMessage = result?.error || 'Registration failed. Please try again.';
+                
+                // Show error modal
+                setErrorModalMessage(errorMessage);
+                setShowErrorModal(true);
+                
+                // If backend returns email-related error (409 status), show it on the email field
+                // Check if the error message indicates email already exists
+                if (errorMessage.includes('email') && errorMessage.includes('already exists')) {
+                    setValidationErrors(prev => ({
+                        ...prev,
+                        email: errorMessage
+                    }));
+                    setError(''); // Clear general error since we're showing it on the field
+                } else {
+                    setError(errorMessage);
+                    // Clear email field error if it's a different error
+                    setValidationErrors(prev => {
+                        const newErrors = { ...prev };
+                        delete newErrors.email;
+                        return newErrors;
+                    });
+                }
+                // IMPORTANT: Do NOT navigate - stay on registration page to show the error
+            }
         } catch (err) {
-            setError(err.message || 'Registration failed. Please try again.');
+            // Fallback error handling in case register throws an error
+            console.error('Registration error:', err);
+            
+            // Display the error message sent from the backend
+            const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
+            
+            // Show error modal
+            setErrorModalMessage(errorMessage);
+            setShowErrorModal(true);
+            
+            // If backend returns email-related error (409 status), show it on the email field
+            if (err.response?.status === 409) {
+                setValidationErrors(prev => ({
+                    ...prev,
+                    email: errorMessage
+                }));
+                setError(''); // Clear general error since we're showing it on the field
+            } else {
+                setError(errorMessage);
+                // Clear email field error if it's a different error
+                setValidationErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.email;
+                    return newErrors;
+                });
+            }
+            // IMPORTANT: Do NOT navigate - stay on registration page to show the error
+            // The error will be displayed to the user on the registration form
         } finally {
             setIsLoading(false);
         }
@@ -534,6 +593,53 @@ const RegisterPage = () => {
                     </form>
                 </div>
             </div>
+
+            {/* Error Modal */}
+            {showErrorModal && (
+                <div
+                    className="register-error-modal-overlay"
+                    onClick={() => setShowErrorModal(false)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape' || e.key === 'Enter') {
+                            setShowErrorModal(false);
+                        }
+                    }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="error-modal-title"
+                    tabIndex={-1}
+                >
+                    <div
+                        className="register-error-modal-content"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                    >
+                        <div className="register-error-modal-header">
+                            <h3 id="error-modal-title">Registration Failed</h3>
+                            <button
+                                className="register-error-modal-close"
+                                onClick={() => setShowErrorModal(false)}
+                                aria-label="Close error dialog"
+                                type="button"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="register-error-modal-body">
+                            <p>{errorModalMessage}</p>
+                        </div>
+                        <div className="register-error-modal-footer">
+                            <button
+                                className="register-error-modal-button"
+                                onClick={() => setShowErrorModal(false)}
+                                type="button"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Branding */}
             <div className="register-branding">
