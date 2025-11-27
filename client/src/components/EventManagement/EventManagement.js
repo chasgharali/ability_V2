@@ -34,6 +34,7 @@ export default function EventManagement() {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [rowPendingDelete, setRowPendingDelete] = useState(null);
     const toastRef = useRef(null);
+    const deleteDialogRef = useRef(null);
 
     // RTE image upload helpers (Event Information editor)
     const rteInfoRef = useRef(null);
@@ -157,6 +158,26 @@ export default function EventManagement() {
     };
 
     useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading]);
+
+    // Center delete dialog when it opens
+    useEffect(() => {
+        if (confirmOpen && deleteDialogRef.current) {
+            const dialogElement = deleteDialogRef.current.element || deleteDialogRef.current;
+            if (dialogElement) {
+                // Wait for dialog to render
+                setTimeout(() => {
+                    const dialog = document.querySelector('.em-delete-dialog.e-dialog');
+                    if (dialog) {
+                        dialog.style.position = 'fixed';
+                        dialog.style.top = '50%';
+                        dialog.style.left = '50%';
+                        dialog.style.transform = 'translate(-50%, -50%)';
+                        dialog.style.margin = '0';
+                    }
+                }, 10);
+            }
+        }
+    }, [confirmOpen]);
 
     const showToast = (message, type = 'Success') => {
         if (toastRef.current) {
@@ -624,6 +645,7 @@ export default function EventManagement() {
                 </main>
             </div>
             <DialogComponent
+                ref={deleteDialogRef}
                 width="450px"
                 isModal={true}
                 showCloseIcon={true}
@@ -631,6 +653,7 @@ export default function EventManagement() {
                 header="Delete Event"
                 closeOnEscape={true}
                 close={cancelDelete}
+                cssClass="em-delete-dialog"
                 buttons={[
                     {
                         buttonModel: {

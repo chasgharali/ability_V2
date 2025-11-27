@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import './BoothManagement.css';
@@ -40,6 +41,7 @@ export default function BoothManagement() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   const toastRef = useRef(null);
+  const deleteDialogRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
   // RTE image upload helpers
   const rteFirstRef = React.useRef(null);
@@ -213,6 +215,26 @@ export default function BoothManagement() {
   useEffect(() => {
     loadEvents();
   }, []);
+
+  // Center delete dialog when it opens
+  useEffect(() => {
+    if (confirmOpen && deleteDialogRef.current) {
+      const dialogElement = deleteDialogRef.current.element || deleteDialogRef.current;
+      if (dialogElement) {
+        // Wait for dialog to render
+        setTimeout(() => {
+          const dialog = document.querySelector('.bm-delete-dialog.e-dialog');
+          if (dialog) {
+            dialog.style.position = 'fixed';
+            dialog.style.top = '50%';
+            dialog.style.left = '50%';
+            dialog.style.transform = 'translate(-50%, -50%)';
+            dialog.style.margin = '0';
+          }
+        }, 10);
+      }
+    }
+  }, [confirmOpen]);
 
   // (Focus management moved into reusable Toast component)
 
@@ -787,10 +809,46 @@ export default function BoothManagement() {
       {/* Mobile overlay */}
       <div className="mobile-overlay" aria-hidden="true" />
 
-      {/* Placeholder preview modal */}
-      {previewBooth && (
-        <div role="dialog" aria-modal="true" className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
-          <div className="modal-card" style={{ background: '#fff', borderRadius: 8, padding: 20, width: '90%', maxWidth: 1100, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+      {/* Placeholder preview modal - rendered via portal to avoid DOM conflicts */}
+      {previewBooth && typeof document !== 'undefined' && createPortal(
+        <div 
+          role="dialog" 
+          aria-modal="true" 
+          className="modal-overlay" 
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.4)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 60 
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setPreviewBooth(null);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setPreviewBooth(null);
+            }
+          }}
+          tabIndex={-1}
+        >
+          <div 
+            className="modal-card" 
+            style={{ 
+              background: '#fff', 
+              borderRadius: 8, 
+              padding: 20, 
+              width: '90%', 
+              maxWidth: 1100, 
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0 }}>Placeholder Preview - {previewBooth.name}</h3>
               <ButtonComponent cssClass="e-outline e-primary" onClick={() => setPreviewBooth(null)}>
@@ -799,17 +857,28 @@ export default function BoothManagement() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               {[0, 1, 2].map(i => (
-                <div key={i} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, minHeight: 200, overflow: 'auto' }}>
+                <div 
+                  key={`placeholder-${i}-${previewBooth.id || previewBooth.name}`} 
+                  style={{ 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: 8, 
+                    padding: 12, 
+                    minHeight: 200, 
+                    overflow: 'auto' 
+                  }}
+                >
                   <div dangerouslySetInnerHTML={{ __html: previewBooth.richSections?.[i]?.contentHtml || '<em>No content</em>' }} />
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent
+        ref={deleteDialogRef}
         width="450px"
         isModal={true}
         showCloseIcon={true}
@@ -817,6 +886,7 @@ export default function BoothManagement() {
         header="Delete Booth"
         closeOnEscape={true}
         close={cancelDelete}
+        cssClass="bm-delete-dialog"
         buttons={[
           {
             buttonModel: {

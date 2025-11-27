@@ -43,6 +43,7 @@ export default function JobSeekerManagement() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const toastRef = useRef(null);
   const gridRef = useRef(null);
+  const deleteDialogRef = useRef(null);
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
@@ -269,6 +270,26 @@ export default function JobSeekerManagement() {
       }
     }
   }, [mode]);
+
+  // Center delete dialog when it opens
+  useEffect(() => {
+    if (confirmOpen && deleteDialogRef.current) {
+      const dialogElement = deleteDialogRef.current.element || deleteDialogRef.current;
+      if (dialogElement) {
+        // Wait for dialog to render
+        setTimeout(() => {
+          const dialog = document.querySelector('.jsm-delete-dialog.e-dialog');
+          if (dialog) {
+            dialog.style.position = 'fixed';
+            dialog.style.top = '50%';
+            dialog.style.left = '50%';
+            dialog.style.transform = 'translate(-50%, -50%)';
+            dialog.style.margin = '0';
+          }
+        }, 10);
+      }
+    }
+  }, [confirmOpen]);
 
   const handleToggleActive = async (row) => {
     try {
@@ -1060,6 +1081,7 @@ export default function JobSeekerManagement() {
 
       {/* Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent
+        ref={deleteDialogRef}
         width="450px"
         isModal={true}
         showCloseIcon={true}
@@ -1067,6 +1089,7 @@ export default function JobSeekerManagement() {
         header="Delete Job Seeker"
         closeOnEscape={true}
         close={cancelDelete}
+        cssClass="jsm-delete-dialog"
         buttons={[
           {
             buttonModel: {
@@ -1090,9 +1113,11 @@ export default function JobSeekerManagement() {
           }
         ]}
       >
-        <p style={{ margin: 0, lineHeight: '1.5' }}>
-          Are you sure you want to permanently delete <strong>{rowPendingDelete?.firstName} {rowPendingDelete?.lastName}</strong>? This action cannot be undone.
-        </p>
+        <div style={{ padding: '12px 0' }}>
+          <p style={{ margin: 0, lineHeight: '1.5' }}>
+            Are you sure you want to permanently delete <strong>{rowPendingDelete?.firstName} {rowPendingDelete?.lastName}</strong>? This action cannot be undone.
+          </p>
+        </div>
       </DialogComponent>
 
       {/* Verify Email confirm modal - Syncfusion DialogComponent */}

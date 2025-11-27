@@ -1048,3 +1048,34 @@ html body .e-popup.e-popup-open:has(.e-column-list) .e-search input:focus {
   max-width: 100% !important;
 }
 
+/* Delete Dialog - Ensure proper z-index and positioning to avoid DOM conflicts */
+.em-delete-dialog.e-dialog {
+  z-index: 10000 !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  max-width: 450px !important;
+}
+
+/* Target all possible dialog containers */
+.e-dialog.em-delete-dialog,
+.em-delete-dialog.e-popup,
+body .em-delete-dialog.e-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+
+.em-delete-dialog.e-dialog .e-dlg-content {
+  padding: 20px !important;
+}
+
+.em-delete-dialog.e-dialog .e-footer-content {
+  padding: 16px 20px !important;
+  border-top: 1px solid #e5e7eb !important;
+}
+

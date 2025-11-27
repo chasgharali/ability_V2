@@ -30,6 +30,7 @@ export default function UserManagement() {
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   // Syncfusion Toast ref
   const toastRef = useRef(null);
+  const deleteDialogRef = useRef(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -168,6 +169,26 @@ export default function UserManagement() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
+
+  // Center delete dialog when it opens
+  useEffect(() => {
+    if (confirmOpen && deleteDialogRef.current) {
+      const dialogElement = deleteDialogRef.current.element || deleteDialogRef.current;
+      if (dialogElement) {
+        // Wait for dialog to render
+        setTimeout(() => {
+          const dialog = document.querySelector('.um-delete-dialog.e-dialog');
+          if (dialog) {
+            dialog.style.position = 'fixed';
+            dialog.style.top = '50%';
+            dialog.style.left = '50%';
+            dialog.style.transform = 'translate(-50%, -50%)';
+            dialog.style.margin = '0';
+          }
+        }, 10);
+      }
+    }
+  }, [confirmOpen]);
 
   // Grid template functions for custom column renders - using Syncfusion ButtonComponent
   const actionsTemplate = (props) => {
@@ -489,6 +510,7 @@ export default function UserManagement() {
 
       {/* Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent
+        ref={deleteDialogRef}
         width="450px"
         isModal={true}
         showCloseIcon={true}
@@ -496,6 +518,7 @@ export default function UserManagement() {
         header="Delete User"
         closeOnEscape={true}
         close={cancelDelete}
+        cssClass="um-delete-dialog"
         buttons={[
           {
             buttonModel: {
