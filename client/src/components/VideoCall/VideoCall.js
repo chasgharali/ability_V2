@@ -93,12 +93,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [networkStats, setNetworkStats] = useState({ latency: 0, packetLoss: 0 });
 
   // Refs
-  // Cleanup guards
+  // Cleanup / lifecycle guards
   const isMountedRef = useRef(true);
   const isCleaningUpRef = useRef(false);
   const roomRef = useRef();
   const reconnectTimeoutRef = useRef();
   const qualityCheckIntervalRef = useRef();
+  // Once a call has been explicitly ended (by recruiter or locally),
+  // prevent any further automatic reconnects or re-initialization.
+  const callEndedRef = useRef(false);
 
   // Initialize call
   useEffect(() => {
@@ -188,6 +191,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initializeCallWithData = async (data) => {
+    // If the call has already been marked as ended, do not re-init
+    if (callEndedRef.current) {
+      console.warn('initializeCallWithData called after call ended - ignoring');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -294,6 +302,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const initializeCall = useCallback(async () => {
+    // If the call has already been marked as ended, do not re-init
+    if (callEndedRef.current) {
+      console.warn('initializeCall called after call ended - ignoring');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -575,7 +588,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const handleCallEnded = async (data) => {
     console.log('📞 Call ended event received:', data);
-
+    // Mark call as ended so no further reconnect / init happens
+    callEndedRef.current = true;
+    
     // Announce call end for all participants
     if (user.role === 'JobSeeker') {
       speak("The call has ended. Thank you for participating.");
@@ -759,6 +774,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const attemptReconnect = () => {
+    // Never attempt to reconnect after call has been explicitly ended
+    if (callEndedRef.current) {
+      console.log('Reconnect skipped because call has ended');
+      return;
+    }
+
     if (reconnectAttempts >= 3) {
       setError('Unable to reconnect to call. Please refresh and try again.');
       return;
