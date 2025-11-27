@@ -38,6 +38,7 @@ export default function JobSeekerManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'view' | 'edit'
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -46,6 +47,9 @@ export default function JobSeekerManagement() {
   const deleteDialogRef = useRef(null);
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
+  const searchInputRef = useRef(null);
+  // Use ref for input value to prevent re-renders on every keystroke
+  const inputValueRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -74,8 +78,8 @@ export default function JobSeekerManagement() {
     { value: 'inactive', label: 'Inactive' },
   ], []);
 
-  // Syncfusion Toast
-  const showToast = (message, type = 'Success', duration = 3000) => {
+  // Syncfusion Toast - memoized to prevent unnecessary re-renders
+  const showToast = useCallback((message, type = 'Success', duration = 3000) => {
     if (toastRef.current) {
       toastRef.current.show({
         title: type,
@@ -85,7 +89,7 @@ export default function JobSeekerManagement() {
         timeOut: duration
       });
     }
-  };
+  }, []);
 
   const handleDelete = (row) => {
     if (row.isActive) return; // safety - can't delete active users
@@ -116,7 +120,11 @@ export default function JobSeekerManagement() {
 
   const loadJobSeekers = useCallback(async (page, limit, search, isActive) => {
     try {
-      setLoading(true);
+      // Only set main loading for initial load or page changes, not for search
+      const isSearch = search && search.trim();
+      if (!isSearch) {
+        setLoading(true);
+      }
       
       // Build query parameters
       const params = {
@@ -140,7 +148,8 @@ export default function JobSeekerManagement() {
       const res = await listUsers(params);
       const items = (res?.users || []).filter(u => u.role === 'JobSeeker');
       
-      setJobSeekers(items.map(u => {
+      // Batch state updates to prevent multiple re-renders
+      const mappedItems = items.map(u => {
         const parts = (u.name || '').trim().split(/\s+/);
         const firstName = parts[0] || '';
         const lastName = parts.slice(1).join(' ') || '';
@@ -167,9 +176,11 @@ export default function JobSeekerManagement() {
           needsCaptions: u.needsCaptions,
           needsOther: u.needsOther,
         };
-      }));
+      });
       
-      // Update pagination state
+      // Update all states in a single batch
+      setJobSeekers(mappedItems);
+      
       if (res?.pagination) {
         setPagination({
           currentPage: res.pagination.currentPage,
@@ -186,13 +197,15 @@ export default function JobSeekerManagement() {
       showToast('Failed to load job seekers', 'Error');
     } finally {
       setLoading(false);
+      setSearchLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   // Track previous values to detect actual changes
   const isFirstRender = useRef(true);
   const prevSearchFilter = useRef(searchFilter);
   const prevStatusFilter = useRef(statusFilter);
+  const searchTimeoutRef = useRef(null);
 
   // Update refs when filters change
   useEffect(() => {
@@ -209,7 +222,14 @@ export default function JobSeekerManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Store loadJobSeekers in ref to avoid dependency issues
+  const loadJobSeekersRef = useRef(loadJobSeekers);
+  useEffect(() => {
+    loadJobSeekersRef.current = loadJobSeekers;
+  }, [loadJobSeekers]);
+
   // Handle status filter changes (immediate, not debounced)
+  // NOTE: This does NOT use searchFilter - status filter is independent
   useEffect(() => {
     // Skip on first render
     if (isFirstRender.current) return;
@@ -218,29 +238,33 @@ export default function JobSeekerManagement() {
     if (prevStatusFilter.current !== statusFilter) {
       prevStatusFilter.current = statusFilter;
       setCurrentPage(1);
-      loadJobSeekers(1, pageSize, searchFilterRef.current, statusFilter);
+      // Clear any pending search
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
+      }
+      // Status filter change does NOT include search text - only filter by status
+      loadJobSeekersRef.current(1, pageSize, '', statusFilter);
     }
-  }, [statusFilter, pageSize, loadJobSeekers]);
+  }, [statusFilter, pageSize]);
 
-  // Debounced search effect
-  useEffect(() => {
-    // Skip on first render
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+  // Function to trigger search - only called explicitly by button or Enter key
+  const triggerSearch = useCallback(() => {
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
     }
+    
+    // Get search value from ref (most up-to-date) or state (fallback)
+    const searchValue = (inputValueRef.current || searchFilterRef.current || searchFilter).trim();
+    setSearchLoading(true);
+    prevSearchFilter.current = searchValue;
+    setCurrentPage(1);
+    loadJobSeekersRef.current(1, pageSize, searchValue, statusFilterRef.current);
+  }, [searchFilter, pageSize]);
 
-    // Only trigger if search actually changed
-    if (prevSearchFilter.current === searchFilter) return;
-
-    const searchTimer = setTimeout(() => {
-      prevSearchFilter.current = searchFilter;
-      setCurrentPage(1);
-      loadJobSeekers(1, pageSize, searchFilter, statusFilterRef.current);
-    }, 500); // 500ms debounce
-
-    return () => clearTimeout(searchTimer);
-  }, [searchFilter, pageSize, loadJobSeekers]);
+  // No automatic search on typing - search only on button click or Enter key
 
   // Cleanup grid and toast when mode changes to prevent DOM manipulation errors
   useEffect(() => {
@@ -733,6 +757,17 @@ export default function JobSeekerManagement() {
     );
   };
 
+  // Memoize stats calculation - only recalculate when jobSeekers actually changes
+  const stats = useMemo(() => {
+    const activeCount = jobSeekers.filter(js => js.isActive).length;
+    const inactiveCount = jobSeekers.filter(js => !js.isActive).length;
+    const verifiedCount = jobSeekers.filter(js => js.emailVerified).length;
+    return { activeCount, inactiveCount, verifiedCount };
+  }, [jobSeekers]);
+
+  // Memoize grid data - only update when jobSeekers actually changes
+  const gridDataSource = useMemo(() => jobSeekers, [jobSeekers]);
+
   return (
     <div className="dashboard">
       <AdminHeader />
@@ -750,12 +785,50 @@ export default function JobSeekerManagement() {
 
             {/* Filters */}
             <div className="filters-row">
-              <Input
-                label="Search by name or email"
-                value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
-                placeholder="Search job seekers..."
-              />
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
+                <div style={{ flex: 1 }}>
+                  <Input
+                    ref={searchInputRef}
+                    label="Search by name or email"
+                    defaultValue={searchFilter}
+                    onChange={(e) => {
+                      // ONLY update refs - NO state update, NO re-render, NO blocking
+                      const value = e.target.value;
+                      inputValueRef.current = value;
+                      searchFilterRef.current = value;
+                      // Do NOT call setSearchFilter - this prevents re-renders
+                    }}
+                    onKeyDown={(e) => {
+                      // Trigger search only on Enter key
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Sync ref value to state only when searching
+                        const searchValue = inputValueRef.current || searchFilterRef.current || '';
+                        setSearchFilter(searchValue);
+                        triggerSearch();
+                      }
+                    }}
+                    placeholder="Search job seekers... (Press Enter or click Search)"
+                  />
+                </div>
+                <ButtonComponent
+                  cssClass="e-primary"
+                  onClick={() => {
+                    // Sync input value to state before searching
+                    if (searchInputRef.current) {
+                      const value = searchInputRef.current.value || inputValueRef.current || '';
+                      setSearchFilter(value);
+                      searchFilterRef.current = value;
+                      inputValueRef.current = value;
+                    }
+                    triggerSearch();
+                  }}
+                  disabled={searchLoading}
+                  style={{ minWidth: '100px', height: '40px', marginBottom: '0',alignContent: 'center' }}
+                >
+                  {searchLoading ? 'Searching...' : 'Search'}
+                </ButtonComponent>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label htmlFor="status-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
                   Status Filter
@@ -774,7 +847,7 @@ export default function JobSeekerManagement() {
               </div>
             </div>
 
-            {/* Stats */}
+            {/* Stats - memoized to prevent unnecessary recalculations */}
             <div className="stats-row">
               <div className="stat-card">
                 <h4>Total Job Seekers</h4>
@@ -782,26 +855,44 @@ export default function JobSeekerManagement() {
               </div>
               <div className="stat-card">
                 <h4>Active</h4>
-                <span className="stat-number">{jobSeekers.filter(js => js.isActive).length}</span>
+                <span className="stat-number">{stats.activeCount}</span>
               </div>
               <div className="stat-card">
                 <h4>Inactive</h4>
-                <span className="stat-number">{jobSeekers.filter(js => !js.isActive).length}</span>
+                <span className="stat-number">{stats.inactiveCount}</span>
               </div>
               <div className="stat-card">
                 <h4>Email Verified</h4>
-                <span className="stat-number">{jobSeekers.filter(js => js.emailVerified).length}</span>
+                <span className="stat-number">{stats.verifiedCount}</span>
               </div>
             </div>
 
             {/* Data Grid */}
             {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
             {mode === 'list' && !isTransitioning && (
-              <div style={{ display: isTransitioning ? 'none' : 'block' }}>
+              <div style={{ position: 'relative', display: isTransitioning ? 'none' : 'block' }}>
+                {searchLoading && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                    borderRadius: '8px',
+                    pointerEvents: 'none' // Don't block interactions
+                  }}>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Searching...</div>
+                  </div>
+                )}
                 <GridComponent
-                  key={`job-seekers-grid-${currentPage}-${pageSize}`}
+                  key={`job-seekers-grid-${currentPage}-${pageSize}-${statusFilter}`}
                   ref={gridRef}
-                  dataSource={jobSeekers}
+                  dataSource={gridDataSource}
                   allowPaging={false}
                   allowSorting={true}
                   allowFiltering={false}
