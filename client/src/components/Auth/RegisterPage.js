@@ -25,6 +25,8 @@ const RegisterPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
+    const [eventName, setEventName] = useState(null);
+    const [isLoadingEvent, setIsLoadingEvent] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorModalMessage, setErrorModalMessage] = useState('');
 
@@ -37,6 +39,43 @@ const RegisterPage = () => {
     // Get redirect parameter from URL
     const urlParams = new URLSearchParams(location.search);
     const redirectPath = urlParams.get('redirect');
+
+    // Extract event slug from redirect path (e.g., /event/101ability/register -> 101ability)
+    const extractEventSlug = (path) => {
+        if (!path) return null;
+        const match = path.match(/\/event\/([^\/]+)\//);
+        return match ? match[1] : null;
+    };
+
+    const eventSlug = extractEventSlug(redirectPath);
+
+    // Fetch event name if we have a slug
+    useEffect(() => {
+        if (!eventSlug) return;
+
+        const fetchEventName = async () => {
+            setIsLoadingEvent(true);
+            try {
+                // Use public endpoint that doesn't require authentication
+                const response = await fetch(`/api/events/public/slug/${encodeURIComponent(eventSlug)}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data?.event?.name) {
+                        setEventName(data.event.name);
+                    }
+                }
+                // Silently fail if event not found - we'll just not show the event name
+            } catch (err) {
+                // Silently fail - event name is optional
+                console.log('Could not fetch event name:', err);
+            } finally {
+                setIsLoadingEvent(false);
+            }
+        };
+
+        fetchEventName();
+    }, [eventSlug]);
 
     // Redirect already authenticated users to their intended destination
     useEffect(() => {
@@ -285,6 +324,13 @@ const RegisterPage = () => {
                 {/* Registration Form */}
                 <div className="register-form-container">
                     <h1 className="register-title">Create your Job Seeker Account</h1>
+                    {eventName && (
+                        <div className="register-event-banner" role="status" aria-live="polite">
+                            <p className="register-event-text">
+                                Registering for: <strong>{eventName}</strong>
+                            </p>
+                        </div>
+                    )}
                     <p className="register-subtitle">Enter your information to create your account. Be sure to signup for announcements about future events.</p>
 
                     {error && (

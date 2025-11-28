@@ -10,6 +10,7 @@ import ChatPanel from './ChatPanel';
 import ParticipantsList from './ParticipantsList';
 import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
+import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
 import './VideoCall.css';
 
 const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) => {
@@ -93,12 +94,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [networkStats, setNetworkStats] = useState({ latency: 0, packetLoss: 0 });
 
   // Refs
-  // Cleanup guards
+  // Cleanup / lifecycle guards
   const isMountedRef = useRef(true);
   const isCleaningUpRef = useRef(false);
   const roomRef = useRef();
   const reconnectTimeoutRef = useRef();
   const qualityCheckIntervalRef = useRef();
+  // Once a call has been explicitly ended (by recruiter or locally),
+  // prevent any further automatic reconnects or re-initialization.
+  const callEndedRef = useRef(false);
 
   // Initialize call
   useEffect(() => {
@@ -188,6 +192,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initializeCallWithData = async (data) => {
+    // If the call has already been marked as ended, do not re-init
+    if (callEndedRef.current) {
+      console.warn('initializeCallWithData called after call ended - ignoring');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -196,27 +205,57 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setCallInfo(data);
       setChatMessages(data.chatMessages || []);
 
+      // Validate and clean device preferences before using them
+      const { audioDeviceId, videoDeviceId } = await validateAndCleanDevicePreferences();
+
       // Create local tracks with preferred devices if set
-      const preferredVideoDeviceId = localStorage.getItem('preferredVideoDeviceId');
-      const preferredAudioDeviceId = localStorage.getItem('preferredAudioDeviceId');
+      let videoTrack, audioTrack;
+      
+      try {
+        // Try with exact device constraints first
+        const { video: videoConstraints, audio: audioConstraints } = createExactMediaConstraints(
+          audioDeviceId,
+          videoDeviceId
+        );
 
-      const videoConstraints = {
-        width: 1280,
-        height: 720,
-        frameRate: 30,
-        facingMode: 'user',
-        ...(preferredVideoDeviceId ? { deviceId: { exact: preferredVideoDeviceId } } : {})
-      };
+        videoTrack = await createLocalVideoTrack(videoConstraints);
+        audioTrack = await createLocalAudioTrack(audioConstraints);
+      } catch (deviceError) {
+        // Handle OverconstrainedError or other device errors
+        if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
+          console.warn('Device constraint error, retrying without device preferences:', deviceError);
+          
+          // Clear invalid device IDs
+          if (videoDeviceId) {
+            localStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from localStorage');
+          }
+          if (audioDeviceId) {
+            localStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from localStorage');
+          }
 
-      const audioConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        ...(preferredAudioDeviceId ? { deviceId: { exact: preferredAudioDeviceId } } : {})
-      };
+          // Retry without device constraints
+          const fallbackVideoConstraints = {
+            width: 1280,
+            height: 720,
+            frameRate: 30,
+            facingMode: 'user'
+          };
 
-      const videoTrack = await createLocalVideoTrack(videoConstraints);
-      const audioTrack = await createLocalAudioTrack(audioConstraints);
+          const fallbackAudioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          };
+
+          videoTrack = await createLocalVideoTrack(fallbackVideoConstraints);
+          audioTrack = await createLocalAudioTrack(fallbackAudioConstraints);
+        } else {
+          // Re-throw if it's not a device constraint error
+          throw deviceError;
+        }
+      }
 
       setLocalTracks([videoTrack, audioTrack]);
 
@@ -294,6 +333,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const initializeCall = useCallback(async () => {
+    // If the call has already been marked as ended, do not re-init
+    if (callEndedRef.current) {
+      console.warn('initializeCall called after call ended - ignoring');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -303,27 +347,57 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setCallInfo(callDetails);
       setChatMessages(callDetails.chatMessages || []);
 
+      // Validate and clean device preferences before using them
+      const { audioDeviceId, videoDeviceId } = await validateAndCleanDevicePreferences();
+
       // Create local tracks using preferred device IDs if available
-      const preferredVideoDeviceId2 = localStorage.getItem('preferredVideoDeviceId');
-      const preferredAudioDeviceId2 = localStorage.getItem('preferredAudioDeviceId');
+      let videoTrack, audioTrack;
+      
+      try {
+        // Try with exact device constraints first
+        const { video: videoConstraints2, audio: audioConstraints2 } = createExactMediaConstraints(
+          audioDeviceId,
+          videoDeviceId
+        );
 
-      const videoConstraints2 = {
-        width: 1280,
-        height: 720,
-        frameRate: 30,
-        facingMode: 'user',
-        ...(preferredVideoDeviceId2 ? { deviceId: { exact: preferredVideoDeviceId2 } } : {})
-      };
+        videoTrack = await createLocalVideoTrack(videoConstraints2);
+        audioTrack = await createLocalAudioTrack(audioConstraints2);
+      } catch (deviceError) {
+        // Handle OverconstrainedError or other device errors
+        if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
+          console.warn('Device constraint error, retrying without device preferences:', deviceError);
+          
+          // Clear invalid device IDs
+          if (videoDeviceId) {
+            localStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from localStorage');
+          }
+          if (audioDeviceId) {
+            localStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from localStorage');
+          }
 
-      const audioConstraints2 = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        ...(preferredAudioDeviceId2 ? { deviceId: { exact: preferredAudioDeviceId2 } } : {})
-      };
+          // Retry without device constraints
+          const fallbackVideoConstraints = {
+            width: 1280,
+            height: 720,
+            frameRate: 30,
+            facingMode: 'user'
+          };
 
-      const videoTrack = await createLocalVideoTrack(videoConstraints2);
-      const audioTrack = await createLocalAudioTrack(audioConstraints2);
+          const fallbackAudioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          };
+
+          videoTrack = await createLocalVideoTrack(fallbackVideoConstraints);
+          audioTrack = await createLocalAudioTrack(fallbackAudioConstraints);
+        } else {
+          // Re-throw if it's not a device constraint error
+          throw deviceError;
+        }
+      }
 
       setLocalTracks([videoTrack, audioTrack]);
 
@@ -575,7 +649,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const handleCallEnded = async (data) => {
     console.log('📞 Call ended event received:', data);
-
+    // Mark call as ended so no further reconnect / init happens
+    callEndedRef.current = true;
+    
     // Announce call end for all participants
     if (user.role === 'JobSeeker') {
       speak("The call has ended. Thank you for participating.");
@@ -759,6 +835,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const attemptReconnect = () => {
+    // Never attempt to reconnect after call has been explicitly ended
+    if (callEndedRef.current) {
+      console.log('Reconnect skipped because call has ended');
+      return;
+    }
+
     if (reconnectAttempts >= 3) {
       setError('Unable to reconnect to call. Please refresh and try again.');
       return;

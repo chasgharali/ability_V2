@@ -652,11 +652,62 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     // Filter participants: exclude current user and users already in chat list,
     // then sort so online users appear at the top
     const filteredParticipants = participants
-        .filter(p =>
-            p._id !== user?._id && // Exclude current user
-            !existingChatUserIds.has(p._id) && // Exclude users already in chat list
-            p.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        .filter(p => {
+            // Exclude current user
+            if (p._id === user?._id) return false;
+            
+            // Exclude users already in chat list
+            if (existingChatUserIds.has(p._id)) return false;
+            
+            // Search filter
+            if (!p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+            
+            // For recruiters: only show users from their company (booth) and support users
+            // This applies to both online and offline users - online/offline only affects sorting
+            if (user?.role === 'Recruiter' && user?.assignedBooth) {
+                const userBoothId = user.assignedBooth._id?.toString() || user.assignedBooth.toString();
+                const participantBoothId = p.assignedBooth?._id?.toString() || p.assignedBooth?.toString();
+                const isSameCompany = participantBoothId && participantBoothId === userBoothId;
+                const isSupport = p.role === 'Support' || p.role === 'GlobalSupport';
+                
+                // If same company/booth: show Recruiters and Support only (excludes Interpreters)
+                if (isSameCompany) {
+                    return p.role === 'Recruiter' || p.role === 'Support';
+                }
+                
+                // If different company/booth: show Support users only (Support and GlobalSupport)
+                return isSupport;
+            }
+            
+            // For interpreters: only show Support and Interpreter users
+            // This applies to both online and offline users - online/offline only affects sorting
+            if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+                const isSupport = p.role === 'Support' || p.role === 'GlobalSupport';
+                const isInterpreter = p.role === 'Interpreter' || p.role === 'GlobalInterpreter';
+                return isSupport || isInterpreter;
+            }
+            
+            // For support users: only show Support, Recruiter, and Interpreter from same booth, plus GlobalSupport and GlobalInterpreter
+            // This applies to both online and offline users - online/offline only affects sorting
+            if (user?.role === 'Support' && user?.assignedBooth) {
+                const userBoothId = user.assignedBooth._id?.toString() || user.assignedBooth.toString();
+                const participantBoothId = p.assignedBooth?._id?.toString() || p.assignedBooth?.toString();
+                const isSameCompany = participantBoothId && participantBoothId === userBoothId;
+                const isGlobalSupport = p.role === 'GlobalSupport';
+                const isGlobalInterpreter = p.role === 'GlobalInterpreter';
+                
+                // If same company/booth: show Support, Recruiters, and Interpreters
+                if (isSameCompany) {
+                    return p.role === 'Support' || p.role === 'Recruiter' || p.role === 'Interpreter';
+                }
+                
+                // If different company/booth: show GlobalSupport and GlobalInterpreter only
+                return isGlobalSupport || isGlobalInterpreter;
+            }
+            
+            // For non-recruiters, non-interpreters, and non-support, show all participants (existing behavior)
+            return true;
+        })
         .sort((a, b) => {
             const aOnline = onlineUsers.has(a._id);
             const bOnline = onlineUsers.has(b._id);
