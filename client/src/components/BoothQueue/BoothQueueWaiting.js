@@ -74,6 +74,10 @@ export default function BoothQueueWaiting() {
   const announcementCounterRef = useRef(0);
 
   useEffect(() => {
+    // Reset queueToken when boothId changes to prevent using token from wrong booth
+    setQueueToken(location.state?.queueToken || '');
+    setQueueEntryId(null);
+    
     loadData();
     joinSocketRoom();
 
@@ -206,12 +210,18 @@ export default function BoothQueueWaiting() {
           } catch (e) { }
         } else {
           // Not in queue or backend returned a non-successful shape
-          // Do not reset to 0; retain last known value in UI
+          // Reset queueToken to prevent using token from wrong booth
+          setQueueToken('');
+          setQueueEntryId(null);
+          // Do not reset to 0; retain last known value in UI for position
         }
       } catch (qErr) {
         // Gracefully handle 404 Not Found (user not in queue after refresh)
         console.warn('Queue status unavailable (likely not in queue):', qErr?.response?.status || qErr);
-        // Keep existing values to avoid flashing zeros
+        // Reset queueToken to prevent using token from wrong booth
+        setQueueToken('');
+        setQueueEntryId(null);
+        // Keep existing values for position to avoid flashing zeros
       }
 
     } catch (error) {
