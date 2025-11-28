@@ -687,7 +687,25 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                 return isSupport || isInterpreter;
             }
             
-            // For non-recruiters and non-interpreters, show all participants (existing behavior)
+            // For support users: only show Support, Recruiter, and Interpreter from same booth, plus GlobalSupport and GlobalInterpreter
+            // This applies to both online and offline users - online/offline only affects sorting
+            if (user?.role === 'Support' && user?.assignedBooth) {
+                const userBoothId = user.assignedBooth._id?.toString() || user.assignedBooth.toString();
+                const participantBoothId = p.assignedBooth?._id?.toString() || p.assignedBooth?.toString();
+                const isSameCompany = participantBoothId && participantBoothId === userBoothId;
+                const isGlobalSupport = p.role === 'GlobalSupport';
+                const isGlobalInterpreter = p.role === 'GlobalInterpreter';
+                
+                // If same company/booth: show Support, Recruiters, and Interpreters
+                if (isSameCompany) {
+                    return p.role === 'Support' || p.role === 'Recruiter' || p.role === 'Interpreter';
+                }
+                
+                // If different company/booth: show GlobalSupport and GlobalInterpreter only
+                return isGlobalSupport || isGlobalInterpreter;
+            }
+            
+            // For non-recruiters, non-interpreters, and non-support, show all participants (existing behavior)
             return true;
         })
         .sort((a, b) => {
