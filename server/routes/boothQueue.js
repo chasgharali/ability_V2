@@ -313,69 +313,69 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
         const MeetingRecord = require('../models/MeetingRecord');
         const User = require('../models/User');
         
-        // Find recruiter assigned to this booth
+        // Find recruiter assigned to this booth (optional - recruiter can be assigned later)
         const recruiter = await User.findOne({
             assignedBooth: boothId,
             role: 'Recruiter'
         });
         
-        if (!recruiter) {
-            console.error('No recruiter found for booth:', boothId);
-            return res.status(400).json({
-                success: false,
-                message: 'No recruiter assigned to this booth'
+        const recruiterId = recruiter ? recruiter._id : null;
+
+        // Only create meeting record if recruiter exists, otherwise just save leave message in queue entry
+        if (recruiter) {
+            console.log('Creating meeting record for leave message:', {
+                eventId: queueEntry.event._id,
+                boothId: queueEntry.booth._id,
+                queueId: queueEntry._id,
+                recruiterId,
+                jobseekerId: jobSeekerId,
+                status: 'left_with_message',
+                messageType: type
             });
-        }
-        
-        const recruiterId = recruiter._id;
 
-        console.log('Creating meeting record for leave message:', {
-            eventId: queueEntry.event._id,
-            boothId: queueEntry.booth._id,
-            queueId: queueEntry._id,
-            recruiterId,
-            jobseekerId: jobSeekerId,
-            status: 'left_with_message',
-            messageType: type
-        });
-
-        const meetingRecord = new MeetingRecord({
-            eventId: queueEntry.event._id,
-            boothId: queueEntry.booth._id,
-            queueId: queueEntry._id,
-            recruiterId: recruiterId,
-            jobseekerId: jobSeekerId,
-            twilioRoomId: `leave-message-${queueEntry._id}`,
-            startTime: queueEntry.joinedAt,
-            endTime: new Date(),
-            duration: 0,
-            status: 'left_with_message',
-            jobSeekerMessages: [{
-                type: type,
-                content: content,
-                sender: 'jobseeker',
-                createdAt: new Date(),
-                isLeaveMessage: true
-            }]
-        });
-
-        try {
-            await meetingRecord.save();
-            console.log('Meeting record created successfully:', meetingRecord._id);
-            console.log('Meeting record details:', {
-                id: meetingRecord._id,
-                status: meetingRecord.status,
-                jobseekerId: meetingRecord.jobseekerId,
-                recruiterId: meetingRecord.recruiterId
+            const meetingRecord = new MeetingRecord({
+                eventId: queueEntry.event._id,
+                boothId: queueEntry.booth._id,
+                queueId: queueEntry._id,
+                recruiterId: recruiterId,
+                jobseekerId: jobSeekerId,
+                twilioRoomId: `leave-message-${queueEntry._id}`,
+                startTime: queueEntry.joinedAt,
+                endTime: new Date(),
+                duration: 0,
+                status: 'left_with_message',
+                jobSeekerMessages: [{
+                    type: type,
+                    content: content,
+                    sender: 'jobseeker',
+                    createdAt: new Date(),
+                    isLeaveMessage: true
+                }]
             });
-        } catch (saveError) {
-            console.error('Error saving meeting record:', saveError);
-            throw saveError;
+
+            try {
+                await meetingRecord.save();
+                console.log('Meeting record created successfully:', meetingRecord._id);
+                console.log('Meeting record details:', {
+                    id: meetingRecord._id,
+                    status: meetingRecord.status,
+                    jobseekerId: meetingRecord.jobseekerId,
+                    recruiterId: meetingRecord.recruiterId
+                });
+                
+                // Link meeting record to queue entry
+                queueEntry.meetingId = meetingRecord._id;
+                await queueEntry.save();
+            } catch (saveError) {
+                console.error('Error saving meeting record:', saveError);
+                // Don't throw - leave message is already saved in queueEntry.leaveMessage
+                console.warn('Meeting record creation failed, but leave message is saved in queue entry');
+            }
+        } else {
+            console.log('No recruiter assigned to booth:', boothId, '- Leave message saved in queue entry only');
+            // Leave message is already saved in queueEntry.leaveMessage above
+            // Meeting record will be created later when recruiter is assigned, if needed
         }
-        
-        // Link meeting record to queue entry
-        queueEntry.meetingId = meetingRecord._id;
-        await queueEntry.save();
 
         // Emit socket event to recruiters
         if (req.app.get('io')) {
