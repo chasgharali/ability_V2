@@ -4,29 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './AdminHeader.css';
-import settingsAPI from '../../services/settings';
+import { getBrandingLogo } from '../../utils/brandingCache';
 
 export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo, hideMenuToggle = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
   
-  // Fetch branding logo from API if not provided as prop
+  // Fetch branding logo from cache/API if not provided as prop (only once, cached globally)
   useEffect(() => {
-    const fetchBrandingLogo = async () => {
-      try {
-        const response = await settingsAPI.getSetting('branding_logo');
-        if (response.success && response.value) {
-          setBrandingLogoFromAPI(response.value);
-        }
-      } catch (error) {
-        // Setting doesn't exist yet, that's okay
-        console.log('No branding logo set');
-      }
-    };
-
     if (!brandingLogoProp) {
-      fetchBrandingLogo();
+      getBrandingLogo().then(logo => {
+        if (logo) {
+          setBrandingLogoFromAPI(logo);
+        }
+      });
     }
   }, [brandingLogoProp]);
 

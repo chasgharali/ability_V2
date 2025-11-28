@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import './UserManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -19,9 +20,14 @@ export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const location = useLocation();
+  const isActiveRoute = location.pathname === '/usermanagement';
 
   const [boothOptions, setBoothOptions] = useState([]);
   const [eventOptions, setEventOptions] = useState([]);
@@ -33,6 +39,9 @@ export default function UserManagement() {
   // Syncfusion Toast ref
   const toastRef = useRef(null);
   const deleteDialogRef = useRef(null);
+  // Prevent race conditions and duplicate calls
+  const loadingRef = useRef(false);
+  const lastLoadParamsRef = useRef({ page: null, limit: null, role: null, search: null });
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -115,21 +124,44 @@ export default function UserManagement() {
   };
 
   const loadUsers = useCallback(async () => {
+    if (!isActiveRoute) return;
+    
+    const params = { page: currentPage, limit: pageSize };
+    if (roleFilter && roleFilter.trim()) {
+      params.role = roleFilter.trim();
+    }
+    if (searchQuery && searchQuery.trim()) {
+      params.search = searchQuery.trim();
+    }
+    
+    // Check if we're already loading the same data - do this atomically
+    const lastParams = lastLoadParamsRef.current;
+    const paramsKey = `${params.page}-${params.limit}-${params.role || ''}-${params.search || ''}`;
+    const lastParamsKey = `${lastParams.page}-${lastParams.limit}-${lastParams.role || ''}-${lastParams.search || ''}`;
+    
+    if (paramsKey === lastParamsKey && loadingRef.current) {
+      return; // Already loading this exact data
+    }
+    
+    // Set both atomically to prevent race conditions
+    loadingRef.current = true;
+    lastLoadParamsRef.current = { ...params };
+    
     try {
-      setLoading(true);
-      // Only pass role parameter if roleFilter has a value
-      // When "All Roles" is selected, don't pass role parameter at all
-      // The server will exclude JobSeekers by default
-      // Fetch a large number of users (5000) to ensure all users are loaded
-      // The grid will handle client-side pagination
-      const params = { page: 1, limit: 5000 };
-      if (roleFilter && roleFilter.trim()) {
-        params.role = roleFilter.trim();
+      // Only show loading if we don't have data yet (first load)
+      const hasData = users.length > 0;
+      if (!hasData) {
+        setLoading(true);
       }
       
       const res = await listUsers(params);
-      // Server already excludes JobSeekers when no role filter is provided
-      // But keep this filter as a safety measure
+      // Check route again after async call using current location
+      const currentLocation = window.location.pathname;
+      if (currentLocation !== '/usermanagement') {
+        loadingRef.current = false;
+        return;
+      }
+      
       const items = (res?.users || []).filter(u => u.role !== 'JobSeeker');
       setUsers(items.map(u => {
         const parts = (u.name || '').trim().split(/\s+/);
@@ -147,14 +179,21 @@ export default function UserManagement() {
           createdAt: u.createdAt,
         };
       }));
-      // announce results for screen readers
-      const count = (items || []).length;
-      setLiveMsg(`${count} user${count === 1 ? '' : 's'} loaded`);
+      setTotalCount(res?.pagination?.totalCount || items.length);
+      const count = items.length;
+      setLiveMsg(`${count} of ${res?.pagination?.totalCount || 0} user${(res?.pagination?.totalCount || 0) === 1 ? '' : 's'} loaded`);
     } catch (e) {
       console.error('Failed to load users', e);
-      showToast('Failed to load users', 'Error');
-    } finally { setLoading(false); }
-  }, [roleFilter]);
+      const currentLocation = window.location.pathname;
+      if (currentLocation === '/usermanagement') {
+        showToast('Failed to load users', 'Error');
+      }
+    } finally { 
+      loadingRef.current = false;
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleFilter, searchQuery, currentPage, pageSize, isActiveRoute]); // users.length checked via ref, not dependency
 
   const loadBoothsAndEvents = async () => {
     try {
@@ -169,7 +208,22 @@ export default function UserManagement() {
     }
   };
 
-  useEffect(() => { loadUsers(); }, [loadUsers]);
+  useEffect(() => {
+    if (isActiveRoute) {
+      loadUsers();
+    } else {
+      // Reset refs when route becomes inactive to allow fresh load when returning
+      loadingRef.current = false;
+      lastLoadParamsRef.current = { page: null, limit: null, role: null, search: null };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, roleFilter, searchQuery, isActiveRoute]); // Only depend on actual data dependencies
+
+  // Handle search - reset to page 1 when search changes
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
 
   // Center delete dialog when it opens
@@ -360,7 +414,7 @@ export default function UserManagement() {
 
             {mode === 'list' ? (
               <div className="bm-grid-wrap">
-                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px' }}>
+                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px', display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {/* <label htmlFor="role-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
                       Role
@@ -370,18 +424,27 @@ export default function UserManagement() {
                       dataSource={[{ value: '', text: 'All Roles' }, ...roleOptionsNoJobSeeker.map(r => ({ value: r.value, text: r.label }))]}
                       fields={{ value: 'value', text: 'text' }}
                       value={roleFilter}
-                      change={(e) => setRoleFilter(e.value || '')}
+                      change={(e) => { setRoleFilter(e.value || ''); setCurrentPage(1); }}
                       placeholder="Select Role"
                       cssClass="role-filter-dropdown"
                       popupHeight="300px"
                       width="200px"
                     />
                   </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, maxWidth: '300px' }}>
+                    <Input
+                      type="text"
+                      placeholder="Search by name or email..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
                 </div>
                 <div aria-live="polite" className="sr-only">{liveMsg}</div>
                 {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
                 <GridComponent
-                  dataSource={users.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                  dataSource={users}
                   allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
@@ -498,7 +561,7 @@ export default function UserManagement() {
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '14px', color: '#374151' }}>
-                                Page {currentPage} of {Math.ceil(users.length / pageSize) || 1} ({users.length} total)
+                                Page {currentPage} of {Math.ceil(totalCount / pageSize) || 1} ({totalCount} total)
                             </span>
                         </div>
 

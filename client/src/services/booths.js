@@ -1,10 +1,16 @@
 import axios from 'axios';
 
-export async function listBooths({ page = 1, limit = 50, eventId } = {}) {
+export async function listBooths({ page = 1, limit = 50, eventId, search } = {}) {
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
   const params = { page, limit };
   if (eventId) params.eventId = eventId;
+  if (search !== undefined && search !== null && search !== '') {
+    const searchStr = String(search).trim();
+    if (searchStr) {
+      params.search = searchStr;
+    }
+  }
   const res = await axios.get('/api/booths', { headers, params });
   return res.data;
 }

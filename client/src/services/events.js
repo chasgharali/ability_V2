@@ -5,11 +5,17 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function listEvents({ page = 1, limit = 20, status, upcoming, active } = {}) {
+export async function listEvents({ page = 1, limit = 20, status, upcoming, active, search } = {}) {
   const params = { page, limit };
   if (status) params.status = status;
   if (typeof upcoming === 'boolean') params.upcoming = String(upcoming);
   if (typeof active === 'boolean') params.active = String(active);
+  if (search !== undefined && search !== null && search !== '') {
+    const searchStr = String(search).trim();
+    if (searchStr) {
+      params.search = searchStr;
+    }
+  }
   const res = await axios.get('/api/events', { params, headers: authHeaders() });
   return res.data;
 }

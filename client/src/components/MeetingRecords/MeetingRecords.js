@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import './MeetingRecords.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -21,6 +22,8 @@ export default function MeetingRecords() {
     const { user, loading } = useAuth();
     const { getMessage } = useRoleMessages();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isActiveRoute = location.pathname === '/meeting-records';
     const { booth, event } = useRecruiterBooth();
     
     // Get role message from context
@@ -41,6 +44,12 @@ export default function MeetingRecords() {
     const [events, setEvents] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
+    // Prevent duplicate calls
+    const loadingRecordsRef = useRef(false);
+    const loadingStatsRef = useRef(false);
+    const loadingRecruitersRef = useRef(false);
+    const loadingEventsRef = useRef(false);
+    const lastFiltersKeyRef = useRef(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -95,58 +104,136 @@ export default function MeetingRecords() {
     };
 
     const loadMeetingRecords = useCallback(async () => {
+        if (!isActiveRoute) return;
+        
+        // Create a unique key for the current filters to prevent duplicate calls
+        const filterKey = JSON.stringify(filters);
+        
+        // Check if we're already loading the same filters - do this atomically
+        if (lastFiltersKeyRef.current === filterKey && loadingRecordsRef.current) {
+            return; // Already loading this exact data
+        }
+        
+        // Set both atomically to prevent race conditions
+        loadingRecordsRef.current = true;
+        lastFiltersKeyRef.current = filterKey;
+        
         try {
-            setLoadingData(true);
+            // Only show loading if we don't have data yet (first load)
+            const hasData = meetingRecords.length > 0;
+            if (!hasData) {
+                setLoadingData(true);
+            }
             const response = await meetingRecordsAPI.getMeetingRecords(filters);
+            // Check route again after async call
+            const currentLocation = window.location.pathname;
+            if (currentLocation !== '/meeting-records') {
+                loadingRecordsRef.current = false;
+                if (!hasData) {
+                    setLoadingData(false);
+                }
+                return;
+            }
+            
             setMeetingRecords(response.meetingRecords);
             setPagination(response.pagination);
             // Reset select all pages when data changes
             setSelectAllPages(false);
         } catch (error) {
             console.error('Error loading meeting records:', error);
-            showToast('Failed to load meeting records', 'Error');
+            const currentLocation = window.location.pathname;
+            if (currentLocation === '/meeting-records') {
+                showToast('Failed to load meeting records', 'Error');
+            }
         } finally {
+            loadingRecordsRef.current = false;
             setLoadingData(false);
         }
-    }, [filters]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters, isActiveRoute]); // meetingRecords.length checked inside, not as dependency
 
     const loadStats = useCallback(async () => {
+        if (!isActiveRoute || loadingStatsRef.current) return;
+        
+        const filterKey = JSON.stringify(filters);
+        if (lastFiltersKeyRef.current !== filterKey) {
+            return; // Only load stats when filters match the records we're loading
+        }
+        
+        loadingStatsRef.current = true;
         try {
             const statsData = await meetingRecordsAPI.getStats(filters);
-            setStats(statsData);
+            const currentLocation = window.location.pathname;
+            if (currentLocation === '/meeting-records') {
+                setStats(statsData);
+            }
         } catch (error) {
             console.error('Error loading stats:', error);
+        } finally {
+            loadingStatsRef.current = false;
         }
-    }, [filters]);
+    }, [filters, isActiveRoute]);
 
     const loadRecruiters = useCallback(async () => {
+        if (!isActiveRoute || loadingRecruitersRef.current) return;
+        
+        // Only load once if we don't have recruiters yet
+        if (recruiters.length > 0) return;
+        
+        loadingRecruitersRef.current = true;
         try {
             if (['Admin', 'GlobalSupport'].includes(user?.role)) {
                 const response = await listUsers({ role: 'Recruiter', limit: 1000 });
-                setRecruiters(response.users || []);
+                const currentLocation = window.location.pathname;
+                if (currentLocation === '/meeting-records') {
+                    setRecruiters(response.users || []);
+                }
             }
         } catch (error) {
             console.error('Error loading recruiters:', error);
+        } finally {
+            loadingRecruitersRef.current = false;
         }
-    }, [user?.role]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.role, isActiveRoute]); // recruiters.length checked inside, not as dependency
 
     const loadEvents = useCallback(async () => {
+        if (!isActiveRoute || loadingEventsRef.current) return;
+        
+        // Only load once if we don't have events yet
+        if (events.length > 0) return;
+        
+        loadingEventsRef.current = true;
         try {
             const response = await listEvents({ limit: 1000 });
-            setEvents(response.events || []);
+            const currentLocation = window.location.pathname;
+            if (currentLocation === '/meeting-records') {
+                setEvents(response.events || []);
+            }
         } catch (error) {
             console.error('Error loading events:', error);
+        } finally {
+            loadingEventsRef.current = false;
         }
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isActiveRoute]); // events.length checked inside, not as dependency
 
     useEffect(() => {
-        if (user) {
+        if (user && isActiveRoute) {
             loadMeetingRecords();
             loadStats();
             loadRecruiters();
             loadEvents();
+        } else if (!isActiveRoute) {
+            // Reset refs when route becomes inactive to allow fresh load when returning
+            loadingRecordsRef.current = false;
+            loadingStatsRef.current = false;
+            loadingRecruitersRef.current = false;
+            loadingEventsRef.current = false;
+            lastFiltersKeyRef.current = null;
         }
-    }, [user, filters, loadMeetingRecords, loadStats, loadRecruiters, loadEvents]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, filters.page, filters.limit, filters.recruiterId, filters.eventId, filters.status, filters.startDate, filters.endDate, filters.sortBy, filters.sortOrder, isActiveRoute]); // Only depend on actual filter values, not the object
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({

@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import './BoothManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -18,6 +18,8 @@ import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
 export default function BoothManagement() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isActiveRoute = location.pathname === '/boothmanagement';
   // Header uses branding/user from shared AdminHeader
 
   const [boothMode, setBoothMode] = useState('list'); // 'list' | 'create'
@@ -36,8 +38,10 @@ export default function BoothManagement() {
     companyPage: ''
   });
   const [booths, setBooths] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const [loadingBooths, setLoadingBooths] = useState(false);
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -45,6 +49,10 @@ export default function BoothManagement() {
   const toastRef = useRef(null);
   const deleteDialogRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
+  // Prevent race conditions and duplicate calls
+  const loadingBoothsRef = useRef(false);
+  const loadingEventsRef = useRef(false);
+  const lastLoadBoothsParamsRef = useRef({ page: null, limit: null, search: null });
   // RTE image upload helpers
   const rteFirstRef = React.useRef(null);
   const rteSecondRef = React.useRef(null);
@@ -180,10 +188,19 @@ export default function BoothManagement() {
     return exceeded;
   };
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
+    if (!isActiveRoute || loadingEventsRef.current) return;
+    
+    loadingEventsRef.current = true;
     try {
       setLoadingEvents(true);
       const res = await listEvents({ page: 1, limit: 200 });
+      // Only update state if we're still on the active route
+      if (!isActiveRoute) {
+        loadingEventsRef.current = false;
+        return;
+      }
+      
       const items = res?.events || [];
       const options = items.map(e => {
         const maxBooths = e?.limits?.maxBooths || 0; // 0 means unlimited
@@ -208,15 +225,22 @@ export default function BoothManagement() {
       setEventLimits(limitsMap);
     } catch (err) {
       console.error('Failed to load events for booth', err);
-      setEventOptions([]);
+      if (isActiveRoute) {
+        setEventOptions([]);
+      }
     } finally {
-      setLoadingEvents(false);
+      loadingEventsRef.current = false;
+      if (isActiveRoute) {
+        setLoadingEvents(false);
+      }
     }
-  };
+  }, [isActiveRoute]);
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    if (isActiveRoute) {
+      loadEvents();
+    }
+  }, [loadEvents, isActiveRoute]);
 
   // Center delete dialog when it opens
   useEffect(() => {
@@ -416,10 +440,41 @@ export default function BoothManagement() {
     } finally { setBoothSaving(false); }
   };
 
-  const loadBooths = async () => {
+  const loadBooths = useCallback(async () => {
+    if (!isActiveRoute) return;
+    
+    const params = { page: currentPage, limit: pageSize };
+    if (searchQuery && searchQuery.trim()) {
+      params.search = searchQuery.trim();
+    }
+    
+    // Check if we're already loading the same data - do this atomically
+    const lastParams = lastLoadBoothsParamsRef.current;
+    const paramsKey = `${params.page}-${params.limit}-${params.search || ''}`;
+    const lastParamsKey = `${lastParams.page}-${lastParams.limit}-${lastParams.search || ''}`;
+    
+    if (paramsKey === lastParamsKey && loadingBoothsRef.current) {
+      return; // Already loading this exact data
+    }
+    
+    // Set both atomically to prevent race conditions
+    loadingBoothsRef.current = true;
+    lastLoadBoothsParamsRef.current = { ...params };
+    
     try {
-      setLoadingBooths(true);
-      const res = await listBooths({ page: 1, limit: 50 });
+      // Only show loading if we don't have data yet (first load)
+      const hasData = booths.length > 0;
+      if (!hasData) {
+        setLoadingBooths(true);
+      }
+      const res = await listBooths(params);
+      // Check route again after async call using current location
+      const currentLocation = window.location.pathname;
+      if (currentLocation !== '/boothmanagement') {
+        loadingBoothsRef.current = false;
+        return;
+      }
+      
       const items = res?.booths || [];
       // Map to grid rows expected by Syncfusion GridComponent
       setBooths(items.map(b => ({
@@ -435,13 +490,36 @@ export default function BoothManagement() {
         recruitersCount: b.recruitersCount ?? 0,
         expireLinkTime: b.expireLinkTime || null,
       })));
+      setTotalCount(res?.pagination?.totalCount || items.length);
     } catch (e) {
       console.error('Failed to load booths', e);
-      setBooths([]);
-    } finally { setLoadingBooths(false); }
-  };
+      const currentLocation = window.location.pathname;
+      if (currentLocation === '/boothmanagement') {
+        setBooths([]);
+      }
+    } finally { 
+      loadingBoothsRef.current = false;
+      setLoadingBooths(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, searchQuery, isActiveRoute, baseUrl]); // booths.length checked via ref, not dependency
 
-  useEffect(() => { loadBooths(); }, []);
+  useEffect(() => {
+    if (isActiveRoute) {
+      loadBooths();
+    } else {
+      // Reset refs when route becomes inactive to allow fresh load when returning
+      loadingBoothsRef.current = false;
+      lastLoadBoothsParamsRef.current = { page: null, limit: null, search: null };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, searchQuery, isActiveRoute]); // Only depend on actual data dependencies
+
+  // Handle search - reset to page 1 when search changes
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   // Edit handler (basic prefill)
   const startEdit = (row) => {
@@ -532,9 +610,20 @@ export default function BoothManagement() {
 
             {boothMode === 'list' ? (
               <div className="bm-grid-wrap">
+                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, maxWidth: '300px' }}>
+                    <Input
+                      type="text"
+                      placeholder="Search by name or slug..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                </div>
                 {loadingBooths && <div style={{ marginBottom: 12 }}>Loading…</div>}
                 <GridComponent
-                  dataSource={booths.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                  dataSource={booths}
                   allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
@@ -696,7 +785,7 @@ export default function BoothManagement() {
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '14px', color: '#374151' }}>
-                                Page {currentPage} of {Math.ceil(booths.length / pageSize) || 1} ({booths.length} total)
+                                Page {currentPage} of {Math.ceil(totalCount / pageSize) || 1} ({totalCount} total)
                             </span>
                         </div>
 
@@ -745,11 +834,11 @@ export default function BoothManagement() {
                             <input
                                 type="number"
                                 min="1"
-                                max={Math.ceil(booths.length / pageSize) || 1}
+                                max={Math.ceil(totalCount / pageSize) || 1}
                                 value={currentPage}
                                 onChange={(e) => {
                                     const val = parseInt(e.target.value);
-                                    const maxPage = Math.ceil(booths.length / pageSize) || 1;
+                                    const maxPage = Math.ceil(totalCount / pageSize) || 1;
                                     if (val >= 1 && val <= maxPage) {
                                         setCurrentPage(val);
                                     }
@@ -766,20 +855,20 @@ export default function BoothManagement() {
                             
                             <button
                                 onClick={() => {
-                                    const maxPage = Math.ceil(booths.length / pageSize) || 1;
+                                    const maxPage = Math.ceil(totalCount / pageSize) || 1;
                                     if (currentPage < maxPage) {
                                         setCurrentPage(currentPage + 1);
                                     }
                                 }}
-                                disabled={currentPage >= (Math.ceil(booths.length / pageSize) || 1) || loadingBooths}
+                                disabled={currentPage >= (Math.ceil(totalCount / pageSize) || 1) || loadingBooths}
                                 style={{
                                     padding: '8px 12px',
                                     borderRadius: '6px',
                                     border: '1px solid #d1d5db',
-                                    backgroundColor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#f3f4f6' : '#fff',
-                                    cursor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? 'not-allowed' : 'pointer',
+                                    backgroundColor: currentPage >= (Math.ceil(totalCount / pageSize) || 1) ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage >= (Math.ceil(totalCount / pageSize) || 1) ? 'not-allowed' : 'pointer',
                                     fontSize: '14px',
-                                    color: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#9ca3af' : '#374151'
+                                    color: currentPage >= (Math.ceil(totalCount / pageSize) || 1) ? '#9ca3af' : '#374151'
                                 }}
                                 title="Next Page"
                             >
@@ -787,20 +876,20 @@ export default function BoothManagement() {
                             </button>
                             <button
                                 onClick={() => {
-                                    const maxPage = Math.ceil(booths.length / pageSize) || 1;
+                                    const maxPage = Math.ceil(totalCount / pageSize) || 1;
                                     if (currentPage < maxPage) {
                                         setCurrentPage(maxPage);
                                     }
                                 }}
-                                disabled={currentPage >= (Math.ceil(booths.length / pageSize) || 1) || loadingBooths}
+                                disabled={currentPage >= (Math.ceil(totalCount / pageSize) || 1) || loadingBooths}
                                 style={{
                                     padding: '8px 12px',
                                     borderRadius: '6px',
                                     border: '1px solid #d1d5db',
-                                    backgroundColor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#f3f4f6' : '#fff',
-                                    cursor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? 'not-allowed' : 'pointer',
+                                    backgroundColor: currentPage >= (Math.ceil(totalCount / pageSize) || 1) ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage >= (Math.ceil(totalCount / pageSize) || 1) ? 'not-allowed' : 'pointer',
                                     fontSize: '14px',
-                                    color: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#9ca3af' : '#374151'
+                                    color: currentPage >= (Math.ceil(totalCount / pageSize) || 1) ? '#9ca3af' : '#374151'
                                 }}
                                 title="Last Page"
                             >

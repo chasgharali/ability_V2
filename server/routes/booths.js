@@ -12,9 +12,18 @@ const router = express.Router();
  */
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const { eventId, page = 1, limit = 50 } = req.query;
+        const { eventId, page = 1, limit = 50, search } = req.query;
         const filter = {};
         if (eventId) filter.eventId = eventId;
+        
+        // Add search filter if provided
+        if (search && search.trim()) {
+            filter.$or = [
+                { name: { $regex: search.trim(), $options: 'i' } },
+                { customInviteSlug: { $regex: search.trim(), $options: 'i' } }
+            ];
+        }
+        
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         const [items, total] = await Promise.all([
@@ -24,9 +33,13 @@ router.get('/', authenticateToken, async (req, res) => {
 
         res.json({
             booths: items.map(b => b.getSummary()),
-            total,
-            page: parseInt(page),
-            limit: parseInt(limit)
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(total / parseInt(limit)),
+                totalCount: total,
+                hasNext: skip + parseInt(limit) < total,
+                hasPrev: parseInt(page) > 1
+            }
         });
     } catch (error) {
         logger.error('List booths error:', error);

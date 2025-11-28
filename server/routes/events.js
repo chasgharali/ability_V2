@@ -14,7 +14,7 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { user } = req;
-        const { status, upcoming, active, page = 1, limit = 20 } = req.query;
+        const { status, upcoming, active, page = 1, limit = 20, search } = req.query;
 
         // Build query based on user role and filters
         let query = {};
@@ -37,6 +37,15 @@ router.get('/', authenticateToken, async (req, res) => {
             query.start = { $lte: now };
             query.end = { $gte: now };
             query.status = 'active';
+        }
+
+        // Add search filter if provided
+        if (search && search.trim()) {
+            query.$or = [
+                { name: { $regex: search.trim(), $options: 'i' } },
+                { slug: { $regex: search.trim(), $options: 'i' } },
+                { description: { $regex: search.trim(), $options: 'i' } }
+            ];
         }
 
         // Find events

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import './EventManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -18,6 +19,8 @@ import { useNavigate } from 'react-router-dom';
 export default function EventManagement() {
     const { user, loading } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isActiveRoute = location.pathname === '/eventmanagement';
     useEffect(() => {
         if (!loading) {
             if (!user) {
@@ -40,6 +43,9 @@ export default function EventManagement() {
     const rteInfoRef = useRef(null);
     const hiddenImageInputRef = useRef(null);
     const [activeRteRef, setActiveRteRef] = useState(null);
+    // Prevent race conditions and duplicate calls
+    const loadingEventsRef = useRef(false);
+    const lastLoadEventsParamsRef = useRef({ page: null, limit: null, search: null });
 
     const [form, setForm] = useState({
         sendyId: '',
@@ -115,13 +121,46 @@ export default function EventManagement() {
     const [events, setEvents] = useState([]);
     const [loadingList, setLoadingList] = useState(false);
     const [termsOptions, setTermsOptions] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
 
-    const loadEvents = async () => {
+    const loadEvents = useCallback(async () => {
+        if (!isActiveRoute) return;
+        
+        const params = { page: currentPage, limit: pageSize };
+        if (searchQuery && searchQuery.trim()) {
+            params.search = searchQuery.trim();
+        }
+        
+        // Check if we're already loading the same data - do this atomically
+        const lastParams = lastLoadEventsParamsRef.current;
+        const paramsKey = `${params.page}-${params.limit}-${params.search || ''}`;
+        const lastParamsKey = `${lastParams.page}-${lastParams.limit}-${lastParams.search || ''}`;
+        
+        if (paramsKey === lastParamsKey && loadingEventsRef.current) {
+            return; // Already loading this exact data
+        }
+        
+        // Set both atomically to prevent race conditions
+        loadingEventsRef.current = true;
+        lastLoadEventsParamsRef.current = { ...params };
+        
         try {
-            setLoadingList(true);
-            const res = await listEvents({ page: 1, limit: 50 });
+            // Only show loading if we don't have data yet (first load)
+            const hasData = events.length > 0;
+            if (!hasData) {
+                setLoadingList(true);
+            }
+            const res = await listEvents(params);
+            // Check route again after async call using current location
+            const currentLocation = window.location.pathname;
+            if (currentLocation !== '/eventmanagement') {
+                loadingEventsRef.current = false;
+                return;
+            }
+            
             const items = res?.events || [];
             setEvents(items.map((e) => ({
                 id: e._id,
@@ -142,14 +181,17 @@ export default function EventManagement() {
                 addFooter: Boolean((e.addFooter !== undefined ? e.addFooter : e.theme?.addFooter)),
                 termsIds: e.termsIds || [],
             })));
+            setTotalCount(res?.pagination?.totalCount || items.length);
         } catch (err) {
             console.error('Failed to load events', err);
         } finally {
+            loadingEventsRef.current = false;
             setLoadingList(false);
         }
-    };
+    }, [currentPage, pageSize, searchQuery, isActiveRoute]);
 
-    const loadTerms = async () => {
+    const loadTerms = useCallback(async () => {
+        if (!isActiveRoute) return;
         try {
             const res = await termsConditionsAPI.getAll({ page: 1, limit: 100 });
             const list = res?.terms || [];
@@ -157,9 +199,25 @@ export default function EventManagement() {
         } catch (e) {
             console.error('Failed to load terms', e);
         }
-    };
+    }, [isActiveRoute]);
 
-    useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading]);
+    useEffect(() => {
+        if (!loading && isActiveRoute) {
+            loadEvents();
+            loadTerms();
+        } else if (!isActiveRoute) {
+            // Reset refs when route becomes inactive to allow fresh load when returning
+            loadingEventsRef.current = false;
+            lastLoadEventsParamsRef.current = { page: null, limit: null, search: null };
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, currentPage, pageSize, searchQuery, isActiveRoute]); // Only depend on actual data dependencies
+
+    // Handle search - reset to page 1 when search changes
+    const handleSearch = (value) => {
+        setSearchQuery(value);
+        setCurrentPage(1); // Reset to first page when searching
+    };
 
     // Center delete dialog when it opens
     useEffect(() => {
@@ -381,9 +439,20 @@ export default function EventManagement() {
 
                         {mode === 'list' ? (
                             <div className="bm-grid-wrap">
+                                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, maxWidth: '300px' }}>
+                                        <Input
+                                            type="text"
+                                            placeholder="Search by name, slug, or description..."
+                                            value={searchQuery}
+                                            onChange={(e) => handleSearch(e.target.value)}
+                                            style={{ width: '100%' }}
+                                        />
+                                    </div>
+                                </div>
                                 {loadingList && <div style={{ marginBottom: 12 }}>Loading…</div>}
                                 <GridComponent
-                                    dataSource={events.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                                    dataSource={events}
                                     allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}
@@ -555,7 +624,7 @@ export default function EventManagement() {
 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '14px', color: '#374151' }}>
-                                                Page {currentPage} of {Math.ceil(events.length / pageSize) || 1} ({events.length} total)
+                                                Page {currentPage} of {Math.ceil(totalCount / pageSize) || 1} ({totalCount} total)
                                             </span>
                                         </div>
 

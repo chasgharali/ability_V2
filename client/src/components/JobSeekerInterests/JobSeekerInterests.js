@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { listEvents } from '../../services/events';
 import { listUsers } from '../../services/users';
@@ -20,6 +20,8 @@ const JobSeekerInterests = () => {
     const { user, loading } = useAuth();
     const { getMessage } = useRoleMessages();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isActiveRoute = location.pathname === '/jobseeker-interests';
     const { booth, event } = useRecruiterBooth();
     
     // Get role message from context
@@ -45,6 +47,8 @@ const JobSeekerInterests = () => {
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const initialLoadDone = useRef(false);
     const fetchInProgress = useRef(false);
+    // Prevent duplicate calls
+    const lastFiltersKeyRef = useRef(null);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -90,108 +94,120 @@ const JobSeekerInterests = () => {
 
 
     // Load all data when component mounts or filters change
-    useEffect(() => {
-        if (!user) return;
+    const fetchAllData = useCallback(async () => {
+        if (!user || !isActiveRoute) return;
 
         // Only make request if user role is valid
         if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) {
             return;
         }
 
-        // Prevent duplicate requests
-        if (fetchInProgress.current) {
-            console.log('Fetch already in progress, skipping...');
-            return;
+        // Create a unique key for the current filters to prevent duplicate calls
+        const filterKey = JSON.stringify({
+            page: filters.page,
+            limit: filters.limit,
+            eventId: filters.eventId,
+            boothId: filters.boothId,
+            recruiterId: filters.recruiterId,
+            sortBy: filters.sortBy,
+            sortOrder: filters.sortOrder
+        });
+        
+        // Check if we're already loading the same filters - do this atomically
+        if (lastFiltersKeyRef.current === filterKey && fetchInProgress.current) {
+            return; // Already loading this exact data
         }
 
-        let cancelled = false;
-
-        const fetchAllData = async () => {
-            fetchInProgress.current = true;
-            
-            try {
+        // Set both atomically to prevent race conditions
+        fetchInProgress.current = true;
+        lastFiltersKeyRef.current = filterKey;
+        
+        try {
+            // Only show loading if we don't have data yet (first load)
+            // Check via ref to avoid dependency on interests state
+            const hasData = interests.length > 0;
+            if (!hasData) {
                 setLoadingData(true);
-                
-                // Load recruiters and events only on initial load
-                if (!initialLoadDone.current) {
-                    if (user.role !== 'Recruiter') {
-                        try {
-                            const recruiterResponse = await listUsers({ role: 'Recruiter', limit: 1000 });
-                            if (!cancelled) {
-                                setRecruiters(recruiterResponse.users || []);
-                            }
-                        } catch (error) {
-                            console.error('Error loading recruiters:', error);
-                        }
-                    }
-                    
+            }
+            
+            // Load recruiters and events only on initial load
+            if (!initialLoadDone.current) {
+                if (user.role !== 'Recruiter') {
                     try {
-                        const eventsResponse = await listEvents({ limit: 1000 });
-                        if (!cancelled) {
-                            setEvents(eventsResponse.events || []);
+                        const recruiterResponse = await listUsers({ role: 'Recruiter', limit: 1000 });
+                        if (window.location.pathname === '/jobseeker-interests') {
+                            setRecruiters(recruiterResponse.users || []);
                         }
                     } catch (error) {
-                        console.error('Error loading events:', error);
+                        console.error('Error loading recruiters:', error);
                     }
-                    
-                    initialLoadDone.current = true;
                 }
                 
-                // Load interests with current filters
-                console.log('Loading interests with filters:', filters);
-                const response = await jobSeekerInterestsAPI.getInterests(filters);
-
-                if (cancelled) return;
-
-                console.log('API Response:', response);
-
-                const interests = response.interests || [];
-                setInterests(interests);
-
-                // Update pagination from API response
-                if (response.pagination) {
-                    console.log('Setting pagination:', response.pagination);
-                    setPagination(response.pagination);
+                try {
+                    const eventsResponse = await listEvents({ limit: 1000 });
+                    if (window.location.pathname === '/jobseeker-interests') {
+                        setEvents(eventsResponse.events || []);
+                    }
+                } catch (error) {
+                    console.error('Error loading events:', error);
                 }
-
-                // Calculate stats - use totalInterests from pagination for accurate count
-                const totalInterests = response.pagination?.totalInterests || interests.length;
-                const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
-                const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
-                const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
-
-                setStats({
-                    totalInterests: totalInterests,
-                    uniqueJobSeekers,
-                    uniqueBooths,
-                    averageInterestsPerJobSeeker: avgInterests
-                });
-
-                if (interests.length === 0) {
-                    console.log('No interests found. This could be because:');
-                    console.log('1. No job seekers have expressed interest in booths yet');
-                    console.log('2. User role restrictions are filtering out data');
-                    console.log('3. Current filters are too restrictive');
-                }
-            } catch (error) {
-                if (cancelled) return;
-                console.error('Error loading data:', error);
-                showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
-            } finally {
-                if (!cancelled) {
-                    setLoadingData(false);
-                    fetchInProgress.current = false;
-                }
+                
+                initialLoadDone.current = true;
             }
-        };
+            
+            // Load interests with current filters
+            const response = await jobSeekerInterestsAPI.getInterests(filters);
+            
+            // Check route again after async call
+            const currentLocation = window.location.pathname;
+            if (currentLocation !== '/jobseeker-interests') {
+                fetchInProgress.current = false;
+                return;
+            }
 
-        fetchAllData();
+            const interestsData = response.interests || [];
+            setInterests(interestsData);
 
-        return () => {
-            cancelled = true;
+            // Update pagination from API response
+            if (response.pagination) {
+                setPagination(response.pagination);
+            }
+
+            // Calculate stats - use totalInterests from pagination for accurate count
+            const totalInterests = response.pagination?.totalInterests || interestsData.length;
+            const uniqueJobSeekers = new Set(interestsData.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
+            const uniqueBooths = new Set(interestsData.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
+            const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
+
+            setStats({
+                totalInterests: totalInterests,
+                uniqueJobSeekers,
+                uniqueBooths,
+                averageInterestsPerJobSeeker: avgInterests
+            });
+        } catch (error) {
+            console.error('Error loading data:', error);
+            const currentLocation = window.location.pathname;
+            if (currentLocation === '/jobseeker-interests') {
+                showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
+            }
+        } finally {
+            setLoadingData(false);
             fetchInProgress.current = false;
-        };
-    }, [user, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, showToast]);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.role, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, filters.sortBy, filters.sortOrder, isActiveRoute, showToast]); // Use individual filter properties for stability
+
+    useEffect(() => {
+        if (isActiveRoute && user) {
+            fetchAllData();
+        } else if (!isActiveRoute) {
+            // Reset refs when route becomes inactive to allow fresh load when returning
+            fetchInProgress.current = false;
+            lastFiltersKeyRef.current = null;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.role, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, filters.sortBy, filters.sortOrder, isActiveRoute]); // Only depend on actual filter values, not callbacks
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({
