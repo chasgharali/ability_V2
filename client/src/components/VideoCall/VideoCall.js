@@ -137,80 +137,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   }, []);
 
   // Cleanup on unmount
-  const cleanup = useCallback(() => {
-    if (isCleaningUpRef.current) return;
-    isCleaningUpRef.current = true;
-
-    console.log('🧹 Cleaning up video call...');
-
-    // Clear intervals
-    if (qualityCheckIntervalRef.current) {
-      clearInterval(qualityCheckIntervalRef.current);
-    }
-
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    // Stop all local tracks first (before unpublishing)
-    localTracks.forEach(track => {
-      if (track && typeof track.stop === 'function') {
-        try {
-          console.log('Stopping local track:', track.kind);
-          track.stop();
-        } catch (error) {
-          console.warn('Error stopping local track:', error);
-        }
-      }
-    });
-
-    // Disconnect from room and unpublish tracks
-    if (roomRef.current) {
-      try {
-        // Unpublish all local participant tracks
-        roomRef.current.localParticipant.tracks.forEach(publication => {
-          if (publication.track) {
-            try {
-              console.log('Unpublishing track:', publication.track.kind);
-              publication.unpublish();
-              // Stop the track
-              if (typeof publication.track.stop === 'function') {
-                publication.track.stop();
-              }
-            } catch (e) {
-              console.warn('Error unpublishing track:', e);
-            }
-          }
-        });
-
-        // Disconnect from room
-        console.log('Disconnecting from Twilio room');
-        roomRef.current.disconnect();
-      } catch (e) {
-        console.warn('Error disconnecting from room:', e);
-      }
-      roomRef.current = null;
-    }
-
-    // Clear all state
-    setRoom(null);
-    setLocalTracks([]);
-    setParticipants(new Map());
-    setLoading(false);
-    setError(null);
-    setIsInitializing(false);
-    setConnectionQuality('good');
-    setReconnectAttempts(0);
-
-    isCleaningUpRef.current = false;
-  }, [localTracks]);
-
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
       cleanup();
     };
-  }, [cleanup]);
+  }, []);
 
   // Socket event listeners
   useEffect(() => {
@@ -525,7 +457,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setLoading(false);
       setIsInitializing(false);
     }
-  }, [callId, socket, addParticipant, removeParticipant, handleRoomDisconnected, handleReconnecting, handleReconnected, handleNetworkQualityChanged, startQualityMonitoring, user.role, speak]);
+  }, [callId, socket]); // Add dependencies for useCallback
 
   const addParticipant = useCallback((participant) => {
     setParticipants(prevParticipants => {
@@ -869,25 +801,25 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   };
 
-  const handleRoomDisconnected = useCallback((room, error) => {
+  const handleRoomDisconnected = (room, error) => {
     // Only attempt reconnect if it's an unexpected disconnection
     if (error && error.code !== 20104) { // 20104 is normal disconnection
       setError('Call disconnected. Attempting to reconnect...');
       attemptReconnect();
     }
-  }, [attemptReconnect]);
+  };
 
-  const handleReconnecting = useCallback((error) => {
+  const handleReconnecting = (error) => {
     setConnectionQuality('poor');
-  }, []);
+  };
 
-  const handleReconnected = useCallback(() => {
+  const handleReconnected = () => {
     setError(null);
     setConnectionQuality('good');
     setReconnectAttempts(0); // Reset reconnection attempts on successful connection
-  }, []);
+  };
 
-  const handleNetworkQualityChanged = useCallback((participant, networkQualityLevel) => {
+  const handleNetworkQualityChanged = (participant, networkQualityLevel) => {
     const qualityMap = {
       0: 'poor',
       1: 'poor',
@@ -900,9 +832,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     if (participant === room?.localParticipant) {
       setConnectionQuality(qualityMap[networkQualityLevel] || 'poor');
     }
-  }, [room]);
+  };
 
-  const attemptReconnect = useCallback(() => {
+  const attemptReconnect = () => {
     // Never attempt to reconnect after call has been explicitly ended
     if (callEndedRef.current) {
       console.log('Reconnect skipped because call has ended');
@@ -925,9 +857,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         initializeCallWithData(callInfo);
       }
     }, 3000);
-  }, [reconnectAttempts, callInfo, initializeCallWithData]);
+  };
 
-  const startQualityMonitoring = useCallback(() => {
+  const startQualityMonitoring = () => {
     qualityCheckIntervalRef.current = setInterval(() => {
       if (room && socket) {
         const stats = room.getStats();
@@ -954,7 +886,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         });
       }
     }, 10000); // Check every 10 seconds
-  }, [room, socket, callInfo]);
+  };
 
   const toggleAudio = () => {
     const audioTrack = localTracks.find(track => track.kind === 'audio');
@@ -1239,6 +1171,100 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     setRoom(null);
     setParticipants(new Map());
+  };
+
+  const cleanup = () => {
+    if (isCleaningUpRef.current) return;
+    isCleaningUpRef.current = true;
+
+    console.log('🧹 Cleaning up video call...');
+
+    // Clear intervals
+    if (qualityCheckIntervalRef.current) {
+      clearInterval(qualityCheckIntervalRef.current);
+    }
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    // Stop all local tracks first (before unpublishing)
+    localTracks.forEach(track => {
+      if (track && typeof track.stop === 'function') {
+        try {
+          console.log('Stopping local track:', track.kind);
+          track.stop();
+        } catch (error) {
+          console.warn('Error stopping local track:', error);
+        }
+      }
+    });
+
+    // Disconnect from room and unpublish tracks
+    if (roomRef.current) {
+      try {
+        // Unpublish all local participant tracks
+        roomRef.current.localParticipant.tracks.forEach(publication => {
+          if (publication.track) {
+            try {
+              console.log('Unpublishing track:', publication.track.kind);
+              publication.unpublish();
+              // Stop the track
+              if (typeof publication.track.stop === 'function') {
+                publication.track.stop();
+              }
+            } catch (e) {
+              console.warn('Error unpublishing track:', e);
+            }
+          }
+        });
+
+        // Disconnect from room
+        console.log('Disconnecting from Twilio room');
+        roomRef.current.disconnect();
+      } catch (e) {
+        console.warn('Error during room cleanup:', e);
+      }
+      roomRef.current = null;
+    }
+
+    // Stop all media stream tracks directly from browser
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        // Get all active media streams and stop them
+        const videoElements = document.querySelectorAll('video');
+        videoElements.forEach(video => {
+          if (video.srcObject) {
+            const stream = video.srcObject;
+            stream.getTracks().forEach(track => {
+              console.log('Stopping media stream track:', track.kind, track.label);
+              track.stop();
+            });
+            video.srcObject = null;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Error stopping media stream tracks:', e);
+    }
+
+    setLocalTracks([]);
+
+    // Leave socket room
+    if (socket && callInfo) {
+      try {
+        socket.emit('leave-video-call', {
+          roomName: callInfo.roomName
+        });
+      } catch (e) {
+        console.warn('Error leaving socket room:', e);
+      }
+    }
+
+    setRoom(null);
+    setParticipants(new Map());
+
+    console.log('✅ Video call cleanup complete - all tracks stopped');
   };
 
   // Call duration timer

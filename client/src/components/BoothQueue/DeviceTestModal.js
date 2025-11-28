@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaArrowLeft, FaVideo, FaMicrophone, FaCheck, FaTimes } from 'react-icons/fa';
 import './DeviceTestModal.css';
 
@@ -28,7 +28,7 @@ export default function DeviceTestModal({
   const streamRef = useRef(null);
 
   // Cleanup function
-  const cleanupTest = useCallback(() => {
+  const cleanupTest = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -58,14 +58,14 @@ export default function DeviceTestModal({
     setAudioLevel(0);
     setCameraStatus('inactive');
     setMicrophoneStatus('inactive');
-  }, [testStream]);
+  };
 
   // Cleanup on unmount or close
   useEffect(() => {
     return () => {
       cleanupTest();
     };
-  }, [cleanupTest]);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -73,7 +73,7 @@ export default function DeviceTestModal({
       setCurrentView('selection');
       setTestResults({ camera: false, microphone: false });
     }
-  }, [isOpen, cleanupTest]);
+  }, [isOpen]);
 
   const startDeviceTest = async () => {
     try {
