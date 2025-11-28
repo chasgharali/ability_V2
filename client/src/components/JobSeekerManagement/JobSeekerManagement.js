@@ -9,7 +9,7 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -36,6 +36,17 @@ export default function JobSeekerManagement() {
     return values.map(value => getLabelFromValue(value, optionsList));
   };
   const [mode, setMode] = useState('list'); // 'list' | 'view' | 'edit'
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    city: '',
+    state: '',
+    country: '',
+  });
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -399,6 +410,94 @@ export default function JobSeekerManagement() {
     setRowPendingVerify(null);
   };
 
+  const handleEdit = (row) => {
+    // Clear any active toasts before switching modes
+    if (toastRef.current) {
+      try {
+        toastRef.current.hideAll();
+      } catch (e) {
+        // Ignore toast cleanup errors
+      }
+    }
+    
+    // Set transitioning first to hide the grid
+    setIsTransitioning(true);
+    
+    // Set the selected job seeker and populate form
+    setSelectedJobSeeker(row);
+    setEditForm({
+      firstName: row.firstName || '',
+      lastName: row.lastName || '',
+      email: row.email || '',
+      phone: row.phone || '',
+      city: row.city || '',
+      state: row.state || '',
+      country: row.country || '',
+    });
+    setEditingId(row.id);
+    
+    // Destroy the grid after a brief moment
+    setTimeout(() => {
+      if (gridRef.current) {
+        try {
+          const grid = gridRef.current;
+          if (typeof grid.destroy === 'function') {
+            grid.destroy();
+          }
+          gridRef.current = null;
+        } catch (e) {
+          console.warn('Grid cleanup warning:', e);
+        }
+      }
+      
+      // Change mode after grid is destroyed
+      setTimeout(() => {
+        setMode('edit');
+        setIsTransitioning(false);
+      }, 50);
+    }, 100);
+  };
+
+  const setEditField = (k, v) => setEditForm(prev => ({ ...prev, [k]: v }));
+
+  const handleSaveEdit = async (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    if (!editingId) return;
+    
+    setSaving(true);
+    try {
+      const fullName = `${editForm.firstName} ${editForm.lastName}`.trim();
+      const payload = {
+        name: fullName || undefined,
+        email: editForm.email || undefined,
+        phoneNumber: editForm.phone || undefined,
+        city: editForm.city || undefined,
+        state: editForm.state || undefined,
+        country: editForm.country || undefined,
+      };
+      
+      await updateUser(editingId, payload);
+      showToast('Job seeker updated successfully', 'Success');
+      
+      // Refresh the list
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+      
+      // Return to list mode
+      setMode('list');
+      setEditingId(null);
+      setSelectedJobSeeker(null);
+    } catch (e) {
+      console.error('Update failed', e);
+      const msg = e?.response?.data?.message || 'Failed to update job seeker';
+      showToast(msg, 'Error', 5000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   // Grid template functions for custom column renders - using Syncfusion ButtonComponent
   const statusTemplate = (props) => {
@@ -434,6 +533,13 @@ export default function JobSeekerManagement() {
           title="View Profile"
         >
           View
+        </ButtonComponent>
+        <ButtonComponent 
+          cssClass="e-outline e-primary e-small" 
+          onClick={() => handleEdit(row)}
+          title="Edit User"
+        >
+          Edit
         </ButtonComponent>
         {!row.emailVerified && (
           <ButtonComponent 
@@ -776,6 +882,81 @@ export default function JobSeekerManagement() {
         <main className="dashboard-main">
           {mode === 'view' ? (
             renderJobSeekerProfile()
+          ) : mode === 'edit' ? (
+            <div className="dashboard-content">
+              <div className="form-header">
+                <ButtonComponent 
+                  cssClass="e-outline e-primary"
+                  onClick={() => {
+                    setMode('list');
+                    setEditingId(null);
+                    setSelectedJobSeeker(null);
+                    setIsTransitioning(false);
+                  }}
+                >
+                  ← Back to List
+                </ButtonComponent>
+                <h2>Edit Job Seeker: {editForm.firstName} {editForm.lastName}</h2>
+              </div>
+
+              <form className="account-form" onSubmit={handleSaveEdit} style={{ maxWidth: 720 }}>
+                <Input
+                  label="First Name"
+                  value={editForm.firstName}
+                  onChange={(e) => setEditField('firstName', e.target.value)}
+                  required
+                  placeholder="Enter first name"
+                />
+                <Input
+                  label="Last Name"
+                  value={editForm.lastName}
+                  onChange={(e) => setEditField('lastName', e.target.value)}
+                  required
+                  placeholder="Enter last name"
+                />
+                <Input
+                  label="Email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditField('email', e.target.value)}
+                  required
+                  placeholder="Enter email address"
+                />
+                <Input
+                  label="Phone"
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditField('phone', e.target.value)}
+                  placeholder="Enter phone number"
+                />
+                <Input
+                  label="City"
+                  value={editForm.city}
+                  onChange={(e) => setEditField('city', e.target.value)}
+                  placeholder="Enter city"
+                />
+                <Input
+                  label="State"
+                  value={editForm.state}
+                  onChange={(e) => setEditField('state', e.target.value)}
+                  placeholder="Enter state"
+                />
+                <Input
+                  label="Country"
+                  value={editForm.country}
+                  onChange={(e) => setEditField('country', e.target.value)}
+                  placeholder="Enter country"
+                />
+                <ButtonComponent 
+                  cssClass="e-primary" 
+                  disabled={saving}
+                  isPrimary={true}
+                  onClick={handleSaveEdit}
+                >
+                  {saving ? 'Saving…' : 'Save Changes'}
+                </ButtonComponent>
+              </form>
+            </div>
           ) : (
           <div className="dashboard-content">
             <div className="page-header">
@@ -993,7 +1174,7 @@ export default function JobSeekerManagement() {
                 />
                 <ColumnDirective 
                   headerText='Actions' 
-                  width='450' 
+                  width='550' 
                   allowSorting={false} 
                   allowFiltering={false}
                   template={actionsTemplate}
