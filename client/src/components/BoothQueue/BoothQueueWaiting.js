@@ -34,6 +34,7 @@ export default function BoothQueueWaiting() {
   })();
   const [queuePosition, setQueuePosition] = useState(initialQueuePos);
   const [currentServing, setCurrentServing] = useState(initialServing);
+  const [waitingCount, setWaitingCount] = useState(0);
   const [queueToken, setQueueToken] = useState(location.state?.queueToken || '');
   const [queueEntryId, setQueueEntryId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -195,6 +196,7 @@ export default function BoothQueueWaiting() {
         if (queueData?.success) {
           setQueuePosition(queueData.position);
           setCurrentServing(queueData.currentServing);
+          setWaitingCount(queueData.waitingCount ?? 0);
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
           setUnreadCount(queueData.unreadMessages || 0);
@@ -955,30 +957,20 @@ export default function BoothQueueWaiting() {
 
           <div className="queue-numbers" role="region" aria-label="Queue status information">
             <div className="queue-number-card" role="status" aria-live="polite">
-              <span className="queue-label" id="user-position-label">Your Meeting Number</span>
+              <span className="queue-label" id="ahead-label">Queue status</span>
               <span
                 className="queue-number"
-                aria-labelledby="user-position-label"
-                aria-describedby="queue-position-desc"
+                aria-labelledby="ahead-label"
+                aria-describedby="ahead-desc"
               >
-                {queuePosition}
+                {waitingCount}
               </span>
-              <span id="queue-position-desc" className="sr-only">
-                You are number {queuePosition} in the queue
+              <span id="ahead-desc" className="sr-only">
+                There are {waitingCount} people currently waiting in the queue.
               </span>
-            </div>
-            <div className="queue-number-card" role="status" aria-live="polite">
-              <span className="queue-label" id="serving-number-label">Now Serving Number</span>
-              <span
-                className="queue-number"
-                aria-labelledby="serving-number-label"
-                aria-describedby="serving-number-desc"
-              >
-                {currentServing}
-              </span>
-              <span id="serving-number-desc" className="sr-only">
-                Currently serving number {currentServing}
-              </span>
+              <p className="queue-helper-text">
+                There {waitingCount === 1 ? 'is' : 'are'} {waitingCount} {waitingCount === 1 ? 'person' : 'people'} currently waiting in the queue.
+              </p>
             </div>
           </div>
 

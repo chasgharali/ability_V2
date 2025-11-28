@@ -416,7 +416,7 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
         const jobSeekerId = req.user._id;
 
         const queueEntry = await BoothQueue.getJobSeekerQueue(jobSeekerId, boothId);
-
+        
         if (!queueEntry) {
             return res.status(404).json({
                 success: false,
@@ -430,11 +430,20 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
             status: { $in: ['invited', 'in_meeting', 'completed'] }
         }) + 1;
 
+        // Compute waiting count using the same logic as recruiter view:
+        // number of queue entries still waiting with position greater than currentServing
+        const waitingCount = await BoothQueue.countDocuments({
+            booth: boothId,
+            status: { $in: ['waiting', 'invited'] },
+            position: { $gt: currentServing }
+        });
+
         res.json({
             success: true,
             position: queueEntry.position,
             token: queueEntry.queueToken,
             currentServing,
+            waitingCount,
             status: queueEntry.status,
             queueEntry,
             unreadMessages: queueEntry.unreadForJobSeeker
