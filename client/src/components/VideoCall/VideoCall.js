@@ -10,6 +10,7 @@ import ChatPanel from './ChatPanel';
 import ParticipantsList from './ParticipantsList';
 import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
+import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
 import './VideoCall.css';
 
 const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) => {
@@ -136,12 +137,80 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   }, []);
 
   // Cleanup on unmount
+  const cleanup = useCallback(() => {
+    if (isCleaningUpRef.current) return;
+    isCleaningUpRef.current = true;
+
+    console.log('🧹 Cleaning up video call...');
+
+    // Clear intervals
+    if (qualityCheckIntervalRef.current) {
+      clearInterval(qualityCheckIntervalRef.current);
+    }
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    // Stop all local tracks first (before unpublishing)
+    localTracks.forEach(track => {
+      if (track && typeof track.stop === 'function') {
+        try {
+          console.log('Stopping local track:', track.kind);
+          track.stop();
+        } catch (error) {
+          console.warn('Error stopping local track:', error);
+        }
+      }
+    });
+
+    // Disconnect from room and unpublish tracks
+    if (roomRef.current) {
+      try {
+        // Unpublish all local participant tracks
+        roomRef.current.localParticipant.tracks.forEach(publication => {
+          if (publication.track) {
+            try {
+              console.log('Unpublishing track:', publication.track.kind);
+              publication.unpublish();
+              // Stop the track
+              if (typeof publication.track.stop === 'function') {
+                publication.track.stop();
+              }
+            } catch (e) {
+              console.warn('Error unpublishing track:', e);
+            }
+          }
+        });
+
+        // Disconnect from room
+        console.log('Disconnecting from Twilio room');
+        roomRef.current.disconnect();
+      } catch (e) {
+        console.warn('Error disconnecting from room:', e);
+      }
+      roomRef.current = null;
+    }
+
+    // Clear all state
+    setRoom(null);
+    setLocalTracks([]);
+    setParticipants(new Map());
+    setLoading(false);
+    setError(null);
+    setIsInitializing(false);
+    setConnectionQuality('good');
+    setReconnectAttempts(0);
+
+    isCleaningUpRef.current = false;
+  }, [localTracks]);
+
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
       cleanup();
     };
-  }, []);
+  }, [cleanup]);
 
   // Socket event listeners
   useEffect(() => {
@@ -204,27 +273,57 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setCallInfo(data);
       setChatMessages(data.chatMessages || []);
 
+      // Validate and clean device preferences before using them
+      const { audioDeviceId, videoDeviceId } = await validateAndCleanDevicePreferences();
+
       // Create local tracks with preferred devices if set
-      const preferredVideoDeviceId = localStorage.getItem('preferredVideoDeviceId');
-      const preferredAudioDeviceId = localStorage.getItem('preferredAudioDeviceId');
+      let videoTrack, audioTrack;
+      
+      try {
+        // Try with exact device constraints first
+        const { video: videoConstraints, audio: audioConstraints } = createExactMediaConstraints(
+          audioDeviceId,
+          videoDeviceId
+        );
 
-      const videoConstraints = {
-        width: 1280,
-        height: 720,
-        frameRate: 30,
-        facingMode: 'user',
-        ...(preferredVideoDeviceId ? { deviceId: { exact: preferredVideoDeviceId } } : {})
-      };
+        videoTrack = await createLocalVideoTrack(videoConstraints);
+        audioTrack = await createLocalAudioTrack(audioConstraints);
+      } catch (deviceError) {
+        // Handle OverconstrainedError or other device errors
+        if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
+          console.warn('Device constraint error, retrying without device preferences:', deviceError);
+          
+          // Clear invalid device IDs
+          if (videoDeviceId) {
+            localStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from localStorage');
+          }
+          if (audioDeviceId) {
+            localStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from localStorage');
+          }
 
-      const audioConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        ...(preferredAudioDeviceId ? { deviceId: { exact: preferredAudioDeviceId } } : {})
-      };
+          // Retry without device constraints
+          const fallbackVideoConstraints = {
+            width: 1280,
+            height: 720,
+            frameRate: 30,
+            facingMode: 'user'
+          };
 
-      const videoTrack = await createLocalVideoTrack(videoConstraints);
-      const audioTrack = await createLocalAudioTrack(audioConstraints);
+          const fallbackAudioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          };
+
+          videoTrack = await createLocalVideoTrack(fallbackVideoConstraints);
+          audioTrack = await createLocalAudioTrack(fallbackAudioConstraints);
+        } else {
+          // Re-throw if it's not a device constraint error
+          throw deviceError;
+        }
+      }
 
       setLocalTracks([videoTrack, audioTrack]);
 
@@ -316,27 +415,57 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setCallInfo(callDetails);
       setChatMessages(callDetails.chatMessages || []);
 
+      // Validate and clean device preferences before using them
+      const { audioDeviceId, videoDeviceId } = await validateAndCleanDevicePreferences();
+
       // Create local tracks using preferred device IDs if available
-      const preferredVideoDeviceId2 = localStorage.getItem('preferredVideoDeviceId');
-      const preferredAudioDeviceId2 = localStorage.getItem('preferredAudioDeviceId');
+      let videoTrack, audioTrack;
+      
+      try {
+        // Try with exact device constraints first
+        const { video: videoConstraints2, audio: audioConstraints2 } = createExactMediaConstraints(
+          audioDeviceId,
+          videoDeviceId
+        );
 
-      const videoConstraints2 = {
-        width: 1280,
-        height: 720,
-        frameRate: 30,
-        facingMode: 'user',
-        ...(preferredVideoDeviceId2 ? { deviceId: { exact: preferredVideoDeviceId2 } } : {})
-      };
+        videoTrack = await createLocalVideoTrack(videoConstraints2);
+        audioTrack = await createLocalAudioTrack(audioConstraints2);
+      } catch (deviceError) {
+        // Handle OverconstrainedError or other device errors
+        if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
+          console.warn('Device constraint error, retrying without device preferences:', deviceError);
+          
+          // Clear invalid device IDs
+          if (videoDeviceId) {
+            localStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from localStorage');
+          }
+          if (audioDeviceId) {
+            localStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from localStorage');
+          }
 
-      const audioConstraints2 = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        ...(preferredAudioDeviceId2 ? { deviceId: { exact: preferredAudioDeviceId2 } } : {})
-      };
+          // Retry without device constraints
+          const fallbackVideoConstraints = {
+            width: 1280,
+            height: 720,
+            frameRate: 30,
+            facingMode: 'user'
+          };
 
-      const videoTrack = await createLocalVideoTrack(videoConstraints2);
-      const audioTrack = await createLocalAudioTrack(audioConstraints2);
+          const fallbackAudioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          };
+
+          videoTrack = await createLocalVideoTrack(fallbackVideoConstraints);
+          audioTrack = await createLocalAudioTrack(fallbackAudioConstraints);
+        } else {
+          // Re-throw if it's not a device constraint error
+          throw deviceError;
+        }
+      }
 
       setLocalTracks([videoTrack, audioTrack]);
 
@@ -396,7 +525,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setLoading(false);
       setIsInitializing(false);
     }
-  }, [callId, socket]); // Add dependencies for useCallback
+  }, [callId, socket, addParticipant, removeParticipant, handleRoomDisconnected, handleReconnecting, handleReconnected, handleNetworkQualityChanged, startQualityMonitoring, user.role, speak]);
 
   const addParticipant = useCallback((participant) => {
     setParticipants(prevParticipants => {
@@ -740,25 +869,25 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   };
 
-  const handleRoomDisconnected = (room, error) => {
+  const handleRoomDisconnected = useCallback((room, error) => {
     // Only attempt reconnect if it's an unexpected disconnection
     if (error && error.code !== 20104) { // 20104 is normal disconnection
       setError('Call disconnected. Attempting to reconnect...');
       attemptReconnect();
     }
-  };
+  }, [attemptReconnect]);
 
-  const handleReconnecting = (error) => {
+  const handleReconnecting = useCallback((error) => {
     setConnectionQuality('poor');
-  };
+  }, []);
 
-  const handleReconnected = () => {
+  const handleReconnected = useCallback(() => {
     setError(null);
     setConnectionQuality('good');
     setReconnectAttempts(0); // Reset reconnection attempts on successful connection
-  };
+  }, []);
 
-  const handleNetworkQualityChanged = (participant, networkQualityLevel) => {
+  const handleNetworkQualityChanged = useCallback((participant, networkQualityLevel) => {
     const qualityMap = {
       0: 'poor',
       1: 'poor',
@@ -771,9 +900,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     if (participant === room?.localParticipant) {
       setConnectionQuality(qualityMap[networkQualityLevel] || 'poor');
     }
-  };
+  }, [room]);
 
-  const attemptReconnect = () => {
+  const attemptReconnect = useCallback(() => {
     // Never attempt to reconnect after call has been explicitly ended
     if (callEndedRef.current) {
       console.log('Reconnect skipped because call has ended');
@@ -796,9 +925,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         initializeCallWithData(callInfo);
       }
     }, 3000);
-  };
+  }, [reconnectAttempts, callInfo, initializeCallWithData]);
 
-  const startQualityMonitoring = () => {
+  const startQualityMonitoring = useCallback(() => {
     qualityCheckIntervalRef.current = setInterval(() => {
       if (room && socket) {
         const stats = room.getStats();
@@ -825,7 +954,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         });
       }
     }, 10000); // Check every 10 seconds
-  };
+  }, [room, socket, callInfo]);
 
   const toggleAudio = () => {
     const audioTrack = localTracks.find(track => track.kind === 'audio');
@@ -1110,100 +1239,6 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     setRoom(null);
     setParticipants(new Map());
-  };
-
-  const cleanup = () => {
-    if (isCleaningUpRef.current) return;
-    isCleaningUpRef.current = true;
-
-    console.log('🧹 Cleaning up video call...');
-
-    // Clear intervals
-    if (qualityCheckIntervalRef.current) {
-      clearInterval(qualityCheckIntervalRef.current);
-    }
-
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    // Stop all local tracks first (before unpublishing)
-    localTracks.forEach(track => {
-      if (track && typeof track.stop === 'function') {
-        try {
-          console.log('Stopping local track:', track.kind);
-          track.stop();
-        } catch (error) {
-          console.warn('Error stopping local track:', error);
-        }
-      }
-    });
-
-    // Disconnect from room and unpublish tracks
-    if (roomRef.current) {
-      try {
-        // Unpublish all local participant tracks
-        roomRef.current.localParticipant.tracks.forEach(publication => {
-          if (publication.track) {
-            try {
-              console.log('Unpublishing track:', publication.track.kind);
-              publication.unpublish();
-              // Stop the track
-              if (typeof publication.track.stop === 'function') {
-                publication.track.stop();
-              }
-            } catch (e) {
-              console.warn('Error unpublishing track:', e);
-            }
-          }
-        });
-
-        // Disconnect from room
-        console.log('Disconnecting from Twilio room');
-        roomRef.current.disconnect();
-      } catch (e) {
-        console.warn('Error during room cleanup:', e);
-      }
-      roomRef.current = null;
-    }
-
-    // Stop all media stream tracks directly from browser
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-        // Get all active media streams and stop them
-        const videoElements = document.querySelectorAll('video');
-        videoElements.forEach(video => {
-          if (video.srcObject) {
-            const stream = video.srcObject;
-            stream.getTracks().forEach(track => {
-              console.log('Stopping media stream track:', track.kind, track.label);
-              track.stop();
-            });
-            video.srcObject = null;
-          }
-        });
-      }
-    } catch (e) {
-      console.warn('Error stopping media stream tracks:', e);
-    }
-
-    setLocalTracks([]);
-
-    // Leave socket room
-    if (socket && callInfo) {
-      try {
-        socket.emit('leave-video-call', {
-          roomName: callInfo.roomName
-        });
-      } catch (e) {
-        console.warn('Error leaving socket room:', e);
-      }
-    }
-
-    setRoom(null);
-    setParticipants(new Map());
-
-    console.log('✅ Video call cleanup complete - all tracks stopped');
   };
 
   // Call duration timer

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaArrowLeft, FaVideo, FaMicrophone, FaCheck, FaTimes } from 'react-icons/fa';
 import './DeviceTestModal.css';
 
@@ -28,7 +28,7 @@ export default function DeviceTestModal({
   const streamRef = useRef(null);
 
   // Cleanup function
-  const cleanupTest = () => {
+  const cleanupTest = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -58,14 +58,14 @@ export default function DeviceTestModal({
     setAudioLevel(0);
     setCameraStatus('inactive');
     setMicrophoneStatus('inactive');
-  };
+  }, [testStream]);
 
   // Cleanup on unmount or close
   useEffect(() => {
     return () => {
       cleanupTest();
     };
-  }, []);
+  }, [cleanupTest]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -73,7 +73,7 @@ export default function DeviceTestModal({
       setCurrentView('selection');
       setTestResults({ camera: false, microphone: false });
     }
-  }, [isOpen]);
+  }, [isOpen, cleanupTest]);
 
   const startDeviceTest = async () => {
     try {
@@ -82,12 +82,39 @@ export default function DeviceTestModal({
       setCameraStatus('loading');
       setMicrophoneStatus('loading');
 
-      const constraints = {
+      let constraints = {
         audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
         video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true
       };
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (deviceError) {
+        // Handle OverconstrainedError or other device errors
+        if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
+          console.warn('Device constraint error in device test, retrying without device preferences:', deviceError);
+          
+          // Clear invalid device IDs from localStorage
+          if (selectedVideoId) {
+            localStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from localStorage');
+          }
+          if (selectedAudioId) {
+            localStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from localStorage');
+          }
+
+          // Retry without device constraints
+          constraints = {
+            audio: true,
+            video: true
+          };
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } else {
+          throw deviceError;
+        }
+      }
       streamRef.current = stream;
       setTestStream(stream);
 
