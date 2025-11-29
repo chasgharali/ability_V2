@@ -352,6 +352,26 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         .isEmail()
         .normalizeEmail()
         .withMessage('Please provide a valid email address'),
+    body('phoneNumber')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ min: 7, max: 30 })
+        .withMessage('Phone number must be 7-30 characters'),
+    body('city')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('City too long'),
+    body('state')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('State too long'),
+    body('country')
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Country too long'),
     body('role')
         .optional()
         .isIn(['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
@@ -385,7 +405,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, role, isActive, languages, isAvailable, assignedBooth } = req.body;
+        const { name, email, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth } = req.body;
         const { user } = req;
 
         const targetUser = await User.findById(id);
@@ -399,6 +419,10 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         // Update allowed fields
         if (name !== undefined) targetUser.name = name;
         if (email !== undefined) targetUser.email = email;
+        if (phoneNumber !== undefined) targetUser.phoneNumber = phoneNumber;
+        if (city !== undefined) targetUser.city = city;
+        if (state !== undefined) targetUser.state = state;
+        if (country !== undefined) targetUser.country = country;
         if (role !== undefined) targetUser.role = role;
         if (isActive !== undefined) targetUser.isActive = isActive;
         if (languages !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(targetUser.role)) {
