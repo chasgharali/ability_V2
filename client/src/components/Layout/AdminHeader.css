@@ -113,3 +113,70 @@
     max-width: 80px;
   }
 }
+
+/* JobSeeker header text size on mobile screens only */
+@media (max-width: 768px) {
+  /* Ensure header content doesn't wrap */
+  .admin-header-jobseeker .admin-header-content {
+    flex-wrap: nowrap !important;
+    overflow: hidden;
+  }
+
+  .admin-header-jobseeker .admin-user-name {
+    font-size: 1rem;
+    max-width: none; /* Remove max-width constraint */
+    display: inline-block !important; /* Prevent internal wrapping */
+  }
+
+  .admin-header-jobseeker .admin-connection .connection-text,
+  .admin-header-jobseeker .admin-connection .connection-text-mobile {
+    font-size: 1rem;
+  }
+
+  /* Prevent wrapping - keep name/role and status on same line */
+  .admin-header-jobseeker .admin-user-info {
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    min-width: 0;
+    overflow: visible;
+    flex-shrink: 0; /* Don't shrink the user-info container */
+    max-width: 100%; /* Allow it to take available space */
+  }
+
+  .admin-header-jobseeker .admin-user-name {
+    flex-shrink: 1;
+    min-width: 0;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block !important;
+    word-break: keep-all !important;
+    word-wrap: normal !important;
+    overflow-wrap: normal !important;
+    max-width: 200px; /* Increase max-width for longer names */
+  }
+
+  /* Prevent any text wrapping inside user-name */
+  .admin-header-jobseeker .admin-user-name * {
+    white-space: nowrap !important;
+    display: inline !important;
+  }
+
+  .admin-header-jobseeker .admin-connection {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    display: flex !important;
+  }
+
+  /* Reduce gap to save space */
+  .admin-header-jobseeker .admin-user-info {
+    gap: 0.5rem !important;
+  }
+
+  /* Ensure header-left shrinks to give more room */
+  .admin-header-jobseeker .header-left {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+}

@@ -111,6 +111,7 @@ router.put('/me', authenticateToken, [
     body('state').optional().trim().isLength({ max: 100 }).withMessage('State too long'),
     body('city').optional().trim().isLength({ max: 100 }).withMessage('City too long'),
     body('country').optional().trim().isLength({ max: 2 }).withMessage('Country must be 2-letter code'),
+    body('avatarUrl').optional().custom((value) => value === null || value === '' || typeof value === 'string').withMessage('avatarUrl must be null, empty string, or a string'),
     // Job seeker profile fields
     body('profile').optional().isObject().withMessage('Profile must be an object'),
     body('profile.headline').optional().isString().isLength({ max: 200 }).withMessage('Headline max 200 chars'),
@@ -142,7 +143,7 @@ router.put('/me', authenticateToken, [
             });
         }
 
-        const { name, phoneNumber, state, city, country, profile } = req.body;
+        const { name, phoneNumber, state, city, country, avatarUrl, profile } = req.body;
 
         // Update basic fields if provided
         if (name !== undefined) targetUser.name = name;
@@ -150,6 +151,10 @@ router.put('/me', authenticateToken, [
         if (state !== undefined) targetUser.state = state;
         if (city !== undefined) targetUser.city = city;
         if (country !== undefined) targetUser.country = country;
+        // Allow removing avatar by setting to null or empty string
+        if (avatarUrl !== undefined) {
+            targetUser.avatarUrl = (avatarUrl === null || avatarUrl === '') ? null : avatarUrl;
+        }
 
         // Merge job seeker profile into metadata.profile
         if (profile && typeof profile === 'object') {
