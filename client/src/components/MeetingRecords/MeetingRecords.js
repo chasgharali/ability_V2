@@ -3,7 +3,7 @@ import '../Dashboard/Dashboard.css';
 import './MeetingRecords.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
@@ -158,6 +158,10 @@ export default function MeetingRecords() {
 
     const handlePageChange = (page) => {
         setFilters(prev => ({ ...prev, page }));
+    };
+
+    const handlePageSizeChange = (newSize) => {
+        setFilters(prev => ({ ...prev, limit: newSize, page: 1 }));
     };
 
     const handleExport = async () => {
@@ -709,38 +713,152 @@ export default function MeetingRecords() {
                                 <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                             </GridComponent>
                             
-                            {/* Pagination Footer */}
-                            {pagination.totalPages > 1 && (
-                                <div className="table-footer-pagination" style={{ 
+                            {/* Custom Pagination Footer */}
+                            {pagination.totalPages > 0 && (
+                                <div className="custom-pagination" style={{
                                     display: 'flex', 
-                                    justifyContent: 'space-between', 
                                     alignItems: 'center',
-                                    marginTop: '16px',
-                                    padding: '12px 0'
+                                    justifyContent: 'space-between',
+                                    padding: '16px',
+                                    backgroundColor: '#f9fafb',
+                                    borderTop: '1px solid #e5e7eb',
+                                    marginTop: '0'
                                 }}>
-                                    <div className="pagination-info">
-                                        Showing {((pagination.currentPage - 1) * filters.limit) + 1} to {Math.min(pagination.currentPage * filters.limit, pagination.totalRecords)} of {pagination.totalRecords} rows
-                                    </div>
-                                    <div className="pagination-controls" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                        <ButtonComponent
-                                            cssClass="e-outline e-primary e-small"
-                                            disabled={!pagination.hasPrev}
-                                            onClick={() => handlePageChange(pagination.currentPage - 1)}
-                                            aria-label="Previous page"
-                                        >
-                                            Previous
-                                        </ButtonComponent>
-                                        <span className="pagination-page-info" style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                            Page {pagination.currentPage} of {pagination.totalPages}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <span style={{ fontSize: '14px', color: '#374151' }}>
+                                            Rows per page:
                                         </span>
-                                        <ButtonComponent
-                                            cssClass="e-outline e-primary e-small"
-                                            disabled={!pagination.hasNext}
-                                            onClick={() => handlePageChange(pagination.currentPage + 1)}
-                                            aria-label="Next page"
+                                        <select
+                                            value={filters.limit}
+                                            onChange={(e) => {
+                                                const newSize = parseInt(e.target.value);
+                                                handlePageSizeChange(newSize);
+                                            }}
+                                            style={{
+                                                padding: '6px 12px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #d1d5db',
+                                                fontSize: '14px',
+                                                cursor: 'pointer'
+                                            }}
                                         >
-                                            Next
-                                        </ButtonComponent>
+                                            <option value={10}>10</option>
+                                            <option value={20}>20</option>
+                                            <option value={50}>50</option>
+                                            <option value={100}>100</option>
+                                            <option value={200}>200</option>
+                                        </select>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '14px', color: '#374151' }}>
+                                            Page {pagination.currentPage} of {pagination.totalPages || 1} ({pagination.totalRecords || 0} total)
+                                        </span>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <button
+                                            onClick={() => {
+                                                if (pagination.currentPage > 1) {
+                                                    handlePageChange(1);
+                                                }
+                                            }}
+                                            disabled={pagination.currentPage <= 1 || loadingData}
+                                            style={{
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #d1d5db',
+                                                backgroundColor: pagination.currentPage <= 1 ? '#f3f4f6' : '#fff',
+                                                cursor: pagination.currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                                fontSize: '14px',
+                                                color: pagination.currentPage <= 1 ? '#9ca3af' : '#374151'
+                                            }}
+                                            title="First Page"
+                                        >
+                                            ⟨⟨
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (pagination.currentPage > 1) {
+                                                    handlePageChange(pagination.currentPage - 1);
+                                                }
+                                            }}
+                                            disabled={pagination.currentPage <= 1 || loadingData}
+                                            style={{
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #d1d5db',
+                                                backgroundColor: pagination.currentPage <= 1 ? '#f3f4f6' : '#fff',
+                                                cursor: pagination.currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                                fontSize: '14px',
+                                                color: pagination.currentPage <= 1 ? '#9ca3af' : '#374151'
+                                            }}
+                                            title="Previous Page"
+                                        >
+                                            ⟨ Prev
+                                        </button>
+                                        
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={pagination.totalPages || 1}
+                                            value={pagination.currentPage}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value);
+                                                if (val >= 1 && val <= (pagination.totalPages || 1)) {
+                                                    handlePageChange(val);
+                                                }
+                                            }}
+                                            style={{
+                                                width: '60px',
+                                                padding: '6px 8px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #d1d5db',
+                                                fontSize: '14px',
+                                                textAlign: 'center'
+                                            }}
+                                        />
+                                        
+                                        <button
+                                            onClick={() => {
+                                                if (pagination.currentPage < (pagination.totalPages || 1)) {
+                                                    handlePageChange(pagination.currentPage + 1);
+                                                }
+                                            }}
+                                            disabled={pagination.currentPage >= (pagination.totalPages || 1) || loadingData}
+                                            style={{
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #d1d5db',
+                                                backgroundColor: pagination.currentPage >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
+                                                cursor: pagination.currentPage >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
+                                                fontSize: '14px',
+                                                color: pagination.currentPage >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
+                                            }}
+                                            title="Next Page"
+                                        >
+                                            Next ⟩
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (pagination.currentPage < (pagination.totalPages || 1)) {
+                                                    handlePageChange(pagination.totalPages || 1);
+                                                }
+                                            }}
+                                            disabled={pagination.currentPage >= (pagination.totalPages || 1) || loadingData}
+                                            style={{
+                                                padding: '8px 12px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #d1d5db',
+                                                backgroundColor: pagination.currentPage >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
+                                                cursor: pagination.currentPage >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
+                                                fontSize: '14px',
+                                                color: pagination.currentPage >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
+                                            }}
+                                            title="Last Page"
+                                        >
+                                            ⟩⟩
+                                        </button>
                                     </div>
                                 </div>
                             )}

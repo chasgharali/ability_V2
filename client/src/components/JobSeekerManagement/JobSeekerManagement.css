@@ -429,6 +429,37 @@
 /* Note: ColumnChooser dialog styling is already in EventManagement.css 
    and will apply globally since it uses global selectors */
 
+/* Delete Dialog - Ensure proper z-index and positioning to avoid DOM conflicts */
+.jsm-delete-dialog.e-dialog {
+  z-index: 10000 !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  max-width: 450px !important;
+}
+
+/* Target all possible dialog containers */
+.e-dialog.jsm-delete-dialog,
+.jsm-delete-dialog.e-popup,
+body .jsm-delete-dialog.e-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+
+.jsm-delete-dialog.e-dialog .e-dlg-content {
+  padding: 20px !important;
+}
+
+.jsm-delete-dialog.e-dialog .e-footer-content {
+  padding: 16px 20px !important;
+  border-top: 1px solid #e5e7eb !important;
+}
+
 /* Job Seeker Management Styles */
 .profile-sections {
   display: flex;

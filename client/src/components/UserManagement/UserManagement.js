@@ -20,6 +20,8 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [boothOptions, setBoothOptions] = useState([]);
   const [eventOptions, setEventOptions] = useState([]);
@@ -30,6 +32,7 @@ export default function UserManagement() {
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   // Syncfusion Toast ref
   const toastRef = useRef(null);
+  const deleteDialogRef = useRef(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -168,6 +171,26 @@ export default function UserManagement() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
+
+  // Center delete dialog when it opens
+  useEffect(() => {
+    if (confirmOpen && deleteDialogRef.current) {
+      const dialogElement = deleteDialogRef.current.element || deleteDialogRef.current;
+      if (dialogElement) {
+        // Wait for dialog to render
+        setTimeout(() => {
+          const dialog = document.querySelector('.um-delete-dialog.e-dialog');
+          if (dialog) {
+            dialog.style.position = 'fixed';
+            dialog.style.top = '50%';
+            dialog.style.left = '50%';
+            dialog.style.transform = 'translate(-50%, -50%)';
+            dialog.style.margin = '0';
+          }
+        }, 10);
+      }
+    }
+  }, [confirmOpen]);
 
   // Grid template functions for custom column renders - using Syncfusion ButtonComponent
   const actionsTemplate = (props) => {
@@ -358,9 +381,8 @@ export default function UserManagement() {
                 <div aria-live="polite" className="sr-only">{liveMsg}</div>
                 {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
                 <GridComponent
-                  dataSource={users}
-                  allowPaging={true}
-                  pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+                  dataSource={users.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                  allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
                   filterSettings={{ type: 'Menu' }}
@@ -433,8 +455,162 @@ export default function UserManagement() {
                       template={actionsTemplate}
                     />
                   </ColumnsDirective>
-                  <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                  <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                 </GridComponent>
+
+                {/* Custom Pagination Footer */}
+                {users.length > 0 && (
+                    <div className="custom-pagination" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px',
+                        backgroundColor: '#f9fafb',
+                        borderTop: '1px solid #e5e7eb',
+                        marginTop: '0'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '14px', color: '#374151' }}>
+                                Rows per page:
+                            </span>
+                            <select
+                                value={pageSize}
+                                onChange={(e) => {
+                                    const newSize = parseInt(e.target.value);
+                                    setPageSize(newSize);
+                                    setCurrentPage(1);
+                                }}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={200}>200</option>
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '14px', color: '#374151' }}>
+                                Page {currentPage} of {Math.ceil(users.length / pageSize) || 1} ({users.length} total)
+                            </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button
+                                onClick={() => {
+                                    if (currentPage > 1) {
+                                        setCurrentPage(1);
+                                    }
+                                }}
+                                disabled={currentPage <= 1 || loading}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage <= 1 ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage <= 1 ? '#9ca3af' : '#374151'
+                                }}
+                                title="First Page"
+                            >
+                                ⟨⟨
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (currentPage > 1) {
+                                        setCurrentPage(currentPage - 1);
+                                    }
+                                }}
+                                disabled={currentPage <= 1 || loading}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage <= 1 ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage <= 1 ? '#9ca3af' : '#374151'
+                                }}
+                                title="Previous Page"
+                            >
+                                ⟨ Prev
+                            </button>
+                            
+                            <input
+                                type="number"
+                                min="1"
+                                max={Math.ceil(users.length / pageSize) || 1}
+                                value={currentPage}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    const maxPage = Math.ceil(users.length / pageSize) || 1;
+                                    if (val >= 1 && val <= maxPage) {
+                                        setCurrentPage(val);
+                                    }
+                                }}
+                                style={{
+                                    width: '60px',
+                                    padding: '6px 8px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    fontSize: '14px',
+                                    textAlign: 'center'
+                                }}
+                            />
+                            
+                            <button
+                                onClick={() => {
+                                    const maxPage = Math.ceil(users.length / pageSize) || 1;
+                                    if (currentPage < maxPage) {
+                                        setCurrentPage(currentPage + 1);
+                                    }
+                                }}
+                                disabled={currentPage >= (Math.ceil(users.length / pageSize) || 1) || loading}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage >= (Math.ceil(users.length / pageSize) || 1) ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage >= (Math.ceil(users.length / pageSize) || 1) ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage >= (Math.ceil(users.length / pageSize) || 1) ? '#9ca3af' : '#374151'
+                                }}
+                                title="Next Page"
+                            >
+                                Next ⟩
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const maxPage = Math.ceil(users.length / pageSize) || 1;
+                                    if (currentPage < maxPage) {
+                                        setCurrentPage(maxPage);
+                                    }
+                                }}
+                                disabled={currentPage >= (Math.ceil(users.length / pageSize) || 1) || loading}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage >= (Math.ceil(users.length / pageSize) || 1) ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage >= (Math.ceil(users.length / pageSize) || 1) ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage >= (Math.ceil(users.length / pageSize) || 1) ? '#9ca3af' : '#374151'
+                                }}
+                                title="Last Page"
+                            >
+                                ⟩⟩
+                            </button>
+                        </div>
+                    </div>
+                )}
               </div>
             ) : (
               <form className="account-form" onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
@@ -489,6 +665,7 @@ export default function UserManagement() {
 
       {/* Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent
+        ref={deleteDialogRef}
         width="450px"
         isModal={true}
         showCloseIcon={true}
@@ -496,6 +673,7 @@ export default function UserManagement() {
         header="Delete User"
         closeOnEscape={true}
         close={cancelDelete}
+        cssClass="um-delete-dialog"
         buttons={[
           {
             buttonModel: {

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import '../Dashboard/Dashboard.css';
 import './BoothManagement.css';
@@ -35,11 +36,14 @@ export default function BoothManagement() {
     companyPage: ''
   });
   const [booths, setBooths] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [loadingBooths, setLoadingBooths] = useState(false);
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   const toastRef = useRef(null);
+  const deleteDialogRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
   // RTE image upload helpers
   const rteFirstRef = React.useRef(null);
@@ -213,6 +217,26 @@ export default function BoothManagement() {
   useEffect(() => {
     loadEvents();
   }, []);
+
+  // Center delete dialog when it opens
+  useEffect(() => {
+    if (confirmOpen && deleteDialogRef.current) {
+      const dialogElement = deleteDialogRef.current.element || deleteDialogRef.current;
+      if (dialogElement) {
+        // Wait for dialog to render
+        setTimeout(() => {
+          const dialog = document.querySelector('.bm-delete-dialog.e-dialog');
+          if (dialog) {
+            dialog.style.position = 'fixed';
+            dialog.style.top = '50%';
+            dialog.style.left = '50%';
+            dialog.style.transform = 'translate(-50%, -50%)';
+            dialog.style.margin = '0';
+          }
+        }, 10);
+      }
+    }
+  }, [confirmOpen]);
 
   // (Focus management moved into reusable Toast component)
 
@@ -510,9 +534,8 @@ export default function BoothManagement() {
               <div className="bm-grid-wrap">
                 {loadingBooths && <div style={{ marginBottom: 12 }}>Loading…</div>}
                 <GridComponent
-                  dataSource={booths}
-                  allowPaging={true}
-                  pageSettings={{ pageSize: 10, pageSizes: [10, 20, 50, 100] }}
+                  dataSource={booths.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                  allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
                   filterSettings={{ type: 'Menu' }}
@@ -630,8 +653,162 @@ export default function BoothManagement() {
                       template={actionsTemplate}
                     />
                   </ColumnsDirective>
-                  <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                  <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                 </GridComponent>
+
+                {/* Custom Pagination Footer */}
+                {booths.length > 0 && (
+                    <div className="custom-pagination" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px',
+                        backgroundColor: '#f9fafb',
+                        borderTop: '1px solid #e5e7eb',
+                        marginTop: '0'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '14px', color: '#374151' }}>
+                                Rows per page:
+                            </span>
+                            <select
+                                value={pageSize}
+                                onChange={(e) => {
+                                    const newSize = parseInt(e.target.value);
+                                    setPageSize(newSize);
+                                    setCurrentPage(1);
+                                }}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={200}>200</option>
+                            </select>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '14px', color: '#374151' }}>
+                                Page {currentPage} of {Math.ceil(booths.length / pageSize) || 1} ({booths.length} total)
+                            </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button
+                                onClick={() => {
+                                    if (currentPage > 1) {
+                                        setCurrentPage(1);
+                                    }
+                                }}
+                                disabled={currentPage <= 1 || loadingBooths}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage <= 1 ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage <= 1 ? '#9ca3af' : '#374151'
+                                }}
+                                title="First Page"
+                            >
+                                ⟨⟨
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (currentPage > 1) {
+                                        setCurrentPage(currentPage - 1);
+                                    }
+                                }}
+                                disabled={currentPage <= 1 || loadingBooths}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage <= 1 ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage <= 1 ? '#9ca3af' : '#374151'
+                                }}
+                                title="Previous Page"
+                            >
+                                ⟨ Prev
+                            </button>
+                            
+                            <input
+                                type="number"
+                                min="1"
+                                max={Math.ceil(booths.length / pageSize) || 1}
+                                value={currentPage}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    const maxPage = Math.ceil(booths.length / pageSize) || 1;
+                                    if (val >= 1 && val <= maxPage) {
+                                        setCurrentPage(val);
+                                    }
+                                }}
+                                style={{
+                                    width: '60px',
+                                    padding: '6px 8px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    fontSize: '14px',
+                                    textAlign: 'center'
+                                }}
+                            />
+                            
+                            <button
+                                onClick={() => {
+                                    const maxPage = Math.ceil(booths.length / pageSize) || 1;
+                                    if (currentPage < maxPage) {
+                                        setCurrentPage(currentPage + 1);
+                                    }
+                                }}
+                                disabled={currentPage >= (Math.ceil(booths.length / pageSize) || 1) || loadingBooths}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#9ca3af' : '#374151'
+                                }}
+                                title="Next Page"
+                            >
+                                Next ⟩
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const maxPage = Math.ceil(booths.length / pageSize) || 1;
+                                    if (currentPage < maxPage) {
+                                        setCurrentPage(maxPage);
+                                    }
+                                }}
+                                disabled={currentPage >= (Math.ceil(booths.length / pageSize) || 1) || loadingBooths}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    backgroundColor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#f3f4f6' : '#fff',
+                                    cursor: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    color: currentPage >= (Math.ceil(booths.length / pageSize) || 1) ? '#9ca3af' : '#374151'
+                                }}
+                                title="Last Page"
+                            >
+                                ⟩⟩
+                            </button>
+                        </div>
+                    </div>
+                )}
               </div>
             ) : (
               <form className="account-form" onSubmit={handleCreateBooth} style={{ maxWidth: 720 }}>
@@ -787,10 +964,46 @@ export default function BoothManagement() {
       {/* Mobile overlay */}
       <div className="mobile-overlay" aria-hidden="true" />
 
-      {/* Placeholder preview modal */}
-      {previewBooth && (
-        <div role="dialog" aria-modal="true" className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
-          <div className="modal-card" style={{ background: '#fff', borderRadius: 8, padding: 20, width: '90%', maxWidth: 1100, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+      {/* Placeholder preview modal - rendered via portal to avoid DOM conflicts */}
+      {previewBooth && typeof document !== 'undefined' && createPortal(
+        <div 
+          role="dialog" 
+          aria-modal="true" 
+          className="modal-overlay" 
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.4)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 60 
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setPreviewBooth(null);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setPreviewBooth(null);
+            }
+          }}
+          tabIndex={-1}
+        >
+          <div 
+            className="modal-card" 
+            style={{ 
+              background: '#fff', 
+              borderRadius: 8, 
+              padding: 20, 
+              width: '90%', 
+              maxWidth: 1100, 
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0 }}>Placeholder Preview - {previewBooth.name}</h3>
               <ButtonComponent cssClass="e-outline e-primary" onClick={() => setPreviewBooth(null)}>
@@ -799,17 +1012,28 @@ export default function BoothManagement() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               {[0, 1, 2].map(i => (
-                <div key={i} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, minHeight: 200, overflow: 'auto' }}>
+                <div 
+                  key={`placeholder-${i}-${previewBooth.id || previewBooth.name}`} 
+                  style={{ 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: 8, 
+                    padding: 12, 
+                    minHeight: 500, 
+                    overflow: 'auto' 
+                  }}
+                >
                   <div dangerouslySetInnerHTML={{ __html: previewBooth.richSections?.[i]?.contentHtml || '<em>No content</em>' }} />
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent
+        ref={deleteDialogRef}
         width="450px"
         isModal={true}
         showCloseIcon={true}
@@ -817,6 +1041,7 @@ export default function BoothManagement() {
         header="Delete Booth"
         closeOnEscape={true}
         close={cancelDelete}
+        cssClass="bm-delete-dialog"
         buttons={[
           {
             buttonModel: {
