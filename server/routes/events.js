@@ -73,6 +73,44 @@ router.get('/', authenticateToken, async (req, res) => {
 /* NOTE: dynamic routes like '/:id' must be declared AFTER static routes such as '/upcoming' and '/registered'. */
 
 /**
+ * GET /api/events/public/slug/:slug
+ * Get public event info by slug (for registration pages - no auth required)
+ */
+router.get('/public/slug/:slug', async (req, res) => {
+    try {
+        const { slug } = req.params;
+
+        const event = await Event.findOne({ slug })
+            .select('name slug logoUrl start end status');
+
+        if (!event) {
+            return res.status(404).json({
+                error: 'Event not found',
+                message: 'The specified event does not exist'
+            });
+        }
+
+        // Only return basic public info
+        res.json({
+            event: {
+                name: event.name,
+                slug: event.slug,
+                logoUrl: event.logoUrl,
+                start: event.start,
+                end: event.end,
+                status: event.status
+            }
+        });
+    } catch (error) {
+        logger.error('Get public event by slug error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve event',
+            message: 'An error occurred while retrieving the event'
+        });
+    }
+});
+
+/**
  * GET /api/events/slug/:slug
  * Get event details by slug
  */
