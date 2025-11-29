@@ -401,6 +401,25 @@ export default function MeetingRecords() {
         );
     };
 
+    const meetingNotesTemplate = (props) => {
+        const row = props;
+        const notes = row.recruiterFeedback || '';
+        const truncatedNotes = notes.length > 100 ? notes.substring(0, 100) + '...' : notes;
+        return (
+            <div 
+                style={{ 
+                    wordWrap: 'break-word', 
+                    whiteSpace: 'normal', 
+                    padding: '8px 0',
+                    maxWidth: '300px'
+                }}
+                title={notes || 'No notes'}
+            >
+                {notes ? truncatedNotes : 'N/A'}
+            </div>
+        );
+    };
+
     const actionsTemplate = (props) => {
         const row = props;
         return (
@@ -700,6 +719,7 @@ export default function MeetingRecords() {
                                     <ColumnDirective headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowSorting={false} />
                                     <ColumnDirective headerText='Status' width='130' textAlign='Center' template={statusTemplate} />
                                     <ColumnDirective headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowSorting={false} />
+                                    <ColumnDirective headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowSorting={false} />
                                     <ColumnDirective headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowSorting={false} />
                                     <ColumnDirective headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowSorting={false} />
                                     <ColumnDirective 
