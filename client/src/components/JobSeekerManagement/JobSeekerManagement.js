@@ -212,6 +212,7 @@ export default function JobSeekerManagement() {
           state: u.state || '',
           country: u.country || '',
           isActive: u.isActive,
+          statusText: u.isActive ? 'Active' : 'Inactive', // Flattened for filtering
           createdAt: u.createdAt,
           lastLogin: u.lastLogin,
           emailVerified: u.emailVerified,
@@ -268,6 +269,7 @@ export default function JobSeekerManagement() {
   // Initial load on mount - only runs once
   useEffect(() => {
     loadJobSeekers(1, pageSize, '', '');
+    isFirstRender.current = false; // Mark first render as complete
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -292,8 +294,9 @@ export default function JobSeekerManagement() {
         clearTimeout(searchTimeoutRef.current);
         searchTimeoutRef.current = null;
       }
-      // Status filter change does NOT include search text - only filter by status
-      loadJobSeekersRef.current(1, pageSize, '', statusFilter);
+      // Status filter change - preserve current search filter
+      // Note: Grid key includes statusFilter, so grid will reset automatically
+      loadJobSeekersRef.current(1, pageSize, searchFilterRef.current || '', statusFilter);
     }
   }, [statusFilter, pageSize]);
 
@@ -1324,7 +1327,7 @@ export default function JobSeekerManagement() {
                   )}
                 />
                 <ColumnDirective 
-                  field='isActive' 
+                  field='statusText' 
                   headerText='Status' 
                   width='120' 
                   textAlign='Center'
