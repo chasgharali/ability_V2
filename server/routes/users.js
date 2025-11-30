@@ -357,6 +357,12 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         .isEmail()
         .normalizeEmail()
         .withMessage('Please provide a valid email address'),
+    body('password')
+        .optional()
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~]/)
+        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
     body('role')
         .optional()
         .isIn(['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
@@ -376,7 +382,32 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('assignedBooth')
         .optional()
         .isMongoId()
-        .withMessage('assignedBooth must be a valid ID')
+        .withMessage('assignedBooth must be a valid ID'),
+    // JobSeeker specific fields (but NOT survey)
+    body('phoneNumber')
+        .optional()
+        .trim()
+        .isLength({ min: 7, max: 30 })
+        .withMessage('Phone number must be 7-30 chars'),
+    body('state')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('State too long'),
+    body('city')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('City too long'),
+    body('country')
+        .optional()
+        .trim()
+        .isLength({ max: 2 })
+        .withMessage('Country must be 2-letter code'),
+    body('avatarUrl')
+        .optional()
+        .custom((value) => value === null || value === '' || typeof value === 'string')
+        .withMessage('avatarUrl must be null, empty string, or a string')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -390,7 +421,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, role, isActive, languages, isAvailable, assignedBooth } = req.body;
+        const { name, email, password, role, isActive, languages, isAvailable, assignedBooth, phoneNumber, state, city, country, avatarUrl } = req.body;
         const { user } = req;
 
         const targetUser = await User.findById(id);
@@ -411,6 +442,28 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
         if (isAvailable !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(targetUser.role)) {
             targetUser.isAvailable = isAvailable;
+        }
+        
+        // Update password if provided (admin can change user passwords)
+        if (password !== undefined && password !== null && password.trim() !== '') {
+            targetUser.hashedPassword = password; // Will be hashed by pre-save middleware
+            // Clear legacy password for legacy users (so they use the new bcrypt password)
+            // This ensures legacy users can login with the new password
+            if (targetUser.legacyPassword) {
+                targetUser.legacyPassword = null;
+            }
+            // Invalidate all refresh tokens when password is changed (force re-login on all devices)
+            targetUser.refreshTokens = [];
+        }
+
+        // Update JobSeeker specific fields (but NOT survey - survey should never be updated by admin)
+        if (phoneNumber !== undefined) targetUser.phoneNumber = phoneNumber;
+        if (state !== undefined) targetUser.state = state;
+        if (city !== undefined) targetUser.city = city;
+        if (country !== undefined) targetUser.country = country;
+        // Allow removing avatar by setting to null or empty string
+        if (avatarUrl !== undefined) {
+            targetUser.avatarUrl = (avatarUrl === null || avatarUrl === '') ? null : avatarUrl;
         }
 
         // Handle assignedBooth updates and validation for recruiter/booth admin/support/interpreter

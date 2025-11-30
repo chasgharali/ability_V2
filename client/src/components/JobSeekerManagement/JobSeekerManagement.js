@@ -9,7 +9,7 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -46,12 +46,30 @@ export default function JobSeekerManagement() {
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
   const [rowPendingVerify, setRowPendingVerify] = useState(null);
+  // Password visibility toggles
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  
+  // Edit form state
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phoneNumber: '',
+    city: '',
+    state: '',
+    country: '',
+    avatarUrl: '',
+  });
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -327,6 +345,74 @@ export default function JobSeekerManagement() {
     }, 100); // Delay to allow grid to be hidden first
   };
 
+  const startEdit = (row) => {
+    const firstName = row.firstName || '';
+    const lastName = row.lastName || '';
+    setForm({
+      firstName,
+      lastName,
+      email: row.email || '',
+      phoneNumber: row.phone || '',
+      city: row.city || '',
+      state: row.state || '',
+      country: row.country || '',
+      avatarUrl: row.avatarUrl || '',
+      password: '',
+      confirmPassword: '',
+    });
+    setEditingId(row.id);
+    setSelectedJobSeeker(row);
+    setMode('edit');
+  };
+
+  const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Password validation - only if password is provided
+    if (form.password) {
+      if (form.password.length < 8) {
+        showToast('Password must be at least 8 characters', 'Error');
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        showToast('Passwords do not match', 'Error');
+        return;
+      }
+    }
+
+    try {
+      const fullName = `${form.firstName} ${form.lastName}`.trim();
+      const payload = {
+        name: fullName || undefined,
+        email: form.email || undefined,
+        phoneNumber: form.phoneNumber || undefined,
+        city: form.city || undefined,
+        state: form.state || undefined,
+        country: form.country || undefined,
+        avatarUrl: form.avatarUrl || undefined,
+      };
+      
+      // Include password if provided (admin can update password)
+      if (form.password && form.password.trim()) {
+        payload.password = form.password;
+      }
+      
+      await updateUser(editingId, payload);
+      showToast('Job seeker updated', 'Success');
+      setMode('list');
+      setEditingId(null);
+      setSelectedJobSeeker(null);
+      setForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', phoneNumber: '', city: '', state: '', country: '', avatarUrl: '' });
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+    } catch (e) {
+      console.error('Update job seeker failed', e);
+      const msg = e?.response?.data?.message || 'Failed to update job seeker';
+      showToast(msg, 'Error', 5000);
+    }
+  };
+
   const handleVerifyEmail = (row) => {
     if (row.emailVerified) return; // safety check
     setRowPendingVerify(row);
@@ -389,6 +475,13 @@ export default function JobSeekerManagement() {
           title="View Profile"
         >
           View
+        </ButtonComponent>
+        <ButtonComponent 
+          cssClass="e-outline e-primary e-small" 
+          onClick={() => startEdit(row)}
+          title="Edit Profile"
+        >
+          Edit
         </ButtonComponent>
         {!row.emailVerified && (
           <ButtonComponent 
@@ -720,6 +813,71 @@ export default function JobSeekerManagement() {
         <main className="dashboard-main">
           {mode === 'view' ? (
             renderJobSeekerProfile()
+          ) : mode === 'edit' ? (
+            <div className="dashboard-content">
+              <div className="form-header">
+                <ButtonComponent 
+                  cssClass="e-outline e-primary"
+                  onClick={() => {
+                    setMode('list');
+                    setEditingId(null);
+                    setSelectedJobSeeker(null);
+                    setForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', phoneNumber: '', city: '', state: '', country: '', avatarUrl: '' });
+                  }}
+                >
+                  ← Back to List
+                </ButtonComponent>
+                <h2>Edit Job Seeker: {form.firstName} {form.lastName}</h2>
+              </div>
+              <form className="account-form" onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
+                <Input label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
+                <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
+                <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
+                <div className="password-field-container">
+                  <Input label="New Password (leave blank to keep current)" type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setField('password', e.target.value)} />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showPwd} 
+                    aria-label={showPwd ? 'Hide password' : 'Show password'} 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowPwd(s => !s);
+                    }}
+                  >
+                    {showPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
+                <div className="password-field-container">
+                  <Input label="Confirm New Password (leave blank to keep current)" type={showConfirmPwd ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showConfirmPwd} 
+                    aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowConfirmPwd(s => !s);
+                    }}
+                  >
+                    {showConfirmPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
+                <Input label="Phone Number" value={form.phoneNumber} onChange={(e) => setField('phoneNumber', e.target.value)} />
+                <Input label="City" value={form.city} onChange={(e) => setField('city', e.target.value)} />
+                <Input label="State" value={form.state} onChange={(e) => setField('state', e.target.value)} />
+                <Input label="Country" value={form.country} onChange={(e) => setField('country', e.target.value)} placeholder="2-letter code (e.g., US)" />
+                <Input label="Avatar URL" value={form.avatarUrl} onChange={(e) => setField('avatarUrl', e.target.value)} />
+                <ButtonComponent 
+                  cssClass="e-primary" 
+                  disabled={loading}
+                  isPrimary={true}
+                  onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
+                >
+                  Update Job Seeker
+                </ButtonComponent>
+              </form>
+            </div>
           ) : (
           <div className="dashboard-content">
             <div className="page-header">
@@ -1143,3 +1301,4 @@ export default function JobSeekerManagement() {
     </div>
   );
 }
+
