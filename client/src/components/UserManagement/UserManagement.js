@@ -3,6 +3,7 @@ import '../Dashboard/Dashboard.css';
 import './UserManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import filterIcon from '../../assets/filter.png';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
@@ -171,6 +172,43 @@ export default function UserManagement() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
+
+  // Set CSS variable for filter icon
+  useEffect(() => {
+    const filterIconUrl = `url(${filterIcon})`;
+    
+    // Set CSS variable on document root
+    document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
+    
+    // Apply directly to filter icons when grid is ready
+    const applyFilterIcon = () => {
+      const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
+      filterIcons.forEach(icon => {
+        icon.style.backgroundImage = filterIconUrl;
+        icon.style.display = 'inline-block';
+        icon.style.visibility = 'visible';
+      });
+    };
+    
+    // Apply immediately
+    applyFilterIcon();
+    
+    // Watch for new filter icons being added
+    const observer = new MutationObserver(applyFilterIcon);
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true 
+    });
+    
+    // Also apply after a delay to catch grid render
+    const timeoutId = setTimeout(applyFilterIcon, 500);
+    
+    return () => {
+      document.documentElement.style.removeProperty('--filter-icon-url');
+      observer.disconnect();
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Sync header and content horizontal scrolling
   useEffect(() => {
@@ -508,8 +546,14 @@ export default function UserManagement() {
                   allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
-                  filterSettings={{ type: 'Menu' }}
-                  showColumnMenu={true}
+                  filterSettings={{ 
+                    type: 'Menu',
+                    showFilterBarStatus: true,
+                    immediateModeDelay: 0,
+                    showFilterBarOperator: true,
+                    enableCaseSensitivity: false
+                  }}
+                  showColumnMenu={false}
                   showColumnChooser={true}
                   allowResizing={true}
                   allowReordering={true}
@@ -524,6 +568,7 @@ export default function UserManagement() {
                       field='firstName' 
                       headerText='First Name' 
                       width='150' 
+                      allowFiltering={true}
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.firstName || ''}
@@ -534,6 +579,7 @@ export default function UserManagement() {
                       field='lastName' 
                       headerText='Last Name' 
                       width='150' 
+                      allowFiltering={true}
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.lastName || ''}
@@ -544,6 +590,7 @@ export default function UserManagement() {
                       field='email' 
                       headerText='Email' 
                       width='250' 
+                      allowFiltering={true}
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.email || ''}
@@ -554,6 +601,7 @@ export default function UserManagement() {
                       field='role' 
                       headerText='Role' 
                       width='150' 
+                      allowFiltering={true}
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.role || ''}
@@ -564,6 +612,7 @@ export default function UserManagement() {
                       field='booth' 
                       headerText='Booth' 
                       width='180' 
+                      allowFiltering={true}
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.booth || '-'}

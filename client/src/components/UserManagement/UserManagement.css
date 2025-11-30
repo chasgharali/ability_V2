@@ -631,6 +631,132 @@ body .um-delete-dialog.e-dialog {
 }
 
 /* ========================================
+   Custom Filter Icon - Clean Implementation
+   ======================================== */
+
+/* Hide the default Syncfusion filter icon (font icon) */
+.e-grid .e-filtericon::before,
+.e-grid .e-filtericon::after {
+    display: none !important;
+    content: '' !important;
+}
+
+/* Custom filter icon with your filter.png image */
+.e-grid .e-filtericon {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+    padding: 0 !important;
+    margin-left: 6px !important;
+    cursor: pointer !important;
+    background-image: var(--filter-icon-url) !important;
+    background-size: 18px 18px !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    border: none !important;
+    text-indent: -9999px !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    vertical-align: middle !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Filter icon hover state */
+.e-grid .e-filtericon:hover {
+    opacity: 0.8 !important;
+    background-color: #f3f4f6 !important;
+    transform: scale(1.1) !important;
+}
+
+/* Active/filtered state */
+.e-grid .e-headercell.e-filtered .e-filtericon {
+    opacity: 1 !important;
+    filter: brightness(0.7) !important;
+}
+
+/* Hide column menu icon (three dots) completely */
+.e-grid .e-columnmenuicon {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Filter Popup Menu Styling - Add Padding */
+.e-grid .e-filter-popup,
+.e-popup.e-filter-popup,
+.e-grid .e-filterdiv,
+.e-filterdiv {
+    padding: 16px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Filter popup content wrapper */
+.e-grid .e-filterdiv .e-filter-parent,
+.e-filterdiv .e-filter-parent,
+.e-popup.e-filter-popup .e-filter-parent {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+
+/* Filter condition dropdown - add spacing */
+.e-grid .e-filterdiv .e-dropdownlist,
+.e-filterdiv .e-dropdownlist,
+.e-popup.e-filter-popup .e-dropdownlist {
+    margin-bottom: 0 !important;
+}
+
+/* Filter value input field - add spacing */
+.e-grid .e-filterdiv input[type="text"],
+.e-filterdiv input[type="text"],
+.e-popup.e-filter-popup input[type="text"],
+.e-grid .e-filterdiv .e-input,
+.e-filterdiv .e-input {
+    padding: 10px 12px !important;
+    border-radius: 6px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Filter buttons container - add spacing */
+.e-grid .e-filterdiv .e-filterbtncontainer,
+.e-filterdiv .e-filterbtncontainer,
+.e-popup.e-filter-popup .e-filterbtncontainer {
+    display: flex !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #e5e7eb !important;
+}
+
+/* Filter buttons - improve styling */
+.e-grid .e-filterdiv .e-btn,
+.e-filterdiv .e-btn,
+.e-popup.e-filter-popup .e-btn {
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    min-width: 80px !important;
+}
+
+/* Ensure proper spacing between elements */
+.e-grid .e-filterdiv > div,
+.e-filterdiv > div {
+    margin-bottom: 12px !important;
+}
+
+.e-grid .e-filterdiv > div:last-child,
+.e-filterdiv > div:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ========================================
    Top Scrollbar for Header - Synchronized Scrolling
    ======================================== */
 
