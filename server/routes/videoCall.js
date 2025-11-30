@@ -412,19 +412,38 @@ router.post('/invite-interpreter', auth, async (req, res) => {
     }
 
     // Check if interpreter is already invited to this call
-    const alreadyInvited = videoCall.interpreters.some(
+    // Allow re-inviting if they previously left or declined
+    const existingInvitation = videoCall.interpreters.find(
       i => i.interpreter.toString() === interpreterId.toString()
     );
 
-    if (alreadyInvited) {
-      return res.status(409).json({
-        error: 'Interpreter already invited',
-        message: 'This interpreter has already been invited to this call.'
-      });
+    if (existingInvitation) {
+      // If they previously left or declined, allow re-invitation by updating status
+      if (existingInvitation.status === 'left' || existingInvitation.status === 'declined') {
+        console.log('🔄 Re-inviting interpreter who previously left/declined:', {
+          interpreter: selectedInterpreter.email,
+          previousStatus: existingInvitation.status
+        });
+        // Update the existing invitation to 'invited' status
+        existingInvitation.status = 'invited';
+        existingInvitation.invitedAt = new Date();
+        if (interpreterCategory) {
+          existingInvitation.category = interpreterCategory;
+        }
+        await videoCall.save();
+      } else {
+        // If they're still invited or joined, don't allow duplicate invitation
+        return res.status(409).json({
+          error: 'Interpreter already invited',
+          message: 'This interpreter has already been invited to this call.'
+        });
+      }
     }
 
-    // Add interpreter to call (use empty string if category not provided)
-    await videoCall.inviteInterpreter(selectedInterpreter._id, interpreterCategory || '');
+    // Add interpreter to call only if not already in the array (re-invitation handled above)
+    if (!existingInvitation) {
+      await videoCall.inviteInterpreter(selectedInterpreter._id, interpreterCategory || '');
+    }
 
     // Generate access token for interpreter
     const timestamp = Date.now();
@@ -578,6 +597,15 @@ router.post('/leave', auth, async (req, res) => {
     }
 
     console.log('✅ Authorization passed - participant leaving call');
+
+    // If interpreter leaves, update their status to 'left' in the interpreters array
+    if (isInterpreter) {
+      await videoCall.updateInterpreterStatus(userId, 'left');
+      console.log('✅ Updated interpreter status to left:', userId.toString());
+    }
+
+    // Update participant record
+    await videoCall.removeParticipant(userId);
 
     // Emit socket event to notify others that this participant left
     const io = req.app.get('io');
@@ -847,3 +875,5 @@ router.post('/reset-interpreter-availability', auth, async (req, res) => {
 });
 
 module.exports = router;
+
+
