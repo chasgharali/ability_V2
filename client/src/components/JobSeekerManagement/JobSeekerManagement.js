@@ -9,7 +9,7 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser, updateUser } from '../../services/users';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -62,12 +62,30 @@ export default function JobSeekerManagement() {
   // Use ref for input value to prevent re-renders on every keystroke
   const inputValueRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
   const [rowPendingVerify, setRowPendingVerify] = useState(null);
+  // Password visibility toggles
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  
+  // Edit form state
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phoneNumber: '',
+    city: '',
+    state: '',
+    country: '',
+    avatarUrl: '',
+  });
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -381,6 +399,74 @@ export default function JobSeekerManagement() {
         setIsTransitioning(false);
       }, 50);
     }, 100); // Delay to allow grid to be hidden first
+  };
+
+  const startEdit = (row) => {
+    const firstName = row.firstName || '';
+    const lastName = row.lastName || '';
+    setForm({
+      firstName,
+      lastName,
+      email: row.email || '',
+      phoneNumber: row.phone || '',
+      city: row.city || '',
+      state: row.state || '',
+      country: row.country || '',
+      avatarUrl: row.avatarUrl || '',
+      password: '',
+      confirmPassword: '',
+    });
+    setEditingId(row.id);
+    setSelectedJobSeeker(row);
+    setMode('edit');
+  };
+
+  const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Password validation - only if password is provided
+    if (form.password) {
+      if (form.password.length < 8) {
+        showToast('Password must be at least 8 characters', 'Error');
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        showToast('Passwords do not match', 'Error');
+        return;
+      }
+    }
+
+    try {
+      const fullName = `${form.firstName} ${form.lastName}`.trim();
+      const payload = {
+        name: fullName || undefined,
+        email: form.email || undefined,
+        phoneNumber: form.phoneNumber || undefined,
+        city: form.city || undefined,
+        state: form.state || undefined,
+        country: form.country || undefined,
+        avatarUrl: form.avatarUrl || undefined,
+      };
+      
+      // Include password if provided (admin can update password)
+      if (form.password && form.password.trim()) {
+        payload.password = form.password;
+      }
+      
+      await updateUser(editingId, payload);
+      showToast('Job seeker updated', 'Success');
+      setMode('list');
+      setEditingId(null);
+      setSelectedJobSeeker(null);
+      setForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', phoneNumber: '', city: '', state: '', country: '', avatarUrl: '' });
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+    } catch (e) {
+      console.error('Update job seeker failed', e);
+      const msg = e?.response?.data?.message || 'Failed to update job seeker';
+      showToast(msg, 'Error', 5000);
+    }
   };
 
   const handleVerifyEmail = (row) => {
@@ -1440,3 +1526,4 @@ export default function JobSeekerManagement() {
     </div>
   );
 }
+

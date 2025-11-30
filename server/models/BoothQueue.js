@@ -170,7 +170,7 @@ boothQueueSchema.statics.getJobSeekerQueue = async function(jobSeekerId, boothId
     return this.findOne({ 
         jobSeeker: jobSeekerId, 
         booth: boothId,
-        status: { $in: ['waiting', 'invited'] }
+        status: { $in: ['waiting', 'invited', 'in_meeting'] } // Include 'in_meeting' so job seeker can still see their queue status during meeting
     })
     .populate('booth', 'company companyLogo')
     .populate('event', 'name logo')

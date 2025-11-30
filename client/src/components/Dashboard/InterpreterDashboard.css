@@ -191,7 +191,7 @@
 .video-preview-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9; /* Wider aspect ratio for better hand visibility in sign language interpretation */
   background: #000000;
   border-radius: 12px;
   overflow: hidden;
@@ -203,7 +203,7 @@
 .video-preview {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Use contain instead of cover to show full frame including hands without cropping */
 }
 
 .video-preview.disabled {
@@ -488,7 +488,7 @@
   }
 
   .video-preview-container {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16 / 9; /* Maintain wider aspect ratio on mobile for hand visibility */
   }
 }
 
