@@ -1,1 +1,62 @@
 
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-30 00:13:45:1345 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-30 00:21:56:2156 [32minfo[39m: [32mUser logged in: ali@ability.email[39m
+2025-11-30 00:21:57:2157 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:26:03:263 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:26:05:265 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:26:05:265 [32minfo[39m: [32mUser ali@ability.email disconnected: client namespace disconnect[39m
+2025-11-30 00:26:06:266 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:29:40:2940 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:29:42:2942 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:32:09:329 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:32:12:3212 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:35:21:3521 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:35:23:3523 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:40:33:4033 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:42:28:4228 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 00:42:28:4228 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 00:42:56:4256 [32minfo[39m: [32mUser logged in: ali@ability.email[39m
+2025-11-30 00:42:56:4256 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:46:00:460 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:46:03:463 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:47:47:4747 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:47:50:4750 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 00:50:07:507 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 00:50:11:5011 [32minfo[39m: [32mUser ali@ability.email connected via socket[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:13:013 [32minfo[39m: [32mUser ali@ability.email disconnected: transport close[39m
+2025-11-30 09:00:15:015 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:15:015 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:55:055 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mConnected to Redis[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-11-30 09:01:03:13 [32minfo[39m: [32mRedis Client Connected[39m
+2025-11-30 09:02:14:214 [32minfo[39m: [32mUser logged in: interpretertest@ability.com[39m
+2025-11-30 09:02:15:215 [32minfo[39m: [32mUser interpretertest@ability.com connected via socket[39m
+2025-11-30 09:02:15:215 [32minfo[39m: [32mUser interpretertest@ability.com connected via socket[39m
+2025-11-30 09:02:15:215 [32minfo[39m: [32mSending online users list to interpretertest@ability.com: 0 users[39m
+2025-11-30 09:02:17:217 [32minfo[39m: [32mUser interpretertest@ability.com disconnected: client namespace disconnect[39m
+2025-11-30 09:02:17:217 [32minfo[39m: [32mUser interpretertest@ability.com disconnected: client namespace disconnect[39m
+2025-11-30 09:02:53:253 [32minfo[39m: [32mUser logged in: aadmin@gmail.com[39m
+2025-11-30 09:02:53:253 [32minfo[39m: [32mUser aadmin@gmail.com connected via socket[39m
+2025-11-30 09:09:03:93 [32minfo[39m: [32mUser aadmin@gmail.com disconnected: transport close[39m
+2025-11-30 09:09:05:95 [32minfo[39m: [32mUser aadmin@gmail.com connected via socket[39m
