@@ -158,8 +158,8 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   }, [cameraOpen]);
 
   // Always read latest token and provide an auth-fetch helper BEFORE any hooks use it
-  const getToken = () => localStorage.getItem('token');
-  const getRefreshToken = () => localStorage.getItem('refreshToken');
+  const getToken = () => sessionStorage.getItem('token');
+  const getRefreshToken = () => sessionStorage.getItem('refreshToken');
 
   const tryRefreshToken = async () => {
     try {
@@ -173,8 +173,8 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       if (!res.ok) return false;
       const data = await res.json();
       const { accessToken, refreshToken: newRefresh } = data?.tokens || {};
-      if (accessToken) localStorage.setItem('token', accessToken);
-      if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
+      if (accessToken) sessionStorage.setItem('token', accessToken);
+      if (newRefresh) sessionStorage.setItem('refreshToken', newRefresh);
       return !!accessToken;
     } catch {
       return false;

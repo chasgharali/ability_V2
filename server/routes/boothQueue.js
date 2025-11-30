@@ -438,12 +438,20 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
             position: { $gt: currentServing }
         });
 
+        // Calculate people ahead: count of people currently waiting with position less than current user's position
+        const peopleAhead = await BoothQueue.countDocuments({
+            booth: boothId,
+            status: { $in: ['waiting', 'invited'] },
+            position: { $lt: queueEntry.position }
+        });
+
         res.json({
             success: true,
             position: queueEntry.position,
             token: queueEntry.queueToken,
             currentServing,
             waitingCount,
+            peopleAhead,
             status: queueEntry.status,
             queueEntry,
             unreadMessages: queueEntry.unreadForJobSeeker

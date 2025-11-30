@@ -194,9 +194,9 @@ const RegisterPage = () => {
             };
 
             await register(userData);
-            // Store redirect path in localStorage for persistence through email verification
+            // Store redirect path in sessionStorage for persistence through email verification
             if (redirectPath) {
-                localStorage.setItem('eventRegistrationRedirect', redirectPath);
+                sessionStorage.setItem('eventRegistrationRedirect', redirectPath);
             }
             // Store redirect path in state to use after email verification
             navigate('/verify-email-sent', {

@@ -14,3 +14,7 @@ server/be.zip
 server/.env
 client/.env
 *.env
+
+
+all.logs
+error.logs

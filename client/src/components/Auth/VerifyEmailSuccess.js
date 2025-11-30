@@ -4,9 +4,9 @@ import './Auth.css';
 
 export default function VerifyEmailSuccess() {
   const location = useLocation();
-  // Check for redirect parameter in URL or localStorage
+  // Check for redirect parameter in URL or sessionStorage
   const urlParams = new URLSearchParams(location.search);
-  const redirectPath = urlParams.get('redirect') || localStorage.getItem('eventRegistrationRedirect');
+  const redirectPath = urlParams.get('redirect') || sessionStorage.getItem('eventRegistrationRedirect');
 
   // Announce success to screen readers
   useEffect(() => {

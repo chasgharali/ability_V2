@@ -185,14 +185,17 @@ const InterpreterDashboard = () => {
       setTesting(true);
 
       // Build constraints with selected devices
+      // Use wider aspect ratio (16:9) for better hand visibility in sign language interpretation
       const constraints = {
         video: selectedVideoDevice ? {
           deviceId: { exact: selectedVideoDevice },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          aspectRatio: { ideal: 16 / 9 }
         } : {
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          aspectRatio: { ideal: 16 / 9 }
         },
         audio: selectedAudioDevice ? {
           deviceId: { exact: selectedAudioDevice }

@@ -35,6 +35,7 @@ export default function BoothQueueWaiting() {
   const [queuePosition, setQueuePosition] = useState(initialQueuePos);
   const [currentServing, setCurrentServing] = useState(initialServing);
   const [waitingCount, setWaitingCount] = useState(0);
+  const [peopleAhead, setPeopleAhead] = useState(0);
   const [queueToken, setQueueToken] = useState(location.state?.queueToken || '');
   const [queueEntryId, setQueueEntryId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -162,6 +163,34 @@ export default function BoothQueueWaiting() {
     return () => clearInterval(heartbeatInterval);
   }, [socket, boothId, user._id]);
 
+  // Periodic refresh of queue status to keep numbers updated
+  useEffect(() => {
+    if (!boothId || loading) return;
+    
+    const refreshInterval = setInterval(async () => {
+      try {
+        const queueData = await boothQueueAPI.getQueueStatus(boothId);
+        if (queueData?.success) {
+          setQueuePosition(queueData.position);
+          setCurrentServing(queueData.currentServing);
+          setWaitingCount(queueData.waitingCount ?? 0);
+          setPeopleAhead(queueData.peopleAhead ?? 0);
+          setQueueToken(queueData.token);
+          setQueueEntryId(queueData.queueEntry?._id);
+          try {
+            sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
+            sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+          } catch (e) { }
+        }
+      } catch (e) {
+        // Silently fail - don't break the UI
+        console.warn('Failed to refresh queue status:', e);
+      }
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, [boothId, loading]);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -169,10 +198,10 @@ export default function BoothQueueWaiting() {
       // Load event and booth in parallel
       const [eventRes, boothRes] = await Promise.all([
         fetch(`/api/events/slug/${eventSlug}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
         }),
         fetch(`/api/booths/${boothId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
         })
       ]);
 
@@ -201,6 +230,7 @@ export default function BoothQueueWaiting() {
           setQueuePosition(queueData.position);
           setCurrentServing(queueData.currentServing);
           setWaitingCount(queueData.waitingCount ?? 0);
+          setPeopleAhead(queueData.peopleAhead ?? 0);
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
           setUnreadCount(queueData.unreadMessages || 0);
@@ -242,6 +272,27 @@ export default function BoothQueueWaiting() {
     }
   };
 
+  // Refresh queue status to get updated waitingCount
+  const refreshQueueStatus = async () => {
+    try {
+      const queueData = await boothQueueAPI.getQueueStatus(boothId);
+      if (queueData?.success) {
+        setQueuePosition(queueData.position);
+        setCurrentServing(queueData.currentServing);
+        setWaitingCount(queueData.waitingCount ?? 0);
+        setQueueToken(queueData.token);
+        setQueueEntryId(queueData.queueEntry?._id);
+        try {
+          sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
+          sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+        } catch (e) { }
+      }
+    } catch (e) {
+      // Silently fail - don't break the UI
+      console.warn('Failed to refresh queue status:', e);
+    }
+  };
+
   const handleQueueUpdate = (data) => {
     if (data?.queueEntry?.jobSeeker?._id === user?._id) {
       setQueuePosition(data.queueEntry.position);
@@ -250,6 +301,11 @@ export default function BoothQueueWaiting() {
         sessionStorage.setItem(`queuePos_${boothId}`, String(data.queueEntry.position));
       } catch (e) { }
       speak(`Your position has been updated to ${data.queueEntry.position}.`, 'polite');
+      // Refresh queue status to update waitingCount
+      refreshQueueStatus();
+    } else {
+      // Someone else joined/left - refresh to update waitingCount
+      refreshQueueStatus();
     }
   };
 
@@ -258,6 +314,9 @@ export default function BoothQueueWaiting() {
       const oldServing = currentServing;
       setCurrentServing(data.currentServing);
       try { sessionStorage.setItem(`serving_${boothId}`, String(data.currentServing)); } catch (e) { }
+
+      // Refresh queue status to update waitingCount
+      refreshQueueStatus();
 
       // Announce serving number changes to screen readers
       if (oldServing !== data.currentServing) {
@@ -303,6 +362,9 @@ export default function BoothQueueWaiting() {
         setCallInvitation(null);
         // Redirect out of the waiting page
         navigate(`/events/registered/${eventSlug}`);
+      } else if (sameBooth) {
+        // Queue changed (someone joined/left) - refresh to update counts
+        refreshQueueStatus();
       }
     } catch (err) {
       console.warn('Error handling queue-updated event:', err);
@@ -342,8 +404,8 @@ export default function BoothQueueWaiting() {
       const videos = devices.filter(d => d.kind === 'videoinput');
       setAudioInputs(audios);
       setVideoInputs(videos);
-      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
-      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
+      const savedAudio = sessionStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = sessionStorage.getItem('preferredVideoDeviceId');
       setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
       setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
       setShowInviteModal(true);
@@ -427,8 +489,8 @@ export default function BoothQueueWaiting() {
 
   const handleAcceptInvite = () => {
     if (!pendingInvitation) return;
-    if (selectedAudioId) localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
-    if (selectedVideoId) localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+    if (selectedAudioId) sessionStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+    if (selectedVideoId) sessionStorage.setItem('preferredVideoDeviceId', selectedVideoId);
     // Build callData for VideoCall
     const data = pendingInvitation;
     setCallInvitation({
@@ -546,8 +608,8 @@ export default function BoothQueueWaiting() {
       setVideoInputs(videos);
 
       // Load saved preferences
-      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
-      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
+      const savedAudio = sessionStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = sessionStorage.getItem('preferredVideoDeviceId');
       setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
       setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
 
@@ -561,10 +623,10 @@ export default function BoothQueueWaiting() {
 
   const handleDeviceSave = () => {
     if (selectedAudioId) {
-      localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+      sessionStorage.setItem('preferredAudioDeviceId', selectedAudioId);
     }
     if (selectedVideoId) {
-      localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+      sessionStorage.setItem('preferredVideoDeviceId', selectedVideoId);
     }
 
     setShowDeviceModal(false);
@@ -967,19 +1029,35 @@ export default function BoothQueueWaiting() {
 
           <div className="queue-numbers" role="region" aria-label="Queue status information">
             <div className="queue-number-card" role="status" aria-live="polite">
-              <span className="queue-label" id="ahead-label">Queue status</span>
+              <span className="queue-label" id="total-waiting-label">Queue status</span>
+              <span
+                className="queue-number"
+                aria-labelledby="total-waiting-label"
+                aria-describedby="total-waiting-desc"
+              >
+                {waitingCount}
+              </span>
+              <span id="total-waiting-desc" className="sr-only">
+                There are {waitingCount} people currently waiting in the queue.
+              </span>
+              <p className="queue-helper-text">
+                There {waitingCount === 1 ? 'is' : 'are'} {waitingCount} {waitingCount === 1 ? 'person' : 'people'} currently waiting in the queue.
+              </p>
+            </div>
+            <div className="queue-number-card" role="status" aria-live="polite">
+              <span className="queue-label" id="ahead-label">People ahead of you</span>
               <span
                 className="queue-number"
                 aria-labelledby="ahead-label"
                 aria-describedby="ahead-desc"
               >
-                {waitingCount}
+                {peopleAhead}
               </span>
               <span id="ahead-desc" className="sr-only">
-                There are {waitingCount} people currently waiting in the queue.
+                There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
               </span>
               <p className="queue-helper-text">
-                There {waitingCount === 1 ? 'is' : 'are'} {waitingCount} {waitingCount === 1 ? 'person' : 'people'} currently waiting in the queue.
+                There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
               </p>
             </div>
           </div>

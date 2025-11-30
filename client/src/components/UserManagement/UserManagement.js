@@ -440,7 +440,7 @@ export default function UserManagement() {
               <form className="account-form" onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
                 <Input label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
                 <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
-                <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsNoJobSeeker]} required />
+                <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
                 <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
                 {!editingId && (
                   <>
@@ -469,7 +469,7 @@ export default function UserManagement() {
                   </>
                 )}
                 <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} />
-                <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} />
+                {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
                 <Select label="Select Event (Enable only for Event Admin)" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={form.role !== 'AdminEvent'} />
                 <ButtonComponent 
                   cssClass="e-primary" 
