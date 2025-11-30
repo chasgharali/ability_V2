@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './MyAccountInline.css';
+import { countryCodes } from '../Auth/countryCodes';
 
 // Comprehensive list of countries
 const COUNTRIES = [
@@ -198,12 +199,46 @@ const COUNTRIES = [
   { code: 'ZW', name: 'Zimbabwe' }
 ];
 
+// Helper function to extract country code from phone number
+const extractCountryCode = (phoneNumber) => {
+  if (!phoneNumber) return '+1';
+  
+  // Check if phone starts with a country code
+  for (const country of countryCodes) {
+    if (phoneNumber.startsWith(country.dialCode)) {
+      return country.dialCode;
+    }
+  }
+  
+  // Default to US if no match found
+  return '+1';
+};
+
+// Helper function to extract phone number without country code
+const extractPhoneNumber = (phoneNumber, countryCode) => {
+  if (!phoneNumber) return '';
+  
+  // Remove country code if present
+  if (phoneNumber.startsWith(countryCode)) {
+    return phoneNumber.substring(countryCode.length).trim();
+  }
+  
+  // Remove leading + if present
+  return phoneNumber.replace(/^\+/, '').trim();
+};
+
 export default function MyAccountInline({ user, onDone, updateProfile }) {
+  // Extract country code and phone number from existing phoneNumber
+  const initialPhoneNumber = user?.phoneNumber || '';
+  const initialCountryCode = extractCountryCode(initialPhoneNumber);
+  const initialPhone = extractPhoneNumber(initialPhoneNumber, initialCountryCode);
+
   const [form, setForm] = useState({
     firstName: (user?.name || '').split(' ')[0] || '',
     lastName: (user?.name || '').split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
-    phone: user?.phoneNumber || '',
+    phone: initialPhone,
+    phoneCountryCode: initialCountryCode,
     state: user?.state || '',
     city: user?.city || '',
     country: user?.country || 'US',
@@ -231,12 +266,17 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
     if (e) e.preventDefault();
     setSaving(true); setError(''); setMessage('');
     try {
+      // Combine country code and phone number (phone field should not have country code)
+      const phoneNumber = form.phone 
+        ? `${form.phoneCountryCode}${form.phone.replace(/^\+/, '').trim()}`.trim()
+        : undefined;
+
       const payload = {
         name: `${form.firstName} ${form.lastName}`.trim(),
         state: form.state || '',
         city: form.city || '',
         country: form.country || 'US',
-        phoneNumber: (form.phone || '').trim() || undefined,
+        phoneNumber: phoneNumber || undefined,
         ...a11y,
       };
       await updateProfile(payload);
@@ -272,9 +312,32 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
             <label htmlFor="email">Email *</label>
             <input id="email" name="email" value={form.email} readOnly aria-readonly="true" />
           </div>
-          <div className="form-group">
-            <label htmlFor="phone">Phone</label>
-            <input id="phone" name="phone" value={form.phone} onChange={onChange} />
+          <div className="form-group phone-fields-group">
+            <div className="phone-field-wrapper">
+              <label htmlFor="phoneCountryCode">Country Code</label>
+              <select
+                id="phoneCountryCode"
+                name="phoneCountryCode"
+                value={form.phoneCountryCode}
+                onChange={onChange}
+              >
+                {countryCodes.map(country => (
+                  <option key={country.dialCode} value={country.dialCode}>
+                    {country.flag} {country.dialCode}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="phone-field-wrapper">
+              <label htmlFor="phone">Phone</label>
+              <input 
+                id="phone" 
+                name="phone" 
+                value={form.phone} 
+                onChange={onChange} 
+                type="tel"
+              />
+            </div>
           </div>
         </div>
         <div className="form-row">

@@ -100,7 +100,8 @@ router.post('/register', [
         // If email format is valid (no email validation errors), check if user already exists BEFORE other validations
         // This ensures "user already exists" error takes priority over password/other validation errors
         if (email && emailErrors.length === 0) {
-            // Normalize email for checking (same as validator does)
+            // The email from req.body is already normalized by express-validator's normalizeEmail()
+            // User model stores emails in lowercase (due to lowercase: true), so we ensure it matches
             const normalizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : email;
             const existingUser = await User.findOne({ email: normalizedEmail });
             if (existingUser) {
