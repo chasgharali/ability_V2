@@ -59,7 +59,7 @@ router.post('/register', [
     body('password')
         .isLength({ min: 8 })
         .withMessage('Password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~]/)
         .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
     body('role')
         .optional()
@@ -599,7 +599,7 @@ router.post('/change-password', authenticateToken, [
     body('newPassword')
         .isLength({ min: 8 })
         .withMessage('New password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~]/)
         .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
 ], async (req, res) => {
     try {
@@ -627,6 +627,11 @@ router.post('/change-password', authenticateToken, [
 
         // Update password
         user.hashedPassword = newPassword; // Will be hashed by pre-save middleware
+        // Clear legacy password for legacy users (so they use the new bcrypt password)
+        // This ensures legacy users can login with the new password
+        if (user.legacyPassword) {
+            user.legacyPassword = null;
+        }
         await user.save();
 
         // Invalidate all refresh tokens (force re-login on all devices)
@@ -861,7 +866,7 @@ router.post('/reset-password', [
     body('password')
         .isLength({ min: 8 })
         .withMessage('Password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~]/)
         .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
 ], async (req, res) => {
     try {

@@ -256,8 +256,10 @@ export default function UserManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!editingId) {
-      if (!form.password || form.password.length < 8) {
+    
+    // Password validation for both create and edit modes
+    if (form.password) {
+      if (form.password.length < 8) {
         showToast('Password must be at least 8 characters', 'Error');
         return;
       }
@@ -265,6 +267,10 @@ export default function UserManagement() {
         showToast('Passwords do not match', 'Error');
         return;
       }
+    } else if (!editingId) {
+      // Password is required for new users
+      showToast('Password is required', 'Error');
+      return;
     }
 
     try {
@@ -274,6 +280,10 @@ export default function UserManagement() {
           email: form.email || undefined,
           role: form.role || undefined,
         };
+        // Include password if provided (admin can update password)
+        if (form.password && form.password.trim()) {
+          payload.password = form.password;
+        }
         // Assign booth for Recruiter, BoothAdmin, Support, and Interpreter roles
         if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
           payload.assignedBooth = form.boothId || undefined;
@@ -442,32 +452,28 @@ export default function UserManagement() {
                 <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
                 <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
                 <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
-                {!editingId && (
-                  <>
-                    <div className="password-field-container">
-                      <Input label="Password" type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setField('password', e.target.value)} required />
-                      <ButtonComponent 
-                        cssClass="e-outline e-primary e-small password-toggle-btn" 
-                        aria-pressed={showPwd} 
-                        aria-label={showPwd ? 'Hide password' : 'Show password'} 
-                        onClick={() => setShowPwd(s => !s)}
-                      >
-                        {showPwd ? 'Hide' : 'Show'}
-                      </ButtonComponent>
-                    </div>
-                    <div className="password-field-container">
-                      <Input label="Confirm Password" type={showConfirmPwd ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required />
-                      <ButtonComponent 
-                        cssClass="e-outline e-primary e-small password-toggle-btn" 
-                        aria-pressed={showConfirmPwd} 
-                        aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
-                        onClick={() => setShowConfirmPwd(s => !s)}
-                      >
-                        {showConfirmPwd ? 'Hide' : 'Show'}
-                      </ButtonComponent>
-                    </div>
-                  </>
-                )}
+                <div className="password-field-container">
+                  <Input label={editingId ? "New Password (leave blank to keep current)" : "Password"} type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setField('password', e.target.value)} required={!editingId} />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showPwd} 
+                    aria-label={showPwd ? 'Hide password' : 'Show password'} 
+                    onClick={() => setShowPwd(s => !s)}
+                  >
+                    {showPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
+                <div className="password-field-container">
+                  <Input label={editingId ? "Confirm New Password (leave blank to keep current)" : "Confirm Password"} type={showConfirmPwd ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required={!editingId} />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showConfirmPwd} 
+                    aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
+                    onClick={() => setShowConfirmPwd(s => !s)}
+                  >
+                    {showConfirmPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
                 <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} />
                 {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
                 <Select label="Select Event (Enable only for Event Admin)" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={form.role !== 'AdminEvent'} />
