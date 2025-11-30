@@ -13,6 +13,7 @@ import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
+import filterIcon from '../../assets/filter.png';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
 
@@ -35,6 +36,43 @@ const JobSeekerInterests = () => {
             }
         }
     }, [user, loading, navigate]);
+
+    // Set CSS variable for filter icon
+    useEffect(() => {
+        const filterIconUrl = `url(${filterIcon})`;
+        
+        // Set CSS variable on document root
+        document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
+        
+        // Apply directly to filter icons when grid is ready
+        const applyFilterIcon = () => {
+            const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
+            filterIcons.forEach(icon => {
+                icon.style.backgroundImage = filterIconUrl;
+                icon.style.display = 'inline-block';
+                icon.style.visibility = 'visible';
+            });
+        };
+        
+        // Apply immediately
+        applyFilterIcon();
+        
+        // Watch for new filter icons being added
+        const observer = new MutationObserver(applyFilterIcon);
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+        });
+        
+        // Also apply after a delay to catch grid render
+        const timeoutId = setTimeout(applyFilterIcon, 500);
+        
+        return () => {
+            document.documentElement.style.removeProperty('--filter-icon-url');
+            observer.disconnect();
+            clearTimeout(timeoutId);
+        };
+    }, []);
 
     const [interests, setInterests] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
@@ -473,12 +511,28 @@ const JobSeekerInterests = () => {
                                 {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
                                 <GridComponent
                                     ref={gridRef}
-                                    dataSource={interests}
+                                    dataSource={interests.map(r => ({ 
+                                        ...r, 
+                                        id: r._id,
+                                        // Flatten nested fields for sorting
+                                        jobSeekerName: r.jobSeeker?.name || (r.legacyJobSeekerId ? 'Legacy User' : ''),
+                                        jobSeekerEmail: r.jobSeeker?.email || '',
+                                        eventName: r.event?.name || (r.legacyEventId ? 'Legacy Event' : ''),
+                                        boothName: r.booth?.name || r.company || (r.legacyBoothId ? 'Legacy Booth' : ''),
+                                        jobSeekerCity: r.jobSeeker?.city || '',
+                                        jobSeekerState: r.jobSeeker?.state || ''
+                                    }))}
                                     allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}
-                                    filterSettings={{ type: 'Menu' }}
-                                    showColumnMenu={true}
+                                    filterSettings={{ 
+                                        type: 'Menu',
+                                        showFilterBarStatus: true,
+                                        immediateModeDelay: 0,
+                                        showFilterBarOperator: true,
+                                        enableCaseSensitivity: false
+                                    }}
+                                    showColumnMenu={false}
                                     showColumnChooser={true}
                                     allowResizing={true}
                                     allowReordering={true}
@@ -488,11 +542,12 @@ const JobSeekerInterests = () => {
                                     allowRowDragAndDrop={false}
                                 >
                                     <ColumnsDirective>
-                                        <ColumnDirective headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} />
+                                        <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
                                     </ColumnsDirective>
                                     <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>

@@ -3,6 +3,7 @@ import '../Dashboard/Dashboard.css';
 import './MeetingRecords.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import filterIcon from '../../assets/filter.png';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
@@ -35,6 +36,43 @@ export default function MeetingRecords() {
             }
         }
     }, [user, loading, navigate]);
+
+    // Set CSS variable for filter icon
+    useEffect(() => {
+        const filterIconUrl = `url(${filterIcon})`;
+        
+        // Set CSS variable on document root
+        document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
+        
+        // Apply directly to filter icons when grid is ready
+        const applyFilterIcon = () => {
+            const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
+            filterIcons.forEach(icon => {
+                icon.style.backgroundImage = filterIconUrl;
+                icon.style.display = 'inline-block';
+                icon.style.visibility = 'visible';
+            });
+        };
+        
+        // Apply immediately
+        applyFilterIcon();
+        
+        // Watch for new filter icons being added
+        const observer = new MutationObserver(applyFilterIcon);
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+        });
+        
+        // Also apply after a delay to catch grid render
+        const timeoutId = setTimeout(applyFilterIcon, 500);
+        
+        return () => {
+            document.documentElement.style.removeProperty('--filter-icon-url');
+            observer.disconnect();
+            clearTimeout(timeoutId);
+        };
+    }, []);
 
     const [meetingRecords, setMeetingRecords] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
@@ -668,12 +706,29 @@ export default function MeetingRecords() {
                         <div className="data-grid-container">
                             {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
                             <GridComponent
-                                dataSource={meetingRecords.map(r => ({ ...r, id: r._id }))}
+                                dataSource={meetingRecords.map(r => ({ 
+                                    ...r, 
+                                    id: r._id,
+                                    // Flatten nested fields for sorting
+                                    eventName: r.eventId?.name || '',
+                                    boothName: r.boothId?.name || '',
+                                    recruiterName: r.recruiterId?.name || '',
+                                    jobSeekerName: r.jobseekerId?.name || '',
+                                    jobSeekerCity: r.jobseekerId?.city || '',
+                                    interpreterName: r.interpreterId?.name || 'None',
+                                    messagesCount: r.jobSeekerMessages?.length || 0
+                                }))}
                                 allowPaging={false}
                                 allowSorting={true}
                                 allowFiltering={true}
-                                filterSettings={{ type: 'Menu' }}
-                                showColumnMenu={true}
+                                filterSettings={{ 
+                                    type: 'Menu',
+                                    showFilterBarStatus: true,
+                                    immediateModeDelay: 0,
+                                    showFilterBarOperator: true,
+                                    enableCaseSensitivity: false
+                                }}
+                                showColumnMenu={false}
                                 showColumnChooser={true}
                                 allowResizing={true}
                                 allowReordering={true}
@@ -710,18 +765,19 @@ export default function MeetingRecords() {
                                             width='50' 
                                         />
                                     )}
-                                    <ColumnDirective headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} />
-                                    <ColumnDirective headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Status' width='130' textAlign='Center' template={statusTemplate} />
-                                    <ColumnDirective headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowSorting={false} />
+                                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} />
+                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='duration' headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='status' headerText='Status' width='130' textAlign='Center' template={statusTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='recruiterRating' headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} />
                                     <ColumnDirective 
                                         headerText='Actions' 
                                         width='150' 

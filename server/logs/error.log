@@ -19920,3 +19920,15 @@
 2025-11-24 22:45:58:4558 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
 2025-11-24 22:46:00:460 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
 2025-11-24 22:46:02:462 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-11-30 00:42:28:4228 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 00:42:28:4228 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:10:010 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:15:015 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2025-11-30 09:00:15:015 [31merror[39m: [31mAuthentication error: jwt expired[39m
