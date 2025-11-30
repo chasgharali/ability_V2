@@ -125,7 +125,119 @@ const JobSeekerInterests = () => {
         }
     }, []);
 
+    // Sync header and content horizontal scrolling
+    useEffect(() => {
+        let scrollSyncActive = false;
 
+        const syncScroll = () => {
+            const grids = document.querySelectorAll('.jobseeker-interests-container .e-grid, .data-grid-container .e-grid');
+            grids.forEach(grid => {
+                const header = grid.querySelector('.e-gridheader');
+                const content = grid.querySelector('.e-content');
+                if (!header || !content) return;
+
+                // Force enable scrolling on header
+                header.style.overflowX = 'auto';
+                header.style.overflowY = 'hidden';
+                header.style.position = 'relative';
+                header.style.display = 'block';
+                header.style.width = '100%';
+
+                // Match header table width to content table width for synchronized scrolling
+                const matchTableWidths = () => {
+                    const contentTable = content.querySelector('table');
+                    const headerTable = header.querySelector('table');
+                    const headerContent = header.querySelector('.e-headercontent');
+                    
+                    if (contentTable && headerTable) {
+                        // Force layout recalculation
+                        void contentTable.offsetWidth;
+                        void headerTable.offsetWidth;
+                        
+                        // Get content table's full scroll width (includes all columns)
+                        const contentScrollWidth = contentTable.scrollWidth || contentTable.offsetWidth;
+                        const headerContainerWidth = header.offsetWidth || header.clientWidth;
+                        
+                        // Always set header table width to match content table exactly
+                        if (contentScrollWidth > 0) {
+                            headerTable.style.width = contentScrollWidth + 'px';
+                            headerTable.style.minWidth = contentScrollWidth + 'px';
+                            headerTable.style.maxWidth = 'none';
+                            
+                            if (headerContent) {
+                                headerContent.style.width = contentScrollWidth + 'px';
+                                headerContent.style.minWidth = contentScrollWidth + 'px';
+                                headerContent.style.maxWidth = 'none';
+                            }
+                        }
+                        
+                        // Enable scrolling if content is scrollable
+                        if (contentScrollWidth > headerContainerWidth) {
+                            header.style.overflowX = 'auto';
+                            header.style.overflowY = 'hidden';
+                        }
+                    }
+                };
+                
+                // Match widths with multiple attempts to catch grid render timing
+                matchTableWidths();
+                setTimeout(matchTableWidths, 50);
+                setTimeout(matchTableWidths, 200);
+                setTimeout(matchTableWidths, 500);
+                setTimeout(matchTableWidths, 1000);
+
+                // Sync scroll positions
+                const syncContentToHeader = () => {
+                    if (!scrollSyncActive) {
+                        scrollSyncActive = true;
+                        header.scrollLeft = content.scrollLeft;
+                        requestAnimationFrame(() => {
+                            scrollSyncActive = false;
+                        });
+                    }
+                };
+
+                const syncHeaderToContent = () => {
+                    if (!scrollSyncActive) {
+                        scrollSyncActive = true;
+                        content.scrollLeft = header.scrollLeft;
+                        requestAnimationFrame(() => {
+                            scrollSyncActive = false;
+                        });
+                    }
+                };
+
+                // Remove old listeners
+                content.removeEventListener('scroll', syncContentToHeader);
+                header.removeEventListener('scroll', syncHeaderToContent);
+
+                // Add new listeners
+                content.addEventListener('scroll', syncContentToHeader, { passive: true });
+                header.addEventListener('scroll', syncHeaderToContent, { passive: true });
+
+                // Initial sync
+                header.scrollLeft = content.scrollLeft;
+            });
+        };
+
+        // Run immediately and after delays
+        syncScroll();
+        const timer1 = setTimeout(syncScroll, 100);
+        const timer2 = setTimeout(syncScroll, 500);
+        const timer3 = setTimeout(syncScroll, 1000);
+        
+        const observer = new MutationObserver(() => {
+            setTimeout(syncScroll, 50);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+            clearTimeout(timer3);
+            observer.disconnect();
+        };
+    }, [interests, loadingData]);
 
     // Load all data when component mounts or filters change
     useEffect(() => {
