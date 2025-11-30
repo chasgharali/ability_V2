@@ -429,9 +429,13 @@
     grid-template-columns: 1fr;
   }
 
+  .account-form {
+    padding: 0.5rem !important;
+  }
+
   .accessibility-fieldset,
   .notifications-fieldset {
-    padding: 1rem;
+    padding: 0.25rem !important;
   }
 }
 

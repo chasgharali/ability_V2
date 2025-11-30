@@ -24,11 +24,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const [fontSize, setFontSizeState] = useState<'small' | 'medium' | 'large'>('medium');
     const [reducedMotion, setReducedMotionState] = useState(false);
 
-    // Load preferences from localStorage on mount
+    // Load preferences from sessionStorage on mount
     useEffect(() => {
-        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'high-contrast';
-        const savedFontSize = localStorage.getItem('fontSize') as 'small' | 'medium' | 'large';
-        const savedReducedMotion = localStorage.getItem('reducedMotion') === 'true';
+        const savedTheme = sessionStorage.getItem('theme') as 'light' | 'dark' | 'high-contrast';
+        const savedFontSize = sessionStorage.getItem('fontSize') as 'small' | 'medium' | 'large';
+        const savedReducedMotion = sessionStorage.getItem('reducedMotion') === 'true';
 
         if (savedTheme) {
             setThemeState(savedTheme);
@@ -55,8 +55,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         // Add current theme class
         root.classList.add(`theme-${theme}`);
 
-        // Save to localStorage
-        localStorage.setItem('theme', theme);
+        // Save to sessionStorage
+        sessionStorage.setItem('theme', theme);
     }, [theme]);
 
     // Apply font size to document
@@ -69,8 +69,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         // Add current font size class
         root.classList.add(`font-${fontSize}`);
 
-        // Save to localStorage
-        localStorage.setItem('fontSize', fontSize);
+        // Save to sessionStorage
+        sessionStorage.setItem('fontSize', fontSize);
     }, [fontSize]);
 
     // Apply reduced motion to document
@@ -83,8 +83,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             root.classList.remove('reduced-motion');
         }
 
-        // Save to localStorage
-        localStorage.setItem('reducedMotion', reducedMotion.toString());
+        // Save to sessionStorage
+        sessionStorage.setItem('reducedMotion', reducedMotion.toString());
     }, [reducedMotion]);
 
     // Toggle theme

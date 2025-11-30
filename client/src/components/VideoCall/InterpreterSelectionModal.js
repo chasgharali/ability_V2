@@ -65,7 +65,7 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
         return;
       }
 
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await axios.get(`/api/video-call/available-interpreters/${boothId}`, {
         headers: {
           'Authorization': `Bearer ${token}`

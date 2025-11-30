@@ -33,7 +33,7 @@ export function useRecruiterBooth() {
                 // Get booths where this user is an administrator
                 const response = await fetch('/api/booths', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
 
@@ -55,7 +55,7 @@ export function useRecruiterBooth() {
                     // Get the full booth details including event
                     const boothResponse = await fetch(`/api/booths/${userBooth._id}`, {
                         headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                         }
                     });
 
@@ -110,7 +110,7 @@ export function useRecruiterBooth() {
                         // Get the full booth details including event
                         const boothResponse = await fetch(`/api/booths/${fallbackBooth._id}`, {
                             headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                             }
                         });
 

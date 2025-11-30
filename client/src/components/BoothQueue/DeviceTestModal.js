@@ -95,14 +95,14 @@ export default function DeviceTestModal({
         if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
           console.warn('Device constraint error in device test, retrying without device preferences:', deviceError);
           
-          // Clear invalid device IDs from localStorage
+          // Clear invalid device IDs from sessionStorage
           if (selectedVideoId) {
-            localStorage.removeItem('preferredVideoDeviceId');
-            console.log('Cleared invalid video device ID from localStorage');
+            sessionStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from sessionStorage');
           }
           if (selectedAudioId) {
-            localStorage.removeItem('preferredAudioDeviceId');
-            console.log('Cleared invalid audio device ID from localStorage');
+            sessionStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from sessionStorage');
           }
 
           // Retry without device constraints
