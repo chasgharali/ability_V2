@@ -5,6 +5,7 @@ server/logs
 server/build
 client/build
 server/be.zip
+server/logs/*
 
 # Environment files
 .env

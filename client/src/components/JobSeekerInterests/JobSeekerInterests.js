@@ -497,54 +497,136 @@ const JobSeekerInterests = () => {
                                     <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>
                                 
-                                <div className="pagination-controls">
-                                    <div className="pagination-info">
-                                        Page {pagination.currentPage || filters.page} of {pagination.totalPages || 1} ({pagination.totalInterests || interests.length} items)
-                                    </div>
-                                    <div className="pagination-actions">
-                                        <label>
-                                            Items per page:
+                                {/* Custom Pagination Footer */}
+                                {(pagination.totalPages || 1) > 0 && (
+                                    <div className="custom-pagination" style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '16px',
+                                        backgroundColor: '#f9fafb',
+                                        borderTop: '1px solid #e5e7eb',
+                                        marginTop: '0'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ fontSize: '14px', color: '#374151' }}>
+                                                Rows per page:
+                                            </span>
                                             <select
                                                 value={filters.limit}
                                                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #d1d5db',
+                                                    fontSize: '14px',
+                                                    cursor: 'pointer'
+                                                }}
                                             >
-                                                {[25, 50, 100, 200].map(size => (
-                                                    <option key={size} value={size}>{size}</option>
-                                                ))}
+                                                <option value={10}>10</option>
+                                                <option value={20}>20</option>
+                                                <option value={50}>50</option>
+                                                <option value={100}>100</option>
+                                                <option value={200}>200</option>
                                             </select>
-                                        </label>
-                                        <div className="pagination-buttons">
+                                        </div>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '14px', color: '#374151' }}>
+                                                Page {pagination.currentPage || filters.page} of {pagination.totalPages || 1} ({pagination.totalInterests || interests.length} total)
+                                            </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <button
-                                                type="button"
                                                 onClick={() => goToPage(1)}
-                                                disabled={filters.page <= 1}
+                                                disabled={(pagination.currentPage || filters.page) <= 1 || loadingData}
+                                                style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #d1d5db',
+                                                    backgroundColor: (pagination.currentPage || filters.page) <= 1 ? '#f3f4f6' : '#fff',
+                                                    cursor: (pagination.currentPage || filters.page) <= 1 ? 'not-allowed' : 'pointer',
+                                                    fontSize: '14px',
+                                                    color: (pagination.currentPage || filters.page) <= 1 ? '#9ca3af' : '#374151'
+                                                }}
+                                                title="First Page"
                                             >
-                                                « First
+                                                ⟨⟨
                                             </button>
                                             <button
-                                                type="button"
-                                                onClick={() => goToPage(filters.page - 1)}
-                                                disabled={filters.page <= 1}
+                                                onClick={() => goToPage((pagination.currentPage || filters.page) - 1)}
+                                                disabled={(pagination.currentPage || filters.page) <= 1 || loadingData}
+                                                style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #d1d5db',
+                                                    backgroundColor: (pagination.currentPage || filters.page) <= 1 ? '#f3f4f6' : '#fff',
+                                                    cursor: (pagination.currentPage || filters.page) <= 1 ? 'not-allowed' : 'pointer',
+                                                    fontSize: '14px',
+                                                    color: (pagination.currentPage || filters.page) <= 1 ? '#9ca3af' : '#374151'
+                                                }}
+                                                title="Previous Page"
                                             >
-                                                ‹ Prev
+                                                ⟨ Prev
+                                            </button>
+                                            
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max={pagination.totalPages || 1}
+                                                value={pagination.currentPage || filters.page}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (val >= 1 && val <= (pagination.totalPages || 1)) {
+                                                        goToPage(val);
+                                                    }
+                                                }}
+                                                style={{
+                                                    width: '60px',
+                                                    padding: '6px 8px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #d1d5db',
+                                                    fontSize: '14px',
+                                                    textAlign: 'center'
+                                                }}
+                                            />
+                                            
+                                            <button
+                                                onClick={() => goToPage((pagination.currentPage || filters.page) + 1)}
+                                                disabled={(pagination.currentPage || filters.page) >= (pagination.totalPages || 1) || loadingData}
+                                                style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #d1d5db',
+                                                    backgroundColor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
+                                                    cursor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
+                                                    fontSize: '14px',
+                                                    color: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
+                                                }}
+                                                title="Next Page"
+                                            >
+                                                Next ⟩
                                             </button>
                                             <button
-                                                type="button"
-                                                onClick={() => goToPage(filters.page + 1)}
-                                                disabled={!pagination.hasNext}
-                                            >
-                                                Next ›
-                                            </button>
-                                            <button
-                                                type="button"
                                                 onClick={() => goToPage(pagination.totalPages || filters.page)}
-                                                disabled={!pagination.hasNext}
+                                                disabled={(pagination.currentPage || filters.page) >= (pagination.totalPages || 1) || loadingData}
+                                                style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #d1d5db',
+                                                    backgroundColor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
+                                                    cursor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
+                                                    fontSize: '14px',
+                                                    color: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
+                                                }}
+                                                title="Last Page"
                                             >
-                                                Last »
+                                                ⟩⟩
                                             </button>
                                         </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>
