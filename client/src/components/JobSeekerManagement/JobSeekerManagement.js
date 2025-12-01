@@ -629,15 +629,28 @@ export default function JobSeekerManagement() {
     e.preventDefault();
     
     // Password validation - only if password is provided
-    if (form.password) {
+    if (form.password && form.password.trim()) {
+      // Check password length first
       if (form.password.length < 8) {
-        showToast('Password must be at least 8 characters', 'Error');
+        showToast('Password must be at least 8 characters long', 'Error');
         return;
       }
+      
+      // Check if confirm password is provided
+      if (!form.confirmPassword || !form.confirmPassword.trim()) {
+        showToast('Please confirm your password', 'Error');
+        return;
+      }
+      
+      // Check if passwords match
       if (form.password !== form.confirmPassword) {
-        showToast('Passwords do not match', 'Error');
+        showToast('Passwords do not match. Please enter the same password in both fields', 'Error');
         return;
       }
+    } else if (form.confirmPassword && form.confirmPassword.trim() && !form.password) {
+      // If confirm password is provided but password is not
+      showToast('Please enter a password', 'Error');
+      return;
     }
 
     try {
@@ -758,15 +771,28 @@ export default function JobSeekerManagement() {
     if (!editingId) return;
     
     // Password validation - only if password is provided
-    if (editForm.password) {
+    if (editForm.password && editForm.password.trim()) {
+      // Check password length first
       if (editForm.password.length < 8) {
-        showToast('Password must be at least 8 characters', 'Error');
+        showToast('Password must be at least 8 characters long', 'Error');
         return;
       }
+      
+      // Check if confirm password is provided
+      if (!editForm.confirmPassword || !editForm.confirmPassword.trim()) {
+        showToast('Please confirm your password', 'Error');
+        return;
+      }
+      
+      // Check if passwords match
       if (editForm.password !== editForm.confirmPassword) {
-        showToast('Passwords do not match', 'Error');
+        showToast('Passwords do not match. Please enter the same password in both fields', 'Error');
         return;
       }
+    } else if (editForm.confirmPassword && editForm.confirmPassword.trim() && !editForm.password) {
+      // If confirm password is provided but password is not
+      showToast('Please enter a password', 'Error');
+      return;
     }
     
     setSaving(true);
