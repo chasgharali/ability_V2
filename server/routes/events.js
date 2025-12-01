@@ -311,7 +311,15 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
     body('limits.maxRecruitersPerEvent')
         .optional()
         .isInt({ min: 0 })
-        .withMessage('Max recruiters per event must be a non-negative integer')
+        .withMessage('Max recruiters per event must be a non-negative integer'),
+    body('termsIds')
+        .optional()
+        .isArray()
+        .withMessage('termsIds must be an array'),
+    body('termsIds.*')
+        .optional()
+        .isMongoId()
+        .withMessage('Each terms id must be a valid MongoDB ObjectId')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -324,7 +332,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             });
         }
 
-        const { name, description, start, end, timezone, logoUrl, status, sendyId, limits, theme, isDemo } = req.body;
+        const { name, description, start, end, timezone, logoUrl, status, sendyId, limits, theme, termsIds, isDemo } = req.body;
         const { event, user } = req;
 
         // Update allowed fields
@@ -361,6 +369,11 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             if (theme.chatHeaderColor !== undefined) event.theme.chatHeaderColor = theme.chatHeaderColor;
             if (theme.chatSidebarColor !== undefined) event.theme.chatSidebarColor = theme.chatSidebarColor;
             if (theme.addFooter !== undefined) event.theme.addFooter = theme.addFooter;
+        }
+
+        // Update termsIds if provided
+        if (termsIds !== undefined) {
+            event.termsIds = Array.isArray(termsIds) ? termsIds : [];
         }
 
         // Validate date range if both dates are provided
