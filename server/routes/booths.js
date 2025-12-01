@@ -36,12 +36,53 @@ router.get('/', authenticateToken, async (req, res) => {
 
 /**
  * GET /api/booths/invite/:slug
- * Resolve a booth by its customInviteSlug
+ * Resolve a booth by its customInviteSlug or by name-token pattern
+ * Returns booth info, event info, registration status, and event status
  */
 router.get('/invite/:slug', authenticateToken, async (req, res) => {
     try {
         const { slug } = req.params;
-        const booth = await Booth.findOne({ customInviteSlug: slug }).populate('eventId', 'name slug logoUrl status');
+        const { user } = req;
+        
+        // First, try to find by customInviteSlug
+        let booth = await Booth.findOne({ customInviteSlug: slug }).populate('eventId', 'name slug logoUrl status start end isDemo');
+        
+        // If not found, try to match by name-token pattern (e.g., "meta-632814")
+        if (!booth) {
+            // Check if slug matches pattern: name-token (where token is 6 digits)
+            const nameTokenPattern = /^(.+)-(\d{6})$/;
+            const match = slug.match(nameTokenPattern);
+            
+            if (match) {
+                const boothNamePart = match[1].toLowerCase(); // e.g., "meta"
+                
+                // Find all booths and filter by slugified name
+                const allBooths = await Booth.find({}).populate('eventId', 'name slug logoUrl status start end isDemo');
+                booth = allBooths.find(b => {
+                    // Slugify the booth name for comparison (same logic as frontend)
+                    const boothNameSlug = b.name
+                        .toLowerCase()
+                        .trim()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-');
+                    return boothNameSlug === boothNamePart;
+                });
+            } else {
+                // If it doesn't match name-token pattern, try direct name match (for backward compatibility)
+                const allBooths = await Booth.find({}).populate('eventId', 'name slug logoUrl status start end isDemo');
+                booth = allBooths.find(b => {
+                    const boothNameSlug = b.name
+                        .toLowerCase()
+                        .trim()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-');
+                    return boothNameSlug === slug.toLowerCase();
+                });
+            }
+        }
+        
         if (!booth) {
             return res.status(404).json({
                 error: 'Booth not found',
@@ -49,11 +90,83 @@ router.get('/invite/:slug', authenticateToken, async (req, res) => {
             });
         }
 
+        // Check if event is assigned to booth
+        if (!booth.eventId) {
+            return res.status(400).json({
+                error: 'Event not assigned',
+                message: 'This booth is not assigned to any event. You are unable to join this booth.',
+                booth: booth.getPublicInfo(),
+                boothId: booth._id,
+                event: null,
+                isRegistered: false,
+                isEventUpcoming: false,
+                canJoinQueue: false
+            });
+        }
+
+        const event = booth.eventId;
+        // Get event summary with virtuals
+        const eventSummary = event.getSummary ? event.getSummary() : { 
+            _id: event._id, 
+            name: event.name, 
+            slug: event.slug, 
+            logoUrl: event.logoUrl, 
+            status: event.status,
+            start: event.start,
+            end: event.end,
+            isUpcoming: event.isUpcoming,
+            isActive: event.isActive,
+            isDemo: event.isDemo || false
+        };
+        
+        // Ensure virtuals are computed if getSummary didn't include them
+        if (!eventSummary.isUpcoming && event.start) {
+            const now = new Date();
+            eventSummary.isUpcoming = new Date(event.start) > now && ['published', 'active'].includes(event.status);
+        }
+        if (!eventSummary.isActive && event.start && event.end) {
+            const now = new Date();
+            eventSummary.isActive = event.status === 'active' && now >= new Date(event.start) && now <= new Date(event.end);
+        }
+
+        // Check if user is registered for the event
+        let isRegistered = false;
+        if (user && user.metadata && user.metadata.registeredEvents) {
+            const registeredEvents = user.metadata.registeredEvents || [];
+            isRegistered = registeredEvents.some(reg => 
+                (reg.id && reg.id.toString() === event._id.toString()) ||
+                (reg.slug && reg.slug === event.slug)
+            );
+        }
+
+        // Check if event is upcoming/active using computed values
+        const now = new Date();
+        const eventStart = eventSummary.start ? new Date(eventSummary.start) : null;
+        const eventEnd = eventSummary.end ? new Date(eventSummary.end) : null;
+        const isEventUpcoming = eventSummary.isUpcoming || (eventStart && eventStart > now && ['published', 'active'].includes(eventSummary.status));
+        const isEventActive = eventSummary.isActive || (eventStart && eventStart <= now && eventEnd && eventEnd >= now && eventSummary.status === 'active');
+        const isEventPublished = ['published', 'active'].includes(eventSummary.status);
+        const isDemoEvent = eventSummary.isDemo || false;
+
+        // Determine if user can join queue
+        // User can join if:
+        // 1. They are registered AND
+        // 2. Event is published/active (not draft or cancelled) AND
+        // 3. Event hasn't ended (or is demo)
+        const eventHasEnded = eventEnd && eventEnd < now;
+        const canJoinQueue = isRegistered && isEventPublished && (!eventHasEnded || isDemoEvent);
+
+        // Log for debugging
+        logger.info(`Booth invite resolve: slug=${slug}, boothId=${booth._id}, eventId=${event._id}, isRegistered=${isRegistered}, isEventPublished=${isEventPublished}, eventHasEnded=${eventHasEnded}, isDemoEvent=${isDemoEvent}, canJoinQueue=${canJoinQueue}`);
+
         // Public info for job seekers
         res.json({
             booth: booth.getPublicInfo(),
             boothId: booth._id,
-            event: booth.eventId ? (booth.eventId.getSummary ? booth.eventId.getSummary() : { _id: booth.eventId._id, name: booth.eventId.name, slug: booth.eventId.slug, logoUrl: booth.eventId.logoUrl, status: booth.eventId.status }) : null
+            event: eventSummary,
+            isRegistered,
+            isEventUpcoming,
+            canJoinQueue
         });
     } catch (error) {
         logger.error('Resolve booth by invite slug error:', error);
