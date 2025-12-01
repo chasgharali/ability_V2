@@ -1144,52 +1144,6 @@ export default function JobSeekerManagement() {
             </div>
           </div>
 
-          {/* Survey Information */}
-          {survey && Object.keys(survey).length > 0 && (
-            <div className="profile-section">
-              <h3>Survey Information</h3>
-              <div className="profile-grid">
-                {survey.race && survey.race.length > 0 && (
-                  <div className="profile-field">
-                    <label>Race/Ethnicity:</label>
-                    <span>{survey.race.join(', ')}</span>
-                  </div>
-                )}
-                {survey.genderIdentity && (
-                  <div className="profile-field">
-                    <label>Gender Identity:</label>
-                    <span>{survey.genderIdentity}</span>
-                  </div>
-                )}
-                {survey.ageGroup && (
-                  <div className="profile-field">
-                    <label>Age Group:</label>
-                    <span>{survey.ageGroup}</span>
-                  </div>
-                )}
-                {survey.countryOfOrigin && (
-                  <div className="profile-field">
-                    <label>Country of Origin:</label>
-                    <span>{survey.countryOfOrigin}</span>
-                  </div>
-                )}
-                {survey.disabilities && survey.disabilities.length > 0 && (
-                  <div className="profile-field">
-                    <label>Disabilities:</label>
-                    <span>{survey.disabilities.join(', ')}</span>
-                  </div>
-                )}
-                {survey.otherDisability && (
-                  <div className="profile-field">
-                    <label>Other Disability:</label>
-                    <span>{survey.otherDisability}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-
           {/* Account Details */}
           <div className="profile-section">
             <h3>Account Details</h3>
