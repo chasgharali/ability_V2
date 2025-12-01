@@ -16,6 +16,7 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
+    const isLoggingInRef = useRef(false); // Track if we're in the middle of login
 
     const { login, user, loading } = useAuth();
     const navigate = useNavigate();
@@ -26,16 +27,25 @@ const LoginPage = () => {
     const redirectPath = urlParams.get('redirect');
 
     // Redirect already authenticated users to their intended destination
+    // But skip if we're in the middle of a login flow (handleSubmit will handle redirect)
     useEffect(() => {
-        if (!loading && user && redirectPath) {
-            // User is already logged in and has a redirect path, navigate directly
-            navigate(decodeURIComponent(redirectPath), { replace: true });
-        }
-    }, [user, loading, redirectPath, navigate]);
-
-    // If user is authenticated but no explicit redirect, send them to dashboard
-    useEffect(() => {
-        if (!loading && user && !redirectPath) {
+        if (!loading && user && !isLoggingInRef.current) {
+            // Check for pending queue invite first (highest priority)
+            const pendingQueueInvite = sessionStorage.getItem('pendingQueueInvite');
+            if (pendingQueueInvite) {
+                sessionStorage.removeItem('pendingQueueInvite');
+                navigate(`/queue/${pendingQueueInvite}`, { replace: true });
+                return;
+            }
+            
+            // Then check for redirect path
+            if (redirectPath) {
+                // User is already logged in and has a redirect path, navigate directly
+                navigate(decodeURIComponent(redirectPath), { replace: true });
+                return;
+            }
+            
+            // Default redirect for authenticated users
             navigate('/dashboard', { replace: true });
         }
     }, [user, loading, redirectPath, navigate]);
@@ -91,23 +101,37 @@ const LoginPage = () => {
         }
 
         setIsLoading(true);
+        isLoggingInRef.current = true; // Mark that we're logging in
 
         try {
             const loginType = userType === 'jobseeker' ? 'jobseeker' : 'company';
             const result = await login(formData.email, formData.password, loginType);
             if (result.success) {
+                // Check for pending queue invite first (highest priority)
+                const pendingQueueInvite = sessionStorage.getItem('pendingQueueInvite');
+                if (pendingQueueInvite) {
+                    sessionStorage.removeItem('pendingQueueInvite');
+                    isLoggingInRef.current = false;
+                    // Navigate immediately - useEffect will be blocked by isLoggingInRef
+                    navigate(`/queue/${pendingQueueInvite}`, { replace: true });
+                    return;
+                }
+                
                 // Clear stored redirect path from sessionStorage
                 sessionStorage.removeItem('eventRegistrationRedirect');
                 // Navigate to redirect path if available, otherwise to dashboard
+                isLoggingInRef.current = false;
                 if (redirectPath) {
                     navigate(decodeURIComponent(redirectPath), { replace: true });
                 } else {
                     navigate('/dashboard');
                 }
             } else {
+                isLoggingInRef.current = false;
                 setError(result.error || 'Invalid email or password');
             }
         } catch (err) {
+            isLoggingInRef.current = false;
             setError(err.message || 'Invalid email or password');
         } finally {
             setIsLoading(false);
