@@ -409,12 +409,43 @@ export default function BoothManagement() {
         }
       }
     } catch (err) {
+      console.error(editingBoothId ? 'Update booth failed' : 'Create booth failed', err);
+      
+      // Handle specific error cases
       if (err?.response?.status === 409) {
-        showToast('Custom invite already taken');
-      } else {
-        console.error('Create booth failed', err);
-        showToast('Failed to create booth');
+        showToast('Custom invite already taken', 'Error', 5000);
+        return;
       }
+      
+      // Extract error message from response
+      const errorData = err?.response?.data;
+      let errorMessage = editingBoothId ? 'Failed to update booth' : 'Failed to create booth';
+      
+      if (errorData) {
+        // Check for validation errors with details
+        if (errorData.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
+          const validationErrors = errorData.details
+            .map(detail => {
+              if (detail.msg) return detail.msg;
+              if (detail.path) return `${detail.path}: Invalid value`;
+              return 'Validation error';
+            })
+            .filter(Boolean)
+            .join('\n');
+          
+          if (validationErrors) {
+            errorMessage = `Validation failed:\n${validationErrors}`;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      }
+      
+      showToast(errorMessage, 'Error', 7000);
     } finally { setBoothSaving(false); }
   };
 
@@ -1036,11 +1067,16 @@ export default function BoothManagement() {
                 <div className="form-group">
                   <label className="form-label">Booth Logo</label>
                   <div className="upload-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <label htmlFor="booth-logo-upload" style={{ margin: 0 }}>
-                      <ButtonComponent cssClass="e-outline e-primary e-small">
-                        Choose file
-                      </ButtonComponent>
-                    </label>
+                    <ButtonComponent 
+                      cssClass="e-outline e-primary e-small"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        document.getElementById('booth-logo-upload')?.click();
+                      }}
+                    >
+                      Choose file
+                    </ButtonComponent>
                     <input
                       id="booth-logo-upload"
                       type="file"
