@@ -904,6 +904,15 @@ const socketHandler = (io) => {
                         const videoCall = await VideoCall.findById(socket.currentVideoCallId);
                         if (videoCall) {
                             await videoCall.removeParticipant(socket.userId);
+                            
+                            // If user is an interpreter, update their status to 'left'
+                            const isInterpreter = videoCall.interpreters?.some(
+                                i => i.interpreter.toString() === socket.userId.toString()
+                            );
+                            if (isInterpreter) {
+                                await videoCall.updateInterpreterStatus(socket.userId, 'left');
+                                logger.info(`Updated interpreter ${socket.user.email} status to 'left' on disconnect`);
+                            }
                         }
                     }
                 } catch (error) {

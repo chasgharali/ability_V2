@@ -7,7 +7,7 @@ import axios from 'axios';
 // Returns: { key, downloadUrl }
 export async function uploadBoothLogoToS3(file) {
   if (!file) throw new Error('No file provided');
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
   // Request presigned URL for booth-logo
@@ -49,7 +49,7 @@ export async function uploadBoothLogoToS3(file) {
 }
 export async function uploadImageToS3(file) {
   if (!file) throw new Error('No file provided');
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
   // 1) Ask backend for presigned URL
@@ -92,7 +92,7 @@ export async function uploadImageToS3(file) {
 
 export async function uploadAudioToS3(file) {
   if (!file) throw new Error('No file provided');
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
   // 1) Ask backend for presigned URL
@@ -135,7 +135,7 @@ export async function uploadAudioToS3(file) {
 
 export async function uploadVideoToS3(file) {
   if (!file) throw new Error('No file provided');
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
   // 1) Ask backend for presigned URL

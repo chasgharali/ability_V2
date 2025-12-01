@@ -29,7 +29,11 @@
     max-width: 480px;
     position: relative;
 }
-
+@media (max-width: 768px) {
+    .login-card {
+        padding: 1.5rem;
+    }
+}
 .login-back-link {
     display: flex;
     align-items: center;

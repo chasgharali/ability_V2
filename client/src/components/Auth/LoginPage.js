@@ -96,8 +96,8 @@ const LoginPage = () => {
             const loginType = userType === 'jobseeker' ? 'jobseeker' : 'company';
             const result = await login(formData.email, formData.password, loginType);
             if (result.success) {
-                // Clear stored redirect path from localStorage
-                localStorage.removeItem('eventRegistrationRedirect');
+                // Clear stored redirect path from sessionStorage
+                sessionStorage.removeItem('eventRegistrationRedirect');
                 // Navigate to redirect path if available, otherwise to dashboard
                 if (redirectPath) {
                     navigate(decodeURIComponent(redirectPath), { replace: true });

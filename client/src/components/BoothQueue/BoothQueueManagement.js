@@ -174,7 +174,7 @@ export default function BoothQueueManagement() {
 
       const [boothRes, queueRes] = await Promise.all([
         fetch(`/api/booths/${boothId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
         }),
         boothQueueAPI.getBoothQueue(boothId)
       ]);
@@ -363,8 +363,8 @@ export default function BoothQueueManagement() {
       const videos = devices.filter(d => d.kind === 'videoinput');
       setAudioInputs(audios);
       setVideoInputs(videos);
-      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
-      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
+      const savedAudio = sessionStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = sessionStorage.getItem('preferredVideoDeviceId');
       setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
       setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
     } catch (err) {
@@ -380,8 +380,8 @@ export default function BoothQueueManagement() {
 
   const handleRecruiterAcceptInvite = async () => {
     try {
-      if (selectedAudioId) localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
-      if (selectedVideoId) localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+      if (selectedAudioId) sessionStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+      if (selectedVideoId) sessionStorage.setItem('preferredVideoDeviceId', selectedVideoId);
       setShowRecruiterInviteModal(false);
       if (!pendingQueueEntry) return;
 

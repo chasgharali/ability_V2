@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
 
     // Check for existing token on mount
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         if (token) {
             // Verify token with backend
             verifyToken(token);
@@ -35,8 +35,8 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data.user);
         } catch (error) {
             console.error('Token verification failed:', error);
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('refreshToken');
         } finally {
             setLoading(false);
         }
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
     const updateProfile = async (profileData) => {
         try {
             setError(null);
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await axios.put('/api/auth/profile', profileData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
     const changePassword = async (currentPassword, newPassword) => {
         try {
             setError(null);
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await axios.post('/api/auth/change-password', { currentPassword, newPassword }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -86,8 +86,8 @@ export const AuthProvider = ({ children }) => {
             });
 
             const { tokens, user } = response.data;
-            localStorage.setItem('token', tokens.accessToken);
-            localStorage.setItem('refreshToken', tokens.refreshToken);
+            sessionStorage.setItem('token', tokens.accessToken);
+            sessionStorage.setItem('refreshToken', tokens.refreshToken);
             setUser(user);
             return { success: true };
         } catch (error) {
@@ -115,8 +115,8 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.post('/api/auth/register', userData);
 
             const { tokens, user } = response.data;
-            localStorage.setItem('token', tokens.accessToken);
-            localStorage.setItem('refreshToken', tokens.refreshToken);
+            sessionStorage.setItem('token', tokens.accessToken);
+            sessionStorage.setItem('refreshToken', tokens.refreshToken);
             setUser(user);
             return { success: true };
         } catch (error) {
@@ -127,8 +127,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('refreshToken');
         setUser(null);
         setError(null);
     };
