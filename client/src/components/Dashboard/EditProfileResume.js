@@ -36,11 +36,15 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const [resumeUrl, setResumeUrl] = useState('');
   const [resumeKey, setResumeKey] = useState('');
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
+  const [avatarKey, setAvatarKey] = useState('');
+  const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const resumeInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
@@ -62,6 +66,73 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     } catch (e) {
       showToast('Failed to delete resume', 'error');
     }
+  };
+
+  const deleteAvatar = async () => {
+    try {
+      if (avatarKey) {
+        // Try to delete from S3 first if we have the key
+        try {
+          await authFetch(`/api/uploads/${encodeURIComponent(avatarKey)}`, { method: 'DELETE' });
+        } catch (e) {
+          // If S3 delete fails, fall back to just removing from user profile
+          console.warn('S3 delete failed, removing from profile only:', e);
+        }
+      }
+      // Always remove from user profile
+      await authFetch('/api/users/me', {
+        method: 'PUT',
+        body: JSON.stringify({ avatarUrl: null })
+      });
+      setAvatarPreviewUrl('');
+      setAvatarKey('');
+      showToast('Profile picture removed', 'success');
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    } catch (e) {
+      showToast('Failed to remove profile picture', 'error');
+    }
+  };
+
+  const handleAvatarFileSelect = (file) => {
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+    
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Image size must be less than 2MB', 'error');
+      return;
+    }
+    
+    // Create preview
+    const previewUrl = URL.createObjectURL(file);
+    setPendingAvatarFile(file);
+    setPendingAvatarPreview(previewUrl);
+  };
+
+  const confirmAvatarUpload = async () => {
+    if (!pendingAvatarFile) return;
+    await uploadToS3(pendingAvatarFile, 'avatar');
+    // Clean up pending state
+    if (pendingAvatarPreview) {
+      URL.revokeObjectURL(pendingAvatarPreview);
+    }
+    setPendingAvatarFile(null);
+    setPendingAvatarPreview(null);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  };
+
+  const cancelAvatarUpload = () => {
+    if (pendingAvatarPreview) {
+      URL.revokeObjectURL(pendingAvatarPreview);
+    }
+    setPendingAvatarFile(null);
+    setPendingAvatarPreview(null);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
   };
 
   // Bind stream to video when modal is open and video is mounted
@@ -87,8 +158,8 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   }, [cameraOpen]);
 
   // Always read latest token and provide an auth-fetch helper BEFORE any hooks use it
-  const getToken = () => localStorage.getItem('token');
-  const getRefreshToken = () => localStorage.getItem('refreshToken');
+  const getToken = () => sessionStorage.getItem('token');
+  const getRefreshToken = () => sessionStorage.getItem('refreshToken');
 
   const tryRefreshToken = async () => {
     try {
@@ -102,8 +173,8 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       if (!res.ok) return false;
       const data = await res.json();
       const { accessToken, refreshToken: newRefresh } = data?.tokens || {};
-      if (accessToken) localStorage.setItem('token', accessToken);
-      if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
+      if (accessToken) sessionStorage.setItem('token', accessToken);
+      if (newRefresh) sessionStorage.setItem('refreshToken', newRefresh);
       return !!accessToken;
     } catch {
       return false;
@@ -164,7 +235,18 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         }));
 
         const avatarUrl = data?.user?.avatarUrl;
-        if (avatarUrl) setAvatarPreviewUrl(avatarUrl);
+        if (avatarUrl) {
+          setAvatarPreviewUrl(avatarUrl);
+          // Extract avatar key from URL if it's an S3 URL
+          try {
+            const u = new URL(avatarUrl);
+            const path = decodeURIComponent(u.pathname.startsWith('/') ? u.pathname.slice(1) : u.pathname);
+            // path is the S3 key, e.g., "avatar/<userId>/<filename>"
+            if (path && path.startsWith('avatar/')) {
+              setAvatarKey(path);
+            }
+          } catch { }
+        }
 
         const rUrl = data?.user?.resumeUrl;
         if (rUrl) {
@@ -185,6 +267,15 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (pendingAvatarPreview) {
+        URL.revokeObjectURL(pendingAvatarPreview);
+      }
+    };
+  }, [pendingAvatarPreview]);
 
 
   const onChange = (e) => {
@@ -251,9 +342,19 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         // Clear input so selecting the same file again triggers onChange
         if (resumeInputRef.current) resumeInputRef.current.value = '';
       } else if (fileType === 'avatar') {
+        // Store the key for deletion later
+        setAvatarKey(key);
         // Create local preview; avatarUrl in DB updated by server
         const url = URL.createObjectURL(file);
         setAvatarPreviewUrl(url);
+        // Also update with the download URL from server
+        const completedUrl = complete?.file?.downloadUrl || immediateDownload;
+        if (completedUrl) {
+          // Use server URL after a short delay to ensure it's updated
+          setTimeout(() => {
+            setAvatarPreviewUrl(completedUrl);
+          }, 500);
+        }
         showToast('Profile picture uploaded');
       }
     } catch (e) {
@@ -311,7 +412,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       canvas.toBlob(async (blob) => {
         if (!blob) return;
         const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
-        await uploadToS3(file, 'avatar');
+        handleAvatarFileSelect(file);
         closeCamera();
       }, 'image/jpeg', 0.9);
     } catch (e) {
@@ -398,23 +499,106 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
         <div className="upload-card">
           <h4>Add a Profile Picture (Optional)</h4>
-          <p className="muted">Accepted file types: JPG, PNG, GIF (max size: 1mb)</p>
-          <label className="update-button" style={{ display: 'inline-block' }}>
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadToS3(f, 'avatar');
-              }}
-            />
-            {uploading ? 'Uploading…' : 'Choose file'}
-          </label>
-          <div style={{ marginTop: '0.75rem' }}>
-            <button type="button" className="dashboard-button" onClick={openCamera}>Take your Picture</button>
-          </div>
-          <div className="avatar-preview" aria-hidden="true" style={avatarPreviewUrl ? { backgroundImage: `url(${avatarPreviewUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined} />
+          <p className="muted">Accepted file types: JPG, PNG, GIF (max size: 2MB)</p>
+          
+          {/* Current Avatar Preview (already uploaded) */}
+          {avatarPreviewUrl && !pendingAvatarPreview && (
+            <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <div 
+                className="avatar-preview" 
+                style={{ 
+                  width: '150px', 
+                  height: '150px', 
+                  borderRadius: '50%', 
+                  backgroundImage: `url(${avatarPreviewUrl})`, 
+                  backgroundSize: 'cover', 
+                  backgroundPosition: 'center',
+                  border: '2px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                aria-label="Profile picture preview"
+              />
+            </div>
+          )}
+
+          {/* Pending Avatar Preview (before upload) */}
+          {pendingAvatarPreview && (
+            <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <div 
+                className="avatar-preview" 
+                style={{ 
+                  width: '150px', 
+                  height: '150px', 
+                  borderRadius: '50%', 
+                  backgroundImage: `url(${pendingAvatarPreview})`, 
+                  backgroundSize: 'cover', 
+                  backgroundPosition: 'center',
+                  border: '2px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                aria-label="New profile picture preview"
+              />
+              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Preview - Confirm to upload</p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  type="button" 
+                  className="update-button" 
+                  onClick={confirmAvatarUpload}
+                  disabled={uploading}
+                  style={{ padding: '0.5rem 1.5rem', whiteSpace: 'nowrap', minWidth: '140px', boxSizing: 'border-box' }}
+                >
+                  {uploading ? 'Uploading…' : 'Upload'}
+                </button>
+                <button 
+                  type="button" 
+                  className="dashboard-button" 
+                  onClick={cancelAvatarUpload}
+                  disabled={uploading}
+                  style={{ padding: '0.5rem 1.5rem', whiteSpace: 'nowrap', minWidth: '100px', boxSizing: 'border-box' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Upload Controls */}
+          {!pendingAvatarPreview && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem' }}>
+                <label className="update-button" style={{ display: 'inline-block', textAlign: 'center', whiteSpace: 'nowrap', boxSizing: 'border-box', margin: 0 }}>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleAvatarFileSelect(f);
+                    }}
+                  />
+                  Choose Picture
+                </label>
+                {avatarPreviewUrl && (
+                  <button 
+                    type="button" 
+                    className="update-button" 
+                    onClick={deleteAvatar} 
+                    style={{ whiteSpace: 'nowrap', boxSizing: 'border-box', margin: 0 }}
+                  >
+                    Remove Picture
+                  </button>
+                )}
+              </div>
+              <button type="button" className="dashboard-button" onClick={openCamera} disabled={uploading}>
+                Take your Picture
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

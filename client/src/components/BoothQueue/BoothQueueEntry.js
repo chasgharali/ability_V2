@@ -31,10 +31,10 @@ export default function BoothQueueEntry() {
       // Load event, booth, and interpreter categories
       const [eventRes, boothRes, interpreterRes] = await Promise.all([
         fetch(`/api/events/slug/${eventSlug}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
         }),
         fetch(`/api/booths/${boothId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
         }),
         interpreterCategoriesAPI.getActive()
       ]);

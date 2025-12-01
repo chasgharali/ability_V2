@@ -15,11 +15,11 @@ export const ThemeProvider = ({ children }) => {
     const [fontSize, setFontSize] = useState('normal');
     const [reducedMotion, setReducedMotion] = useState(false);
 
-    // Load theme preferences from localStorage on mount
+    // Load theme preferences from sessionStorage on mount
     useEffect(() => {
-        const savedTheme = localStorage.getItem('theme');
-        const savedFontSize = localStorage.getItem('fontSize');
-        const savedReducedMotion = localStorage.getItem('reducedMotion');
+        const savedTheme = sessionStorage.getItem('theme');
+        const savedFontSize = sessionStorage.getItem('fontSize');
+        const savedReducedMotion = sessionStorage.getItem('reducedMotion');
 
         if (savedTheme) setTheme(savedTheme);
         if (savedFontSize) setFontSize(savedFontSize);
@@ -41,27 +41,27 @@ export const ThemeProvider = ({ children }) => {
     const toggleTheme = () => {
         const newTheme = theme === 'high-contrast' ? 'grayscale' : 'high-contrast';
         setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
+        sessionStorage.setItem('theme', newTheme);
     };
 
     const setFontSizePreference = (size) => {
         setFontSize(size);
-        localStorage.setItem('fontSize', size);
+        sessionStorage.setItem('fontSize', size);
     };
 
     const toggleReducedMotion = () => {
         const newValue = !reducedMotion;
         setReducedMotion(newValue);
-        localStorage.setItem('reducedMotion', newValue.toString());
+        sessionStorage.setItem('reducedMotion', newValue.toString());
     };
 
     const resetPreferences = () => {
         setTheme('high-contrast');
         setFontSize('normal');
         setReducedMotion(false);
-        localStorage.removeItem('theme');
-        localStorage.removeItem('fontSize');
-        localStorage.removeItem('reducedMotion');
+        sessionStorage.removeItem('theme');
+        sessionStorage.removeItem('fontSize');
+        sessionStorage.removeItem('reducedMotion');
     };
 
     const value = {

@@ -15,3 +15,7 @@ server/logs/*
 server/.env
 client/.env
 *.env
+
+
+all.logs
+error.logs

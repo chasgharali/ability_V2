@@ -21,7 +21,7 @@ export default function ViewProfile() {
   const [profile, setProfile] = useState(null);
   const profileNotice = getMessage('view-profile', 'profile-notice') || '';
 
-  const getToken = () => localStorage.getItem('token');
+  const getToken = () => sessionStorage.getItem('token');
 
   useEffect(() => {
     const run = async () => {

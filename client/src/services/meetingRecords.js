@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL
   : `${getApiUrl()}/api`;
 
 function authHeaders() {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     return { Authorization: `Bearer ${token}` };
 }
 
