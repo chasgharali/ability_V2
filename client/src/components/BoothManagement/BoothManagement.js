@@ -34,7 +34,8 @@ export default function BoothManagement() {
     customInviteText: '',
     expireLinkTime: '',
     enableExpiry: false,
-    companyPage: ''
+    companyPage: '',
+    joinBoothButtonLink: ''
   });
   const [booths, setBooths] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -343,6 +344,7 @@ export default function BoothManagement() {
         recruitersCount: boothForm.recruitersCount || 1,
         expireLinkTime: boothForm.expireLinkTime || undefined,
         customInviteSlug: sanitizeInvite(boothForm.customInviteText || ''),
+        joinBoothButtonLink: boothForm.joinBoothButtonLink || '',
         richSections: [
           { title: 'First Placeholder', contentHtml: boothForm.firstHtml || '' },
           { title: 'Second Placeholder', contentHtml: boothForm.secondHtml || '' },
@@ -359,6 +361,7 @@ export default function BoothManagement() {
           recruitersCount: payload.recruitersCount,
           expireLinkTime: payload.expireLinkTime,
           customInviteSlug: payload.customInviteSlug,
+          joinBoothButtonLink: payload.joinBoothButtonLink,
           eventId: boothForm.eventIds && boothForm.eventIds.length > 0 ? boothForm.eventIds[0] : undefined,
         });
         // Update rich sections via dedicated endpoint
@@ -465,6 +468,7 @@ export default function BoothManagement() {
         richSections: b.richSections || [],
         customInviteSlug: b.customInviteSlug || '',
         companyPage: b.companyPage || '',
+        joinBoothButtonLink: b.joinBoothButtonLink || '',
         customUrl: b.customInviteSlug ? `${baseUrl}/queue/${b.customInviteSlug}` : '',
         recruitersCount: b.recruitersCount ?? 0,
         expireLinkTime: b.expireLinkTime || null,
@@ -685,6 +689,7 @@ export default function BoothManagement() {
       eventIds: row.eventIdRaw ? [row.eventIdRaw] : boothForm.eventIds,
       companyPage: row.companyPage || '',
       customInviteText: row.customInviteSlug || '',
+      joinBoothButtonLink: row.joinBoothButtonLink || '',
     }));
     setBoothMode('create');
     setEditingBoothId(row.id);
@@ -1195,6 +1200,18 @@ export default function BoothManagement() {
                   name="jobSeekerQueueLink"
                   placeholder="Auto-generated link"
                 />
+
+                <Input
+                  label="Join Booth Button Link"
+                  type="url"
+                  value={boothForm.joinBoothButtonLink}
+                  onChange={(e) => setBoothField('joinBoothButtonLink', e.target.value)}
+                  placeholder="Leave empty to use Job Seeker Queue Link"
+                  name="joinBoothButtonLink"
+                />
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                  If set, the "Join Queue" button on the event page will redirect to this URL instead of the default queue link.
+                </p>
 
                 <ButtonComponent
                   cssClass="e-primary"
