@@ -109,6 +109,16 @@
   .mobile-toggle-btn {
     display: none !important;
   }
+
+  /* Ensure desktop queue numbers are shown on large screens */
+  .queue-numbers-desktop {
+    display: flex !important;
+  }
+
+  /* Ensure mobile queue numbers are hidden on large screens */
+  .queue-numbers-mobile {
+    display: none !important;
+  }
   
   /* Ensure queue panel is always visible on large desktop */
   .waiting-sidebar-left {
@@ -398,6 +408,20 @@
   flex-direction: column;
   gap: 1rem;
   width: 100%;
+}
+
+/* Desktop queue numbers - hide on mobile */
+.queue-numbers-desktop {
+  display: flex;
+}
+
+/* Mobile queue numbers - hide on desktop */
+.queue-numbers-mobile {
+  display: none;
+  width: 100%;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .queue-number-card {
@@ -790,6 +814,21 @@
     padding: 1.25rem;
     min-height: 120px;
   }
+
+  /* Hide desktop queue numbers in sidebar at this breakpoint */
+  .queue-numbers-desktop {
+    display: none !important;
+  }
+
+  /* Show mobile queue numbers in main area at this breakpoint */
+  .queue-numbers-mobile {
+    display: flex !important;
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -851,6 +890,16 @@
     flex-direction: row;
     gap: 1rem;
     width: auto;
+  }
+
+  /* Ensure mobile queue numbers are hidden on larger screens */
+  .queue-numbers-mobile {
+    display: none !important;
+  }
+
+  /* Ensure desktop queue numbers are shown on larger screens */
+  .queue-numbers-desktop {
+    display: flex !important;
   }
 
   .queue-number-card {
@@ -1164,6 +1213,21 @@
     position: relative;
   }
 
+  /* Hide desktop queue numbers in sidebar at this breakpoint */
+  .queue-numbers-desktop {
+    display: none !important;
+  }
+
+  /* Show mobile queue numbers in main area at this breakpoint */
+  .queue-numbers-mobile {
+    display: flex !important;
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
+  }
+
   .waiting-sidebar-left {
     position: fixed;
     bottom: 0;
@@ -1215,6 +1279,21 @@
     grid-template-columns: 1fr;
     grid-template-areas: 'main';
     position: relative;
+  }
+
+  /* Hide desktop queue numbers in sidebar on mobile */
+  .queue-numbers-desktop {
+    display: none !important;
+  }
+
+  /* Show mobile queue numbers in main area */
+  .queue-numbers-mobile {
+    display: flex !important;
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1.5rem;
   }
 
   /* Show mobile toggle button */

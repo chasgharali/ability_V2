@@ -1027,7 +1027,7 @@ export default function BoothQueueWaiting() {
             </div>
           </div>
 
-          <div className="queue-numbers" role="region" aria-label="Queue status information">
+          <div className="queue-numbers queue-numbers-desktop" role="region" aria-label="Queue status information">
             <div className="queue-number-card" role="status" aria-live="polite">
               <span className="queue-label" id="total-waiting-label">Queue status</span>
               <span
@@ -1123,6 +1123,26 @@ export default function BoothQueueWaiting() {
             <FaBars aria-hidden="true" />
             {mobilePanelOpen ? 'Close Queue Options' : 'Queue Options'}
           </button>
+
+          {/* Queue status card for mobile - shown only on small screens */}
+          <div className="queue-numbers queue-numbers-mobile" role="region" aria-label="Queue status information">
+            <div className="queue-number-card" role="status" aria-live="polite">
+              <span className="queue-label" id="total-waiting-label-mobile">Queue status</span>
+              <span
+                className="queue-number"
+                aria-labelledby="total-waiting-label-mobile"
+                aria-describedby="total-waiting-desc-mobile"
+              >
+                {waitingCount}
+              </span>
+              <span id="total-waiting-desc-mobile" className="sr-only">
+                There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
+              </span>
+              <p className="queue-helper-text">
+                There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
+              </p>
+            </div>
+          </div>
 
           {/* Waiting message on top of placeholders */}
           <div className="waiting-message-header waiting-message-centered" role="status" aria-live="polite">
