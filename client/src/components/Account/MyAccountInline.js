@@ -282,7 +282,14 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
       await updateProfile(payload);
       setMessage('Saved');
       if (onDone) {
-        onDone();
+        // Pass the form data to onDone callback so validation can use it
+        // The callback can ignore the parameter if it doesn't need it
+        const formData = {
+          city: form.city || '',
+          state: form.state || '',
+          country: form.country || 'US',
+        };
+        onDone(formData);
       }
     } catch (e) {
       setError('Failed to save');

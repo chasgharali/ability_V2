@@ -30,6 +30,7 @@ export default function RegistrationWizard() {
   });
   const [validationErrors, setValidationErrors] = useState({});
   const [currentFormData, setCurrentFormData] = useState(null);
+  const [step1FormData, setStep1FormData] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const liveRef = useRef(null);
@@ -143,21 +144,26 @@ export default function RegistrationWizard() {
 
 
   // Validation functions for each step
-  const validateStep1 = () => {
+  const validateStep1 = (formDataOverride = null) => {
     if (!user) return false;
     const errors = {};
     let isValid = true;
 
+    // Use formDataOverride if provided (from form submission), then step1FormData, then user object
+    const city = formDataOverride?.city || step1FormData?.city || user.city || '';
+    const state = formDataOverride?.state || step1FormData?.state || user.state || '';
+    const country = formDataOverride?.country || step1FormData?.country || user.country || '';
+
     // Required fields for step 1: city, state, country
-    if (!user.city || user.city.trim() === '') {
+    if (!city || city.trim() === '') {
       errors.city = 'City is required';
       isValid = false;
     }
-    if (!user.state || user.state.trim() === '') {
+    if (!state || state.trim() === '') {
       errors.state = 'State is required';
       isValid = false;
     }
-    if (!user.country || user.country.trim() === '') {
+    if (!country || country.trim() === '') {
       errors.country = 'Country is required';
       isValid = false;
     }
@@ -238,12 +244,12 @@ export default function RegistrationWizard() {
     return isValid;
   };
 
-  const next = () => {
+  const next = (formDataOverride = null) => {
     let canProceed = false;
 
     switch (step) {
       case 1:
-        canProceed = validateStep1();
+        canProceed = validateStep1(formDataOverride);
         break;
       case 2:
         canProceed = validateStep2();
@@ -503,7 +509,18 @@ export default function RegistrationWizard() {
                     </ul>
                   </div>
                 )}
-                <MyAccountInline user={user} updateProfile={updateProfile} onDone={next} />
+                <MyAccountInline 
+                  user={user} 
+                  updateProfile={updateProfile} 
+                  onDone={(formData) => {
+                    // Store the form data for future reference
+                    if (formData) {
+                      setStep1FormData(formData);
+                    }
+                    // Pass formData directly to next() so validation uses it immediately
+                    next(formData);
+                  }} 
+                />
               </section>
             )}
 
