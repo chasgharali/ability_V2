@@ -427,7 +427,25 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('avatarUrl')
         .optional()
         .custom((value) => value === null || value === '' || typeof value === 'string')
-        .withMessage('avatarUrl must be null, empty string, or a string')
+        .withMessage('avatarUrl must be null, empty string, or a string'),
+    // Accessibility fields
+    body('usesScreenMagnifier').optional().isBoolean().withMessage('usesScreenMagnifier must be boolean'),
+    body('usesScreenReader').optional().isBoolean().withMessage('usesScreenReader must be boolean'),
+    body('needsASL').optional().isBoolean().withMessage('needsASL must be boolean'),
+    body('needsCaptions').optional().isBoolean().withMessage('needsCaptions must be boolean'),
+    body('needsOther').optional().isBoolean().withMessage('needsOther must be boolean'),
+    // Job seeker profile fields
+    body('profile').optional().isObject().withMessage('Profile must be an object'),
+    body('profile.headline').optional().isString().isLength({ max: 200 }).withMessage('Headline max 200 chars'),
+    body('profile.keywords').optional().isString().isLength({ max: 500 }).withMessage('Keywords max 500 chars'),
+    body('profile.primaryExperience').optional().isArray({ max: 2 }).withMessage('Primary experience must be array (max 2)'),
+    body('profile.workLevel').optional().isString(),
+    body('profile.educationLevel').optional().isString(),
+    body('profile.languages').optional().isArray().withMessage('Languages must be array'),
+    body('profile.employmentTypes').optional().isArray().withMessage('Employment types must be array'),
+    body('profile.clearance').optional().isString(),
+    body('profile.workAuthorization').optional().isString(),
+    body('profile.veteranStatus').optional().isString()
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -441,7 +459,8 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl } = req.body;
+        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, 
+                usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, profile } = req.body;
         const { user } = req;
 
         const targetUser = await User.findById(id);
@@ -488,6 +507,35 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         // Allow removing avatar by setting to null or empty string
         if (avatarUrl !== undefined) {
             targetUser.avatarUrl = (avatarUrl === null || avatarUrl === '') ? null : avatarUrl;
+        }
+
+        // Update accessibility fields for JobSeekers
+        if (usesScreenMagnifier !== undefined) targetUser.usesScreenMagnifier = usesScreenMagnifier;
+        if (usesScreenReader !== undefined) targetUser.usesScreenReader = usesScreenReader;
+        if (needsASL !== undefined) targetUser.needsASL = needsASL;
+        if (needsCaptions !== undefined) targetUser.needsCaptions = needsCaptions;
+        if (needsOther !== undefined) targetUser.needsOther = needsOther;
+
+        // Merge job seeker profile into metadata.profile
+        if (profile && typeof profile === 'object') {
+            const prev = (targetUser.metadata && targetUser.metadata.profile) || {};
+            targetUser.metadata = {
+                ...(targetUser.metadata || {}),
+                profile: {
+                    ...prev,
+                    ...(profile.headline !== undefined ? { headline: profile.headline } : {}),
+                    ...(profile.keywords !== undefined ? { keywords: profile.keywords } : {}),
+                    ...(profile.primaryExperience !== undefined ? { primaryExperience: profile.primaryExperience } : {}),
+                    ...(profile.workLevel !== undefined ? { workLevel: profile.workLevel } : {}),
+                    ...(profile.educationLevel !== undefined ? { educationLevel: profile.educationLevel } : {}),
+                    ...(profile.languages !== undefined ? { languages: profile.languages } : {}),
+                    ...(profile.employmentTypes !== undefined ? { employmentTypes: profile.employmentTypes } : {}),
+                    ...(profile.clearance !== undefined ? { clearance: profile.clearance } : {}),
+                    ...(profile.workAuthorization !== undefined ? { workAuthorization: profile.workAuthorization } : {}),
+                    ...(profile.veteranStatus !== undefined ? { veteranStatus: profile.veteranStatus } : {}),
+                    updatedAt: new Date()
+                }
+            };
         }
 
         // Handle assignedBooth updates and validation for recruiter/booth admin/support/interpreter
