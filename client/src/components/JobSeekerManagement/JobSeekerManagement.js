@@ -9,7 +9,7 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser, updateUser } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -62,7 +62,6 @@ export default function JobSeekerManagement() {
   // Use ref for input value to prevent re-renders on every keystroke
   const inputValueRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
-  const [editingId, setEditingId] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
