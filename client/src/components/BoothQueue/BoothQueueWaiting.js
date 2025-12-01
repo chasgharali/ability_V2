@@ -1038,22 +1038,6 @@ export default function BoothQueueWaiting() {
                 {waitingCount}
               </span>
               <span id="total-waiting-desc" className="sr-only">
-                There are {waitingCount} people currently waiting in the queue.
-              </span>
-              <p className="queue-helper-text">
-                There {waitingCount === 1 ? 'is' : 'are'} {waitingCount} {waitingCount === 1 ? 'person' : 'people'} currently waiting in the queue.
-              </p>
-            </div>
-            <div className="queue-number-card" role="status" aria-live="polite">
-              <span className="queue-label" id="ahead-label">People ahead of you</span>
-              <span
-                className="queue-number"
-                aria-labelledby="ahead-label"
-                aria-describedby="ahead-desc"
-              >
-                {peopleAhead}
-              </span>
-              <span id="ahead-desc" className="sr-only">
                 There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
               </span>
               <p className="queue-helper-text">
