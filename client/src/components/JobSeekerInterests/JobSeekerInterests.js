@@ -37,14 +37,39 @@ const JobSeekerInterests = () => {
         }
     }, [user, loading, navigate]);
 
-    // Set CSS variable for filter icon
+    // Set CSS variable for filter icon and make it trigger column menu
     useEffect(() => {
+        if (!gridRef.current) return;
+        
         const filterIconUrl = `url(${filterIcon})`;
         
         // Set CSS variable on document root
         document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
         
-        // Apply directly to filter icons when grid is ready
+        const grid = gridRef.current;
+        
+        // Override filter icon click to open column menu instead
+        const handleFilterIconClick = (e) => {
+            const filterIcon = e.target.closest('.e-filtericon');
+            if (!filterIcon) return;
+            
+            e.stopPropagation();
+            e.preventDefault();
+            
+            const headerCell = filterIcon.closest('.e-headercell');
+            if (!headerCell || !grid.columnMenuModule) return;
+            
+            // Get column field from header cell
+            const columnIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+            const column = grid.columns[columnIndex];
+            
+            if (column) {
+                // Open column menu
+                grid.columnMenuModule.openColumnMenu(headerCell, column, e);
+            }
+        };
+        
+        // Apply filter icon styling
         const applyFilterIcon = () => {
             const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
             filterIcons.forEach(icon => {
@@ -54,7 +79,13 @@ const JobSeekerInterests = () => {
             });
         };
         
-        // Apply immediately
+        // Attach event listener to grid container
+        const gridElement = grid.element;
+        if (gridElement) {
+            gridElement.addEventListener('click', handleFilterIconClick, true);
+        }
+        
+        // Apply filter icon styling
         applyFilterIcon();
         
         // Watch for new filter icons being added
@@ -64,13 +95,18 @@ const JobSeekerInterests = () => {
             subtree: true 
         });
         
-        // Also apply after a delay to catch grid render
-        const timeoutId = setTimeout(applyFilterIcon, 500);
+        // Also apply after delays to catch grid render
+        const timeoutId1 = setTimeout(applyFilterIcon, 500);
+        const timeoutId2 = setTimeout(applyFilterIcon, 1000);
         
         return () => {
             document.documentElement.style.removeProperty('--filter-icon-url');
+            if (gridElement) {
+                gridElement.removeEventListener('click', handleFilterIconClick, true);
+            }
             observer.disconnect();
-            clearTimeout(timeoutId);
+            clearTimeout(timeoutId1);
+            clearTimeout(timeoutId2);
         };
     }, []);
 
@@ -644,17 +680,17 @@ const JobSeekerInterests = () => {
                                         showFilterBarOperator: true,
                                         enableCaseSensitivity: false
                                     }}
-                                    showColumnMenu={false}
+                                    showColumnMenu={true}
                                     showColumnChooser={true}
                                     allowResizing={true}
                                     allowReordering={true}
-                                    toolbar={['Search', 'ColumnChooser']}
+                                    toolbar={['ColumnChooser']}
                                     selectionSettings={{ type: 'None' }}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
                                 >
                                     <ColumnsDirective>
-                                        <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} />
+                                        <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                         <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
