@@ -1,9 +1,4 @@
 import axios from 'axios';
-import { getApiUrl } from '../utils/apiConfig';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL 
-  ? `${process.env.REACT_APP_API_URL}/api` 
-  : `${getApiUrl()}/api`;
 
 function authHeaders() {
     const token = sessionStorage.getItem('token');
@@ -13,15 +8,17 @@ function authHeaders() {
 export const meetingRecordsAPI = {
     // Get meeting records with filtering and pagination
     getMeetingRecords: async (filters = {}) => {
-        const params = new URLSearchParams();
+        const params = {};
         
+        // Only add parameters if they have valid values (following pattern from other services)
         Object.keys(filters).forEach(key => {
             if (filters[key] !== '' && filters[key] !== null && filters[key] !== undefined) {
-                params.append(key, filters[key]);
+                params[key] = filters[key];
             }
         });
 
-        const response = await axios.get(`${API_BASE_URL}/meeting-records?${params.toString()}`, {
+        const response = await axios.get('/api/meeting-records', {
+            params,
             headers: authHeaders()
         });
         return response.data;
@@ -29,7 +26,7 @@ export const meetingRecordsAPI = {
 
     // Get single meeting record
     getMeetingRecord: async (id) => {
-        const response = await axios.get(`${API_BASE_URL}/meeting-records/${id}`, {
+        const response = await axios.get(`/api/meeting-records/${id}`, {
             headers: authHeaders()
         });
         return response.data;
@@ -37,7 +34,7 @@ export const meetingRecordsAPI = {
 
     // Create meeting record from video call
     createFromVideoCall: async (videoCallId) => {
-        const response = await axios.post(`${API_BASE_URL}/meeting-records/create-from-call`, {
+        const response = await axios.post('/api/meeting-records/create-from-call', {
             videoCallId
         }, {
             headers: authHeaders()
@@ -47,7 +44,7 @@ export const meetingRecordsAPI = {
 
     // Submit recruiter rating and feedback
     submitRating: async (meetingId, rating, feedback) => {
-        const response = await axios.post(`${API_BASE_URL}/meeting-records/${meetingId}/rating`, {
+        const response = await axios.post(`/api/meeting-records/${meetingId}/rating`, {
             rating,
             feedback
         }, {
@@ -58,15 +55,17 @@ export const meetingRecordsAPI = {
 
     // Get meeting statistics
     getStats: async (filters = {}) => {
-        const params = new URLSearchParams();
+        const params = {};
         
+        // Only add parameters if they have valid values
         Object.keys(filters).forEach(key => {
             if (filters[key] !== '' && filters[key] !== null && filters[key] !== undefined) {
-                params.append(key, filters[key]);
+                params[key] = filters[key];
             }
         });
 
-        const response = await axios.get(`${API_BASE_URL}/meeting-records/stats/overview?${params.toString()}`, {
+        const response = await axios.get('/api/meeting-records/stats/overview', {
+            params,
             headers: authHeaders()
         });
         return response.data;
@@ -74,15 +73,17 @@ export const meetingRecordsAPI = {
 
     // Export meeting records as CSV
     exportCSV: async (filters = {}) => {
-        const params = new URLSearchParams();
+        const params = {};
         
+        // Only add parameters if they have valid values
         Object.keys(filters).forEach(key => {
             if (filters[key] !== '' && filters[key] !== null && filters[key] !== undefined) {
-                params.append(key, filters[key]);
+                params[key] = filters[key];
             }
         });
 
-        const response = await axios.get(`${API_BASE_URL}/meeting-records/export/csv?${params.toString()}`, {
+        const response = await axios.get('/api/meeting-records/export/csv', {
+            params,
             headers: authHeaders(),
             responseType: 'blob'
         });
@@ -91,7 +92,7 @@ export const meetingRecordsAPI = {
 
     // Bulk delete meeting records
     bulkDelete: async (recordIds) => {
-        const response = await axios.delete(`${API_BASE_URL}/meeting-records/bulk-delete`, {
+        const response = await axios.delete('/api/meeting-records/bulk-delete', {
             headers: authHeaders(),
             data: { recordIds }
         });
