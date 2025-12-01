@@ -140,6 +140,18 @@
   text-align: center;
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
+  cursor: default !important;
+}
+
+.waiting-sidebar-left .sidebar-header:hover,
+.waiting-sidebar-left .sidebar-header:focus,
+.waiting-sidebar-left .sidebar-header:active,
+.sidebar-header:hover,
+.sidebar-header:focus,
+.sidebar-header:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
 }
 
 .sidebar-header .booth-logo-section {
@@ -205,6 +217,11 @@
 
 .booth-logo-section {
   flex-shrink: 0;
+  pointer-events: none;
+}
+
+.booth-logo-section * {
+  pointer-events: none;
 }
 
 .booth-logo-modern {
@@ -214,6 +231,16 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 2px solid #ffffff;
+}
+
+.booth-logo-modern:hover,
+.booth-logo-modern:focus,
+.booth-logo-modern:active {
+  opacity: 1 !important;
+  filter: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  transform: none !important;
 }
 
 .booth-logo-modern-placeholder {
@@ -226,6 +253,16 @@
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 2px solid #ffffff;
+}
+
+.booth-logo-modern-placeholder:hover,
+.booth-logo-modern-placeholder:focus,
+.booth-logo-modern-placeholder:active {
+  opacity: 1 !important;
+  filter: none !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background-color: transparent !important;
+  transform: none !important;
 }
 
 .booth-logo-modern-placeholder span {
