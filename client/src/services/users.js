@@ -26,8 +26,17 @@ export async function listUsers({ page = 1, limit = 50, search, role, isActive }
     }
   }
   
-  if (typeof isActive === 'boolean') {
-    params.isActive = String(isActive);
+  // Handle isActive filter - accept both boolean and string ('true'/'false')
+  if (isActive !== undefined && isActive !== null && isActive !== '') {
+    if (typeof isActive === 'boolean') {
+      params.isActive = String(isActive);
+    } else if (typeof isActive === 'string') {
+      // Accept string values 'true' or 'false'
+      const isActiveStr = isActive.trim().toLowerCase();
+      if (isActiveStr === 'true' || isActiveStr === 'false') {
+        params.isActive = isActiveStr;
+      }
+    }
   }
   
   const res = await axios.get('/api/users', { params, headers: authHeaders() });

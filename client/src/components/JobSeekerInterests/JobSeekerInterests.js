@@ -13,6 +13,7 @@ import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
+import filterIcon from '../../assets/filter.png';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
 
@@ -35,6 +36,79 @@ const JobSeekerInterests = () => {
             }
         }
     }, [user, loading, navigate]);
+
+    // Set CSS variable for filter icon and make it trigger column menu
+    useEffect(() => {
+        if (!gridRef.current) return;
+        
+        const filterIconUrl = `url(${filterIcon})`;
+        
+        // Set CSS variable on document root
+        document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
+        
+        const grid = gridRef.current;
+        
+        // Override filter icon click to open column menu instead
+        const handleFilterIconClick = (e) => {
+            const filterIcon = e.target.closest('.e-filtericon');
+            if (!filterIcon) return;
+            
+            e.stopPropagation();
+            e.preventDefault();
+            
+            const headerCell = filterIcon.closest('.e-headercell');
+            if (!headerCell || !grid.columnMenuModule) return;
+            
+            // Get column field from header cell
+            const columnIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+            const column = grid.columns[columnIndex];
+            
+            if (column) {
+                // Open column menu
+                grid.columnMenuModule.openColumnMenu(headerCell, column, e);
+            }
+        };
+        
+        // Apply filter icon styling
+        const applyFilterIcon = () => {
+            const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
+            filterIcons.forEach(icon => {
+                icon.style.backgroundImage = filterIconUrl;
+                icon.style.display = 'inline-block';
+                icon.style.visibility = 'visible';
+            });
+        };
+        
+        // Attach event listener to grid container
+        const gridElement = grid.element;
+        if (gridElement) {
+            gridElement.addEventListener('click', handleFilterIconClick, true);
+        }
+        
+        // Apply filter icon styling
+        applyFilterIcon();
+        
+        // Watch for new filter icons being added
+        const observer = new MutationObserver(applyFilterIcon);
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+        });
+        
+        // Also apply after delays to catch grid render
+        const timeoutId1 = setTimeout(applyFilterIcon, 500);
+        const timeoutId2 = setTimeout(applyFilterIcon, 1000);
+        
+        return () => {
+            document.documentElement.style.removeProperty('--filter-icon-url');
+            if (gridElement) {
+                gridElement.removeEventListener('click', handleFilterIconClick, true);
+            }
+            observer.disconnect();
+            clearTimeout(timeoutId1);
+            clearTimeout(timeoutId2);
+        };
+    }, []);
 
     const [interests, setInterests] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
@@ -87,7 +161,119 @@ const JobSeekerInterests = () => {
         }
     }, []);
 
+    // Sync header and content horizontal scrolling
+    useEffect(() => {
+        let scrollSyncActive = false;
 
+        const syncScroll = () => {
+            const grids = document.querySelectorAll('.jobseeker-interests-container .e-grid, .data-grid-container .e-grid');
+            grids.forEach(grid => {
+                const header = grid.querySelector('.e-gridheader');
+                const content = grid.querySelector('.e-content');
+                if (!header || !content) return;
+
+                // Force enable scrolling on header
+                header.style.overflowX = 'auto';
+                header.style.overflowY = 'hidden';
+                header.style.position = 'relative';
+                header.style.display = 'block';
+                header.style.width = '100%';
+
+                // Match header table width to content table width for synchronized scrolling
+                const matchTableWidths = () => {
+                    const contentTable = content.querySelector('table');
+                    const headerTable = header.querySelector('table');
+                    const headerContent = header.querySelector('.e-headercontent');
+                    
+                    if (contentTable && headerTable) {
+                        // Force layout recalculation
+                        void contentTable.offsetWidth;
+                        void headerTable.offsetWidth;
+                        
+                        // Get content table's full scroll width (includes all columns)
+                        const contentScrollWidth = contentTable.scrollWidth || contentTable.offsetWidth;
+                        const headerContainerWidth = header.offsetWidth || header.clientWidth;
+                        
+                        // Always set header table width to match content table exactly
+                        if (contentScrollWidth > 0) {
+                            headerTable.style.width = contentScrollWidth + 'px';
+                            headerTable.style.minWidth = contentScrollWidth + 'px';
+                            headerTable.style.maxWidth = 'none';
+                            
+                            if (headerContent) {
+                                headerContent.style.width = contentScrollWidth + 'px';
+                                headerContent.style.minWidth = contentScrollWidth + 'px';
+                                headerContent.style.maxWidth = 'none';
+                            }
+                        }
+                        
+                        // Enable scrolling if content is scrollable
+                        if (contentScrollWidth > headerContainerWidth) {
+                            header.style.overflowX = 'auto';
+                            header.style.overflowY = 'hidden';
+                        }
+                    }
+                };
+                
+                // Match widths with multiple attempts to catch grid render timing
+                matchTableWidths();
+                setTimeout(matchTableWidths, 50);
+                setTimeout(matchTableWidths, 200);
+                setTimeout(matchTableWidths, 500);
+                setTimeout(matchTableWidths, 1000);
+
+                // Sync scroll positions
+                const syncContentToHeader = () => {
+                    if (!scrollSyncActive) {
+                        scrollSyncActive = true;
+                        header.scrollLeft = content.scrollLeft;
+                        requestAnimationFrame(() => {
+                            scrollSyncActive = false;
+                        });
+                    }
+                };
+
+                const syncHeaderToContent = () => {
+                    if (!scrollSyncActive) {
+                        scrollSyncActive = true;
+                        content.scrollLeft = header.scrollLeft;
+                        requestAnimationFrame(() => {
+                            scrollSyncActive = false;
+                        });
+                    }
+                };
+
+                // Remove old listeners
+                content.removeEventListener('scroll', syncContentToHeader);
+                header.removeEventListener('scroll', syncHeaderToContent);
+
+                // Add new listeners
+                content.addEventListener('scroll', syncContentToHeader, { passive: true });
+                header.addEventListener('scroll', syncHeaderToContent, { passive: true });
+
+                // Initial sync
+                header.scrollLeft = content.scrollLeft;
+            });
+        };
+
+        // Run immediately and after delays
+        syncScroll();
+        const timer1 = setTimeout(syncScroll, 100);
+        const timer2 = setTimeout(syncScroll, 500);
+        const timer3 = setTimeout(syncScroll, 1000);
+        
+        const observer = new MutationObserver(() => {
+            setTimeout(syncScroll, 50);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+            clearTimeout(timer3);
+            observer.disconnect();
+        };
+    }, [interests, loadingData]);
 
     // Load all data when component mounts or filters change
     useEffect(() => {
@@ -473,26 +659,43 @@ const JobSeekerInterests = () => {
                                 {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
                                 <GridComponent
                                     ref={gridRef}
-                                    dataSource={interests}
+                                    dataSource={interests.map(r => ({ 
+                                        ...r, 
+                                        id: r._id,
+                                        // Flatten nested fields for sorting
+                                        jobSeekerName: r.jobSeeker?.name || (r.legacyJobSeekerId ? 'Legacy User' : ''),
+                                        jobSeekerEmail: r.jobSeeker?.email || '',
+                                        eventName: r.event?.name || (r.legacyEventId ? 'Legacy Event' : ''),
+                                        boothName: r.booth?.name || r.company || (r.legacyBoothId ? 'Legacy Booth' : ''),
+                                        jobSeekerCity: r.jobSeeker?.city || '',
+                                        jobSeekerState: r.jobSeeker?.state || ''
+                                    }))}
                                     allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}
-                                    filterSettings={{ type: 'Menu' }}
+                                    filterSettings={{ 
+                                        type: 'Menu',
+                                        showFilterBarStatus: true,
+                                        immediateModeDelay: 0,
+                                        showFilterBarOperator: true,
+                                        enableCaseSensitivity: false
+                                    }}
                                     showColumnMenu={true}
                                     showColumnChooser={true}
                                     allowResizing={true}
                                     allowReordering={true}
-                                    toolbar={['Search', 'ColumnChooser']}
+                                    toolbar={['ColumnChooser']}
                                     selectionSettings={{ type: 'None' }}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
                                 >
                                     <ColumnsDirective>
-                                        <ColumnDirective headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowSorting={false} />
-                                        <ColumnDirective headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} />
+                                        <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
+                                        <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
                                     </ColumnsDirective>
                                     <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>

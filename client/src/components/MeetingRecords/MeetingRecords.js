@@ -3,6 +3,7 @@ import '../Dashboard/Dashboard.css';
 import './MeetingRecords.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import filterIcon from '../../assets/filter.png';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
@@ -36,11 +37,85 @@ export default function MeetingRecords() {
         }
     }, [user, loading, navigate]);
 
+    // Set CSS variable for filter icon and make it trigger column menu
+    useEffect(() => {
+        if (!gridRef.current) return;
+        
+        const filterIconUrl = `url(${filterIcon})`;
+        
+        // Set CSS variable on document root
+        document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
+        
+        const grid = gridRef.current;
+        
+        // Override filter icon click to open column menu instead
+        const handleFilterIconClick = (e) => {
+            const filterIcon = e.target.closest('.e-filtericon');
+            if (!filterIcon) return;
+            
+            e.stopPropagation();
+            e.preventDefault();
+            
+            const headerCell = filterIcon.closest('.e-headercell');
+            if (!headerCell || !grid.columnMenuModule) return;
+            
+            // Get column field from header cell
+            const columnIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+            const column = grid.columns[columnIndex];
+            
+            if (column) {
+                // Open column menu
+                grid.columnMenuModule.openColumnMenu(headerCell, column, e);
+            }
+        };
+        
+        // Apply filter icon styling
+        const applyFilterIcon = () => {
+            const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
+            filterIcons.forEach(icon => {
+                icon.style.backgroundImage = filterIconUrl;
+                icon.style.display = 'inline-block';
+                icon.style.visibility = 'visible';
+            });
+        };
+        
+        // Attach event listener to grid container
+        const gridElement = grid.element;
+        if (gridElement) {
+            gridElement.addEventListener('click', handleFilterIconClick, true);
+        }
+        
+        // Apply filter icon styling
+        applyFilterIcon();
+        
+        // Watch for new filter icons being added
+        const observer = new MutationObserver(applyFilterIcon);
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+        });
+        
+        // Also apply after delays to catch grid render
+        const timeoutId1 = setTimeout(applyFilterIcon, 500);
+        const timeoutId2 = setTimeout(applyFilterIcon, 1000);
+        
+        return () => {
+            document.documentElement.style.removeProperty('--filter-icon-url');
+            if (gridElement) {
+                gridElement.removeEventListener('click', handleFilterIconClick, true);
+            }
+            observer.disconnect();
+            clearTimeout(timeoutId1);
+            clearTimeout(timeoutId2);
+        };
+    }, []);
+
     const [meetingRecords, setMeetingRecords] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
+    const gridRef = useRef(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -71,6 +146,129 @@ export default function MeetingRecords() {
         hasPrev: false
     });
 
+    // Sync header and content horizontal scrolling
+    useEffect(() => {
+        let scrollSyncActive = false;
+
+        const syncScroll = () => {
+            const grids = document.querySelectorAll('.meeting-records-container .e-grid, .data-grid-container .e-grid');
+            grids.forEach(grid => {
+                const header = grid.querySelector('.e-gridheader');
+                const content = grid.querySelector('.e-content');
+                if (!header || !content) return;
+
+                // Force enable scrolling on header
+                header.style.overflowX = 'scroll';
+                header.style.overflowY = 'hidden';
+                header.style.position = 'relative';
+                header.style.display = 'block';
+                header.style.width = '100%';
+
+                // Match header table width to content table width for synchronized scrolling
+                const matchTableWidths = () => {
+                    const contentTable = content.querySelector('table');
+                    const headerTable = header.querySelector('table');
+                    const headerContent = header.querySelector('.e-headercontent');
+                    
+                    if (contentTable && headerTable) {
+                        // Force layout recalculation
+                        void contentTable.offsetWidth;
+                        void headerTable.offsetWidth;
+                        
+                        // Get content table's full scroll width (includes all columns)
+                        const contentScrollWidth = contentTable.scrollWidth || contentTable.offsetWidth;
+                        const headerContainerWidth = header.offsetWidth || header.clientWidth;
+                        
+                        // Always set header table width to match content table exactly
+                        if (contentScrollWidth > 0) {
+                            headerTable.style.width = contentScrollWidth + 'px';
+                            headerTable.style.minWidth = contentScrollWidth + 'px';
+                            headerTable.style.maxWidth = 'none';
+                            
+                            if (headerContent) {
+                                headerContent.style.width = contentScrollWidth + 'px';
+                                headerContent.style.minWidth = contentScrollWidth + 'px';
+                                headerContent.style.maxWidth = 'none';
+                            }
+                        }
+                        
+                        // Enable scrolling if content is scrollable
+                        if (contentScrollWidth > headerContainerWidth) {
+                            header.style.overflowX = 'auto';
+                            header.style.overflowY = 'hidden';
+                        }
+                    }
+                };
+                
+                // Match widths with multiple attempts to catch grid render timing
+                matchTableWidths();
+                setTimeout(matchTableWidths, 50);
+                setTimeout(matchTableWidths, 200);
+                setTimeout(matchTableWidths, 500);
+                setTimeout(matchTableWidths, 1000);
+
+                // Sync scroll positions
+                const syncContentToHeader = () => {
+                    if (!scrollSyncActive) {
+                        scrollSyncActive = true;
+                        header.scrollLeft = content.scrollLeft;
+                        requestAnimationFrame(() => {
+                            scrollSyncActive = false;
+                        });
+                    }
+                };
+
+                const syncHeaderToContent = () => {
+                    if (!scrollSyncActive) {
+                        scrollSyncActive = true;
+                        content.scrollLeft = header.scrollLeft;
+                        requestAnimationFrame(() => {
+                            scrollSyncActive = false;
+                        });
+                    }
+                };
+
+                // Remove old listeners
+                content.removeEventListener('scroll', syncContentToHeader);
+                header.removeEventListener('scroll', syncHeaderToContent);
+
+                // Add new listeners
+                content.addEventListener('scroll', syncContentToHeader, { passive: true });
+                header.addEventListener('scroll', syncHeaderToContent, { passive: true });
+
+                // Initial sync
+                setTimeout(() => {
+                    header.scrollLeft = content.scrollLeft;
+                }, 50);
+            });
+        };
+
+        // Run immediately and after delays
+        syncScroll();
+        const timer1 = setTimeout(syncScroll, 100);
+        const timer2 = setTimeout(syncScroll, 500);
+        const timer3 = setTimeout(syncScroll, 1000);
+        const timer4 = setTimeout(syncScroll, 2000);
+        
+        const observer = new MutationObserver(() => {
+            setTimeout(syncScroll, 100);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Also watch for window resize
+        const handleResize = () => setTimeout(syncScroll, 100);
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+            clearTimeout(timer3);
+            clearTimeout(timer4);
+            observer.disconnect();
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [meetingRecords]);
+
     // Statistics
     const [stats, setStats] = useState({
         totalMeetings: 0,
@@ -97,14 +295,64 @@ export default function MeetingRecords() {
     const loadMeetingRecords = useCallback(async () => {
         try {
             setLoadingData(true);
+            console.log('📡 Loading meeting records with filters:', filters);
             const response = await meetingRecordsAPI.getMeetingRecords(filters);
-            setMeetingRecords(response.meetingRecords);
-            setPagination(response.pagination);
+            console.log('✅ Meeting records response:', response);
+            
+            // Ensure we have valid data structure
+            if (response && response.meetingRecords) {
+                console.log(`📊 Loaded ${response.meetingRecords.length} meeting records`);
+                setMeetingRecords(response.meetingRecords || []);
+                setPagination(response.pagination || {
+                    currentPage: 1,
+                    totalPages: 0,
+                    totalRecords: 0,
+                    hasNext: false,
+                    hasPrev: false
+                });
+            } else {
+                console.warn('⚠️ Invalid response structure:', response);
+                setMeetingRecords([]);
+                setPagination({
+                    currentPage: 1,
+                    totalPages: 0,
+                    totalRecords: 0,
+                    hasNext: false,
+                    hasPrev: false
+                });
+            }
             // Reset select all pages when data changes
             setSelectAllPages(false);
         } catch (error) {
-            console.error('Error loading meeting records:', error);
-            showToast('Failed to load meeting records', 'Error');
+            console.error('❌ Error loading meeting records:', error);
+            console.error('Error details:', {
+                message: error.message,
+                code: error.code,
+                response: error.response?.data,
+                status: error.response?.status,
+                config: error.config?.url
+            });
+            
+            // Check if it's a CORS error
+            const isCorsError = error.code === 'ERR_NETWORK' || 
+                               (error.message && error.message.includes('CORS')) ||
+                               (error.message && error.message === 'Network Error');
+            
+            if (isCorsError) {
+                showToast('CORS Error: Check server configuration or use proxy', 'Error');
+            } else {
+                showToast(error.response?.data?.message || 'Failed to load meeting records', 'Error');
+            }
+            
+            // Set empty data on error to prevent UI crashes
+            setMeetingRecords([]);
+            setPagination({
+                currentPage: 1,
+                totalPages: 0,
+                totalRecords: 0,
+                hasNext: false,
+                hasPrev: false
+            });
         } finally {
             setLoadingData(false);
         }
@@ -146,7 +394,8 @@ export default function MeetingRecords() {
             loadRecruiters();
             loadEvents();
         }
-    }, [user, filters, loadMeetingRecords, loadStats, loadRecruiters, loadEvents]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, filters]);
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({
@@ -401,6 +650,25 @@ export default function MeetingRecords() {
         );
     };
 
+    const meetingNotesTemplate = (props) => {
+        const row = props;
+        const notes = row.recruiterFeedback || '';
+        const truncatedNotes = notes.length > 100 ? notes.substring(0, 100) + '...' : notes;
+        return (
+            <div 
+                style={{ 
+                    wordWrap: 'break-word', 
+                    whiteSpace: 'normal', 
+                    padding: '8px 0',
+                    maxWidth: '300px'
+                }}
+                title={notes || 'No notes'}
+            >
+                {notes ? truncatedNotes : 'N/A'}
+            </div>
+        );
+    };
+
     const actionsTemplate = (props) => {
         const row = props;
         return (
@@ -649,16 +917,51 @@ export default function MeetingRecords() {
                         <div className="data-grid-container">
                             {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
                             <GridComponent
-                                dataSource={meetingRecords.map(r => ({ ...r, id: r._id }))}
+                                ref={gridRef}
+                                dataSource={meetingRecords.map(r => {
+                                    // Safely extract populated field values
+                                    // Backend populates these fields, so they can be objects or null
+                                    const getFieldName = (field) => {
+                                        if (!field) return '';
+                                        if (typeof field === 'string') return field;
+                                        if (typeof field === 'object' && field.name) return field.name;
+                                        return '';
+                                    };
+                                    
+                                    const getFieldCity = (field) => {
+                                        if (!field) return '';
+                                        if (typeof field === 'object' && field.city) return field.city;
+                                        return '';
+                                    };
+                                    
+                                    return {
+                                        ...r, 
+                                        id: r._id || r.id,
+                                        // Flatten nested fields for sorting and filtering
+                                        eventName: getFieldName(r.eventId),
+                                        boothName: getFieldName(r.boothId),
+                                        recruiterName: getFieldName(r.recruiterId),
+                                        jobSeekerName: getFieldName(r.jobseekerId),
+                                        jobSeekerCity: getFieldCity(r.jobseekerId),
+                                        interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
+                                        messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
+                                    };
+                                })}
                                 allowPaging={false}
                                 allowSorting={true}
                                 allowFiltering={true}
-                                filterSettings={{ type: 'Menu' }}
+                                filterSettings={{ 
+                                    type: 'Menu',
+                                    showFilterBarStatus: true,
+                                    immediateModeDelay: 0,
+                                    showFilterBarOperator: true,
+                                    enableCaseSensitivity: false
+                                }}
                                 showColumnMenu={true}
                                 showColumnChooser={true}
                                 allowResizing={true}
                                 allowReordering={true}
-                                toolbar={['Search', 'ColumnChooser']}
+                                toolbar={['ColumnChooser']}
                                 selectionSettings={['Admin', 'GlobalSupport'].includes(user?.role) ? { 
                                     type: 'Multiple', 
                                     checkboxOnly: true,
@@ -691,17 +994,19 @@ export default function MeetingRecords() {
                                             width='50' 
                                         />
                                     )}
-                                    <ColumnDirective headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} />
-                                    <ColumnDirective headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Status' width='130' textAlign='Center' template={statusTemplate} />
-                                    <ColumnDirective headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowSorting={false} />
-                                    <ColumnDirective headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowSorting={false} />
+                                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
+                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='duration' headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='status' headerText='Status' width='130' textAlign='Center' template={statusTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='recruiterRating' headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} />
                                     <ColumnDirective 
                                         headerText='Actions' 
                                         width='150' 

@@ -413,6 +413,362 @@
 }
 
 /* ========================================
+   Custom Filter Icon - Clean Implementation
+   ======================================== */
+
+/* Hide the default Syncfusion filter icon (font icon) */
+.e-grid .e-filtericon::before,
+.e-grid .e-filtericon::after {
+    display: none !important;
+    content: '' !important;
+}
+
+/* Override any Syncfusion default styles on filter icon container */
+.e-grid .e-headercell .e-icons,
+.e-grid .e-headercell .e-headercelldiv .e-icons {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Override any parent element styles */
+.e-grid .e-headercell,
+.e-grid .e-headercell .e-headercelldiv {
+    background: transparent !important;
+}
+
+/* Custom filter icon - completely transparent background, no effects */
+.e-grid .e-filtericon,
+.e-grid .e-headercell .e-filtericon,
+.e-grid .e-headercell .e-headercelldiv .e-filtericon,
+.e-grid .e-headercell .e-icons .e-filtericon {
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    margin-left: 6px !important;
+    cursor: pointer !important;
+    background-image: var(--filter-icon-url) !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-indent: -9999px !important;
+    overflow: visible !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    vertical-align: middle !important;
+    position: static !important;
+    z-index: auto !important;
+    text-shadow: none !important;
+    -webkit-text-shadow: none !important;
+    -moz-text-shadow: none !important;
+    border-radius: 0 !important;
+    -webkit-border-radius: 0 !important;
+    -moz-border-radius: 0 !important;
+}
+
+/* Remove ALL hover effects - completely transparent */
+.e-grid .e-filtericon:hover,
+.e-grid .e-headercell .e-filtericon:hover,
+.e-grid .e-headercell .e-headercelldiv .e-filtericon:hover,
+.e-grid .e-headercell .e-icons .e-filtericon:hover {
+    opacity: 1 !important;
+    background-color: transparent !important;
+    background-image: var(--filter-icon-url) !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+}
+
+/* Remove ALL active/filtered state effects - completely transparent */
+.e-grid .e-headercell.e-filtered .e-filtericon,
+.e-grid .e-headercell.e-filtered .e-filtericon:hover,
+.e-grid .e-headercell.e-filtered .e-headercelldiv .e-filtericon,
+.e-grid .e-headercell.e-filtered .e-headercelldiv .e-filtericon:hover {
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: transparent !important;
+    background-image: var(--filter-icon-url) !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+}
+
+/* Show column menu icon alongside filter icon */
+.e-grid .e-headercell .e-columnmenuicon {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+    margin-left: 4px !important;
+}
+
+/* Ensure filter icon is always visible in header */
+.e-grid .e-headercell .e-headercelldiv {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+}
+
+.e-grid .e-headercell .e-headertext {
+    display: inline-block !important;
+    flex: 1 !important;
+}
+
+/* Ensure filter icon container is visible */
+.e-grid .e-headercell .e-icons {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+/* Style column menu popup */
+.e-grid .e-columnmenu,
+.e-popup.e-columnmenu,
+.e-grid .e-columnmenu-popup {
+    z-index: 10000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+}
+
+/* Hide column menu icon (three dots) completely */
+.e-grid .e-columnmenuicon {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Filter Popup Menu Styling - Add Padding */
+.e-grid .e-filter-popup,
+.e-popup.e-filter-popup,
+.e-grid .e-filterdiv,
+.e-filterdiv {
+    padding: 16px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Filter popup content wrapper */
+.e-grid .e-filterdiv .e-filter-parent,
+.e-filterdiv .e-filter-parent,
+.e-popup.e-filter-popup .e-filter-parent {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+
+/* Filter condition dropdown - add spacing */
+.e-grid .e-filterdiv .e-dropdownlist,
+.e-filterdiv .e-dropdownlist,
+.e-popup.e-filter-popup .e-dropdownlist {
+    margin-bottom: 0 !important;
+}
+
+/* Filter value input field - add spacing */
+.e-grid .e-filterdiv input[type="text"],
+.e-filterdiv input[type="text"],
+.e-popup.e-filter-popup input[type="text"],
+.e-grid .e-filterdiv .e-input,
+.e-filterdiv .e-input {
+    padding: 10px 12px !important;
+    border-radius: 6px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Filter buttons container - add spacing */
+.e-grid .e-filterdiv .e-filterbtncontainer,
+.e-filterdiv .e-filterbtncontainer,
+.e-popup.e-filter-popup .e-filterbtncontainer {
+    display: flex !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #e5e7eb !important;
+}
+
+/* Filter buttons - improve styling */
+.e-grid .e-filterdiv .e-btn,
+.e-filterdiv .e-btn,
+.e-popup.e-filter-popup .e-btn {
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    min-width: 80px !important;
+}
+
+/* Ensure proper spacing between elements */
+.e-grid .e-filterdiv > div,
+.e-filterdiv > div {
+    margin-bottom: 12px !important;
+}
+
+.e-grid .e-filterdiv > div:last-child,
+.e-filterdiv > div:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ========================================
+   Top Scrollbar for Header - Synchronized Scrolling
+   ======================================== */
+
+/* Make header scrollable with visible scrollbar - Force it to show */
+.bm-grid-wrap .e-grid .e-gridheader,
+.data-grid-container .e-grid .e-gridheader {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    position: relative !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #888 #f1f1f1 !important;
+    box-sizing: border-box !important;
+    min-height: 0 !important;
+}
+
+/* Ensure header table can be wider than container */
+.bm-grid-wrap .e-grid .e-gridheader .e-table,
+.data-grid-container .e-grid .e-gridheader .e-table {
+    width: auto !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+}
+
+/* Override any Syncfusion default that might hide the scrollbar */
+.bm-grid-wrap .e-grid .e-gridheader *,
+.data-grid-container .e-grid .e-gridheader * {
+    box-sizing: border-box !important;
+}
+
+/* Ensure header content matches content width for proper scrolling */
+.bm-grid-wrap .e-grid .e-gridheader .e-table,
+.data-grid-container .e-grid .e-gridheader .e-table {
+    margin-bottom: 0 !important;
+}
+
+/* Ensure header table wrapper allows scrolling */
+.bm-grid-wrap .e-grid .e-gridheader .e-headercontent,
+.data-grid-container .e-grid .e-gridheader .e-headercontent {
+    overflow-x: visible !important;
+    overflow-y: hidden !important;
+}
+
+/* Style header scrollbar - Force visibility */
+.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar,
+.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar {
+    height: 15px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar-track,
+.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 0 !important;
+    display: block !important;
+}
+
+.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar-thumb,
+.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 6px !important;
+    min-width: 20px !important;
+    display: block !important;
+}
+
+.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar-thumb:hover,
+.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+}
+
+/* Ensure content scrollbar matches header scrollbar size */
+.bm-grid-wrap .e-grid .e-content::-webkit-scrollbar,
+.data-grid-container .e-grid .e-content::-webkit-scrollbar {
+    height: 15px !important;
+    display: block !important;
+}
+
+.bm-grid-wrap .e-grid .e-content::-webkit-scrollbar-track,
+.data-grid-container .e-grid .e-content::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 0 !important;
+    display: block !important;
+}
+
+.bm-grid-wrap .e-grid .e-content::-webkit-scrollbar-thumb,
+.data-grid-container .e-grid .e-content::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 6px !important;
+    min-width: 20px !important;
+    display: block !important;
+}
+
+.bm-grid-wrap .e-grid .e-content::-webkit-scrollbar-thumb:hover,
+.data-grid-container .e-grid .e-content::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+}
+
+/* Firefox - match scrollbar size */
+.bm-grid-wrap .e-grid .e-gridheader,
+.data-grid-container .e-grid .e-gridheader {
+    scrollbar-width: thin !important;
+    scrollbar-color: #888 #f1f1f1 !important;
+}
+
+.bm-grid-wrap .e-grid .e-content,
+.data-grid-container .e-grid .e-content {
+    scrollbar-width: thin !important;
+    scrollbar-color: #888 #f1f1f1 !important;
+}
+
+/* ========================================
    Professional ColumnChooser Dialog Styling
    ======================================== */
 

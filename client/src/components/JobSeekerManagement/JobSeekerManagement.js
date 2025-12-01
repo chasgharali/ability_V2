@@ -3,6 +3,7 @@ import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import filterIcon from '../../assets/filter.png';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
@@ -46,6 +47,8 @@ export default function JobSeekerManagement() {
     city: '',
     state: '',
     country: '',
+    password: '',
+    confirmPassword: '',
   });
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -119,6 +122,79 @@ export default function JobSeekerManagement() {
     }
   }, []);
 
+  // Set CSS variable for filter icon and make it trigger column menu
+  useEffect(() => {
+    if (!gridRef.current) return;
+    
+    const filterIconUrl = `url(${filterIcon})`;
+    
+    // Set CSS variable on document root
+    document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
+    
+    const grid = gridRef.current;
+    
+    // Override filter icon click to open column menu instead
+    const handleFilterIconClick = (e) => {
+      const filterIcon = e.target.closest('.e-filtericon');
+      if (!filterIcon) return;
+      
+      e.stopPropagation();
+      e.preventDefault();
+      
+      const headerCell = filterIcon.closest('.e-headercell');
+      if (!headerCell || !grid.columnMenuModule) return;
+      
+      // Get column field from header cell
+      const columnIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+      const column = grid.columns[columnIndex];
+      
+      if (column) {
+        // Open column menu
+        grid.columnMenuModule.openColumnMenu(headerCell, column, e);
+      }
+    };
+    
+    // Apply filter icon styling
+    const applyFilterIcon = () => {
+      const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
+      filterIcons.forEach(icon => {
+        icon.style.backgroundImage = filterIconUrl;
+        icon.style.display = 'inline-block';
+        icon.style.visibility = 'visible';
+      });
+    };
+    
+    // Attach event listener to grid container
+    const gridElement = grid.element;
+    if (gridElement) {
+      gridElement.addEventListener('click', handleFilterIconClick, true);
+    }
+    
+    // Apply filter icon styling
+    applyFilterIcon();
+    
+    // Watch for new filter icons being added
+    const observer = new MutationObserver(applyFilterIcon);
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true 
+    });
+    
+    // Also apply after delays to catch grid render
+    const timeoutId1 = setTimeout(applyFilterIcon, 500);
+    const timeoutId2 = setTimeout(applyFilterIcon, 1000);
+    
+    return () => {
+      document.documentElement.style.removeProperty('--filter-icon-url');
+      if (gridElement) {
+        gridElement.removeEventListener('click', handleFilterIconClick, true);
+      }
+      observer.disconnect();
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+    };
+  }, [jobSeekers]);
+
   const handleDelete = (row) => {
     if (row.isActive) return; // safety - can't delete active users
     setRowPendingDelete(row);
@@ -191,6 +267,7 @@ export default function JobSeekerManagement() {
           state: u.state || '',
           country: u.country || '',
           isActive: u.isActive,
+          statusText: u.isActive ? 'Active' : 'Inactive', // Flattened for filtering
           createdAt: u.createdAt,
           lastLogin: u.lastLogin,
           emailVerified: u.emailVerified,
@@ -247,6 +324,7 @@ export default function JobSeekerManagement() {
   // Initial load on mount - only runs once
   useEffect(() => {
     loadJobSeekers(1, pageSize, '', '');
+    isFirstRender.current = false; // Mark first render as complete
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -271,8 +349,9 @@ export default function JobSeekerManagement() {
         clearTimeout(searchTimeoutRef.current);
         searchTimeoutRef.current = null;
       }
-      // Status filter change does NOT include search text - only filter by status
-      loadJobSeekersRef.current(1, pageSize, '', statusFilter);
+      // Status filter change - preserve current search filter
+      // Note: Grid key includes statusFilter, so grid will reset automatically
+      loadJobSeekersRef.current(1, pageSize, searchFilterRef.current || '', statusFilter);
     }
   }, [statusFilter, pageSize]);
 
@@ -322,6 +401,130 @@ export default function JobSeekerManagement() {
       }
     }
   }, [mode]);
+
+  // Sync header and content horizontal scrolling
+  useEffect(() => {
+    let scrollSyncActive = false;
+
+    const syncScroll = () => {
+      // Find all grids in Job Seeker Management - check multiple possible container classes
+      const grids = document.querySelectorAll('.bm-grid-wrap .e-grid, .data-grid-container .e-grid');
+      grids.forEach(grid => {
+        const header = grid.querySelector('.e-gridheader');
+        const content = grid.querySelector('.e-content');
+        if (!header || !content) return;
+
+        // Force enable scrolling on header
+        header.style.overflowX = 'auto';
+        header.style.overflowY = 'hidden';
+        header.style.position = 'relative';
+        header.style.display = 'block';
+        header.style.width = '100%';
+
+        // Match header table width to content table width for synchronized scrolling
+        const matchTableWidths = () => {
+          const contentTable = content.querySelector('table');
+          const headerTable = header.querySelector('table');
+          const headerContent = header.querySelector('.e-headercontent');
+          
+          if (contentTable && headerTable) {
+            // Force layout recalculation
+            void contentTable.offsetWidth;
+            void headerTable.offsetWidth;
+            
+            // Get content table's full scroll width (includes all columns)
+            const contentScrollWidth = contentTable.scrollWidth || contentTable.offsetWidth;
+            const headerContainerWidth = header.offsetWidth || header.clientWidth;
+            
+            // Always set header table width to match content table exactly
+            if (contentScrollWidth > 0) {
+              headerTable.style.width = contentScrollWidth + 'px';
+              headerTable.style.minWidth = contentScrollWidth + 'px';
+              headerTable.style.maxWidth = 'none';
+              
+              if (headerContent) {
+                headerContent.style.width = contentScrollWidth + 'px';
+                headerContent.style.minWidth = contentScrollWidth + 'px';
+                headerContent.style.maxWidth = 'none';
+              }
+            }
+            
+            // Enable scrolling if content is scrollable
+            if (contentScrollWidth > headerContainerWidth) {
+              header.style.overflowX = 'auto';
+              header.style.overflowY = 'hidden';
+            }
+          }
+        };
+        
+        // Match widths with multiple attempts to catch grid render timing
+        matchTableWidths();
+        setTimeout(matchTableWidths, 50);
+        setTimeout(matchTableWidths, 200);
+        setTimeout(matchTableWidths, 500);
+        setTimeout(matchTableWidths, 1000);
+
+        // Sync scroll positions
+        const syncContentToHeader = () => {
+          if (!scrollSyncActive) {
+            scrollSyncActive = true;
+            header.scrollLeft = content.scrollLeft;
+            requestAnimationFrame(() => {
+              scrollSyncActive = false;
+            });
+          }
+        };
+
+        const syncHeaderToContent = () => {
+          if (!scrollSyncActive) {
+            scrollSyncActive = true;
+            content.scrollLeft = header.scrollLeft;
+            requestAnimationFrame(() => {
+              scrollSyncActive = false;
+            });
+          }
+        };
+
+        // Remove old listeners
+        content.removeEventListener('scroll', syncContentToHeader);
+        header.removeEventListener('scroll', syncHeaderToContent);
+
+        // Add new listeners
+        content.addEventListener('scroll', syncContentToHeader, { passive: true });
+        header.addEventListener('scroll', syncHeaderToContent, { passive: true });
+
+        // Initial sync
+        setTimeout(() => {
+          header.scrollLeft = content.scrollLeft;
+        }, 50);
+      });
+    };
+
+    // Run immediately and after delays
+    syncScroll();
+    const timer1 = setTimeout(syncScroll, 100);
+    const timer2 = setTimeout(syncScroll, 500);
+    const timer3 = setTimeout(syncScroll, 1000);
+    const timer4 = setTimeout(syncScroll, 2000);
+    
+    const observer = new MutationObserver(() => {
+      setTimeout(syncScroll, 100);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Also watch for window resize
+    const handleResize = () => setTimeout(syncScroll, 100);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      observer.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [jobSeekers]);
 
   // Center delete dialog when it opens
   useEffect(() => {
@@ -426,15 +629,28 @@ export default function JobSeekerManagement() {
     e.preventDefault();
     
     // Password validation - only if password is provided
-    if (form.password) {
+    if (form.password && form.password.trim()) {
+      // Check password length first
       if (form.password.length < 8) {
-        showToast('Password must be at least 8 characters', 'Error');
+        showToast('Password must be at least 8 characters long', 'Error');
         return;
       }
+      
+      // Check if confirm password is provided
+      if (!form.confirmPassword || !form.confirmPassword.trim()) {
+        showToast('Please confirm your password', 'Error');
+        return;
+      }
+      
+      // Check if passwords match
       if (form.password !== form.confirmPassword) {
-        showToast('Passwords do not match', 'Error');
+        showToast('Passwords do not match. Please enter the same password in both fields', 'Error');
         return;
       }
+    } else if (form.confirmPassword && form.confirmPassword.trim() && !form.password) {
+      // If confirm password is provided but password is not
+      showToast('Please enter a password', 'Error');
+      return;
     }
 
     try {
@@ -518,6 +734,8 @@ export default function JobSeekerManagement() {
       city: row.city || '',
       state: row.state || '',
       country: row.country || '',
+      password: '',
+      confirmPassword: '',
     });
     setEditingId(row.id);
     
@@ -552,6 +770,31 @@ export default function JobSeekerManagement() {
     
     if (!editingId) return;
     
+    // Password validation - only if password is provided
+    if (editForm.password && editForm.password.trim()) {
+      // Check password length first
+      if (editForm.password.length < 8) {
+        showToast('Password must be at least 8 characters long', 'Error');
+        return;
+      }
+      
+      // Check if confirm password is provided
+      if (!editForm.confirmPassword || !editForm.confirmPassword.trim()) {
+        showToast('Please confirm your password', 'Error');
+        return;
+      }
+      
+      // Check if passwords match
+      if (editForm.password !== editForm.confirmPassword) {
+        showToast('Passwords do not match. Please enter the same password in both fields', 'Error');
+        return;
+      }
+    } else if (editForm.confirmPassword && editForm.confirmPassword.trim() && !editForm.password) {
+      // If confirm password is provided but password is not
+      showToast('Please enter a password', 'Error');
+      return;
+    }
+    
     setSaving(true);
     try {
       const fullName = `${editForm.firstName} ${editForm.lastName}`.trim();
@@ -564,11 +807,29 @@ export default function JobSeekerManagement() {
         country: editForm.country || undefined,
       };
       
+      // Include password if provided (admin can update password)
+      if (editForm.password && editForm.password.trim()) {
+        payload.password = editForm.password;
+      }
+      
       await updateUser(editingId, payload);
       showToast('Job seeker updated successfully', 'Success');
       
       // Refresh the list
       await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+      
+      // Reset form
+      setEditForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        city: '',
+        state: '',
+        country: '',
+        password: '',
+        confirmPassword: '',
+      });
       
       // Return to list mode
       setMode('list');
@@ -1007,6 +1268,38 @@ export default function JobSeekerManagement() {
                   required
                   placeholder="Enter email address"
                 />
+                <div className="password-field-container">
+                  <Input 
+                    label="New Password (leave blank to keep current)" 
+                    type={showPwd ? 'text' : 'password'} 
+                    value={editForm.password} 
+                    onChange={(e) => setEditField('password', e.target.value)} 
+                  />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showPwd} 
+                    aria-label={showPwd ? 'Hide password' : 'Show password'} 
+                    onClick={() => setShowPwd(s => !s)}
+                  >
+                    {showPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
+                <div className="password-field-container">
+                  <Input 
+                    label="Confirm New Password (leave blank to keep current)" 
+                    type={showConfirmPwd ? 'text' : 'password'} 
+                    value={editForm.confirmPassword} 
+                    onChange={(e) => setEditField('confirmPassword', e.target.value)} 
+                  />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showConfirmPwd} 
+                    aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
+                    onClick={() => setShowConfirmPwd(s => !s)}
+                  >
+                    {showConfirmPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
                 <Input
                   label="Phone"
                   type="tel"
@@ -1136,7 +1429,7 @@ export default function JobSeekerManagement() {
             {/* Data Grid */}
             {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
             {mode === 'list' && !isTransitioning && (
-              <div style={{ position: 'relative', display: isTransitioning ? 'none' : 'block' }}>
+              <div className="bm-grid-wrap" style={{ position: 'relative', display: isTransitioning ? 'none' : 'block' }}>
                 {searchLoading && (
                   <div style={{
                     position: 'absolute',
@@ -1161,7 +1454,14 @@ export default function JobSeekerManagement() {
                   dataSource={gridDataSource}
                   allowPaging={false}
                   allowSorting={true}
-                  allowFiltering={false}
+                  allowFiltering={true}
+                  filterSettings={{ 
+                    type: 'Menu',
+                    showFilterBarStatus: true,
+                    immediateModeDelay: 0,
+                    showFilterBarOperator: true,
+                    enableCaseSensitivity: false
+                  }}
                   showColumnMenu={true}
                   showColumnChooser={true}
                   allowResizing={true}
@@ -1170,6 +1470,7 @@ export default function JobSeekerManagement() {
                   selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
                   enableHover={true}
                   allowRowDragAndDrop={false}
+                  enableHeaderFocus={false}
                 >
               <ColumnsDirective>
                 <ColumnDirective type='checkbox' width='50' />
@@ -1177,6 +1478,7 @@ export default function JobSeekerManagement() {
                   field='firstName' 
                   headerText='First Name' 
                   width='150' 
+                  allowFiltering={true}
                   template={(props) => (
                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                       {props.firstName || ''}
@@ -1187,6 +1489,7 @@ export default function JobSeekerManagement() {
                   field='lastName' 
                   headerText='Last Name' 
                   width='150' 
+                  allowFiltering={true}
                   template={(props) => (
                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                       {props.lastName || ''}
@@ -1197,6 +1500,7 @@ export default function JobSeekerManagement() {
                   field='email' 
                   headerText='Email' 
                   width='250' 
+                  allowFiltering={true}
                   template={(props) => (
                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                       {props.email || ''}
@@ -1207,6 +1511,7 @@ export default function JobSeekerManagement() {
                   field='phone' 
                   headerText='Phone' 
                   width='150' 
+                  allowFiltering={true}
                   template={(props) => (
                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                       {props.phone || ''}
@@ -1217,6 +1522,7 @@ export default function JobSeekerManagement() {
                   field='city' 
                   headerText='City' 
                   width='120' 
+                  allowFiltering={true}
                   template={(props) => (
                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                       {props.city || ''}
@@ -1227,6 +1533,7 @@ export default function JobSeekerManagement() {
                   field='state' 
                   headerText='State' 
                   width='120' 
+                  allowFiltering={true}
                   template={(props) => (
                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                       {props.state || ''}
@@ -1234,10 +1541,11 @@ export default function JobSeekerManagement() {
                   )}
                 />
                 <ColumnDirective 
-                  field='isActive' 
+                  field='statusText' 
                   headerText='Status' 
                   width='120' 
                   textAlign='Center'
+                  allowFiltering={true}
                   template={statusTemplate}
                 />
                 <ColumnDirective 
@@ -1245,12 +1553,14 @@ export default function JobSeekerManagement() {
                   headerText='Email Verified' 
                   width='130' 
                   textAlign='Center'
+                  allowFiltering={true}
                   template={emailVerifiedTemplate}
                 />
                 <ColumnDirective 
                   field='lastLogin' 
                   headerText='Last Login' 
                   width='150' 
+                  allowFiltering={true}
                   template={(props) => (
                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                       {lastLoginTemplate(props)}
