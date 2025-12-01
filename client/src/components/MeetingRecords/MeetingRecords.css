@@ -385,30 +385,130 @@
     content: '' !important;
 }
 
-/* Custom filter icon with your filter.png image */
-.e-grid .e-filtericon {
+/* Override any Syncfusion default styles on filter icon container */
+.e-grid .e-headercell .e-icons,
+.e-grid .e-headercell .e-headercelldiv .e-icons {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Override any parent element styles */
+.e-grid .e-headercell,
+.e-grid .e-headercell .e-headercelldiv {
+    background: transparent !important;
+}
+
+/* Custom filter icon - completely transparent background, no effects */
+.e-grid .e-filtericon,
+.e-grid .e-headercell .e-filtericon,
+.e-grid .e-headercell .e-headercelldiv .e-filtericon,
+.e-grid .e-headercell .e-icons .e-filtericon {
     display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
     width: 18px !important;
     height: 18px !important;
     padding: 0 !important;
+    margin: 0 !important;
     margin-left: 6px !important;
     cursor: pointer !important;
     background-image: var(--filter-icon-url) !important;
-    background-size: 18px 18px !important;
+    background-size: contain !important;
     background-repeat: no-repeat !important;
-    background-position: center center !important;
+    background-position: center !important;
+    background-color: transparent !important;
     border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-indent: -9999px !important;
+    overflow: visible !important;
     font-size: 0 !important;
     line-height: 0 !important;
-    text-indent: -9999px !important;
-    overflow: hidden !important;
+    vertical-align: middle !important;
+    position: static !important;
+    z-index: auto !important;
+    text-shadow: none !important;
+    -webkit-text-shadow: none !important;
+    -moz-text-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* Remove ALL hover effects - completely transparent */
+.e-grid .e-filtericon:hover,
+.e-grid .e-headercell .e-filtericon:hover,
+.e-grid .e-headercell .e-headercelldiv .e-filtericon:hover,
+.e-grid .e-headercell .e-icons .e-filtericon:hover {
+    opacity: 1 !important;
+    background-color: transparent !important;
+    background-image: var(--filter-icon-url) !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+}
+
+/* Remove ALL active/filtered state effects - completely transparent */
+.e-grid .e-headercell.e-filtered .e-filtericon,
+.e-grid .e-headercell.e-filtered .e-filtericon:hover,
+.e-grid .e-headercell.e-filtered .e-headercelldiv .e-filtericon,
+.e-grid .e-headercell.e-filtered .e-headercelldiv .e-filtericon:hover {
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: transparent !important;
+    background-image: var(--filter-icon-url) !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
 }
 
 /* Hide column menu icon */
 .e-grid .e-columnmenuicon {
     display: none !important;
+}
+
+/* Prevent column menu from opening on header click */
+.e-grid .e-headercell {
+    cursor: default !important;
+}
+
+.e-grid .e-headercell .e-headertext {
+    cursor: default !important;
 }
 
 /* ========================================

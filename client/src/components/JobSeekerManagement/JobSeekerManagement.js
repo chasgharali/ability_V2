@@ -10,7 +10,7 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser, updateUser } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -47,6 +47,8 @@ export default function JobSeekerManagement() {
     city: '',
     state: '',
     country: '',
+    password: '',
+    confirmPassword: '',
   });
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -63,7 +65,6 @@ export default function JobSeekerManagement() {
   // Use ref for input value to prevent re-renders on every keystroke
   const inputValueRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
-  const [editingId, setEditingId] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -121,14 +122,39 @@ export default function JobSeekerManagement() {
     }
   }, []);
 
-  // Set CSS variable for filter icon
+  // Set CSS variable for filter icon and make it trigger column menu
   useEffect(() => {
+    if (!gridRef.current) return;
+    
     const filterIconUrl = `url(${filterIcon})`;
     
     // Set CSS variable on document root
     document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
     
-    // Apply directly to filter icons when grid is ready
+    const grid = gridRef.current;
+    
+    // Override filter icon click to open column menu instead
+    const handleFilterIconClick = (e) => {
+      const filterIcon = e.target.closest('.e-filtericon');
+      if (!filterIcon) return;
+      
+      e.stopPropagation();
+      e.preventDefault();
+      
+      const headerCell = filterIcon.closest('.e-headercell');
+      if (!headerCell || !grid.columnMenuModule) return;
+      
+      // Get column field from header cell
+      const columnIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+      const column = grid.columns[columnIndex];
+      
+      if (column) {
+        // Open column menu
+        grid.columnMenuModule.openColumnMenu(headerCell, column, e);
+      }
+    };
+    
+    // Apply filter icon styling
     const applyFilterIcon = () => {
       const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
       filterIcons.forEach(icon => {
@@ -138,7 +164,13 @@ export default function JobSeekerManagement() {
       });
     };
     
-    // Apply immediately
+    // Attach event listener to grid container
+    const gridElement = grid.element;
+    if (gridElement) {
+      gridElement.addEventListener('click', handleFilterIconClick, true);
+    }
+    
+    // Apply filter icon styling
     applyFilterIcon();
     
     // Watch for new filter icons being added
@@ -148,15 +180,20 @@ export default function JobSeekerManagement() {
       subtree: true 
     });
     
-    // Also apply after a delay to catch grid render
-    const timeoutId = setTimeout(applyFilterIcon, 500);
+    // Also apply after delays to catch grid render
+    const timeoutId1 = setTimeout(applyFilterIcon, 500);
+    const timeoutId2 = setTimeout(applyFilterIcon, 1000);
     
     return () => {
       document.documentElement.style.removeProperty('--filter-icon-url');
+      if (gridElement) {
+        gridElement.removeEventListener('click', handleFilterIconClick, true);
+      }
       observer.disconnect();
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
     };
-  }, []);
+  }, [jobSeekers]);
 
   const handleDelete = (row) => {
     if (row.isActive) return; // safety - can't delete active users
@@ -684,6 +721,8 @@ export default function JobSeekerManagement() {
       city: row.city || '',
       state: row.state || '',
       country: row.country || '',
+      password: '',
+      confirmPassword: '',
     });
     setEditingId(row.id);
     
@@ -718,6 +757,18 @@ export default function JobSeekerManagement() {
     
     if (!editingId) return;
     
+    // Password validation - only if password is provided
+    if (editForm.password) {
+      if (editForm.password.length < 8) {
+        showToast('Password must be at least 8 characters', 'Error');
+        return;
+      }
+      if (editForm.password !== editForm.confirmPassword) {
+        showToast('Passwords do not match', 'Error');
+        return;
+      }
+    }
+    
     setSaving(true);
     try {
       const fullName = `${editForm.firstName} ${editForm.lastName}`.trim();
@@ -730,11 +781,29 @@ export default function JobSeekerManagement() {
         country: editForm.country || undefined,
       };
       
+      // Include password if provided (admin can update password)
+      if (editForm.password && editForm.password.trim()) {
+        payload.password = editForm.password;
+      }
+      
       await updateUser(editingId, payload);
       showToast('Job seeker updated successfully', 'Success');
       
       // Refresh the list
       await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+      
+      // Reset form
+      setEditForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        city: '',
+        state: '',
+        country: '',
+        password: '',
+        confirmPassword: '',
+      });
       
       // Return to list mode
       setMode('list');
@@ -1173,6 +1242,38 @@ export default function JobSeekerManagement() {
                   required
                   placeholder="Enter email address"
                 />
+                <div className="password-field-container">
+                  <Input 
+                    label="New Password (leave blank to keep current)" 
+                    type={showPwd ? 'text' : 'password'} 
+                    value={editForm.password} 
+                    onChange={(e) => setEditField('password', e.target.value)} 
+                  />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showPwd} 
+                    aria-label={showPwd ? 'Hide password' : 'Show password'} 
+                    onClick={() => setShowPwd(s => !s)}
+                  >
+                    {showPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
+                <div className="password-field-container">
+                  <Input 
+                    label="Confirm New Password (leave blank to keep current)" 
+                    type={showConfirmPwd ? 'text' : 'password'} 
+                    value={editForm.confirmPassword} 
+                    onChange={(e) => setEditField('confirmPassword', e.target.value)} 
+                  />
+                  <ButtonComponent 
+                    cssClass="e-outline e-primary e-small password-toggle-btn" 
+                    aria-pressed={showConfirmPwd} 
+                    aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
+                    onClick={() => setShowConfirmPwd(s => !s)}
+                  >
+                    {showConfirmPwd ? 'Hide' : 'Show'}
+                  </ButtonComponent>
+                </div>
                 <Input
                   label="Phone"
                   type="tel"
@@ -1335,7 +1436,7 @@ export default function JobSeekerManagement() {
                     showFilterBarOperator: true,
                     enableCaseSensitivity: false
                   }}
-                  showColumnMenu={false}
+                  showColumnMenu={true}
                   showColumnChooser={true}
                   allowResizing={true}
                   allowReordering={true}
@@ -1343,6 +1444,7 @@ export default function JobSeekerManagement() {
                   selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
                   enableHover={true}
                   allowRowDragAndDrop={false}
+                  enableHeaderFocus={false}
                 >
               <ColumnsDirective>
                 <ColumnDirective type='checkbox' width='50' />

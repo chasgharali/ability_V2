@@ -34,6 +34,7 @@ export default function UserManagement() {
   // Syncfusion Toast ref
   const toastRef = useRef(null);
   const deleteDialogRef = useRef(null);
+  const gridRef = useRef(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -173,14 +174,39 @@ export default function UserManagement() {
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
 
-  // Set CSS variable for filter icon
+  // Set CSS variable for filter icon and make it trigger column menu
   useEffect(() => {
+    if (!gridRef.current) return;
+    
     const filterIconUrl = `url(${filterIcon})`;
     
     // Set CSS variable on document root
     document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
     
-    // Apply directly to filter icons when grid is ready
+    const grid = gridRef.current;
+    
+    // Override filter icon click to open column menu instead
+    const handleFilterIconClick = (e) => {
+      const filterIcon = e.target.closest('.e-filtericon');
+      if (!filterIcon) return;
+      
+      e.stopPropagation();
+      e.preventDefault();
+      
+      const headerCell = filterIcon.closest('.e-headercell');
+      if (!headerCell || !grid.columnMenuModule) return;
+      
+      // Get column field from header cell
+      const columnIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+      const column = grid.columns[columnIndex];
+      
+      if (column) {
+        // Open column menu
+        grid.columnMenuModule.openColumnMenu(headerCell, column, e);
+      }
+    };
+    
+    // Apply filter icon styling
     const applyFilterIcon = () => {
       const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
       filterIcons.forEach(icon => {
@@ -190,7 +216,13 @@ export default function UserManagement() {
       });
     };
     
-    // Apply immediately
+    // Attach event listener to grid container
+    const gridElement = grid.element;
+    if (gridElement) {
+      gridElement.addEventListener('click', handleFilterIconClick, true);
+    }
+    
+    // Apply filter icon styling
     applyFilterIcon();
     
     // Watch for new filter icons being added
@@ -200,15 +232,20 @@ export default function UserManagement() {
       subtree: true 
     });
     
-    // Also apply after a delay to catch grid render
-    const timeoutId = setTimeout(applyFilterIcon, 500);
+    // Also apply after delays to catch grid render
+    const timeoutId1 = setTimeout(applyFilterIcon, 500);
+    const timeoutId2 = setTimeout(applyFilterIcon, 1000);
     
     return () => {
       document.documentElement.style.removeProperty('--filter-icon-url');
+      if (gridElement) {
+        gridElement.removeEventListener('click', handleFilterIconClick, true);
+      }
       observer.disconnect();
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
     };
-  }, []);
+  }, [users]);
 
   // Sync header and content horizontal scrolling
   useEffect(() => {
@@ -552,6 +589,7 @@ export default function UserManagement() {
                 <div aria-live="polite" className="sr-only">{liveMsg}</div>
                 {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
                 <GridComponent
+                  ref={gridRef}
                   dataSource={users.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
                   allowPaging={false}
                   allowSorting={true}
@@ -563,14 +601,15 @@ export default function UserManagement() {
                     showFilterBarOperator: true,
                     enableCaseSensitivity: false
                   }}
-                  showColumnMenu={false}
+                  showColumnMenu={true}
                   showColumnChooser={true}
                   allowResizing={true}
                   allowReordering={true}
-                  toolbar={['Search', 'ColumnChooser']}
+                  toolbar={['ColumnChooser']}
                   selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
                   enableHover={true}
                   allowRowDragAndDrop={false}
+                  enableHeaderFocus={false}
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />

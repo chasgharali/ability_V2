@@ -641,42 +641,156 @@ body .um-delete-dialog.e-dialog {
     content: '' !important;
 }
 
-/* Custom filter icon with your filter.png image */
-.e-grid .e-filtericon {
+/* Override any Syncfusion default styles on filter icon container */
+.e-grid .e-headercell .e-icons,
+.e-grid .e-headercell .e-headercelldiv .e-icons {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Override any parent element styles */
+.e-grid .e-headercell,
+.e-grid .e-headercell .e-headercelldiv {
+    background: transparent !important;
+}
+
+/* Custom filter icon - completely transparent background, no effects */
+.e-grid .e-filtericon,
+.e-grid .e-headercell .e-filtericon,
+.e-grid .e-headercell .e-headercelldiv .e-filtericon,
+.e-grid .e-headercell .e-icons .e-filtericon {
     display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
     width: 18px !important;
     height: 18px !important;
     padding: 0 !important;
+    margin: 0 !important;
     margin-left: 6px !important;
     cursor: pointer !important;
     background-image: var(--filter-icon-url) !important;
-    background-size: 18px 18px !important;
+    background-size: contain !important;
     background-repeat: no-repeat !important;
-    background-position: center center !important;
+    background-position: center !important;
+    background-color: transparent !important;
     border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
     text-indent: -9999px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     font-size: 0 !important;
     line-height: 0 !important;
     vertical-align: middle !important;
-    flex-shrink: 0 !important;
-    position: relative !important;
-    z-index: 1 !important;
+    position: static !important;
+    z-index: auto !important;
+    text-shadow: none !important;
+    -webkit-text-shadow: none !important;
+    -moz-text-shadow: none !important;
+    border-radius: 0 !important;
+    -webkit-border-radius: 0 !important;
+    -moz-border-radius: 0 !important;
 }
 
-/* Filter icon hover state */
-.e-grid .e-filtericon:hover {
-    opacity: 0.8 !important;
-    background-color: #f3f4f6 !important;
-    transform: scale(1.1) !important;
-}
-
-/* Active/filtered state */
-.e-grid .e-headercell.e-filtered .e-filtericon {
+/* Remove ALL hover effects - completely transparent */
+.e-grid .e-filtericon:hover,
+.e-grid .e-headercell .e-filtericon:hover,
+.e-grid .e-headercell .e-headercelldiv .e-filtericon:hover,
+.e-grid .e-headercell .e-icons .e-filtericon:hover {
     opacity: 1 !important;
-    filter: brightness(0.7) !important;
+    background-color: transparent !important;
+    background-image: var(--filter-icon-url) !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+}
+
+/* Remove ALL active/filtered state effects - completely transparent */
+.e-grid .e-headercell.e-filtered .e-filtericon,
+.e-grid .e-headercell.e-filtered .e-filtericon:hover,
+.e-grid .e-headercell.e-filtered .e-headercelldiv .e-filtericon,
+.e-grid .e-headercell.e-filtered .e-headercelldiv .e-filtericon:hover {
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: transparent !important;
+    background-image: var(--filter-icon-url) !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+}
+
+/* Show column menu icon alongside filter icon */
+.e-grid .e-headercell .e-columnmenuicon {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+    margin-left: 4px !important;
+}
+
+/* Ensure filter icon is always visible in header */
+.e-grid .e-headercell .e-headercelldiv {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+}
+
+.e-grid .e-headercell .e-headertext {
+    display: inline-block !important;
+    flex: 1 !important;
+}
+
+/* Ensure filter icon container is visible */
+.e-grid .e-headercell .e-icons {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+/* Style column menu popup */
+.e-grid .e-columnmenu,
+.e-popup.e-columnmenu,
+.e-grid .e-columnmenu-popup {
+    z-index: 10000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
 }
 
 /* Hide column menu icon (three dots) completely */

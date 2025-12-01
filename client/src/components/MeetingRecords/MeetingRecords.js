@@ -37,14 +37,39 @@ export default function MeetingRecords() {
         }
     }, [user, loading, navigate]);
 
-    // Set CSS variable for filter icon
+    // Set CSS variable for filter icon and make it trigger column menu
     useEffect(() => {
+        if (!gridRef.current) return;
+        
         const filterIconUrl = `url(${filterIcon})`;
         
         // Set CSS variable on document root
         document.documentElement.style.setProperty('--filter-icon-url', filterIconUrl);
         
-        // Apply directly to filter icons when grid is ready
+        const grid = gridRef.current;
+        
+        // Override filter icon click to open column menu instead
+        const handleFilterIconClick = (e) => {
+            const filterIcon = e.target.closest('.e-filtericon');
+            if (!filterIcon) return;
+            
+            e.stopPropagation();
+            e.preventDefault();
+            
+            const headerCell = filterIcon.closest('.e-headercell');
+            if (!headerCell || !grid.columnMenuModule) return;
+            
+            // Get column field from header cell
+            const columnIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+            const column = grid.columns[columnIndex];
+            
+            if (column) {
+                // Open column menu
+                grid.columnMenuModule.openColumnMenu(headerCell, column, e);
+            }
+        };
+        
+        // Apply filter icon styling
         const applyFilterIcon = () => {
             const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
             filterIcons.forEach(icon => {
@@ -54,7 +79,13 @@ export default function MeetingRecords() {
             });
         };
         
-        // Apply immediately
+        // Attach event listener to grid container
+        const gridElement = grid.element;
+        if (gridElement) {
+            gridElement.addEventListener('click', handleFilterIconClick, true);
+        }
+        
+        // Apply filter icon styling
         applyFilterIcon();
         
         // Watch for new filter icons being added
@@ -64,13 +95,18 @@ export default function MeetingRecords() {
             subtree: true 
         });
         
-        // Also apply after a delay to catch grid render
-        const timeoutId = setTimeout(applyFilterIcon, 500);
+        // Also apply after delays to catch grid render
+        const timeoutId1 = setTimeout(applyFilterIcon, 500);
+        const timeoutId2 = setTimeout(applyFilterIcon, 1000);
         
         return () => {
             document.documentElement.style.removeProperty('--filter-icon-url');
+            if (gridElement) {
+                gridElement.removeEventListener('click', handleFilterIconClick, true);
+            }
             observer.disconnect();
-            clearTimeout(timeoutId);
+            clearTimeout(timeoutId1);
+            clearTimeout(timeoutId2);
         };
     }, []);
 
@@ -79,6 +115,7 @@ export default function MeetingRecords() {
     const [events, setEvents] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
+    const gridRef = useRef(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -258,14 +295,64 @@ export default function MeetingRecords() {
     const loadMeetingRecords = useCallback(async () => {
         try {
             setLoadingData(true);
+            console.log('📡 Loading meeting records with filters:', filters);
             const response = await meetingRecordsAPI.getMeetingRecords(filters);
-            setMeetingRecords(response.meetingRecords);
-            setPagination(response.pagination);
+            console.log('✅ Meeting records response:', response);
+            
+            // Ensure we have valid data structure
+            if (response && response.meetingRecords) {
+                console.log(`📊 Loaded ${response.meetingRecords.length} meeting records`);
+                setMeetingRecords(response.meetingRecords || []);
+                setPagination(response.pagination || {
+                    currentPage: 1,
+                    totalPages: 0,
+                    totalRecords: 0,
+                    hasNext: false,
+                    hasPrev: false
+                });
+            } else {
+                console.warn('⚠️ Invalid response structure:', response);
+                setMeetingRecords([]);
+                setPagination({
+                    currentPage: 1,
+                    totalPages: 0,
+                    totalRecords: 0,
+                    hasNext: false,
+                    hasPrev: false
+                });
+            }
             // Reset select all pages when data changes
             setSelectAllPages(false);
         } catch (error) {
-            console.error('Error loading meeting records:', error);
-            showToast('Failed to load meeting records', 'Error');
+            console.error('❌ Error loading meeting records:', error);
+            console.error('Error details:', {
+                message: error.message,
+                code: error.code,
+                response: error.response?.data,
+                status: error.response?.status,
+                config: error.config?.url
+            });
+            
+            // Check if it's a CORS error
+            const isCorsError = error.code === 'ERR_NETWORK' || 
+                               (error.message && error.message.includes('CORS')) ||
+                               (error.message && error.message === 'Network Error');
+            
+            if (isCorsError) {
+                showToast('CORS Error: Check server configuration or use proxy', 'Error');
+            } else {
+                showToast(error.response?.data?.message || 'Failed to load meeting records', 'Error');
+            }
+            
+            // Set empty data on error to prevent UI crashes
+            setMeetingRecords([]);
+            setPagination({
+                currentPage: 1,
+                totalPages: 0,
+                totalRecords: 0,
+                hasNext: false,
+                hasPrev: false
+            });
         } finally {
             setLoadingData(false);
         }
@@ -307,7 +394,8 @@ export default function MeetingRecords() {
             loadRecruiters();
             loadEvents();
         }
-    }, [user, filters, loadMeetingRecords, loadStats, loadRecruiters, loadEvents]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, filters]);
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({
@@ -829,18 +917,36 @@ export default function MeetingRecords() {
                         <div className="data-grid-container">
                             {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
                             <GridComponent
-                                dataSource={meetingRecords.map(r => ({ 
-                                    ...r, 
-                                    id: r._id,
-                                    // Flatten nested fields for sorting
-                                    eventName: r.eventId?.name || '',
-                                    boothName: r.boothId?.name || '',
-                                    recruiterName: r.recruiterId?.name || '',
-                                    jobSeekerName: r.jobseekerId?.name || '',
-                                    jobSeekerCity: r.jobseekerId?.city || '',
-                                    interpreterName: r.interpreterId?.name || 'None',
-                                    messagesCount: r.jobSeekerMessages?.length || 0
-                                }))}
+                                ref={gridRef}
+                                dataSource={meetingRecords.map(r => {
+                                    // Safely extract populated field values
+                                    // Backend populates these fields, so they can be objects or null
+                                    const getFieldName = (field) => {
+                                        if (!field) return '';
+                                        if (typeof field === 'string') return field;
+                                        if (typeof field === 'object' && field.name) return field.name;
+                                        return '';
+                                    };
+                                    
+                                    const getFieldCity = (field) => {
+                                        if (!field) return '';
+                                        if (typeof field === 'object' && field.city) return field.city;
+                                        return '';
+                                    };
+                                    
+                                    return {
+                                        ...r, 
+                                        id: r._id || r.id,
+                                        // Flatten nested fields for sorting and filtering
+                                        eventName: getFieldName(r.eventId),
+                                        boothName: getFieldName(r.boothId),
+                                        recruiterName: getFieldName(r.recruiterId),
+                                        jobSeekerName: getFieldName(r.jobseekerId),
+                                        jobSeekerCity: getFieldCity(r.jobseekerId),
+                                        interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
+                                        messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
+                                    };
+                                })}
                                 allowPaging={false}
                                 allowSorting={true}
                                 allowFiltering={true}
@@ -851,11 +957,11 @@ export default function MeetingRecords() {
                                     showFilterBarOperator: true,
                                     enableCaseSensitivity: false
                                 }}
-                                showColumnMenu={false}
+                                showColumnMenu={true}
                                 showColumnChooser={true}
                                 allowResizing={true}
                                 allowReordering={true}
-                                toolbar={['Search', 'ColumnChooser']}
+                                toolbar={['ColumnChooser']}
                                 selectionSettings={['Admin', 'GlobalSupport'].includes(user?.role) ? { 
                                     type: 'Multiple', 
                                     checkboxOnly: true,
@@ -888,7 +994,7 @@ export default function MeetingRecords() {
                                             width='50' 
                                         />
                                     )}
-                                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} />
+                                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                     <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                     <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
                                     <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} />
