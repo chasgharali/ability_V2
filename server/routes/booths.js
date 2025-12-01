@@ -186,6 +186,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('recruitersCount').optional().isInt({ min: 1 }),
     body('expireLinkTime').optional().isISO8601().toDate(),
     body('customInviteSlug').optional().isString().toLowerCase().matches(/^[a-z0-9-]+$/).withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
+    body('joinBoothButtonLink').optional().isString().trim(),
     body('richSections').optional().isArray({ max: 3 }),
     body('richSections.*.title').optional().isString().isLength({ min: 1, max: 100 }),
     body('richSections.*.contentHtml').optional().isString().isLength({ min: 0, max: 5000 }),
@@ -198,7 +199,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             return res.status(400).json({ error: 'Validation failed', details: errors.array() });
         }
 
-        const { name, description, logoUrl, companyPage, recruitersCount, expireLinkTime, customInviteSlug, richSections = [], eventIds } = req.body;
+        const { name, description, logoUrl, companyPage, recruitersCount, expireLinkTime, customInviteSlug, joinBoothButtonLink, richSections = [], eventIds } = req.body;
         const Event = require('../models/Event');
 
         const created = [];
@@ -235,6 +236,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
                 recruitersCount: recruitersCount || 1,
                 expireLinkTime: expireLinkTime || null,
                 customInviteSlug: customInviteSlug || undefined,
+                joinBoothButtonLink: joinBoothButtonLink || '',
                 richSections: (richSections || []).slice(0, 3).map((s, index) => ({
                     title: s.title || `Section ${index + 1}`,
                     contentHtml: s.contentHtml || '',
@@ -369,6 +371,10 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             return /^[a-z0-9-]+$/.test(value);
         })
         .withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
+    body('joinBoothButtonLink')
+        .optional()
+        .isString()
+        .trim(),
     body('eventId')
         .optional()
         .isMongoId()
@@ -389,7 +395,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             });
         }
 
-        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug, eventId } = req.body;
+        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug, joinBoothButtonLink, eventId } = req.body;
         const { booth, user } = req;
         const Event = require('../models/Event');
 
@@ -408,6 +414,9 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
                 }
             }
             booth.customInviteSlug = customInviteSlug || undefined;
+        }
+        if (joinBoothButtonLink !== undefined) {
+            booth.joinBoothButtonLink = joinBoothButtonLink || '';
         }
         if (eventId !== undefined) {
             // Verify event exists

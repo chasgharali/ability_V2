@@ -243,7 +243,22 @@ export default function RegisteredEventDetail() {
                                 
                                 <button
                                   className="join-queue-btn"
-                                  onClick={() => navigate(`/booth-queue/${event.slug}/${booth._id}/entry`)}
+                                  onClick={() => {
+                                    // Use custom joinBoothButtonLink if set, otherwise use default queue link
+                                    const customLink = booth.joinBoothButtonLink;
+                                    if (customLink) {
+                                      // Check if it's an external URL
+                                      if (customLink.startsWith('http://') || customLink.startsWith('https://')) {
+                                        window.location.href = customLink;
+                                      } else {
+                                        // Internal path
+                                        navigate(customLink);
+                                      }
+                                    } else {
+                                      // Default behavior
+                                      navigate(`/booth-queue/${event.slug}/${booth._id}/entry`);
+                                    }
+                                  }}
                                 >
                                   Join Queue
                                 </button>
