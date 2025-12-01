@@ -441,7 +441,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, phoneNumber, state, city, country, avatarUrl } = req.body;
+        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl } = req.body;
         const { user } = req;
 
         const targetUser = await User.findById(id);
