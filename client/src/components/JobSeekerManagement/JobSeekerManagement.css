@@ -1163,6 +1163,45 @@ body .jsm-delete-dialog.e-dialog {
   font-weight: 600;
 }
 
+/* ========================================
+   Job Seeker Edit Tabs
+   ======================================== */
+
+.jsm-edit-tabs.e-tab {
+  width: 100% !important;
+}
+
+.jsm-edit-tabs.e-tab .e-tab-header {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.jsm-edit-tabs.e-tab .e-tab-header .e-toolbar-item .e-tab-wrap {
+  padding: 10px 18px !important;
+}
+
+.jsm-edit-tabs.e-tab .e-tab-header .e-toolbar-item .e-tab-text {
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  color: #6b7280 !important; /* default gray */
+}
+
+.jsm-edit-tabs.e-tab .e-tab-header .e-toolbar-item.e-active .e-tab-text {
+  color: #000000 !important; /* active label black */
+}
+
+.jsm-edit-tabs.e-tab .e-tab-header .e-toolbar-item.e-active {
+  border-bottom: 2px solid #000000 !important; /* active underline black */
+}
+
+.jsm-edit-tabs.e-tab .e-tab-header .e-indicator {
+  background-color: #000000 !important; /* hide/override pink indicator */
+}
+
+.jsm-edit-tabs.e-tab .e-content {
+  padding: 0 0 0 0 !important;
+}
+
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .filters-row {
@@ -1238,5 +1277,733 @@ body .jsm-delete-dialog.e-dialog {
   .btn-resume {
     padding: 0.625rem 1.25rem;
     font-size: 0.8125rem;
+  }
+}
+
+/* ========================================
+   Custom Tabs for Job Seeker Edit Form
+   ======================================== */
+
+/* Tab container */
+.jsm-custom-tabs {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Tab headers container - ensure clean appearance */
+.jsm-tab-headers {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom: 2px solid #e5e7eb;
+  background: #f9fafb;
+  padding: 0;
+  margin: 0;
+  gap: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+  position: relative;
+  z-index: 1;
+  min-height: 48px;
+  align-items: stretch;
+}
+
+.jsm-tab-headers::-webkit-scrollbar {
+  height: 4px;
+}
+
+.jsm-tab-headers::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jsm-tab-headers::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+/* Individual tab button - clean styling */
+.jsm-tab-btn {
+  flex-shrink: 0;
+  flex-grow: 0;
+  padding: 14px 24px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  position: relative;
+  outline: none;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: -2px;
+}
+
+.jsm-tab-btn:hover {
+  color: #111111;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.jsm-tab-btn:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Active tab - BLACK styling */
+.jsm-tab-btn.active {
+  color: #000000;
+  font-weight: 600;
+  border-bottom-color: #000000;
+  background: #ffffff;
+}
+
+/* Tab content area */
+.jsm-tab-content {
+  padding: 2rem;
+  min-height: 300px;
+  background: #ffffff;
+}
+
+/* Tab panel */
+.jsm-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 800px;
+}
+
+/* Checkbox labels */
+.jsm-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+  transition: all 0.15s ease;
+}
+
+.jsm-checkbox-label:hover {
+  border-color: #d1d5db;
+  background: #f3f4f6;
+}
+
+.jsm-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #000000;
+}
+
+.jsm-checkbox-label span {
+  font-size: 0.9375rem;
+  color: #374151;
+}
+
+/* Form field wrapper - ensures proper width constraints */
+.jsm-form-field-wrapper {
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: block;
+}
+
+.jsm-form-field-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+/* Field labels */
+.jsm-field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Dropdown (single select) styling - prevent overflow */
+.jsm-dropdown,
+.jsm-dropdown.e-dropdownlist,
+.jsm-dropdown.e-ddl {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  position: relative !important;
+}
+
+/* Force border on the main container if input-group doesn't have it */
+.jsm-dropdown:not(.e-input-group) {
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+}
+
+.jsm-dropdown .e-input-group,
+.jsm-dropdown .e-input-group-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.jsm-dropdown .e-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ========================================
+   JSM Native HTML Select - Proper Styling
+   ======================================== */
+
+/* Native HTML select element styling */
+.jsm-select {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 14px !important;
+  padding-right: 40px !important; /* Space for dropdown arrow */
+  font-size: 0.9375rem !important;
+  line-height: 1.5 !important;
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  cursor: pointer !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 12px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  min-height: 44px !important;
+}
+
+.jsm-select:hover {
+  border-color: #9ca3af !important;
+}
+
+.jsm-select:focus {
+  outline: none !important;
+  border-color: #111111 !important;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1) !important;
+}
+
+.jsm-select:disabled {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  border-color: #d1d5db !important;
+}
+
+/* Select option styling */
+.jsm-select option {
+  padding: 10px 14px !important;
+  font-size: 0.9375rem !important;
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+}
+
+.jsm-select option:disabled {
+  color: #9ca3af !important;
+}
+
+.jsm-select option:checked {
+  background-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+/* Placeholder option styling */
+.jsm-select option[value=""] {
+  color: #9ca3af !important;
+}
+
+/* ========================================
+   Legacy Syncfusion Dropdown (for status filter only)
+   ======================================== */
+
+/* Main dropdown container - ALL possible Syncfusion structures */
+.jsm-dropdown,
+.jsm-dropdown.e-ddl,
+.jsm-dropdown.e-dropdownlist,
+.jsm-dropdown.e-input-group {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* Input group wrapper - this is where the border should be */
+.jsm-dropdown .e-input-group,
+.jsm-dropdown.e-ddl .e-input-group,
+.jsm-dropdown.e-dropdownlist .e-input-group,
+.jsm-dropdown > .e-input-group {
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* If the dropdown itself doesn't have input-group, add border to it */
+.jsm-dropdown.e-ddl:not(.e-input-group),
+.jsm-dropdown.e-dropdownlist:not(.e-input-group) {
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.jsm-dropdown .e-input-group:hover,
+.jsm-dropdown.e-ddl .e-input-group:hover,
+.jsm-dropdown.e-dropdownlist .e-input-group:hover,
+.jsm-dropdown.e-ddl:not(.e-input-group):hover,
+.jsm-dropdown.e-dropdownlist:not(.e-input-group):hover {
+  border-color: #9ca3af !important;
+}
+
+.jsm-dropdown .e-input-group.e-input-focus,
+.jsm-dropdown.e-ddl .e-input-group.e-input-focus,
+.jsm-dropdown.e-dropdownlist .e-input-group.e-input-focus,
+.jsm-dropdown.e-ddl:not(.e-input-group).e-input-focus,
+.jsm-dropdown.e-dropdownlist:not(.e-input-group).e-input-focus {
+  border-color: #111111 !important;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1) !important;
+  outline: none !important;
+}
+
+/* Input wrapper inside dropdown - NO border here */
+.jsm-dropdown .e-input-group-wrap,
+.jsm-dropdown.e-ddl .e-input-group-wrap,
+.jsm-dropdown.e-dropdownlist .e-input-group-wrap {
+  border: none !important;
+  background: transparent !important;
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+/* Input field itself */
+.jsm-dropdown .e-input,
+.jsm-dropdown .e-input-group .e-input,
+.jsm-dropdown.e-ddl .e-input,
+.jsm-dropdown.e-ddl input.e-input,
+.jsm-dropdown.e-dropdownlist .e-input,
+.jsm-dropdown.e-dropdownlist input.e-input {
+  padding: 10px 14px !important;
+  font-size: 0.9375rem !important;
+  line-height: 1.5 !important;
+  color: #1f2937 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  width: 100% !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.jsm-dropdown .e-input::placeholder,
+.jsm-dropdown.e-ddl .e-input::placeholder,
+.jsm-dropdown.e-dropdownlist .e-input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+/* Dropdown icon container - properly styled and visible */
+.jsm-dropdown .e-input-group-icon,
+.jsm-dropdown .e-ddl-icon,
+.jsm-dropdown.e-ddl .e-input-group-icon,
+.jsm-dropdown.e-dropdownlist .e-input-group-icon,
+.jsm-dropdown .e-input-group .e-input-group-icon,
+.jsm-dropdown .e-input-group-icon.e-ddl-icon,
+.jsm-dropdown.e-ddl .e-input-group-icon.e-ddl-icon {
+  background: transparent !important;
+  border: none !important;
+  border-left: 1px solid #e5e7eb !important;
+  color: #6b7280 !important;
+  padding: 0 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  min-width: 40px !important;
+  width: auto !important;
+  flex-shrink: 0 !important;
+  transition: color 0.2s ease, background-color 0.2s ease !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+}
+
+/* Ensure icon character is visible - multiple selectors for reliability */
+.jsm-dropdown .e-input-group-icon::before,
+.jsm-dropdown .e-ddl-icon::before,
+.jsm-dropdown.e-ddl .e-input-group-icon::before,
+.jsm-dropdown .e-input-group-icon.e-ddl-icon::before,
+.jsm-dropdown.e-ddl .e-input-group-icon.e-ddl-icon::before {
+  content: '\e969' !important; /* Syncfusion dropdown icon */
+  font-family: 'e-icons' !important;
+  font-size: 14px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  line-height: 1 !important;
+}
+
+/* If icon uses a different method, ensure it's visible */
+.jsm-dropdown .e-input-group-icon > *,
+.jsm-dropdown.e-ddl .e-input-group-icon > * {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.jsm-dropdown:hover .e-input-group-icon,
+.jsm-dropdown:hover .e-ddl-icon,
+.jsm-dropdown.e-ddl:hover .e-input-group-icon {
+  color: #374151 !important;
+  background-color: #f9fafb !important;
+}
+
+.jsm-dropdown .e-input-group.e-input-focus .e-input-group-icon,
+.jsm-dropdown.e-ddl .e-input-group.e-input-focus .e-input-group-icon {
+  color: #111111 !important;
+  border-left-color: #d1d5db !important;
+}
+
+/* Remove any extra borders/lines from internal elements */
+.jsm-dropdown .e-input-group::before,
+.jsm-dropdown .e-input-group::after,
+.jsm-dropdown .e-input-group-wrap::before,
+.jsm-dropdown .e-input-group-wrap::after,
+.jsm-dropdown.e-ddl::before,
+.jsm-dropdown.e-ddl::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Clear button if present */
+.jsm-dropdown .e-clear-icon,
+.jsm-dropdown.e-ddl .e-clear-icon {
+  color: #9ca3af !important;
+  padding: 0 8px !important;
+  margin-right: 4px !important;
+}
+
+.jsm-dropdown .e-clear-icon:hover,
+.jsm-dropdown.e-ddl .e-clear-icon:hover {
+  color: #ef4444 !important;
+}
+
+/* Hide any extra indicator/underline elements */
+.jsm-dropdown .e-float-line,
+.jsm-dropdown .e-input-in-wrap,
+.jsm-dropdown.e-ddl .e-float-line,
+.jsm-dropdown.e-dropdownlist .e-float-line {
+  display: none !important;
+  height: 0 !important;
+  border: none !important;
+}
+
+/* Dropdown popup styling */
+.e-ddl.e-popup,
+.e-dropdownbase.e-popup {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid #e5e7eb !important;
+  margin-top: 4px !important;
+}
+
+/* Dropdown list items */
+.e-ddl.e-popup .e-list-item,
+.e-dropdownbase.e-popup .e-list-item {
+  padding: 10px 14px !important;
+  font-size: 0.9375rem !important;
+  color: #374151 !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.e-ddl.e-popup .e-list-item:hover,
+.e-dropdownbase.e-popup .e-list-item:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.e-ddl.e-popup .e-list-item.e-active,
+.e-dropdownbase.e-popup .e-list-item.e-active {
+  background-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+/* ========================================
+   Fix Syncfusion Input Group Border/Underline
+   ======================================== */
+
+/* Remove default Syncfusion underline animation */
+.jsm-dropdown.e-ddl.e-input-group .e-input-group-icon::before,
+.jsm-dropdown.e-ddl.e-input-group .e-input-group-icon::after,
+.jsm-dropdown.e-ddl.e-input-group::before,
+.jsm-dropdown.e-ddl.e-input-group::after {
+  display: none !important;
+  content: none !important;
+  height: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+/* Ensure dropdown icon is visible - target all possible icon elements */
+.jsm-dropdown .e-input-group-icon.e-ddl-icon,
+.jsm-dropdown.e-ddl .e-input-group-icon.e-ddl-icon,
+.jsm-dropdown .e-input-group .e-input-group-icon.e-ddl-icon {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Make sure the icon character is visible */
+.jsm-dropdown .e-input-group-icon.e-ddl-icon::before,
+.jsm-dropdown.e-ddl .e-input-group-icon.e-ddl-icon::before {
+  content: '\e969' !important;
+  font-family: 'e-icons' !important;
+  font-size: 14px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Alternative icon selector if Syncfusion uses different class */
+.jsm-dropdown .e-input-group-icon[class*="icon"],
+.jsm-dropdown.e-ddl .e-input-group-icon[class*="icon"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure input is not read-only and is properly styled */
+.jsm-dropdown input.e-input[readonly],
+.jsm-dropdown.e-ddl input.e-input[readonly] {
+  cursor: pointer !important;
+  background-color: #ffffff !important;
+}
+
+/* Fix any height issues */
+.jsm-dropdown .e-input-group,
+.jsm-dropdown.e-ddl .e-input-group {
+  height: auto !important;
+  min-height: 44px !important;
+}
+
+.jsm-dropdown .e-input-group-wrap,
+.jsm-dropdown.e-ddl .e-input-group-wrap {
+  height: 100% !important;
+  min-height: 44px !important;
+}
+
+/* Multiselect styling - prevent horizontal overflow */
+.jsm-multiselect,
+.jsm-multiselect.e-multiselect,
+.jsm-multiselect .e-input-group,
+.jsm-multiselect .e-input-group-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Main multiselect container - match dropdown styling */
+.jsm-multiselect.e-multi-select-wrapper,
+.jsm-multiselect.e-multiselect .e-multi-select-wrapper {
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  min-height: 44px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  padding: 6px 10px !important;
+}
+
+.jsm-multiselect.e-multi-select-wrapper:hover,
+.jsm-multiselect.e-multiselect .e-multi-select-wrapper:hover {
+  border-color: #9ca3af !important;
+}
+
+.jsm-multiselect.e-input-focus .e-multi-select-wrapper,
+.jsm-multiselect.e-multiselect.e-input-focus .e-multi-select-wrapper {
+  border-color: #111111 !important;
+  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1) !important;
+}
+
+.jsm-multiselect .e-chips {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.375rem !important;
+  max-width: 100% !important;
+}
+
+.jsm-multiselect .e-chips .e-chip,
+.jsm-multiselect .e-chips .e-chipcontent {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex-shrink: 1 !important;
+  min-width: 0 !important;
+}
+
+/* Chip styling */
+.jsm-multiselect .e-chips .e-chip {
+  background-color: #f3f4f6 !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  font-size: 0.8125rem !important;
+}
+
+.jsm-multiselect .e-chips .e-chip .e-chip-close {
+  color: #6b7280 !important;
+}
+
+.jsm-multiselect .e-chips .e-chip .e-chip-close:hover {
+  color: #ef4444 !important;
+}
+
+/* Hide extra elements */
+.jsm-multiselect .e-float-line,
+.jsm-multiselect::before,
+.jsm-multiselect::after {
+  display: none !important;
+}
+
+/* Input placeholder */
+.jsm-multiselect .e-dropdownbase input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Dropdown icon */
+.jsm-multiselect .e-input-group-icon {
+  color: #6b7280 !important;
+  padding: 0 8px !important;
+}
+
+/* Save button container - proper alignment */
+.jsm-save-button-container {
+  margin: 0;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.jsm-save-button-container .e-btn {
+  min-width: 160px;
+  padding: 12px 28px !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.jsm-save-button-container .e-btn.e-primary {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.jsm-save-button-container .e-btn.e-primary:hover {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.jsm-save-button-container .e-btn.e-primary:disabled {
+  background-color: #9ca3af !important;
+  border-color: #9ca3af !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure tab content doesn't overflow */
+.jsm-tab-content {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.jsm-tab-panel {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .jsm-tab-headers {
+    padding: 0;
+  }
+  
+  .jsm-tab-btn {
+    padding: 12px 14px;
+    font-size: 0.8125rem;
+  }
+  
+  .jsm-tab-content {
+    padding: 1rem;
+  }
+  
+  .jsm-save-button-container {
+    padding-top: 1rem;
+  }
+  
+  .jsm-save-button-container .e-btn {
+    width: 100%;
+    min-width: auto;
   }
 }
