@@ -340,12 +340,20 @@ router.delete('/:id', authenticateToken, requireRole(['Admin', 'AdminEvent']), a
         }
 
         // Delete the terms
-        await TermsConditions.findByIdAndDelete(id);
+        const deletedTerms = await TermsConditions.findByIdAndDelete(id);
+        
+        if (!deletedTerms) {
+            return res.status(404).json({
+                error: 'Terms not found',
+                message: 'The specified terms and conditions were not found or already deleted'
+            });
+        }
 
         logger.info(`Terms and conditions deleted: ${terms.title} v${terms.version} by ${user.email}`);
 
         res.json({
-            message: 'Terms and conditions deleted successfully'
+            message: 'Terms and conditions deleted successfully',
+            deletedId: id
         });
     } catch (error) {
         logger.error('Delete terms error:', error);
