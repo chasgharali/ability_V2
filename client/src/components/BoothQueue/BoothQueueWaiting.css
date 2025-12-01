@@ -110,13 +110,18 @@
     display: none !important;
   }
 
-  /* Ensure desktop queue numbers are shown on large screens */
-  .queue-numbers-desktop {
+  /* Ensure desktop event info and queue status are shown on large screens */
+  .sidebar-header-desktop,
+  .queue-numbers-desktop,
+  .queue-status-desktop {
     display: flex !important;
   }
 
-  /* Ensure mobile queue numbers are hidden on large screens */
-  .queue-numbers-mobile {
+  /* Ensure mobile event info and queue status are hidden on large screens */
+  .mobile-event-info,
+  .mobile-queue-header,
+  .queue-numbers-mobile,
+  .queue-status-mobile {
     display: none !important;
   }
   
@@ -151,6 +156,12 @@
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
   cursor: default !important;
+}
+
+.sidebar-header-desktop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .waiting-sidebar-left .sidebar-header:hover,
@@ -235,12 +246,11 @@
 }
 
 .booth-logo-modern {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 2px solid #ffffff;
 }
 
 .booth-logo-modern:hover,
@@ -254,15 +264,14 @@
 }
 
 .booth-logo-modern-placeholder {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 2px solid #ffffff;
 }
 
 .booth-logo-modern-placeholder:hover,
@@ -276,7 +285,7 @@
 }
 
 .booth-logo-modern-placeholder span {
-  font-size: 1.75rem;
+  font-size: 2.25rem;
   font-weight: bold;
   color: white;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -424,6 +433,21 @@
   margin-right: auto;
 }
 
+/* Mobile event info - hide on desktop */
+.mobile-event-info {
+  display: none;
+}
+
+/* Mobile queue header - combined booth logo and queue card */
+.mobile-queue-header {
+  display: none;
+}
+
+/* Mobile queue status - hide on desktop */
+.queue-status-mobile {
+  display: none;
+}
+
 .queue-number-card {
   background: #111827;
   color: white;
@@ -455,6 +479,10 @@
   font-size: 0.875rem;
   color: #6b7280;
   font-weight: 500;
+}
+
+.queue-status-desktop {
+  display: flex;
 }
 
 .status-dot {
@@ -892,14 +920,131 @@
     width: auto;
   }
 
-  /* Ensure mobile queue numbers are hidden on larger screens */
-  .queue-numbers-mobile {
+  /* Hide desktop event info and queue status in sidebar on tablet */
+  .sidebar-header-desktop,
+  .queue-numbers-desktop,
+  .queue-status-desktop {
     display: none !important;
   }
 
-  /* Ensure desktop queue numbers are shown on larger screens */
-  .queue-numbers-desktop {
+  /* Show combined booth logo and queue card in one row on tablet */
+  .mobile-queue-header {
     display: flex !important;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .mobile-booth-logo {
+    flex-shrink: 0;
+  }
+
+  .mobile-booth-logo .booth-logo-modern,
+  .mobile-booth-logo .booth-logo-modern-placeholder {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-booth-logo .booth-logo-modern-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-booth-logo .booth-logo-modern-placeholder span {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Event and booth name - compact */
+  .mobile-event-info-compact {
+    flex: 1;
+    min-width: 0;
+    padding: 0 0.75rem;
+  }
+
+  .mobile-event-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-booth-subtitle {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Compact queue card in mobile header */
+  .queue-numbers-mobile {
+    display: flex !important;
+    flex: 0 0 auto;
+    margin: 0;
+    max-width: 150px;
+  }
+
+  .queue-number-card-mobile {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    min-height: auto;
+    width: 100%;
+  }
+
+  .queue-number-card-mobile .queue-label {
+    font-size: 0.6875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .queue-number-card-mobile .queue-number {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .queue-helper-text-mobile {
+    font-size: 0.6875rem;
+    margin-top: 0.25rem;
+    line-height: 1.3;
+  }
+
+  /* Show mobile queue status in main area on tablet - compact */
+  .queue-status-mobile {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .queue-status-mobile .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+  }
+
+  .queue-status-mobile .status-text {
+    color: #111827;
+    font-weight: 600;
   }
 
   .queue-number-card {
@@ -1213,19 +1358,131 @@
     position: relative;
   }
 
-  /* Hide desktop queue numbers in sidebar at this breakpoint */
-  .queue-numbers-desktop {
+  /* Hide desktop event info and queue status in sidebar at this breakpoint */
+  .sidebar-header-desktop,
+  .queue-numbers-desktop,
+  .queue-status-desktop {
     display: none !important;
   }
 
-  /* Show mobile queue numbers in main area at this breakpoint */
+  /* Show combined booth logo and queue card in one row at this breakpoint */
+  .mobile-queue-header {
+    display: flex !important;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .mobile-booth-logo {
+    flex-shrink: 0;
+  }
+
+  .mobile-booth-logo .booth-logo-modern,
+  .mobile-booth-logo .booth-logo-modern-placeholder {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-booth-logo .booth-logo-modern-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-booth-logo .booth-logo-modern-placeholder span {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Event and booth name - compact */
+  .mobile-event-info-compact {
+    flex: 1;
+    min-width: 0;
+    padding: 0 0.75rem;
+  }
+
+  .mobile-event-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-booth-subtitle {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Compact queue card in mobile header */
   .queue-numbers-mobile {
     display: flex !important;
+    flex: 0 0 auto;
+    margin: 0;
+    max-width: 150px;
+  }
+
+  .queue-number-card-mobile {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    min-height: auto;
     width: 100%;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 1.5rem;
+  }
+
+  .queue-number-card-mobile .queue-label {
+    font-size: 0.6875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .queue-number-card-mobile .queue-number {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .queue-helper-text-mobile {
+    font-size: 0.6875rem;
+    margin-top: 0.25rem;
+    line-height: 1.3;
+  }
+
+  /* Show mobile queue status in main area at this breakpoint - compact */
+  .queue-status-mobile {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .queue-status-mobile .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+  }
+
+  .queue-status-mobile .status-text {
+    color: #111827;
+    font-weight: 600;
   }
 
   .waiting-sidebar-left {
@@ -1281,19 +1538,131 @@
     position: relative;
   }
 
-  /* Hide desktop queue numbers in sidebar on mobile */
-  .queue-numbers-desktop {
+  /* Hide desktop event info and queue status in sidebar on mobile */
+  .sidebar-header-desktop,
+  .queue-numbers-desktop,
+  .queue-status-desktop {
     display: none !important;
   }
 
-  /* Show mobile queue numbers in main area */
+  /* Show combined booth logo and queue card in one row */
+  .mobile-queue-header {
+    display: flex !important;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .mobile-booth-logo {
+    flex-shrink: 0;
+  }
+
+  .mobile-booth-logo .booth-logo-modern,
+  .mobile-booth-logo .booth-logo-modern-placeholder {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-booth-logo .booth-logo-modern-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-booth-logo .booth-logo-modern-placeholder span {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Event and booth name - compact */
+  .mobile-event-info-compact {
+    flex: 1;
+    min-width: 0;
+    padding: 0 0.75rem;
+  }
+
+  .mobile-event-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-booth-subtitle {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Compact queue card in mobile header */
   .queue-numbers-mobile {
     display: flex !important;
+    flex: 0 0 auto;
+    margin: 0;
+    max-width: 150px;
+  }
+
+  .queue-number-card-mobile {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    min-height: auto;
     width: 100%;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 1.5rem;
+  }
+
+  .queue-number-card-mobile .queue-label {
+    font-size: 0.6875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .queue-number-card-mobile .queue-number {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  .queue-helper-text-mobile {
+    font-size: 0.6875rem;
+    margin-top: 0.25rem;
+    line-height: 1.3;
+  }
+
+  /* Show mobile queue status in main area - more compact */
+  .queue-status-mobile {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .queue-status-mobile .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+  }
+
+  .queue-status-mobile .status-text {
+    color: #111827;
+    font-weight: 600;
   }
 
   /* Show mobile toggle button */
