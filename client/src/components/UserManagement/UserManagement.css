@@ -985,7 +985,7 @@ body .um-delete-dialog.e-dialog {
     align-items: center !important;
     flex-wrap: wrap !important;
     margin-bottom: 12px !important;
-    padding-left: 20px !important;
+    /* padding-left: 20px !important; */
 }
 
 .form-row .form-field {
@@ -1007,7 +1007,7 @@ body .um-delete-dialog.e-dialog {
 .form-row > .role-filter-dropdown,
 .form-row .form-field {
     display: flex !important;
-    align-items: center !important;
+    /* align-items: center !important; */
     vertical-align: middle !important;
 }
 
