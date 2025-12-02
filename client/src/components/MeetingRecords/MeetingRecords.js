@@ -10,6 +10,7 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
+import { Input } from '../UI/FormComponents';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useNavigate } from 'react-router-dom';
@@ -131,11 +132,15 @@ export default function MeetingRecords() {
         status: '',
         startDate: '',
         endDate: '',
+        search: '',
         page: 1,
         limit: 10,
         sortBy: 'startTime',
         sortOrder: 'desc'
     });
+    
+    // Search query state for input field
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Pagination
     const [pagination, setPagination] = useState({
@@ -432,17 +437,36 @@ export default function MeetingRecords() {
     };
 
     const clearFilters = () => {
+        setSearchQuery('');
         setFilters({
             recruiterId: '',
             eventId: '',
             status: '',
             startDate: '',
             endDate: '',
+            search: '',
             page: 1,
             limit: 10,
             sortBy: 'startTime',
             sortOrder: 'desc'
         });
+    };
+    
+    const handleSearch = () => {
+        setFilters(prev => ({
+            ...prev,
+            search: searchQuery.trim(),
+            page: 1 // Reset to first page when searching
+        }));
+    };
+    
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setFilters(prev => ({
+            ...prev,
+            search: '',
+            page: 1
+        }));
     };
 
     const formatDuration = (minutes) => {
@@ -751,6 +775,72 @@ export default function MeetingRecords() {
                             </div>
                         </div>
 
+                        {/* Search and Status Filter Row */}
+                        <div className="mr-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            {/* Status Filter - Left */}
+                            <div style={{ width: '200px', flexShrink: 0 }}>
+                                <DropDownListComponent
+                                    id="status-filter-dropdown-main"
+                                    dataSource={[
+                                        { value: '', text: 'All Statuses' },
+                                        { value: 'scheduled', text: 'Scheduled' },
+                                        { value: 'active', text: 'Active' },
+                                        { value: 'completed', text: 'Completed' },
+                                        { value: 'cancelled', text: 'Cancelled' },
+                                        { value: 'failed', text: 'Failed' },
+                                        { value: 'left_with_message', text: 'Left Message' }
+                                    ]}
+                                    fields={{ value: 'value', text: 'text' }}
+                                    value={filters.status}
+                                    change={(e) => handleFilterChange('status', e.value || '')}
+                                    placeholder="Select Status"
+                                    cssClass="status-filter-dropdown"
+                                    popupHeight="300px"
+                                    width="100%"
+                                />
+                            </div>
+                            {/* Search Section - Right */}
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+                                <div style={{ marginBottom: 0 }}>
+                                    <Input
+                                        id="meeting-records-search-input"
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleSearch();
+                                            }
+                                        }}
+                                        placeholder="Search by name, email, or any field..."
+                                        style={{ width: '300px', marginBottom: 0 }}
+                                        className="mr-search-input-no-label"
+                                    />
+                                </div>
+                                <ButtonComponent
+                                    cssClass="e-primary e-small"
+                                    onClick={handleSearch}
+                                    disabled={loadingData}
+                                    aria-label="Search meeting records"
+                                    style={{ minWidth: '80px', height: '44px' }}
+                                >
+                                    Search
+                                </ButtonComponent>
+                                {(searchQuery || filters.search) && (
+                                    <ButtonComponent
+                                        cssClass="e-outline e-primary e-small"
+                                        onClick={handleClearSearch}
+                                        disabled={loadingData}
+                                        aria-label="Clear search"
+                                        style={{ minWidth: '70px', height: '44px' }}
+                                    >
+                                        Clear
+                                    </ButtonComponent>
+                                )}
+                            </div>
+                        </div>
+
                         {/* Filters */}
                         <div className="filters-section">
                             <div 
@@ -769,7 +859,7 @@ export default function MeetingRecords() {
                             >
                                 <h3>
                                     Filters
-                                    {(filters.recruiterId || filters.eventId || filters.status || filters.startDate || filters.endDate) && (
+                                    {(filters.recruiterId || filters.eventId || filters.startDate || filters.endDate) && (
                                         <span className="active-filters-indicator">●</span>
                                     )}
                                 </h3>

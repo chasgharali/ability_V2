@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Dashboard/Dashboard.css';
 import './EventManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -192,12 +192,81 @@ export default function EventManagement() {
     const [termsOptions, setTermsOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [searchQuery, setSearchQuery] = useState(''); // Input field value
+    const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
 
-    const loadEvents = async () => {
+    const handleSearch = () => {
+        // Set the active search query to trigger filtering
+        setActiveSearchQuery(searchQuery.trim());
+        setCurrentPage(1); // Reset to first page when searching
+    };
+
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setActiveSearchQuery('');
+        setCurrentPage(1); // Reset to first page when clearing
+    };
+
+    const loadEvents = useCallback(async () => {
         try {
             setLoadingList(true);
-            const res = await listEvents({ page: 1, limit: 50 });
-            const items = res?.events || [];
+            // When searching, fetch a very large number (10000) to ensure ALL matching records are loaded
+            // When not searching, fetch 50 for initial load (grid handles client-side pagination)
+            const limit = activeSearchQuery && activeSearchQuery.trim() ? 10000 : 50;
+            const res = await listEvents({ page: 1, limit });
+            let items = res?.events || [];
+            
+            // Client-side filtering if search query exists
+            if (activeSearchQuery && activeSearchQuery.trim()) {
+                const searchLower = activeSearchQuery.trim().toLowerCase();
+                items = items.filter(e => {
+                    const name = (e.name || '').toLowerCase();
+                    const description = (e.description || '').toLowerCase();
+                    const slug = (e.slug || '').toLowerCase();
+                    const sendyId = (e.sendyId || '').toLowerCase();
+                    const status = (e.status || '').toLowerCase();
+                    // Also search in formatted date strings
+                    let startDate = '';
+                    let endDate = '';
+                    let createdDate = '';
+                    try {
+                        if (e.start) {
+                            const start = new Date(e.start);
+                            if (!isNaN(start.getTime())) {
+                                startDate = start.toLocaleString().toLowerCase();
+                            }
+                        }
+                        if (e.end) {
+                            const end = new Date(e.end);
+                            if (!isNaN(end.getTime())) {
+                                endDate = end.toLocaleString().toLowerCase();
+                            }
+                        }
+                        if (e.createdAt) {
+                            const created = new Date(e.createdAt);
+                            if (!isNaN(created.getTime())) {
+                                createdDate = created.toDateString().toLowerCase();
+                            }
+                        }
+                    } catch (err) {
+                        // Ignore date parsing errors
+                    }
+                    const maxRecruiters = String(e.limits?.maxRecruitersPerEvent ?? 0);
+                    const maxBooths = String(e.limits?.maxBooths ?? 0);
+                    
+                    return name.includes(searchLower) || 
+                           description.includes(searchLower) || 
+                           slug.includes(searchLower) ||
+                           sendyId.includes(searchLower) ||
+                           status.includes(searchLower) ||
+                           startDate.includes(searchLower) ||
+                           endDate.includes(searchLower) ||
+                           createdDate.includes(searchLower) ||
+                           maxRecruiters.includes(searchLower) ||
+                           maxBooths.includes(searchLower);
+                });
+            }
+            
             setEvents(items.map((e) => ({
                 id: e._id,
                 name: e.name,
@@ -219,10 +288,11 @@ export default function EventManagement() {
             })));
         } catch (err) {
             console.error('Failed to load events', err);
+            setEvents([]);
         } finally {
             setLoadingList(false);
         }
-    };
+    }, [activeSearchQuery]);
 
     const loadTerms = async () => {
         try {
@@ -234,7 +304,7 @@ export default function EventManagement() {
         }
     };
 
-    useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading]);
+    useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading, loadEvents]);
 
     // Sync header and content horizontal scrolling
     useEffect(() => {
@@ -579,6 +649,43 @@ export default function EventManagement() {
 
                         {mode === 'list' ? (
                             <div className="bm-grid-wrap">
+                                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    {/* Search Section - Right Aligned */}
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                        <Input
+                                            id="event-search-input"
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleSearch();
+                                                }
+                                            }}
+                                            placeholder="Search by name, description, status, or any field..."
+                                            style={{ minWidth: '250px', maxWidth: '400px' }}
+                                        />
+                                        <ButtonComponent
+                                            cssClass="e-primary"
+                                            onClick={handleSearch}
+                                            disabled={loadingList}
+                                            aria-label="Search events"
+                                        >
+                                            Search
+                                        </ButtonComponent>
+                                        {(searchQuery || activeSearchQuery) && (
+                                            <ButtonComponent
+                                                cssClass="e-outline e-primary"
+                                                onClick={handleClearSearch}
+                                                disabled={loadingList}
+                                                aria-label="Clear search"
+                                            >
+                                                Clear
+                                            </ButtonComponent>
+                                        )}
+                                    </div>
+                                </div>
                                 {loadingList && <div style={{ marginBottom: 12 }}>Loading…</div>}
                                 <GridComponent
                                     ref={gridRef}
