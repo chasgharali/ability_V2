@@ -649,52 +649,52 @@ export default function BoothQueueManagement() {
 
               <div className="serving-controls">
                 <div className="serving-controls-row">
-                  <span className={`rt-badge ${socketConnected ? 'online' : 'offline'}`} title={socketConnected ? 'Real-time connected' : 'Real-time offline'}>
-                    <span className="rt-dot" /> {socketConnected ? 'Online' : 'Offline'}
-                  </span>
-                  <button
-                    onClick={loadQueueData}
-                    className={`icon-btn refresh-btn ${isRefreshing ? 'loading' : ''}`}
-                    title="Refresh Queue Data"
-                    aria-label="Refresh Queue Data"
-                    disabled={isRefreshing}
-                  >
-                    <FaRedoAlt size={16} />
-                  </button>
-                  <button
-                    onClick={joinSocketRoom}
-                    className={`icon-btn reconnect-btn ${isReconnecting ? 'loading' : ''}`}
-                    title="Reconnect to Real-time Updates"
-                    aria-label="Reconnect to Real-time Updates"
-                    disabled={isReconnecting}
-                  >
-                    <FaPlug size={16} />
-                  </button>
+                <span className={`rt-badge ${socketConnected ? 'online' : 'offline'}`} title={socketConnected ? 'Real-time connected' : 'Real-time offline'}>
+                  <span className="rt-dot" /> {socketConnected ? 'Online' : 'Offline'}
+                </span>
+                <button
+                  onClick={loadQueueData}
+                  className={`icon-btn refresh-btn ${isRefreshing ? 'loading' : ''}`}
+                  title="Refresh Queue Data"
+                  aria-label="Refresh Queue Data"
+                  disabled={isRefreshing}
+                >
+                  <FaRedoAlt size={16} />
+                </button>
+                <button
+                  onClick={joinSocketRoom}
+                  className={`icon-btn reconnect-btn ${isReconnecting ? 'loading' : ''}`}
+                  title="Reconnect to Real-time Updates"
+                  aria-label="Reconnect to Real-time Updates"
+                  disabled={isReconnecting}
+                >
+                  <FaPlug size={16} />
+                </button>
                 </div>
                 <div className="serving-controls-row">
-                  <label>Now Serving:</label>
-                  <input
-                    type="number"
-                    value={currentServing}
-                    onChange={(e) => setCurrentServing(parseInt(e.target.value) || 1)}
-                    min="1"
-                    className="serving-input"
+                <label>Now Serving:</label>
+                <input
+                  type="number"
+                  value={currentServing}
+                  onChange={(e) => setCurrentServing(parseInt(e.target.value) || 1)}
+                  min="1"
+                  className="serving-input"
                     aria-label="Current serving number"
-                  />
+                />
                 </div>
                 <div className="serving-controls-row">
-                  <button
-                    onClick={async () => {
-                      await handleUpdateServing(currentServing);
-                      setToast('Now Serving updated');
-                      setTimeout(() => setToast(''), 2000);
-                    }}
-                    className="update-serving-btn"
-                    style={{ background: '#111827', borderColor: '#111827', color: '#fff' }}
+                <button
+                  onClick={async () => {
+                    await handleUpdateServing(currentServing);
+                    setToast('Now Serving updated');
+                    setTimeout(() => setToast(''), 2000);
+                  }}
+                  className="update-serving-btn"
+                  style={{ background: '#111827', borderColor: '#111827', color: '#fff' }}
                     aria-label="Update serving number"
-                  >
-                    Update
-                  </button>
+                >
+                  Update
+                </button>
                   <button
                     onClick={handleDeviceSelection}
                     className="test-device-btn"

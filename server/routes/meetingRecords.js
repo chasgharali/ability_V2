@@ -3,6 +3,7 @@ const router = express.Router();
 const MeetingRecord = require('../models/MeetingRecord');
 const VideoCall = require('../models/VideoCall');
 const BoothQueue = require('../models/BoothQueue');
+const User = require('../models/User');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
 // Get meeting records with filtering
@@ -26,21 +27,53 @@ router.get('/', authenticateToken, async (req, res) => {
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
-            // Recruiters can only see their own records
-            query.recruiterId = req.user._id;
+            // Get recruiter's assigned booth
+            const recruiter = await User.findById(req.user._id).select('assignedBooth').populate('assignedBooth');
+            const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
+            
+            // Recruiters see:
+            // 1. Their own meeting records (where recruiterId matches)
+            // 2. All "left_with_message" records from their booth (visible to all recruiters in booth)
+            if (recruiterBoothId) {
+                // Build the $or conditions
+                const orConditions = [];
+                
+                // First condition: recruiter's own records (apply status filter if provided)
+                const ownRecordsCondition = { recruiterId: req.user._id };
+                if (status) {
+                    ownRecordsCondition.status = status;
+                }
+                orConditions.push(ownRecordsCondition);
+                
+                // Second condition: left_with_message records from booth (always show, ignore status filter)
+                orConditions.push({
+                    status: 'left_with_message',
+                    boothId: recruiterBoothId
+                });
+                
+                query.$or = orConditions;
+            } else {
+                // If no booth assigned, only show their own records
+                query.recruiterId = req.user._id;
+                if (status) {
+                    query.status = status;
+                }
+            }
         } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
             // Admins can filter by recruiter or see all
             if (recruiterId) {
                 query.recruiterId = recruiterId;
             }
+            if (status) {
+                query.status = status;
+            }
         } else {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        // Apply additional filters
+        // Apply additional filters (these apply to all conditions in $or)
         if (eventId) query.eventId = eventId;
         if (boothId) query.boothId = boothId;
-        if (status) query.status = status;
 
         console.log('Meeting records query:', JSON.stringify(query));
 
@@ -75,7 +108,7 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         // Calculate duration for records that don't have it
-        const processedRecords = meetingRecords.map(record => {
+        let processedRecords = meetingRecords.map(record => {
             const recordObj = record.toObject();
             // If duration is null but we have start and end times, calculate it
             if (!recordObj.duration && recordObj.startTime && recordObj.endTime) {
@@ -84,16 +117,63 @@ router.get('/', authenticateToken, async (req, res) => {
             return recordObj;
         });
 
-        // Get total count for pagination
-        const totalRecords = await MeetingRecord.countDocuments(query);
+        // Deduplicate left_with_message records by queueId
+        // If multiple left_with_message records exist for the same queueId, keep only one
+        if (req.user.role === 'Recruiter') {
+            const seenQueueIds = new Set();
+            processedRecords = processedRecords.filter(record => {
+                // For left_with_message records, deduplicate by queueId
+                if (record.status === 'left_with_message' && record.queueId) {
+                    const queueIdStr = record.queueId._id?.toString() || record.queueId.toString();
+                    if (seenQueueIds.has(queueIdStr)) {
+                        return false; // Skip duplicate
+                    }
+                    seenQueueIds.add(queueIdStr);
+                }
+                return true; // Keep all other records
+            });
+        }
 
+        // Get total count for pagination
+        // Note: For recruiters with $or query, count may include duplicates from old records
+        // but the deduplication filter above will remove them from display
+        const totalRecords = await MeetingRecord.countDocuments(query);
+        
+        // Adjust count for recruiters to account for deduplication
+        // Count unique left_with_message records by queueId
+        let adjustedCount = totalRecords;
+        if (req.user.role === 'Recruiter' && query.$or) {
+            // Count how many duplicate left_with_message records exist
+            const duplicateQuery = {
+                ...query,
+                status: 'left_with_message'
+            };
+            const leftMessageRecords = await MeetingRecord.find(duplicateQuery).select('queueId');
+            const uniqueQueueIds = new Set();
+            let duplicateCount = 0;
+            leftMessageRecords.forEach(record => {
+                const queueIdStr = record.queueId?.toString();
+                if (queueIdStr) {
+                    if (uniqueQueueIds.has(queueIdStr)) {
+                        duplicateCount++;
+                    } else {
+                        uniqueQueueIds.add(queueIdStr);
+                    }
+                }
+            });
+            adjustedCount = totalRecords - duplicateCount;
+        }
+
+        // Use adjusted count for pagination if we deduplicated
+        const finalCount = req.user.role === 'Recruiter' && query.$or ? adjustedCount : totalRecords;
+        
         res.json({
             meetingRecords: processedRecords,
             pagination: {
                 currentPage: parseInt(page),
-                totalPages: Math.ceil(totalRecords / limit),
-                totalRecords,
-                hasNext: page * limit < totalRecords,
+                totalPages: Math.ceil(finalCount / limit),
+                totalRecords: finalCount,
+                hasNext: page * limit < finalCount,
                 hasPrev: page > 1
             }
         });
@@ -121,11 +201,35 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
 
         // Check access permissions
-        const canAccess = req.user.role === 'Admin' ||
+        let canAccess = req.user.role === 'Admin' ||
             req.user.role === 'GlobalSupport' ||
-            meetingRecord.recruiterId._id.toString() === req.user._id.toString() ||
             meetingRecord.jobseekerId._id.toString() === req.user._id.toString() ||
             (meetingRecord.interpreterId && meetingRecord.interpreterId._id.toString() === req.user._id.toString());
+
+        // For recruiters: check if they can access the record
+        if (req.user.role === 'Recruiter') {
+            // If it's a left_with_message record, check if recruiter is in the same booth
+            if (meetingRecord.status === 'left_with_message' && meetingRecord.boothId) {
+                const User = require('../models/User');
+                const recruiter = await User.findById(req.user._id).select('assignedBooth');
+                const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
+                const recordBoothId = meetingRecord.boothId._id || meetingRecord.boothId;
+                
+                if (recruiterBoothId && recordBoothId && 
+                    recruiterBoothId.toString() === recordBoothId.toString()) {
+                    canAccess = true;
+                }
+            } else {
+                // For other records, check if recruiter matches
+                if (meetingRecord.recruiterId && 
+                    meetingRecord.recruiterId._id.toString() === req.user._id.toString()) {
+                    canAccess = true;
+                }
+            }
+        } else if (meetingRecord.recruiterId && 
+                   meetingRecord.recruiterId._id.toString() === req.user._id.toString()) {
+            canAccess = true;
+        }
 
         if (!canAccess) {
             return res.status(403).json({ message: 'Access denied' });
