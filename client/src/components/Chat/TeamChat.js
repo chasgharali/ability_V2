@@ -681,10 +681,18 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
             
             // For interpreters: only show Support and Interpreter users
             // This applies to both online and offline users - online/offline only affects sorting
-            if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
+            if (user?.role === 'Interpreter') {
                 const isSupport = p.role === 'Support' || p.role === 'GlobalSupport';
                 const isInterpreter = p.role === 'Interpreter' || p.role === 'GlobalInterpreter';
                 return isSupport || isInterpreter;
+            }
+            
+            // For global interpreters: only show GlobalSupport and GlobalInterpreter users
+            // This applies to both online and offline users - online/offline only affects sorting
+            if (user?.role === 'GlobalInterpreter') {
+                const isGlobalSupport = p.role === 'GlobalSupport';
+                const isGlobalInterpreter = p.role === 'GlobalInterpreter';
+                return isGlobalSupport || isGlobalInterpreter;
             }
             
             // For support users: only show Support, Recruiter, and Interpreter from same booth, plus GlobalSupport and GlobalInterpreter
