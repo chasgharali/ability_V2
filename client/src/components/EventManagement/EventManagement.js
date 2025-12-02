@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Dashboard/Dashboard.css';
 import './EventManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import filterIcon from '../../assets/filter.png';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
+import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input, DateTimePicker, Checkbox, Select, MultiSelect } from '../UI/FormComponents';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
 import { uploadImageToS3 } from '../../services/uploads';
@@ -192,12 +193,97 @@ export default function EventManagement() {
     const [termsOptions, setTermsOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [statusFilter, setStatusFilter] = useState('');
+    const [searchQuery, setSearchQuery] = useState(''); // Input field value
+    const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
 
-    const loadEvents = async () => {
+    const handleSearch = useCallback(() => {
+        // Set the active search query to trigger filtering
+        setActiveSearchQuery(searchQuery.trim());
+        setCurrentPage(1); // Reset to first page when searching
+    }, [searchQuery]);
+
+    const handleClearSearch = useCallback(() => {
+        setSearchQuery('');
+        setActiveSearchQuery('');
+        // loadEvents will be called automatically via useEffect when activeSearchQuery changes
+        setCurrentPage(1); // Reset to first page when clearing
+    }, []);
+
+    const statusOptions = [
+        { value: '', label: 'All Statuses' },
+        { value: 'draft', label: 'Draft' },
+        { value: 'published', label: 'Published' },
+        { value: 'active', label: 'Active' },
+        { value: 'completed', label: 'Completed' },
+        { value: 'cancelled', label: 'Cancelled' },
+    ];
+
+    const loadEvents = useCallback(async () => {
         try {
             setLoadingList(true);
-            const res = await listEvents({ page: 1, limit: 50 });
-            const items = res?.events || [];
+            // Fetch a very large number (10000) to ensure ALL records are loaded for client-side pagination and filtering
+            // This allows all events to be displayed whether searching or not
+            const limit = 10000;
+            const params = { page: 1, limit };
+            // Add status filter if selected
+            if (statusFilter && statusFilter.trim()) {
+                params.status = statusFilter.trim();
+            }
+            const res = await listEvents(params);
+            let items = res?.events || [];
+            
+            // Client-side filtering if search query exists
+            if (activeSearchQuery && activeSearchQuery.trim()) {
+                const searchLower = activeSearchQuery.trim().toLowerCase();
+                items = items.filter(e => {
+                    const name = (e.name || '').toLowerCase();
+                    const description = (e.description || '').toLowerCase();
+                    const slug = (e.slug || '').toLowerCase();
+                    const sendyId = (e.sendyId || '').toLowerCase();
+                    const status = (e.status || '').toLowerCase();
+                    // Also search in formatted date strings
+                    let startDate = '';
+                    let endDate = '';
+                    let createdDate = '';
+                    try {
+                        if (e.start) {
+                            const start = new Date(e.start);
+                            if (!isNaN(start.getTime())) {
+                                startDate = start.toLocaleString().toLowerCase();
+                            }
+                        }
+                        if (e.end) {
+                            const end = new Date(e.end);
+                            if (!isNaN(end.getTime())) {
+                                endDate = end.toLocaleString().toLowerCase();
+                            }
+                        }
+                        if (e.createdAt) {
+                            const created = new Date(e.createdAt);
+                            if (!isNaN(created.getTime())) {
+                                createdDate = created.toDateString().toLowerCase();
+                            }
+                        }
+                    } catch (err) {
+                        // Ignore date parsing errors
+                    }
+                    const maxRecruiters = String(e.limits?.maxRecruitersPerEvent ?? 0);
+                    const maxBooths = String(e.limits?.maxBooths ?? 0);
+                    
+                    return name.includes(searchLower) || 
+                           description.includes(searchLower) || 
+                           slug.includes(searchLower) ||
+                           sendyId.includes(searchLower) ||
+                           status.includes(searchLower) ||
+                           startDate.includes(searchLower) ||
+                           endDate.includes(searchLower) ||
+                           createdDate.includes(searchLower) ||
+                           maxRecruiters.includes(searchLower) ||
+                           maxBooths.includes(searchLower);
+                });
+            }
+            
             setEvents(items.map((e) => ({
                 id: e._id,
                 name: e.name,
@@ -219,10 +305,11 @@ export default function EventManagement() {
             })));
         } catch (err) {
             console.error('Failed to load events', err);
+            setEvents([]);
         } finally {
             setLoadingList(false);
         }
-    };
+    }, [statusFilter, activeSearchQuery]);
 
     const loadTerms = async () => {
         try {
@@ -234,7 +321,7 @@ export default function EventManagement() {
         }
     };
 
-    useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading]);
+    useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading, loadEvents]);
 
     // Sync header and content horizontal scrolling
     useEffect(() => {
@@ -579,6 +666,66 @@ export default function EventManagement() {
 
                         {mode === 'list' ? (
                             <div className="bm-grid-wrap">
+                                <div className="em-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    {/* Status Filter - Left */}
+                                    <div style={{ width: '200px', flexShrink: 0 }}>
+                                        <DropDownListComponent
+                                            id="status-filter-dropdown"
+                                            dataSource={statusOptions.map(s => ({ value: s.value, text: s.label }))}
+                                            fields={{ value: 'value', text: 'text' }}
+                                            value={statusFilter}
+                                            change={(e) => {
+                                                setStatusFilter(e.value || '');
+                                                setCurrentPage(1); // Reset to first page when filter changes
+                                                // loadEvents will be called automatically via useEffect when statusFilter changes
+                                            }}
+                                            placeholder="Select Status"
+                                            cssClass="status-filter-dropdown"
+                                            popupHeight="300px"
+                                            width="100%"
+                                        />
+                                    </div>
+                                    {/* Search Section - Right */}
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+                                        <div style={{ marginBottom: 0 }}>
+                                            <Input
+                                                id="event-search-input"
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleSearch();
+                                                    }
+                                                }}
+                                                placeholder="Search by name, email, or any field..."
+                                                style={{ width: '300px', marginBottom: 0 }}
+                                                className="em-search-input-no-label"
+                                            />
+                                        </div>
+                                        <ButtonComponent
+                                            cssClass="e-primary e-small"
+                                            onClick={handleSearch}
+                                            disabled={loadingList}
+                                            aria-label="Search events"
+                                            style={{ minWidth: '80px', height: '44px' }}
+                                        >
+                                            Search
+                                        </ButtonComponent>
+                                        {(searchQuery || activeSearchQuery) && (
+                                            <ButtonComponent
+                                                cssClass="e-outline e-primary e-small"
+                                                onClick={handleClearSearch}
+                                                disabled={loadingList}
+                                                aria-label="Clear search"
+                                                style={{ minWidth: '70px', height: '44px' }}
+                                            >
+                                                Clear
+                                            </ButtonComponent>
+                                        )}
+                                    </div>
+                                </div>
                                 {loadingList && <div style={{ marginBottom: 12 }}>Loading…</div>}
                                 <GridComponent
                                     ref={gridRef}

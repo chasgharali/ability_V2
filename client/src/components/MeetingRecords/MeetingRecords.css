@@ -822,6 +822,149 @@
     color: #333;
 }
 
+/* Meeting Records Filters Row - Enhanced Styling */
+.mr-filters-row {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    transition: box-shadow 0.2s ease;
+}
+
+.mr-filters-row:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Fix alignment for search input in filter row */
+.mr-filters-row .form-field {
+    margin-bottom: 0 !important;
+}
+
+.mr-filters-row .mr-search-input-no-label .form-field {
+    margin-bottom: 0 !important;
+}
+
+.mr-filters-row .form-input {
+    height: 44px !important;
+    padding: 12px 16px !important;
+    box-sizing: border-box !important;
+    margin-bottom: 0 !important;
+}
+
+/* Status Filter Dropdown Styling */
+.status-filter-dropdown.e-dropdownlist {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    width: 100% !important;
+    max-width: 200px !important;
+    display: block !important;
+    box-sizing: border-box !important;
+}
+
+/* Remove ALL borders from nested elements - be very aggressive */
+.status-filter-dropdown .e-input-group,
+.status-filter-dropdown .e-input-group-wrap *,
+.status-filter-dropdown .e-input,
+.status-filter-dropdown .e-input-wrapper,
+.status-filter-dropdown .e-input-group .e-input-group-wrap,
+.status-filter-dropdown .e-dropdownlist .e-input-group,
+.status-filter-dropdown .e-dropdownlist .e-input {
+    border: none !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+}
+
+/* Single border ONLY on the outermost wrapper - Match Edit/Delete button style */
+.status-filter-dropdown .e-input-group-wrap,
+.status-filter-dropdown.e-dropdownlist .e-input-group-wrap {
+    border: 1px solid #111111 !important;
+    border-radius: 6px !important;
+    background-color: transparent !important;
+    transition: all 0.15s ease !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    cursor: pointer !important;
+    color: #111111 !important;
+}
+
+/* Hover state - match button hover (Edit/Delete buttons) */
+.status-filter-dropdown .e-input-group-wrap:hover,
+.status-filter-dropdown.e-dropdownlist:hover .e-input-group-wrap {
+    background-color: #111111 !important;
+    border-color: #111111 !important;
+    color: #ffffff !important;
+}
+
+/* Focus state - match button focus */
+.status-filter-dropdown.e-input-focus .e-input-group-wrap,
+.status-filter-dropdown .e-input-group-wrap.e-input-focus,
+.status-filter-dropdown.e-dropdownlist.e-input-focus .e-input-group-wrap {
+    background-color: #f3f4f6 !important;
+    border-color: #111111 !important;
+    color: #111111 !important;
+    outline: none !important;
+}
+
+/* Input text styling - match small button text */
+.status-filter-dropdown .e-input {
+    padding: 6px 12px !important;
+    color: inherit !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    font-weight: 500 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    text-align: left !important;
+    flex: 1 !important;
+    height: auto !important;
+    min-height: 20px !important;
+}
+
+.status-filter-dropdown .e-input::placeholder {
+    color: #9ca3af !important;
+    opacity: 1 !important;
+}
+
+.status-filter-dropdown .e-input-group-wrap:hover .e-input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Dropdown icon styling - match button colors, inherit from wrapper */
+.status-filter-dropdown .e-input-group-icon,
+.status-filter-dropdown .e-ddl-icon {
+    color: inherit !important;
+    transition: color 0.15s ease, transform 0.15s ease !important;
+    right: 12px !important;
+    width: 16px !important;
+    height: 16px !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    font-size: 12px !important;
+}
+
+.status-filter-dropdown .e-input-group-wrap:hover .e-input-group-icon,
+.status-filter-dropdown.e-dropdownlist:hover .e-input-group-wrap .e-input-group-icon {
+    color: #ffffff !important;
+}
+
 /* Filters Section */
 .filters-section {
     background: white;

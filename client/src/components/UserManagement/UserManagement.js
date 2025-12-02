@@ -20,6 +20,8 @@ export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [roleFilter, setRoleFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Input field value
+  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -116,17 +118,32 @@ export default function UserManagement() {
     setRowPendingDelete(null);
   };
 
+  const handleSearch = useCallback(() => {
+    // Set the active search query to trigger API call
+    setActiveSearchQuery(searchQuery.trim());
+  }, [searchQuery]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setActiveSearchQuery('');
+    // loadUsers will be called automatically via useEffect when activeSearchQuery changes
+  }, []);
+
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       // Only pass role parameter if roleFilter has a value
       // When "All Roles" is selected, don't pass role parameter at all
       // The server will exclude JobSeekers by default
-      // Fetch a large number of users (5000) to ensure all users are loaded
-      // The grid will handle client-side pagination
-      const params = { page: 1, limit: 5000 };
+      // When searching, fetch a very large number (10000) to ensure ALL matching records are loaded
+      // When not searching, fetch 5000 for initial load (grid handles client-side pagination)
+      const params = { page: 1, limit: activeSearchQuery && activeSearchQuery.trim() ? 10000 : 5000 };
       if (roleFilter && roleFilter.trim()) {
         params.role = roleFilter.trim();
+      }
+      // Add search parameter if active search query exists
+      if (activeSearchQuery && activeSearchQuery.trim()) {
+        params.search = activeSearchQuery.trim();
       }
       
       const res = await listUsers(params);
@@ -151,12 +168,15 @@ export default function UserManagement() {
       }));
       // announce results for screen readers
       const count = (items || []).length;
-      setLiveMsg(`${count} user${count === 1 ? '' : 's'} loaded`);
+      const roleLabel = roleFilter ? roleOptionsNoJobSeeker.find(r => r.value === roleFilter)?.label || roleFilter : null;
+      const roleText = roleLabel ? ` with role "${roleLabel}"` : '';
+      const searchText = activeSearchQuery ? ` matching "${activeSearchQuery}"` : '';
+      setLiveMsg(`${count} user${count === 1 ? '' : 's'} loaded${roleText}${searchText}`);
     } catch (e) {
       console.error('Failed to load users', e);
       showToast('Failed to load users', 'Error');
     } finally { setLoading(false); }
-  }, [roleFilter]);
+  }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker]);
 
   const loadBoothsAndEvents = async () => {
     try {
@@ -568,22 +588,63 @@ export default function UserManagement() {
 
             {mode === 'list' ? (
               <div className="bm-grid-wrap">
-                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {/* <label htmlFor="role-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                      Role
-                    </label> */}
+                <div className="um-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  {/* Role Filter - Left */}
+                  <div style={{ width: '200px', flexShrink: 0 }}>
                     <DropDownListComponent
                       id="role-filter-dropdown"
                       dataSource={[{ value: '', text: 'All Roles' }, ...roleOptionsNoJobSeeker.map(r => ({ value: r.value, text: r.label }))]}
                       fields={{ value: 'value', text: 'text' }}
                       value={roleFilter}
-                      change={(e) => setRoleFilter(e.value || '')}
+                      change={(e) => {
+                        setRoleFilter(e.value || '');
+                        // loadUsers will be called automatically via useEffect when roleFilter changes
+                      }}
                       placeholder="Select Role"
                       cssClass="role-filter-dropdown"
                       popupHeight="300px"
-                      width="200px"
+                      width="100%"
                     />
+                  </div>
+                  {/* Search Section - Right */}
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+                    <div style={{ marginBottom: 0 }}>
+                      <Input
+                        id="user-search-input"
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSearch();
+                          }
+                        }}
+                        placeholder="Search by name, email, or any field..."
+                        style={{ width: '300px', marginBottom: 0 }}
+                        className="um-search-input-no-label"
+                      />
+                    </div>
+                    <ButtonComponent
+                      cssClass="e-primary e-small"
+                      onClick={handleSearch}
+                      disabled={loading}
+                      aria-label="Search users"
+                      style={{ minWidth: '80px', height: '44px' }}
+                    >
+                      Search
+                    </ButtonComponent>
+                    {(searchQuery || activeSearchQuery) && (
+                      <ButtonComponent
+                        cssClass="e-outline e-primary e-small"
+                        onClick={handleClearSearch}
+                        disabled={loading}
+                        aria-label="Clear search"
+                        style={{ minWidth: '70px', height: '44px' }}
+                      >
+                        Clear
+                      </ButtonComponent>
+                    )}
                   </div>
                 </div>
                 <div aria-live="polite" className="sr-only">{liveMsg}</div>
