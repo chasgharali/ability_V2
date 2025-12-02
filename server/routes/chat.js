@@ -91,7 +91,7 @@ router.get('/participants', authenticateToken, async (req, res) => {
             return res.json(globalReachUsers);
         }
 
-        // Global Interpreter can only reach GlobalSupport and GlobalInterpreter
+        // Global Interpreter can only reach GlobalSupport and GlobalInterpreter (NOT Support)
         if (currentUser.role === 'GlobalInterpreter') {
             const targetRoles = ['GlobalSupport', 'GlobalInterpreter'];
 
@@ -101,7 +101,12 @@ router.get('/participants', authenticateToken, async (req, res) => {
                 _id: { $ne: currentUser._id }
             }).select('name email avatarUrl role assignedBooth');
 
-            return res.json(globalReachUsers);
+            // Ensure we only return GlobalSupport and GlobalInterpreter (explicitly exclude Support)
+            const filteredUsers = globalReachUsers.filter(user => 
+                user.role === 'GlobalSupport' || user.role === 'GlobalInterpreter'
+            );
+
+            return res.json(filteredUsers);
         }
 
         // For booth-specific roles (Recruiter, Interpreter, Support)
