@@ -656,7 +656,7 @@ export default function BoothQueueManagement() {
                   {queue.map((queueEntry) => (
                     <div
                       key={queueEntry._id}
-                      className={`queue-card ${queueEntry.status === 'left_with_message' ? 'left-message' : queueEntry.position <= currentServing ? 'ready' : 'waiting'}`}
+                      className={`queue-card ${queueEntry.status === 'left_with_message' ? 'left-message' : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? 'in-call' : queueEntry.position <= currentServing ? 'ready' : 'waiting'}`}
                     >
                       <div className="queue-card-header">
                         <div className="job-seeker-info">
@@ -679,6 +679,8 @@ export default function BoothQueueManagement() {
                         <div className="queue-status">
                           {queueEntry.status === 'left_with_message' ? (
                             <span className="status-badge left-message-badge">Left Message</span>
+                          ) : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? (
+                            <span className="status-badge in-call">In Call</span>
                           ) : queueEntry.position <= currentServing ? (
                             <span className="status-badge ready">Ready</span>
                           ) : (
@@ -690,7 +692,7 @@ export default function BoothQueueManagement() {
                       <div className="queue-details">
                         <div className="waiting-row">
                           <div className="waiting-left">
-                            <strong>Waiting:</strong>
+                            <strong>{queueEntry.status === 'in_meeting' || queueEntry.isInCall ? 'In Call:' : 'Waiting:'}</strong>
                             <span className="waiting-timer">{formatDuration(nowTs - new Date(queueEntry.joinedAt).getTime())}</span>
                           </div>
                           <button
@@ -726,6 +728,35 @@ export default function BoothQueueManagement() {
                               onClick={() => handleRemoveFromQueue(queueEntry)}
                               className="btn-remove"
                               style={{ background: theme.danger, borderColor: theme.danger }}
+                            >
+                              Remove
+                            </button>
+                          </>
+                        ) : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? (
+                          <>
+                            <button
+                              onClick={() => handleInviteToMeeting(queueEntry)}
+                              className="btn-invite"
+                              style={{ background: theme.success, borderColor: theme.success }}
+                              disabled
+                            >
+                              Invite
+                            </button>
+
+                            <button
+                              onClick={() => handleViewMessages(queueEntry)}
+                              className="btn-messages"
+                              style={{ background: theme.primary, borderColor: theme.primary }}
+                              disabled
+                            >
+                              Messages ({queueEntry.messageCount || 0})
+                            </button>
+
+                            <button
+                              onClick={() => handleRemoveFromQueue(queueEntry)}
+                              className="btn-remove"
+                              style={{ background: theme.danger, borderColor: theme.danger }}
+                              disabled
                             >
                               Remove
                             </button>

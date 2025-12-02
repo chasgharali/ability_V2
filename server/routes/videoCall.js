@@ -64,6 +64,7 @@ router.post('/create', auth, async (req, res) => {
       recruiter: recruiterId,
       jobSeeker: queueEntry.jobSeeker._id,
       queueEntry: queueId,
+      status: 'active', // Explicitly set status to active
       metadata: {
         interpreterRequested: queueEntry.interpreterCategory ? true : false,
         interpreterCategory: queueEntry.interpreterCategory
@@ -71,6 +72,14 @@ router.post('/create', auth, async (req, res) => {
     });
 
     await videoCall.save();
+    console.log('✅ VideoCall created:', {
+      id: videoCall._id,
+      roomName: videoCall.roomName,
+      booth: videoCall.booth.toString(),
+      jobSeeker: videoCall.jobSeeker.toString(),
+      status: videoCall.status,
+      queueEntry: videoCall.queueEntry.toString()
+    });
 
     // Generate access tokens with unique identities
     const timestamp = Date.now();
@@ -80,6 +89,11 @@ router.post('/create', auth, async (req, res) => {
     // Update queue entry status
     queueEntry.status = 'in_meeting';
     await queueEntry.save();
+    console.log('✅ Queue entry status updated to in_meeting:', {
+      queueId: queueEntry._id,
+      jobSeeker: queueEntry.jobSeeker._id.toString(),
+      status: queueEntry.status
+    });
 
     // Emit socket event to job seeker
     const io = req.app.get('io');
@@ -94,6 +108,26 @@ router.post('/create', auth, async (req, res) => {
       booth: queueEntry.booth,
       event: queueEntry.event,
       accessToken: jobSeekerToken
+    });
+
+    // Notify all recruiters in the booth that the queue entry status has changed
+    // Reload the queue entry with populated fields to send complete data
+    const updatedQueueEntry = await BoothQueue.findById(queueEntry._id)
+      .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+      .populate('interpreterCategory', 'name code');
+    
+    const boothId = queueEntry.booth._id.toString();
+    const updateData = {
+      boothId: boothId,
+      action: 'status_changed',
+      queueEntry: updatedQueueEntry.toJSON()
+    };
+    io.to(`booth_${boothId}`).emit('queue-updated', updateData);
+    io.to(`booth_management_${boothId}`).emit('queue-updated', updateData);
+    console.log('📢 Emitted queue-updated event for call start to booth:', boothId, {
+      queueEntryId: updatedQueueEntry._id,
+      jobSeeker: updatedQueueEntry.jobSeeker._id.toString(),
+      status: updatedQueueEntry.status
     });
 
     res.json({

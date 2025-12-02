@@ -1,12 +1,70 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const BoothQueue = require('../models/BoothQueue');
 const Booth = require('../models/Booth');
 const Event = require('../models/Event');
 const MeetingRecord = require('../models/MeetingRecord');
+const VideoCall = require('../models/VideoCall');
 const { authenticateToken } = require('../middleware/auth');
 const { getIO } = require('../socket/socketHandler');
 const logger = require('../utils/logger');
+
+// Helper function to get job seekers currently in active calls for a booth
+const getJobSeekersInActiveCalls = async (boothId) => {
+    const boothObjectId = mongoose.Types.ObjectId.isValid(boothId) 
+        ? new mongoose.Types.ObjectId(boothId) 
+        : boothId;
+    
+    // Check VideoCall model for active calls
+    const activeVideoCalls = await VideoCall.find({
+        booth: boothObjectId,
+        status: 'active'
+    }).select('jobSeeker roomName');
+    
+    // Check MeetingRecord model for active/scheduled calls (only recent ones - last 2 hours)
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const activeMeetings = await MeetingRecord.find({
+        boothId: boothObjectId,
+        status: { $in: ['active', 'scheduled'] },
+        startTime: { $gte: twoHoursAgo }
+    }).select('jobseekerId twilioRoomId startTime');
+    
+    // Also check BoothQueue for entries with status 'in_meeting' (most reliable source)
+    const inMeetingQueues = await BoothQueue.find({
+        booth: boothObjectId,
+        status: 'in_meeting'
+    }).select('jobSeeker');
+    
+    // Combine job seeker IDs from all sources
+    const jobSeekerIds = new Set();
+    
+    activeVideoCalls.forEach(call => {
+        if (call.jobSeeker) {
+            jobSeekerIds.add(call.jobSeeker.toString());
+        }
+    });
+    
+    activeMeetings.forEach(meeting => {
+        if (meeting.jobseekerId) {
+            jobSeekerIds.add(meeting.jobseekerId.toString());
+        }
+    });
+    
+    inMeetingQueues.forEach(queue => {
+        if (queue.jobSeeker) {
+            jobSeekerIds.add(queue.jobSeeker.toString());
+        }
+    });
+    
+    console.log('Active calls check for booth:', boothId);
+    console.log('  - VideoCall active:', activeVideoCalls.length, activeVideoCalls.map(c => ({ js: c.jobSeeker?.toString(), room: c.roomName })));
+    console.log('  - MeetingRecord active (last 2h):', activeMeetings.length, activeMeetings.map(m => ({ js: m.jobseekerId?.toString(), room: m.twilioRoomId })));
+    console.log('  - BoothQueue in_meeting:', inMeetingQueues.length, inMeetingQueues.map(q => q.jobSeeker?.toString()));
+    console.log('  - Total unique jobSeekers in calls:', jobSeekerIds.size, [...jobSeekerIds]);
+    
+    return jobSeekerIds;
+};
 
 // Join a booth queue
 router.post('/join', authenticateToken, async (req, res) => {
@@ -480,9 +538,10 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
             });
         }
 
+        // Include 'in_meeting' status to show job seekers currently in calls
         const queue = await BoothQueue.find({ 
             booth: boothId, 
-            status: { $in: ['waiting', 'invited'] }
+            status: { $in: ['waiting', 'invited', 'in_meeting'] }
         })
         .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
         .populate('interpreterCategory', 'name code')
@@ -494,9 +553,19 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
             status: { $in: ['invited', 'in_meeting', 'completed'] }
         }) + 1;
 
+        // Check for active calls in this booth to detect job seekers currently in calls with other recruiters
+        const jobSeekersInCall = await getJobSeekersInActiveCalls(boothId);
+
+        // Add isInCall flag to each queue entry
+        const queueWithCallStatus = queue.map(entry => {
+            const entryObj = entry.toObject();
+            entryObj.isInCall = jobSeekersInCall.has(entry.jobSeeker._id.toString());
+            return entryObj;
+        });
+
         res.json({
             success: true,
-            queue,
+            queue: queueWithCallStatus,
             currentServing,
             totalCount: queue.length
         });

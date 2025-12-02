@@ -378,6 +378,11 @@
   background: #f5f3ff;
 }
 
+.queue-card.in-call {
+  border-left: 4px solid #3b82f6;
+  background: #eff6ff;
+}
+
 .queue-card-header {
   padding: 1rem 1.25rem;
   display: flex;
@@ -467,6 +472,13 @@
 .status-badge.left-message-badge {
   background: #ede9fe;
   color: #5b21b6;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.status-badge.in-call {
+  background: #dbeafe;
+  color: #1e40af;
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -572,9 +584,16 @@
   box-shadow: 0 1px 2px rgba(59, 130, 246, 0.25);
 }
 
-.btn-messages:hover {
+.btn-messages:hover:not(:disabled) {
   background: #2563eb;
   border-color: #2563eb;
+}
+
+.btn-messages:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn-remove {
@@ -582,6 +601,18 @@
   color: #ffffff;
   border-color: #ef4444;
   box-shadow: 0 1px 2px rgba(239, 68, 68, 0.25);
+}
+
+.btn-remove:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn-remove:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 
@@ -605,11 +636,6 @@
 
 .queue-card:hover {
   transform: translateY(-1px);
-}
-
-.btn-remove:hover {
-  background: #dc2626;
-  border-color: #dc2626;
 }
 
 .btn-send-msg {
