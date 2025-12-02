@@ -92,6 +92,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [connectionQuality, setConnectionQuality] = useState('good');
   const [callDuration, setCallDuration] = useState(0);
   const [networkStats, setNetworkStats] = useState({ latency: 0, packetLoss: 0 });
+  
+  // Caption state
+  const [isCaptionEnabled, setIsCaptionEnabled] = useState(false);
+  const [captionText, setCaptionText] = useState('');
+  const [captionHistory, setCaptionHistory] = useState([]);
 
   // Refs
   // Cleanup / lifecycle guards
@@ -103,6 +108,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   // Once a call has been explicitly ended (by recruiter or locally),
   // prevent any further automatic reconnects or re-initialization.
   const callEndedRef = useRef(false);
+  // Speech recognition ref for captions
+  const recognitionRef = useRef(null);
 
   // Initialize call
   useEffect(() => {
@@ -918,6 +925,122 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   };
 
+  // Toggle captions using Web Speech API
+  const toggleCaption = useCallback(() => {
+    if (isCaptionEnabled) {
+      // Turn off captions
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsCaptionEnabled(false);
+      setCaptionText('');
+      console.log('🔇 Captions disabled');
+    } else {
+      // Turn on captions
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        console.warn('Speech recognition not supported in this browser');
+        alert('Speech recognition is not supported in your browser. Please use Chrome or Edge for captions.');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        console.log('🎤 Caption recognition started');
+        setIsCaptionEnabled(true);
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+            // Add to caption history
+            setCaptionHistory(prev => {
+              const newHistory = [...prev, {
+                text: transcript,
+                timestamp: new Date().toISOString(),
+                speaker: user?.name || 'You'
+              }];
+              // Keep only last 10 entries
+              return newHistory.slice(-10);
+            });
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        // Update current caption text
+        const displayText = finalTranscript || interimTranscript;
+        setCaptionText(displayText.trim());
+
+        // Clear caption after 5 seconds of no speech
+        if (finalTranscript) {
+          setTimeout(() => {
+            setCaptionText(prev => prev === displayText.trim() ? '' : prev);
+          }, 5000);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Caption recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          alert('Microphone access is required for captions. Please allow microphone access and try again.');
+          setIsCaptionEnabled(false);
+        } else if (event.error === 'no-speech') {
+          // Just restart recognition on no-speech, don't disable
+          if (isCaptionEnabled && recognitionRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              // Already running
+            }
+          }
+        }
+      };
+
+      recognition.onend = () => {
+        // Restart recognition if captions are still enabled
+        if (isCaptionEnabled && recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            console.log('Recognition already started or stopped');
+          }
+        }
+      };
+
+      recognitionRef.current = recognition;
+      
+      try {
+        recognition.start();
+      } catch (e) {
+        console.error('Failed to start speech recognition:', e);
+        setIsCaptionEnabled(false);
+      }
+    }
+  }, [isCaptionEnabled, user?.name]);
+
+  // Cleanup speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
+
   const inviteInterpreter = async (interpreterId, category) => {
     try {
       const callId = callInfo.id || callInfo.callId || callInfo._id;
@@ -1516,6 +1639,19 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       })()}
 
 
+      {/* Caption Display */}
+      {isCaptionEnabled && (
+        <div className="caption-container" role="region" aria-live="polite" aria-label="Live captions">
+          <div className="caption-content">
+            {captionText ? (
+              <p className="caption-text">{captionText}</p>
+            ) : (
+              <p className="caption-text caption-listening">Listening for speech...</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {isProfileOpen && callInfo?.userRole === 'recruiter' && (() => {
         // Try to get job seeker data from multiple sources
         let jobSeekerData = null;
@@ -1566,8 +1702,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         <CallControls
           isAudioEnabled={isAudioEnabled}
           isVideoEnabled={isVideoEnabled}
+          isCaptionEnabled={isCaptionEnabled}
           onToggleAudio={toggleAudio}
           onToggleVideo={toggleVideo}
+          onToggleCaption={toggleCaption}
           onToggleChat={handleToggleChat}
           onToggleParticipants={handleToggleParticipants}
           onToggleProfile={handleToggleProfile}

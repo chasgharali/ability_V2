@@ -9,15 +9,18 @@ import {
   FiUser,
   FiPhoneOff,
   FiSettings,
-  FiMoreHorizontal
+  FiMoreHorizontal,
+  FiType
 } from 'react-icons/fi';
 import './CallControls.css';
 
 const CallControls = ({
   isAudioEnabled,
   isVideoEnabled,
+  isCaptionEnabled,
   onToggleAudio,
   onToggleVideo,
+  onToggleCaption,
   onToggleChat,
   onToggleParticipants,
   onToggleProfile,
@@ -69,6 +72,15 @@ const CallControls = ({
       ariaLabel: isVideoEnabled ? 'Stop video' : 'Start video',
       onClick: onToggleVideo,
       className: `control-button ${isVideoEnabled ? 'enabled' : 'disabled'}`,
+      primary: true
+    },
+    {
+      id: 'caption',
+      icon: FiType,
+      label: isCaptionEnabled ? 'CC On' : 'CC Off',
+      ariaLabel: isCaptionEnabled ? 'Turn off captions' : 'Turn on captions',
+      onClick: onToggleCaption,
+      className: `control-button caption-button ${isCaptionEnabled ? 'enabled caption-active' : 'disabled'}`,
       primary: true
     },
     {
