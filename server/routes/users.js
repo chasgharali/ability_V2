@@ -54,7 +54,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
         // Get profile data - check both metadata.profile (new format) and metadata.resume (migrated format)
         let profile = targetUser.metadata?.profile || null;
-        
+
         // If profile doesn't exist but resume data exists (migrated user), transform it
         if (!profile && targetUser.metadata?.resume) {
             const resumeData = targetUser.metadata.resume;
@@ -69,15 +69,15 @@ router.get('/me', authenticateToken, async (req, res) => {
                 clearance: resumeData.securityClearance || null,
                 veteranStatus: resumeData.veteranStatus || resumeData.militaryStatus || null
             };
-            
+
             // Remove null/empty values
             Object.keys(profile).forEach(key => {
-                if (profile[key] === null || profile[key] === undefined || 
+                if (profile[key] === null || profile[key] === undefined ||
                     (Array.isArray(profile[key]) && profile[key].length === 0)) {
                     delete profile[key];
                 }
             });
-            
+
             // If profile has data, save it to metadata.profile for future use
             if (Object.keys(profile).length > 0) {
                 targetUser.metadata = {
@@ -310,8 +310,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
         // Users can view their own profile, admins can view any profile
         // Recruiters and booth admins can view job seeker profiles
-        const canViewProfile = 
-            id === user._id.toString() || 
+        const canViewProfile =
+            id === user._id.toString() ||
             ['Admin', 'GlobalSupport'].includes(user.role) ||
             (['Recruiter', 'BoothAdmin'].includes(user.role));
 
@@ -460,7 +460,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 
         const { id } = req.params;
         const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, resumeUrl,
-                usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, profile } = req.body;
+            usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, profile } = req.body;
         const { user } = req;
 
         const targetUser = await User.findById(id);
@@ -486,7 +486,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         if (isAvailable !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(targetUser.role)) {
             targetUser.isAvailable = isAvailable;
         }
-        
+
         // Update password if provided (admin can change user passwords)
         if (password !== undefined && password !== null && password.trim() !== '') {
             targetUser.hashedPassword = password; // Will be hashed by pre-save middleware
@@ -647,7 +647,7 @@ router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
 
             // Permanently delete the user
             await User.findByIdAndDelete(id);
-            
+
             logger.info(`User permanently deleted: ${targetUser.email} by ${user.email}`);
 
             res.json({
