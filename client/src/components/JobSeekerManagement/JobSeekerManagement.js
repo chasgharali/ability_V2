@@ -15,6 +15,7 @@ import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
+import axios from 'axios';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -53,6 +54,8 @@ export default function JobSeekerManagement() {
     country: '',
     password: '',
     confirmPassword: '',
+    avatarUrl: '',
+    resumeUrl: '',
     // Professional Summary
     headline: '',
     keywords: '',
@@ -99,6 +102,13 @@ export default function JobSeekerManagement() {
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [activeEditTab, setActiveEditTab] = useState(0); // Custom tab state
+  // Upload states
+  const [uploading, setUploading] = useState(false);
+  const [uploadingType, setUploadingType] = useState(null); // 'resume' or 'avatar'
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
+  const resumeInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
   
   // Edit form state
   const [form, setForm] = useState({
@@ -764,6 +774,8 @@ export default function JobSeekerManagement() {
       country: row.country || '',
       password: '',
       confirmPassword: '',
+      avatarUrl: row.avatarUrl || '',
+      resumeUrl: row.resumeUrl || '',
       // Professional Summary
       headline: profile.headline || metadata.professionalHeadline || metadata.headline || '',
       keywords: profile.keywords || metadata.skills || metadata.keywords || '',
@@ -794,6 +806,22 @@ export default function JobSeekerManagement() {
       needsCaptions: row.needsCaptions || false,
       needsOther: row.needsOther || false,
     });
+    // Initialize preview states
+    const existingAvatarUrl = row.avatarUrl || '';
+    const existingResumeUrl = row.resumeUrl || '';
+    setAvatarPreviewUrl(existingAvatarUrl);
+    // Try to extract filename from resume URL, or use a default message
+    if (existingResumeUrl) {
+      try {
+        const urlParts = existingResumeUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
+        setResumeFileName(fileName || 'Resume uploaded');
+      } catch (e) {
+        setResumeFileName('Resume uploaded');
+      }
+    } else {
+      setResumeFileName('');
+    }
     setEditingId(row.id);
     setActiveEditTab(0); // Reset to first tab when editing
     
@@ -820,6 +848,139 @@ export default function JobSeekerManagement() {
   };
 
   const setEditField = (k, v) => setEditForm(prev => ({ ...prev, [k]: v }));
+
+  // Sync preview states with form values when in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && editingId) {
+      // Sync avatar preview - use form value if preview is empty
+      if (editForm.avatarUrl && editForm.avatarUrl !== avatarPreviewUrl) {
+        setAvatarPreviewUrl(editForm.avatarUrl);
+      }
+      // Sync resume filename - use form value if filename is empty
+      if (editForm.resumeUrl && !resumeFileName) {
+        try {
+          const urlParts = editForm.resumeUrl.split('/');
+          const fileName = urlParts[urlParts.length - 1].split('?')[0];
+          setResumeFileName(fileName || 'Resume uploaded');
+        } catch (e) {
+          setResumeFileName('Resume uploaded');
+        }
+      }
+    }
+  }, [mode, editingId, editForm.avatarUrl, editForm.resumeUrl]);
+
+  // Upload functions for resume and avatar
+  const uploadToS3 = async (file, fileType) => {
+    setUploading(true);
+    setUploadingType(fileType);
+    try {
+      const token = sessionStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Request presigned URL
+      const presignRes = await axios.post(
+        '/api/uploads/presign',
+        {
+          fileName: file.name,
+          fileType: fileType,
+          mimeType: file.type || (fileType === 'resume' ? 'application/pdf' : 'image/jpeg'),
+        },
+        { headers }
+      );
+
+      const { upload, download } = presignRes.data;
+      const { url, key } = upload;
+
+      // Upload to S3
+      await axios.put(url, file, {
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      });
+
+      // Confirm upload
+      const completeRes = await axios.post(
+        '/api/uploads/complete',
+        {
+          fileKey: key,
+          fileType: fileType,
+          fileName: file.name,
+          mimeType: file.type || (fileType === 'resume' ? 'application/pdf' : 'image/jpeg'),
+          size: file.size,
+        },
+        { headers }
+      );
+
+      const downloadUrl = completeRes?.data?.file?.downloadUrl || download?.url;
+
+      if (fileType === 'resume') {
+        setResumeFileName(file.name);
+        setEditField('resumeUrl', downloadUrl);
+        showToast('Resume uploaded successfully', 'Success');
+        if (resumeInputRef.current) resumeInputRef.current.value = '';
+      } else if (fileType === 'avatar') {
+        setAvatarPreviewUrl(downloadUrl);
+        setEditField('avatarUrl', downloadUrl);
+        showToast('Profile picture uploaded successfully', 'Success');
+        if (avatarInputRef.current) avatarInputRef.current.value = '';
+      }
+
+      return downloadUrl;
+    } catch (e) {
+      console.error('S3 upload error', e);
+      const msg = e?.response?.data?.message || 'Upload failed';
+      showToast(msg, 'Error', 5000);
+      throw e;
+    } finally {
+      setUploading(false);
+      setUploadingType(null);
+    }
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Please upload a PDF or Word document', 'Error');
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('File size must be less than 10MB', 'Error');
+      return;
+    }
+
+    try {
+      await uploadToS3(file, 'resume');
+    } catch (e) {
+      // Error already handled in uploadToS3
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showToast('Please upload an image file', 'Error');
+      return;
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Image size must be less than 2MB', 'Error');
+      return;
+    }
+
+    try {
+      await uploadToS3(file, 'avatar');
+    } catch (e) {
+      // Error already handled in uploadToS3
+    }
+  };
 
   const handleSaveEdit = async (e) => {
     if (e && e.preventDefault) {
@@ -863,6 +1024,8 @@ export default function JobSeekerManagement() {
         city: editForm.city || undefined,
         state: editForm.state || undefined,
         country: editForm.country || undefined,
+        avatarUrl: editForm.avatarUrl || undefined,
+        resumeUrl: editForm.resumeUrl || undefined,
         // Accessibility Needs
         usesScreenMagnifier: editForm.usesScreenMagnifier,
         usesScreenReader: editForm.usesScreenReader,
@@ -906,6 +1069,8 @@ export default function JobSeekerManagement() {
         country: '',
         password: '',
         confirmPassword: '',
+        avatarUrl: '',
+        resumeUrl: '',
         headline: '',
         keywords: '',
         primaryExperience: [],
@@ -922,6 +1087,9 @@ export default function JobSeekerManagement() {
         needsCaptions: false,
         needsOther: false,
       });
+      // Reset preview states
+      setAvatarPreviewUrl('');
+      setResumeFileName('');
       
       // Return to list mode
       setMode('list');
@@ -1391,6 +1559,95 @@ export default function JobSeekerManagement() {
                         onChange={(e) => setEditField('country', e.target.value)}
                         placeholder="Enter country"
                       />
+                      
+                      {/* Profile Image Upload */}
+                      <div className="jsm-upload-field">
+                        <label className="jsm-field-label">Profile Image</label>
+                        <div className="jsm-upload-container">
+                          {(avatarPreviewUrl || editForm.avatarUrl) && (
+                            <div className="jsm-avatar-preview">
+                              <img src={avatarPreviewUrl || editForm.avatarUrl} alt="Profile preview" onError={(e) => {
+                                // Hide image if it fails to load
+                                e.target.style.display = 'none';
+                              }} />
+                              <button
+                                type="button"
+                                className="jsm-remove-avatar"
+                                onClick={() => {
+                                  setAvatarPreviewUrl('');
+                                  setEditField('avatarUrl', '');
+                                  if (avatarInputRef.current) avatarInputRef.current.value = '';
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                          <div className="jsm-upload-input-wrapper">
+                            <input
+                              ref={avatarInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleAvatarUpload}
+                              disabled={uploading && uploadingType === 'avatar'}
+                              className="jsm-file-input"
+                              id="avatar-upload"
+                            />
+                            <label htmlFor="avatar-upload" className="jsm-file-label">
+                              {uploading && uploadingType === 'avatar' ? 'Uploading...' : avatarPreviewUrl ? 'Change Image' : 'Upload Profile Image'}
+                            </label>
+                          </div>
+                          <p className="jsm-upload-hint">Accepted formats: JPG, PNG, GIF, WebP (max 2MB)</p>
+                        </div>
+                      </div>
+
+                      {/* Resume Upload */}
+                      <div className="jsm-upload-field">
+                        <label className="jsm-field-label">Resume</label>
+                        <div className="jsm-upload-container">
+                          {(resumeFileName || editForm.resumeUrl) && (
+                            <div className="jsm-resume-info">
+                              <span className="jsm-resume-name">{resumeFileName || 'Resume uploaded'}</span>
+                              {(editForm.resumeUrl || resumeFileName) && (
+                                <a
+                                  href={editForm.resumeUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="jsm-view-resume"
+                                >
+                                  View Resume
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                className="jsm-remove-resume"
+                                onClick={() => {
+                                  setResumeFileName('');
+                                  setEditField('resumeUrl', '');
+                                  if (resumeInputRef.current) resumeInputRef.current.value = '';
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                          <div className="jsm-upload-input-wrapper">
+                            <input
+                              ref={resumeInputRef}
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              onChange={handleResumeUpload}
+                              disabled={uploading && uploadingType === 'resume'}
+                              className="jsm-file-input"
+                              id="resume-upload"
+                            />
+                            <label htmlFor="resume-upload" className="jsm-file-label">
+                              {uploading && uploadingType === 'resume' ? 'Uploading...' : resumeFileName ? 'Change Resume' : 'Upload Resume'}
+                            </label>
+                          </div>
+                          <p className="jsm-upload-hint">Accepted formats: PDF, DOC, DOCX (max 10MB)</p>
+                        </div>
+                      </div>
                     </div>
                   )}
 

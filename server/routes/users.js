@@ -459,7 +459,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, 
+        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, resumeUrl,
                 usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, profile } = req.body;
         const { user } = req;
 
@@ -507,6 +507,10 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         // Allow removing avatar by setting to null or empty string
         if (avatarUrl !== undefined) {
             targetUser.avatarUrl = (avatarUrl === null || avatarUrl === '') ? null : avatarUrl;
+        }
+        // Allow removing resume by setting to null or empty string
+        if (resumeUrl !== undefined) {
+            targetUser.resumeUrl = (resumeUrl === null || resumeUrl === '') ? null : resumeUrl;
         }
 
         // Update accessibility fields for JobSeekers

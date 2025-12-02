@@ -2007,3 +2007,145 @@ body .jsm-delete-dialog.e-dialog {
     min-width: auto;
   }
 }
+
+/* ========================================
+   Upload Field Styling
+   ======================================== */
+
+.jsm-upload-field {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.jsm-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.jsm-avatar-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.jsm-avatar-preview img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.jsm-remove-avatar,
+.jsm-remove-resume {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  color: #dc2626;
+  background-color: transparent;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+.jsm-remove-avatar:hover,
+.jsm-remove-resume:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
+.jsm-resume-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.jsm-resume-name {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  flex: 1;
+  min-width: 150px;
+}
+
+.jsm-view-resume {
+  font-size: 0.875rem;
+  color: #111111;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.jsm-view-resume:hover {
+  background-color: #f3f4f6;
+  text-decoration: underline;
+}
+
+.jsm-upload-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.jsm-file-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.jsm-file-label {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111111;
+  background-color: transparent;
+  border: 1px solid #111111;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  text-align: center;
+  min-width: 150px;
+}
+
+.jsm-file-label:hover {
+  background-color: #111111;
+  color: #ffffff;
+}
+
+.jsm-file-input:disabled + .jsm-file-label {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+}
+
+.jsm-file-input:disabled + .jsm-file-label:hover {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+.jsm-upload-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
