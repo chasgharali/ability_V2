@@ -18,6 +18,7 @@ import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
 import { listEvents } from '../../services/events';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
+import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 
 export default function MeetingRecords() {
     const { user, loading } = useAuth();
@@ -124,6 +125,10 @@ export default function MeetingRecords() {
     const [allRecordIds, setAllRecordIds] = useState([]);
     // Bulk delete confirmation dialog
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+    // Job Seeker Profile Modal state
+    const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
+    const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -695,14 +700,32 @@ export default function MeetingRecords() {
 
     const actionsTemplate = (props) => {
         const row = props;
+        // Handle both populated jobseekerId object and jobseekerId string
+        const jobSeekerData = row.jobseekerId || row.jobSeekerId;
+        
         return (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <ButtonComponent 
                     cssClass="e-primary e-small" 
                     onClick={() => navigate(`/meeting-records/${row._id}`)}
+                    aria-label="View meeting record details"
                 >
                     View Details
                 </ButtonComponent>
+                {jobSeekerData && (
+                    <ButtonComponent 
+                        cssClass="e-outline e-primary e-small" 
+                        onClick={() => {
+                            // Handle both object (populated) and string (ID) cases
+                            const jobSeeker = typeof jobSeekerData === 'object' ? jobSeekerData : { _id: jobSeekerData };
+                            setSelectedJobSeekerForModal(jobSeeker);
+                            setShowJobSeekerModal(true);
+                        }}
+                        aria-label="View job seeker details"
+                    >
+                        View Job Seeker Detail
+                    </ButtonComponent>
+                )}
             </div>
         );
     };
@@ -1099,10 +1122,12 @@ export default function MeetingRecords() {
                                     <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} />
                                     <ColumnDirective 
                                         headerText='Actions' 
-                                        width='150' 
+                                        width='280' 
                                         allowSorting={false} 
                                         allowFiltering={false}
                                         template={actionsTemplate}
+                                        showInColumnChooser={true}
+                                        visible={true}
                                     />
                                 </ColumnsDirective>
                                 <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
@@ -1307,6 +1332,16 @@ export default function MeetingRecords() {
                 showProgressBar={true}
                 timeOut={3000}
                 newestOnTop={true}
+            />
+
+            {/* Job Seeker Profile Modal */}
+            <JobSeekerProfileModal
+                isOpen={showJobSeekerModal}
+                onClose={() => {
+                    setShowJobSeekerModal(false);
+                    setSelectedJobSeekerForModal(null);
+                }}
+                jobSeeker={selectedJobSeekerForModal}
             />
         </div>
     );
