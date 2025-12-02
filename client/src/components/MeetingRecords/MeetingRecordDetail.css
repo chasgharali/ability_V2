@@ -10,28 +10,44 @@
 
 .header-left {
     display: flex;
-    flex-direction: row;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
 }
 
 .btn-back {
     background: #6c757d;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
+    padding: 10px 20px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
-    transition: background-color 0.3s;
-    align-self: flex-start;
+    font-size: 14px;
+    transition: all 0.3s ease;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0;
+    align-self: flex-start;
 }
 
 .btn-back:hover {
     background: #5a6268;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.btn-back:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-back:focus {
+    outline: 2px solid #6c757d;
+    outline-offset: 2px;
 }
 
 .page-header h1 {

@@ -135,8 +135,9 @@ export default function MeetingRecordDetail() {
                                 <button
                                     className="btn-back"
                                     onClick={() => navigate('/meeting-records')}
+                                    type="button"
                                 >
-                                    Back to Meeting Records
+                                    ← Back to Meeting Records
                                 </button>
                             </div>
                         </div>
@@ -162,6 +163,7 @@ export default function MeetingRecordDetail() {
                                     <button
                                         className="btn-back"
                                         onClick={() => navigate('/meeting-records')}
+                                        type="button"
                                     >
                                         ← Back to Meeting Records
                                     </button>
@@ -209,8 +211,18 @@ export default function MeetingRecordDetail() {
                                     <div className="participants-grid" role="list">
                                         <article className="participant-card" role="listitem">
                                             <h3>Recruiter</h3>
-                                            <p><strong>Name:</strong> {meetingRecord.recruiterId?.name || 'N/A'}</p>
-                                            <p><strong>Email:</strong> {meetingRecord.recruiterId?.email || 'N/A'}</p>
+                                            {meetingRecord.status === 'left_with_message' ? (
+                                                <>
+                                                    <p><strong>Name:</strong> All Recruiters in Booth</p>
+                                                    <p><strong>Email:</strong> {meetingRecord.boothId?.name || 'Booth Message'}</p>
+                                                    <p><strong>Note:</strong> This message is visible to all recruiters in the booth</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <p><strong>Name:</strong> {meetingRecord.recruiterId?.name || 'N/A'}</p>
+                                                    <p><strong>Email:</strong> {meetingRecord.recruiterId?.email || 'N/A'}</p>
+                                                </>
+                                            )}
                                         </article>
                                         <article className="participant-card" role="listitem">
                                             <h3>Job Seeker</h3>

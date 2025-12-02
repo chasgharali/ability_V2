@@ -13,7 +13,7 @@ import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
 import { Input } from '../UI/FormComponents';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
 import { listEvents } from '../../services/events';
@@ -24,6 +24,7 @@ export default function MeetingRecords() {
     const { user, loading } = useAuth();
     const { getMessage } = useRoleMessages();
     const navigate = useNavigate();
+    const location = useLocation();
     const { booth, event } = useRecruiterBooth();
     
     // Get role message from context
@@ -405,7 +406,7 @@ export default function MeetingRecords() {
             loadEvents();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, filters]);
+    }, [user, filters, location.key]);
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({
@@ -584,6 +585,14 @@ export default function MeetingRecords() {
 
     const recruiterTemplate = (props) => {
         const row = props;
+        // For left_with_message records, show "All Recruiters in Booth" instead of specific recruiter
+        if (row.status === 'left_with_message') {
+            return (
+                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                    <span style={{ fontStyle: 'italic', color: '#6b7280' }}>All Recruiters in Booth</span>
+                </div>
+            );
+        }
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                 {row.recruiterId?.name || 'N/A'}
