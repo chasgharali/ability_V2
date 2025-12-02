@@ -137,16 +137,35 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
             // Recruiters can only see interests for their booths
+            // Check both assignedBooth field on User AND administrators array on Booth
             const Booth = require('../models/Booth');
-            const recruiterBooths = await Booth.find({
+            const User = require('../models/User');
+            
+            // Get the recruiter's assigned booth directly from User model
+            const recruiter = await User.findById(req.user._id).select('assignedBooth');
+            const boothIds = new Set();
+            
+            // Add assigned booth if it exists
+            if (recruiter && recruiter.assignedBooth) {
+                const boothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
+                boothIds.add(boothId.toString());
+                console.log('Recruiter has assignedBooth:', boothId);
+            }
+            
+            // Also check booths where recruiter is in administrators array
+            const adminBooths = await Booth.find({
                 administrators: req.user._id
             }).select('_id');
-
-            const boothIds = recruiterBooths.map(booth => booth._id);
-            console.log('Recruiter booths found:', recruiterBooths.length, 'IDs:', boothIds);
+            
+            adminBooths.forEach(booth => {
+                boothIds.add(booth._id.toString());
+            });
+            
+            const boothIdsArray = Array.from(boothIds).map(id => mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id);
+            console.log('Recruiter booths found:', boothIdsArray.length, 'IDs:', boothIdsArray);
 
             // If recruiter has no booths, return empty result
-            if (boothIds.length === 0) {
+            if (boothIdsArray.length === 0) {
                 console.log('Recruiter has no assigned booths, returning empty result');
                 return res.json({
                     interests: [],
@@ -160,17 +179,34 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
                 });
             }
 
-            query.booth = { $in: boothIds };
+            query.booth = { $in: boothIdsArray };
         } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
             // Admins can filter by recruiter or see all
             if (recruiterId) {
                 const Booth = require('../models/Booth');
-                const recruiterBooths = await Booth.find({
+                const User = require('../models/User');
+                
+                // Get the recruiter's assigned booth directly from User model
+                const recruiter = await User.findById(recruiterId).select('assignedBooth');
+                const boothIds = new Set();
+                
+                // Add assigned booth if it exists
+                if (recruiter && recruiter.assignedBooth) {
+                    const boothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
+                    boothIds.add(boothId.toString());
+                }
+                
+                // Also check booths where recruiter is in administrators array
+                const adminBooths = await Booth.find({
                     administrators: recruiterId
                 }).select('_id');
-
-                const boothIds = recruiterBooths.map(booth => booth._id);
-                query.booth = { $in: boothIds };
+                
+                adminBooths.forEach(booth => {
+                    boothIds.add(booth._id.toString());
+                });
+                
+                const boothIdsArray = Array.from(boothIds).map(id => mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id);
+                query.booth = { $in: boothIdsArray };
             }
         }
 
