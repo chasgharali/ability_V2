@@ -375,9 +375,10 @@ export default function BoothQueueManagement() {
   };
 
   const handleDeviceSelection = async () => {
+    let stream = null;
     try {
       // Request permissions and enumerate devices
-      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       const devices = await navigator.mediaDevices.enumerateDevices();
       const audios = devices.filter(d => d.kind === 'audioinput');
       const videos = devices.filter(d => d.kind === 'videoinput');
@@ -395,6 +396,13 @@ export default function BoothQueueManagement() {
     } catch (error) {
       console.error('Error accessing devices:', error);
       showError('Unable to access camera and microphone. Please check your permissions.');
+    } finally {
+      // Always stop the stream tracks to release camera and microphone
+      if (stream) {
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
     }
   };
 
