@@ -41,6 +41,8 @@ export default function BoothManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loadingBooths, setLoadingBooths] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // Input field value
+  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -452,11 +454,43 @@ export default function BoothManagement() {
     } finally { setBoothSaving(false); }
   };
 
+  const handleSearch = () => {
+    // Set the active search query to trigger API call
+    setActiveSearchQuery(searchQuery.trim());
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setActiveSearchQuery('');
+    setCurrentPage(1); // Reset to first page when clearing
+  };
+
   const loadBooths = async () => {
     try {
       setLoadingBooths(true);
-      const res = await listBooths({ page: 1, limit: 50 });
-      const items = res?.booths || [];
+      // When searching, fetch a very large number (10000) to ensure ALL matching records are loaded
+      // When not searching, fetch 50 for initial load (grid handles client-side pagination)
+      const limit = activeSearchQuery && activeSearchQuery.trim() ? 10000 : 50;
+      const params = { page: 1, limit };
+      const res = await listBooths(params);
+      let items = res?.booths || [];
+      
+      // Client-side filtering if search query exists
+      if (activeSearchQuery && activeSearchQuery.trim()) {
+        const searchLower = activeSearchQuery.trim().toLowerCase();
+        items = items.filter(b => {
+          const name = (b.name || '').toLowerCase();
+          const eventName = (b.eventId?.name || '').toLowerCase();
+          const customInvite = (b.customInviteSlug || '').toLowerCase();
+          const companyPage = (b.companyPage || '').toLowerCase();
+          return name.includes(searchLower) || 
+                 eventName.includes(searchLower) || 
+                 customInvite.includes(searchLower) ||
+                 companyPage.includes(searchLower);
+        });
+      }
+      
       // Map to grid rows expected by Syncfusion GridComponent
       setBooths(items.map(b => ({
         id: b._id,
@@ -479,7 +513,7 @@ export default function BoothManagement() {
     } finally { setLoadingBooths(false); }
   };
 
-  useEffect(() => { loadBooths(); }, []);
+  useEffect(() => { loadBooths(); }, [activeSearchQuery]);
 
   // Set CSS variable for filter icon and make it trigger column menu
   useEffect(() => {
@@ -767,6 +801,43 @@ export default function BoothManagement() {
 
             {boothMode === 'list' ? (
               <div className="bm-grid-wrap">
+                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  {/* Search Section - Right Aligned */}
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                    <Input
+                      id="booth-search-input"
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSearch();
+                        }
+                      }}
+                      placeholder="Search by name, event, or any field..."
+                      style={{ minWidth: '250px', maxWidth: '400px' }}
+                    />
+                    <ButtonComponent
+                      cssClass="e-primary"
+                      onClick={handleSearch}
+                      disabled={loadingBooths}
+                      aria-label="Search booths"
+                    >
+                      Search
+                    </ButtonComponent>
+                    {(searchQuery || activeSearchQuery) && (
+                      <ButtonComponent
+                        cssClass="e-outline e-primary"
+                        onClick={handleClearSearch}
+                        disabled={loadingBooths}
+                        aria-label="Clear search"
+                      >
+                        Clear
+                      </ButtonComponent>
+                    )}
+                  </div>
+                </div>
                 {loadingBooths && <div style={{ marginBottom: 12 }}>Loading…</div>}
                 <GridComponent
                   ref={gridRef}
@@ -786,7 +857,7 @@ export default function BoothManagement() {
                   enableHeaderFocus={false}
                   allowResizing={true}
                   allowReordering={true}
-                  toolbar={['Search', 'ColumnChooser']}
+                  toolbar={['ColumnChooser']}
                   selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
                   enableHover={true}
                   allowRowDragAndDrop={false}

@@ -77,7 +77,8 @@ export default function JobSeekerManagement() {
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchFilter, setSearchFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Input field value
+  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [statusFilter, setStatusFilter] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const toastRef = useRef(null);
@@ -85,9 +86,6 @@ export default function JobSeekerManagement() {
   const deleteDialogRef = useRef(null);
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
-  const searchInputRef = useRef(null);
-  // Use ref for input value to prevent re-renders on every keystroke
-  const inputValueRef = useRef('');
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -333,14 +331,14 @@ export default function JobSeekerManagement() {
 
   // Track previous values to detect actual changes
   const isFirstRender = useRef(true);
-  const prevSearchFilter = useRef(searchFilter);
+  const prevSearchFilter = useRef(activeSearchQuery);
   const prevStatusFilter = useRef(statusFilter);
   const searchTimeoutRef = useRef(null);
 
   // Update refs when filters change
   useEffect(() => {
-    searchFilterRef.current = searchFilter;
-  }, [searchFilter]);
+    searchFilterRef.current = activeSearchQuery;
+  }, [activeSearchQuery]);
 
   useEffect(() => {
     statusFilterRef.current = statusFilter;
@@ -353,6 +351,20 @@ export default function JobSeekerManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handle active search query changes
+  useEffect(() => {
+    // Skip on first render
+    if (isFirstRender.current) return;
+    
+    // Only trigger if search actually changed
+    if (prevSearchFilter.current !== activeSearchQuery) {
+      prevSearchFilter.current = activeSearchQuery;
+      setCurrentPage(1);
+      setSearchLoading(true);
+      loadJobSeekersRef.current(1, pageSize, activeSearchQuery, statusFilterRef.current);
+    }
+  }, [activeSearchQuery, pageSize]);
+
   // Store loadJobSeekers in ref to avoid dependency issues
   const loadJobSeekersRef = useRef(loadJobSeekers);
   useEffect(() => {
@@ -360,7 +372,7 @@ export default function JobSeekerManagement() {
   }, [loadJobSeekers]);
 
   // Handle status filter changes (immediate, not debounced)
-  // NOTE: This does NOT use searchFilter - status filter is independent
+  // NOTE: This does NOT use searchQuery - status filter is independent
   useEffect(() => {
     // Skip on first render
     if (isFirstRender.current) return;
@@ -376,9 +388,9 @@ export default function JobSeekerManagement() {
       }
       // Status filter change - preserve current search filter
       // Note: Grid key includes statusFilter, so grid will reset automatically
-      loadJobSeekersRef.current(1, pageSize, searchFilterRef.current || '', statusFilter);
+      loadJobSeekersRef.current(1, pageSize, activeSearchQuery || '', statusFilter);
     }
-  }, [statusFilter, pageSize]);
+  }, [statusFilter, pageSize, activeSearchQuery]);
 
   // Function to trigger search - only called explicitly by button or Enter key
   const triggerSearch = useCallback(() => {
@@ -388,13 +400,15 @@ export default function JobSeekerManagement() {
       searchTimeoutRef.current = null;
     }
     
-    // Get search value from ref (most up-to-date) or state (fallback)
-    const searchValue = (inputValueRef.current || searchFilterRef.current || searchFilter).trim();
+    // Get search value from state
+    const searchValue = searchQuery.trim();
+    setActiveSearchQuery(searchValue);
     setSearchLoading(true);
     prevSearchFilter.current = searchValue;
+    searchFilterRef.current = searchValue;
     setCurrentPage(1);
     loadJobSeekersRef.current(1, pageSize, searchValue, statusFilterRef.current);
-  }, [searchFilter, pageSize]);
+  }, [searchQuery, pageSize]);
 
   // No automatic search on typing - search only on button click or Enter key
 
@@ -1624,66 +1638,67 @@ export default function JobSeekerManagement() {
             </div>
 
             {/* Filters */}
-            <div className="filters-row">
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
-                <div style={{ flex: 1 }}>
-                  <Input
-                    ref={searchInputRef}
-                    label="Search by name or email"
-                    defaultValue={searchFilter}
-                    onChange={(e) => {
-                      // ONLY update refs - NO state update, NO re-render, NO blocking
-                      const value = e.target.value;
-                      inputValueRef.current = value;
-                      searchFilterRef.current = value;
-                      // Do NOT call setSearchFilter - this prevents re-renders
-                    }}
-                    onKeyDown={(e) => {
-                      // Trigger search only on Enter key
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        // Sync ref value to state only when searching
-                        const searchValue = inputValueRef.current || searchFilterRef.current || '';
-                        setSearchFilter(searchValue);
-                        triggerSearch();
-                      }
-                    }}
-                    placeholder="Search job seekers... (Press Enter or click Search)"
-                  />
-                </div>
-                <ButtonComponent
-                  cssClass="e-primary"
-                  onClick={() => {
-                    // Sync input value to state before searching
-                    if (searchInputRef.current) {
-                      const value = searchInputRef.current.value || inputValueRef.current || '';
-                      setSearchFilter(value);
-                      searchFilterRef.current = value;
-                      inputValueRef.current = value;
-                    }
-                    triggerSearch();
-                  }}
-                  disabled={searchLoading}
-                  style={{ minWidth: '100px', height: '40px', marginBottom: '0',alignContent: 'center' }}
-                >
-                  {searchLoading ? 'Searching...' : 'Search'}
-                </ButtonComponent>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label htmlFor="status-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                  Status Filter
-                </label>
+            <div className="jsm-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Status Filter - Left */}
+              <div style={{ width: '200px', flexShrink: 0 }}>
                 <DropDownListComponent
                   id="status-filter-dropdown"
                   dataSource={statusOptions.map(s => ({ value: s.value, text: s.label }))}
                   fields={{ value: 'value', text: 'text' }}
                   value={statusFilter}
-                  change={(e) => setStatusFilter(e.value || '')}
+                  change={(e) => {
+                    setStatusFilter(e.value || '');
+                    // loadJobSeekers will be called automatically via useEffect when statusFilter changes
+                  }}
                   placeholder="Select Status"
                   cssClass="status-filter-dropdown"
                   popupHeight="300px"
-                  width="200px"
+                  width="100%"
                 />
+              </div>
+              {/* Search Section - Right */}
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+                <div style={{ marginBottom: 0 }}>
+                  <Input
+                    id="jobseeker-search-input"
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        triggerSearch();
+                      }
+                    }}
+                    placeholder="Search by name, email, or any field..."
+                    style={{ width: '300px', marginBottom: 0 }}
+                    className="jsm-search-input-no-label"
+                  />
+                </div>
+                <ButtonComponent
+                  cssClass="e-primary e-small"
+                  onClick={triggerSearch}
+                  disabled={searchLoading}
+                  aria-label="Search job seekers"
+                  style={{ minWidth: '80px', height: '44px' }}
+                >
+                  {searchLoading ? 'Searching...' : 'Search'}
+                </ButtonComponent>
+                {(searchQuery || activeSearchQuery) && (
+                  <ButtonComponent
+                    cssClass="e-outline e-primary e-small"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setActiveSearchQuery('');
+                      // loadJobSeekers will be called automatically via useEffect when activeSearchQuery changes
+                    }}
+                    disabled={searchLoading}
+                    aria-label="Clear search"
+                    style={{ minWidth: '70px', height: '44px' }}
+                  >
+                    Clear
+                  </ButtonComponent>
+                )}
               </div>
             </div>
 
