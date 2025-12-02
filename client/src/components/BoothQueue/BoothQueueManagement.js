@@ -7,8 +7,9 @@ import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import videoCallService from '../../services/videoCall';
 import VideoCall from '../VideoCall/VideoCall';
-import { FaRedoAlt, FaPlug } from 'react-icons/fa';
+import { FaRedoAlt, FaPlug, FaVideo } from 'react-icons/fa';
 import CallInviteModal from '../VideoCall/CallInviteModal';
+import DeviceTestModal from './DeviceTestModal';
 import RatingModal from '../MeetingRecords/RatingModal';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import AdminHeader from '../Layout/AdminHeader';
@@ -55,6 +56,7 @@ export default function BoothQueueManagement() {
   const [videoInputs, setVideoInputs] = useState([]);
   const [selectedAudioId, setSelectedAudioId] = useState('');
   const [selectedVideoId, setSelectedVideoId] = useState('');
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
 
   // Rating modal state
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -372,6 +374,46 @@ export default function BoothQueueManagement() {
     }
   };
 
+  const handleDeviceSelection = async () => {
+    try {
+      // Request permissions and enumerate devices
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audios = devices.filter(d => d.kind === 'audioinput');
+      const videos = devices.filter(d => d.kind === 'videoinput');
+
+      setAudioInputs(audios);
+      setVideoInputs(videos);
+
+      // Load saved preferences
+      const savedAudio = sessionStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = sessionStorage.getItem('preferredVideoDeviceId');
+      setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
+      setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
+
+      setShowDeviceModal(true);
+    } catch (error) {
+      console.error('Error accessing devices:', error);
+      showError('Unable to access camera and microphone. Please check your permissions.');
+    }
+  };
+
+  const handleDeviceSave = () => {
+    if (selectedAudioId) {
+      sessionStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+    }
+    if (selectedVideoId) {
+      sessionStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+    }
+
+    setShowDeviceModal(false);
+    showSuccess('Camera and microphone preferences saved successfully!');
+  };
+
+  const handleDeviceCancel = () => {
+    setShowDeviceModal(false);
+  };
+
   const handleInviteToMeeting = async (queueEntry) => {
     setPendingQueueEntry(queueEntry);
     await enumerateDevicesForRecruiter();
@@ -626,6 +668,7 @@ export default function BoothQueueManagement() {
                   onChange={(e) => setCurrentServing(parseInt(e.target.value) || 1)}
                   min="1"
                   className="serving-input"
+                  aria-label="Current serving number"
                 />
                 <button
                   onClick={async () => {
@@ -635,8 +678,17 @@ export default function BoothQueueManagement() {
                   }}
                   className="update-serving-btn"
                   style={{ background: '#111827', borderColor: '#111827', color: '#fff' }}
+                  aria-label="Update serving number"
                 >
                   Update
+                </button>
+                <button
+                  onClick={handleDeviceSelection}
+                  className="test-device-btn"
+                  title="Test Camera & Microphone"
+                  aria-label="Test camera and microphone devices"
+                >
+                  <FaVideo size={16} aria-hidden="true" /> Test Device
                 </button>
               </div>
             </div>
@@ -1057,6 +1109,19 @@ export default function BoothQueueManagement() {
           loading={submittingRating}
         />
       )}
+
+      {/* Device Test Modal */}
+      <DeviceTestModal
+        isOpen={showDeviceModal}
+        onClose={handleDeviceCancel}
+        audioInputs={audioInputs}
+        videoInputs={videoInputs}
+        selectedAudioId={selectedAudioId}
+        selectedVideoId={selectedVideoId}
+        onChangeAudio={setSelectedAudioId}
+        onChangeVideo={setSelectedVideoId}
+        onSave={handleDeviceSave}
+      />
     </div>
   );
 }

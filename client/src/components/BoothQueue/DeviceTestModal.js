@@ -293,16 +293,33 @@ export default function DeviceTestModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay device-test-overlay">
+    <div 
+      className="modal-overlay device-test-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="device-test-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          handleClose();
+        }
+      }}
+      tabIndex={-1}
+    >
       <div className="modal-content device-test-modal">
         <div className="modal-header">
-          <h3>
+          <h3 id="device-test-modal-title">
             {currentView === 'selection' ? 'Select Camera & Microphone' : 'Test Your Devices'}
           </h3>
           <button
             className="modal-close"
             onClick={handleClose}
-            aria-label="Close device test"
+            aria-label="Close device test modal"
+            type="button"
           >
             ×
           </button>
