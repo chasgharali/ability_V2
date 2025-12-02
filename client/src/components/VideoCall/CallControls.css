@@ -124,6 +124,52 @@
   color: #cccccc;
 }
 
+/* Caption button styles */
+.control-button.caption-button {
+  position: relative;
+}
+
+.control-button.caption-button.caption-active {
+  background: #007bff;
+  color: white;
+}
+
+.control-button.caption-button.caption-active:hover {
+  background: #0056b3;
+}
+
+/* Caption indicator dot */
+.control-button.caption-button.caption-active::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: #28a745;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.8);
+  animation: caption-pulse 2s infinite;
+}
+
+@keyframes caption-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+/* Reduced motion for caption pulse */
+@media (prefers-reduced-motion: reduce) {
+  .control-button.caption-button.caption-active::after {
+    animation: none;
+  }
+}
+
 .end-call-button {
   background: var(--end-call-bg);
   color: white;
