@@ -8,9 +8,14 @@ import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject,
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
-import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
+import { DropDownListComponent, MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
+// Custom tabs - removed Syncfusion TabComponent
 import { Input } from '../UI/FormComponents';
+import '@syncfusion/ej2-base/styles/material.css';
+import '@syncfusion/ej2-buttons/styles/material.css';
+import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
+import axios from 'axios';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -49,6 +54,28 @@ export default function JobSeekerManagement() {
     country: '',
     password: '',
     confirmPassword: '',
+    avatarUrl: '',
+    resumeUrl: '',
+    // Professional Summary
+    headline: '',
+    keywords: '',
+    // Experience & Employment
+    primaryExperience: [],
+    employmentTypes: [],
+    workLevel: '',
+    // Education & Qualifications
+    educationLevel: '',
+    clearance: '',
+    // Additional Information
+    languages: [],
+    workAuthorization: '',
+    veteranStatus: '',
+    // Accessibility Needs
+    usesScreenMagnifier: false,
+    usesScreenReader: false,
+    needsASL: false,
+    needsCaptions: false,
+    needsOther: false,
   });
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -74,6 +101,14 @@ export default function JobSeekerManagement() {
   // Password visibility toggles
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [activeEditTab, setActiveEditTab] = useState(0); // Custom tab state
+  // Upload states
+  const [uploading, setUploading] = useState(false);
+  const [uploadingType, setUploadingType] = useState(null); // 'resume' or 'avatar'
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
+  const resumeInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
   
   // Edit form state
   const [form, setForm] = useState({
@@ -726,18 +761,69 @@ export default function JobSeekerManagement() {
     
     // Set the selected job seeker and populate form
     setSelectedJobSeeker(row);
+    const metadata = row.metadata || {};
+    const profile = metadata.profile || {};
+    
     setEditForm({
       firstName: row.firstName || '',
       lastName: row.lastName || '',
       email: row.email || '',
-      phone: row.phone || '',
+      phone: row.phone || row.phoneNumber || '',
       city: row.city || '',
       state: row.state || '',
       country: row.country || '',
       password: '',
       confirmPassword: '',
+      avatarUrl: row.avatarUrl || '',
+      resumeUrl: row.resumeUrl || '',
+      // Professional Summary
+      headline: profile.headline || metadata.professionalHeadline || metadata.headline || '',
+      keywords: profile.keywords || metadata.skills || metadata.keywords || '',
+      // Experience & Employment
+      primaryExperience: Array.isArray(profile.primaryExperience) ? profile.primaryExperience : 
+                        (profile.primaryExperience ? [profile.primaryExperience] : 
+                        (metadata.primaryJobExperience ? [metadata.primaryJobExperience] : 
+                        (Array.isArray(metadata.primaryExperience) ? metadata.primaryExperience : []))),
+      employmentTypes: Array.isArray(profile.employmentTypes) ? profile.employmentTypes :
+                       (profile.employmentTypes ? [profile.employmentTypes] :
+                       (Array.isArray(metadata.employmentTypes) ? metadata.employmentTypes :
+                       (metadata.employmentType ? [metadata.employmentType] : []))),
+      workLevel: profile.workLevel || metadata.experienceLevel || metadata.workLevel || '',
+      // Education & Qualifications
+      educationLevel: profile.educationLevel || metadata.education || metadata.educationLevel || '',
+      clearance: profile.clearance || metadata.securityClearance || metadata.clearance || '',
+      // Additional Information
+      languages: Array.isArray(profile.languages) ? profile.languages :
+                 (profile.languages ? [profile.languages] :
+                 (Array.isArray(metadata.languages) ? metadata.languages :
+                 (Array.isArray(row.languages) ? row.languages : []))),
+      workAuthorization: profile.workAuthorization || metadata.workAuthorization || metadata.workAuth || '',
+      veteranStatus: profile.veteranStatus || metadata.veteranStatus || metadata.militaryStatus || '',
+      // Accessibility Needs
+      usesScreenMagnifier: row.usesScreenMagnifier || false,
+      usesScreenReader: row.usesScreenReader || false,
+      needsASL: row.needsASL || false,
+      needsCaptions: row.needsCaptions || false,
+      needsOther: row.needsOther || false,
     });
+    // Initialize preview states
+    const existingAvatarUrl = row.avatarUrl || '';
+    const existingResumeUrl = row.resumeUrl || '';
+    setAvatarPreviewUrl(existingAvatarUrl);
+    // Try to extract filename from resume URL, or use a default message
+    if (existingResumeUrl) {
+      try {
+        const urlParts = existingResumeUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
+        setResumeFileName(fileName || 'Resume uploaded');
+      } catch (e) {
+        setResumeFileName('Resume uploaded');
+      }
+    } else {
+      setResumeFileName('');
+    }
     setEditingId(row.id);
+    setActiveEditTab(0); // Reset to first tab when editing
     
     // Destroy the grid after a brief moment
     setTimeout(() => {
@@ -762,6 +848,139 @@ export default function JobSeekerManagement() {
   };
 
   const setEditField = (k, v) => setEditForm(prev => ({ ...prev, [k]: v }));
+
+  // Sync preview states with form values when in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && editingId) {
+      // Sync avatar preview - use form value if preview is empty
+      if (editForm.avatarUrl && editForm.avatarUrl !== avatarPreviewUrl) {
+        setAvatarPreviewUrl(editForm.avatarUrl);
+      }
+      // Sync resume filename - use form value if filename is empty
+      if (editForm.resumeUrl && !resumeFileName) {
+        try {
+          const urlParts = editForm.resumeUrl.split('/');
+          const fileName = urlParts[urlParts.length - 1].split('?')[0];
+          setResumeFileName(fileName || 'Resume uploaded');
+        } catch (e) {
+          setResumeFileName('Resume uploaded');
+        }
+      }
+    }
+  }, [mode, editingId, editForm.avatarUrl, editForm.resumeUrl]);
+
+  // Upload functions for resume and avatar
+  const uploadToS3 = async (file, fileType) => {
+    setUploading(true);
+    setUploadingType(fileType);
+    try {
+      const token = sessionStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Request presigned URL
+      const presignRes = await axios.post(
+        '/api/uploads/presign',
+        {
+          fileName: file.name,
+          fileType: fileType,
+          mimeType: file.type || (fileType === 'resume' ? 'application/pdf' : 'image/jpeg'),
+        },
+        { headers }
+      );
+
+      const { upload, download } = presignRes.data;
+      const { url, key } = upload;
+
+      // Upload to S3
+      await axios.put(url, file, {
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      });
+
+      // Confirm upload
+      const completeRes = await axios.post(
+        '/api/uploads/complete',
+        {
+          fileKey: key,
+          fileType: fileType,
+          fileName: file.name,
+          mimeType: file.type || (fileType === 'resume' ? 'application/pdf' : 'image/jpeg'),
+          size: file.size,
+        },
+        { headers }
+      );
+
+      const downloadUrl = completeRes?.data?.file?.downloadUrl || download?.url;
+
+      if (fileType === 'resume') {
+        setResumeFileName(file.name);
+        setEditField('resumeUrl', downloadUrl);
+        showToast('Resume uploaded successfully', 'Success');
+        if (resumeInputRef.current) resumeInputRef.current.value = '';
+      } else if (fileType === 'avatar') {
+        setAvatarPreviewUrl(downloadUrl);
+        setEditField('avatarUrl', downloadUrl);
+        showToast('Profile picture uploaded successfully', 'Success');
+        if (avatarInputRef.current) avatarInputRef.current.value = '';
+      }
+
+      return downloadUrl;
+    } catch (e) {
+      console.error('S3 upload error', e);
+      const msg = e?.response?.data?.message || 'Upload failed';
+      showToast(msg, 'Error', 5000);
+      throw e;
+    } finally {
+      setUploading(false);
+      setUploadingType(null);
+    }
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Please upload a PDF or Word document', 'Error');
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('File size must be less than 10MB', 'Error');
+      return;
+    }
+
+    try {
+      await uploadToS3(file, 'resume');
+    } catch (e) {
+      // Error already handled in uploadToS3
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showToast('Please upload an image file', 'Error');
+      return;
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Image size must be less than 2MB', 'Error');
+      return;
+    }
+
+    try {
+      await uploadToS3(file, 'avatar');
+    } catch (e) {
+      // Error already handled in uploadToS3
+    }
+  };
 
   const handleSaveEdit = async (e) => {
     if (e && e.preventDefault) {
@@ -805,6 +1024,27 @@ export default function JobSeekerManagement() {
         city: editForm.city || undefined,
         state: editForm.state || undefined,
         country: editForm.country || undefined,
+        avatarUrl: editForm.avatarUrl || undefined,
+        resumeUrl: editForm.resumeUrl || undefined,
+        // Accessibility Needs
+        usesScreenMagnifier: editForm.usesScreenMagnifier,
+        usesScreenReader: editForm.usesScreenReader,
+        needsASL: editForm.needsASL,
+        needsCaptions: editForm.needsCaptions,
+        needsOther: editForm.needsOther,
+        // Profile data
+        profile: {
+          headline: editForm.headline || undefined,
+          keywords: editForm.keywords || undefined,
+          primaryExperience: editForm.primaryExperience && editForm.primaryExperience.length > 0 ? editForm.primaryExperience : undefined,
+          employmentTypes: editForm.employmentTypes && editForm.employmentTypes.length > 0 ? editForm.employmentTypes : undefined,
+          workLevel: editForm.workLevel || undefined,
+          educationLevel: editForm.educationLevel || undefined,
+          clearance: editForm.clearance || undefined,
+          languages: editForm.languages && editForm.languages.length > 0 ? editForm.languages : undefined,
+          workAuthorization: editForm.workAuthorization || undefined,
+          veteranStatus: editForm.veteranStatus || undefined,
+        }
       };
       
       // Include password if provided (admin can update password)
@@ -829,7 +1069,27 @@ export default function JobSeekerManagement() {
         country: '',
         password: '',
         confirmPassword: '',
+        avatarUrl: '',
+        resumeUrl: '',
+        headline: '',
+        keywords: '',
+        primaryExperience: [],
+        employmentTypes: [],
+        workLevel: '',
+        educationLevel: '',
+        clearance: '',
+        languages: [],
+        workAuthorization: '',
+        veteranStatus: '',
+        usesScreenMagnifier: false,
+        usesScreenReader: false,
+        needsASL: false,
+        needsCaptions: false,
+        needsOther: false,
       });
+      // Reset preview states
+      setAvatarPreviewUrl('');
+      setResumeFileName('');
       
       // Return to list mode
       setMode('list');
@@ -1144,52 +1404,6 @@ export default function JobSeekerManagement() {
             </div>
           </div>
 
-          {/* Survey Information */}
-          {survey && Object.keys(survey).length > 0 && (
-            <div className="profile-section">
-              <h3>Survey Information</h3>
-              <div className="profile-grid">
-                {survey.race && survey.race.length > 0 && (
-                  <div className="profile-field">
-                    <label>Race/Ethnicity:</label>
-                    <span>{survey.race.join(', ')}</span>
-                  </div>
-                )}
-                {survey.genderIdentity && (
-                  <div className="profile-field">
-                    <label>Gender Identity:</label>
-                    <span>{survey.genderIdentity}</span>
-                  </div>
-                )}
-                {survey.ageGroup && (
-                  <div className="profile-field">
-                    <label>Age Group:</label>
-                    <span>{survey.ageGroup}</span>
-                  </div>
-                )}
-                {survey.countryOfOrigin && (
-                  <div className="profile-field">
-                    <label>Country of Origin:</label>
-                    <span>{survey.countryOfOrigin}</span>
-                  </div>
-                )}
-                {survey.disabilities && survey.disabilities.length > 0 && (
-                  <div className="profile-field">
-                    <label>Disabilities:</label>
-                    <span>{survey.disabilities.join(', ')}</span>
-                  </div>
-                )}
-                {survey.otherDisability && (
-                  <div className="profile-field">
-                    <label>Other Disability:</label>
-                    <span>{survey.otherDisability}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-
           {/* Account Details */}
           <div className="profile-section">
             <h3>Account Details</h3>
@@ -1245,95 +1459,419 @@ export default function JobSeekerManagement() {
                 <h2>Edit Job Seeker: {editForm.firstName} {editForm.lastName}</h2>
               </div>
 
-              <form className="account-form" onSubmit={handleSaveEdit} style={{ maxWidth: 720 }}>
-                <Input
-                  label="First Name"
-                  value={editForm.firstName}
-                  onChange={(e) => setEditField('firstName', e.target.value)}
-                  required
-                  placeholder="Enter first name"
-                />
-                <Input
-                  label="Last Name"
-                  value={editForm.lastName}
-                  onChange={(e) => setEditField('lastName', e.target.value)}
-                  required
-                  placeholder="Enter last name"
-                />
-                <Input
-                  label="Email"
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditField('email', e.target.value)}
-                  required
-                  placeholder="Enter email address"
-                />
-                <div className="password-field-container">
-                  <Input 
-                    label="New Password (leave blank to keep current)" 
-                    type={showPwd ? 'text' : 'password'} 
-                    value={editForm.password} 
-                    onChange={(e) => setEditField('password', e.target.value)} 
-                  />
+              {/* Custom Tabs */}
+              <div className="jsm-custom-tabs">
+                {/* Tab Headers */}
+                <div className="jsm-tab-headers">
+                  {['Basic Information', 'Professional Summary', 'Experience & Employment', 'Education & Qualifications', 'Additional Information', 'Accessibility Needs'].map((tab, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={`jsm-tab-btn ${activeEditTab === index ? 'active' : ''}`}
+                      onClick={() => setActiveEditTab(index)}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab Content */}
+                <div className="jsm-tab-content">
+                  {/* Basic Information Tab */}
+                  {activeEditTab === 0 && (
+                    <div className="jsm-tab-panel">
+                      <Input
+                        label="First Name"
+                        value={editForm.firstName}
+                        onChange={(e) => setEditField('firstName', e.target.value)}
+                        required
+                        placeholder="Enter first name"
+                      />
+                      <Input
+                        label="Last Name"
+                        value={editForm.lastName}
+                        onChange={(e) => setEditField('lastName', e.target.value)}
+                        required
+                        placeholder="Enter last name"
+                      />
+                      <Input
+                        label="Email"
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) => setEditField('email', e.target.value)}
+                        required
+                        placeholder="Enter email address"
+                      />
+                      <div className="password-field-container">
+                        <Input 
+                          label="New Password (leave blank to keep current)" 
+                          type={showPwd ? 'text' : 'password'} 
+                          value={editForm.password} 
+                          onChange={(e) => setEditField('password', e.target.value)} 
+                        />
+                        <ButtonComponent 
+                          cssClass="e-outline e-primary e-small password-toggle-btn" 
+                          aria-pressed={showPwd} 
+                          aria-label={showPwd ? 'Hide password' : 'Show password'} 
+                          onClick={() => setShowPwd(s => !s)}
+                        >
+                          {showPwd ? 'Hide' : 'Show'}
+                        </ButtonComponent>
+                      </div>
+                      <div className="password-field-container">
+                        <Input 
+                          label="Confirm New Password (leave blank to keep current)" 
+                          type={showConfirmPwd ? 'text' : 'password'} 
+                          value={editForm.confirmPassword} 
+                          onChange={(e) => setEditField('confirmPassword', e.target.value)} 
+                        />
+                        <ButtonComponent 
+                          cssClass="e-outline e-primary e-small password-toggle-btn" 
+                          aria-pressed={showConfirmPwd} 
+                          aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
+                          onClick={() => setShowConfirmPwd(s => !s)}
+                        >
+                          {showConfirmPwd ? 'Hide' : 'Show'}
+                        </ButtonComponent>
+                      </div>
+                      <Input
+                        label="Phone"
+                        type="tel"
+                        value={editForm.phone}
+                        onChange={(e) => setEditField('phone', e.target.value)}
+                        placeholder="Enter phone number"
+                      />
+                      <Input
+                        label="City"
+                        value={editForm.city}
+                        onChange={(e) => setEditField('city', e.target.value)}
+                        placeholder="Enter city"
+                      />
+                      <Input
+                        label="State"
+                        value={editForm.state}
+                        onChange={(e) => setEditField('state', e.target.value)}
+                        placeholder="Enter state"
+                      />
+                      <Input
+                        label="Country"
+                        value={editForm.country}
+                        onChange={(e) => setEditField('country', e.target.value)}
+                        placeholder="Enter country"
+                      />
+                      
+                      {/* Profile Image Upload */}
+                      <div className="jsm-upload-field">
+                        <label className="jsm-field-label">Profile Image</label>
+                        <div className="jsm-upload-container">
+                          {(avatarPreviewUrl || editForm.avatarUrl) && (
+                            <div className="jsm-avatar-preview">
+                              <img src={avatarPreviewUrl || editForm.avatarUrl} alt="Profile preview" onError={(e) => {
+                                // Hide image if it fails to load
+                                e.target.style.display = 'none';
+                              }} />
+                              <button
+                                type="button"
+                                className="jsm-remove-avatar"
+                                onClick={() => {
+                                  setAvatarPreviewUrl('');
+                                  setEditField('avatarUrl', '');
+                                  if (avatarInputRef.current) avatarInputRef.current.value = '';
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                          <div className="jsm-upload-input-wrapper">
+                            <input
+                              ref={avatarInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleAvatarUpload}
+                              disabled={uploading && uploadingType === 'avatar'}
+                              className="jsm-file-input"
+                              id="avatar-upload"
+                            />
+                            <label htmlFor="avatar-upload" className="jsm-file-label">
+                              {uploading && uploadingType === 'avatar' ? 'Uploading...' : avatarPreviewUrl ? 'Change Image' : 'Upload Profile Image'}
+                            </label>
+                          </div>
+                          <p className="jsm-upload-hint">Accepted formats: JPG, PNG, GIF, WebP (max 2MB)</p>
+                        </div>
+                      </div>
+
+                      {/* Resume Upload */}
+                      <div className="jsm-upload-field">
+                        <label className="jsm-field-label">Resume</label>
+                        <div className="jsm-upload-container">
+                          {(resumeFileName || editForm.resumeUrl) && (
+                            <div className="jsm-resume-info">
+                              <span className="jsm-resume-name">{resumeFileName || 'Resume uploaded'}</span>
+                              {(editForm.resumeUrl || resumeFileName) && (
+                                <a
+                                  href={editForm.resumeUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="jsm-view-resume"
+                                >
+                                  View Resume
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                className="jsm-remove-resume"
+                                onClick={() => {
+                                  setResumeFileName('');
+                                  setEditField('resumeUrl', '');
+                                  if (resumeInputRef.current) resumeInputRef.current.value = '';
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                          <div className="jsm-upload-input-wrapper">
+                            <input
+                              ref={resumeInputRef}
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              onChange={handleResumeUpload}
+                              disabled={uploading && uploadingType === 'resume'}
+                              className="jsm-file-input"
+                              id="resume-upload"
+                            />
+                            <label htmlFor="resume-upload" className="jsm-file-label">
+                              {uploading && uploadingType === 'resume' ? 'Uploading...' : resumeFileName ? 'Change Resume' : 'Upload Resume'}
+                            </label>
+                          </div>
+                          <p className="jsm-upload-hint">Accepted formats: PDF, DOC, DOCX (max 10MB)</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Professional Summary Tab */}
+                  {activeEditTab === 1 && (
+                    <div className="jsm-tab-panel">
+                      <Input
+                        label="Professional Headline"
+                        value={editForm.headline}
+                        onChange={(e) => setEditField('headline', e.target.value)}
+                        placeholder="Enter professional headline"
+                      />
+                      <Input
+                        label="Keywords & Skills"
+                        value={editForm.keywords}
+                        onChange={(e) => setEditField('keywords', e.target.value)}
+                        placeholder="Enter keywords and skills (comma-separated)"
+                      />
+                    </div>
+                  )}
+
+                  {/* Experience & Employment Tab */}
+                  {activeEditTab === 2 && (
+                    <div className="jsm-tab-panel">
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Primary Job Experience (max 2)</label>
+                        <MultiSelectComponent
+                          dataSource={JOB_CATEGORY_LIST}
+                          fields={{ text: 'name', value: 'value' }}
+                          value={editForm.primaryExperience}
+                          mode="Box"
+                          placeholder="Select primary job experience"
+                          enableSelectionOrder={false}
+                          maximumSelectionLength={2}
+                          cssClass="jsm-multiselect"
+                          showDropDownIcon={true}
+                          popupHeight="260px"
+                          allowFiltering={false}
+                          change={(args) => {
+                            const values = Array.isArray(args?.value) ? args.value : [];
+                            setEditField('primaryExperience', values.slice(0, 2));
+                          }}
+                        />
+                      </div>
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Employment Types</label>
+                        <MultiSelectComponent
+                          dataSource={JOB_TYPE_LIST}
+                          fields={{ text: 'name', value: 'value' }}
+                          value={editForm.employmentTypes}
+                          mode="Box"
+                          placeholder="Select employment types"
+                          enableSelectionOrder={false}
+                          cssClass="jsm-multiselect"
+                          showDropDownIcon={true}
+                          popupHeight="260px"
+                          allowFiltering={false}
+                          change={(args) => {
+                            const values = Array.isArray(args?.value) ? args.value : [];
+                            setEditField('employmentTypes', values);
+                          }}
+                        />
+                      </div>
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Experience Level</label>
+                        <select
+                          className="jsm-select"
+                          value={editForm.workLevel || ''}
+                          onChange={(e) => setEditField('workLevel', e.target.value)}
+                        >
+                          <option value="">Select experience level</option>
+                          {EXPERIENCE_LEVEL_LIST.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Education & Qualifications Tab */}
+                  {activeEditTab === 3 && (
+                    <div className="jsm-tab-panel">
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Highest Education Level</label>
+                        <select
+                          className="jsm-select"
+                          value={editForm.educationLevel || ''}
+                          onChange={(e) => setEditField('educationLevel', e.target.value)}
+                        >
+                          <option value="">Select education level</option>
+                          {EDUCATION_LEVEL_LIST.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Security Clearance</label>
+                        <select
+                          className="jsm-select"
+                          value={editForm.clearance || ''}
+                          onChange={(e) => setEditField('clearance', e.target.value)}
+                        >
+                          <option value="">Select security clearance</option>
+                          {SECURITY_CLEARANCE_LIST.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Additional Information Tab */}
+                  {activeEditTab === 4 && (
+                    <div className="jsm-tab-panel">
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Languages</label>
+                        <MultiSelectComponent
+                          dataSource={LANGUAGE_LIST}
+                          fields={{ text: 'name', value: 'value' }}
+                          value={editForm.languages}
+                          mode="Box"
+                          placeholder="Select languages"
+                          enableSelectionOrder={false}
+                          cssClass="jsm-multiselect"
+                          showDropDownIcon={true}
+                          popupHeight="260px"
+                          allowFiltering={false}
+                          change={(args) => {
+                            const values = Array.isArray(args?.value) ? args.value : [];
+                            setEditField('languages', values);
+                          }}
+                        />
+                      </div>
+                      <Input
+                        label="Work Authorization"
+                        value={editForm.workAuthorization}
+                        onChange={(e) => setEditField('workAuthorization', e.target.value)}
+                        placeholder="Enter work authorization"
+                      />
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Veteran/Military Status</label>
+                        <select
+                          className="jsm-select"
+                          value={editForm.veteranStatus || ''}
+                          onChange={(e) => setEditField('veteranStatus', e.target.value)}
+                        >
+                          <option value="">Select veteran status</option>
+                          {MILITARY_EXPERIENCE_LIST.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Accessibility Needs Tab */}
+                  {activeEditTab === 5 && (
+                    <div className="jsm-tab-panel">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <label className="jsm-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={editForm.usesScreenMagnifier}
+                            onChange={(e) => setEditField('usesScreenMagnifier', e.target.checked)}
+                          />
+                          <span>Screen Magnifier</span>
+                        </label>
+                        <label className="jsm-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={editForm.usesScreenReader}
+                            onChange={(e) => setEditField('usesScreenReader', e.target.checked)}
+                          />
+                          <span>Screen Reader</span>
+                        </label>
+                        <label className="jsm-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={editForm.needsASL}
+                            onChange={(e) => setEditField('needsASL', e.target.checked)}
+                          />
+                          <span>ASL Interpreter</span>
+                        </label>
+                        <label className="jsm-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={editForm.needsCaptions}
+                            onChange={(e) => setEditField('needsCaptions', e.target.checked)}
+                          />
+                          <span>Captions</span>
+                        </label>
+                        <label className="jsm-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={editForm.needsOther}
+                            onChange={(e) => setEditField('needsOther', e.target.checked)}
+                          />
+                          <span>Other Accommodations</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Save Button */}
+                <div className="jsm-save-button-container">
                   <ButtonComponent 
-                    cssClass="e-outline e-primary e-small password-toggle-btn" 
-                    aria-pressed={showPwd} 
-                    aria-label={showPwd ? 'Hide password' : 'Show password'} 
-                    onClick={() => setShowPwd(s => !s)}
+                    cssClass="e-primary" 
+                    disabled={saving}
+                    isPrimary={true}
+                    onClick={handleSaveEdit}
                   >
-                    {showPwd ? 'Hide' : 'Show'}
+                    {saving ? 'Saving…' : 'Save Changes'}
                   </ButtonComponent>
                 </div>
-                <div className="password-field-container">
-                  <Input 
-                    label="Confirm New Password (leave blank to keep current)" 
-                    type={showConfirmPwd ? 'text' : 'password'} 
-                    value={editForm.confirmPassword} 
-                    onChange={(e) => setEditField('confirmPassword', e.target.value)} 
-                  />
-                  <ButtonComponent 
-                    cssClass="e-outline e-primary e-small password-toggle-btn" 
-                    aria-pressed={showConfirmPwd} 
-                    aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
-                    onClick={() => setShowConfirmPwd(s => !s)}
-                  >
-                    {showConfirmPwd ? 'Hide' : 'Show'}
-                  </ButtonComponent>
-                </div>
-                <Input
-                  label="Phone"
-                  type="tel"
-                  value={editForm.phone}
-                  onChange={(e) => setEditField('phone', e.target.value)}
-                  placeholder="Enter phone number"
-                />
-                <Input
-                  label="City"
-                  value={editForm.city}
-                  onChange={(e) => setEditField('city', e.target.value)}
-                  placeholder="Enter city"
-                />
-                <Input
-                  label="State"
-                  value={editForm.state}
-                  onChange={(e) => setEditField('state', e.target.value)}
-                  placeholder="Enter state"
-                />
-                <Input
-                  label="Country"
-                  value={editForm.country}
-                  onChange={(e) => setEditField('country', e.target.value)}
-                  placeholder="Enter country"
-                />
-                <ButtonComponent 
-                  cssClass="e-primary" 
-                  disabled={saving}
-                  isPrimary={true}
-                  onClick={handleSaveEdit}
-                >
-                  {saving ? 'Saving…' : 'Save Changes'}
-                </ButtonComponent>
-              </form>
+              </div>
             </div>
           ) : (
           <div className="dashboard-content">

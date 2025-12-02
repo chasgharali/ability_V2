@@ -54,7 +54,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
         // Get profile data - check both metadata.profile (new format) and metadata.resume (migrated format)
         let profile = targetUser.metadata?.profile || null;
-        
+
         // If profile doesn't exist but resume data exists (migrated user), transform it
         if (!profile && targetUser.metadata?.resume) {
             const resumeData = targetUser.metadata.resume;
@@ -69,15 +69,15 @@ router.get('/me', authenticateToken, async (req, res) => {
                 clearance: resumeData.securityClearance || null,
                 veteranStatus: resumeData.veteranStatus || resumeData.militaryStatus || null
             };
-            
+
             // Remove null/empty values
             Object.keys(profile).forEach(key => {
-                if (profile[key] === null || profile[key] === undefined || 
+                if (profile[key] === null || profile[key] === undefined ||
                     (Array.isArray(profile[key]) && profile[key].length === 0)) {
                     delete profile[key];
                 }
             });
-            
+
             // If profile has data, save it to metadata.profile for future use
             if (Object.keys(profile).length > 0) {
                 targetUser.metadata = {
@@ -310,8 +310,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
         // Users can view their own profile, admins can view any profile
         // Recruiters and booth admins can view job seeker profiles
-        const canViewProfile = 
-            id === user._id.toString() || 
+        const canViewProfile =
+            id === user._id.toString() ||
             ['Admin', 'GlobalSupport'].includes(user.role) ||
             (['Recruiter', 'BoothAdmin'].includes(user.role));
 
@@ -427,7 +427,25 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('avatarUrl')
         .optional()
         .custom((value) => value === null || value === '' || typeof value === 'string')
-        .withMessage('avatarUrl must be null, empty string, or a string')
+        .withMessage('avatarUrl must be null, empty string, or a string'),
+    // Accessibility fields
+    body('usesScreenMagnifier').optional().isBoolean().withMessage('usesScreenMagnifier must be boolean'),
+    body('usesScreenReader').optional().isBoolean().withMessage('usesScreenReader must be boolean'),
+    body('needsASL').optional().isBoolean().withMessage('needsASL must be boolean'),
+    body('needsCaptions').optional().isBoolean().withMessage('needsCaptions must be boolean'),
+    body('needsOther').optional().isBoolean().withMessage('needsOther must be boolean'),
+    // Job seeker profile fields
+    body('profile').optional().isObject().withMessage('Profile must be an object'),
+    body('profile.headline').optional().isString().isLength({ max: 200 }).withMessage('Headline max 200 chars'),
+    body('profile.keywords').optional().isString().isLength({ max: 500 }).withMessage('Keywords max 500 chars'),
+    body('profile.primaryExperience').optional().isArray({ max: 2 }).withMessage('Primary experience must be array (max 2)'),
+    body('profile.workLevel').optional().isString(),
+    body('profile.educationLevel').optional().isString(),
+    body('profile.languages').optional().isArray().withMessage('Languages must be array'),
+    body('profile.employmentTypes').optional().isArray().withMessage('Employment types must be array'),
+    body('profile.clearance').optional().isString(),
+    body('profile.workAuthorization').optional().isString(),
+    body('profile.veteranStatus').optional().isString()
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -441,7 +459,8 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl } = req.body;
+        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, resumeUrl,
+            usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, profile } = req.body;
         const { user } = req;
 
         const targetUser = await User.findById(id);
@@ -467,7 +486,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         if (isAvailable !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(targetUser.role)) {
             targetUser.isAvailable = isAvailable;
         }
-        
+
         // Update password if provided (admin can change user passwords)
         if (password !== undefined && password !== null && password.trim() !== '') {
             targetUser.hashedPassword = password; // Will be hashed by pre-save middleware
@@ -488,6 +507,39 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         // Allow removing avatar by setting to null or empty string
         if (avatarUrl !== undefined) {
             targetUser.avatarUrl = (avatarUrl === null || avatarUrl === '') ? null : avatarUrl;
+        }
+        // Allow removing resume by setting to null or empty string
+        if (resumeUrl !== undefined) {
+            targetUser.resumeUrl = (resumeUrl === null || resumeUrl === '') ? null : resumeUrl;
+        }
+
+        // Update accessibility fields for JobSeekers
+        if (usesScreenMagnifier !== undefined) targetUser.usesScreenMagnifier = usesScreenMagnifier;
+        if (usesScreenReader !== undefined) targetUser.usesScreenReader = usesScreenReader;
+        if (needsASL !== undefined) targetUser.needsASL = needsASL;
+        if (needsCaptions !== undefined) targetUser.needsCaptions = needsCaptions;
+        if (needsOther !== undefined) targetUser.needsOther = needsOther;
+
+        // Merge job seeker profile into metadata.profile
+        if (profile && typeof profile === 'object') {
+            const prev = (targetUser.metadata && targetUser.metadata.profile) || {};
+            targetUser.metadata = {
+                ...(targetUser.metadata || {}),
+                profile: {
+                    ...prev,
+                    ...(profile.headline !== undefined ? { headline: profile.headline } : {}),
+                    ...(profile.keywords !== undefined ? { keywords: profile.keywords } : {}),
+                    ...(profile.primaryExperience !== undefined ? { primaryExperience: profile.primaryExperience } : {}),
+                    ...(profile.workLevel !== undefined ? { workLevel: profile.workLevel } : {}),
+                    ...(profile.educationLevel !== undefined ? { educationLevel: profile.educationLevel } : {}),
+                    ...(profile.languages !== undefined ? { languages: profile.languages } : {}),
+                    ...(profile.employmentTypes !== undefined ? { employmentTypes: profile.employmentTypes } : {}),
+                    ...(profile.clearance !== undefined ? { clearance: profile.clearance } : {}),
+                    ...(profile.workAuthorization !== undefined ? { workAuthorization: profile.workAuthorization } : {}),
+                    ...(profile.veteranStatus !== undefined ? { veteranStatus: profile.veteranStatus } : {}),
+                    updatedAt: new Date()
+                }
+            };
         }
 
         // Handle assignedBooth updates and validation for recruiter/booth admin/support/interpreter
@@ -595,7 +647,7 @@ router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
 
             // Permanently delete the user
             await User.findByIdAndDelete(id);
-            
+
             logger.info(`User permanently deleted: ${targetUser.email} by ${user.email}`);
 
             res.json({

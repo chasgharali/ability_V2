@@ -906,11 +906,16 @@ export default function EventManagement() {
                                 <div className="form-group">
                                     <label className="form-label">Event Logo</label>
                                     <div className="upload-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <label htmlFor="logo-upload" style={{ margin: 0 }}>
-                                            <ButtonComponent cssClass="e-outline e-primary e-small">
-                                                Choose file
-                                            </ButtonComponent>
-                                        </label>
+                                        <ButtonComponent 
+                                            cssClass="e-outline e-primary e-small"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                document.getElementById('logo-upload')?.click();
+                                            }}
+                                        >
+                                            Choose file
+                                        </ButtonComponent>
                                         <input 
                                             id="logo-upload"
                                             type="file" 

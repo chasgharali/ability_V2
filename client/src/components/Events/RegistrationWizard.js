@@ -394,7 +394,7 @@ export default function RegistrationWizard() {
                   />
                   <span className="checkbox-custom"></span>
                   <span className="checkbox-text">
-                    <strong>I accept the {docTitle}</strong>
+                    <strong>I agree to {docTitle}</strong>
                     <small>{isRequired ? 'Required to complete registration' : 'Optional'}</small>
                   </span>
                 </label>
@@ -509,9 +509,9 @@ export default function RegistrationWizard() {
                     </ul>
                   </div>
                 )}
-                <MyAccountInline 
-                  user={user} 
-                  updateProfile={updateProfile} 
+                <MyAccountInline
+                  user={user}
+                  updateProfile={updateProfile}
                   onDone={(formData) => {
                     // Store the form data for future reference
                     if (formData) {
@@ -519,7 +519,7 @@ export default function RegistrationWizard() {
                     }
                     // Pass formData directly to next() so validation uses it immediately
                     next(formData);
-                  }} 
+                  }}
                 />
               </section>
             )}
