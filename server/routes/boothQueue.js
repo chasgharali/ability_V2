@@ -12,16 +12,16 @@ const logger = require('../utils/logger');
 
 // Helper function to get job seekers currently in active calls for a booth
 const getJobSeekersInActiveCalls = async (boothId) => {
-    const boothObjectId = mongoose.Types.ObjectId.isValid(boothId) 
-        ? new mongoose.Types.ObjectId(boothId) 
+    const boothObjectId = mongoose.Types.ObjectId.isValid(boothId)
+        ? new mongoose.Types.ObjectId(boothId)
         : boothId;
-    
+
     // Check VideoCall model for active calls
     const activeVideoCalls = await VideoCall.find({
         booth: boothObjectId,
         status: 'active'
     }).select('jobSeeker roomName');
-    
+
     // Check MeetingRecord model for active/scheduled calls (only recent ones - last 2 hours)
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const activeMeetings = await MeetingRecord.find({
@@ -29,40 +29,40 @@ const getJobSeekersInActiveCalls = async (boothId) => {
         status: { $in: ['active', 'scheduled'] },
         startTime: { $gte: twoHoursAgo }
     }).select('jobseekerId twilioRoomId startTime');
-    
+
     // Also check BoothQueue for entries with status 'in_meeting' (most reliable source)
     const inMeetingQueues = await BoothQueue.find({
         booth: boothObjectId,
         status: 'in_meeting'
     }).select('jobSeeker');
-    
+
     // Combine job seeker IDs from all sources
     const jobSeekerIds = new Set();
-    
+
     activeVideoCalls.forEach(call => {
         if (call.jobSeeker) {
             jobSeekerIds.add(call.jobSeeker.toString());
         }
     });
-    
+
     activeMeetings.forEach(meeting => {
         if (meeting.jobseekerId) {
             jobSeekerIds.add(meeting.jobseekerId.toString());
         }
     });
-    
+
     inMeetingQueues.forEach(queue => {
         if (queue.jobSeeker) {
             jobSeekerIds.add(queue.jobSeeker.toString());
         }
     });
-    
+
     console.log('Active calls check for booth:', boothId);
     console.log('  - VideoCall active:', activeVideoCalls.length, activeVideoCalls.map(c => ({ js: c.jobSeeker?.toString(), room: c.roomName })));
     console.log('  - MeetingRecord active (last 2h):', activeMeetings.length, activeMeetings.map(m => ({ js: m.jobseekerId?.toString(), room: m.twilioRoomId })));
     console.log('  - BoothQueue in_meeting:', inMeetingQueues.length, inMeetingQueues.map(q => q.jobSeeker?.toString()));
     console.log('  - Total unique jobSeekers in calls:', jobSeekerIds.size, [...jobSeekerIds]);
-    
+
     return jobSeekerIds;
 };
 
@@ -100,7 +100,7 @@ router.post('/join', authenticateToken, async (req, res) => {
                     queueEntry: staleEntry._id,
                     status: 'active'
                 });
-                
+
                 // If no active call found, it's safe to clean up
                 if (!activeCall) {
                     await staleEntry.leaveQueue();
@@ -362,7 +362,7 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
             content,
             createdAt: new Date()
         };
-        
+
         // Mark as left with message
         await queueEntry.leaveQueue(true);
         await queueEntry.save();
@@ -370,13 +370,13 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
         // Create meeting record for the leave message
         const MeetingRecord = require('../models/MeetingRecord');
         const User = require('../models/User');
-        
+
         // Find recruiter assigned to this booth (optional - recruiter can be assigned later)
         const recruiter = await User.findOne({
             assignedBooth: boothId,
             role: 'Recruiter'
         });
-        
+
         const recruiterId = recruiter ? recruiter._id : null;
 
         // Only create meeting record if recruiter exists, otherwise just save leave message in queue entry
@@ -420,7 +420,7 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
                     jobseekerId: meetingRecord.jobseekerId,
                     recruiterId: meetingRecord.recruiterId
                 });
-                
+
                 // Link meeting record to queue entry
                 queueEntry.meetingId = meetingRecord._id;
                 await queueEntry.save();
@@ -474,7 +474,7 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
         const jobSeekerId = req.user._id;
 
         const queueEntry = await BoothQueue.getJobSeekerQueue(jobSeekerId, boothId);
-        
+
         if (!queueEntry) {
             return res.status(404).json({
                 success: false,
@@ -539,13 +539,13 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
         }
 
         // Include 'in_meeting' status to show job seekers currently in calls
-        const queue = await BoothQueue.find({ 
-            booth: boothId, 
+        const queue = await BoothQueue.find({
+            booth: boothId,
             status: { $in: ['waiting', 'invited', 'in_meeting'] }
         })
-        .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
-        .populate('interpreterCategory', 'name code')
-        .sort({ position: 1 });
+            .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+            .populate('interpreterCategory', 'name code')
+            .sort({ position: 1 });
 
         // Get current serving number
         const currentServing = await BoothQueue.countDocuments({
@@ -892,7 +892,7 @@ router.delete('/remove/:queueId', authenticateToken, async (req, res) => {
 router.post('/cleanup', authenticateToken, async (req, res) => {
     try {
         const jobSeekerId = req.user._id;
-        
+
         // Find all queue entries for this user
         const userQueues = await BoothQueue.find({
             jobSeeker: jobSeekerId,
