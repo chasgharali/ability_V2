@@ -1029,7 +1029,7 @@ export default function BoothQueueWaiting() {
 
           <div className="queue-numbers queue-numbers-desktop" role="region" aria-label="Queue status information">
             <div className="queue-number-card" role="status" aria-live="polite">
-              <span className="queue-label" id="total-waiting-label">Queue status</span>
+              <span className="queue-label" id="total-waiting-label">Meeting Number</span>
               <span
                 className="queue-number"
                 aria-labelledby="total-waiting-label"
