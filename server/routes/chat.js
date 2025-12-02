@@ -102,7 +102,7 @@ router.get('/participants', authenticateToken, async (req, res) => {
             }).select('name email avatarUrl role assignedBooth');
 
             // Ensure we only return GlobalSupport and GlobalInterpreter (explicitly exclude Support)
-            const filteredUsers = globalReachUsers.filter(user => 
+            const filteredUsers = globalReachUsers.filter(user =>
                 user.role === 'GlobalSupport' || user.role === 'GlobalInterpreter'
             );
 
