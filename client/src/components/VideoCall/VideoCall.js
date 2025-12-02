@@ -92,7 +92,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [connectionQuality, setConnectionQuality] = useState('good');
   const [callDuration, setCallDuration] = useState(0);
   const [networkStats, setNetworkStats] = useState({ latency: 0, packetLoss: 0 });
-  
+
   // Caption state
   const [isCaptionEnabled, setIsCaptionEnabled] = useState(false);
   const [captionText, setCaptionText] = useState('');
@@ -114,6 +114,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const isCaptionEnabledRef = useRef(false);
   // Ref to track caption clear timeout (for cleanup)
   const captionClearTimeoutRef = useRef(null);
+  // Ref to track current recognition instance ID (prevents old instances from interfering)
+  const recognitionInstanceIdRef = useRef(0);
 
   // Initialize call
   useEffect(() => {
@@ -221,7 +223,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       // Create local tracks with preferred devices if set
       let videoTrack, audioTrack;
-      
+
       try {
         // Try with exact device constraints first
         const { video: videoConstraints, audio: audioConstraints } = createExactMediaConstraints(
@@ -235,7 +237,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         // Handle OverconstrainedError or other device errors
         if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
           console.warn('Device constraint error, retrying without device preferences:', deviceError);
-          
+
           // Clear invalid device IDs
           if (videoDeviceId) {
             sessionStorage.removeItem('preferredVideoDeviceId');
@@ -363,7 +365,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       // Create local tracks using preferred device IDs if available
       let videoTrack, audioTrack;
-      
+
       try {
         // Try with exact device constraints first
         const { video: videoConstraints2, audio: audioConstraints2 } = createExactMediaConstraints(
@@ -377,7 +379,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         // Handle OverconstrainedError or other device errors
         if (deviceError.name === 'OverconstrainedError' || deviceError.name === 'NotReadableError' || deviceError.name === 'NotFoundError') {
           console.warn('Device constraint error, retrying without device preferences:', deviceError);
-          
+
           // Clear invalid device IDs
           if (videoDeviceId) {
             sessionStorage.removeItem('preferredVideoDeviceId');
@@ -662,7 +664,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     console.log('📞 Call ended event received:', data);
     // Mark call as ended so no further reconnect / init happens
     callEndedRef.current = true;
-    
+
     // Announce call end for all participants
     if (user.role === 'JobSeeker') {
       speak("The call has ended. Thank you for participating.");
@@ -934,15 +936,28 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     if (isCaptionEnabledRef.current) {
       // Turn off captions - update ref first to prevent race conditions
       isCaptionEnabledRef.current = false;
-      
+
+      // Increment instance ID to invalidate any pending handlers from old instances
+      recognitionInstanceIdRef.current += 1;
+
       // Clear any pending caption clear timeout
       if (captionClearTimeoutRef.current) {
         clearTimeout(captionClearTimeoutRef.current);
         captionClearTimeoutRef.current = null;
       }
-      
+
+      // Stop and remove all event handlers from the current recognition instance
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          // Remove all event handlers to prevent them from firing after stop
+          recognitionRef.current.onstart = null;
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onerror = null;
+          recognitionRef.current.onend = null;
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.warn('Error stopping recognition:', e);
+        }
         recognitionRef.current = null;
       }
       setIsCaptionEnabled(false);
@@ -956,24 +971,43 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         return;
       }
 
+      // Stop and clean up any existing recognition instance first
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.onstart = null;
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onerror = null;
+          recognitionRef.current.onend = null;
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore errors when stopping old instance
+        }
+      }
+
+      // Increment instance ID for the new instance
+      recognitionInstanceIdRef.current += 1;
+      const currentInstanceId = recognitionInstanceIdRef.current;
+
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
-      
+
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
+        // Only process if this is still the current instance
+        if (currentInstanceId !== recognitionInstanceIdRef.current) return;
         console.log('🎤 Caption recognition started');
         isCaptionEnabledRef.current = true;
         setIsCaptionEnabled(true);
       };
 
       recognition.onresult = (event) => {
-        // Check if captions are still enabled using ref (not stale state)
-        if (!isCaptionEnabledRef.current) return;
-        
+        // Only process if this is still the current instance and captions are enabled
+        if (currentInstanceId !== recognitionInstanceIdRef.current || !isCaptionEnabledRef.current) return;
+
         let interimTranscript = '';
         let finalTranscript = '';
 
@@ -1002,20 +1036,31 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
         // Clear caption after 5 seconds of no speech - clear previous timeout first
         if (finalTranscript) {
+          // Clear any existing timeout before setting a new one
           if (captionClearTimeoutRef.current) {
             clearTimeout(captionClearTimeoutRef.current);
+            captionClearTimeoutRef.current = null;
           }
+
+          // Capture the instance ID in the timeout closure
+          const timeoutInstanceId = currentInstanceId;
           captionClearTimeoutRef.current = setTimeout(() => {
-            // Only clear if captions are still enabled
-            if (isCaptionEnabledRef.current) {
+            // Only clear if this is still the current instance and captions are enabled
+            if (timeoutInstanceId === recognitionInstanceIdRef.current && isCaptionEnabledRef.current) {
               setCaptionText('');
             }
-            captionClearTimeoutRef.current = null;
+            // Clear the timeout ref if this timeout is still the current one
+            if (captionClearTimeoutRef.current && timeoutInstanceId === recognitionInstanceIdRef.current) {
+              captionClearTimeoutRef.current = null;
+            }
           }, 5000);
         }
       };
 
       recognition.onerror = (event) => {
+        // Only process if this is still the current instance
+        if (currentInstanceId !== recognitionInstanceIdRef.current) return;
+
         console.error('Caption recognition error:', event.error);
         if (event.error === 'not-allowed') {
           alert('Microphone access is required for captions. Please allow microphone access and try again.');
@@ -1023,37 +1068,42 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           setIsCaptionEnabled(false);
         } else if (event.error === 'no-speech') {
           // Just restart recognition on no-speech, don't disable
-          // Use ref to check current state (avoids stale closure)
-          if (isCaptionEnabledRef.current && recognitionRef.current) {
+          // Check both instance ID and current state to avoid stale closures
+          if (currentInstanceId === recognitionInstanceIdRef.current &&
+            isCaptionEnabledRef.current &&
+            recognitionRef.current === recognition) {
             try {
-              recognitionRef.current.start();
+              recognition.start();
             } catch (e) {
-              // Already running
+              // Already running or stopped
             }
           }
         }
       };
 
       recognition.onend = () => {
-        // Restart recognition if captions are still enabled
-        // Use ref to check current state (avoids stale closure)
-        if (isCaptionEnabledRef.current && recognitionRef.current) {
+        // Only restart if this is still the current instance and captions are enabled
+        if (currentInstanceId === recognitionInstanceIdRef.current &&
+          isCaptionEnabledRef.current &&
+          recognitionRef.current === recognition) {
           try {
-            recognitionRef.current.start();
+            recognition.start();
           } catch (e) {
+            // Recognition already started or stopped
             console.log('Recognition already started or stopped');
           }
         }
       };
 
       recognitionRef.current = recognition;
-      
+
       try {
         recognition.start();
       } catch (e) {
         console.error('Failed to start speech recognition:', e);
         isCaptionEnabledRef.current = false;
         setIsCaptionEnabled(false);
+        recognitionRef.current = null;
       }
     }
   }, [user?.name]);
@@ -1063,16 +1113,28 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     return () => {
       // Clear caption enabled ref
       isCaptionEnabledRef.current = false;
-      
+
+      // Invalidate instance ID to prevent any pending handlers from executing
+      recognitionInstanceIdRef.current += 1;
+
       // Clear any pending caption clear timeout
       if (captionClearTimeoutRef.current) {
         clearTimeout(captionClearTimeoutRef.current);
         captionClearTimeoutRef.current = null;
       }
-      
-      // Stop recognition
+
+      // Stop recognition and remove all event handlers
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          // Remove all event handlers to prevent them from firing after stop
+          recognitionRef.current.onstart = null;
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onerror = null;
+          recognitionRef.current.onend = null;
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.warn('Error stopping recognition during cleanup:', e);
+        }
         recognitionRef.current = null;
       }
     };
