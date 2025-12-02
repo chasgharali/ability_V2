@@ -110,6 +110,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const callEndedRef = useRef(false);
   // Speech recognition ref for captions
   const recognitionRef = useRef(null);
+  // Ref to track caption enabled state (avoids stale closure in event handlers)
+  const isCaptionEnabledRef = useRef(false);
+  // Ref to track caption clear timeout (for cleanup)
+  const captionClearTimeoutRef = useRef(null);
 
   // Initialize call
   useEffect(() => {
@@ -927,8 +931,16 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   // Toggle captions using Web Speech API
   const toggleCaption = useCallback(() => {
-    if (isCaptionEnabled) {
-      // Turn off captions
+    if (isCaptionEnabledRef.current) {
+      // Turn off captions - update ref first to prevent race conditions
+      isCaptionEnabledRef.current = false;
+      
+      // Clear any pending caption clear timeout
+      if (captionClearTimeoutRef.current) {
+        clearTimeout(captionClearTimeoutRef.current);
+        captionClearTimeoutRef.current = null;
+      }
+      
       if (recognitionRef.current) {
         recognitionRef.current.stop();
         recognitionRef.current = null;
@@ -954,10 +966,14 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       recognition.onstart = () => {
         console.log('🎤 Caption recognition started');
+        isCaptionEnabledRef.current = true;
         setIsCaptionEnabled(true);
       };
 
       recognition.onresult = (event) => {
+        // Check if captions are still enabled using ref (not stale state)
+        if (!isCaptionEnabledRef.current) return;
+        
         let interimTranscript = '';
         let finalTranscript = '';
 
@@ -984,10 +1000,17 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         const displayText = finalTranscript || interimTranscript;
         setCaptionText(displayText.trim());
 
-        // Clear caption after 5 seconds of no speech
+        // Clear caption after 5 seconds of no speech - clear previous timeout first
         if (finalTranscript) {
-          setTimeout(() => {
-            setCaptionText(prev => prev === displayText.trim() ? '' : prev);
+          if (captionClearTimeoutRef.current) {
+            clearTimeout(captionClearTimeoutRef.current);
+          }
+          captionClearTimeoutRef.current = setTimeout(() => {
+            // Only clear if captions are still enabled
+            if (isCaptionEnabledRef.current) {
+              setCaptionText('');
+            }
+            captionClearTimeoutRef.current = null;
           }, 5000);
         }
       };
@@ -996,10 +1019,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         console.error('Caption recognition error:', event.error);
         if (event.error === 'not-allowed') {
           alert('Microphone access is required for captions. Please allow microphone access and try again.');
+          isCaptionEnabledRef.current = false;
           setIsCaptionEnabled(false);
         } else if (event.error === 'no-speech') {
           // Just restart recognition on no-speech, don't disable
-          if (isCaptionEnabled && recognitionRef.current) {
+          // Use ref to check current state (avoids stale closure)
+          if (isCaptionEnabledRef.current && recognitionRef.current) {
             try {
               recognitionRef.current.start();
             } catch (e) {
@@ -1011,7 +1036,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       recognition.onend = () => {
         // Restart recognition if captions are still enabled
-        if (isCaptionEnabled && recognitionRef.current) {
+        // Use ref to check current state (avoids stale closure)
+        if (isCaptionEnabledRef.current && recognitionRef.current) {
           try {
             recognitionRef.current.start();
           } catch (e) {
@@ -1026,14 +1052,25 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         recognition.start();
       } catch (e) {
         console.error('Failed to start speech recognition:', e);
+        isCaptionEnabledRef.current = false;
         setIsCaptionEnabled(false);
       }
     }
-  }, [isCaptionEnabled, user?.name]);
+  }, [user?.name]);
 
   // Cleanup speech recognition on unmount
   useEffect(() => {
     return () => {
+      // Clear caption enabled ref
+      isCaptionEnabledRef.current = false;
+      
+      // Clear any pending caption clear timeout
+      if (captionClearTimeoutRef.current) {
+        clearTimeout(captionClearTimeoutRef.current);
+        captionClearTimeoutRef.current = null;
+      }
+      
+      // Stop recognition
       if (recognitionRef.current) {
         recognitionRef.current.stop();
         recognitionRef.current = null;
