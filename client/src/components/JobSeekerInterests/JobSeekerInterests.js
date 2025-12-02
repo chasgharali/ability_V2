@@ -14,6 +14,7 @@ import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
 import filterIcon from '../../assets/filter.png';
+import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
 
@@ -151,6 +152,10 @@ const JobSeekerInterests = () => {
         hasNext: false,
         hasPrev: false
     });
+
+    // Job Seeker Profile Modal state
+    const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
+    const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
 
     // Syncfusion Toast
     const showToast = useCallback((message, type = 'Success', duration = 3000) => {
@@ -519,6 +524,31 @@ const JobSeekerInterests = () => {
         );
     };
 
+    const actionsTemplate = (props) => {
+        const row = props;
+        // Handle both populated jobSeeker object and jobSeeker ID
+        const jobSeekerData = row.jobSeeker || (row.jobSeekerId ? { _id: row.jobSeekerId } : null) || (row.legacyJobSeekerId ? { _id: row.legacyJobSeekerId } : null);
+        
+        if (!jobSeekerData) {
+            return <div style={{ padding: '8px 0', color: '#999' }}>N/A</div>;
+        }
+        
+        return (
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <ButtonComponent 
+                    cssClass="e-primary e-small" 
+                    onClick={() => {
+                        setSelectedJobSeekerForModal(jobSeekerData);
+                        setShowJobSeekerModal(true);
+                    }}
+                    aria-label="View job seeker details"
+                >
+                    View Job Seeker Detail
+                </ButtonComponent>
+            </div>
+        );
+    };
+
     const notesTemplate = (props) => {
         const row = props;
         return (
@@ -761,6 +791,15 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
                                         <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
                                         <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
+                                        <ColumnDirective 
+                                            headerText='Actions' 
+                                            width='200' 
+                                            allowSorting={false} 
+                                            allowFiltering={false}
+                                            template={actionsTemplate}
+                                            showInColumnChooser={true}
+                                            visible={true}
+                                        />
                                     </ColumnsDirective>
                                     <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>
@@ -908,6 +947,16 @@ const JobSeekerInterests = () => {
                 showProgressBar={true}
                 timeOut={3000}
                 newestOnTop={true}
+            />
+
+            {/* Job Seeker Profile Modal */}
+            <JobSeekerProfileModal
+                isOpen={showJobSeekerModal}
+                onClose={() => {
+                    setShowJobSeekerModal(false);
+                    setSelectedJobSeekerForModal(null);
+                }}
+                jobSeeker={selectedJobSeekerForModal}
             />
         </div>
     );
