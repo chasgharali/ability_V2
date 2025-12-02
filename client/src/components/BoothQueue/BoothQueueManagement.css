@@ -5,6 +5,21 @@
   /* compact container padding */
 }
 
+/* Group controls for better mobile layout */
+.booth-queue-management .serving-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.booth-queue-management .serving-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
 .booth-queue-management .management-header {
   display: flex;
   justify-content: space-between;
@@ -16,6 +31,11 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Remove extra spacing below header */
+.booth-queue-management .management-header + * {
+  margin-top: 0;
 }
 
 .booth-queue-management .booth-info {
@@ -156,6 +176,16 @@
   align-items: center;
   gap: 0.5rem;
   /* tighter controls */
+  flex-wrap: wrap;
+}
+
+/* Desktop: keep horizontal layout */
+.booth-queue-management .serving-controls-row {
+  display: contents;
+}
+
+.booth-queue-management .serving-controls-row label {
+  margin: 0;
 }
 
 .booth-queue-management .refresh-btn {
@@ -367,7 +397,7 @@
 }
 
 .queue-list h2 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
   font-size: 1.25rem;
   font-weight: 600;
   color: #1f2937;
@@ -1036,10 +1066,25 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
+  .booth-queue-management {
+    padding: 1rem;
+  }
+
   .booth-queue-management .management-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
     align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .booth-queue-management .booth-info {
+    width: 100%;
+  }
+
+  .booth-queue-management .serving-controls {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .booth-queue-management .queue-grid {
@@ -1047,34 +1092,374 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  .booth-queue-management {
+    padding: 0.75rem;
+  }
+
   .booth-queue-management .management-header {
-    padding: 0.6rem 0.75rem;
+    padding: 0.875rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+  }
+
+  .booth-queue-management .booth-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
 
   .booth-queue-management .booth-logo img {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
   }
 
-  .booth-queue-management .serving-controls {
-    flex-wrap: wrap;
-    justify-content: center;
+  .booth-queue-management .booth-info h1 {
+    font-size: 1rem;
+  }
+
+  .booth-queue-management .booth-info p {
+    font-size: 0.8125rem;
   }
 
   .booth-queue-management .header-stats {
-    gap: 8px;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
   }
 
-  .booth-queue-management .queue-stats {
-    grid-template-columns: 1fr;
+  .booth-queue-management .header-stat {
+    padding: 0.5rem 0.75rem;
   }
 
-  .booth-queue-management .queue-actions {
+  .booth-queue-management .header-stat .stat-label {
+    font-size: 10px;
+  }
+
+  .booth-queue-management .header-stat .stat-value {
+    font-size: 14px;
+  }
+
+  .booth-queue-management .serving-controls {
     flex-direction: column;
+    align-items: stretch;
+    gap: 0.625rem;
+    width: 100%;
   }
 
-  .booth-queue-management .queue-actions button {
-    flex: none;
+  /* First row: Online, Refresh, Reconnect */
+  .booth-queue-management .serving-controls-row:first-of-type {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .booth-queue-management .serving-controls-row:first-of-type .rt-badge {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .booth-queue-management .serving-controls-row:first-of-type .icon-btn {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Second row: Now Serving label and input */
+  .booth-queue-management .serving-controls-row:nth-of-type(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    width: 100%;
+  }
+
+  .booth-queue-management .serving-controls-row:nth-of-type(2) label {
+    display: block;
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .booth-queue-management .serving-controls-row:nth-of-type(2) .serving-input {
+    width: 100%;
+    padding: 0.5rem;
+  }
+
+  /* Third row: Update and Test Device buttons */
+  .booth-queue-management .serving-controls-row:last-of-type {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .booth-queue-management .serving-controls-row:last-of-type .update-serving-btn,
+  .booth-queue-management .serving-controls-row:last-of-type .test-device-btn {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    min-width: 0;
+  }
+
+  .queue-list h2 {
+    font-size: 1.125rem;
+  }
+
+  .queue-card {
+    border-radius: 6px;
+  }
+
+  .queue-card-header {
+    padding: 0.875rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .job-seeker-info {
+    width: 100%;
+  }
+
+  .queue-status {
+    align-self: flex-end;
+  }
+
+  .queue-details {
+    padding: 0.75rem 1rem;
+  }
+
+  .waiting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .queue-actions {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .queue-actions button {
+    width: 100%;
+    padding: 0.625rem;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .booth-queue-management {
+    padding: 0.5rem;
+  }
+
+  .booth-queue-management .management-header {
+    padding: 0.75rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .queue-list {
+    margin-top: 0.5rem;
+  }
+
+  .queue-list h2 {
+    margin-bottom: 0.625rem;
+  }
+
+  .booth-queue-management .booth-logo img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .booth-queue-management .booth-info h1 {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+  }
+
+  .booth-queue-management .booth-info p {
+    font-size: 0.75rem;
+  }
+
+  .booth-queue-management .header-stats {
+    gap: 0.375rem;
+    flex-wrap: wrap;
+  }
+
+  .booth-queue-management .header-stat {
+    padding: 0.375rem 0.625rem;
+    flex: 1;
+    min-width: calc(33.333% - 0.25rem);
+  }
+
+  .booth-queue-management .header-stat .stat-label {
+    font-size: 9px;
+  }
+
+  .booth-queue-management .header-stat .stat-value {
+    font-size: 13px;
+  }
+
+  .booth-queue-management .serving-controls {
+    gap: 0.5rem;
+  }
+
+  .booth-queue-management .serving-controls-row:first-of-type {
+    gap: 0.375rem;
+  }
+
+  .booth-queue-management .serving-controls-row:first-of-type .rt-badge {
+    padding: 0.5rem 0.625rem;
+    font-size: 11px;
+  }
+
+  .booth-queue-management .serving-controls-row:first-of-type .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .booth-queue-management .serving-controls-row:last-of-type {
+    gap: 0.375rem;
+  }
+
+  .booth-queue-management .serving-controls-row:last-of-type .update-serving-btn,
+  .booth-queue-management .serving-controls-row:last-of-type .test-device-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .booth-queue-management .icon-btn {
+    height: 38px;
+  }
+
+  .booth-queue-management .rt-badge {
+    font-size: 11px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .booth-queue-management .serving-input {
+    font-size: 0.875rem;
+    padding: 0.5rem;
+  }
+
+  .booth-queue-management .update-serving-btn,
+  .booth-queue-management .test-device-btn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .booth-queue-management .test-device-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .queue-list h2 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .empty-queue {
+    padding: 2rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .queue-card-header {
+    padding: 0.75rem;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .avatar-placeholder {
+    font-size: 1rem;
+  }
+
+  .job-seeker-info h3 {
+    font-size: 0.9375rem;
+  }
+
+  .job-seeker-name {
+    font-size: 0.8125rem;
+  }
+
+  .job-seeker-email {
+    font-size: 0.6875rem;
+  }
+
+  .status-badge {
+    font-size: 0.6875rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .queue-details {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .waiting-timer {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    min-width: 50px;
+  }
+
+  .detail-item {
+    font-size: 0.8125rem;
+  }
+
+  .queue-actions {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .queue-actions button {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-details-inline {
+    font-size: 0.6875rem;
+    padding: 0.3rem 0.5rem;
+    margin-left: 0.25rem;
+  }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+  .booth-queue-management .management-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .booth-queue-management .serving-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
+  }
+
+  .booth-queue-management .serving-controls > * {
+    width: auto;
+  }
+}
+
+/* Info banner responsive styles */
+@media (max-width: 768px) {
+  .info-banner {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    margin-bottom: 1.25rem !important;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-banner {
+    padding: 0.625rem 0.75rem !important;
+    font-size: 0.8125rem !important;
+    margin-bottom: 1rem !important;
+    line-height: 1.5;
+  }
+
+  .info-banner span {
+    display: block;
   }
 }
