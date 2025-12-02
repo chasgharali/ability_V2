@@ -78,9 +78,22 @@ router.get('/participants', authenticateToken, async (req, res) => {
             return res.status(403).json({ message: 'Your role does not have chat access' });
         }
 
-        // Global Support & Global Interpreter can reach all key operational roles
-        if (['GlobalSupport', 'GlobalInterpreter'].includes(currentUser.role)) {
+        // Global Support can reach all key operational roles
+        if (currentUser.role === 'GlobalSupport') {
             const targetRoles = ['GlobalSupport', 'GlobalInterpreter', 'Interpreter', 'Support', 'Recruiter'];
+
+            const globalReachUsers = await User.find({
+                role: { $in: targetRoles },
+                isActive: true,
+                _id: { $ne: currentUser._id }
+            }).select('name email avatarUrl role assignedBooth');
+
+            return res.json(globalReachUsers);
+        }
+
+        // Global Interpreter can only reach GlobalSupport and GlobalInterpreter
+        if (currentUser.role === 'GlobalInterpreter') {
+            const targetRoles = ['GlobalSupport', 'GlobalInterpreter'];
 
             const globalReachUsers = await User.find({
                 role: { $in: targetRoles },
