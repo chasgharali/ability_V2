@@ -61,6 +61,12 @@ const boothSchema = new mongoose.Schema({
         trim: true,
         match: [/^[a-z0-9-]+$/, 'Custom invite must be lowercase letters, numbers, and dashes only']
     },
+    // Custom join booth button link - if set, overrides the default queue link
+    joinBoothButtonLink: {
+        type: String,
+        default: '',
+        trim: true
+    },
     logoUrl: {
         type: String,
         default: null
@@ -206,6 +212,7 @@ boothSchema.methods.getSummary = function () {
         companyPage: this.companyPage,
         expireLinkTime: this.expireLinkTime,
         customInviteSlug: this.customInviteSlug,
+        joinBoothButtonLink: this.joinBoothButtonLink || '',
         status: this.status,
         isAvailableForQueue: this.isAvailableForQueue,
         queueId: this.queueId,
@@ -228,6 +235,7 @@ boothSchema.methods.getPublicInfo = function () {
         logoUrl: this.logoUrl,
         recruitersCount: this.recruitersCount,
         companyPage: this.companyPage,
+        joinBoothButtonLink: this.joinBoothButtonLink || '',
         isAvailableForQueue: this.isAvailableForQueue,
         estimatedWaitTime: this.settings.queueSettings.estimatedWaitTime,
         richSections: sections

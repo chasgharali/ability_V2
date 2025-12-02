@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
@@ -76,8 +76,19 @@ const AppLayout = ({ children }) => {
 function App() {
     const RequireAuth = ({ children }) => {
         const { user, loading } = useAuth();
+        const location = useLocation();
+        
         if (loading) return null; // could render a spinner if desired
-        if (!user) return <Navigate to="/login" replace />;
+        
+        if (!user) {
+            // Check if this is a queue invite link - store it for redirect after login
+            if (location.pathname.startsWith('/queue/')) {
+                const inviteSlug = location.pathname.replace('/queue/', '');
+                sessionStorage.setItem('pendingQueueInvite', inviteSlug);
+            }
+            // Pass the original location so login can redirect back
+            return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+        }
         return children;
     };
     return (

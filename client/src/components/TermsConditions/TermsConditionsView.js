@@ -12,6 +12,8 @@ const TermsConditionsView = () => {
     const [terms, setTerms] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [toggleLoading, setToggleLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(null);
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -20,6 +22,7 @@ const TermsConditionsView = () => {
     const fetchTerms = useCallback(async () => {
         try {
             setLoading(true);
+            setError(null);
             const data = await termsConditionsAPI.getById(id);
             setTerms(data.terms);
         } catch (err) {
@@ -36,17 +39,48 @@ const TermsConditionsView = () => {
 
     // Handle activate/deactivate
     const handleToggleActive = async () => {
+        if (!terms || toggleLoading) return;
+        
+        const wasActive = terms.isActive;
+        const action = wasActive ? 'deactivate' : 'activate';
+        
         try {
-            if (terms.isActive) {
-                await termsConditionsAPI.deactivate(id);
+            setToggleLoading(true);
+            setError(null);
+            setSuccessMessage(null);
+            
+            let response;
+            if (wasActive) {
+                response = await termsConditionsAPI.deactivate(id);
             } else {
-                await termsConditionsAPI.activate(id);
+                response = await termsConditionsAPI.activate(id);
             }
-            // Refresh the terms data
-            await fetchTerms();
+            
+            // Update terms state directly from response or refresh
+            if (response?.terms) {
+                setTerms(response.terms);
+            } else {
+                // Fallback: refresh the terms data
+                await fetchTerms();
+            }
+            
+            // Show success message
+            setSuccessMessage(`Terms and conditions ${action}d successfully`);
+            setTimeout(() => setSuccessMessage(null), 3000);
         } catch (err) {
-            setError(err.response?.data?.message || err.message || `Failed to ${terms.isActive ? 'deactivate' : 'activate'} terms and conditions`);
-            console.error(`Error ${terms.isActive ? 'deactivating' : 'activating'} terms:`, err);
+            const errorMessage = err?.response?.data?.message || 
+                               err?.response?.data?.error || 
+                               err?.message || 
+                               `Failed to ${action} terms and conditions`;
+            
+            setError(errorMessage);
+            console.error(`Error ${action}ing terms:`, err);
+            console.error('Error details:', err?.response?.data);
+            
+            // Clear error after 5 seconds
+            setTimeout(() => setError(null), 5000);
+        } finally {
+            setToggleLoading(false);
         }
     };
 
@@ -65,7 +99,7 @@ const TermsConditionsView = () => {
         );
     }
 
-    if (error) {
+    if (error && !terms) {
         return (
             <div className="dashboard">
                 <AdminHeader />
@@ -134,10 +168,15 @@ const TermsConditionsView = () => {
                                     </button>
                                     <button
                                         onClick={handleToggleActive}
+                                        disabled={toggleLoading}
                                         className={`dashboard-button ${terms.isActive ? 'secondary' : 'primary'}`}
-                                        style={{ width: 'auto' }}
+                                        style={{ width: 'auto', opacity: toggleLoading ? 0.6 : 1, cursor: toggleLoading ? 'not-allowed' : 'pointer' }}
                                     >
-                                        {terms.isActive ? (
+                                        {toggleLoading ? (
+                                            <>
+                                                <span>Processing...</span>
+                                            </>
+                                        ) : terms.isActive ? (
                                             <>
                                                 <MdCancel />
                                                 Deactivate
@@ -155,6 +194,18 @@ const TermsConditionsView = () => {
                     </div>
 
                     <div className="dashboard-content-area">
+                        {(error || successMessage) && (
+                            <div className={`terms-message ${error ? 'terms-error-message' : 'terms-success-message'}`} style={{
+                                marginBottom: '1.5rem',
+                                padding: '1rem 1.5rem',
+                                borderRadius: '8px',
+                                backgroundColor: error ? '#f8d7da' : '#d4edda',
+                                color: error ? '#721c24' : '#155724',
+                                border: `1px solid ${error ? '#f5c6cb' : '#c3e6cb'}`
+                            }}>
+                                {error || successMessage}
+                            </div>
+                        )}
                         <div className="terms-meta">
                             <div className="terms-title-section">
                                 <h2>{terms.title}</h2>
