@@ -350,15 +350,13 @@
 /* Role filter dropdown container - ensure no double borders and proper layout */
 .form-row {
   /* display: flex !important; */
-  align-items: flex-start !important;
+  align-items: center !important;
   gap: 12px !important;
 }
 
 .form-row > div {
-  width: 100%;
-  /* max-width: 200px; */
+  flex: 1;
   min-width: 200px;
-  flex-shrink: 0;
 }
 
 /* ========================================
@@ -403,8 +401,8 @@
 /* Ensure dropdown wrapper doesn't break */
 .role-filter-dropdown.e-dropdownlist {
     width: 100% !important;
-  max-width: 200px !important;
-  display: block !important;
+  display: flex !important;
+  align-items: center !important;
   box-sizing: border-box !important;
 }
 
@@ -412,7 +410,6 @@
 .role-filter-dropdown.e-dropdownlist {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
   width: 100% !important;
-  max-width: 200px !important;
 }
 
 /* Remove ALL borders from nested elements - be very aggressive */
@@ -445,7 +442,8 @@
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  min-height: 32px !important;
+  min-height: 44px !important;
+  height: 44px !important;
   padding: 0 !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -978,5 +976,87 @@ body .um-delete-dialog.e-dialog {
 .data-grid-container .e-grid .e-content {
     scrollbar-width: thin !important;
     scrollbar-color: #888 #f1f1f1 !important;
+}
+
+/* Search Box Styling - Single Row Layout */
+.form-row {
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    margin-bottom: 12px !important;
+    padding-left: 20px !important;
+}
+
+.form-row .form-field {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Ensure search input in form-row aligns properly */
+.form-row .form-field .form-input {
+    margin-bottom: 0 !important;
+    height: auto !important;
+}
+
+/* Ensure dropdown and search elements are vertically centered */
+.form-row > div,
+.form-row > .role-filter-dropdown,
+.form-row .form-field {
+    display: flex !important;
+    align-items: center !important;
+    vertical-align: middle !important;
+}
+
+.form-row .form-field .form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.form-row .form-field .form-input:focus {
+    outline: none;
+    border-color: #111111;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+}
+
+/* User Management Filters Row - Enhanced Styling */
+.um-filters-row {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    transition: box-shadow 0.2s ease;
+}
+
+.um-filters-row:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Fix alignment for search input in filter row */
+.um-filters-row .form-field {
+    margin-bottom: 0 !important;
+}
+
+.um-filters-row .um-search-input-no-label .form-field {
+    margin-bottom: 0 !important;
+}
+
+.um-filters-row .form-input {
+    height: 44px !important;
+    padding: 12px 16px !important;
+    box-sizing: border-box !important;
+    margin-bottom: 0 !important;
 }
 
