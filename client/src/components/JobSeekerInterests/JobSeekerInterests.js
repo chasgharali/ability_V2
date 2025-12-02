@@ -125,11 +125,15 @@ const JobSeekerInterests = () => {
         recruiterId: '',
         eventId: '',
         boothId: '',
+        search: '',
         page: 1,
         limit: 50,
         sortBy: 'createdAt',
         sortOrder: 'desc'
     });
+    
+    // Search query state for input field
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Statistics
     const [stats, setStats] = useState({
@@ -377,7 +381,7 @@ const JobSeekerInterests = () => {
             cancelled = true;
             fetchInProgress.current = false;
         };
-    }, [user, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, showToast]);
+    }, [user, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, filters.search, showToast]);
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({
@@ -388,15 +392,34 @@ const JobSeekerInterests = () => {
     };
 
     const clearFilters = () => {
+        setSearchQuery('');
         setFilters({
             recruiterId: '',
             eventId: '',
             boothId: '',
+            search: '',
             page: 1,
             limit: 50,
             sortBy: 'createdAt',
             sortOrder: 'desc'
         });
+    };
+    
+    const handleSearch = () => {
+        setFilters(prev => ({
+            ...prev,
+            search: searchQuery.trim(),
+            page: 1 // Reset to first page when searching
+        }));
+    };
+    
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setFilters(prev => ({
+            ...prev,
+            search: '',
+            page: 1
+        }));
     };
 
     const handlePageSizeChange = (newSize) => {
@@ -572,6 +595,64 @@ const JobSeekerInterests = () => {
                                 </div>
                             </div>
 
+                            {/* Search and Event Filter Row */}
+                            <div className="jsi-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                {/* Event Filter - Left */}
+                                <div style={{ width: '200px', flexShrink: 0 }}>
+                                    <DropDownListComponent
+                                        id="event-filter-dropdown-main"
+                                        dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
+                                        fields={{ value: 'value', text: 'text' }}
+                                        value={filters.eventId}
+                                        change={(e) => handleFilterChange('eventId', e.value || '')}
+                                        placeholder="Select Event"
+                                        cssClass="event-filter-dropdown"
+                                        popupHeight="300px"
+                                        width="100%"
+                                    />
+                                </div>
+                                {/* Search Section - Right */}
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+                                    <div style={{ marginBottom: 0 }}>
+                                        <Input
+                                            id="jsi-search-input"
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleSearch();
+                                                }
+                                            }}
+                                            placeholder="Search by name, email, or any field..."
+                                            style={{ width: '300px', marginBottom: 0 }}
+                                            className="jsi-search-input-no-label"
+                                        />
+                                    </div>
+                                    <ButtonComponent
+                                        cssClass="e-primary e-small"
+                                        onClick={handleSearch}
+                                        disabled={loadingData}
+                                        aria-label="Search job seeker interests"
+                                        style={{ minWidth: '80px', height: '44px' }}
+                                    >
+                                        Search
+                                    </ButtonComponent>
+                                    {(searchQuery || filters.search) && (
+                                        <ButtonComponent
+                                            cssClass="e-outline e-primary e-small"
+                                            onClick={handleClearSearch}
+                                            disabled={loadingData}
+                                            aria-label="Clear search"
+                                            style={{ minWidth: '70px', height: '44px' }}
+                                        >
+                                            Clear
+                                        </ButtonComponent>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Filters */}
                             <div className="filters-section">
                                 <div
@@ -590,7 +671,7 @@ const JobSeekerInterests = () => {
                                 >
                                     <h3>
                                         Filters
-                                        {(filters.recruiterId || filters.eventId || (user?.role !== 'Recruiter' && filters.boothId)) && (
+                                        {(filters.recruiterId || (user?.role !== 'Recruiter' && filters.boothId)) && (
                                             <span className="active-filters-indicator">●</span>
                                         )}
                                     </h3>
@@ -618,22 +699,6 @@ const JobSeekerInterests = () => {
                                                 />
                                             </div>
                                         )}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label htmlFor="event-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                                Event
-                                            </label>
-                                            <DropDownListComponent
-                                                id="event-filter-dropdown"
-                                                dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
-                                                fields={{ value: 'value', text: 'text' }}
-                                                value={filters.eventId}
-                                                change={(e) => handleFilterChange('eventId', e.value || '')}
-                                                placeholder="Select Event"
-                                                cssClass="filter-dropdown"
-                                                popupHeight="300px"
-                                                width="100%"
-                                            />
-                                        </div>
                                         {['Admin', 'GlobalSupport'].includes(user.role) && (
                                             <Input
                                                 label="Booth ID"
