@@ -773,18 +773,18 @@ export default function BoothQueueManagement() {
                       <div className="queue-card-header">
                         <div className="job-seeker-info">
                           <div className="avatar">
-                            {queueEntry.jobSeeker.avatarUrl ? (
+                            {queueEntry.jobSeeker?.avatarUrl ? (
                               <img src={queueEntry.jobSeeker.avatarUrl} alt="Profile" />
                             ) : (
                               <div className="avatar-placeholder">
-                                {queueEntry.jobSeeker.name?.charAt(0) || '?'}
+                                {queueEntry.jobSeeker?.name?.charAt(0) || '?'}
                               </div>
                             )}
                           </div>
                           <div>
                             <h3>Meeting no. {queueEntry.position}</h3>
-                            <p className="job-seeker-name">{queueEntry.jobSeeker.name || 'Unknown'}</p>
-                            <p className="job-seeker-email">{queueEntry.jobSeeker.email || 'N/A'}</p>
+                            <p className="job-seeker-name">{queueEntry.jobSeeker?.name || 'Unknown'}</p>
+                            <p className="job-seeker-email">{queueEntry.jobSeeker?.email || 'N/A'}</p>
                           </div>
                         </div>
 
@@ -1011,28 +1011,28 @@ export default function BoothQueueManagement() {
               {/* Profile Header */}
               <div className="profile-header">
                 <div className="profile-avatar">
-                  {selectedJobSeeker.jobSeeker.avatarUrl ? (
+                  {selectedJobSeeker.jobSeeker?.avatarUrl ? (
                     <img src={selectedJobSeeker.jobSeeker.avatarUrl} alt="Profile" />
                   ) : (
                     <div className="avatar-placeholder">
-                      {selectedJobSeeker.jobSeeker.name?.charAt(0) || '?'}
+                      {selectedJobSeeker.jobSeeker?.name?.charAt(0) || '?'}
                     </div>
                   )}
                   <div className="online-indicator"></div>
                 </div>
                 <div className="profile-info">
-                  <h2 className="profile-name">{selectedJobSeeker.jobSeeker.name || 'Unknown'}</h2>
-                  <p className="profile-email">{selectedJobSeeker.jobSeeker.email || 'N/A'}</p>
-                  {selectedJobSeeker.jobSeeker.phoneNumber && (
+                  <h2 className="profile-name">{selectedJobSeeker.jobSeeker?.name || 'Unknown'}</h2>
+                  <p className="profile-email">{selectedJobSeeker.jobSeeker?.email || 'N/A'}</p>
+                  {selectedJobSeeker.jobSeeker?.phoneNumber && (
                     <p className="profile-phone">{selectedJobSeeker.jobSeeker.phoneNumber}</p>
                   )}
-                  {(selectedJobSeeker.jobSeeker.city || selectedJobSeeker.jobSeeker.state) && (
+                  {(selectedJobSeeker.jobSeeker?.city || selectedJobSeeker.jobSeeker?.state) && (
                     <p className="profile-location">
-                      {[selectedJobSeeker.jobSeeker.city, selectedJobSeeker.jobSeeker.state, 'US'].filter(Boolean).join(', ')}
+                      {[selectedJobSeeker.jobSeeker?.city, selectedJobSeeker.jobSeeker?.state, 'US'].filter(Boolean).join(', ')}
                     </p>
                   )}
                   <div className="profile-actions">
-                    {selectedJobSeeker.jobSeeker.resumeUrl ? (
+                    {selectedJobSeeker.jobSeeker?.resumeUrl ? (
                       <a
                         href={selectedJobSeeker.jobSeeker.resumeUrl}
                         target="_blank"
@@ -1059,11 +1059,11 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">PROFESSIONAL HEADLINE</span>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.professionalHeadline || 'this is test headline'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.professionalHeadline || 'this is test headline'}</p>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">KEYWORDS & SKILLS</span>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.skills || 'mern dev'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.skills || 'mern dev'}</p>
                       </div>
                     </div>
                   </div>
@@ -1074,8 +1074,8 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">PRIMARY JOB EXPERIENCE</span>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.primaryJobExperience || 'Accounting / Finance'}</p>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.secondaryJobExperience || 'Administrative Services / Human Resources'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.primaryJobExperience || 'Accounting / Finance'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.secondaryJobExperience || 'Administrative Services / Human Resources'}</p>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">EMPLOYMENT TYPES</span>
@@ -1086,7 +1086,7 @@ export default function BoothQueueManagement() {
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">EXPERIENCE LEVEL</span>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.experienceLevel || 'Experienced (non-Manager)'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.experienceLevel || 'Experienced (non-Manager)'}</p>
                       </div>
                     </div>
                   </div>
@@ -1097,11 +1097,11 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">HIGHEST EDUCATION LEVEL</span>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.education || 'General Educational Development (GED)'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.education || 'General Educational Development (GED)'}</p>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">SECURITY CLEARANCE</span>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.securityClearance || 'None'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.securityClearance || 'None'}</p>
                       </div>
                     </div>
                   </div>
@@ -1120,7 +1120,7 @@ export default function BoothQueueManagement() {
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">VETERAN/MILITARY STATUS</span>
-                        <p>{selectedJobSeeker.jobSeeker.metadata?.veteranStatus || 'None'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.veteranStatus || 'None'}</p>
                       </div>
                     </div>
                   </div>
