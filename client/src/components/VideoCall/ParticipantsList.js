@@ -163,25 +163,12 @@ const ParticipantsList = ({
           if (!twilioParticipant) return; // Skip null/undefined entries
           const twilioIdentity = twilioParticipant.identity;
 
-          console.log('Processing Twilio participant:', {
-            identity: twilioIdentity,
-            sid: twilioParticipant.sid,
-            existingParticipants: Array.from(participantMap.entries()).map(([id, p]) => ({
-              id,
-              name: p.name,
-              email: p.email,
-              role: p.role
-            })),
-            emailToIdMap: Array.from(emailToIdMap.entries())
-          });
-
           // Try to find matching participant in map by email/ID
           let matchedId = null;
 
           // Check if this identity matches any email we've seen
           if (emailToIdMap.has(twilioIdentity)) {
             matchedId = emailToIdMap.get(twilioIdentity);
-            console.log('Matched by email map:', matchedId);
           } else {
             // Try to find by searching through existing participants
             for (const [id, participant] of participantMap.entries()) {
@@ -197,7 +184,6 @@ const ParticipantsList = ({
                 (participant.role === 'recruiter' && twilioIdentity.startsWith('recruiter_') && twilioIdentity.includes(id)) ||
                 (participant.role === 'jobseeker' && twilioIdentity.startsWith('jobseeker_') && twilioIdentity.includes(id))) {
                 matchedId = id;
-                console.log('Matched by search:', { matchedId, participant });
                 break;
               }
             }
@@ -206,7 +192,6 @@ const ParticipantsList = ({
           // If we found a match, update that participant's status
           if (matchedId && participantMap.has(matchedId)) {
             const existing = participantMap.get(matchedId);
-            console.log('Updating existing participant:', matchedId, 'from', existing.status, 'to connected');
             participantMap.set(matchedId, {
               ...existing,
               twilioConnected: true,
@@ -254,7 +239,6 @@ const ParticipantsList = ({
             }
 
             // Only add as new participant if no match found
-            console.warn('No match found for Twilio participant, adding as new:', twilioIdentity, 'role:', detectedRole || 'participant', 'name:', participantName);
             const transformedParticipant = {
               identity: twilioIdentity,
               email: participantEmail || twilioIdentity,
@@ -326,7 +310,6 @@ const ParticipantsList = ({
             const existing = roleMap.get(role);
             // Prefer the connected participant
             if (participant.twilioConnected && !existing.twilioConnected) {
-              console.log(`Replacing ${role} with connected version:`, { old: existing.name, new: participant.name });
               roleMap.set(role, participant);
             } else if (!participant.twilioConnected && !existing.twilioConnected) {
               // Both not connected, prefer the one with more complete data (has proper name)
@@ -359,7 +342,6 @@ const ParticipantsList = ({
       // Combine role-specific participants with interpreters
       const deduplicated = [...Array.from(roleMap.values()), ...interpreters];
 
-      console.log('Final participants after deduplication:', deduplicated);
       return deduplicated;
     } catch (error) {
       console.error('Error processing participants:', error);
