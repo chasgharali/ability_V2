@@ -35,13 +35,29 @@
   max-width: 100%;
 }
 
-/* Remote stream video specific styles */
+/* Remote stream video specific styles - applies to all remote participants (recruiters, job seekers, interpreters) */
+.video-participant.remote {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+}
+
 .video-participant.remote .video-container {
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 100% !important;
 }
 
 .video-participant.remote .participant-video {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+/* Ensure video element inside remote participant takes full width */
+.video-participant.remote video {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 100% !important;

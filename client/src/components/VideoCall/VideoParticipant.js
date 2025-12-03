@@ -107,11 +107,13 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
           const applyVideoStyles = () => {
             videoRef.current.style.width = '100%';
             videoRef.current.style.height = '100%';
-            videoRef.current.style.objectFit = 'cover';
+            // Use 'contain' for remote participants to maintain aspect ratio and fill width
+            // Use 'cover' for local participant to fill the container
+            videoRef.current.style.objectFit = isLocal ? 'cover' : 'contain';
             videoRef.current.style.position = 'absolute';
             videoRef.current.style.top = '0';
             videoRef.current.style.left = '0';
-            videoRef.current.style.maxWidth = 'none';
+            videoRef.current.style.maxWidth = isLocal ? 'none' : '100%';
             videoRef.current.style.maxHeight = 'none';
             videoRef.current.style.minWidth = '100%';
             videoRef.current.style.minHeight = '100%';
