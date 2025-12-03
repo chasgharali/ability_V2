@@ -183,12 +183,22 @@ export default function BoothQueueWaiting() {
           } catch (e) { }
         }
       } catch (e) {
-        // Silently fail - don't break the UI (404 is expected if not in queue)
+        // Handle 404 - if user is truly not in queue, redirect them
+        const is404 = e.response?.status === 404;
+        const shouldRedirect = e.response?.data?.shouldRedirect;
+        
+        if (is404 && shouldRedirect) {
+          // User is truly not in queue - redirect to queue entry page
+          console.log('User not in queue during periodic refresh, redirecting');
+          navigate(`/booth-queue/${eventSlug}/${boothId}/entry`, { replace: true });
+          return; // Exit early
+        }
+        // For other errors, silently fail - don't break the UI
       }
     }, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(refreshInterval);
-  }, [boothId, loading]);
+  }, [boothId, loading, eventSlug, navigate]);
 
   const loadData = async () => {
     try {
@@ -241,7 +251,19 @@ export default function BoothQueueWaiting() {
           // Do not reset to 0; retain last known value in UI for position
         }
       } catch (qErr) {
-        // Gracefully handle 404 Not Found (user not in queue after refresh)
+        // Handle 404 Not Found (user not in queue after refresh)
+        const is404 = qErr.response?.status === 404;
+        const shouldRedirect = qErr.response?.data?.shouldRedirect;
+        
+        if (is404 && shouldRedirect) {
+          // User is truly not in queue - redirect to queue entry page so they can rejoin
+          // This happens if entry was legitimately removed or never existed
+          console.log('User not in queue, redirecting to queue entry page');
+          navigate(`/booth-queue/${eventSlug}/${boothId}/entry`, { replace: true });
+          return; // Exit early to prevent further execution
+        }
+        
+        // For other errors or if backend says not to redirect, just reset state
         // Reset queueToken to prevent using token from wrong booth
         setQueueToken('');
         setQueueEntryId(null);

@@ -326,7 +326,19 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded.admin && (
               <div className="sidebar-items">
-                <button className={itemClass('queue')} onClick={() => handleItemClick(assignedBoothId ? `/booth-queue/manage/${assignedBoothId}` : '/boothmanagement')}>
+                <button 
+                  className={itemClass('queue')} 
+                  onClick={() => {
+                    if (assignedBoothId) {
+                      handleItemClick(`/booth-queue/manage/${assignedBoothId}`);
+                    } else {
+                      // Show error message instead of redirecting to admin page
+                      alert('No booth is assigned to your account. Please contact an administrator to assign a booth so you can manage your meeting queue.');
+                    }
+                  }}
+                  disabled={!assignedBoothId}
+                  title={!assignedBoothId ? 'No booth assigned. Please contact an administrator.' : ''}
+                >
                   Meeting Queue
                 </button>
                 <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>
