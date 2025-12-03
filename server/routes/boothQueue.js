@@ -294,7 +294,7 @@ router.post('/leave', authenticateToken, async (req, res) => {
         const queueEntry = await BoothQueue.findOne({
             jobSeeker: jobSeekerId,
             booth: boothId,
-            status: { $in: ['waiting', 'invited'] }
+            status: { $in: ['waiting', 'invited', 'in_meeting'] }
         });
 
         if (!queueEntry) {
@@ -486,20 +486,23 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
         let queueEntry = await BoothQueue.getJobSeekerQueue(jobSeekerId, boothId);
 
         // If not found, try to find ANY entry (including left ones) - user might have refreshed
-        // Even if they've been waiting for hours, if they refresh and check status, they're still waiting
+        // BUT: Only restore if entry was left very recently (within last 5 minutes) to prevent restoring
+        // entries when user explicitly left or navigated away
         if (!queueEntry) {
             // Restore entries that were incorrectly cleaned up, NOT legitimate leaves or recruiter removals
             // Criteria for restoration:
             // 1. Status is 'left' (not 'left_with_message', 'removed', or 'completed')
-            // 2. No active/ended call or completed meeting (evidence of legitimate leave)
-            // 3. User is actively checking status (they're still waiting)
-            // Note: We don't limit by time - if user refreshes after hours, they're still waiting
+            // 2. Left very recently (within 5 minutes) - indicates cleanup, not user action
+            // 3. No active/ended call or completed meeting (evidence of legitimate leave)
+            // 4. User is actively checking status (they're still waiting)
+            // Note: We limit by time to prevent restoring entries when user explicitly left
             // Note: 'removed' status means recruiter removed them - never restore those
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
             const leftEntry = await BoothQueue.findOne({
                 jobSeeker: jobSeekerId,
                 booth: boothId,
-                status: 'left' // Only restore 'left', NOT 'left_with_message' (legitimate leave) or 'removed' (recruiter removal)
-                // Don't limit by leftAt time - user might have been waiting for hours
+                status: 'left', // Only restore 'left', NOT 'left_with_message' (legitimate leave) or 'removed' (recruiter removal)
+                leftAt: { $gte: fiveMinutesAgo } // Only restore if left very recently (likely cleanup, not user action)
             })
             .populate('booth', 'company companyLogo')
             .populate('event', 'name logo')
@@ -800,7 +803,9 @@ router.post('/message-to-jobseeker/:queueId', authenticateToken, async (req, res
 
         // Emit socket event to job seeker
         if (req.app.get('io') && queueEntry.jobSeeker && queueEntry.jobSeeker._id) {
-            req.app.get('io').to(`user_${queueEntry.jobSeeker._id}`).emit('new-message-from-recruiter', {
+            // Use user:userId format to match socket handler room joining
+            const jobSeekerIdStr = queueEntry.jobSeeker._id.toString();
+            req.app.get('io').to(`user:${jobSeekerIdStr}`).emit('new-message-from-recruiter', {
                 queueId: queueEntry._id,
                 boothId: queueEntry.booth,
                 message: { type: 'text', content, sender: 'recruiter', createdAt: new Date() }
@@ -912,7 +917,10 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
 
         // Emit socket event to job seeker
         if (req.app.get('io')) {
-            req.app.get('io').to(`user_${jobSeekerId}`).emit('queue-invited-to-meeting', {
+            // Use user:userId format to match socket handler room joining
+            const io = req.app.get('io');
+            const jobSeekerIdStr = jobSeekerId.toString();
+            io.to(`user:${jobSeekerIdStr}`).emit('queue-invited-to-meeting', {
                 boothId,
                 userId: jobSeekerId,
                 meetingId: meeting._id,

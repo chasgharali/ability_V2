@@ -672,12 +672,122 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       speak("The call has ended. Thank you for your service.");
     }
 
-    // Disconnect from Twilio room FIRST to stop camera/mic immediately
+    console.log('🧹 Stopping camera/mic for job seeker (call ended by recruiter)...');
+
+    // Step 1: Detach all Twilio tracks from video elements FIRST (removes browser media indicator)
+    if (roomRef.current) {
+      try {
+        // Detach all local participant tracks from video elements
+        roomRef.current.localParticipant.tracks.forEach(publication => {
+          if (publication.track && typeof publication.track.detach === 'function') {
+            try {
+              console.log('Detaching local track from video elements:', publication.track.kind);
+              const elements = publication.track.detach();
+              elements.forEach(el => {
+                if (el && el.srcObject) {
+                  // Stop tracks in the detached element's stream
+                  if (el.srcObject instanceof MediaStream) {
+                    el.srcObject.getTracks().forEach(track => track.stop());
+                  }
+                  el.srcObject = null;
+                }
+              });
+            } catch (e) {
+              console.warn('Error detaching local track:', e);
+            }
+          }
+        });
+
+        // Detach all remote participant tracks from video elements
+        roomRef.current.participants.forEach(participant => {
+          participant.tracks.forEach(publication => {
+            if (publication.track && typeof publication.track.detach === 'function') {
+              try {
+                console.log('Detaching remote track from video elements:', publication.track.kind);
+                const elements = publication.track.detach();
+                elements.forEach(el => {
+                  if (el && el.srcObject) {
+                    if (el.srcObject instanceof MediaStream) {
+                      el.srcObject.getTracks().forEach(track => track.stop());
+                    }
+                    el.srcObject = null;
+                  }
+                });
+              } catch (e) {
+                console.warn('Error detaching remote track:', e);
+              }
+            }
+          });
+        });
+      } catch (e) {
+        console.warn('Error detaching tracks from video elements:', e);
+      }
+    }
+
+    // Step 2: Stop all local tracks from state (after detaching)
+    localTracks.forEach(track => {
+      if (track && typeof track.stop === 'function') {
+        try {
+          console.log('Stopping local track:', track.kind);
+          track.stop();
+        } catch (error) {
+          console.warn('Error stopping local track:', error);
+        }
+      }
+    });
+
+    // Step 3: Stop all MediaStream tracks directly from video elements (critical for camera/mic)
+    try {
+      const videoElements = document.querySelectorAll('video');
+      videoElements.forEach(video => {
+        if (video.srcObject) {
+          const stream = video.srcObject;
+          stream.getTracks().forEach(track => {
+            try {
+              console.log('Stopping media stream track:', track.kind, track.label);
+              track.stop();
+            } catch (e) {
+              console.warn('Error stopping media stream track:', e);
+            }
+          });
+          video.srcObject = null;
+        }
+        // Also pause the video element to ensure browser releases resources
+        if (video) {
+          video.pause();
+          video.load(); // Reset the video element
+        }
+      });
+
+      // Also clear audio elements if any
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        if (audio.srcObject) {
+          const stream = audio.srcObject;
+          stream.getTracks().forEach(track => {
+            try {
+              track.stop();
+            } catch (e) {
+              console.warn('Error stopping audio stream track:', e);
+            }
+          });
+          audio.srcObject = null;
+        }
+        if (audio) {
+          audio.pause();
+          audio.load(); // Reset the audio element
+        }
+      });
+    } catch (e) {
+      console.warn('Error stopping media stream tracks from video elements:', e);
+    }
+
+    // Step 4: Disconnect from Twilio room and unpublish tracks
     if (roomRef.current) {
       try {
         console.log('🔌 Disconnecting from Twilio room (call ended by recruiter)...');
 
-        // Stop and unpublish all local tracks
+        // Unpublish all local participant tracks
         roomRef.current.localParticipant.tracks.forEach(publication => {
           if (publication.track) {
             try {
@@ -701,10 +811,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       }
     }
 
-    // Wait a moment for disconnect to complete
+    // Step 4: Wait a moment for disconnect to complete
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    // Final cleanup
+    // Step 5: Final cleanup (socket, intervals, etc.)
     cleanupRemainingResources();
 
     // Role-based navigation when call is ended by another participant
@@ -1322,57 +1432,64 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const cleanupRemainingResources = () => {
-    if (isCleaningUpRef.current) {
-      console.log('⚠️ Cleanup already in progress, skipping...');
-      return;
-    }
+    const wasAlreadyCleaning = isCleaningUpRef.current;
     isCleaningUpRef.current = true;
 
-    console.log('🧹 Final cleanup of remaining resources...');
+    if (wasAlreadyCleaning) {
+      console.log('⚠️ Cleanup already in progress, but ensuring socket/intervals are cleaned up...');
+    } else {
+      console.log('🧹 Final cleanup of remaining resources...');
+    }
 
-    // Clear intervals
+    // Always clear intervals (even if cleanup was already in progress)
     if (qualityCheckIntervalRef.current) {
       clearInterval(qualityCheckIntervalRef.current);
+      qualityCheckIntervalRef.current = null;
     }
 
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
 
-    // Stop all local tracks
-    localTracks.forEach(track => {
-      if (track && typeof track.stop === 'function') {
-        try {
-          console.log('Stopping remaining local track:', track.kind);
-          track.stop();
-        } catch (error) {
-          console.warn('Error stopping local track:', error);
-        }
-      }
-    });
-
-    // Stop all media stream tracks directly from browser
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-        const videoElements = document.querySelectorAll('video');
-        videoElements.forEach(video => {
-          if (video.srcObject) {
-            const stream = video.srcObject;
-            stream.getTracks().forEach(track => {
-              console.log('Stopping media stream track:', track.kind, track.label);
-              track.stop();
-            });
-            video.srcObject = null;
+    // Stop all local tracks (only if not already stopped)
+    if (!wasAlreadyCleaning) {
+      localTracks.forEach(track => {
+        if (track && typeof track.stop === 'function') {
+          try {
+            console.log('Stopping remaining local track:', track.kind);
+            track.stop();
+          } catch (error) {
+            console.warn('Error stopping local track:', error);
           }
-        });
+        }
+      });
+
+      // Stop all media stream tracks directly from browser (only if not already stopped)
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+          const videoElements = document.querySelectorAll('video');
+          videoElements.forEach(video => {
+            if (video.srcObject) {
+              const stream = video.srcObject;
+              stream.getTracks().forEach(track => {
+                if (track.readyState !== 'ended') {
+                  console.log('Stopping media stream track:', track.kind, track.label);
+                  track.stop();
+                }
+              });
+              video.srcObject = null;
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Error stopping media stream tracks:', e);
       }
-    } catch (e) {
-      console.warn('Error stopping media stream tracks:', e);
+
+      setLocalTracks([]);
     }
 
-    setLocalTracks([]);
-
-    // Leave socket room
+    // Always leave socket room (even if cleanup was already in progress)
     if (socket && callInfo) {
       try {
         const roomName = callInfo.roomName || `call_${callInfo.id || callInfo.callId}`;

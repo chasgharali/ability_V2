@@ -123,6 +123,23 @@ export default function BoothQueueEntry() {
 
   const handleExit = () => {
     // Don't leave queue on exit from entry form - user hasn't joined yet
+    // Clear any sessionStorage data for this booth to prevent restoration logic from triggering
+    try {
+      
+      sessionStorage.removeItem(`queuePos_${boothId}`);
+      sessionStorage.removeItem(`serving_${boothId}`);
+      sessionStorage.removeItem(`queueToken_${boothId}`);
+    } catch (e) {
+      // Ignore sessionStorage errors
+    }
+    // Use eventSlug from URL params - same as how handleCallEnd and handleLeaveQueue work in BoothQueueWaiting
+    // This ensures we navigate to the same event page the user came from
+    if (!eventSlug) {
+      console.error('Cannot navigate: eventSlug is missing from URL params');
+      navigate('/events/registered', { replace: true });
+      return;
+    }
+    // Navigate exactly like handleCallEnd does - no replace, just direct navigation
     navigate(`/events/registered/${eventSlug}`);
   };
 
