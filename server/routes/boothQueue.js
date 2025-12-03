@@ -551,18 +551,33 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
             status: { $in: ['invited', 'in_meeting', 'completed'] }
         }) + 1;
 
-        // Check for active calls in this booth to detect job seekers currently in calls with other recruiters
+        // Check for active calls in this booth to detect job seekers currently in calls
+        // We'll check both: if job seeker has any active call, AND if there's an active call for this specific queue entry
         const jobSeekersInCall = await getJobSeekersInActiveCalls(boothId);
+        
+        // Get active video calls with queueEntry populated to check specific queue entries
+        const activeVideoCallsWithQueue = await VideoCall.find({
+            booth: mongoose.Types.ObjectId.isValid(boothId) ? new mongoose.Types.ObjectId(boothId) : boothId,
+            status: 'active'
+        }).select('queueEntry jobSeeker');
+
+        // Create a map of queue entry IDs that have active calls
+        const queueEntriesInCall = new Set();
+        activeVideoCallsWithQueue.forEach(call => {
+            if (call.queueEntry) {
+                queueEntriesInCall.add(call.queueEntry.toString());
+            }
+        });
 
         // Add isInCall flag to each queue entry
+        // Only mark as in call if there's an active call for THIS specific queue entry
+        // This allows recruiters to invite job seekers even if they have calls from other queue entries
         const queueWithCallStatus = queue.map(entry => {
             const entryObj = entry.toObject();
-            // Check if jobSeeker exists before accessing _id
-            if (entry.jobSeeker && entry.jobSeeker._id) {
-                entryObj.isInCall = jobSeekersInCall.has(entry.jobSeeker._id.toString());
-            } else {
-                entryObj.isInCall = false;
-            }
+            // Check if there's an active call for THIS specific queue entry
+            const hasCallForThisEntry = queueEntriesInCall.has(entry._id.toString());
+            // Also check if queue entry status is 'in_meeting' (most reliable indicator)
+            entryObj.isInCall = hasCallForThisEntry || entry.status === 'in_meeting';
             return entryObj;
         });
 

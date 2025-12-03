@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
@@ -108,7 +109,6 @@ export default function BoothQueueWaiting() {
     // Trigger voice loading immediately
     if ('speechSynthesis' in window) {
       window.speechSynthesis.getVoices();
-      console.log('✓ Speech synthesis available');
     } else {
       console.warn('⚠️ Speech synthesis not supported in this browser');
     }
@@ -183,8 +183,7 @@ export default function BoothQueueWaiting() {
           } catch (e) { }
         }
       } catch (e) {
-        // Silently fail - don't break the UI
-        console.warn('Failed to refresh queue status:', e);
+        // Silently fail - don't break the UI (404 is expected if not in queue)
       }
     }, 5000); // Refresh every 5 seconds
 
@@ -197,16 +196,12 @@ export default function BoothQueueWaiting() {
 
       // Load event and booth in parallel
       const [eventRes, boothRes] = await Promise.all([
-        fetch(`/api/events/slug/${eventSlug}`, {
-          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
-        }),
-        fetch(`/api/booths/${boothId}`, {
-          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
-        })
+        axios.get(`/api/events/slug/${eventSlug}`),
+        axios.get(`/api/booths/${boothId}`)
       ]);
 
-      const eventData = await eventRes.json();
-      const boothData = await boothRes.json();
+      const eventData = eventRes.data;
+      const boothData = boothRes.data;
 
       // Normalize event
       let extractedEvent = null;
@@ -247,7 +242,6 @@ export default function BoothQueueWaiting() {
         }
       } catch (qErr) {
         // Gracefully handle 404 Not Found (user not in queue after refresh)
-        console.warn('Queue status unavailable (likely not in queue):', qErr?.response?.status || qErr);
         // Reset queueToken to prevent using token from wrong booth
         setQueueToken('');
         setQueueEntryId(null);
@@ -288,8 +282,7 @@ export default function BoothQueueWaiting() {
         } catch (e) { }
       }
     } catch (e) {
-      // Silently fail - don't break the UI
-      console.warn('Failed to refresh queue status:', e);
+      // Silently fail - don't break the UI (404 is expected if not in queue)
     }
   };
 
@@ -438,8 +431,6 @@ export default function BoothQueueWaiting() {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
 
-      console.log('🗣️ Speaking:', text);
-
       // Create utterance
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
@@ -455,16 +446,20 @@ export default function BoothQueueWaiting() {
       }
 
       // Event handlers
+      // Speech event handlers (no console logs needed for normal operation)
       utterance.onstart = () => {
-        console.log('▶️ Speech started');
+        // Speech started
       };
 
       utterance.onend = () => {
-        console.log('✅ Speech completed');
+        // Speech completed
       };
 
       utterance.onerror = (event) => {
-        console.error('❌ Speech error:', event.error);
+        // Only log non-interrupted errors (interrupted is expected when speech is cancelled)
+        if (event.error !== 'interrupted') {
+          console.error('❌ Speech error:', event.error);
+        }
       };
 
       // Speak immediately
