@@ -12,6 +12,7 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: none;
 }
 
 .video-participant:hover {
@@ -29,7 +30,22 @@
 }
 
 .video-participant.remote {
-  border: 1px solid #555;
+  border: none;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Remote stream video specific styles */
+.video-participant.remote .video-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.video-participant.remote .participant-video {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  object-fit: contain !important;
 }
 
 /* Video Container */

@@ -14,6 +14,7 @@ import RatingModal from '../MeetingRecords/RatingModal';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import './BoothQueueManagement.css';
 import '../Dashboard/Dashboard.css';
 
@@ -22,6 +23,7 @@ export default function BoothQueueManagement() {
   const { user } = useAuth();
   const { getMessage } = useRoleMessages();
   const { socket } = useSocket();
+  const { booth: recruiterBooth, event: recruiterEvent } = useRecruiterBooth();
   
   // Get role message from context
   const infoBannerMessage = getMessage('meeting-queue', 'info-banner') || '';
@@ -74,16 +76,23 @@ export default function BoothQueueManagement() {
   }), [event]);
 
   useEffect(() => {
+    // Wait for recruiter booth to load if boothId is not in URL
+    if (!boothId && !recruiterBooth) {
+      return;
+    }
     loadData();
     joinSocketRoom();
     // Don't check for active calls automatically - only when recruiter creates one
 
     return () => {
       if (socket) {
-        socket.emit('leave-booth-management', { boothId, userId: user?._id });
+        const targetBoothId = boothId || recruiterBooth?._id;
+        if (targetBoothId) {
+          socket.emit('leave-booth-management', { boothId: targetBoothId, userId: user?._id });
+        }
       }
     };
-  }, [boothId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [boothId, recruiterBooth?._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ensure we (re)join socket rooms after the socket connects/reconnects
   useEffect(() => {
@@ -116,7 +125,7 @@ export default function BoothQueueManagement() {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [socket, boothId, user]);
+  }, [socket, boothId, recruiterBooth?._id, user]);
 
   // Check for active video call
   const checkActiveCall = async () => {
@@ -174,11 +183,20 @@ export default function BoothQueueManagement() {
     try {
       setLoading(true);
 
+      // Use boothId from URL if available, otherwise use recruiter's booth
+      const targetBoothId = boothId || recruiterBooth?._id;
+      
+      if (!targetBoothId) {
+        console.error('No booth ID available');
+        setLoading(false);
+        return;
+      }
+
       const [boothRes, queueRes] = await Promise.all([
-        fetch(`/api/booths/${boothId}`, {
+        fetch(`/api/booths/${targetBoothId}`, {
           headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
         }),
-        boothQueueAPI.getBoothQueue(boothId)
+        boothQueueAPI.getBoothQueue(targetBoothId)
       ]);
 
       const boothData = await boothRes.json();
@@ -186,12 +204,21 @@ export default function BoothQueueManagement() {
       if (boothRes.ok && boothData.booth) {
         setBooth(boothData.booth);
 
-        // Set event data if it's included in the response
+        // Set event data if it's included in the response, otherwise use from hook
         if (boothData.event) {
           setEvent(boothData.event);
+        } else if (recruiterEvent) {
+          setEvent(recruiterEvent);
         }
       } else {
         console.error('Failed to load booth:', boothData.message || boothData.error);
+        // Fallback to recruiter booth if API call fails
+        if (recruiterBooth) {
+          setBooth(recruiterBooth);
+          if (recruiterEvent) {
+            setEvent(recruiterEvent);
+          }
+        }
       }
 
       if (queueRes.success) {
@@ -203,14 +230,22 @@ export default function BoothQueueManagement() {
 
     } catch (error) {
       console.error('Error loading data:', error);
+      // Fallback to recruiter booth on error
+      if (recruiterBooth) {
+        setBooth(recruiterBooth);
+        if (recruiterEvent) {
+          setEvent(recruiterEvent);
+        }
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const joinSocketRoom = async () => {
-    if (!socket || !boothId || !user) {
-      console.warn('Cannot join socket rooms:', { socket: !!socket, boothId, user: !!user });
+    const targetBoothId = boothId || recruiterBooth?._id;
+    if (!socket || !targetBoothId || !user) {
+      console.warn('Cannot join socket rooms:', { socket: !!socket, boothId: targetBoothId, user: !!user });
       setToast('Cannot reconnect: Missing connection details');
       setTimeout(() => setToast(''), 3000);
       return;
@@ -218,10 +253,10 @@ export default function BoothQueueManagement() {
 
     try {
       setIsReconnecting(true);
-      console.log('Joining socket rooms for booth management:', { boothId, userId: user._id, userRole: user.role });
-      socket.emit('join-booth-management', { boothId, userId: user._id });
+      console.log('Joining socket rooms for booth management:', { boothId: targetBoothId, userId: user._id, userRole: user.role });
+      socket.emit('join-booth-management', { boothId: targetBoothId, userId: user._id });
       // Also join booth room to receive generic queue updates
-      socket.emit('join-booth-queue', { boothId, userId: user._id });
+      socket.emit('join-booth-queue', { boothId: targetBoothId, userId: user._id });
 
       // Add a small delay and then test the connection
       setTimeout(() => {
@@ -556,7 +591,8 @@ export default function BoothQueueManagement() {
   };
 
   const handleRemoveFromQueue = async (queueEntry) => {
-    if (window.confirm(`Remove ${queueEntry.jobSeeker.name} from the queue?`)) {
+    const jobSeekerName = queueEntry.jobSeeker?.name || 'this job seeker';
+    if (window.confirm(`Remove ${jobSeekerName} from the queue?`)) {
       try {
         await boothQueueAPI.removeFromQueue(queueEntry._id);
         loadData(); // Refresh queue
@@ -603,11 +639,15 @@ export default function BoothQueueManagement() {
   }
 
 
+  // Use booth/event from state if available, otherwise fallback to hook data
+  const displayBooth = booth || recruiterBooth;
+  const displayEvent = event || recruiterEvent;
+
   return (
     <div className="dashboard">
       <AdminHeader
-        brandingLogo={event?.logoUrl || event?.logo || ''}
-        secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+        brandingLogo={displayEvent?.logoUrl || displayEvent?.logo || ''}
+        secondaryLogo={displayBooth?.logoUrl || displayBooth?.companyLogo || ''}
       />
       <div className="dashboard-layout">
         <AdminSidebar active="booths" />
@@ -622,13 +662,13 @@ export default function BoothQueueManagement() {
             <div className="management-header">
               <div className="booth-info">
                 <div className="booth-logo">
-                  {(booth?.logoUrl || booth?.companyLogo) && (
-                    <img src={booth?.logoUrl || booth?.companyLogo} alt={`${booth?.name || booth?.company} logo`} />
+                  {(displayBooth?.logoUrl || displayBooth?.companyLogo) && (
+                    <img src={displayBooth?.logoUrl || displayBooth?.companyLogo} alt={`${displayBooth?.name || displayBooth?.company} logo`} />
                   )}
                 </div>
                 <div>
-                  <h1>{booth?.name || booth?.company} - Meeting Queue</h1>
-                  <p>{event?.name}</p>
+                  <h1>{displayBooth?.name || displayBooth?.company} - Meeting Queue</h1>
+                  <p>{displayEvent?.name}</p>
                   {/* Compact stats in header */}
                   <div className="header-stats">
                     <div className="header-stat">
@@ -719,7 +759,13 @@ export default function BoothQueueManagement() {
                 </div>
               ) : (
                 <div className="queue-grid">
-                  {queue.map((queueEntry) => (
+                  {queue.map((queueEntry) => {
+                    // Skip entries with null jobSeeker
+                    if (!queueEntry.jobSeeker) {
+                      return null;
+                    }
+                    
+                    return (
                     <div
                       key={queueEntry._id}
                       className={`queue-card ${queueEntry.status === 'left_with_message' ? 'left-message' : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? 'in-call' : queueEntry.position <= currentServing ? 'ready' : 'waiting'}`}
@@ -731,14 +777,14 @@ export default function BoothQueueManagement() {
                               <img src={queueEntry.jobSeeker.avatarUrl} alt="Profile" />
                             ) : (
                               <div className="avatar-placeholder">
-                                {queueEntry.jobSeeker.name.charAt(0)}
+                                {queueEntry.jobSeeker.name?.charAt(0) || '?'}
                               </div>
                             )}
                           </div>
                           <div>
                             <h3>Meeting no. {queueEntry.position}</h3>
-                            <p className="job-seeker-name">{queueEntry.jobSeeker.name}</p>
-                            <p className="job-seeker-email">{queueEntry.jobSeeker.email}</p>
+                            <p className="job-seeker-name">{queueEntry.jobSeeker.name || 'Unknown'}</p>
+                            <p className="job-seeker-email">{queueEntry.jobSeeker.email || 'N/A'}</p>
                           </div>
                         </div>
 
@@ -856,7 +902,8 @@ export default function BoothQueueManagement() {
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -947,7 +994,7 @@ export default function BoothQueueManagement() {
       )}
 
       {/* Job Seeker Profile Modal */}
-      {showDetails && selectedJobSeeker && (
+      {showDetails && selectedJobSeeker && selectedJobSeeker.jobSeeker && (
         <div className="modal-overlay">
           <div className="modal-content profile-modal">
             <div className="modal-header">
@@ -968,14 +1015,14 @@ export default function BoothQueueManagement() {
                     <img src={selectedJobSeeker.jobSeeker.avatarUrl} alt="Profile" />
                   ) : (
                     <div className="avatar-placeholder">
-                      {selectedJobSeeker.jobSeeker.name.charAt(0)}
+                      {selectedJobSeeker.jobSeeker.name?.charAt(0) || '?'}
                     </div>
                   )}
                   <div className="online-indicator"></div>
                 </div>
                 <div className="profile-info">
-                  <h2 className="profile-name">{selectedJobSeeker.jobSeeker.name}</h2>
-                  <p className="profile-email">{selectedJobSeeker.jobSeeker.email}</p>
+                  <h2 className="profile-name">{selectedJobSeeker.jobSeeker.name || 'Unknown'}</h2>
+                  <p className="profile-email">{selectedJobSeeker.jobSeeker.email || 'N/A'}</p>
                   {selectedJobSeeker.jobSeeker.phoneNumber && (
                     <p className="profile-phone">{selectedJobSeeker.jobSeeker.phoneNumber}</p>
                   )}

@@ -557,7 +557,12 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
         // Add isInCall flag to each queue entry
         const queueWithCallStatus = queue.map(entry => {
             const entryObj = entry.toObject();
-            entryObj.isInCall = jobSeekersInCall.has(entry.jobSeeker._id.toString());
+            // Check if jobSeeker exists before accessing _id
+            if (entry.jobSeeker && entry.jobSeeker._id) {
+                entryObj.isInCall = jobSeekersInCall.has(entry.jobSeeker._id.toString());
+            } else {
+                entryObj.isInCall = false;
+            }
             return entryObj;
         });
 
@@ -661,7 +666,7 @@ router.post('/message-to-jobseeker/:queueId', authenticateToken, async (req, res
         await queueEntry.updateActivity();
 
         // Emit socket event to job seeker
-        if (req.app.get('io')) {
+        if (req.app.get('io') && queueEntry.jobSeeker && queueEntry.jobSeeker._id) {
             req.app.get('io').to(`user_${queueEntry.jobSeeker._id}`).emit('new-message-from-recruiter', {
                 queueId: queueEntry._id,
                 boothId: queueEntry.booth,
