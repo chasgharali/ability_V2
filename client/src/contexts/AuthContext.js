@@ -16,6 +16,119 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Refresh auth token function
+    const refreshAuthToken = async () => {
+        const refreshToken = sessionStorage.getItem('refreshToken');
+        if (!refreshToken) {
+            throw new Error('No refresh token available');
+        }
+
+        try {
+            const response = await axios.post('/api/auth/refresh', {
+                refreshToken: refreshToken
+            });
+
+            const { tokens } = response.data;
+            sessionStorage.setItem('token', tokens.accessToken);
+            sessionStorage.setItem('refreshToken', tokens.refreshToken);
+            
+            return tokens.accessToken;
+        } catch (error) {
+            // Refresh failed, clear auth and redirect to login
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('refreshToken');
+            setUser(null);
+            window.location.href = '/login';
+            throw error;
+        }
+    };
+
+    // Set up axios interceptor for automatic token refresh
+    useEffect(() => {
+        let isRefreshingToken = false;
+        let failedQueue = [];
+
+        const processQueue = (error, token = null) => {
+            failedQueue.forEach(prom => {
+                if (error) {
+                    prom.reject(error);
+                } else {
+                    prom.resolve(token);
+                }
+            });
+            failedQueue = [];
+        };
+
+        // Request interceptor - add token to requests
+        const requestInterceptor = axios.interceptors.request.use(
+            (config) => {
+                const token = sessionStorage.getItem('token');
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+                return config;
+            },
+            (error) => {
+                return Promise.reject(error);
+            }
+        );
+
+        // Response interceptor - handle 401 errors and refresh token
+        const responseInterceptor = axios.interceptors.response.use(
+            (response) => {
+                return response;
+            },
+            async (error) => {
+                const originalRequest = error.config;
+
+                // Don't intercept refresh token requests to avoid infinite loops
+                if (originalRequest.url?.includes('/auth/refresh')) {
+                    return Promise.reject(error);
+                }
+
+                // If error is 401 and we haven't tried to refresh yet
+                if (error.response?.status === 401 && !originalRequest._retry) {
+                    if (isRefreshingToken) {
+                        // If already refreshing, queue this request
+                        return new Promise((resolve, reject) => {
+                            failedQueue.push({ resolve, reject });
+                        })
+                            .then(token => {
+                                originalRequest.headers.Authorization = `Bearer ${token}`;
+                                return axios(originalRequest);
+                            })
+                            .catch(err => {
+                                return Promise.reject(err);
+                            });
+                    }
+
+                    originalRequest._retry = true;
+                    isRefreshingToken = true;
+
+                    try {
+                        const newToken = await refreshAuthToken();
+                        processQueue(null, newToken);
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                        return axios(originalRequest);
+                    } catch (refreshError) {
+                        processQueue(refreshError, null);
+                        return Promise.reject(refreshError);
+                    } finally {
+                        isRefreshingToken = false;
+                    }
+                }
+
+                return Promise.reject(error);
+            }
+        );
+
+        // Cleanup interceptors on unmount
+        return () => {
+            axios.interceptors.request.eject(requestInterceptor);
+            axios.interceptors.response.eject(responseInterceptor);
+        };
+    }, []);
+
     // Check for existing token on mount
     useEffect(() => {
         const token = sessionStorage.getItem('token');
@@ -142,6 +255,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         updateProfile,
         changePassword,
+        refreshAuthToken,
         isAuthenticated: !!user
     };
 

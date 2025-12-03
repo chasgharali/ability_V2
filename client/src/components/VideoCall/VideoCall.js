@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { connect, createLocalVideoTrack, createLocalAudioTrack } from 'twilio-video';
+import { connect, createLocalVideoTrack, createLocalAudioTrack, Log } from 'twilio-video';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import videoCallService from '../../services/videoCall';
@@ -13,6 +13,11 @@ import CallInviteModal from './CallInviteModal';
 import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
 import './VideoCall.css';
 
+// Suppress Twilio console warnings and errors
+if (typeof Log !== 'undefined') {
+  Log.setLevel(Log.levels.OFF);
+}
+
 const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) => {
   const { callId: paramCallId } = useParams();
   const location = useLocation();
@@ -23,13 +28,6 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   // Use prop callData if provided, otherwise check navigation state
   const callData = propCallData || location.state?.callData;
-
-  console.log('🎬 VideoCall initialized:', {
-    callId,
-    hasCallData: !!callData,
-    callData,
-    locationState: location.state
-  });
 
   const { user } = useAuth();
   const { socket } = useSocket();
@@ -1143,12 +1141,6 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const inviteInterpreter = async (interpreterId, category) => {
     try {
       const callId = callInfo.id || callInfo.callId || callInfo._id;
-      console.log('📞 Inviting interpreter:', {
-        callId,
-        interpreterId,
-        category,
-        callInfo
-      });
       await videoCallService.inviteInterpreter(callId, interpreterId, category);
 
       // Show success message
@@ -1503,43 +1495,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     };
   }, [room, callStartTime]);
 
-  // Network quality monitoring
-  useEffect(() => {
-    if (!room) return;
-
-    const monitorNetworkQuality = () => {
-      // Monitor network quality for all participants
-      const participants = Array.from(room.participants.values());
-      let overallQuality = 5; // Start with excellent
-
-      participants.forEach(participant => {
-        participant.on('networkQualityLevelChanged', (networkQualityLevel) => {
-          if (networkQualityLevel < overallQuality) {
-            overallQuality = networkQualityLevel;
-          }
-        });
-      });
-
-      // Update connection quality based on network level
-      const getQualityString = (level) => {
-        if (level >= 4) return 'excellent';
-        if (level >= 3) return 'good';
-        if (level >= 2) return 'fair';
-        return 'poor';
-      };
-
-      setConnectionQuality(getQualityString(overallQuality));
-
-      // Simulate network stats (in real implementation, get from Twilio stats)
-      setNetworkStats({
-        latency: Math.floor(Math.random() * 100) + 50,
-        packetLoss: Math.floor(Math.random() * 5)
-      });
-    };
-
-    const interval = setInterval(monitorNetworkQuality, 5000);
-    return () => clearInterval(interval);
-  }, [room]);
+  // Network quality monitoring - removed duplicate monitoring that was causing MaxListenersExceededWarning
+  // Network quality is already handled by handleNetworkQualityChanged on the room level
 
   if (loading) {
     return (
@@ -1719,8 +1676,6 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       {isParticipantsOpen && (() => {
         const boothId = callInfo?.booth?._id || callInfo?.booth;
-        console.log('Rendering ParticipantsList with boothId:', boothId);
-        console.log('Full callInfo.booth:', callInfo?.booth);
         return (
           <ParticipantsList
             participants={{
