@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-function authHeaders() {
-  const token = sessionStorage.getItem('token');
-  return { Authorization: `Bearer ${token}` };
-}
+// Note: Auth headers are automatically added by axios interceptor in AuthContext
+// No need to manually add headers - the interceptor handles token refresh automatically
 
 const videoCallService = {
   /**
@@ -13,7 +11,7 @@ const videoCallService = {
    */
   createCall: async (queueId) => {
     try {
-      const response = await axios.post('/api/video-call/create', { queueId }, { headers: authHeaders() });
+      const response = await axios.post('/api/video-call/create', { queueId });
       return response.data;
     } catch (error) {
       console.error('Error creating video call:', error);
@@ -28,7 +26,7 @@ const videoCallService = {
    */
   joinCall: async (callId) => {
     try {
-      const response = await axios.post('/api/video-call/join', { callId }, { headers: authHeaders() });
+      const response = await axios.post('/api/video-call/join', { callId });
       return response.data;
     } catch (error) {
       console.error('Error joining video call:', error);
@@ -49,7 +47,7 @@ const videoCallService = {
         callId,
         interpreterId,
         interpreterCategory
-      }, { headers: authHeaders() });
+      });
       return response.data;
     } catch (error) {
       console.error('Error inviting interpreter:', error);
@@ -68,7 +66,7 @@ const videoCallService = {
       const response = await axios.post('/api/video-call/send-message', {
         callId,
         message
-      }, { headers: authHeaders() });
+      });
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -83,7 +81,7 @@ const videoCallService = {
    */
   leaveCall: async (callId) => {
     try {
-      const response = await axios.post('/api/video-call/leave', { callId }, { headers: authHeaders() });
+      const response = await axios.post('/api/video-call/leave', { callId });
       return response.data;
     } catch (error) {
       console.error('Error leaving video call:', error);
@@ -98,7 +96,7 @@ const videoCallService = {
    */
   endCall: async (callId) => {
     try {
-      const response = await axios.post('/api/video-call/end', { callId }, { headers: authHeaders() });
+      const response = await axios.post('/api/video-call/end', { callId });
       return response.data;
     } catch (error) {
       console.error('Error ending video call:', error);
@@ -112,7 +110,7 @@ const videoCallService = {
    */
   getActiveCall: async () => {
     try {
-      const response = await axios.get('/api/video-call/active', { headers: authHeaders() });
+      const response = await axios.get('/api/video-call/active');
       return response.data;
     } catch (error) {
       console.error('Error getting active call:', error);
@@ -127,7 +125,7 @@ const videoCallService = {
    */
   getCallDetails: async (callId) => {
     try {
-      const response = await axios.get(`/api/video-call/${callId}`, { headers: authHeaders() });
+      const response = await axios.get(`/api/video-call/${callId}`);
       return response.data;
     } catch (error) {
       console.error('Error getting call details:', error);

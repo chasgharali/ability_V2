@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useToast, ToastContainer } from '../common/Toast';
@@ -193,15 +194,13 @@ export default function BoothQueueManagement() {
       }
 
       const [boothRes, queueRes] = await Promise.all([
-        fetch(`/api/booths/${targetBoothId}`, {
-          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
-        }),
+        axios.get(`/api/booths/${targetBoothId}`),
         boothQueueAPI.getBoothQueue(targetBoothId)
       ]);
 
-      const boothData = await boothRes.json();
+      const boothData = boothRes.data;
 
-      if (boothRes.ok && boothData.booth) {
+      if (boothData && boothData.booth) {
         setBooth(boothData.booth);
 
         // Set event data if it's included in the response, otherwise use from hook
