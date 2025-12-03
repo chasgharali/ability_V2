@@ -239,6 +239,39 @@ export default function BoothQueueWaiting() {
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
           setUnreadCount(queueData.unreadMessages || 0);
+          
+          // Check if user is in a meeting - if so, fetch call data and show call interface
+          if (queueData.status === 'in_meeting' && queueData.queueEntry?.meetingId) {
+            try {
+              // Fetch video call data to join the meeting
+              const videoCallRes = await axios.get(`/api/video-call/by-queue/${queueData.queueEntry._id}`);
+              if (videoCallRes.data?.success && videoCallRes.data.videoCall) {
+                const callData = videoCallRes.data.videoCall;
+                // Set up call invitation data to show call interface
+                setCallInvitation({
+                  id: callData._id || callData.id,
+                  roomName: callData.roomName,
+                  accessToken: callData.jobSeekerToken || callData.accessToken,
+                  userRole: 'jobseeker',
+                  booth: queueData.queueEntry.booth,
+                  event: queueData.queueEntry.event,
+                  participants: {
+                    recruiter: callData.recruiter,
+                    jobSeeker: user
+                  },
+                  metadata: {
+                    interpreterRequested: !!queueData.queueEntry.interpreterCategory,
+                    interpreterCategory: queueData.queueEntry.interpreterCategory
+                  }
+                });
+                setIsInCall(true);
+              }
+            } catch (callErr) {
+              console.error('Error fetching video call data:', callErr);
+              // If we can't fetch call data, user might need to wait for invitation
+            }
+          }
+          
           try {
             sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -256,10 +289,10 @@ export default function BoothQueueWaiting() {
         const shouldRedirect = qErr.response?.data?.shouldRedirect;
         
         if (is404 && shouldRedirect) {
-          // User is truly not in queue - redirect to queue entry page so they can rejoin
+          // User is truly not in queue - redirect to event page
           // This happens if entry was legitimately removed or never existed
-          console.log('User not in queue, redirecting to queue entry page');
-          navigate(`/booth-queue/${eventSlug}/${boothId}/entry`, { replace: true });
+          console.log('User not in queue, redirecting to event page');
+          navigate(`/events/registered/${eventSlug}`, { replace: true });
           return; // Exit early to prevent further execution
         }
         
