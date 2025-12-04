@@ -79,34 +79,32 @@ export function useRecruiterBooth() {
                         });
                     }
                 } else {
-                    // No booth found for this user - try to get any booth as fallback
-                    console.log(`useRecruiterBooth: No booth found for this ${user.role}, trying fallback`);
+                    // No booth found for this user
+                    console.log(`useRecruiterBooth: No booth found for this ${user.role}`);
                     
-                    // Dynamic fallback: check if user has assignedBooth field
+                    // Global Interpreters should never have a booth - they are global
+                    if (user.role === 'GlobalInterpreter') {
+                        console.log('useRecruiterBooth: Global Interpreter - no booth assigned');
+                        setBoothInfo({
+                            booth: null,
+                            event: null,
+                            loading: false,
+                            error: null
+                        });
+                        return;
+                    }
+                    
+                    // For other roles, only try assignedBooth if it exists (don't fallback to random booth)
                     let fallbackBooth = null;
                     
-                    // 1. First try to use user's assignedBooth field if it exists
+                    // Only use user's assignedBooth field if it exists (for unassigned recruiters, this will be null)
                     if (user.assignedBooth) {
                         fallbackBooth = data.booths?.find(booth => booth._id === user.assignedBooth);
                         console.log('useRecruiterBooth: Found booth via user.assignedBooth:', fallbackBooth?.name);
                     }
                     
-                    // 2. If no assignedBooth or booth not found, use first available booth with logo
-                    if (!fallbackBooth) {
-                        fallbackBooth = data.booths?.find(booth => booth.logoUrl) || data.booths?.[0];
-                        console.log('useRecruiterBooth: Using first available booth:', fallbackBooth?.name);
-                    }
-                    
-                    console.log('useRecruiterBooth: Available booths:', data.booths?.map(b => ({ 
-                    name: b.name, 
-                    logoUrl: b.logoUrl, 
-                    administrators: b.administrators,
-                    _id: b._id 
-                })));
-                console.log('useRecruiterBooth: Current user ID:', user._id);
-                    
                     if (fallbackBooth) {
-                        console.log('useRecruiterBooth: Using fallback booth:', fallbackBooth.name);
+                        console.log('useRecruiterBooth: Using assignedBooth:', fallbackBooth.name);
                         // Get the full booth details including event
                         const boothResponse = await fetch(`/api/booths/${fallbackBooth._id}`, {
                             headers: {
@@ -116,7 +114,7 @@ export function useRecruiterBooth() {
 
                         if (boothResponse.ok) {
                             const boothData = await boothResponse.json();
-                            console.log('useRecruiterBooth: Fallback booth details:', boothData);
+                            console.log('useRecruiterBooth: Assigned booth details:', boothData);
                             setBoothInfo({
                                 booth: boothData.booth,
                                 event: boothData.event,
@@ -128,12 +126,12 @@ export function useRecruiterBooth() {
                                 booth: null,
                                 event: null,
                                 loading: false,
-                                error: 'Failed to fetch fallback booth details'
+                                error: 'Failed to fetch assigned booth details'
                             });
                         }
                     } else {
-                        // No booth found for this user
-                        console.log('useRecruiterBooth: No booths available at all');
+                        // No booth found for this user - don't use random booth as fallback
+                        console.log('useRecruiterBooth: No booth assigned to this user');
                         setBoothInfo({
                             booth: null,
                             event: null,

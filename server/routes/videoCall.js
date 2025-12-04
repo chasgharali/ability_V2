@@ -97,7 +97,16 @@ router.post('/create', auth, async (req, res) => {
 
     // Emit socket event to job seeker
     const io = req.app.get('io');
-    io.to(`user_${queueEntry.jobSeeker._id}`).emit('call_invitation', {
+    const jobSeekerId = queueEntry.jobSeeker._id.toString();
+    const userRoom = `user:${jobSeekerId}`;
+    
+    // Check if job seeker is in the socket room
+    const userRoomSockets = io.sockets.adapter.rooms.get(userRoom);
+    const usersInRoom = userRoomSockets ? userRoomSockets.size : 0;
+    console.log(`📞 Emitting call_invitation to room ${userRoom}, users in room: ${usersInRoom}`);
+    
+    // Emit to both room formats for compatibility
+    const invitationData = {
       callId: videoCall._id,
       roomName: roomName,
       recruiter: {
@@ -108,6 +117,17 @@ router.post('/create', auth, async (req, res) => {
       booth: queueEntry.booth,
       event: queueEntry.event,
       accessToken: jobSeekerToken
+    };
+    
+    io.to(userRoom).emit('call_invitation', invitationData);
+    // Also emit to legacy format just in case
+    io.to(`user_${jobSeekerId}`).emit('call_invitation', invitationData);
+    
+    console.log('✅ call_invitation emitted:', {
+      jobSeekerId,
+      callId: videoCall._id,
+      roomName,
+      usersInRoom
     });
 
     // Notify all recruiters in the booth that the queue entry status has changed
@@ -816,6 +836,66 @@ router.get('/active', auth, async (req, res) => {
   } catch (error) {
     console.error('Error getting active call:', error);
     res.status(500).json({ error: 'Failed to get active call' });
+  }
+});
+
+/**
+ * GET /api/video-call/by-queue/:queueEntryId
+ * Get active video call by queue entry ID
+ */
+router.get('/by-queue/:queueEntryId', auth, async (req, res) => {
+  try {
+    const { queueEntryId } = req.params;
+    const userId = req.user._id;
+
+    const videoCall = await VideoCall.findOne({
+      queueEntry: queueEntryId,
+      status: 'active'
+    })
+      .populate('recruiter jobSeeker event booth queueEntry interpreters.interpreter');
+
+    if (!videoCall) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Active video call not found for this queue entry' 
+      });
+    }
+
+    // Check if user has access to this call
+    const hasAccess = videoCall.recruiter._id.toString() === userId ||
+      videoCall.jobSeeker._id.toString() === userId ||
+      videoCall.interpreters.some(i => i.interpreter._id.toString() === userId);
+
+    if (!hasAccess) {
+      return res.status(403).json({ 
+        success: false,
+        error: 'Unauthorized access to call' 
+      });
+    }
+
+    // Generate access token for job seeker if they're the requester
+    let accessToken = null;
+    if (videoCall.jobSeeker._id.toString() === userId) {
+      accessToken = generateAccessToken(
+        `jobseeker_${userId}_${Date.now()}`,
+        videoCall.roomName
+      );
+    }
+
+    res.json({
+      success: true,
+      videoCall: {
+        ...videoCall.toObject(),
+        jobSeekerToken: accessToken
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting video call by queue entry:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get video call' 
+    });
   }
 });
 

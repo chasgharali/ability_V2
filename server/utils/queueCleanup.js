@@ -4,16 +4,20 @@ const { getIO } = require('../socket/socketHandler');
 
 /**
  * Clean up stale queue entries
- * Runs periodically to remove entries where users have disconnected
+ * Runs periodically to remove entries where users have truly disconnected
+ * Note: We use a 5-hour timeout to allow job seekers to wait for extended periods
+ * They will only be removed if they explicitly leave, join a meeting, or are inactive for 5+ hours
  */
 const cleanupStaleQueueEntries = async () => {
     try {
-        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        // Use 5 hours - job seekers can wait up to 5 hours before being considered inactive
+        // Only clean up entries that are truly abandoned (no activity for 5+ hours)
+        const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000);
 
-        // Find stale entries (waiting status, no activity for 30+ minutes)
+        // Find stale entries (waiting status, no activity for 5+ hours)
         const staleEntries = await BoothQueue.find({
             status: 'waiting',
-            lastActivity: { $lt: thirtyMinutesAgo }
+            lastActivity: { $lt: fiveHoursAgo }
         }).populate('jobSeeker', 'name email');
 
         if (staleEntries.length > 0) {

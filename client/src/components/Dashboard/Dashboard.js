@@ -485,7 +485,21 @@ const Dashboard = () => {
                             <div className="dashboard-card">
                                 <h3>Meeting Queue</h3>
                                 <p>View and manage job seeker queues</p>
-                                <button className="dashboard-button" disabled={!assignedBoothId} onClick={() => assignedBoothId ? navigate(`/booth-queue/manage/${assignedBoothId}`) : navigate('/boothmanagement')}>Manage Queue</button>
+                                <button 
+                                    className="dashboard-button" 
+                                    disabled={!assignedBoothId} 
+                                    onClick={() => {
+                                        if (assignedBoothId) {
+                                            navigate(`/booth-queue/manage/${assignedBoothId}`);
+                                        } else {
+                                            // Don't navigate to admin page - button is already disabled
+                                            alert('No booth is assigned to your account. Please contact an administrator to assign a booth so you can manage your meeting queue.');
+                                        }
+                                    }}
+                                    title={!assignedBoothId ? 'No booth assigned. Please contact an administrator.' : ''}
+                                >
+                                    Manage Queue
+                                </button>
                             </div>
                             <div className="dashboard-card">
                                 <h3>Meeting Records</h3>
