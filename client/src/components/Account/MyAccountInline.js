@@ -227,7 +227,7 @@ const extractPhoneNumber = (phoneNumber, countryCode) => {
   return phoneNumber.replace(/^\+/, '').trim();
 };
 
-export default function MyAccountInline({ user, onDone, updateProfile }) {
+export default function MyAccountInline({ user, onDone, updateProfile, changePassword }) {
   // Extract country code and phone number from existing phoneNumber
   const initialPhoneNumber = user?.phoneNumber || '';
   const initialCountryCode = extractCountryCode(initialPhoneNumber);
@@ -255,12 +255,78 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const toggle = (key) => (e) => setA11y(prev => ({ ...prev, [key]: !!e.target.checked }));
+
+  const onPasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    if (e) e.preventDefault();
+    setPasswordError('');
+    setPasswordMessage('');
+
+    // Validate passwords
+    if (!passwordForm.currentPassword) {
+      setPasswordError('Current password is required');
+      return;
+    }
+    if (!passwordForm.newPassword) {
+      setPasswordError('New password is required');
+      return;
+    }
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters long');
+      return;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:'",.<>?/~])/.test(passwordForm.newPassword)) {
+      setPasswordError('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (!changePassword) {
+      setPasswordError('Password change functionality is not available');
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      const result = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      if (result.success) {
+        setPasswordMessage(result.message || 'Password changed successfully');
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setPasswordError(result.error || 'Failed to change password');
+      }
+    } catch (err) {
+      setPasswordError('Failed to change password');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
 
   const handleNext = async (e) => {
     if (e) e.preventDefault();
@@ -508,6 +574,108 @@ export default function MyAccountInline({ user, onDone, updateProfile }) {
           </button>
         </div>
       </form>
+
+      {/* Update Password Section */}
+      {changePassword && (
+        <div className="password-update-section">
+          <h3 className="section-title">Update Password</h3>
+          
+          {passwordMessage && (
+            <div className="alert-box" role="status" aria-live="polite">{passwordMessage}</div>
+          )}
+          {passwordError && (
+            <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{passwordError}</div>
+          )}
+
+          <form onSubmit={handlePasswordUpdate} className="account-form password-form">
+            <div className="form-group">
+              <label htmlFor="currentPassword">Current Password *</label>
+              <div className="password-input-wrapper">
+                <input
+                  id="currentPassword"
+                  name="currentPassword"
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={passwordForm.currentPassword}
+                  onChange={onPasswordChange}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                >
+                  {showCurrentPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="newPassword">New Password *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="newPassword"
+                    name="newPassword"
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={passwordForm.newPassword}
+                    onChange={onPasswordChange}
+                    required
+                    autoComplete="new-password"
+                    aria-describedby="password-requirements"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                  >
+                    {showNewPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm New Password *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={passwordForm.confirmPassword}
+                    onChange={onPasswordChange}
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  >
+                    {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="password-requirements" className="field-help password-requirements">
+              Password must be at least 8 characters and contain: uppercase letter, lowercase letter, number, and special character.
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="ajf-btn ajf-btn-dark"
+                disabled={savingPassword}
+                aria-label="Update password"
+              >
+                {savingPassword ? 'Updating…' : 'Update Password'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

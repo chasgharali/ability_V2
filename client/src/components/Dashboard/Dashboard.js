@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component {
 }
 
 const Dashboard = () => {
-    const { user, logout, loading, updateProfile } = useAuth();
+    const { user, logout, loading, updateProfile, changePassword } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const { socket } = useSocket();
@@ -461,7 +461,7 @@ const Dashboard = () => {
                             </div>
                         )}
 
-                        <MyAccountInline user={user} updateProfile={updateProfile} />
+                        <MyAccountInline user={user} updateProfile={updateProfile} changePassword={changePassword} />
                     </div>
                 );
             case 'Recruiter':
