@@ -572,6 +572,42 @@ router.get('/live-stats', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
         const uniqueSessions = new Set(callParticipants.map(p => p.sessionId));
 
+        // Group participants by sessionId to create meetings
+        const meetingsMap = new Map();
+        callParticipants.forEach(participant => {
+            const sessionId = participant.sessionId;
+            if (!meetingsMap.has(sessionId)) {
+                meetingsMap.set(sessionId, {
+                    sessionId: sessionId,
+                    jobSeeker: null,
+                    recruiter: null,
+                    interpreter: null,
+                    boothName: participant.boothName || '—',
+                    boothId: participant.boothId,
+                    joinedAt: participant.joinedAt
+                });
+            }
+            
+            const meeting = meetingsMap.get(sessionId);
+            
+            // Assign participants by role
+            if (participant.role === 'JobSeeker') {
+                meeting.jobSeeker = participant.name || 'Unknown';
+            } else if (participant.role === 'Recruiter') {
+                meeting.recruiter = participant.name || 'Unknown';
+            } else if (participant.role === 'GlobalInterpreter' || participant.role === 'Interpreter') {
+                meeting.interpreter = participant.name || 'Unknown';
+            }
+            
+            // Use earliest join time
+            if (participant.joinedAt && (!meeting.joinedAt || new Date(participant.joinedAt) < new Date(meeting.joinedAt))) {
+                meeting.joinedAt = participant.joinedAt;
+            }
+        });
+
+        // Convert map to array
+        const meetings = Array.from(meetingsMap.values());
+
         // Queue stats (waiting job seekers)
         const queueMatch = {
             status: { $in: ['waiting', 'invited'] }
@@ -617,7 +653,8 @@ router.get('/live-stats', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             calls: {
                 totalParticipants: callParticipants.length,
                 totalSessions: uniqueSessions.size,
-                participants: callParticipants
+                participants: callParticipants,
+                meetings: meetings
             },
             queue: {
                 totalWaiting: queueData.length,

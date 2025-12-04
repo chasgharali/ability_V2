@@ -80,7 +80,8 @@ export default function JobSeekerManagement() {
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(''); // Input field value
+  // Use ref for search input to avoid re-renders on every keystroke
+  const searchInputRef = useRef(null);
   const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [statusFilter, setStatusFilter] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -206,12 +207,22 @@ export default function JobSeekerManagement() {
     // Apply filter icon styling
     applyFilterIcon();
     
-    // Watch for new filter icons being added
-    const observer = new MutationObserver(applyFilterIcon);
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true 
-    });
+    // Watch for new filter icons being added - ONLY observe the grid element, not entire body
+    // This prevents performance issues when typing in search field
+    let observer = null;
+    let debounceTimer = null;
+    const debouncedApplyFilterIcon = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(applyFilterIcon, 100);
+    };
+    
+    if (gridElement) {
+      observer = new MutationObserver(debouncedApplyFilterIcon);
+      observer.observe(gridElement, { 
+        childList: true, 
+        subtree: true 
+      });
+    }
     
     // Also apply after delays to catch grid render
     const timeoutId1 = setTimeout(applyFilterIcon, 500);
@@ -222,7 +233,8 @@ export default function JobSeekerManagement() {
       if (gridElement) {
         gridElement.removeEventListener('click', handleFilterIconClick, true);
       }
-      observer.disconnect();
+      if (observer) observer.disconnect();
+      if (debounceTimer) clearTimeout(debounceTimer);
       clearTimeout(timeoutId1);
       clearTimeout(timeoutId2);
     };
@@ -410,15 +422,15 @@ export default function JobSeekerManagement() {
       searchTimeoutRef.current = null;
     }
     
-    // Get search value from state
-    const searchValue = searchQuery.trim();
+    // Get search value from input ref (uncontrolled input for performance)
+    const searchValue = (searchInputRef.current?.value || '').trim();
     setActiveSearchQuery(searchValue);
     setSearchLoading(true);
     prevSearchFilter.current = searchValue;
     searchFilterRef.current = searchValue;
     setCurrentPage(1);
     loadJobSeekersRef.current(1, pageSize, searchValue, statusFilterRef.current);
-  }, [searchQuery, pageSize]);
+  }, [pageSize]);
 
   // No automatic search on typing - search only on button click or Enter key
 
@@ -454,6 +466,7 @@ export default function JobSeekerManagement() {
   // Sync header and content horizontal scrolling
   useEffect(() => {
     let scrollSyncActive = false;
+    let observerDebounceTimer = null;
 
     const syncScroll = () => {
       // Find all grids in Job Seeker Management - check multiple possible container classes
@@ -556,10 +569,20 @@ export default function JobSeekerManagement() {
     const timer3 = setTimeout(syncScroll, 1000);
     const timer4 = setTimeout(syncScroll, 2000);
     
-    const observer = new MutationObserver(() => {
-      setTimeout(syncScroll, 100);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Debounced sync for MutationObserver to prevent cascading updates
+    const debouncedSyncScroll = () => {
+      if (observerDebounceTimer) clearTimeout(observerDebounceTimer);
+      observerDebounceTimer = setTimeout(syncScroll, 150);
+    };
+    
+    // Only observe the grid container, not the entire document.body
+    // This prevents performance issues when typing in search field
+    let observer = null;
+    const gridWrap = document.querySelector('.bm-grid-wrap');
+    if (gridWrap) {
+      observer = new MutationObserver(debouncedSyncScroll);
+      observer.observe(gridWrap, { childList: true, subtree: true });
+    }
 
     // Also watch for window resize
     const handleResize = () => setTimeout(syncScroll, 100);
@@ -570,7 +593,8 @@ export default function JobSeekerManagement() {
       clearTimeout(timer2);
       clearTimeout(timer3);
       clearTimeout(timer4);
-      observer.disconnect();
+      if (observerDebounceTimer) clearTimeout(observerDebounceTimer);
+      if (observer) observer.disconnect();
       window.removeEventListener('resize', handleResize);
     };
   }, [jobSeekers]);
@@ -1913,14 +1937,14 @@ export default function JobSeekerManagement() {
                   width="100%"
                 />
               </div>
-              {/* Search Section - Right */}
+              {/* Search Section - Right - Using uncontrolled input for performance */}
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                 <div style={{ marginBottom: 0 }}>
-                  <Input
+                  <input
+                    ref={searchInputRef}
                     id="jobseeker-search-input"
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    defaultValue=""
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1928,8 +1952,15 @@ export default function JobSeekerManagement() {
                       }
                     }}
                     placeholder="Search by name, email, or any field..."
-                    style={{ width: '300px', marginBottom: 0 }}
-                    className="jsm-search-input-no-label"
+                    style={{ 
+                      width: '300px', 
+                      padding: '10px 12px',
+                      fontSize: '14px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px',
+                      outline: 'none'
+                    }}
+                    className="jsm-search-input-native"
                   />
                 </div>
                 <ButtonComponent
@@ -1941,11 +1972,13 @@ export default function JobSeekerManagement() {
                 >
                   {searchLoading ? 'Searching...' : 'Search'}
                 </ButtonComponent>
-                {(searchQuery || activeSearchQuery) && (
+                {activeSearchQuery && (
                   <ButtonComponent
                     cssClass="e-outline e-primary e-small"
                     onClick={() => {
-                      setSearchQuery('');
+                      if (searchInputRef.current) {
+                        searchInputRef.current.value = '';
+                      }
                       setActiveSearchQuery('');
                       // loadJobSeekers will be called automatically via useEffect when activeSearchQuery changes
                     }}

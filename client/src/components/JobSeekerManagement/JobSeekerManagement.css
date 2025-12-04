@@ -2184,3 +2184,30 @@ body .jsm-delete-dialog.e-dialog {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
+
+/* Native Search Input - for performance (uncontrolled) */
+.jsm-search-input-native {
+  width: 300px;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #fff;
+  color: #374151;
+}
+
+.jsm-search-input-native:focus {
+  border-color: #111111;
+  box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.1);
+}
+
+.jsm-search-input-native:hover {
+  border-color: #9ca3af;
+}
+
+.jsm-search-input-native::placeholder {
+  color: #9ca3af;
+}
