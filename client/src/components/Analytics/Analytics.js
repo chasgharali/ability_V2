@@ -596,23 +596,25 @@ export default function Analytics() {
 
                                                 <div className="live-stats-section">
                                                     <h2>Users in Calls</h2>
-                                                    {liveStats.calls?.participants?.length ? (
+                                                    {liveStats.calls?.meetings?.length ? (
                                                         <table className="data-table live-stats-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>Name</th>
-                                                                    <th>Role</th>
+                                                                    <th>Job Seeker</th>
+                                                                    <th>Recruiter</th>
+                                                                    <th>Interpreter</th>
                                                                     <th>Booth</th>
                                                                     <th>Joined</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {liveStats.calls.participants.map(participant => (
-                                                                    <tr key={`${participant.sessionId}-${participant.userId}`}>
-                                                                        <td>{participant.name || 'Unknown'}</td>
-                                                                        <td>{participant.role}</td>
-                                                                        <td>{participant.boothName || '—'}</td>
-                                                                        <td>{formatDateTime(participant.joinedAt)}</td>
+                                                                {liveStats.calls.meetings.map(meeting => (
+                                                                    <tr key={meeting.sessionId}>
+                                                                        <td>{meeting.jobSeeker || '—'}</td>
+                                                                        <td>{meeting.recruiter || '—'}</td>
+                                                                        <td>{meeting.interpreter || '—'}</td>
+                                                                        <td>{meeting.boothName || '—'}</td>
+                                                                        <td>{formatDateTime(meeting.joinedAt)}</td>
                                                                     </tr>
                                                                 ))}
                                                             </tbody>

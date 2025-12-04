@@ -32,26 +32,31 @@ export default function RegisteredEventDetail() {
           const eventBooths = boothsRes?.booths || [];
           setBooths(eventBooths);
           
-          // Fetch existing interests
-          try {
-            const interestsRes = await jobSeekerInterestsAPI.getMyInterests(evt._id);
-            const interestMap = {};
-            interestsRes.interests?.forEach(interest => {
-              interestMap[interest.booth._id] = interest;
-            });
-            setInterests(interestMap);
-          } catch (error) {
-            console.warn('Failed to fetch interests:', error);
+          // Fetch existing interests (only for JobSeekers)
+          if (user?.role === 'JobSeeker') {
+            try {
+              const interestsRes = await jobSeekerInterestsAPI.getMyInterests(evt._id);
+              const interestMap = {};
+              interestsRes.interests?.forEach(interest => {
+                interestMap[interest.booth._id] = interest;
+              });
+              setInterests(interestMap);
+            } catch (error) {
+              // Only log if it's not a 403 (forbidden) error, as that's expected for non-JobSeekers
+              if (error.response?.status !== 403) {
+                console.warn('Failed to fetch interests:', error);
+              }
+            }
           }
         }
       } finally {
         setFetching(false);
       }
     })();
-  }, [slug, loading]);
+  }, [slug, loading, user]);
 
   const handleInterestToggle = async (booth) => {
-    if (!event || !user) return;
+    if (!event || !user || user.role !== 'JobSeeker') return;
     
     const boothId = booth._id;
     setSavingInterest(prev => ({ ...prev, [boothId]: true }));

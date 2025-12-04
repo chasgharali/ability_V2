@@ -480,3 +480,90 @@
     transition: none;
   }
 }
+
+/* Password Update Section */
+.password-update-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.password-update-section .section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #000000;
+  letter-spacing: -0.025em;
+}
+
+.password-form {
+  max-width: 100%;
+  width: 100%;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 3rem;
+  width: 100%;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 1rem;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+  line-height: 1;
+}
+
+.password-toggle-btn:hover {
+  opacity: 1;
+}
+
+.password-toggle-btn:focus {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.password-requirements {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 4px;
+  border-left: 3px solid #000000;
+}
+
+/* Alert box styles */
+.alert-box {
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+/* Section note styles */
+.section-note {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 1.5rem 0;
+  font-weight: 400;
+  font-style: italic;
+}

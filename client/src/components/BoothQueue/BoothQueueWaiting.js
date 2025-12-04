@@ -601,15 +601,38 @@ export default function BoothQueueWaiting() {
   const handleNewMessageFromRecruiter = (data) => {
     if (data.queueId === queueEntryId || data.boothId === boothId) {
       playNotificationSound();
-      // Show toast that stays until manually closed
-      showInfo('New message from recruiter', 0); // 0 means no auto-dismiss
+      showInfo('New message from recruiter', 0);
 
-      // If chat modal is open, add message to chat and scroll
+      setMessages(prev => {
+        const incomingCreatedAt = data.message.createdAt instanceof Date 
+          ? data.message.createdAt.getTime() 
+          : new Date(data.message.createdAt).getTime();
+        
+        const isDuplicate = prev.some(msg => {
+          if (msg._id && data.message._id) {
+            return msg._id.toString() === data.message._id.toString();
+          }
+          
+          const msgCreatedAt = msg.createdAt instanceof Date 
+            ? msg.createdAt.getTime() 
+            : new Date(msg.createdAt).getTime();
+          
+          const timeDiff = Math.abs(msgCreatedAt - incomingCreatedAt);
+          return msg.content === data.message.content && 
+                 msg.sender === data.message.sender &&
+                 timeDiff < 5000;
+        });
+        
+        if (isDuplicate) {
+          return prev;
+        }
+        
+        return [...prev, data.message];
+      });
+      
       if (showTextMessagingModal) {
-        setMessages(prev => [...prev, data.message]);
         setTimeout(scrollToBottom, 100);
       } else {
-        // If modal is closed, increment unread counter
         setUnreadCount(prev => prev + 1);
       }
     }
@@ -882,7 +905,28 @@ export default function BoothQueueWaiting() {
     try {
       const response = await boothQueueAPI.getMessages(queueEntryId);
       if (response.success) {
-        setMessages(response.messages || []);
+        const apiMessages = response.messages || [];
+        
+        // Merge with existing messages to avoid losing any that arrived via socket
+        setMessages(prev => {
+          const mergedMessages = [...apiMessages];
+          const existingIds = new Set(apiMessages.map(m => m._id || `${m.content}-${m.createdAt}-${m.sender}`));
+          
+          prev.forEach(msg => {
+            const msgId = msg._id || `${msg.content}-${msg.createdAt}-${msg.sender}`;
+            if (!existingIds.has(msgId)) {
+              mergedMessages.push(msg);
+            }
+          });
+          
+          // Sort by timestamp to ensure correct order
+          return mergedMessages.sort((a, b) => {
+            const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+            const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+            return timeA - timeB;
+          });
+        });
+        
         setUnreadCount(0); // Mark as read when viewing
         // Scroll to bottom after messages load
         setTimeout(scrollToBottom, 100);
