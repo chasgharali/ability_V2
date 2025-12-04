@@ -40,11 +40,14 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const resumeInputRef = useRef(null);
   const avatarInputRef = useRef(null);
+  const topRef = useRef(null);
+  const successMessageRef = useRef(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
@@ -277,6 +280,16 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     };
   }, [pendingAvatarPreview]);
 
+  // Auto-clear success message after 10 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 10000); // Clear after 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -423,6 +436,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setSuccessMessage(''); // Clear any previous success message
     try {
       const payload = {
         profile: {
@@ -441,13 +455,38 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         method: 'PUT',
         body: JSON.stringify(payload)
       });
-      showToast('Profile saved', 'success');
+      
+      // Set success message and scroll to top
+      setSuccessMessage('Profile updated successfully!');
+      
+      // Scroll to top smoothly
+      setTimeout(() => {
+        if (topRef.current) {
+          topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Focus on success message for screen readers after scroll
+          setTimeout(() => {
+            if (successMessageRef.current) {
+              successMessageRef.current.focus();
+            }
+          }, 300);
+        } else {
+          // Fallback: scroll window to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setTimeout(() => {
+            if (successMessageRef.current) {
+              successMessageRef.current.focus();
+            }
+          }, 300);
+        }
+      }, 100);
+      
       // Call onDone callback if provided (for wizard navigation)
       if (onDone) {
         onDone();
       }
     } catch (e) {
       showToast('Failed to save', 'error');
+      setSuccessMessage(''); // Clear success message on error
     } finally {
       setSaving(false);
     }
@@ -455,8 +494,33 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
   return (
     <div className="dashboard-content">
+      <div ref={topRef} style={{ position: 'absolute', top: 0 }} aria-hidden="true" />
       {toast.visible && (
         <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
+      )}
+      {successMessage && (
+        <div 
+          ref={successMessageRef}
+          className="success-message" 
+          role="alert" 
+          aria-live="assertive"
+          tabIndex={-1}
+          style={{
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            backgroundColor: '#d1fae5',
+            border: '2px solid #10b981',
+            borderRadius: '8px',
+            color: '#065f46',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <span style={{ fontSize: '1.25rem' }}>✓</span>
+          <span>{successMessage}</span>
+        </div>
       )}
       <h2>My Profile</h2>
       <p className="section-note">Edit the form below to update your profile information.</p>
@@ -542,7 +606,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
                 }}
                 aria-label="New profile picture preview"
               />
-              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Preview - Confirm to upload</p>
+              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Click Upload to Preview</p>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button 
                   type="button" 
@@ -606,8 +670,33 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         <p className="section-note">An asterisk (*) indicates a required field.</p>
 
         <div className="form-group">
-          <label htmlFor="headline">* Your Headline</label>
-          <input id="headline" name="headline" value={form.headline} onChange={onChange} placeholder="Make a brief statement about yourself. Max 150 characters" />
+          <div className="label-with-counter">
+            <label htmlFor="headline">* Your Headline</label>
+            <span 
+              className={`char-counter ${
+                form.headline.length > 150 ? 'char-counter-over' :
+                form.headline.length >= 145 ? 'char-counter-danger' :
+                form.headline.length >= 140 ? 'char-counter-warning' :
+                form.headline.length > 130 ? 'char-counter-caution' : ''
+              }`}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {form.headline.length}/150 characters
+            </span>
+          </div>
+          <input 
+            id="headline" 
+            name="headline" 
+            value={form.headline} 
+            onChange={onChange} 
+            placeholder="Make a brief statement about yourself" 
+            maxLength={150}
+            aria-describedby="headline-hint"
+          />
+          <span id="headline-hint" className="visually-hidden">
+            Maximum 150 characters. Currently {form.headline.length} of 150 characters used.
+          </span>
         </div>
 
         <div className="form-group">

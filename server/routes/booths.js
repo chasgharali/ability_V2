@@ -180,7 +180,7 @@ router.get('/invite/:slug', authenticateToken, async (req, res) => {
  */
 router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('name').isString().trim().isLength({ min: 2, max: 200 }),
-    body('description').optional().isString().isLength({ max: 1000 }),
+    body('description').optional().isString(),
     body('logoUrl').optional().isURL(),
     body('companyPage').optional().isURL(),
     body('recruitersCount').optional().isInt({ min: 1 }),
@@ -343,9 +343,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .withMessage('Booth name must be between 2 and 200 characters'),
     body('description')
         .optional()
-        .trim()
-        .isLength({ max: 1000 })
-        .withMessage('Description cannot exceed 1000 characters'),
+        .trim(),
     body('logoUrl')
         .optional()
         .isURL()
