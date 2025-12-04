@@ -606,7 +606,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
                 }}
                 aria-label="New profile picture preview"
               />
-              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Preview - Confirm to upload</p>
+              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Click Upload to Preview</p>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button 
                   type="button" 

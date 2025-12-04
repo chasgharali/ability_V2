@@ -615,7 +615,15 @@ router.post('/change-password', authenticateToken, [
         }
 
         const { currentPassword, newPassword } = req.body;
-        const { user } = req;
+        
+        // Re-fetch user with password fields (authenticateToken middleware excludes them)
+        const user = await User.findById(req.user._id).select('+hashedPassword +legacyPassword');
+        if (!user) {
+            return res.status(404).json({
+                error: 'User not found',
+                message: 'User account not found'
+            });
+        }
 
         // Verify current password
         const isCurrentPasswordValid = await user.comparePassword(currentPassword);
