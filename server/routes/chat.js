@@ -86,7 +86,9 @@ router.get('/participants', authenticateToken, async (req, res) => {
                 role: { $in: targetRoles },
                 isActive: true,
                 _id: { $ne: currentUser._id }
-            }).select('name email avatarUrl role assignedBooth');
+            })
+            .select('name email avatarUrl role assignedBooth')
+            .populate('assignedBooth', 'name company');
 
             return res.json(globalReachUsers);
         }
@@ -99,7 +101,9 @@ router.get('/participants', authenticateToken, async (req, res) => {
                 role: { $in: targetRoles },
                 isActive: true,
                 _id: { $ne: currentUser._id }
-            }).select('name email avatarUrl role assignedBooth');
+            })
+            .select('name email avatarUrl role assignedBooth')
+            .populate('assignedBooth', 'name company');
 
             // Ensure we only return GlobalSupport and GlobalInterpreter (explicitly exclude Support)
             const filteredUsers = globalReachUsers.filter(user =>
@@ -117,7 +121,9 @@ router.get('/participants', authenticateToken, async (req, res) => {
                 role: { $in: ['Recruiter', 'Interpreter', 'Support'] },
                 isActive: true,
                 _id: { $ne: currentUser._id }
-            }).select('name email avatarUrl role assignedBooth');
+            })
+            .select('name email avatarUrl role assignedBooth')
+            .populate('assignedBooth', 'name company');
 
             participants.push(...boothUsers);
         }
@@ -275,7 +281,14 @@ router.post('/:chatId/messages', authenticateToken, async (req, res) => {
         });
 
         const populatedMessage = await Message.findById(message._id)
-            .populate('sender', 'name email avatarUrl role');
+            .populate({
+                path: 'sender',
+                select: 'name email avatarUrl role assignedBooth',
+                populate: {
+                    path: 'assignedBooth',
+                    select: 'name company'
+                }
+            });
 
         // Update chat's last message
         chat.lastMessage = {
@@ -333,7 +346,14 @@ router.put('/messages/:messageId', authenticateToken, async (req, res) => {
         await message.markAsEdited();
 
         const populatedMessage = await Message.findById(message._id)
-            .populate('sender', 'name email avatarUrl role');
+            .populate({
+                path: 'sender',
+                select: 'name email avatarUrl role assignedBooth',
+                populate: {
+                    path: 'assignedBooth',
+                    select: 'name company'
+                }
+            });
 
         res.json(populatedMessage);
     } catch (error) {

@@ -246,6 +246,15 @@
     color: #94a3b8;
 }
 
+/* Booth name display for recruiters in participant list (GlobalSupport only) */
+.team-chat-booth-name {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
 /* Unread Badge in Chat List */
 .team-chat-unread-badge {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
@@ -535,6 +544,16 @@
     background: #f3f4f6;
     color: #1a1a1a;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Booth name display for recruiters when viewed by GlobalSupport */
+.syncfusion-chat-wrapper .e-chat-ui .e-message .recruiter-booth-name {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2px;
+    font-weight: 500;
+    line-height: 1.2;
+    display: block;
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-input-group {
