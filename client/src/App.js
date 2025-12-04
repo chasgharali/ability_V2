@@ -91,6 +91,24 @@ function App() {
         }
         return children;
     };
+
+    const RequireRole = ({ children, allowedRoles }) => {
+        const { user, loading } = useAuth();
+        const location = useLocation();
+        
+        if (loading) return null;
+        
+        if (!user) {
+            return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+        }
+        
+        if (allowedRoles && !allowedRoles.includes(user.role)) {
+            // Redirect unauthorized users to dashboard
+            return <Navigate to="/dashboard" replace />;
+        }
+        
+        return children;
+    };
     return (
         <ThemeProvider>
             <AuthProvider>
@@ -113,7 +131,7 @@ function App() {
                                     <Route path="/dashboard/edit-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                                    <Route path="/boothmanagement" element={<RequireAuth><BoothManagement /></RequireAuth>} />
+                                    <Route path="/boothmanagement" element={<RequireAuth><RequireRole allowedRoles={['Admin', 'AdminEvent', 'GlobalSupport']}><BoothManagement /></RequireRole></RequireAuth>} />
                                     <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                     <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
                                     <Route path="/usermanagement" element={<RequireAuth><UserManagement /></RequireAuth>} />
