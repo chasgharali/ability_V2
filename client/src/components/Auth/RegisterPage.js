@@ -201,7 +201,7 @@ const RegisterPage = () => {
             if (result && result.success) {
                 // Only navigate if registration was successful
                 if (redirectPath) {
-                    localStorage.setItem('eventRegistrationRedirect', redirectPath);
+                    sessionStorage.setItem('eventRegistrationRedirect', redirectPath);
                 }
                 // Store redirect path in state to use after email verification
                 navigate('/verify-email-sent', {

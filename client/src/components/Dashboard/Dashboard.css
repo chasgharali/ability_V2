@@ -961,6 +961,18 @@ body.sidebar-open .mobile-menu-toggle:hover {
     outline-offset: -2px;
 }
 
+.sidebar-header:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: #9ca3af;
+}
+
+.sidebar-header:disabled:hover,
+.sidebar-header:disabled:focus {
+    background: none;
+    outline: none;
+}
+
 .sidebar-items {
     background: #1a1a1a;
 }
