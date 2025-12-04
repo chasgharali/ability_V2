@@ -102,11 +102,28 @@ export default function EventDetail() {
                     <dl style={{ margin: 0 }} aria-label="Event date and time">
                       <div style={{ marginBottom: 6 }}>
                         <dt style={{ fontWeight: 700, display: 'inline' }}>Date: </dt>
-                        <dd style={{ display: 'inline', marginInlineStart: 4 }}>{event.start ? new Date(event.start).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : '-'}</dd>
+                        <dd style={{ display: 'inline', marginInlineStart: 4 }}>{event.start ? (() => {
+                          const d = new Date(event.start);
+                          return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
+                        })() : '-'}</dd>
                       </div>
                       <div>
                         <dt style={{ fontWeight: 700, display: 'inline' }}>Time: </dt>
-                        <dd style={{ display: 'inline', marginInlineStart: 4 }}>{event.start ? new Date(event.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '-'} - {event.end ? new Date(event.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '-'}</dd>
+                        <dd style={{ display: 'inline', marginInlineStart: 4 }}>{event.start ? (() => {
+                          const d = new Date(event.start);
+                          const hours = d.getUTCHours();
+                          const minutes = d.getUTCMinutes();
+                          const period = hours >= 12 ? 'PM' : 'AM';
+                          const displayHours = hours % 12 || 12;
+                          return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+                        })() : '-'} - {event.end ? (() => {
+                          const d = new Date(event.end);
+                          const hours = d.getUTCHours();
+                          const minutes = d.getUTCMinutes();
+                          const period = hours >= 12 ? 'PM' : 'AM';
+                          const displayHours = hours % 12 || 12;
+                          return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+                        })() : '-'}</dd>
                       </div>
                     </dl>
                     {event.logoUrl && (
