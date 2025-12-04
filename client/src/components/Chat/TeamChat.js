@@ -422,6 +422,89 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         }
     }, [messages]);
 
+    // Process author names to display booth name for recruiters when viewed by GlobalSupport
+    useEffect(() => {
+        if (user?.role !== 'GlobalSupport' || !selectedChat) return;
+
+        // Wait for Syncfusion to render messages
+        const timer = setTimeout(() => {
+            const messageElements = document.querySelectorAll('.syncfusion-chat-wrapper .e-chat-ui .e-message');
+            
+            messageElements.forEach((messageEl, index) => {
+                // Skip if already processed
+                if (messageEl.dataset.boothProcessed === 'true') return;
+                
+                // Get the message data
+                const message = messages[index];
+                if (!message || !message.author?.boothName) return;
+
+                // Only process bot messages (messages from others, not current user)
+                const isBotMessage = messageEl.classList.contains('e-bot');
+                if (!isBotMessage) return;
+
+                // Find the author name element - try multiple selectors
+                let authorEl = messageEl.querySelector('.e-message-author') ||
+                              messageEl.querySelector('.e-author-name') ||
+                              messageEl.querySelector('[class*="author"]') ||
+                              messageEl.querySelector('.e-message-header') ||
+                              messageEl.querySelector('.e-message-content')?.previousElementSibling;
+
+                // If we can't find a specific author element, try to find text content that matches the name
+                if (!authorEl) {
+                    const allElements = messageEl.querySelectorAll('*');
+                    for (let el of allElements) {
+                        if (el.textContent && el.textContent.includes('|||BOOTH:')) {
+                            authorEl = el;
+                            break;
+                        }
+                    }
+                }
+
+                if (authorEl) {
+                    // Check if we already added the booth name
+                    if (authorEl.querySelector('.recruiter-booth-name')) {
+                        messageEl.dataset.boothProcessed = 'true';
+                        return;
+                    }
+
+                    // Process text content if it contains the booth separator
+                    const textContent = authorEl.textContent || '';
+                    if (textContent.includes('|||BOOTH:')) {
+                        const parts = textContent.split('|||BOOTH:');
+                        if (parts.length === 2) {
+                            const namePart = parts[0].trim();
+                            const boothPart = parts[1].split('|||')[0].trim();
+                            
+                            // Clear and rebuild the content
+                            authorEl.innerHTML = '';
+                            
+                            // Add name
+                            const nameSpan = document.createElement('span');
+                            nameSpan.textContent = namePart;
+                            authorEl.appendChild(nameSpan);
+                            
+                            // Add booth name
+                            const boothSpan = document.createElement('div');
+                            boothSpan.className = 'recruiter-booth-name';
+                            boothSpan.textContent = boothPart;
+                            authorEl.appendChild(boothSpan);
+                        }
+                    } else {
+                        // If no separator found, just add the booth name after the existing content
+                        const boothSpan = document.createElement('div');
+                        boothSpan.className = 'recruiter-booth-name';
+                        boothSpan.textContent = message.author.boothName;
+                        authorEl.appendChild(boothSpan);
+                    }
+                    
+                    messageEl.dataset.boothProcessed = 'true';
+                }
+            });
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [messages, selectedChat, user]);
+
     // Monitor online users changes
     useEffect(() => {
         console.log('👥 Online users state updated:', onlineUsers.size, 'users online');
@@ -472,15 +555,33 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         };
     }, [selectedChat, handleTyping]);
 
-    const convertToSyncfusionMessage = (msg) => ({
-        text: msg.content,
-        author: {
-            id: msg.sender._id,
-            user: msg.sender.name,
-            avatarUrl: msg.sender.avatarUrl || ''
-        },
-        timeStamp: new Date(msg.createdAt)
-    });
+    const convertToSyncfusionMessage = (msg) => {
+        // For GlobalSupport users viewing recruiters, include booth name in author name
+        const shouldShowBooth = user?.role === 'GlobalSupport' && 
+                                 msg.sender?.role === 'Recruiter' && 
+                                 msg.sender?.assignedBooth;
+        
+        const boothName = shouldShowBooth && msg.sender.assignedBooth?.name 
+            ? msg.sender.assignedBooth.name 
+            : null;
+        
+        // Include booth name in author name with a special separator for CSS targeting
+        const authorName = boothName 
+            ? `${msg.sender.name}|||BOOTH:${boothName}|||`
+            : msg.sender.name;
+        
+        return {
+            text: msg.content,
+            author: {
+                id: msg.sender._id,
+                user: authorName,
+                avatarUrl: msg.sender.avatarUrl || '',
+                role: msg.sender.role,
+                boothName: boothName
+            },
+            timeStamp: new Date(msg.createdAt)
+        };
+    };
 
     const loadChats = async () => {
         try {
@@ -502,6 +603,15 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     const loadParticipants = async () => {
         try {
             const data = await chatAPI.getParticipants();
+            // Debug: Log participants to check assignedBooth
+            if (user?.role === 'GlobalSupport') {
+                console.log('📋 Participants loaded:', data.map(p => ({
+                    name: p.name,
+                    role: p.role,
+                    assignedBooth: p.assignedBooth,
+                    hasBooth: !!p.assignedBooth
+                })));
+            }
             setParticipants(data);
         } catch (error) {
             console.error('Error loading participants:', error);
@@ -848,6 +958,15 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                                                 <div className="team-chat-name">
                                                     {participant.name} ({participant.role})
                                                 </div>
+                                                {user?.role === 'GlobalSupport' && 
+                                                 participant.role === 'Recruiter' && 
+                                                 participant.assignedBooth && (
+                                                    <div className="team-chat-booth-name">
+                                                        {participant.assignedBooth?.name || 
+                                                         participant.assignedBooth?.company || 
+                                                         (typeof participant.assignedBooth === 'string' ? participant.assignedBooth : 'No Booth')}
+                                                    </div>
+                                                )}
                                                 <div className={`team-chat-status ${isOnline ? 'online' : 'offline'}`}>
                                                     {isOnline ? 'Online' : 'Offline'}
                                                 </div>
