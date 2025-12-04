@@ -203,15 +203,31 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   useEffect(() => {
     if (!socket) return;
 
+    console.log('🔌 Setting up socket listeners for video call');
+
     socket.on('call_invitation', handleCallInvitation);
-    socket.on('chat_message', handleNewChatMessage);
+    
+    // Listen for all possible message events
+    socket.on('chat_message', (data) => {
+      console.log('📨 Received chat_message event:', data);
+      handleNewChatMessage(data);
+    });
+    
+    socket.on('new_chat_message', (data) => {
+      console.log('📨 Received new_chat_message event:', data);
+      handleNewChatMessage(data);
+    });
+    
     socket.on('video-call-message', (data) => {
+      console.log('📨 Received video-call-message event:', data);
       handleNewChatMessage(data);
     });
 
     socket.on('video-call-message-direct', (data) => {
+      console.log('📨 Received video-call-message-direct event:', data);
       handleNewChatMessage(data);
     });
+    
     socket.on('participant_joined', handleParticipantJoined);
     socket.on('participant_left', handleParticipantLeft);
     socket.on('participant_left_call', handleParticipantLeftCall);
@@ -228,11 +244,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     });
 
     return () => {
+      console.log('🔌 Cleaning up socket listeners');
       socket.off('call_invitation', handleCallInvitation);
       socket.off('new_chat_message', handleNewChatMessage);
       socket.off('chat_message', handleNewChatMessage);
-      socket.off('video-call-message');
-      socket.off('video-call-message-direct');
+      socket.off('video-call-message', handleNewChatMessage);
+      socket.off('video-call-message-direct', handleNewChatMessage);
       socket.off('participant_joined', handleParticipantJoined);
       socket.off('participant_left', handleParticipantLeft);
       socket.off('participant_left_call', handleParticipantLeftCall);
@@ -242,7 +259,6 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
       socket.off('error');
-      socket.off('participant-joined-video');
     };
   }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -807,13 +823,48 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const handleNewChatMessage = (messageData) => {
-    // Don't add our own messages again
-    if (messageData.sender?.id === (user._id || user.id)) {
+    console.log('📩 handleNewChatMessage received:', messageData);
+    console.log('📩 Current user ID:', user._id || user.id);
+    console.log('📩 Message sender ID:', messageData.sender?.id);
+    
+    // Normalize IDs for comparison (handle both string and ObjectId)
+    const currentUserId = String(user._id || user.id);
+    const senderId = String(messageData.sender?.id || '');
+    
+    // Don't add our own messages again (they're already added optimistically)
+    if (senderId === currentUserId) {
+      console.log('⏭️ Skipping own message');
       return;
     }
 
+    // Ensure message has the correct structure for ChatPanel
+    const formattedMessage = {
+      sender: {
+        id: messageData.sender?.id,
+        name: messageData.sender?.name,
+        role: messageData.sender?.role
+      },
+      message: messageData.message || messageData.content || '',
+      timestamp: messageData.timestamp || new Date().toISOString(),
+      messageType: messageData.messageType || 'text'
+    };
+
+    console.log('✅ Adding message to chat:', formattedMessage);
+
     setChatMessages(prev => {
-      const newMessages = [...prev, messageData];
+      // Check for duplicates based on timestamp and sender
+      const isDuplicate = prev.some(msg => 
+        msg.timestamp === formattedMessage.timestamp && 
+        String(msg.sender?.id) === senderId
+      );
+      
+      if (isDuplicate) {
+        console.log('⏭️ Skipping duplicate message');
+        return prev;
+      }
+      
+      const newMessages = [...prev, formattedMessage];
+      console.log('📝 Updated messages count:', newMessages.length);
       return newMessages;
     });
 

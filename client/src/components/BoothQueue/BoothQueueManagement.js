@@ -147,14 +147,11 @@ export default function BoothQueueManagement() {
       return;
     }
 
-    console.log('Setting up socket event listeners for booth management');
     setSocketConnected(true);
     socket.on('queue-updated', handleQueueUpdate);
     socket.on('new-queue-message', handleNewMessage);
     socket.on('jobseeker-left-with-message', handleJobSeekerLeftWithMessage);
-    socket.on('test-connection-response', (data) => {
-      console.log('Test connection response received:', data);
-    });
+    socket.on('test-connection-response', () => {});
 
     return () => {
       socket.off('queue-updated', handleQueueUpdate);
@@ -244,7 +241,6 @@ export default function BoothQueueManagement() {
   const joinSocketRoom = async () => {
     const targetBoothId = boothId || recruiterBooth?._id;
     if (!socket || !targetBoothId || !user) {
-      console.warn('Cannot join socket rooms:', { socket: !!socket, boothId: targetBoothId, user: !!user });
       setToast('Cannot reconnect: Missing connection details');
       setTimeout(() => setToast(''), 3000);
       return;
@@ -252,14 +248,10 @@ export default function BoothQueueManagement() {
 
     try {
       setIsReconnecting(true);
-      console.log('Joining socket rooms for booth management:', { boothId: targetBoothId, userId: user._id, userRole: user.role });
       socket.emit('join-booth-management', { boothId: targetBoothId, userId: user._id });
-      // Also join booth room to receive generic queue updates
       socket.emit('join-booth-queue', { boothId: targetBoothId, userId: user._id });
 
-      // Add a small delay and then test the connection
       setTimeout(() => {
-        console.log('Testing socket connection after joining rooms...');
         socket.emit('test-connection', { message: 'Testing after room join' });
         setToast('Reconnected to real-time updates');
         setTimeout(() => setToast(''), 2000);
@@ -274,17 +266,8 @@ export default function BoothQueueManagement() {
   };
 
   const handleQueueUpdate = (data) => {
-    console.log('Received queue-updated event:', data);
-    console.log('Current boothId:', boothId);
-    console.log('Event boothId:', data.boothId, 'Event booth:', data.booth);
-
-    // When any update occurs for this booth, reload queue from API
     if (data.boothId === boothId || data.booth === boothId) {
-      console.log('Reloading queue data due to update');
-      // Use a more efficient approach - only reload queue data, not booth data
       loadQueueData();
-    } else {
-      console.log('Queue update not for this booth, ignoring');
     }
   };
 
@@ -322,20 +305,65 @@ export default function BoothQueueManagement() {
     }
   };
 
+  // Auto-scroll to bottom when messages change and modal is open
+  useEffect(() => {
+    if (showMessagesModal && messages.length > 0) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    }
+  }, [messages, showMessagesModal]);
+
   const handleNewMessage = (data) => {
-    if (data.boothId === boothId) {
+    const targetBoothId = boothId || recruiterBooth?._id;
+    if (data.boothId === targetBoothId || data.boothId?.toString() === targetBoothId?.toString()) {
       playNotificationSound();
-      // Show toast with job seeker name, auto-dismiss after 200ms
       const jobSeekerName = data.queueEntry?.jobSeeker?.name || 'job seeker';
       showInfo(`New message from ${jobSeekerName}`, 200);
       
-      // If chat modal is open for this entry, add message to chat and scroll
-      if (currentChatEntry?._id === data.queueEntry._id && showMessagesModal) {
-        setMessages(prev => [...prev, data.message]);
-        setTimeout(scrollToBottom, 100);
+      const queueEntryId = (data.queueEntry?._id || data.queueEntry?.id)?.toString()?.trim();
+      const currentChatId = (currentChatEntry?._id || currentChatEntry?.id)?.toString()?.trim();
+      
+      const shouldAddMessage = queueEntryId && (
+        (showMessagesModal && queueEntryId === currentChatId) ||
+        !showMessagesModal
+      );
+      
+      if (shouldAddMessage) {
+        setMessages(prev => {
+          const incomingCreatedAt = data.message.createdAt instanceof Date 
+            ? data.message.createdAt.getTime() 
+            : new Date(data.message.createdAt).getTime();
+          
+          const isDuplicate = prev.some(msg => {
+            if (msg._id && data.message._id) {
+              return msg._id.toString() === data.message._id.toString();
+            }
+            
+            const msgCreatedAt = msg.createdAt instanceof Date 
+              ? msg.createdAt.getTime() 
+              : new Date(msg.createdAt).getTime();
+            
+            const timeDiff = Math.abs(msgCreatedAt - incomingCreatedAt);
+            return msg.content === data.message.content && 
+                   msg.sender === data.message.sender &&
+                   timeDiff < 5000;
+          });
+          
+          if (isDuplicate) {
+            return prev;
+          }
+          
+          return [...prev, data.message];
+        });
+        
+        if (showMessagesModal) {
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
+        }
       }
       
-      // Always refresh queue data to update unread counter
       loadQueueData();
     }
   };
@@ -609,15 +637,37 @@ export default function BoothQueueManagement() {
   };
 
   const handleViewMessages = async (queueEntry) => {
+    const previousChatEntry = currentChatEntry;
     setCurrentChatEntry(queueEntry);
     setShowMessagesModal(true);
     try {
       const response = await boothQueueAPI.getQueueMessages(queueEntry._id);
       if (response.success) {
-        setMessages(response.messages || []);
-        // Scroll to bottom after messages load
+        const apiMessages = response.messages || [];
+        
+        setMessages(prev => {
+          if (previousChatEntry?._id !== queueEntry._id) {
+            return apiMessages;
+          }
+          
+          const mergedMessages = [...apiMessages];
+          const existingIds = new Set(apiMessages.map(m => m._id || `${m.content}-${m.createdAt}-${m.sender}`));
+          
+          prev.forEach(msg => {
+            const msgId = msg._id || `${msg.content}-${msg.createdAt}-${msg.sender}`;
+            if (!existingIds.has(msgId)) {
+              mergedMessages.push(msg);
+            }
+          });
+          
+          return mergedMessages.sort((a, b) => {
+            const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+            const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+            return timeA - timeB;
+          });
+        });
+        
         setTimeout(scrollToBottom, 100);
-        // Refresh queue to update counter
         loadQueueData();
       }
     } catch (error) {
