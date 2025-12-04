@@ -236,16 +236,36 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button
               className="sidebar-header"
-              onClick={() => { handleItemClick('/events/registered'); closeMobileMenu(); }}
-              aria-label="Go to My Current Registrations"
+              onClick={() => { 
+                if (myRegistrations.length > 0) {
+                  handleItemClick('/events/registered'); 
+                  closeMobileMenu(); 
+                }
+              }}
+              disabled={myRegistrations.length === 0}
+              aria-label={myRegistrations.length === 0 ? "No current registrations available" : "Go to My Current Registrations"}
+              title={myRegistrations.length === 0 ? "No current registrations available" : ""}
             >
               <span>Current Registrations</span>
               <span
                 className="icon-button"
                 role="button"
-                tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); toggleSection('registrations'); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleSection('registrations'); } }}
+                tabIndex={myRegistrations.length === 0 ? -1 : 0}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  if (myRegistrations.length > 0) {
+                    toggleSection('registrations'); 
+                  }
+                }}
+                onKeyDown={(e) => { 
+                  if (e.key === 'Enter' || e.key === ' ') { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    if (myRegistrations.length > 0) {
+                      toggleSection('registrations'); 
+                    }
+                  } 
+                }}
                 aria-label="Toggle registrations list"
               >
                 {expanded['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
@@ -266,17 +286,37 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button
               className="sidebar-header"
-              onClick={() => { handleItemClick('/events/upcoming'); closeMobileMenu(); }}
-              aria-label="Go to Upcoming Events"
+              onClick={() => { 
+                if (upcomingEvents.length > 0) {
+                  handleItemClick('/events/upcoming'); 
+                  closeMobileMenu(); 
+                }
+              }}
+              disabled={upcomingEvents.length === 0}
+              aria-label={upcomingEvents.length === 0 ? "No upcoming events available" : "Go to Upcoming Events"}
+              title={upcomingEvents.length === 0 ? "No upcoming events available" : ""}
             >
               <span>Upcoming Events</span>
               <span
                 className="icon-button"
-                onClick={(e) => { e.stopPropagation(); toggleSection('upcoming-events'); }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  if (upcomingEvents.length > 0) {
+                    toggleSection('upcoming-events'); 
+                  }
+                }}
                 aria-label={expanded['upcoming-events'] ? 'Collapse Upcoming Events menu' : 'Expand Upcoming Events menu'}
                 role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleSection('upcoming-events'); } }}
+                tabIndex={upcomingEvents.length === 0 ? -1 : 0}
+                onKeyDown={(e) => { 
+                  if (e.key === 'Enter' || e.key === ' ') { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    if (upcomingEvents.length > 0) {
+                      toggleSection('upcoming-events'); 
+                    }
+                  } 
+                }}
               >
                 {expanded['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
               </span>
@@ -326,7 +366,19 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded.admin && (
               <div className="sidebar-items">
-                <button className={itemClass('queue')} onClick={() => handleItemClick(assignedBoothId ? `/booth-queue/manage/${assignedBoothId}` : '/boothmanagement')}>
+                <button 
+                  className={itemClass('queue')} 
+                  onClick={() => {
+                    if (assignedBoothId) {
+                      handleItemClick(`/booth-queue/manage/${assignedBoothId}`);
+                    } else {
+                      // Show error message instead of redirecting to admin page
+                      alert('No booth is assigned to your account. Please contact an administrator to assign a booth so you can manage your meeting queue.');
+                    }
+                  }}
+                  disabled={!assignedBoothId}
+                  title={!assignedBoothId ? 'No booth assigned. Please contact an administrator.' : ''}
+                >
                   Meeting Queue
                 </button>
                 <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>

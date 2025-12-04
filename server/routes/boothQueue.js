@@ -81,13 +81,15 @@ router.post('/join', authenticateToken, async (req, res) => {
         }
 
         // First, clean up any stale queue entries for this user across all events
-        const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+        // Use 5 minutes instead of 1 minute to prevent cleanup of users who are actively waiting
+        // (they might refresh the page, which is normal behavior)
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         const staleEntries = await BoothQueue.find({
             jobSeeker: jobSeekerId,
             status: { $in: ['waiting', 'in_meeting'] }, // Include in_meeting status for cleanup
             $or: [
-                { lastActivity: { $lt: oneMinuteAgo } },
-                { lastActivity: { $exists: false }, createdAt: { $lt: oneMinuteAgo } }
+                { lastActivity: { $lt: fiveMinutesAgo } },
+                { lastActivity: { $exists: false }, createdAt: { $lt: fiveMinutesAgo } }
             ]
         });
 
@@ -122,10 +124,11 @@ router.post('/join', authenticateToken, async (req, res) => {
         // If there's an existing queue entry, try to clean up stale entries
         // (entries where user might have disconnected without proper cleanup)
         if (existingQueue) {
-            // Check if this is a stale entry (older than 2 minutes with no recent activity)
-            const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-            const isStale = existingQueue.createdAt < twoMinutesAgo &&
-                (!existingQueue.lastActivity || existingQueue.lastActivity < twoMinutesAgo);
+            // Check if this is a stale entry (older than 5 minutes with no recent activity)
+            // Use 5 minutes to match the cleanup threshold above
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            const isStale = existingQueue.createdAt < fiveMinutesAgo &&
+                (!existingQueue.lastActivity || existingQueue.lastActivity < fiveMinutesAgo);
 
             // Also check if user is trying to join the same booth they're already in
             const isSameBooth = existingQueue.booth.toString() === boothId;
@@ -291,7 +294,7 @@ router.post('/leave', authenticateToken, async (req, res) => {
         const queueEntry = await BoothQueue.findOne({
             jobSeeker: jobSeekerId,
             booth: boothId,
-            status: { $in: ['waiting', 'invited'] }
+            status: { $in: ['waiting', 'invited', 'in_meeting'] }
         });
 
         if (!queueEntry) {
@@ -471,14 +474,132 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
         const { boothId } = req.params;
         const jobSeekerId = req.user._id;
 
-        const queueEntry = await BoothQueue.getJobSeekerQueue(jobSeekerId, boothId);
+        // Validate boothId format
+        if (!mongoose.Types.ObjectId.isValid(boothId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid booth ID'
+            });
+        }
 
+        // Find queue entry with active statuses
+        let queueEntry = await BoothQueue.getJobSeekerQueue(jobSeekerId, boothId);
+
+        // If not found, try to find ANY entry (including left ones) - user might have refreshed
+        // BUT: Only restore if entry was left very recently (within last 5 minutes) to prevent restoring
+        // entries when user explicitly left or navigated away
+        if (!queueEntry) {
+            // Restore entries that were incorrectly cleaned up, NOT legitimate leaves or recruiter removals
+            // Criteria for restoration:
+            // 1. Status is 'left' (not 'left_with_message', 'removed', or 'completed')
+            // 2. Left very recently (within 5 minutes) - indicates cleanup, not user action
+            // 3. No active/ended call or completed meeting (evidence of legitimate leave)
+            // 4. User is actively checking status (they're still waiting)
+            // Note: We limit by time to prevent restoring entries when user explicitly left
+            // Note: 'removed' status means recruiter removed them - never restore those
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            const leftEntry = await BoothQueue.findOne({
+                jobSeeker: jobSeekerId,
+                booth: boothId,
+                status: 'left', // Only restore 'left', NOT 'left_with_message' (legitimate leave) or 'removed' (recruiter removal)
+                leftAt: { $gte: fiveMinutesAgo } // Only restore if left very recently (likely cleanup, not user action)
+            })
+            .populate('booth', 'company companyLogo')
+            .populate('event', 'name logo')
+            .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+            .populate('interpreterCategory', 'name code');
+
+            if (leftEntry) {
+                // Check if there's an active meeting or ended call - if so, don't restore
+                const VideoCall = require('../models/VideoCall');
+                const activeCall = await VideoCall.findOne({
+                    queueEntry: leftEntry._id,
+                    status: 'active'
+                });
+                
+                const endedCall = await VideoCall.findOne({
+                    queueEntry: leftEntry._id,
+                    status: 'ended'
+                });
+                
+                // Check for completed meetings
+                let hasCompletedMeeting = false;
+                if (leftEntry.meetingId) {
+                    const MeetingRecord = require('../models/MeetingRecord');
+                    const meeting = await MeetingRecord.findById(leftEntry.meetingId);
+                    if (meeting && meeting.status === 'completed') {
+                        hasCompletedMeeting = true;
+                    }
+                }
+                
+                // Restore if:
+                // 1. No active call (user is not in a meeting)
+                // 2. No ended call (call didn't just end)
+                // 3. No completed meeting (meeting didn't just complete)
+                // Note: We only look for 'left' status here, not 'removed' (recruiter removal) or 'left_with_message' (user left with message)
+                // This ensures we only restore entries that were cleaned up due to inactivity
+                if (!activeCall && !endedCall && !hasCompletedMeeting) {
+                    // Restore the entry - user is still checking status, so they're still in queue
+                    logger.info(`Restoring queue entry ${leftEntry._id} for user ${jobSeekerId} in booth ${boothId} (user refreshed, entry was cleaned up due to inactivity)`);
+                    leftEntry.status = 'waiting';
+                    leftEntry.leftAt = null;
+                    leftEntry.lastActivity = new Date();
+                    // Clear meetingId if it exists (since meeting is not active/completed)
+                    if (leftEntry.meetingId) {
+                        leftEntry.meetingId = null;
+                    }
+                    await leftEntry.save();
+                    queueEntry = leftEntry;
+                } else {
+                    // This was likely a legitimate leave - don't restore
+                    logger.info(`Not restoring queue entry ${leftEntry._id} - likely legitimate leave (has active call: ${!!activeCall}, has ended call: ${!!endedCall}, has completed meeting: ${hasCompletedMeeting})`);
+                }
+            }
+            
+            // If still not found, check for entries with null/undefined status
+            if (!queueEntry) {
+                // Also check for entries without status filter (in case status is null/undefined)
+                const anyEntry = await BoothQueue.findOne({
+                    jobSeeker: jobSeekerId,
+                    booth: boothId
+                })
+                .populate('booth', 'company companyLogo')
+                .populate('event', 'name logo')
+                .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+                .populate('interpreterCategory', 'name code');
+
+                if (anyEntry) {
+                    // If status is null/undefined, fix it
+                    if (!anyEntry.status) {
+                        anyEntry.status = 'waiting';
+                        anyEntry.lastActivity = new Date();
+                        await anyEntry.save();
+                        queueEntry = anyEntry;
+                    } else if (anyEntry.status === 'completed') {
+                        // Completed entries shouldn't be restored
+                        return res.status(404).json({
+                            success: false,
+                            message: 'Not in queue',
+                            reason: 'completed'
+                        });
+                    }
+                }
+            }
+        }
+
+        // If still not found, return 404
         if (!queueEntry) {
             return res.status(404).json({
                 success: false,
-                message: 'Not in queue'
+                message: 'Not in queue',
+                shouldRedirect: true
             });
         }
+
+        // CRITICAL: Update lastActivity immediately to prevent cleanup logic from marking this as stale
+        // This must happen on every status check, especially when user refreshes the page
+        queueEntry.lastActivity = new Date();
+        await queueEntry.save();
 
         // Get current serving number (you might want to store this in booth or calculate it)
         const currentServing = await BoothQueue.countDocuments({
@@ -682,7 +803,9 @@ router.post('/message-to-jobseeker/:queueId', authenticateToken, async (req, res
 
         // Emit socket event to job seeker
         if (req.app.get('io') && queueEntry.jobSeeker && queueEntry.jobSeeker._id) {
-            req.app.get('io').to(`user_${queueEntry.jobSeeker._id}`).emit('new-message-from-recruiter', {
+            // Use user:userId format to match socket handler room joining
+            const jobSeekerIdStr = queueEntry.jobSeeker._id.toString();
+            req.app.get('io').to(`user:${jobSeekerIdStr}`).emit('new-message-from-recruiter', {
                 queueId: queueEntry._id,
                 boothId: queueEntry.booth,
                 message: { type: 'text', content, sender: 'recruiter', createdAt: new Date() }
@@ -794,7 +917,10 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
 
         // Emit socket event to job seeker
         if (req.app.get('io')) {
-            req.app.get('io').to(`user_${jobSeekerId}`).emit('queue-invited-to-meeting', {
+            // Use user:userId format to match socket handler room joining
+            const io = req.app.get('io');
+            const jobSeekerIdStr = jobSeekerId.toString();
+            io.to(`user:${jobSeekerIdStr}`).emit('queue-invited-to-meeting', {
                 boothId,
                 userId: jobSeekerId,
                 meetingId: meeting._id,
@@ -878,7 +1004,10 @@ router.delete('/remove/:queueId', authenticateToken, async (req, res) => {
             });
         }
 
-        await queueEntry.leaveQueue();
+        // Mark as removed (by recruiter) - different from 'left' (user action) or cleanup
+        queueEntry.status = 'removed';
+        queueEntry.leftAt = new Date();
+        await queueEntry.save();
 
         // Emit socket event
         if (req.app.get('io')) {
