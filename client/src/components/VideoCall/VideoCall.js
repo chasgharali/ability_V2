@@ -18,6 +18,50 @@ if (typeof Log !== 'undefined') {
   Log.setLevel(Log.levels.OFF);
 }
 
+// Override console.warn and console.error to filter out unwanted warnings
+const originalConsoleWarn = console.warn;
+const originalConsoleError = console.error;
+
+console.warn = function(...args) {
+  const message = args.join(' ');
+  
+  // Filter out Twilio heartbeat warnings when connection is closed
+  if (message.includes('TwilioConnection') && 
+      (message.includes('Unexpected state') || message.includes('unexpected state')) && 
+      (message.includes('heartbeat') || message.includes('TCMP'))) {
+    return; // Suppress this specific warning
+  }
+  
+  // Filter out React Router future flag warnings
+  if (message.includes('React Router Future Flag Warning') || 
+      message.includes('v7_startTransition') || 
+      message.includes('v7_relativeSplatPath')) {
+    return; // Suppress React Router v7 migration warnings
+  }
+  
+  // Filter out socket-related warnings
+  if (message.includes('Cannot join socket rooms') ||
+      message.includes('Socket URL normalized')) {
+    return; // Suppress socket connection warnings
+  }
+  
+  // Call original console.warn for all other warnings
+  originalConsoleWarn.apply(console, args);
+};
+
+console.error = function(...args) {
+  const message = args.join(' ');
+  
+  // Filter out specific WebSocket connection errors (common when socket.io reconnects)
+  if (message.includes('WebSocket') && 
+      message.includes('closed before the connection is established')) {
+    return; // Suppress this specific WebSocket error
+  }
+  
+  // Call original console.error for all other errors
+  originalConsoleError.apply(console, args);
+};
+
 const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) => {
   const { callId: paramCallId } = useParams();
   const location = useLocation();
