@@ -670,8 +670,33 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         <p className="section-note">An asterisk (*) indicates a required field.</p>
 
         <div className="form-group">
-          <label htmlFor="headline">* Your Headline</label>
-          <input id="headline" name="headline" value={form.headline} onChange={onChange} placeholder="Make a brief statement about yourself. Max 150 characters" />
+          <div className="label-with-counter">
+            <label htmlFor="headline">* Your Headline</label>
+            <span 
+              className={`char-counter ${
+                form.headline.length > 150 ? 'char-counter-over' :
+                form.headline.length >= 145 ? 'char-counter-danger' :
+                form.headline.length >= 140 ? 'char-counter-warning' :
+                form.headline.length > 130 ? 'char-counter-caution' : ''
+              }`}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {form.headline.length}/150 characters
+            </span>
+          </div>
+          <input 
+            id="headline" 
+            name="headline" 
+            value={form.headline} 
+            onChange={onChange} 
+            placeholder="Make a brief statement about yourself" 
+            maxLength={150}
+            aria-describedby="headline-hint"
+          />
+          <span id="headline-hint" className="visually-hidden">
+            Maximum 150 characters. Currently {form.headline.length} of 150 characters used.
+          </span>
         </div>
 
         <div className="form-group">
