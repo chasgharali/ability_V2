@@ -80,7 +80,14 @@ messageSchema.statics.getChatMessages = async function(chatId, limit = 50, skip 
         chat: chatId,
         isDeleted: false
     })
-    .populate('sender', 'name email avatarUrl role')
+    .populate({
+        path: 'sender',
+        select: 'name email avatarUrl role assignedBooth',
+        populate: {
+            path: 'assignedBooth',
+            select: 'name company'
+        }
+    })
     .sort({ createdAt: -1 })
     .limit(limit)
     .skip(skip);

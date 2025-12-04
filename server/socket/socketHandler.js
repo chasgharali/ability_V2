@@ -1047,7 +1047,14 @@ const socketHandler = (io) => {
                 });
 
                 const populatedMessage = await Message.findById(message._id)
-                    .populate('sender', 'name email avatarUrl role');
+                    .populate({
+                        path: 'sender',
+                        select: 'name email avatarUrl role assignedBooth',
+                        populate: {
+                            path: 'assignedBooth',
+                            select: 'name company'
+                        }
+                    });
 
                 // Update chat's last message
                 chat.lastMessage = {
