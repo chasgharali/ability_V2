@@ -32,7 +32,7 @@ const boothQueueSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['waiting', 'invited', 'in_meeting', 'completed', 'left', 'left_with_message'],
+        enum: ['waiting', 'invited', 'in_meeting', 'completed', 'left', 'left_with_message', 'removed'],
     },
     joinedAt: {
         type: Date,

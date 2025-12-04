@@ -31,27 +31,16 @@ router.get('/', authenticateToken, async (req, res) => {
             const recruiter = await User.findById(req.user._id).select('assignedBooth').populate('assignedBooth');
             const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
             
-            // Recruiters see:
-            // 1. Their own meeting records (where recruiterId matches)
-            // 2. All "left_with_message" records from their booth (visible to all recruiters in booth)
+            // Recruiters see ALL meeting records from their assigned booth
+            // This allows all recruiters in the same booth to see each other's meeting records
             if (recruiterBoothId) {
-                // Build the $or conditions
-                const orConditions = [];
+                // Filter by boothId to show all records from the assigned booth
+                query.boothId = recruiterBoothId;
                 
-                // First condition: recruiter's own records (apply status filter if provided)
-                const ownRecordsCondition = { recruiterId: req.user._id };
+                // Apply status filter if provided
                 if (status) {
-                    ownRecordsCondition.status = status;
+                    query.status = status;
                 }
-                orConditions.push(ownRecordsCondition);
-                
-                // Second condition: left_with_message records from booth (always show, ignore status filter)
-                orConditions.push({
-                    status: 'left_with_message',
-                    boothId: recruiterBoothId
-                });
-                
-                query.$or = orConditions;
             } else {
                 // If no booth assigned, only show their own records
                 query.recruiterId = req.user._id;
@@ -135,14 +124,14 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         // Get total count for pagination
-        // Note: For recruiters with $or query, count may include duplicates from old records
+        // Note: For recruiters, count may include duplicates from old records (especially left_with_message)
         // but the deduplication filter above will remove them from display
         const totalRecords = await MeetingRecord.countDocuments(query);
         
-        // Adjust count for recruiters to account for deduplication
+        // Adjust count for recruiters to account for deduplication of left_with_message records
         // Count unique left_with_message records by queueId
         let adjustedCount = totalRecords;
-        if (req.user.role === 'Recruiter' && query.$or) {
+        if (req.user.role === 'Recruiter') {
             // Count how many duplicate left_with_message records exist
             const duplicateQuery = {
                 ...query,
@@ -165,7 +154,7 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         // Use adjusted count for pagination if we deduplicated
-        const finalCount = req.user.role === 'Recruiter' && query.$or ? adjustedCount : totalRecords;
+        const finalCount = adjustedCount;
         
         res.json({
             meetingRecords: processedRecords,
@@ -208,23 +197,19 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
         // For recruiters: check if they can access the record
         if (req.user.role === 'Recruiter') {
-            // If it's a left_with_message record, check if recruiter is in the same booth
-            if (meetingRecord.status === 'left_with_message' && meetingRecord.boothId) {
-                const User = require('../models/User');
-                const recruiter = await User.findById(req.user._id).select('assignedBooth');
-                const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
-                const recordBoothId = meetingRecord.boothId._id || meetingRecord.boothId;
-                
-                if (recruiterBoothId && recordBoothId && 
-                    recruiterBoothId.toString() === recordBoothId.toString()) {
-                    canAccess = true;
-                }
-            } else {
-                // For other records, check if recruiter matches
-                if (meetingRecord.recruiterId && 
-                    meetingRecord.recruiterId._id.toString() === req.user._id.toString()) {
-                    canAccess = true;
-                }
+            // Recruiters can access any meeting record from their assigned booth
+            const User = require('../models/User');
+            const recruiter = await User.findById(req.user._id).select('assignedBooth');
+            const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
+            const recordBoothId = meetingRecord.boothId?._id || meetingRecord.boothId;
+            
+            if (recruiterBoothId && recordBoothId && 
+                recruiterBoothId.toString() === recordBoothId.toString()) {
+                canAccess = true;
+            } else if (!recruiterBoothId && meetingRecord.recruiterId && 
+                       meetingRecord.recruiterId._id.toString() === req.user._id.toString()) {
+                // If no booth assigned, only allow access to their own records
+                canAccess = true;
             }
         } else if (meetingRecord.recruiterId && 
                    meetingRecord.recruiterId._id.toString() === req.user._id.toString()) {
@@ -373,7 +358,16 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
-            matchQuery.recruiterId = req.user._id;
+            // Get recruiter's assigned booth and filter by boothId to show all records from the booth
+            const recruiter = await User.findById(req.user._id).select('assignedBooth').populate('assignedBooth');
+            const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
+            
+            if (recruiterBoothId) {
+                matchQuery.boothId = recruiterBoothId;
+            } else {
+                // If no booth assigned, only show their own records
+                matchQuery.recruiterId = req.user._id;
+            }
         } else if (recruiterId) {
             matchQuery.recruiterId = recruiterId;
         }
@@ -434,7 +428,16 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
-            query.recruiterId = req.user._id;
+            // Get recruiter's assigned booth and filter by boothId to show all records from the booth
+            const recruiter = await User.findById(req.user._id).select('assignedBooth').populate('assignedBooth');
+            const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
+            
+            if (recruiterBoothId) {
+                query.boothId = recruiterBoothId;
+            } else {
+                // If no booth assigned, only show their own records
+                query.recruiterId = req.user._id;
+            }
         } else if (recruiterId) {
             query.recruiterId = recruiterId;
         }

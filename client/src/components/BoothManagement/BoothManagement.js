@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import '../Dashboard/Dashboard.css';
 import './BoothManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -19,6 +20,17 @@ import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
 export default function BoothManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Defense-in-depth: Check user role on component mount
+  useEffect(() => {
+    const allowedRoles = ['Admin', 'AdminEvent', 'GlobalSupport'];
+    if (user && !allowedRoles.includes(user.role)) {
+      // Redirect unauthorized users to dashboard
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+  
   // Header uses branding/user from shared AdminHeader
 
   const [boothMode, setBoothMode] = useState('list'); // 'list' | 'create'
@@ -774,6 +786,12 @@ export default function BoothManagement() {
       showToast('Copy failed. Link shown.');
     }
   };
+
+  // Check user role before rendering - all hooks must be called first
+  const allowedRoles = ['Admin', 'AdminEvent', 'GlobalSupport'];
+  if (!user || !allowedRoles.includes(user.role)) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="dashboard">

@@ -183,12 +183,22 @@ export default function BoothQueueWaiting() {
           } catch (e) { }
         }
       } catch (e) {
-        // Silently fail - don't break the UI (404 is expected if not in queue)
+        // Handle 404 - if user is truly not in queue, redirect them
+        const is404 = e.response?.status === 404;
+        const shouldRedirect = e.response?.data?.shouldRedirect;
+        
+        if (is404 && shouldRedirect) {
+          // User is truly not in queue - redirect to queue entry page
+          console.log('User not in queue during periodic refresh, redirecting');
+          navigate(`/booth-queue/${eventSlug}/${boothId}/entry`, { replace: true });
+          return; // Exit early
+        }
+        // For other errors, silently fail - don't break the UI
       }
     }, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(refreshInterval);
-  }, [boothId, loading]);
+  }, [boothId, loading, eventSlug, navigate]);
 
   const loadData = async () => {
     try {
@@ -229,6 +239,39 @@ export default function BoothQueueWaiting() {
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
           setUnreadCount(queueData.unreadMessages || 0);
+          
+          // Check if user is in a meeting - if so, fetch call data and show call interface
+          if (queueData.status === 'in_meeting' && queueData.queueEntry?.meetingId) {
+            try {
+              // Fetch video call data to join the meeting
+              const videoCallRes = await axios.get(`/api/video-call/by-queue/${queueData.queueEntry._id}`);
+              if (videoCallRes.data?.success && videoCallRes.data.videoCall) {
+                const callData = videoCallRes.data.videoCall;
+                // Set up call invitation data to show call interface
+                setCallInvitation({
+                  id: callData._id || callData.id,
+                  roomName: callData.roomName,
+                  accessToken: callData.jobSeekerToken || callData.accessToken,
+                  userRole: 'jobseeker',
+                  booth: queueData.queueEntry.booth,
+                  event: queueData.queueEntry.event,
+                  participants: {
+                    recruiter: callData.recruiter,
+                    jobSeeker: user
+                  },
+                  metadata: {
+                    interpreterRequested: !!queueData.queueEntry.interpreterCategory,
+                    interpreterCategory: queueData.queueEntry.interpreterCategory
+                  }
+                });
+                setIsInCall(true);
+              }
+            } catch (callErr) {
+              console.error('Error fetching video call data:', callErr);
+              // If we can't fetch call data, user might need to wait for invitation
+            }
+          }
+          
           try {
             sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -241,7 +284,19 @@ export default function BoothQueueWaiting() {
           // Do not reset to 0; retain last known value in UI for position
         }
       } catch (qErr) {
-        // Gracefully handle 404 Not Found (user not in queue after refresh)
+        // Handle 404 Not Found (user not in queue after refresh)
+        const is404 = qErr.response?.status === 404;
+        const shouldRedirect = qErr.response?.data?.shouldRedirect;
+        
+        if (is404 && shouldRedirect) {
+          // User is truly not in queue - redirect to event page
+          // This happens if entry was legitimately removed or never existed
+          console.log('User not in queue, redirecting to event page');
+          navigate(`/events/registered/${eventSlug}`, { replace: true });
+          return; // Exit early to prevent further execution
+        }
+        
+        // For other errors or if backend says not to redirect, just reset state
         // Reset queueToken to prevent using token from wrong booth
         setQueueToken('');
         setQueueEntryId(null);
