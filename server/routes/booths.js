@@ -357,9 +357,16 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .isInt({ min: 1 })
         .withMessage('Recruiters count must be at least 1'),
     body('expireLinkTime')
-        .optional()
-        .isISO8601()
-        .toDate(),
+        .optional({ nullable: true, checkFalsy: true })
+        .custom((value) => {
+            // Allow null, undefined, empty string, or string "null"
+            if (value === null || value === undefined || value === '' || value === 'null' || String(value).toLowerCase() === 'null') {
+                return true;
+            }
+            // For non-empty values, validate as ISO8601 date
+            const validator = require('validator');
+            return validator.isISO8601(String(value));
+        }),
     body('customInviteSlug')
         .optional()
         .isString()
@@ -397,48 +404,110 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         const { booth, user } = req;
         const Event = require('../models/Event');
 
-        // Update allowed fields
-        if (name !== undefined) booth.name = name;
-        if (description !== undefined) booth.description = description;
-        if (logoUrl !== undefined) booth.logoUrl = logoUrl;
-        if (companyPage !== undefined) booth.companyPage = companyPage;
-        if (recruitersCount !== undefined) booth.recruitersCount = recruitersCount;
-        if (expireLinkTime !== undefined) booth.expireLinkTime = expireLinkTime;
+        // CRITICAL FIX: If expireLinkTime is stored as string "null" in DB, fix it directly in database first
+        // This must happen before any validation or save operations
+        const existingExpireLinkTime = booth.expireLinkTime;
+        if (existingExpireLinkTime !== null && existingExpireLinkTime !== undefined) {
+            const existingValueStr = String(existingExpireLinkTime);
+            if (existingValueStr === 'null' || existingValueStr.toLowerCase() === 'null') {
+                // Directly update in database to fix the corrupted value (bypass validation)
+                await Booth.findByIdAndUpdate(booth._id, { $set: { expireLinkTime: null } }, { runValidators: false });
+                // CRITICAL: Reload the entire booth document to get the fixed value
+                // We need to get a fresh instance from the database
+                const reloadedBooth = await Booth.findById(booth._id);
+                if (reloadedBooth) {
+                    // Replace the booth object's expireLinkTime with the fixed value
+                    booth.expireLinkTime = reloadedBooth.expireLinkTime;
+                    // Mark it as modified so it doesn't get overwritten
+                    booth.markModified('expireLinkTime');
+                }
+            }
+        }
+
+        // Check if this is a demo event - if so, skip expireLinkTime validation
+        let isDemoEvent = false;
+        if (booth.eventId) {
+            try {
+                const event = await Event.findById(booth.eventId);
+                isDemoEvent = event && event.isDemo;
+            } catch (err) {
+                // If event lookup fails, continue without demo check
+                logger.warn(`Could not check if event is demo for booth ${booth._id}:`, err);
+            }
+        }
+
+        // Build update object - use findByIdAndUpdate to bypass validation issues
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (description !== undefined) updateData.description = description;
+        if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+        if (companyPage !== undefined) updateData.companyPage = companyPage;
+        if (recruitersCount !== undefined) updateData.recruitersCount = recruitersCount;
+        
+        // Handle expireLinkTime - always convert string "null" to actual null
+        if (expireLinkTime !== undefined) {
+            let processedValue = expireLinkTime;
+            if (typeof processedValue === 'string' && (processedValue === 'null' || processedValue.toLowerCase() === 'null' || processedValue === '')) {
+                processedValue = null;
+            } else if (processedValue === null || processedValue === undefined || processedValue === '') {
+                processedValue = null;
+            } else if (typeof processedValue === 'string') {
+                const parsedDate = new Date(processedValue);
+                processedValue = isNaN(parsedDate.getTime()) ? null : parsedDate;
+            }
+            updateData.expireLinkTime = processedValue;
+        }
+        
         if (customInviteSlug !== undefined) {
-            if (customInviteSlug) {
-                const exists = await Booth.findOne({ customInviteSlug, _id: { $ne: booth._id } });
+            const slugValue = customInviteSlug === '' ? undefined : customInviteSlug;
+            if (slugValue) {
+                const exists = await Booth.findOne({ customInviteSlug: slugValue, _id: { $ne: booth._id } });
                 if (exists) {
                     return res.status(409).json({ error: 'Custom invite already taken' });
                 }
             }
-            booth.customInviteSlug = customInviteSlug || undefined;
+            updateData.customInviteSlug = slugValue;
         }
-        if (joinBoothButtonLink !== undefined) {
-            booth.joinBoothButtonLink = joinBoothButtonLink || '';
-        }
+        if (joinBoothButtonLink !== undefined) updateData.joinBoothButtonLink = joinBoothButtonLink;
         if (eventId !== undefined) {
-            // Verify event exists
-            const event = await Event.findById(eventId);
-            if (!event) {
+            const targetEvent = await Event.findById(eventId);
+            if (!targetEvent) {
                 return res.status(404).json({ error: 'Event not found' });
             }
-            booth.eventId = eventId;
+            updateData.eventId = eventId;
         }
-        if (status !== undefined) booth.status = status;
+        if (status !== undefined) updateData.status = status;
 
-        await booth.save();
+        // Use findByIdAndUpdate - this bypasses the corrupted value issue
+        // The setter in the model will handle conversion when the new value is set
+        const updatedBooth = await Booth.findByIdAndUpdate(
+            booth._id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
 
-        logger.info(`Booth updated: ${booth.name} by ${user.email}`);
+        if (!updatedBooth) {
+            return res.status(404).json({ error: 'Booth not found' });
+        }
+
+        logger.info(`Booth updated: ${updatedBooth.name} by ${user.email}`);
 
         res.json({
             message: 'Booth updated successfully',
-            booth: booth.getSummary()
+            booth: updatedBooth.getSummary()
         });
     } catch (error) {
         logger.error('Update booth error:', error);
+        // Log the full error details for debugging
+        logger.error('Update booth error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
         res.status(500).json({
             error: 'Failed to update booth',
-            message: 'An error occurred while updating the booth'
+            message: error.message || 'An error occurred while updating the booth',
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
@@ -457,8 +526,8 @@ router.put('/:id/rich-sections', authenticateToken, requireResourceAccess('booth
         .withMessage('Section title must be between 1 and 100 characters'),
     body('sections.*.contentHtml')
         .trim()
-        .isLength({ min: 1, max: 5000 })
-        .withMessage('Section content must be between 1 and 5000 characters'),
+        .isLength({ min: 0, max: 5000 })
+        .withMessage('Section content must be between 0 and 5000 characters'),
     body('sections.*.isActive')
         .optional()
         .isBoolean()
@@ -469,7 +538,54 @@ router.put('/:id/rich-sections', authenticateToken, requireResourceAccess('booth
         .withMessage('Section order must be between 0 and 2')
 ], async (req, res) => {
     try {
-        // Check for validation errors
+        const { sections } = req.body;
+        const { booth, user } = req;
+        const Event = require('../models/Event');
+        
+        // CRITICAL FIX: If expireLinkTime is stored as string "null" in DB, fix it directly in database first
+        const existingExpireLinkTime = booth.expireLinkTime;
+        if (existingExpireLinkTime !== null && existingExpireLinkTime !== undefined) {
+            const existingValueStr = String(existingExpireLinkTime);
+            if (existingValueStr === 'null' || existingValueStr.toLowerCase() === 'null') {
+                await Booth.findByIdAndUpdate(booth._id, { $set: { expireLinkTime: null } }, { runValidators: false });
+                const reloadedBooth = await Booth.findById(booth._id);
+                if (reloadedBooth) {
+                    booth.expireLinkTime = reloadedBooth.expireLinkTime;
+                }
+            }
+        }
+        
+        // Check if this is a demo event - if so, allow empty content
+        let isDemoEvent = false;
+        if (booth.eventId) {
+            try {
+                const event = await Event.findById(booth.eventId);
+                isDemoEvent = event && event.isDemo;
+            } catch (err) {
+                logger.warn(`Could not check if event is demo for booth ${booth._id}:`, err);
+            }
+        }
+        
+        // For demo events, allow empty contentHtml. For regular events, validate content is not empty
+        if (!isDemoEvent) {
+            for (let i = 0; i < sections.length; i++) {
+                if (!sections[i].contentHtml || sections[i].contentHtml.trim() === '') {
+                    return res.status(400).json({
+                        error: 'Validation failed',
+                        message: 'Please check your input data',
+                        details: [{
+                            type: 'field',
+                            value: sections[i].contentHtml,
+                            msg: 'Section content must be between 1 and 5000 characters',
+                            path: `sections[${i}].contentHtml`,
+                            location: 'body'
+                        }]
+                    });
+                }
+            }
+        }
+        
+        // Check for other validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -479,24 +595,30 @@ router.put('/:id/rich-sections', authenticateToken, requireResourceAccess('booth
             });
         }
 
-        const { sections } = req.body;
-        const { booth, user } = req;
-
-        // Update rich sections
-        booth.richSections = sections.map((section, index) => ({
+        // Prepare rich sections - for demo events, allow empty contentHtml
+        const richSectionsData = sections.map((section, index) => ({
             title: section.title,
-            contentHtml: section.contentHtml,
+            contentHtml: section.contentHtml || '', // Allow empty for demo events
             isActive: section.isActive !== undefined ? section.isActive : true,
             order: section.order !== undefined ? section.order : index
         }));
 
-        await booth.save();
+        // Use findByIdAndUpdate to bypass validation issues
+        const updatedBooth = await Booth.findByIdAndUpdate(
+            booth._id,
+            { $set: { richSections: richSectionsData } },
+            { new: true, runValidators: true }
+        );
 
-        logger.info(`Booth rich sections updated: ${booth.name} by ${user.email}`);
+        if (!updatedBooth) {
+            return res.status(404).json({ error: 'Booth not found' });
+        }
+
+        logger.info(`Booth rich sections updated: ${updatedBooth.name} by ${user.email}`);
 
         res.json({
             message: 'Rich sections updated successfully',
-            sections: booth.richSections
+            sections: updatedBooth.richSections
         });
     } catch (error) {
         logger.error('Update booth rich sections error:', error);
