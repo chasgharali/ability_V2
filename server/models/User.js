@@ -39,6 +39,20 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    pendingEmail: {
+        type: String,
+        default: null,
+        lowercase: true,
+        trim: true
+    },
+    emailChangeToken: {
+        type: String,
+        default: null
+    },
+    emailChangeExpires: {
+        type: Date,
+        default: null
+    },
     email: {
         type: String,
         required: [true, 'Email is required'],
@@ -323,7 +337,8 @@ userSchema.methods.getPublicProfile = function () {
         languages: this.languages,
         isAvailable: this.isAvailable,
         assignedBooth: this.assignedBooth,
-        createdAt: this.createdAt
+        createdAt: this.createdAt,
+        pendingEmail: this.pendingEmail
     };
 
     // If assignedBooth is populated, include booth name

@@ -144,13 +144,11 @@ const RegisterPage = () => {
 
         // Phone validation has been removed to make the field optional.
 
-        // Password validation
+        // Password validation - only length check
         if (!formData.password) {
             errors.password = 'Password is required';
         } else if (formData.password.length < 8) {
             errors.password = 'Password must be at least 8 characters long';
-        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-            errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
         }
 
         // Confirm password validation
