@@ -58,9 +58,7 @@ router.post('/register', [
         .withMessage('Please provide a valid email address'),
     body('password')
         .isLength({ min: 8 })
-        .withMessage('Password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~]/)
-        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+        .withMessage('Password must be at least 8 characters long'),
     body('role')
         .optional()
         .isIn(['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
