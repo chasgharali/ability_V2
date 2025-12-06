@@ -16,6 +16,14 @@ const testUsers = [
             department: 'IT',
             phone: '+1-555-0101'
         }
+    },
+    {
+        name: 'Test Admin',
+        email: 't2admin@gmal.com',
+        password: 'Qwe123!@#',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {}
     }
 ];
 

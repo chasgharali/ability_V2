@@ -285,7 +285,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
     setPasswordError('');
     setPasswordMessage('');
 
-    // Validate passwords
+    // Validate passwords - only length check
     if (!passwordForm.currentPassword) {
       setPasswordError('Current password is required');
       return;
@@ -296,10 +296,6 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
     }
     if (passwordForm.newPassword.length < 8) {
       setPasswordError('New password must be at least 8 characters long');
-      return;
-    }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:'",.<>?/~])/.test(passwordForm.newPassword)) {
-      setPasswordError('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -660,7 +656,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
             </div>
 
             <div id="password-requirements" className="field-help password-requirements">
-              Password must be at least 8 characters and contain: uppercase letter, lowercase letter, number, and special character.
+              Password must be at least 8 characters long.
             </div>
 
             <div className="form-actions">
