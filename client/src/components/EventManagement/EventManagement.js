@@ -298,6 +298,7 @@ export default function EventManagement() {
                 createdAt: new Date(e.createdAt).toDateString(),
                 maxRecruitersPerEvent: e.limits?.maxRecruitersPerEvent ?? 0,
                 maxBooths: e.limits?.maxBooths ?? 0,
+                registrationCount: e.stats?.totalRegistrations ?? 0,
                 status: e.status || 'draft',
                 isDemo: e.isDemo || false,
                 addFooter: Boolean((e.addFooter !== undefined ? e.addFooter : e.theme?.addFooter)),
@@ -859,6 +860,19 @@ export default function EventManagement() {
                                             template={(props) => (
                                                 <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
                                                     {props.maxBooths ?? 0}
+                                                </div>
+                                            )}
+                                        />
+                                        <ColumnDirective 
+                                            field='registrationCount' 
+                                            headerText='Registered Jobseekers' 
+                                            width='180' 
+                                            textAlign='Center'
+                                            allowFiltering={true}
+                                            allowSorting={true}
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                                                    {props.registrationCount ?? 0}
                                                 </div>
                                             )}
                                         />
