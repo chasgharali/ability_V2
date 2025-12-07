@@ -15,6 +15,7 @@ import ForgotPassword from './components/Auth/ForgotPassword';
 import ResetPassword from './components/Auth/ResetPassword';
 import VerifyEmailSent from './components/Auth/VerifyEmailSent';
 import VerifyEmailSuccess from './components/Auth/VerifyEmailSuccess';
+import EmailChangeVerified from './components/Auth/EmailChangeVerified';
 import Dashboard from './components/Dashboard/Dashboard';
 import BoothManagement from './components/BoothManagement/BoothManagement';
 import EventManagement from './components/EventManagement/EventManagement';
@@ -125,6 +126,7 @@ function App() {
                                     <Route path="/reset-password" element={<ResetPassword />} />
                                     <Route path="/verify-email-sent" element={<VerifyEmailSent />} />
                                     <Route path="/email-verified" element={<VerifyEmailSuccess />} />
+                                    <Route path="/email-change-verified" element={<EmailChangeVerified />} />
                                     <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/dashboard/my-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/dashboard/survey" element={<RequireAuth><Dashboard /></RequireAuth>} />
