@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './MyAccountInline.css';
 import { countryCodes } from '../Auth/countryCodes';
 
@@ -255,6 +256,20 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  // Email change state
+  const [emailForm, setEmailForm] = useState({
+    newEmail: '',
+  });
+  const [emailError, setEmailError] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState(user?.pendingEmail || null);
+
+  // Update pendingEmail when user prop changes
+  useEffect(() => {
+    setPendingEmail(user?.pendingEmail || null);
+  }, [user?.pendingEmail]);
+
   // Password change state
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -275,9 +290,57 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
 
   const toggle = (key) => (e) => setA11y(prev => ({ ...prev, [key]: !!e.target.checked }));
 
+  const onEmailChange = (e) => {
+    const { name, value } = e.target;
+    setEmailForm(prev => ({ ...prev, [name]: value }));
+    setEmailError('');
+  };
+
   const onPasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEmailUpdate = async (e) => {
+    if (e) e.preventDefault();
+    setEmailError('');
+    setEmailMessage('');
+
+    // Validate email
+    if (!emailForm.newEmail) {
+      setEmailError('New email address is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailForm.newEmail)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+    if (emailForm.newEmail.toLowerCase() === form.email.toLowerCase()) {
+      setEmailError('New email address must be different from your current email');
+      return;
+    }
+
+    setSavingEmail(true);
+    try {
+      const token = sessionStorage.getItem('token');
+      const response = await axios.post('/api/users/me/change-email', 
+        { newEmail: emailForm.newEmail },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.message) {
+        setEmailMessage(response.data.message || 'Verification email sent to your new email address. Please check your inbox.');
+        setPendingEmail(response.data.pendingEmail);
+        setEmailForm({ newEmail: '' });
+      } else {
+        setEmailError('Failed to request email change');
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Failed to request email change';
+      setEmailError(errorMessage);
+    } finally {
+      setSavingEmail(false);
+    }
   };
 
   const handlePasswordUpdate = async (e) => {
@@ -285,7 +348,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
     setPasswordError('');
     setPasswordMessage('');
 
-    // Validate passwords
+    // Validate passwords - only length check
     if (!passwordForm.currentPassword) {
       setPasswordError('Current password is required');
       return;
@@ -296,10 +359,6 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
     }
     if (passwordForm.newPassword.length < 8) {
       setPasswordError('New password must be at least 8 characters long');
-      return;
-    }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:'",.<>?/~])/.test(passwordForm.newPassword)) {
-      setPasswordError('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -384,6 +443,11 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
           <div className="form-group">
             <label htmlFor="email">Email *</label>
             <input id="email" name="email" value={form.email} readOnly aria-readonly="true" />
+            {pendingEmail && (
+              <div className="field-help" style={{ color: '#2563eb', marginTop: '4px' }}>
+                Pending email change to: {pendingEmail}. Please check your inbox and verify the new email address.
+              </div>
+            )}
           </div>
           <div className="form-group phone-fields-group">
             <div className="phone-field-wrapper">
@@ -575,9 +639,54 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
         </div>
       </form>
 
+      {/* Update Email Section */}
+      <div className="email-update-section" style={{ marginTop: '3rem' }}>
+        <h3 className="section-title">Update Email Address</h3>
+        
+        {emailMessage && (
+          <div className="alert-box" role="status" aria-live="polite">{emailMessage}</div>
+        )}
+        {emailError && (
+          <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{emailError}</div>
+        )}
+
+        <form onSubmit={handleEmailUpdate} className="account-form email-form">
+          <div className="form-group">
+            <label htmlFor="newEmail">New Email Address *</label>
+            <input
+              id="newEmail"
+              name="newEmail"
+              type="email"
+              value={emailForm.newEmail}
+              onChange={onEmailChange}
+              placeholder="Enter new email address"
+              required
+              autoComplete="email"
+              disabled={savingEmail || !!pendingEmail}
+            />
+            <div className="field-help">
+              {pendingEmail 
+                ? 'Please verify your pending email change before requesting a new one.'
+                : 'A verification email will be sent to your new email address. You must verify it to complete the change.'}
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="submit"
+              className="ajf-btn ajf-btn-dark"
+              disabled={savingEmail || !!pendingEmail}
+              aria-label="Request email change"
+            >
+              {savingEmail ? 'Sending...' : 'Request Email Change'}
+            </button>
+          </div>
+        </form>
+      </div>
+
       {/* Update Password Section */}
       {changePassword && (
-        <div className="password-update-section">
+        <div className="password-update-section" style={{ marginTop: '3rem' }}>
           <h3 className="section-title">Update Password</h3>
           
           {passwordMessage && (
@@ -660,7 +769,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
             </div>
 
             <div id="password-requirements" className="field-help password-requirements">
-              Password must be at least 8 characters and contain: uppercase letter, lowercase letter, number, and special character.
+              Password must be at least 8 characters long.
             </div>
 
             <div className="form-actions">
