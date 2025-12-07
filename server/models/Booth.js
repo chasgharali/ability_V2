@@ -9,7 +9,8 @@ const richSectionSchema = new mongoose.Schema({
     },
     contentHtml: {
         type: String,
-        required: [true, 'Content is required'],
+        required: false, // Made optional to allow empty content for demo events
+        default: '',
         maxlength: [5000, 'Content cannot exceed 5000 characters']
     },
     isActive: {
