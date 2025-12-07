@@ -193,6 +193,228 @@ router.put('/me', authenticateToken, [
         });
     }
 });
+
+/**
+ * POST /api/users/me/change-email
+ * Request email change for current authenticated user (Job Seeker)
+ */
+router.post('/me/change-email', authenticateToken, [
+    body('newEmail')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please provide a valid email address')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: 'Please check your input data',
+                details: errors.array()
+            });
+        }
+
+        const { user } = req;
+        const { newEmail } = req.body;
+        const normalizedNewEmail = typeof newEmail === 'string' ? newEmail.toLowerCase().trim() : newEmail;
+
+        // Re-fetch user to get latest data
+        const targetUser = await User.findById(user._id);
+        if (!targetUser) {
+            return res.status(404).json({
+                error: 'User not found',
+                message: 'The current user does not exist'
+            });
+        }
+
+        // Check if new email is the same as current email
+        if (targetUser.email === normalizedNewEmail) {
+            return res.status(400).json({
+                error: 'Invalid email',
+                message: 'The new email address is the same as your current email address'
+            });
+        }
+
+        // Check if new email is already in use
+        const existingUser = await User.findOne({ email: normalizedNewEmail });
+        if (existingUser) {
+            return res.status(409).json({
+                error: 'Email already in use',
+                message: 'An account with this email address already exists'
+            });
+        }
+
+        // Check if there's already a pending email change
+        if (targetUser.pendingEmail && targetUser.emailChangeExpires && targetUser.emailChangeExpires > new Date()) {
+            return res.status(400).json({
+                error: 'Email change already pending',
+                message: `An email change to ${targetUser.pendingEmail} is already pending. Please verify that email or wait for it to expire.`
+            });
+        }
+
+        // Generate email change token (24h expiry)
+        const crypto = require('crypto');
+        const token = crypto.randomBytes(32).toString('hex');
+        targetUser.pendingEmail = normalizedNewEmail;
+        targetUser.emailChangeToken = token;
+        targetUser.emailChangeExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        await targetUser.save();
+
+        // Send verification email to new email address
+        const { sendEmailChangeVerificationEmail } = require('../utils/mailer');
+        
+        // Determine the correct base URL for the verification link
+        let appBase = process.env.APP_BASE_URL;
+        if (!appBase) {
+            appBase = process.env.CORS_ORIGIN;
+        }
+        if (!appBase) {
+            appBase = 'http://localhost:3000';
+            if (process.env.NODE_ENV === 'production') {
+                logger.warn('⚠️ APP_BASE_URL not set in production! Using localhost fallback.');
+            }
+        }
+        
+        let apiBase = process.env.API_BASE_URL;
+        if (!apiBase) {
+            apiBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || `http://localhost:${process.env.PORT || 5000}`;
+        }
+        
+        // Verification link points to API endpoint which will redirect to app
+        const verifyLink = `${apiBase}/api/users/verify-email-change?token=${encodeURIComponent(token)}`;
+        
+        try {
+            const ok = await sendEmailChangeVerificationEmail(normalizedNewEmail, verifyLink);
+            if (!ok) {
+                logger.warn(`Failed to send email change verification email to ${normalizedNewEmail}`);
+            } else {
+                logger.info(`Email change verification email sent successfully to ${normalizedNewEmail}`);
+            }
+        } catch (emailError) {
+            logger.error(`Error sending email change verification email to ${normalizedNewEmail}:`, emailError);
+            // Don't fail the request if email fails, but log the error
+        }
+
+        logger.info(`Email change requested for user: ${targetUser.email} -> ${normalizedNewEmail}`);
+
+        res.json({
+            message: 'Verification email sent to your new email address. Please check your inbox and click the verification link to complete the email change.',
+            pendingEmail: normalizedNewEmail
+        });
+    } catch (error) {
+        logger.error('Email change request error:', error);
+        res.status(500).json({
+            error: 'Email change request failed',
+            message: 'An error occurred while processing your email change request'
+        });
+    }
+});
+
+/**
+ * GET /api/users/verify-email-change?token=...
+ * Verify email change and update user's email
+ */
+router.get('/verify-email-change', async (req, res) => {
+    try {
+        // Determine the correct base URL for redirect
+        let appBase = process.env.APP_BASE_URL;
+        if (!appBase) {
+            appBase = process.env.CORS_ORIGIN;
+        }
+        if (!appBase) {
+            // Try to construct from request (for production)
+            if (req.headers.host && process.env.NODE_ENV !== 'development') {
+                const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+                appBase = `${protocol}://${req.headers.host.replace(/:\d+$/, '')}`;
+            } else {
+                appBase = 'http://localhost:3000';
+            }
+        }
+
+        const { token } = req.query;
+        if (!token || typeof token !== 'string') {
+            const redirectUrl = `${appBase}/email-change-verified?error=${encodeURIComponent('Invalid verification link')}`;
+            return res.redirect(302, redirectUrl);
+        }
+
+        const user = await User.findOne({
+            emailChangeToken: token,
+            emailChangeExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            const redirectUrl = `${appBase}/email-change-verified?error=${encodeURIComponent('Email change verification link is invalid or has expired')}`;
+            return res.redirect(302, redirectUrl);
+        }
+
+        if (!user.pendingEmail) {
+            const redirectUrl = `${appBase}/email-change-verified?error=${encodeURIComponent('No pending email change found')}`;
+            return res.redirect(302, redirectUrl);
+        }
+
+        // Check if pending email is already in use by another user
+        const existingUser = await User.findOne({ email: user.pendingEmail, _id: { $ne: user._id } });
+        if (existingUser) {
+            // Clear the pending email change
+            user.pendingEmail = null;
+            user.emailChangeToken = null;
+            user.emailChangeExpires = null;
+            await user.save();
+            
+            const redirectUrl = `${appBase}/email-change-verified?error=${encodeURIComponent('This email address is already in use by another account')}`;
+            return res.redirect(302, redirectUrl);
+        }
+
+        // Update email
+        const oldEmail = user.email;
+        user.email = user.pendingEmail;
+        user.pendingEmail = null;
+        user.emailChangeToken = null;
+        user.emailChangeExpires = null;
+        // Reset email verification status since it's a new email
+        user.emailVerified = false;
+        // Generate new email verification token for the new email
+        const crypto = require('crypto');
+        const newVerificationToken = crypto.randomBytes(32).toString('hex');
+        user.emailVerificationToken = newVerificationToken;
+        user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        
+        await user.save();
+
+        // Send verification email for the new email address
+        const { sendVerificationEmail } = require('../utils/mailer');
+        
+        // Determine the correct base URL for the verification link (reuse appBase from above)
+        let apiBase = process.env.API_BASE_URL;
+        if (!apiBase) {
+            apiBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || `http://localhost:${process.env.PORT || 5000}`;
+        }
+        
+        const verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(newVerificationToken)}`;
+        
+        try {
+            const ok = await sendVerificationEmail(user.email, verifyLink);
+            if (!ok) {
+                logger.warn(`Failed to send verification email to ${user.email} after email change`);
+            } else {
+                logger.info(`Verification email sent successfully to ${user.email} after email change`);
+            }
+        } catch (emailError) {
+            logger.error(`Error sending verification email to ${user.email} after email change:`, emailError);
+        }
+
+        logger.info(`Email changed successfully for user: ${oldEmail} -> ${user.email}`);
+
+        // Redirect to success page (appBase already determined at the top of the function)
+        const redirectUrl = `${appBase}/email-change-verified`;
+        return res.redirect(302, redirectUrl);
+    } catch (error) {
+        logger.error('Verify email change error:', error);
+        return res.status(500).send('Failed to verify email change');
+    }
+});
+
 /**
  * GET /api/users
  * Get list of users (Admin/GlobalSupport only)
@@ -360,9 +582,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('password')
         .optional()
         .isLength({ min: 8 })
-        .withMessage('Password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{}|;:'",.<>?/~]/)
-        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+        .withMessage('Password must be at least 8 characters long'),
     body('phoneNumber')
         .optional({ nullable: true, checkFalsy: true })
         .trim()
@@ -470,6 +690,10 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
                 message: 'The specified user does not exist'
             });
         }
+
+        // Store old email if email is being changed (for notifications)
+        const oldEmail = targetUser.email;
+        const emailChanged = email !== undefined && email !== null && email.toLowerCase().trim() !== oldEmail.toLowerCase().trim();
 
         // Update allowed fields
         if (name !== undefined) targetUser.name = name;
@@ -586,6 +810,35 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         await targetUser.save();
+
+        // Send email notifications if email was changed (only for JobSeekers)
+        if (emailChanged && targetUser.role === 'JobSeeker') {
+            const { sendEmailChangedNotificationOldEmail, sendEmailChangedNotificationNewEmail } = require('../utils/mailer');
+            
+            // Send notification to old email
+            try {
+                const okOld = await sendEmailChangedNotificationOldEmail(oldEmail, targetUser.email, targetUser.name);
+                if (!okOld) {
+                    logger.warn(`Failed to send email change notification to old email ${oldEmail}`);
+                } else {
+                    logger.info(`Email change notification sent successfully to old email ${oldEmail}`);
+                }
+            } catch (emailError) {
+                logger.error(`Error sending email change notification to old email ${oldEmail}:`, emailError);
+            }
+
+            // Send congratulations email to new email
+            try {
+                const okNew = await sendEmailChangedNotificationNewEmail(targetUser.email, targetUser.name);
+                if (!okNew) {
+                    logger.warn(`Failed to send email change notification to new email ${targetUser.email}`);
+                } else {
+                    logger.info(`Email change notification sent successfully to new email ${targetUser.email}`);
+                }
+            } catch (emailError) {
+                logger.error(`Error sending email change notification to new email ${targetUser.email}:`, emailError);
+            }
+        }
 
         logger.info(`User updated: ${targetUser.email} by ${user.email}`);
 
