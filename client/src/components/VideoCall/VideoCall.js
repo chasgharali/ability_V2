@@ -11,6 +11,7 @@ import ParticipantsList from './ParticipantsList';
 import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
 import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
+import { CaptionManager } from '../../utils/audioCapture';
 import './VideoCall.css';
 
 // Suppress Twilio console warnings and errors
@@ -139,6 +140,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [isCaptionEnabled, setIsCaptionEnabled] = useState(false);
   const [captionText, setCaptionText] = useState('');
   const [captionHistory, setCaptionHistory] = useState([]);
+  // Remote captions from all participants (Map of participantId -> {text, speaker, timestamp, isFinal})
+  const [remoteCaptions, setRemoteCaptions] = useState(new Map());
 
   // Refs
   // Cleanup / lifecycle guards
@@ -150,14 +153,14 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   // Once a call has been explicitly ended (by recruiter or locally),
   // prevent any further automatic reconnects or re-initialization.
   const callEndedRef = useRef(false);
-  // Speech recognition ref for captions
-  const recognitionRef = useRef(null);
+  // Caption manager ref for Deepgram-based captions
+  const captionManagerRef = useRef(null);
   // Ref to track caption enabled state (avoids stale closure in event handlers)
   const isCaptionEnabledRef = useRef(false);
   // Ref to track caption clear timeout (for cleanup)
   const captionClearTimeoutRef = useRef(null);
-  // Ref to track current recognition instance ID (prevents old instances from interfering)
-  const recognitionInstanceIdRef = useRef(0);
+  // Ref to store fallback speech recognition function (avoids initialization order issues)
+  const startFallbackSpeechRecognitionRef = useRef(null);
 
   // Initialize call
   useEffect(() => {
@@ -227,7 +230,81 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       console.log('📨 Received video-call-message-direct event:', data);
       handleNewChatMessage(data);
     });
+
+    // Listen for caption transcriptions from Deepgram via server
+    socket.on('caption-transcription', (data) => {
+      console.log('🔔 caption-transcription event received:', data);
+      
+      if (!isCaptionEnabledRef.current || !data) {
+        if (!isCaptionEnabledRef.current) {
+          console.warn('📝 Caption received but captions are disabled (isCaptionEnabledRef.current = false)');
+        }
+        if (!data) {
+          console.warn('📝 Caption received but data is null/undefined');
+        }
+        return;
+      }
+
+      const { participantId, participantName, text, isFinal, timestamp } = data;
+      
+      if (!participantId || !text) {
+        console.error('📝 Invalid caption data received:', { participantId, text: text?.substring(0, 30), fullData: data });
+        return;
+      }
+
+      console.log('✅ Processing caption:', { participantId, participantName, text: text.substring(0, 50), isFinal, timestamp });
+
+      // Update remote captions map
+      setRemoteCaptions(prev => {
+        const newMap = new Map(prev);
+        const captionData = {
+          text: text.trim(),
+          speaker: participantName || 'Participant',
+          timestamp: timestamp || new Date().toISOString(),
+          isFinal: isFinal !== false
+        };
+        newMap.set(participantId, captionData);
+        console.log(`✅ Updated remoteCaptions map:`, {
+          participantId,
+          caption: captionData,
+          totalCaptions: newMap.size
+        });
+        return newMap;
+      });
+      
+      // Force a re-render by updating caption text
+      if (isFinal) {
+        setCaptionText(''); // Clear status text when we have final captions
+      }
+
+      // Clear this participant's caption after 5 seconds if final
+      if (isFinal) {
+        setTimeout(() => {
+          if (isCaptionEnabledRef.current) {
+            setRemoteCaptions(prev => {
+              const newMap = new Map(prev);
+              const existing = newMap.get(participantId);
+              // Only clear if this is still the same caption (not overwritten)
+              if (existing && existing.timestamp === timestamp) {
+                newMap.delete(participantId);
+              }
+              return newMap;
+            });
+          }
+        }, 5000);
+      }
+    });
     
+    // Listen for caption errors
+    socket.on('caption-error', (error) => {
+      console.error('❌ Caption error:', error);
+      if (error.code === 'SERVICE_UNAVAILABLE') {
+        setCaptionText('Caption service unavailable - check server configuration');
+        alert('Caption service is not configured on the server. Please contact your administrator.\n\n' + 
+              (error.details || 'DEEPGRAM_API_KEY not set in server configuration'));
+      }
+    });
+
     socket.on('participant_joined', handleParticipantJoined);
     socket.on('participant_left', handleParticipantLeft);
     socket.on('participant_left_call', handleParticipantLeftCall);
@@ -258,6 +335,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       socket.off('participant-joined-video', handleParticipantJoined);
       socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
+      socket.off('caption-transcription');
+      socket.off('caption-error');
       socket.off('error');
     };
   }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1104,7 +1183,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }, 10000); // Check every 10 seconds
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = useCallback(() => {
     const audioTrack = localTracks.find(track => track.kind === 'audio');
     if (!audioTrack) return;
 
@@ -1112,14 +1191,35 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // Mute: disable the track (stops transmission)
       audioTrack.disable();
       setIsAudioEnabled(false);
+
+      // If captions are enabled, stop capturing local audio (but keep receiving others' captions)
+      if (isCaptionEnabledRef.current && captionManagerRef.current) {
+        const localId = user?._id || user?.id || 'local';
+        captionManagerRef.current.stopCapture(localId);
+        console.log('🔇 Muted - stopped local caption capture, still receiving others\' captions');
+      }
     } else {
       // Unmute: enable the track (resumes transmission)
       audioTrack.enable();
       setIsAudioEnabled(true);
-    }
-  };
 
-  const toggleVideo = () => {
+      // If captions are enabled, start capturing local audio again
+      if (isCaptionEnabledRef.current && captionManagerRef.current && callInfo) {
+        const localId = user?._id || user?.id || 'local';
+        const localName = user?.name || 'You';
+        
+        captionManagerRef.current.startCapture(localId, localName, audioTrack)
+          .then(success => {
+            if (success) {
+              console.log('🔊 Unmuted - started local caption capture');
+            }
+          })
+          .catch(err => console.warn('Failed to restart caption capture:', err));
+      }
+    }
+  }, [localTracks, isAudioEnabled, user, callInfo]);
+
+  const toggleVideo = useCallback(() => {
     const videoTrack = localTracks.find(track => track.kind === 'video');
     if (!videoTrack) return;
 
@@ -1132,16 +1232,132 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       videoTrack.enable();
       setIsVideoEnabled(true);
     }
-  };
+  }, [localTracks, isVideoEnabled]);
 
-  // Toggle captions using Web Speech API
-  const toggleCaption = useCallback(() => {
+  // Fallback to Web Speech API if Deepgram is not available
+  const startFallbackSpeechRecognition = useCallback(() => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      console.warn('Web Speech API not supported in this browser');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      console.log('🎤 Fallback speech recognition started');
+      setCaptionText('Listening for speech (browser mode)...');
+    };
+
+    recognition.onresult = (event) => {
+      if (!isCaptionEnabledRef.current) return;
+
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+          setCaptionHistory(prev => [...prev.slice(-9), {
+            text: transcript,
+            timestamp: new Date().toISOString(),
+            speaker: user?.name || 'You'
+          }]);
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      const displayText = finalTranscript || interimTranscript;
+      if (displayText.trim()) {
+        const localId = user?._id || user?.id || 'local';
+        const localName = user?.name || 'You';
+        const timestamp = new Date().toISOString();
+        const isFinal = !!finalTranscript;
+
+        // Update remote captions map with local user's transcript
+        setRemoteCaptions(prev => {
+          const newMap = new Map(prev);
+          newMap.set(localId, {
+            text: displayText.trim(),
+            speaker: localName,
+            timestamp: timestamp,
+            isFinal: isFinal
+          });
+          return newMap;
+        });
+
+        // Also broadcast to other participants via socket (so they see your captions too)
+        if (socket && callInfo) {
+          const roomName = callInfo.roomName;
+          const callId = callInfo.id || callInfo.callId || callInfo._id;
+          
+          socket.emit('caption-transcription-broadcast', {
+            callId,
+            roomName,
+            participantId: localId,
+            participantName: localName,
+            text: displayText.trim(),
+            isFinal: isFinal,
+            timestamp: timestamp
+          });
+        }
+      }
+
+      if (finalTranscript) {
+        if (captionClearTimeoutRef.current) {
+          clearTimeout(captionClearTimeoutRef.current);
+        }
+        captionClearTimeoutRef.current = setTimeout(() => {
+          if (isCaptionEnabledRef.current) {
+            setRemoteCaptions(prev => {
+              const newMap = new Map(prev);
+              newMap.delete('local');
+              return newMap;
+            });
+          }
+        }, 5000);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === 'not-allowed') {
+        alert('Microphone access is required for captions.');
+        isCaptionEnabledRef.current = false;
+        setIsCaptionEnabled(false);
+      } else if (event.error === 'no-speech') {
+        try { recognition.start(); } catch (e) { }
+      }
+    };
+
+    recognition.onend = () => {
+      if (isCaptionEnabledRef.current) {
+        try { recognition.start(); } catch (e) { }
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error('Failed to start fallback speech recognition:', e);
+    }
+  }, [user, socket, callInfo]);
+
+  // Store fallback function in ref to avoid dependency issues
+  startFallbackSpeechRecognitionRef.current = startFallbackSpeechRecognition;
+
+  // Toggle captions using Deepgram (via server) with Web Speech API fallback
+  const toggleCaption = useCallback(async () => {
     if (isCaptionEnabledRef.current) {
-      // Turn off captions - update ref first to prevent race conditions
+      // Turn off captions
+      console.log('🔇 Disabling captions...');
       isCaptionEnabledRef.current = false;
-
-      // Increment instance ID to invalidate any pending handlers from old instances
-      recognitionInstanceIdRef.current += 1;
 
       // Clear any pending caption clear timeout
       if (captionClearTimeoutRef.current) {
@@ -1149,196 +1365,139 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         captionClearTimeoutRef.current = null;
       }
 
-      // Stop and remove all event handlers from the current recognition instance
-      if (recognitionRef.current) {
-        try {
-          // Remove all event handlers to prevent them from firing after stop
-          recognitionRef.current.onstart = null;
-          recognitionRef.current.onresult = null;
-          recognitionRef.current.onerror = null;
-          recognitionRef.current.onend = null;
-          recognitionRef.current.stop();
-        } catch (e) {
-          console.warn('Error stopping recognition:', e);
-        }
-        recognitionRef.current = null;
+      // Stop caption manager (Deepgram-based captions)
+      if (captionManagerRef.current) {
+        captionManagerRef.current.disable();
+        captionManagerRef.current.destroy();
+        captionManagerRef.current = null;
       }
+
       setIsCaptionEnabled(false);
       setCaptionText('');
-      console.log('🔇 Captions disabled');
+      setRemoteCaptions(new Map());
+      console.log('✅ Captions disabled');
     } else {
       // Turn on captions
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        console.warn('Speech recognition not supported in this browser');
-        alert('Speech recognition is not supported in your browser. Please use Chrome or Edge for captions.');
+      console.log('🎤 Enabling captions...');
+
+      if (!socket || !callInfo) {
+        alert('Cannot enable captions: missing connection or call info');
         return;
       }
 
-      // Stop and clean up any existing recognition instance first
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.onstart = null;
-          recognitionRef.current.onresult = null;
-          recognitionRef.current.onerror = null;
-          recognitionRef.current.onend = null;
-          recognitionRef.current.stop();
-        } catch (e) {
-          // Ignore errors when stopping old instance
-        }
+      const callIdToUse = callInfo.id || callInfo.callId || callInfo._id;
+      const roomNameToUse = callInfo.roomName;
+
+      if (!callIdToUse || !roomNameToUse) {
+        alert('Cannot enable captions: missing call information');
+        return;
       }
 
-      // Increment instance ID for the new instance
-      recognitionInstanceIdRef.current += 1;
-      const currentInstanceId = recognitionInstanceIdRef.current;
-
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      recognition.maxAlternatives = 1;
-
-      recognition.onstart = () => {
-        // Only process if this is still the current instance
-        if (currentInstanceId !== recognitionInstanceIdRef.current) return;
-        console.log('🎤 Caption recognition started');
-        isCaptionEnabledRef.current = true;
-        setIsCaptionEnabled(true);
-      };
-
-      recognition.onresult = (event) => {
-        // Only process if this is still the current instance and captions are enabled
-        if (currentInstanceId !== recognitionInstanceIdRef.current || !isCaptionEnabledRef.current) return;
-
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-            // Add to caption history
-            setCaptionHistory(prev => {
-              const newHistory = [...prev, {
-                text: transcript,
-                timestamp: new Date().toISOString(),
-                speaker: user?.name || 'You'
-              }];
-              // Keep only last 10 entries
-              return newHistory.slice(-10);
-            });
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-
-        // Update current caption text
-        const displayText = finalTranscript || interimTranscript;
-        setCaptionText(displayText.trim());
-
-        // Clear caption after 5 seconds of no speech - clear previous timeout first
-        if (finalTranscript) {
-          // Clear any existing timeout before setting a new one
-          if (captionClearTimeoutRef.current) {
-            clearTimeout(captionClearTimeoutRef.current);
-            captionClearTimeoutRef.current = null;
-          }
-
-          // Capture the instance ID in the timeout closure
-          const timeoutInstanceId = currentInstanceId;
-          captionClearTimeoutRef.current = setTimeout(() => {
-            // Only clear if this is still the current instance and captions are enabled
-            if (timeoutInstanceId === recognitionInstanceIdRef.current && isCaptionEnabledRef.current) {
-              setCaptionText('');
-            }
-            // Clear the timeout ref if this timeout is still the current one
-            if (captionClearTimeoutRef.current && timeoutInstanceId === recognitionInstanceIdRef.current) {
-              captionClearTimeoutRef.current = null;
-            }
-          }, 5000);
-        }
-      };
-
-      recognition.onerror = (event) => {
-        // Only process if this is still the current instance
-        if (currentInstanceId !== recognitionInstanceIdRef.current) return;
-
-        console.error('Caption recognition error:', event.error);
-        if (event.error === 'not-allowed') {
-          alert('Microphone access is required for captions. Please allow microphone access and try again.');
-          isCaptionEnabledRef.current = false;
-          setIsCaptionEnabled(false);
-        } else if (event.error === 'no-speech') {
-          // Just restart recognition on no-speech, don't disable
-          // Check both instance ID and current state to avoid stale closures
-          if (currentInstanceId === recognitionInstanceIdRef.current &&
-            isCaptionEnabledRef.current &&
-            recognitionRef.current === recognition) {
-            try {
-              recognition.start();
-            } catch (e) {
-              // Already running or stopped
-            }
-          }
-        }
-      };
-
-      recognition.onend = () => {
-        // Only restart if this is still the current instance and captions are enabled
-        if (currentInstanceId === recognitionInstanceIdRef.current &&
-          isCaptionEnabledRef.current &&
-          recognitionRef.current === recognition) {
-          try {
-            recognition.start();
-          } catch (e) {
-            // Recognition already started or stopped
-            console.log('Recognition already started or stopped');
-          }
-        }
-      };
-
-      recognitionRef.current = recognition;
+      // Enable caption state first
+      isCaptionEnabledRef.current = true;
+      setIsCaptionEnabled(true);
+      setCaptionText('Starting captions...');
 
       try {
-        recognition.start();
-      } catch (e) {
-        console.error('Failed to start speech recognition:', e);
-        isCaptionEnabledRef.current = false;
-        setIsCaptionEnabled(false);
-        recognitionRef.current = null;
+        // Create caption manager
+        const captionManager = new CaptionManager(socket, callIdToUse, roomNameToUse);
+        captionManagerRef.current = captionManager;
+
+        // IMPORTANT: Each client only captures their OWN local audio
+        // The server broadcasts transcriptions to ALL participants
+        // This ensures:
+        // 1. No duplicate transcriptions (each audio source is captured once)
+        // 2. Both users see each other's captions via socket broadcast
+        // 3. Works even when your mic is muted (you still receive others' captions)
+        
+        const participantsToCapture = [];
+
+        // Only capture local user's audio track (if not muted)
+        // Other participants' audio is captured by THEIR clients, not yours
+        if (isAudioEnabled) {
+          const localAudioTrack = localTracks.find(track => track.kind === 'audio');
+          if (localAudioTrack) {
+            participantsToCapture.push({
+              id: user?._id || user?.id || 'local',
+              name: user?.name || 'You',
+              audioTrack: localAudioTrack
+            });
+            console.log('🎤 Will capture local audio for captions');
+          }
+        } else {
+          console.log('🔇 Mic is muted - not capturing local audio, but will receive others\' captions');
+        }
+
+        console.log(`🎤 Starting caption capture for ${participantsToCapture.length} audio source(s)`);
+        console.log('📝 You will see captions from other participants when they speak (via server broadcast)');
+
+        // Enable caption manager with local participant only
+        const successCount = await captionManager.enable(participantsToCapture);
+
+        if (successCount > 0) {
+          setCaptionText('Listening for speech...');
+          console.log(`✅ Captions enabled - your audio is being transcribed (${successCount} capture(s) active)`);
+        } else if (isAudioEnabled) {
+          // Deepgram not configured but mic is on - try fallback
+          setCaptionText('Waiting for transcription service...');
+          console.warn('⚠️ No audio captures started - Deepgram may not be configured on server');
+          console.warn('   Check server logs for DEEPGRAM_API_KEY configuration');
+          
+          // Check if we should fall back to Web Speech API
+          if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            console.log('🔄 Falling back to browser-based speech recognition...');
+            if (startFallbackSpeechRecognitionRef.current) {
+              startFallbackSpeechRecognitionRef.current();
+            }
+          } else {
+            console.error('❌ Web Speech API not available in this browser');
+            setCaptionText('Caption service unavailable - check server configuration');
+          }
+        } else {
+          // Mic is muted - just wait for others' captions
+          setCaptionText('Waiting for others to speak...');
+          console.log('🔇 Mic muted - waiting for captions from other participants');
+          console.log('📝 You will see captions when other participants speak (if they have captions enabled)');
+        }
+
+      } catch (error) {
+        console.error('Failed to enable captions:', error);
+        setCaptionText('Caption service unavailable');
+        
+        // Try fallback to Web Speech API (only if mic is on)
+        if (isAudioEnabled && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+          console.log('🔄 Falling back to browser-based speech recognition...');
+          if (startFallbackSpeechRecognitionRef.current) {
+            startFallbackSpeechRecognitionRef.current();
+          }
+        } else {
+          setCaptionText('Waiting for others to speak...');
+        }
       }
     }
-  }, [user?.name]);
+  }, [socket, callInfo, isAudioEnabled, localTracks, user]);
 
-  // Cleanup speech recognition on unmount
+  // Cleanup caption manager on unmount
   useEffect(() => {
     return () => {
       // Clear caption enabled ref
       isCaptionEnabledRef.current = false;
 
-      // Invalidate instance ID to prevent any pending handlers from executing
-      recognitionInstanceIdRef.current += 1;
-
       // Clear any pending caption clear timeout
       if (captionClearTimeoutRef.current) {
         clearTimeout(captionClearTimeoutRef.current);
         captionClearTimeoutRef.current = null;
       }
 
-      // Stop recognition and remove all event handlers
-      if (recognitionRef.current) {
+      // Stop and destroy caption manager (Deepgram-based captions)
+      if (captionManagerRef.current) {
         try {
-          // Remove all event handlers to prevent them from firing after stop
-          recognitionRef.current.onstart = null;
-          recognitionRef.current.onresult = null;
-          recognitionRef.current.onerror = null;
-          recognitionRef.current.onend = null;
-          recognitionRef.current.stop();
+          captionManagerRef.current.disable();
+          captionManagerRef.current.destroy();
+          captionManagerRef.current = null;
         } catch (e) {
-          console.warn('Error stopping recognition during cleanup:', e);
+          console.warn('Error cleaning up caption manager:', e);
         }
-        recognitionRef.current = null;
       }
     };
   }, []);
@@ -1547,6 +1706,25 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       reconnectTimeoutRef.current = null;
     }
 
+    // Clear caption timeout
+    if (captionClearTimeoutRef.current) {
+      clearTimeout(captionClearTimeoutRef.current);
+      captionClearTimeoutRef.current = null;
+    }
+
+    // Stop caption manager
+    if (captionManagerRef.current) {
+      try {
+        captionManagerRef.current.disable();
+        captionManagerRef.current.destroy();
+        captionManagerRef.current = null;
+      } catch (e) {
+        console.warn('Error cleaning up caption manager:', e);
+      }
+    }
+
+    isCaptionEnabledRef.current = false;
+
     // Stop all local tracks (only if not already stopped)
     if (!wasAlreadyCleaning) {
       localTracks.forEach(track => {
@@ -1613,6 +1791,25 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
     }
+
+    // Clear caption timeout
+    if (captionClearTimeoutRef.current) {
+      clearTimeout(captionClearTimeoutRef.current);
+      captionClearTimeoutRef.current = null;
+    }
+
+    // Stop caption manager
+    if (captionManagerRef.current) {
+      try {
+        captionManagerRef.current.disable();
+        captionManagerRef.current.destroy();
+        captionManagerRef.current = null;
+      } catch (e) {
+        console.warn('Error cleaning up caption manager:', e);
+      }
+    }
+
+    isCaptionEnabledRef.current = false;
 
     // Stop all local tracks first (before unpublishing)
     localTracks.forEach(track => {
@@ -1909,11 +2106,44 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       {isCaptionEnabled && (
         <div className="caption-container" role="region" aria-live="polite" aria-label="Live captions">
           <div className="caption-content">
-            {captionText ? (
-              <p className="caption-text">{captionText}</p>
-            ) : (
-              <p className="caption-text caption-listening">Listening for speech...</p>
-            )}
+            {(() => {
+              // Collect all captions to display
+              const allCaptions = [];
+              
+              // Add captions from remoteCaptions map (includes both Deepgram and fallback)
+              remoteCaptions.forEach((caption, participantId) => {
+                if (caption && caption.text && caption.text.trim()) {
+                  allCaptions.push({
+                    id: participantId,
+                    text: caption.text,
+                    speaker: caption.speaker || 'Participant',
+                    isFinal: caption.isFinal
+                  });
+                }
+              });
+
+              // Debug logging
+              if (allCaptions.length > 0) {
+                console.log(`📺 Rendering ${allCaptions.length} caption(s) on screen`);
+              }
+              
+              if (allCaptions.length > 0) {
+                return allCaptions.map((caption, index) => {
+                  console.log(`📺 Rendering caption ${index + 1}:`, caption);
+                  return (
+                    <div key={`${caption.id}-${index}`} className="caption-item">
+                      <span className="caption-speaker">{caption.speaker}:</span>
+                      <span className="caption-text">{caption.text}</span>
+                    </div>
+                  );
+                });
+              } else if (captionText && captionText !== 'Listening for speech...') {
+                // Show status text
+                return <p className="caption-text caption-listening">{captionText}</p>;
+              } else {
+                return <p className="caption-text caption-listening">Listening for speech...</p>;
+              }
+            })()}
           </div>
         </div>
       )}
