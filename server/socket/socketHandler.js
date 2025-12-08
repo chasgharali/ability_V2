@@ -8,6 +8,7 @@ const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const logger = require('../utils/logger');
 const liveStatsStore = require('../utils/liveStatsStore');
+const deepgramService = require('../services/deepgramService');
 
 /**
  * Socket.IO connection handler with authentication and real-time features
@@ -372,6 +373,209 @@ const socketHandler = (io) => {
             } catch (error) {
                 logger.error('Direct video call message error:', error);
                 socket.emit('error', { message: 'Failed to send direct message' });
+            }
+        });
+
+        /**
+         * Caption Audio Stream - Receive audio chunks for Deepgram transcription
+         * This enables real-time captions using professional speech-to-text
+         */
+        socket.on('caption-audio-stream', async (data) => {
+            try {
+                const { callId, roomName, participantId, participantName, audioChunk, isStart, isEnd } = data;
+                
+                if (!callId || !roomName || !participantId) {
+                    logger.warn('Caption audio stream missing required fields');
+                    return;
+                }
+
+                const connectionKey = `${callId}_${participantId}`;
+
+                // Start new transcription session
+                if (isStart) {
+                    if (!deepgramService.isAvailable()) {
+                        logger.error('❌ Deepgram service not available - DEEPGRAM_API_KEY not configured in server .env file');
+                        logger.error('   To enable captions, add DEEPGRAM_API_KEY=your-api-key to server/.env and restart server');
+                        socket.emit('caption-error', { 
+                            message: 'Caption service not configured. Please contact administrator.',
+                            code: 'SERVICE_UNAVAILABLE',
+                            details: 'DEEPGRAM_API_KEY not set in server configuration'
+                        });
+                        return;
+                    }
+                    
+                    logger.info(`🎤 Starting Deepgram transcription for ${participantName} (callId: ${callId}, roomName: ${roomName})`);
+
+                    try {
+                        await deepgramService.startTranscription(
+                            connectionKey,
+                            callId,
+                            roomName,
+                            participantId,
+                            participantName || socket.user.name,
+                            (transcription) => {
+                                // Broadcast transcription to all participants
+                                const captionData = {
+                                    participantId: transcription.participantId,
+                                    participantName: transcription.participantName,
+                                    text: transcription.text,
+                                    isFinal: transcription.isFinal,
+                                    timestamp: transcription.timestamp,
+                                    confidence: transcription.confidence
+                                };
+
+                                // Use existing room format for broadcasting
+                                const fullRoomName = `call_${roomName}`;
+                                const videoCallRoomName = `video-call-${callId}`;
+
+                                // Broadcast to all participants in the call rooms (including sender)
+                                io.to(fullRoomName).emit('caption-transcription', captionData);
+                                io.to(videoCallRoomName).emit('caption-transcription', captionData);
+                                
+                                // Also emit directly to sender to ensure they receive it
+                                socket.emit('caption-transcription', captionData);
+
+                                logger.info(`📝 Caption broadcast: ${transcription.participantName} -> "${transcription.text.substring(0, 50)}..." (to ${fullRoomName} and ${videoCallRoomName})`);
+                            }
+                        );
+
+                        socket.emit('caption-started', { 
+                            connectionKey,
+                            message: 'Caption transcription started' 
+                        });
+
+                        logger.info(`🎤 Caption transcription started for ${participantName} in call ${callId}`);
+                    } catch (error) {
+                        logger.error('Failed to start caption transcription:', error);
+                        socket.emit('caption-error', { 
+                            message: 'Failed to start caption service',
+                            code: 'START_FAILED'
+                        });
+                    }
+                    return;
+                }
+
+                // End transcription session
+                if (isEnd) {
+                    deepgramService.stopTranscription(connectionKey);
+                    socket.emit('caption-stopped', { 
+                        connectionKey,
+                        message: 'Caption transcription stopped' 
+                    });
+                    logger.info(`🛑 Caption transcription stopped for ${participantName} in call ${callId}`);
+                    return;
+                }
+
+                // Send audio chunk to Deepgram
+                if (audioChunk) {
+                    // Convert array/object to Buffer if needed
+                    let audioBuffer;
+                    if (Buffer.isBuffer(audioChunk)) {
+                        audioBuffer = audioChunk;
+                    } else if (audioChunk.data && Array.isArray(audioChunk.data)) {
+                        // Convert Int16 array to proper Buffer (16-bit PCM)
+                        const int16Array = new Int16Array(audioChunk.data);
+                        audioBuffer = Buffer.from(int16Array.buffer);
+                    } else if (Array.isArray(audioChunk)) {
+                        // Convert Int16 array to proper Buffer (16-bit PCM)
+                        // The array contains Int16 values, so we need to create an Int16Array first
+                        const int16Array = new Int16Array(audioChunk);
+                        audioBuffer = Buffer.from(int16Array.buffer);
+                    } else if (typeof audioChunk === 'string') {
+                        audioBuffer = Buffer.from(audioChunk, 'base64');
+                    } else {
+                        logger.warn(`⚠️ Invalid audio chunk format received for ${participantName}:`, typeof audioChunk, audioChunk?.constructor?.name);
+                        return;
+                    }
+
+                    // Track chunk count for logging
+                    if (!socket._audioChunkCount) socket._audioChunkCount = 0;
+                    socket._audioChunkCount++;
+                    
+                    // Log first chunk and periodically
+                    if (socket._audioChunkCount === 1) {
+                        logger.info(`🎤 First audio chunk received from ${participantName} (size: ${audioBuffer.length} bytes)`);
+                        logger.info(`   Original array length: ${Array.isArray(audioChunk) ? audioChunk.length : 'N/A'}, Buffer size: ${audioBuffer.length} bytes`);
+                        logger.info(`   Expected buffer size for Int16: ${Array.isArray(audioChunk) ? audioChunk.length * 2 : 'N/A'} bytes`);
+                        // Log sample values to verify they're in valid Int16 range
+                        if (Array.isArray(audioChunk) && audioChunk.length > 0) {
+                            const sampleValues = audioChunk.slice(0, 5);
+                            logger.info(`   Sample values (first 5): ${JSON.stringify(sampleValues)}`);
+                        }
+                    } else if (socket._audioChunkCount % 50 === 0) {
+                        logger.debug(`📤 Received ${socket._audioChunkCount} audio chunks from ${participantName}`);
+                    }
+
+                    const sent = deepgramService.sendAudio(connectionKey, audioBuffer);
+                    if (!sent) {
+                        logger.warn(`⚠️ Failed to send audio chunk ${socket._audioChunkCount} to Deepgram for ${participantName} (connectionKey: ${connectionKey})`);
+                        logger.warn(`   Check if Deepgram WebSocket is open and connection is active`);
+                    }
+                } else {
+                    logger.debug(`No audio chunk in data for ${participantName}`);
+                }
+
+            } catch (error) {
+                logger.error('Caption audio stream error:', error);
+            }
+        });
+
+        /**
+         * Stop all captions when leaving a call
+         */
+        socket.on('caption-stop-all', async (data) => {
+            try {
+                const { callId } = data;
+                if (callId) {
+                    deepgramService.stopAllForCall(callId);
+                    logger.info(`Stopped all captions for call ${callId}`);
+                }
+            } catch (error) {
+                logger.error('Caption stop all error:', error);
+            }
+        });
+
+        /**
+         * Broadcast caption transcription from fallback Web Speech API
+         * This allows browser-based speech recognition to also broadcast to other participants
+         */
+        socket.on('caption-transcription-broadcast', async (data) => {
+            try {
+                const { callId, roomName, participantId, participantName, text, isFinal, timestamp } = data;
+                
+                if (!roomName || !text || !participantId) {
+                    logger.warn('Caption transcription broadcast missing required fields:', data);
+                    return;
+                }
+                
+                // Prepare caption data for broadcasting
+                const captionData = {
+                    participantId,
+                    participantName: participantName || socket.user.name,
+                    text,
+                    isFinal: isFinal !== false,
+                    timestamp: timestamp || new Date().toISOString()
+                };
+                
+                // Find the room name format used for this call
+                const fullRoomName = `call_${roomName}`;
+                const videoCallRoomName = `video-call-${callId}`;
+                
+                // Broadcast to all participants in the call room (including sender)
+                io.to(fullRoomName).emit('caption-transcription', captionData);
+                io.to(videoCallRoomName).emit('caption-transcription', captionData);
+                
+                if (callId) {
+                    io.to(`video-call-${callId}`).emit('caption-transcription', captionData);
+                }
+                
+                // Also emit directly to sender to ensure they receive it
+                socket.emit('caption-transcription', captionData);
+                
+                logger.info(`📝 Fallback caption broadcast: ${participantName} -> "${text.substring(0, 50)}..." (to ${fullRoomName} and ${videoCallRoomName})`);
+                
+            } catch (error) {
+                logger.error('Caption transcription broadcast error:', error);
             }
         });
 
@@ -897,6 +1101,13 @@ const socketHandler = (io) => {
                     user: socket.user.getPublicProfile(),
                     reason: 'disconnected'
                 });
+
+                // Stop any active caption transcriptions for this user
+                if (socket.currentVideoCallId) {
+                    const connectionKey = `${socket.currentVideoCallId}_${socket.userId}`;
+                    deepgramService.stopTranscription(connectionKey);
+                    logger.info(`Stopped caption transcription for disconnected user ${socket.user.email}`);
+                }
 
                 // Update participant status in video call
                 try {
