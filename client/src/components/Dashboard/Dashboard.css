@@ -1102,9 +1102,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 .alert-box p {
-    margin: 0;
-    color: #1976d2;
-    font-size: 0.9rem;
+    font-size: 1.2em;
+    color: black;
 }
 
 /* By default stack; only use two columns on wide screens */
@@ -2022,14 +2021,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 .support-hint {
-    margin-top: 12px;
-    padding: 12px;
-    background: #e3f2fd;
-    border-left: 3px solid #2196f3;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    color: #1976d2;
-    font-weight: 500;
+    font-size: 1.2em;
+    color: black;
 }
 
 /* Responsive Support Dashboard */
