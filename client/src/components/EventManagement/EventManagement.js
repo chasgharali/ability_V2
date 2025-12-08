@@ -298,6 +298,7 @@ export default function EventManagement() {
                 createdAt: new Date(e.createdAt).toDateString(),
                 maxRecruitersPerEvent: e.limits?.maxRecruitersPerEvent ?? 0,
                 maxBooths: e.limits?.maxBooths ?? 0,
+                registrationCount: e.stats?.totalRegistrations ?? 0,
                 status: e.status || 'draft',
                 isDemo: e.isDemo || false,
                 addFooter: Boolean((e.addFooter !== undefined ? e.addFooter : e.theme?.addFooter)),
@@ -494,6 +495,20 @@ export default function EventManagement() {
     const eventPageUrlFor = (row) => row.link || `${window.location.origin}/event/${row.slug}`;
 
     // Grid template functions for custom column renders - using Syncfusion ButtonComponent
+    // Format date/time to show the time that was actually entered (using UTC hours/minutes)
+    const formatEventDateTime = (dateString) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = date.getUTCDate().toString().padStart(2, '0');
+        const year = date.getUTCFullYear();
+        const hours = date.getUTCHours();
+        const minutes = date.getUTCMinutes();
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+        return `${month}/${day}/${year}, ${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    };
+
     const eventPageTemplate = (props) => (
         <ButtonComponent 
             cssClass="e-outline e-primary e-small" 
@@ -776,7 +791,7 @@ export default function EventManagement() {
                                             allowFiltering={true}
                                             template={(props) => (
                                                 <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                                                    {props.startTime ? new Date(props.startTime).toLocaleString() : '-'}
+                                                    {formatEventDateTime(props.startTime)}
                                                 </div>
                                             )}
                                         />
@@ -787,7 +802,7 @@ export default function EventManagement() {
                                             allowFiltering={true}
                                             template={(props) => (
                                                 <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                                                    {props.endTime ? new Date(props.endTime).toLocaleString() : '-'}
+                                                    {formatEventDateTime(props.endTime)}
                                                 </div>
                                             )}
                                         />
@@ -845,6 +860,19 @@ export default function EventManagement() {
                                             template={(props) => (
                                                 <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
                                                     {props.maxBooths ?? 0}
+                                                </div>
+                                            )}
+                                        />
+                                        <ColumnDirective 
+                                            field='registrationCount' 
+                                            headerText='Registered Jobseekers' 
+                                            width='180' 
+                                            textAlign='Center'
+                                            allowFiltering={true}
+                                            allowSorting={true}
+                                            template={(props) => (
+                                                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+                                                    {props.registrationCount ?? 0}
                                                 </div>
                                             )}
                                         />
