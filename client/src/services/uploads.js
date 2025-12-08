@@ -113,10 +113,14 @@ export async function uploadAudioToS3(file) {
   const { upload, download } = presignRes.data;
   const { url, key } = upload;
 
-  // 2) Upload the file to S3 directly
-  await axios.put(url, file, {
+  // 2) Upload the file to S3 directly using fetch (axios adds extra headers that break presigned URLs)
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    mode: 'cors',
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
   });
+  if (!putRes.ok) throw new Error(`S3 upload failed: ${putRes.status}`);
 
   // 3) Confirm upload so server can return a long-lived download URL
   const completeRes = await axios.post(
@@ -156,10 +160,14 @@ export async function uploadVideoToS3(file) {
   const { upload, download } = presignRes.data;
   const { url, key } = upload;
 
-  // 2) Upload the file to S3 directly
-  await axios.put(url, file, {
+  // 2) Upload the file to S3 directly using fetch (axios adds extra headers that break presigned URLs)
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    mode: 'cors',
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
   });
+  if (!putRes.ok) throw new Error(`S3 upload failed: ${putRes.status}`);
 
   // 3) Confirm upload so server can return a long-lived download URL
   const completeRes = await axios.post(
