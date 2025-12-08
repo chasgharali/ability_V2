@@ -74,6 +74,7 @@ export default function BoothQueueWaiting() {
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const announcementCounterRef = useRef(0);
+  const hasLeftQueueRef = useRef(false); // Track if user has left the queue
 
   useEffect(() => {
     // Reset queueToken when boothId changes to prevent using token from wrong booth
@@ -168,6 +169,12 @@ export default function BoothQueueWaiting() {
     if (!boothId || loading) return;
     
     const refreshInterval = setInterval(async () => {
+      // Don't make status requests if user has left the queue
+      if (hasLeftQueueRef.current) {
+        clearInterval(refreshInterval);
+        return;
+      }
+      
       try {
         const queueData = await boothQueueAPI.getQueueStatus(boothId);
         if (queueData?.success) {
@@ -323,6 +330,11 @@ export default function BoothQueueWaiting() {
 
   // Refresh queue status to get updated waitingCount
   const refreshQueueStatus = async () => {
+    // Don't make status requests if user has left the queue
+    if (hasLeftQueueRef.current) {
+      return;
+    }
+    
     try {
       const queueData = await boothQueueAPI.getQueueStatus(boothId);
       if (queueData?.success) {
@@ -877,6 +889,9 @@ export default function BoothQueueWaiting() {
         content: finalContent,
         queueToken
       });
+
+      // Mark that user has left to prevent further status checks
+      hasLeftQueueRef.current = true;
 
       setShowLeaveMessageModal(false);
       setRecordedBlob(null);
