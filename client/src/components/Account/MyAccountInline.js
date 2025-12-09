@@ -640,49 +640,51 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
       </form>
 
       {/* Update Email Section */}
-      <div className="email-update-section" style={{ marginTop: '3rem' }}>
-        <h3 className="section-title">Update Email Address</h3>
-        
-        {emailMessage && (
-          <div className="alert-box" role="status" aria-live="polite">{emailMessage}</div>
-        )}
-        {emailError && (
-          <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{emailError}</div>
-        )}
+      {changePassword && (
+        <div className="email-update-section" style={{ marginTop: '3rem' }}>
+          <h3 className="section-title">Update Email Address</h3>
+          
+          {emailMessage && (
+            <div className="alert-box" role="status" aria-live="polite">{emailMessage}</div>
+          )}
+          {emailError && (
+            <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{emailError}</div>
+          )}
 
-        <form onSubmit={handleEmailUpdate} className="account-form email-form">
-          <div className="form-group">
-            <label htmlFor="newEmail">New Email Address *</label>
-            <input
-              id="newEmail"
-              name="newEmail"
-              type="email"
-              value={emailForm.newEmail}
-              onChange={onEmailChange}
-              placeholder="Enter new email address"
-              required
-              autoComplete="email"
-              disabled={savingEmail || !!pendingEmail}
-            />
-            <div className="field-help">
-              {pendingEmail 
-                ? 'Please verify your pending email change before requesting a new one.'
-                : 'A verification email will be sent to your new email address. You must verify it to complete the change.'}
+          <form onSubmit={handleEmailUpdate} className="account-form email-form">
+            <div className="form-group">
+              <label htmlFor="newEmail">New Email Address *</label>
+              <input
+                id="newEmail"
+                name="newEmail"
+                type="email"
+                value={emailForm.newEmail}
+                onChange={onEmailChange}
+                placeholder="Enter new email address"
+                required
+                autoComplete="email"
+                disabled={savingEmail || !!pendingEmail}
+              />
+              <div className="field-help">
+                {pendingEmail 
+                  ? 'Please verify your pending email change before requesting a new one.'
+                  : 'A verification email will be sent to your new email address. You must verify it to complete the change.'}
+              </div>
             </div>
-          </div>
 
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="ajf-btn ajf-btn-dark"
-              disabled={savingEmail || !!pendingEmail}
-              aria-label="Request email change"
-            >
-              {savingEmail ? 'Sending...' : 'Request Email Change'}
-            </button>
-          </div>
-        </form>
-      </div>
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="ajf-btn ajf-btn-dark"
+                disabled={savingEmail || !!pendingEmail}
+                aria-label="Request email change"
+              >
+                {savingEmail ? 'Sending...' : 'Request Email Change'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Update Password Section */}
       {changePassword && (

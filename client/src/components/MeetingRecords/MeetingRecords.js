@@ -424,22 +424,353 @@ export default function MeetingRecords() {
         setFilters(prev => ({ ...prev, limit: newSize, page: 1 }));
     };
 
+    // Helper function to escape CSV fields
+    const escapeCSV = (value) => {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+        const stringValue = String(value);
+        // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+            return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+    };
+
+    // Helper function to format date consistently
+    const formatDateForCSV = (date) => {
+        if (!date) return '';
+        try {
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return '';
+            // Format: YYYY-MM-DD HH:MM:SS
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        } catch (e) {
+            return '';
+        }
+    };
+
+    // Helper function to format duration
+    const formatDurationForCSV = (duration, startTime, endTime) => {
+        if (duration !== null && duration !== undefined && duration !== '') {
+            return String(duration);
+        }
+        if (startTime && endTime) {
+            try {
+                const start = new Date(startTime);
+                const end = new Date(endTime);
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+                    return String(Math.round((end - start) / (1000 * 60)));
+                }
+            } catch (e) {
+                // Ignore
+            }
+        }
+        return '';
+    };
+
     const handleExport = async () => {
         try {
-            const blob = await meetingRecordsAPI.exportCSV(filters);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'meeting-records.csv';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            showToast('Meeting records exported successfully', 'Success');
+            setLoadingData(true);
+            
+            // Check if there are column filters applied in the grid
+            let hasColumnFilters = false;
+            if (gridRef.current) {
+                try {
+                    // Check if grid has any active column filters
+                    const gridInstance = gridRef.current;
+                    if (gridInstance.filterSettings && gridInstance.filterSettings.columns && gridInstance.filterSettings.columns.length > 0) {
+                        hasColumnFilters = true;
+                        console.log('📊 Column filters detected in grid');
+                    }
+                } catch (e) {
+                    console.warn('Could not check grid filters:', e);
+                }
+            }
+            
+            // If column filters are applied, we need to fetch all data and filter client-side
+            // Otherwise, use server-side export API which is more efficient
+            if (hasColumnFilters) {
+                // Fetch ALL records matching current server-side filters (not paginated)
+                const exportFilters = {
+                    ...filters,
+                    page: 1,
+                    limit: 100000 // Large limit to get all records
+                };
+                
+                console.log('📡 Fetching ALL records for export with server-side filters:', exportFilters);
+                const response = await meetingRecordsAPI.getMeetingRecords(exportFilters);
+                let allRecords = response.meetingRecords || [];
+                
+                console.log(`📊 Fetched ${allRecords.length} total records from server`);
+                
+                // Map records to match grid dataSource structure
+                const mappedRecords = allRecords.map(r => {
+                    const getFieldName = (field) => {
+                        if (!field) return '';
+                        if (typeof field === 'string') return field;
+                        if (typeof field === 'object' && field.name) return field.name;
+                        return '';
+                    };
+                    
+                    const getFieldEmail = (field) => {
+                        if (!field) return '';
+                        if (typeof field === 'object' && field.email) return field.email;
+                        return '';
+                    };
+                    
+                    const getFieldResumeUrl = (field) => {
+                        if (!field) return '';
+                        if (typeof field === 'object' && field.resumeUrl) return field.resumeUrl;
+                        return '';
+                    };
+                    
+                    const getFieldCity = (field) => {
+                        if (!field) return '';
+                        if (typeof field === 'object' && field.city) return field.city;
+                        return '';
+                    };
+                    
+                    return {
+                        ...r, 
+                        id: r._id || r.id,
+                        eventName: getFieldName(r.eventId),
+                        boothName: getFieldName(r.boothId),
+                        recruiterName: getFieldName(r.recruiterId),
+                        jobSeekerName: getFieldName(r.jobseekerId),
+                        jobSeekerEmail: getFieldEmail(r.jobseekerId),
+                        jobSeekerResumeUrl: getFieldResumeUrl(r.jobseekerId),
+                        jobSeekerCity: getFieldCity(r.jobseekerId),
+                        interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
+                        messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
+                    };
+                });
+                
+                // Apply column filters by temporarily updating grid dataSource
+                let recordsToExport = mappedRecords;
+                try {
+                    // Save current state
+                    const originalDataSource = gridRef.current.dataSource;
+                    const originalPageSettings = gridRef.current.pageSettings;
+                    
+                    // Temporarily set all records and disable paging
+                    gridRef.current.dataSource = mappedRecords;
+                    gridRef.current.pageSettings = { pageSize: mappedRecords.length };
+                    gridRef.current.refresh();
+                    
+                    // Wait for grid to process
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    // Get filtered records
+                    const filteredRows = gridRef.current.getFilteredRecords();
+                    
+                    // Restore original state
+                    gridRef.current.dataSource = originalDataSource;
+                    gridRef.current.pageSettings = originalPageSettings;
+                    gridRef.current.refresh();
+                    
+                    if (filteredRows && filteredRows.length > 0) {
+                        const filteredIds = new Set(filteredRows.map(row => (row._id || row.id)));
+                        recordsToExport = mappedRecords.filter(r => filteredIds.has(r._id || r.id));
+                        console.log(`📊 Applied column filters: ${recordsToExport.length} records (from ${mappedRecords.length} total)`);
+                    }
+                } catch (gridError) {
+                    console.warn('⚠️ Could not apply column filters, exporting all:', gridError);
+                }
+                
+                // Export using client-side CSV generation
+                exportToCSVClientSide(recordsToExport);
+            } else {
+                // No column filters - use efficient server-side export
+                console.log('📡 Using server-side export API (no column filters)');
+                const exportFilters = {
+                    ...filters
+                    // Remove pagination params for export
+                };
+                delete exportFilters.page;
+                delete exportFilters.limit;
+                
+                const blob = await meetingRecordsAPI.exportCSV(exportFilters);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'meeting-records.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast('Meeting records exported successfully', 'Success');
+            }
         } catch (error) {
             console.error('Error exporting meeting records:', error);
             showToast('Failed to export meeting records', 'Error');
+        } finally {
+            setLoadingData(false);
         }
+    };
+    
+    // Helper function for client-side CSV export
+    const exportToCSVClientSide = (recordsToExport) => {
+        // CSV Headers
+        const csvHeaders = [
+            'Event Name',
+            'Booth',
+            'Recruiter Name',
+            'Recruiter Email',
+            'Job Seeker Name',
+            'Job Seeker Email',
+            'Job Seeker Location',
+            'Job Seeker Resume Link',
+            'Interpreter',
+            'Start Time',
+            'End Time',
+            'Duration (minutes)',
+            'Status',
+            'Rating',
+            'Feedback',
+            'Messages Count'
+        ];
+
+        // Format status labels
+        const statusLabels = {
+                'scheduled': 'Scheduled',
+                'active': 'Active',
+                'completed': 'Completed',
+                'cancelled': 'Cancelled',
+                'failed': 'Failed',
+                'left_with_message': 'Left Message'
+        };
+
+        // Convert records to CSV rows
+        const csvRows = recordsToExport.map(record => {
+                // Helper functions to extract data
+                const getFieldName = (field) => {
+                    if (!field) return '';
+                    if (typeof field === 'string') return field;
+                    if (typeof field === 'object' && field.name) return field.name;
+                    return '';
+                };
+                
+                const getFieldEmail = (field) => {
+                    if (!field) return '';
+                    if (typeof field === 'string') return field;
+                    if (typeof field === 'object' && field.email) return String(field.email).trim();
+                    return '';
+                };
+                
+                const getFieldResumeUrl = (field) => {
+                    if (!field) return '';
+                    // Check if already extracted (from mapping above)
+                    if (typeof field === 'string' && field.startsWith('http')) return field;
+                    if (typeof field === 'object' && field.resumeUrl) return String(field.resumeUrl).trim();
+                    // Also check the original nested structure
+                    if (record.jobseekerId && typeof record.jobseekerId === 'object') {
+                        if (record.jobseekerId.resumeUrl) return String(record.jobseekerId.resumeUrl).trim();
+                    }
+                    return '';
+                };
+                
+                const getFieldCity = (field) => {
+                    if (!field) return '';
+                    if (typeof field === 'string') return field;
+                    if (typeof field === 'object' && field.city) return String(field.city).trim();
+                    return '';
+                };
+                
+                const getFieldState = (field) => {
+                    if (!field) return '';
+                    if (typeof field === 'string') return field;
+                    if (typeof field === 'object' && field.state) return String(field.state).trim();
+                    return '';
+                };
+
+                // Extract values - use mapped fields if available, otherwise extract from nested objects
+                const eventName = record.eventName || getFieldName(record.eventId);
+                const boothName = record.boothName || getFieldName(record.boothId);
+                const recruiterName = record.recruiterName || getFieldName(record.recruiterId);
+                const recruiterEmail = getFieldEmail(record.recruiterId);
+                const jobSeekerName = record.jobSeekerName || getFieldName(record.jobseekerId);
+                const jobSeekerEmail = record.jobSeekerEmail || getFieldEmail(record.jobseekerId);
+                const jobSeekerResumeUrl = record.jobSeekerResumeUrl || getFieldResumeUrl(record.jobseekerId);
+                const jobSeekerCity = record.jobSeekerCity || getFieldCity(record.jobseekerId);
+                const jobSeekerState = getFieldState(record.jobseekerId);
+                
+                let location = '';
+                if (jobSeekerCity && jobSeekerState) {
+                    location = `${jobSeekerCity}, ${jobSeekerState}`;
+                } else if (jobSeekerCity) {
+                    location = jobSeekerCity;
+                } else if (jobSeekerState) {
+                    location = jobSeekerState;
+                }
+                
+                const interpreterName = (record.interpreterId && typeof record.interpreterId === 'object' && record.interpreterId.name) 
+                    ? record.interpreterId.name 
+                    : 'None';
+                
+                const duration = formatDurationForCSV(record.duration, record.startTime, record.endTime);
+                const status = statusLabels[record.status] || record.status || '';
+                const rating = (record.recruiterRating !== null && record.recruiterRating !== undefined && record.recruiterRating !== '') 
+                    ? String(record.recruiterRating) 
+                    : '';
+                const feedback = (record.recruiterFeedback !== null && record.recruiterFeedback !== undefined) 
+                    ? String(record.recruiterFeedback).trim() 
+                    : '';
+                const messagesCount = Array.isArray(record.jobSeekerMessages) 
+                    ? String(record.jobSeekerMessages.length) 
+                    : '0';
+
+                return [
+                    escapeCSV(eventName),
+                    escapeCSV(boothName),
+                    escapeCSV(recruiterName),
+                    escapeCSV(recruiterEmail),
+                    escapeCSV(jobSeekerName),
+                    escapeCSV(jobSeekerEmail),
+                    escapeCSV(location),
+                    escapeCSV(jobSeekerResumeUrl),
+                    escapeCSV(interpreterName),
+                    escapeCSV(formatDateForCSV(record.startTime)),
+                    escapeCSV(formatDateForCSV(record.endTime)),
+                    escapeCSV(duration),
+                    escapeCSV(status),
+                    escapeCSV(rating),
+                    escapeCSV(feedback),
+                    escapeCSV(messagesCount)
+                ];
+        });
+
+        // Build CSV content
+        const csvContent = [
+            csvHeaders.map(h => escapeCSV(h)).join(','),
+            ...csvRows.map(row => row.join(','))
+        ].join('\r\n');
+
+        // Add BOM for Excel compatibility (UTF-8 BOM)
+        const BOM = '\uFEFF';
+        const finalContent = BOM + csvContent;
+
+        // Create blob and download
+        const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'meeting-records.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showToast(`Exported ${recordsToExport.length} meeting record(s) successfully`, 'Success');
     };
 
     const clearFilters = () => {
@@ -568,7 +899,7 @@ export default function MeetingRecords() {
     const eventTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.eventId?.name || 'N/A'}
             </div>
         );
@@ -577,7 +908,7 @@ export default function MeetingRecords() {
     const boothTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
                 {row.boothId?.name || 'N/A'}
             </div>
         );
@@ -588,13 +919,13 @@ export default function MeetingRecords() {
         // For left_with_message records, show "All Recruiters in Booth" instead of specific recruiter
         if (row.status === 'left_with_message') {
             return (
-                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ fontStyle: 'italic', color: '#6b7280' }}>All Recruiters in Booth</span>
                 </div>
             );
         }
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.recruiterId?.name || 'N/A'}
             </div>
         );
@@ -603,8 +934,31 @@ export default function MeetingRecords() {
     const jobSeekerTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.jobseekerId?.name || 'N/A'}
+            </div>
+        );
+    };
+
+    const jobSeekerEmailTemplate = (props) => {
+        const row = props;
+        const email = row.jobseekerId?.email || row.jobSeekerEmail || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {email !== 'N/A' ? (
+                    <a 
+                        href={`mailto:${email}`}
+                        style={{ color: '#111827', textDecoration: 'none' }}
+                        onClick={(e) => e.stopPropagation()}
+                        title={`Send email to ${email}`}
+                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                    >
+                        {email}
+                    </a>
+                ) : (
+                    <span style={{ color: '#111827' }}>N/A</span>
+                )}
             </div>
         );
     };
@@ -617,7 +971,7 @@ export default function MeetingRecords() {
             locationText = `${jobSeeker.city}, ${jobSeeker.state}`;
         }
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {locationText}
             </div>
         );
@@ -626,7 +980,7 @@ export default function MeetingRecords() {
     const startTimeTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {formatDateTime(row.startTime)}
             </div>
         );
@@ -635,7 +989,7 @@ export default function MeetingRecords() {
     const durationTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {formatDuration(row.duration)}
             </div>
         );
@@ -652,16 +1006,18 @@ export default function MeetingRecords() {
             'left_with_message': 'Left Message'
         };
         return (
-            <span className={`status-badge status-${row.status}`}>
-                {statusLabels[row.status] || row.status}
-            </span>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                <span className={`status-badge status-${row.status}`}>
+                    {statusLabels[row.status] || row.status}
+                </span>
+            </div>
         );
     };
 
     const ratingTemplate = (props) => {
         const row = props;
         return (
-            <div className="rating-display">
+            <div className="rating-display" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                 <span className="stars">{renderStars(row.recruiterRating)}</span>
                 {row.recruiterRating && (
                     <span className="rating-number">({row.recruiterRating}/5)</span>
@@ -673,7 +1029,7 @@ export default function MeetingRecords() {
     const messagesTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.jobSeekerMessages?.length || 0}
             </div>
         );
@@ -682,7 +1038,7 @@ export default function MeetingRecords() {
     const interpreterTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.interpreterId?.name || 'None'}
             </div>
         );
@@ -698,7 +1054,11 @@ export default function MeetingRecords() {
                     wordWrap: 'break-word', 
                     whiteSpace: 'normal', 
                     padding: '8px 0',
-                    maxWidth: '300px'
+                    maxWidth: '300px',
+                    textAlign: 'center',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }}
                 title={notes || 'No notes'}
             >
@@ -1056,6 +1416,18 @@ export default function MeetingRecords() {
                                         return '';
                                     };
                                     
+                                    const getFieldEmail = (field) => {
+                                        if (!field) return '';
+                                        if (typeof field === 'object' && field.email) return field.email;
+                                        return '';
+                                    };
+                                    
+                                    const getFieldResumeUrl = (field) => {
+                                        if (!field) return '';
+                                        if (typeof field === 'object' && field.resumeUrl) return field.resumeUrl;
+                                        return '';
+                                    };
+                                    
                                     return {
                                         ...r, 
                                         id: r._id || r.id,
@@ -1064,6 +1436,8 @@ export default function MeetingRecords() {
                                         boothName: getFieldName(r.boothId),
                                         recruiterName: getFieldName(r.recruiterId),
                                         jobSeekerName: getFieldName(r.jobseekerId),
+                                        jobSeekerEmail: getFieldEmail(r.jobseekerId),
+                                        jobSeekerResumeUrl: getFieldResumeUrl(r.jobseekerId),
                                         jobSeekerCity: getFieldCity(r.jobseekerId),
                                         interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
                                         messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
@@ -1117,18 +1491,19 @@ export default function MeetingRecords() {
                                         />
                                     )}
                                     <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerEmail' headerText='Job Seeker Email' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerEmailTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='duration' headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowFiltering={true} />
                                     <ColumnDirective field='status' headerText='Status' width='130' textAlign='Center' template={statusTemplate} allowFiltering={true} />
                                     <ColumnDirective field='recruiterRating' headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} type='string' />
+                                    <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} type='string' textAlign='Center' />
                                     <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective 
                                         headerText='Actions' 
                                         width='280' 
