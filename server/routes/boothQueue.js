@@ -890,12 +890,56 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
             });
         }
 
-        const queueEntry = await BoothQueue.findById(queueId);
+        // CRITICAL FIX: Atomic check-and-update to prevent race conditions
+        // Only update if queue entry is still in 'waiting' status
+        const queueEntry = await BoothQueue.findOneAndUpdate(
+            {
+                _id: queueId,
+                status: 'waiting'  // Only invite if still waiting
+            },
+            {
+                $set: {
+                    status: 'invited',
+                    invitedAt: new Date(),
+                    lastActivity: new Date()
+                }
+            },
+            { new: true }
+        );
 
         if (!queueEntry) {
+            // Check if queue entry exists but is in different status
+            const existingEntry = await BoothQueue.findById(queueId);
+            if (existingEntry) {
+                if (existingEntry.status === 'invited' || existingEntry.status === 'in_meeting') {
+                    return res.status(409).json({
+                        success: false,
+                        message: 'Job seeker already invited or in meeting',
+                        currentStatus: existingEntry.status
+                    });
+                }
+            }
             return res.status(404).json({
                 success: false,
-                message: 'Queue entry not found'
+                message: 'Queue entry not found or no longer available'
+            });
+        }
+
+        // CRITICAL FIX: Check if there's already an active call for this queue entry
+        const existingCall = await VideoCall.findOne({
+            queueEntry: queueId,
+            status: 'active'
+        });
+
+        if (existingCall) {
+            // Restore queue entry status
+            await BoothQueue.findByIdAndUpdate(queueId, {
+                $set: { status: 'waiting' }
+            });
+            return res.status(409).json({
+                success: false,
+                message: 'Job seeker already in an active call',
+                existingCallId: existingCall._id
             });
         }
 
@@ -912,8 +956,9 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
 
         await meeting.save();
 
-        // Update queue entry
-        await queueEntry.inviteToMeeting(meeting._id);
+        // Update queue entry with meeting ID (status already updated atomically above)
+        queueEntry.meetingId = meeting._id;
+        await queueEntry.save();
 
         // Emit socket event to job seeker
         if (req.app.get('io')) {
