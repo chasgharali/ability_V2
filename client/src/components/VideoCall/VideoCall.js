@@ -11,7 +11,9 @@ import ParticipantsList from './ParticipantsList';
 import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
 import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
-import { CaptionManager } from '../../utils/audioCapture';
+// Syncfusion Speech To Text Component
+import { SpeechToTextComponent } from '@syncfusion/ej2-react-inputs';
+import '@syncfusion/ej2-react-inputs/styles/material.css';
 import './VideoCall.css';
 
 // Suppress Twilio console warnings and errors
@@ -153,14 +155,20 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   // Once a call has been explicitly ended (by recruiter or locally),
   // prevent any further automatic reconnects or re-initialization.
   const callEndedRef = useRef(false);
-  // Caption manager ref for Deepgram-based captions
-  const captionManagerRef = useRef(null);
+  // Syncfusion SpeechToText component reference
+  const speechToTextRef = useRef(null);
   // Ref to track caption enabled state (avoids stale closure in event handlers)
   const isCaptionEnabledRef = useRef(false);
   // Ref to track caption clear timeout (for cleanup)
   const captionClearTimeoutRef = useRef(null);
-  // Ref to store fallback speech recognition function (avoids initialization order issues)
-  const startFallbackSpeechRecognitionRef = useRef(null);
+  // Ref to track last transcript time (for detecting if recognition stopped)
+  const lastTranscriptTimeRef = useRef(null);
+  // Ref to track periodic check interval for Syncfusion component
+  const syncfusionCheckIntervalRef = useRef(null);
+  // Ref to track if we're currently restarting the component (prevent multiple restarts)
+  const isRestartingSyncfusionRef = useRef(false);
+  // Ref to track Syncfusion component listening state
+  const syncfusionListeningStateRef = useRef('Inactive');
 
   // Initialize call
   useEffect(() => {
@@ -202,11 +210,151 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     };
   }, []);
 
+  // Create caption transcription handler function (outside useEffect to avoid closure issues)
+  const handleCaptionTranscription = useCallback((data) => {
+      // IMPORTANT: Always check the ref directly (refs don't have closure issues)
+      // The ref is updated synchronously when captions are enabled/disabled
+      const captionsCurrentlyEnabled = isCaptionEnabledRef.current;
+      
+      // Debug logging to help diagnose the issue
+      if (!captionsCurrentlyEnabled) {
+        // Only log once every 5 seconds to reduce spam
+        if (!window._lastCaptionDisabledWarning || Date.now() - window._lastCaptionDisabledWarning > 5000) {
+          console.warn('📝 Caption received but captions are disabled');
+          console.warn('🔍 Debug info:', {
+            isCaptionEnabledRef: isCaptionEnabledRef.current,
+            isCaptionEnabledState: isCaptionEnabled,
+            hasData: !!data,
+            participantId: data?.participantId,
+            text: data?.text?.substring(0, 30),
+            timestamp: new Date().toISOString()
+          });
+          console.warn('💡 Toggle captions off/on to refresh the socket listener');
+          window._lastCaptionDisabledWarning = Date.now();
+        }
+        return;
+      }
+      
+      if (!data) {
+        console.warn('📝 Caption received but data is null/undefined');
+        return;
+      }
+      
+      // Extract data first
+      const { participantId, participantName, text, isFinal, timestamp } = data;
+      
+      // Deduplication: Skip if we've already processed this exact caption recently
+      const captionKey = `${participantId}_${text}_${timestamp}`;
+      if (!window._processedCaptions) {
+        window._processedCaptions = new Set();
+      }
+      
+      // Clean old entries (keep only last 100)
+      if (window._processedCaptions.size > 100) {
+        const entries = Array.from(window._processedCaptions);
+        window._processedCaptions = new Set(entries.slice(-50));
+      }
+      
+      if (window._processedCaptions.has(captionKey)) {
+        // Already processed this caption - skip to avoid duplicates
+        return;
+      }
+      window._processedCaptions.add(captionKey);
+      
+      // Log when we actually process captions (not when disabled)
+      if (!window._lastCaptionLog || Date.now() - window._lastCaptionLog > 2000) {
+        console.log('🔔 caption-transcription event received:', data);
+        console.log('✅ Processing caption - isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
+        window._lastCaptionLog = Date.now();
+      }
+      
+      // Verify ref is still true (double-check)
+      if (!isCaptionEnabledRef.current) {
+        console.warn('⚠️ Ref became false during processing - skipping');
+        return;
+      }
+      
+      if (!participantId || !text) {
+        console.error('📝 Invalid caption data received:', { participantId, text: text?.substring(0, 30), fullData: data });
+        return;
+      }
+
+      // Only log unique captions
+      const logKey = `${participantId}_${text.substring(0, 50)}_${timestamp}`;
+      if (!window._lastLoggedCaptionKey || window._lastLoggedCaptionKey !== logKey) {
+        console.log('✅ Processing REMOTE caption:', { participantId, participantName, text: text.substring(0, 50), isFinal, timestamp });
+        window._lastLoggedCaptionKey = logKey;
+      }
+
+      // Update remote captions map with OTHER participant's transcript
+      // This ensures OTHER users' captions show up on YOUR screen
+      setRemoteCaptions(prev => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(participantId);
+        const newText = text.trim();
+        const newTimestamp = timestamp || new Date().toISOString();
+        
+        // Only update if text actually changed (avoid unnecessary re-renders)
+        if (!existing || existing.text !== newText) {
+          const captionData = {
+            text: newText,
+            speaker: participantName || 'Participant',
+            timestamp: newTimestamp,
+            isFinal: isFinal !== false
+          };
+          newMap.set(participantId, captionData);
+          console.log(`✅ Updated OTHER user's caption: ${participantName} -> "${newText.substring(0, 50)}" (isFinal: ${isFinal})`);
+          // Reset logged captions so new caption will be logged
+          window._lastLoggedCaptions = null;
+        } else {
+          // Text is same, but update timestamp and isFinal status
+          newMap.set(participantId, {
+            ...existing,
+            timestamp: newTimestamp,
+            isFinal: isFinal !== false
+          });
+        }
+        return newMap;
+      });
+      
+      // Don't force re-render with setCaptionText - it causes unnecessary renders
+      // The remoteCaptions state update is enough to trigger a re-render
+
+      // Clear this participant's caption after 15 seconds if final (longer timeout to keep captions visible)
+      if (isFinal) {
+        setTimeout(() => {
+          if (isCaptionEnabledRef.current) {
+            setRemoteCaptions(prev => {
+              const newMap = new Map(prev);
+              const existing = newMap.get(participantId);
+              // Only clear if this is still the same caption (not overwritten by newer speech)
+              if (existing && existing.timestamp === timestamp) {
+                console.log(`🧹 Clearing old caption for ${participantName} after 15 seconds`);
+                newMap.delete(participantId);
+              }
+              return newMap;
+            });
+          }
+        }, 15000); // Increased from 5 to 15 seconds
+      }
+  }, [isCaptionEnabled]); // Include isCaptionEnabled for debugging, but use ref for actual check
+
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
 
     console.log('🔌 Setting up socket listeners for video call');
+    console.log('🔍 Current caption state when setting up listeners:', {
+      isCaptionEnabledRef: isCaptionEnabledRef.current,
+      isCaptionEnabledState: isCaptionEnabled
+    });
+    
+    // IMPORTANT: If captions were enabled before this listener was set up (e.g., during hot reload),
+    // ensure the ref is synced with the state
+    if (isCaptionEnabled && !isCaptionEnabledRef.current) {
+      console.warn('⚠️ State says captions are enabled but ref is false - syncing ref');
+      isCaptionEnabledRef.current = true;
+    }
 
     socket.on('call_invitation', handleCallInvitation);
     
@@ -231,69 +379,13 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       handleNewChatMessage(data);
     });
 
-    // Listen for caption transcriptions from Deepgram via server
-    socket.on('caption-transcription', (data) => {
-      console.log('🔔 caption-transcription event received:', data);
-      
-      if (!isCaptionEnabledRef.current || !data) {
-        if (!isCaptionEnabledRef.current) {
-          console.warn('📝 Caption received but captions are disabled (isCaptionEnabledRef.current = false)');
-        }
-        if (!data) {
-          console.warn('📝 Caption received but data is null/undefined');
-        }
-        return;
-      }
-
-      const { participantId, participantName, text, isFinal, timestamp } = data;
-      
-      if (!participantId || !text) {
-        console.error('📝 Invalid caption data received:', { participantId, text: text?.substring(0, 30), fullData: data });
-        return;
-      }
-
-      console.log('✅ Processing caption:', { participantId, participantName, text: text.substring(0, 50), isFinal, timestamp });
-
-      // Update remote captions map
-      setRemoteCaptions(prev => {
-        const newMap = new Map(prev);
-        const captionData = {
-          text: text.trim(),
-          speaker: participantName || 'Participant',
-          timestamp: timestamp || new Date().toISOString(),
-          isFinal: isFinal !== false
-        };
-        newMap.set(participantId, captionData);
-        console.log(`✅ Updated remoteCaptions map:`, {
-          participantId,
-          caption: captionData,
-          totalCaptions: newMap.size
-        });
-        return newMap;
-      });
-      
-      // Force a re-render by updating caption text
-      if (isFinal) {
-        setCaptionText(''); // Clear status text when we have final captions
-      }
-
-      // Clear this participant's caption after 5 seconds if final
-      if (isFinal) {
-        setTimeout(() => {
-          if (isCaptionEnabledRef.current) {
-            setRemoteCaptions(prev => {
-              const newMap = new Map(prev);
-              const existing = newMap.get(participantId);
-              // Only clear if this is still the same caption (not overwritten)
-              if (existing && existing.timestamp === timestamp) {
-                newMap.delete(participantId);
-              }
-              return newMap;
-            });
-          }
-        }, 5000);
-      }
-    });
+    // Listen for caption transcriptions from other participants (via socket broadcast)
+    // IMPORTANT: This listener works REGARDLESS of your mic state (muted/unmuted)
+    // When you're muted, you won't see YOUR captions, but you'll still see OTHER users' captions
+    socket.on('caption-transcription', handleCaptionTranscription);
+    
+    // Log current ref state when listener is set up (for debugging)
+    console.log('🔍 Socket listener setup - isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
     
     // Listen for caption errors
     socket.on('caption-error', (error) => {
@@ -304,7 +396,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               (error.details || 'DEEPGRAM_API_KEY not set in server configuration'));
       }
     });
-
+    
     socket.on('participant_joined', handleParticipantJoined);
     socket.on('participant_left', handleParticipantLeft);
     socket.on('participant_left_call', handleParticipantLeftCall);
@@ -335,11 +427,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       socket.off('participant-joined-video', handleParticipantJoined);
       socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
-      socket.off('caption-transcription');
+      socket.off('caption-transcription', handleCaptionTranscription);
       socket.off('caption-error');
       socket.off('error');
     };
-  }, [socket]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket, handleCaptionTranscription]); // Include handleCaptionTranscription to ensure it's up to date
 
   const initializeCallWithData = async (data) => {
     // If the call has already been marked as ended, do not re-init
@@ -1192,30 +1284,29 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       audioTrack.disable();
       setIsAudioEnabled(false);
 
-      // If captions are enabled, stop capturing local audio (but keep receiving others' captions)
-      if (isCaptionEnabledRef.current && captionManagerRef.current) {
-        const localId = user?._id || user?.id || 'local';
-        captionManagerRef.current.stopCapture(localId);
-        console.log('🔇 Muted - stopped local caption capture, still receiving others\' captions');
+      // When muted, stop Syncfusion SpeechToText (no point capturing if mic is off)
+      // But keep captions enabled to receive other users' captions via socket
+      if (isCaptionEnabledRef.current && speechToTextRef.current) {
+        console.log('🔇 Muted - Stopping Syncfusion SpeechToText (no mic input)');
+        console.log('📝 You will still receive OTHER users\' captions via socket');
+        try {
+          // Syncfusion component handles stop internally
+          if (speechToTextRef.current && typeof speechToTextRef.current.stop === 'function') {
+            speechToTextRef.current.stop();
+          }
+        } catch (e) {
+          console.warn('⚠️ Error stopping Syncfusion SpeechToText:', e);
+        }
       }
     } else {
       // Unmute: enable the track (resumes transmission)
       audioTrack.enable();
       setIsAudioEnabled(true);
 
-      // If captions are enabled, start capturing local audio again
-      if (isCaptionEnabledRef.current && captionManagerRef.current && callInfo) {
-        const localId = user?._id || user?.id || 'local';
-        const localName = user?.name || 'You';
-        
-        captionManagerRef.current.startCapture(localId, localName, audioTrack)
-          .then(success => {
-            if (success) {
-              console.log('🔊 Unmuted - started local caption capture');
-            }
-          })
-          .catch(err => console.warn('Failed to restart caption capture:', err));
-      }
+      // When unmuted, Syncfusion SpeechToText will resume automatically if captions are enabled
+      if (isCaptionEnabledRef.current && speechToTextRef.current) {
+        console.log('🔊 Unmuted - Syncfusion SpeechToText will resume capturing YOUR speech');
+    }
     }
   }, [localTracks, isAudioEnabled, user, callInfo]);
 
@@ -1234,83 +1325,166 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   }, [localTracks, isVideoEnabled]);
 
-  // Fallback to Web Speech API if Deepgram is not available
-  const startFallbackSpeechRecognition = useCallback(() => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.warn('Web Speech API not supported in this browser');
+  // Handle Syncfusion SpeechToText transcriptChanged event
+  const handleTranscriptChanged = useCallback((args) => {
+    if (!args) {
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const transcript = args.transcript || args.text || '';
+    const isFinal = args.isFinal !== false; // Default to true if not specified
+    
+    if (!transcript || transcript.trim() === '') {
+      return; // Skip empty transcripts
+    }
+    
+    // Update last transcript time to track if recognition is still active
+    lastTranscriptTimeRef.current = Date.now();
+    
+    // Only log when transcript actually changes to reduce spam
+    if (!window._lastProcessedSyncfusionTranscript || window._lastProcessedSyncfusionTranscript !== transcript.trim()) {
+      console.log(`🎤 [Syncfusion SpeechToText] New transcript: "${transcript.substring(0, 50)}" (isFinal: ${isFinal})`);
+      window._lastProcessedSyncfusionTranscript = transcript.trim();
+    }
+    
+    if (!isCaptionEnabledRef.current) {
+      return;
+    }
 
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
+    const localId = user?._id || user?.id || 'local';
+    const localName = user?.name || 'You';
+    const timestamp = new Date().toISOString();
 
-    recognition.onstart = () => {
-      console.log('🎤 Fallback speech recognition started');
-      setCaptionText('Listening for speech (browser mode)...');
-    };
+    // Update remote captions map with local user's transcript
+    setRemoteCaptions(prev => {
+      const newMap = new Map(prev);
+      const existing = newMap.get(localId);
+      
+      // Only update if text actually changed (avoid unnecessary re-renders)
+      if (!existing || existing.text !== transcript.trim()) {
+        const captionData = {
+          text: transcript.trim(),
+          speaker: localName,
+          timestamp: timestamp,
+          isFinal: isFinal
+        };
+        newMap.set(localId, captionData);
+        window._lastLoggedCaptions = null; // Reset to allow new caption logging
+      } else {
+        // Text is same, but update timestamp and isFinal status
+        newMap.set(localId, {
+          ...existing,
+          timestamp: timestamp,
+          isFinal: isFinal
+        });
+      }
+      return newMap;
+    });
 
-    recognition.onresult = (event) => {
-      if (!isCaptionEnabledRef.current) return;
+    // Broadcast YOUR caption to other participants via socket
+    if (socket && callInfo) {
+      const callId = callInfo.id || callInfo.callId || callInfo._id;
+      // Server requires roomName (not connectionKey)
+      const roomName = callInfo.roomName || callInfo.connectionKey || `booth_${callInfo.booth?._id || callInfo.booth}_${localId}_${Date.now()}`;
+      const participantId = user?._id || user?.id || 'local';
+      const participantName = user?.name || 'You';
 
-      let interimTranscript = '';
-      let finalTranscript = '';
+      const broadcastData = {
+        callId: callId,
+        roomName: roomName, // REQUIRED by server - must be present
+        participantId: participantId, // REQUIRED by server - must be present
+        participantName: participantName,
+        text: transcript.trim(), // REQUIRED by server - must be present
+        isFinal: isFinal,
+        timestamp: timestamp
+      };
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-          setCaptionHistory(prev => [...prev.slice(-9), {
-            text: transcript,
-            timestamp: new Date().toISOString(),
-            speaker: user?.name || 'You'
-          }]);
-        } else {
-          interimTranscript += transcript;
-        }
+      // Only log broadcast details when transcript changes
+      if (!window._lastBroadcastedTranscript || window._lastBroadcastedTranscript !== transcript.trim()) {
+        console.log('📤 [Syncfusion SpeechToText] Broadcasting:', {
+          roomName,
+          participantId,
+          text: transcript.trim().substring(0, 50),
+          isFinal
+        });
+        window._lastBroadcastedTranscript = transcript.trim();
       }
 
-      const displayText = finalTranscript || interimTranscript;
-      if (displayText.trim()) {
-        const localId = user?._id || user?.id || 'local';
-        const localName = user?.name || 'You';
-        const timestamp = new Date().toISOString();
-        const isFinal = !!finalTranscript;
+      socket.emit('caption-transcription-broadcast', broadcastData);
+    } else {
+      console.warn('⚠️ [Syncfusion SpeechToText] Cannot broadcast - missing socket or callInfo');
+    }
+  }, [user, socket, callInfo]);
 
-        // Update remote captions map with local user's transcript
-        setRemoteCaptions(prev => {
-          const newMap = new Map(prev);
-          newMap.set(localId, {
-            text: displayText.trim(),
+  // Legacy function name for compatibility (not used anymore)
+  const handleSpeechResult = useCallback((transcript, isFinal) => {
+    console.log(`🎤 [Speech Recognition] Processing: "${transcript.substring(0, 50)}" (isFinal: ${isFinal})`);
+    
+    if (!isCaptionEnabledRef.current) {
+      console.warn('⚠️ [Speech Recognition] Caption received but captions are disabled');
+      return;
+    }
+
+    if (transcript.trim()) {
+      const localId = user?._id || user?.id || 'local';
+      const localName = user?.name || 'You';
+      const timestamp = new Date().toISOString();
+
+      // Update remote captions map with local user's transcript
+      // This ensures YOUR captions show up on YOUR screen
+      setRemoteCaptions(prev => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(localId);
+        
+        // Only update if text actually changed (avoid unnecessary re-renders)
+        if (!existing || existing.text !== transcript.trim()) {
+          const captionData = {
+            text: transcript.trim(),
             speaker: localName,
             timestamp: timestamp,
             isFinal: isFinal
-          });
-          return newMap;
-        });
-
-        // Also broadcast to other participants via socket (so they see your captions too)
-        if (socket && callInfo) {
-          const roomName = callInfo.roomName;
-          const callId = callInfo.id || callInfo.callId || callInfo._id;
-          
-          socket.emit('caption-transcription-broadcast', {
-            callId,
-            roomName,
-            participantId: localId,
-            participantName: localName,
-            text: displayText.trim(),
-            isFinal: isFinal,
-            timestamp: timestamp
+          };
+          newMap.set(localId, captionData);
+          console.log(`✅ [Speech Recognition] Updated YOUR caption: "${transcript.trim().substring(0, 50)}" (isFinal: ${isFinal})`);
+          // Reset logged captions so new caption will be logged
+          window._lastLoggedCaptions = null;
+        } else {
+          // Text is same, but update timestamp and isFinal status
+          newMap.set(localId, {
+            ...existing,
+            timestamp: timestamp,
+            isFinal: isFinal
           });
         }
+        return newMap;
+      });
+
+      // Broadcast to other participants via socket (so they see your captions too)
+      if (socket && callInfo) {
+        const roomName = callInfo.roomName;
+        const callId = callInfo.id || callInfo.callId || callInfo._id;
+        
+        socket.emit('caption-transcription-broadcast', {
+          callId,
+          roomName,
+          participantId: localId,
+          participantName: localName,
+          text: transcript.trim(),
+          isFinal: isFinal,
+          timestamp: timestamp
+        });
       }
 
-      if (finalTranscript) {
+      // Add to history if final
+      if (isFinal) {
+        setCaptionHistory(prev => [...prev.slice(-9), {
+          text: transcript.trim(),
+          timestamp: timestamp,
+          speaker: localName
+        }]);
+
+        // Clear caption after 15 seconds of inactivity (longer timeout to keep captions visible)
+        // This allows users to read the captions and keeps them visible during natural speech pauses
         if (captionClearTimeoutRef.current) {
           clearTimeout(captionClearTimeoutRef.current);
         }
@@ -1318,42 +1492,22 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           if (isCaptionEnabledRef.current) {
             setRemoteCaptions(prev => {
               const newMap = new Map(prev);
-              newMap.delete('local');
+              const existing = newMap.get(localId);
+              // Only clear if this is still the same caption (not overwritten by newer speech)
+              if (existing && existing.timestamp === timestamp) {
+                console.log('🧹 Clearing old caption after 15 seconds of inactivity');
+                newMap.delete(localId);
+              }
               return newMap;
             });
           }
-        }, 5000);
+        }, 15000); // Increased from 5 to 15 seconds
       }
-    };
-
-    recognition.onerror = (event) => {
-      if (event.error === 'not-allowed') {
-        alert('Microphone access is required for captions.');
-        isCaptionEnabledRef.current = false;
-        setIsCaptionEnabled(false);
-      } else if (event.error === 'no-speech') {
-        try { recognition.start(); } catch (e) { }
-      }
-    };
-
-    recognition.onend = () => {
-      if (isCaptionEnabledRef.current) {
-        try { recognition.start(); } catch (e) { }
-      }
-    };
-
-    try {
-      recognition.start();
-    } catch (e) {
-      console.error('Failed to start fallback speech recognition:', e);
     }
   }, [user, socket, callInfo]);
 
-  // Store fallback function in ref to avoid dependency issues
-  startFallbackSpeechRecognitionRef.current = startFallbackSpeechRecognition;
-
-  // Toggle captions using Deepgram (via server) with Web Speech API fallback
-  const toggleCaption = useCallback(async () => {
+  // Toggle captions using Syncfusion SpeechToText component
+  const toggleCaption = useCallback(() => {
     if (isCaptionEnabledRef.current) {
       // Turn off captions
       console.log('🔇 Disabling captions...');
@@ -1365,11 +1519,16 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         captionClearTimeoutRef.current = null;
       }
 
-      // Stop caption manager (Deepgram-based captions)
-      if (captionManagerRef.current) {
-        captionManagerRef.current.disable();
-        captionManagerRef.current.destroy();
-        captionManagerRef.current = null;
+      // Stop Syncfusion SpeechToText component
+      if (speechToTextRef.current) {
+        try {
+          if (typeof speechToTextRef.current.stop === 'function') {
+            speechToTextRef.current.stop();
+          }
+          console.log('✅ [Syncfusion SpeechToText] Stopped');
+        } catch (e) {
+          console.warn('⚠️ Error stopping Syncfusion SpeechToText:', e);
+        }
       }
 
       setIsCaptionEnabled(false);
@@ -1378,106 +1537,327 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       console.log('✅ Captions disabled');
     } else {
       // Turn on captions
-      console.log('🎤 Enabling captions...');
+      console.log('🎤 Enabling captions with Syncfusion SpeechToText...');
 
       if (!socket || !callInfo) {
         alert('Cannot enable captions: missing connection or call info');
         return;
       }
 
-      const callIdToUse = callInfo.id || callInfo.callId || callInfo._id;
-      const roomNameToUse = callInfo.roomName;
-
-      if (!callIdToUse || !roomNameToUse) {
-        alert('Cannot enable captions: missing call information');
+      // Check if Web Speech API is supported (required for Syncfusion)
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
         return;
       }
 
-      // Enable caption state first
+      // Enable caption state - Set ref FIRST (synchronously) before state
+      // This ensures socket listeners see the updated ref immediately
       isCaptionEnabledRef.current = true;
       setIsCaptionEnabled(true);
       setCaptionText('Starting captions...');
+      console.log('✅ Captions enabled - isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
+      console.log('🔍 Verification: Ref set synchronously before any async operations');
+      
+      // Force a small delay to ensure ref is set before any socket events arrive
+      // This helps with hot reload scenarios where socket listeners might be recreated
+      setTimeout(() => {
+        console.log('🔍 Post-enable check - isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
+      }, 100);
 
-      try {
-        // Create caption manager
-        const captionManager = new CaptionManager(socket, callIdToUse, roomNameToUse);
-        captionManagerRef.current = captionManager;
+      // Check actual audio track state (more reliable than state variable)
+      const audioTrack = localTracks.find(track => track.kind === 'audio');
+      const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
+      
+      console.log('🔍 Audio state check:', {
+        isAudioEnabled,
+        actualAudioEnabled,
+        hasAudioTrack: !!audioTrack,
+        trackEnabled: audioTrack?.isEnabled
+      });
 
-        // IMPORTANT: Each client only captures their OWN local audio
-        // The server broadcasts transcriptions to ALL participants
-        // This ensures:
-        // 1. No duplicate transcriptions (each audio source is captured once)
-        // 2. Both users see each other's captions via socket broadcast
-        // 3. Works even when your mic is muted (you still receive others' captions)
+      // IMPORTANT: Only start Syncfusion SpeechToText if mic is UNMUTED
+      // If muted, we'll only receive other users' captions via socket (no need to capture our own speech)
+      if (!actualAudioEnabled) {
+        console.log('🔇 Mic is muted - Syncfusion SpeechToText will not start');
+        console.log('📝 You will only receive OTHER users\' captions via socket (when they speak)');
+        setCaptionText('Waiting for others to speak...');
+        // CRITICAL: Set ref FIRST (synchronously) before state to ensure socket listener sees it
+        isCaptionEnabledRef.current = true;
+        setIsCaptionEnabled(true);
+        console.log('✅ Captions enabled (muted mode) - ready to receive OTHER users\' captions');
+        console.log('🔍 Verification: isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
         
-        const participantsToCapture = [];
-
-        // Only capture local user's audio track (if not muted)
-        // Other participants' audio is captured by THEIR clients, not yours
-        if (isAudioEnabled) {
-          const localAudioTrack = localTracks.find(track => track.kind === 'audio');
-          if (localAudioTrack) {
-            participantsToCapture.push({
-              id: user?._id || user?.id || 'local',
-              name: user?.name || 'You',
-              audioTrack: localAudioTrack
-            });
-            console.log('🎤 Will capture local audio for captions');
-          }
-        } else {
-          console.log('🔇 Mic is muted - not capturing local audio, but will receive others\' captions');
-        }
-
-        console.log(`🎤 Starting caption capture for ${participantsToCapture.length} audio source(s)`);
-        console.log('📝 You will see captions from other participants when they speak (via server broadcast)');
-
-        // Enable caption manager with local participant only
-        const successCount = await captionManager.enable(participantsToCapture);
-
-        if (successCount > 0) {
-          setCaptionText('Listening for speech...');
-          console.log(`✅ Captions enabled - your audio is being transcribed (${successCount} capture(s) active)`);
-        } else if (isAudioEnabled) {
-          // Deepgram not configured but mic is on - try fallback
-          setCaptionText('Waiting for transcription service...');
-          console.warn('⚠️ No audio captures started - Deepgram may not be configured on server');
-          console.warn('   Check server logs for DEEPGRAM_API_KEY configuration');
-          
-          // Check if we should fall back to Web Speech API
-          if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            console.log('🔄 Falling back to browser-based speech recognition...');
-            if (startFallbackSpeechRecognitionRef.current) {
-              startFallbackSpeechRecognitionRef.current();
-            }
-          } else {
-            console.error('❌ Web Speech API not available in this browser');
-            setCaptionText('Caption service unavailable - check server configuration');
-          }
-        } else {
-          // Mic is muted - just wait for others' captions
-          setCaptionText('Waiting for others to speak...');
-          console.log('🔇 Mic muted - waiting for captions from other participants');
-          console.log('📝 You will see captions when other participants speak (if they have captions enabled)');
-        }
-
-      } catch (error) {
-        console.error('Failed to enable captions:', error);
-        setCaptionText('Caption service unavailable');
+        // Force a small delay to ensure ref is set before any socket events arrive
+        setTimeout(() => {
+          console.log('🔍 Post-enable check (muted) - isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
+        }, 100);
         
-        // Try fallback to Web Speech API (only if mic is on)
-        if (isAudioEnabled && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-          console.log('🔄 Falling back to browser-based speech recognition...');
-          if (startFallbackSpeechRecognitionRef.current) {
-            startFallbackSpeechRecognitionRef.current();
-          }
-        } else {
-          setCaptionText('Waiting for others to speak...');
-        }
+        // Syncfusion component won't be started - just wait for socket broadcasts
+        return;
       }
+      
+      // Mic is unmuted - also set ref synchronously
+      isCaptionEnabledRef.current = true;
+
+      // Mic is unmuted - Syncfusion SpeechToText component will start automatically when rendered
+      console.log('🎤 Mic is unmuted - Syncfusion SpeechToText will start capturing YOUR speech');
+      console.log('📝 You will also receive OTHER users\' captions via socket when they speak');
     }
   }, [socket, callInfo, isAudioEnabled, localTracks, user]);
 
-  // Cleanup caption manager on unmount
+  // Helper function to start Syncfusion SpeechToText component
+  const startSyncfusionComponent = useCallback(() => {
+    if (!speechToTextRef.current) {
+      console.warn('⚠️ Cannot start Syncfusion - component ref is null');
+      return false;
+    }
+
+    if (isRestartingSyncfusionRef.current) {
+      console.log('⏳ Already restarting Syncfusion - skipping');
+      return false;
+    }
+
+    try {
+      console.log('🎤 Attempting to start Syncfusion SpeechToText component...');
+      
+      // First, check if component is already listening using listeningState
+      const currentState = syncfusionListeningStateRef.current;
+      if (currentState === 'Listening') {
+        console.log('✅ Syncfusion SpeechToText is already listening');
+        lastTranscriptTimeRef.current = Date.now();
+        return true;
+      }
+      
+      // Also check button state as fallback
+      const buttonElement = speechToTextRef.current.element?.querySelector('button');
+      const isAlreadyListening = buttonElement && (
+        buttonElement.getAttribute('aria-pressed') === 'true' ||
+        buttonElement.classList.contains('e-active') ||
+        buttonElement.classList.contains('e-listening-state')
+      );
+
+      if (isAlreadyListening) {
+        console.log('✅ Syncfusion SpeechToText is already listening (button state)');
+        syncfusionListeningStateRef.current = 'Listening';
+        lastTranscriptTimeRef.current = Date.now();
+        return true;
+      }
+
+      // Try multiple methods to start the component
+      let started = false;
+      
+      // Method 1: Try startListening() method directly
+      if (speechToTextRef.current.startListening) {
+        try {
+          speechToTextRef.current.startListening();
+          console.log('✅ Syncfusion SpeechToText started via startListening() method');
+          started = true;
+          lastTranscriptTimeRef.current = Date.now();
+          
+          // Verify it actually started after a short delay
+          setTimeout(() => {
+            const buttonEl = speechToTextRef.current?.element?.querySelector('button');
+            const isActive = buttonEl && (
+              buttonEl.getAttribute('aria-pressed') === 'true' ||
+              buttonEl.classList.contains('e-active') ||
+              buttonEl.classList.contains('e-listening-state')
+            );
+            if (!isActive) {
+              console.warn('⚠️ startListening() called but component not active - trying button click');
+              if (buttonEl) {
+                buttonEl.click();
+              }
+            }
+          }, 300);
+        } catch (e) {
+          console.warn('⚠️ startListening() failed:', e);
+        }
+      }
+      
+      // Method 2: Find and click the button element
+      if (!started) {
+        if (buttonElement) {
+          try {
+            console.log('✅ Found button element, clicking...');
+            // Stop first if it's in a stopped state
+            const isStopped = buttonElement.classList.contains('e-stopped-state') || 
+                            buttonElement.getAttribute('aria-label')?.includes('Press to start');
+            if (isStopped) {
+              buttonElement.click();
+              console.log('✅ Syncfusion SpeechToText button clicked');
+              started = true;
+              lastTranscriptTimeRef.current = Date.now();
+            } else {
+              // Try clicking anyway
+              buttonElement.click();
+              started = true;
+              lastTranscriptTimeRef.current = Date.now();
+            }
+          } catch (e) {
+            console.warn('⚠️ Button click failed:', e);
+          }
+        } else {
+          console.warn('⚠️ Could not find button element');
+        }
+      }
+      
+      // Method 3: Try start() method as fallback
+      if (!started && speechToTextRef.current.start) {
+        try {
+          speechToTextRef.current.start();
+          console.log('✅ Syncfusion SpeechToText started via start() method');
+          started = true;
+          lastTranscriptTimeRef.current = Date.now();
+        } catch (e) {
+          console.warn('⚠️ start() method failed:', e);
+        }
+      }
+
+      // If still not started, wait a bit and try button click again
+      if (!started) {
+        setTimeout(() => {
+          const btnEl = speechToTextRef.current?.element?.querySelector('button');
+          if (btnEl) {
+            try {
+              btnEl.click();
+              console.log('✅ Retry: Syncfusion SpeechToText button clicked');
+              lastTranscriptTimeRef.current = Date.now();
+            } catch (e) {
+              console.warn('⚠️ Retry button click failed:', e);
+            }
+          }
+        }, 500);
+      }
+      
+      return started;
+    } catch (e) {
+      console.error('❌ Error starting Syncfusion SpeechToText:', e);
+      return false;
+    }
+  }, []);
+
+  // Check if Syncfusion component is still running
+  const checkSyncfusionStatus = useCallback(() => {
+    if (!isCaptionEnabledRef.current || !speechToTextRef.current) {
+      return;
+    }
+
+    const audioTrack = localTracks.find(track => track.kind === 'audio');
+    const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
+    
+    // Only check if captions are enabled and mic is unmuted
+    if (!actualAudioEnabled) {
+      return;
+    }
+
+    // Check if component is still listening using listeningState (preferred method)
+    const currentState = syncfusionListeningStateRef.current;
+    const isListening = currentState === 'Listening';
+    
+    // Also check button state as fallback
+    const buttonElement = speechToTextRef.current.element?.querySelector('button');
+    const isListeningByButton = buttonElement && (
+      buttonElement.getAttribute('aria-pressed') === 'true' ||
+      buttonElement.classList.contains('e-active') ||
+      buttonElement.classList.contains('e-listening-state')
+    );
+    
+    // Use either method - if state says listening OR button says listening, it's active
+    const isActive = isListening || isListeningByButton;
+
+    // If component appears stopped, restart it
+    if (!isActive) {
+      // Check if we've received transcripts recently
+      // If we received transcripts recently (within last 20 seconds), component might just be processing
+      const timeSinceLastTranscript = lastTranscriptTimeRef.current 
+        ? Date.now() - lastTranscriptTimeRef.current 
+        : Infinity;
+      
+      // More aggressive restart: if component is not listening and no recent transcripts (15 seconds)
+      // OR if it's been more than 60 seconds since last transcript (definitely stopped)
+      const shouldRestart = (timeSinceLastTranscript > 15000 && timeSinceLastTranscript < 60000) || 
+                           (timeSinceLastTranscript > 60000);
+      
+      if (shouldRestart && !isRestartingSyncfusionRef.current) {
+        console.warn(`⚠️ Syncfusion SpeechToText appears to have stopped (${Math.round(timeSinceLastTranscript / 1000)}s since last transcript) - restarting...`);
+        isRestartingSyncfusionRef.current = true;
+        
+        // Try to restart with retry logic
+        const attemptRestart = (attempt = 1) => {
+          setTimeout(() => {
+            const restarted = startSyncfusionComponent();
+            if (restarted) {
+              console.log('✅ Syncfusion SpeechToText restarted successfully');
+              isRestartingSyncfusionRef.current = false;
+            } else if (attempt < 3) {
+              console.log(`🔄 Retry ${attempt}/3: Attempting to restart Syncfusion SpeechToText...`);
+              attemptRestart(attempt + 1);
+            } else {
+              console.warn('⚠️ Failed to restart Syncfusion SpeechToText after 3 attempts');
+              isRestartingSyncfusionRef.current = false;
+            }
+          }, attempt * 500); // Exponential backoff
+        };
+        
+        attemptRestart();
+      }
+    } else if (isActive) {
+      // Component is active, update state if needed
+      if (syncfusionListeningStateRef.current !== 'Listening') {
+        syncfusionListeningStateRef.current = 'Listening';
+      }
+      // Component is active, reset the last transcript time if it's been a while
+      // This prevents false positives when user is just silent
+      if (lastTranscriptTimeRef.current && (Date.now() - lastTranscriptTimeRef.current) > 30000) {
+        // User might be silent, but component is still listening - that's fine
+        // Don't reset the timer, but don't restart either
+      }
+    }
+  }, [isAudioEnabled, localTracks, startSyncfusionComponent]);
+
+  // Auto-start Syncfusion SpeechToText component when enabled
+  useEffect(() => {
+    // Check actual audio track state
+    const audioTrack = localTracks.find(track => track.kind === 'audio');
+    const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
+    
+    if (isCaptionEnabled && actualAudioEnabled) {
+      // Wait for component to mount, then start it
+      const timer = setTimeout(() => {
+        if (speechToTextRef.current) {
+          startSyncfusionComponent();
+          
+          // Note: We're now using Syncfusion's onStart, onStop, and onError props
+          // instead of accessing the internal recognition object directly
+          // This is the recommended approach per Syncfusion documentation
+        } else {
+          console.warn('⚠️ speechToTextRef.current is null - component may not be mounted yet');
+        }
+      }, 1500); // Delay to ensure component is fully mounted and rendered
+      
+      // Set up periodic check to ensure component stays running
+      // Check more frequently (every 5 seconds) for better reliability
+      syncfusionCheckIntervalRef.current = setInterval(() => {
+        checkSyncfusionStatus();
+      }, 5000); // Check every 5 seconds for faster detection
+      
+      return () => {
+        clearTimeout(timer);
+        if (syncfusionCheckIntervalRef.current) {
+          clearInterval(syncfusionCheckIntervalRef.current);
+          syncfusionCheckIntervalRef.current = null;
+        }
+      };
+    } else {
+      // Clear interval if captions are disabled or mic is muted
+      if (syncfusionCheckIntervalRef.current) {
+        clearInterval(syncfusionCheckIntervalRef.current);
+        syncfusionCheckIntervalRef.current = null;
+      }
+    }
+  }, [isCaptionEnabled, isAudioEnabled, localTracks, startSyncfusionComponent, checkSyncfusionStatus]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       // Clear caption enabled ref
@@ -1489,16 +1869,13 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         captionClearTimeoutRef.current = null;
       }
 
-      // Stop and destroy caption manager (Deepgram-based captions)
-      if (captionManagerRef.current) {
-        try {
-          captionManagerRef.current.disable();
-          captionManagerRef.current.destroy();
-          captionManagerRef.current = null;
-        } catch (e) {
-          console.warn('Error cleaning up caption manager:', e);
-        }
+      // Clear Syncfusion check interval
+      if (syncfusionCheckIntervalRef.current) {
+        clearInterval(syncfusionCheckIntervalRef.current);
+        syncfusionCheckIntervalRef.current = null;
       }
+
+      // Syncfusion component cleanup is handled automatically
     };
   }, []);
 
@@ -1712,17 +2089,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       captionClearTimeoutRef.current = null;
     }
 
-    // Stop caption manager
-    if (captionManagerRef.current) {
-      try {
-        captionManagerRef.current.disable();
-        captionManagerRef.current.destroy();
-        captionManagerRef.current = null;
-      } catch (e) {
-        console.warn('Error cleaning up caption manager:', e);
-      }
-    }
-
+    // Syncfusion component will clean up automatically when unmounted
     isCaptionEnabledRef.current = false;
 
     // Stop all local tracks (only if not already stopped)
@@ -1798,17 +2165,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       captionClearTimeoutRef.current = null;
     }
 
-    // Stop caption manager
-    if (captionManagerRef.current) {
-      try {
-        captionManagerRef.current.disable();
-        captionManagerRef.current.destroy();
-        captionManagerRef.current = null;
-      } catch (e) {
-        console.warn('Error cleaning up caption manager:', e);
-      }
-    }
-
+    // Syncfusion component will clean up automatically when unmounted
     isCaptionEnabledRef.current = false;
 
     // Stop all local tracks first (before unpublishing)
@@ -2101,6 +2458,38 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         );
       })()}
 
+      {/* Syncfusion SpeechToText Component - Must be visible (but off-screen) for microphone access */}
+      {(() => {
+        const audioTrack = localTracks.find(track => track.kind === 'audio');
+        const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
+        
+        if (isCaptionEnabled && actualAudioEnabled) {
+          return (
+            <div 
+              style={{ 
+                position: 'fixed', 
+                top: '10px', 
+                right: '10px', 
+                width: '200px', 
+                height: '50px',
+                zIndex: 9999,
+                opacity: 0.01, // Nearly invisible but still "visible" to browser
+                pointerEvents: 'auto'
+              }}
+              aria-hidden="true"
+            >
+              <SpeechToTextComponent
+                ref={speechToTextRef}
+                transcriptChanged={handleTranscriptChanged}
+                locale="en-US"
+                cssClass="e-primary"
+              />
+            </div>
+          );
+        }
+        return null;
+      })()}
+
 
       {/* Caption Display */}
       {isCaptionEnabled && (
@@ -2110,38 +2499,49 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               // Collect all captions to display
               const allCaptions = [];
               
-              // Add captions from remoteCaptions map (includes both Deepgram and fallback)
+              // Add captions from remoteCaptions map (from Syncfusion SpeechToText and socket broadcasts)
               remoteCaptions.forEach((caption, participantId) => {
                 if (caption && caption.text && caption.text.trim()) {
                   allCaptions.push({
                     id: participantId,
                     text: caption.text,
                     speaker: caption.speaker || 'Participant',
-                    isFinal: caption.isFinal
+                    isFinal: caption.isFinal,
+                    timestamp: caption.timestamp // Include timestamp for unique keys
                   });
                 }
               });
 
-              // Debug logging
+              // Log only when captions actually change (not on every render)
               if (allCaptions.length > 0) {
-                console.log(`📺 Rendering ${allCaptions.length} caption(s) on screen`);
+                const captionTexts = allCaptions.map(c => c.text).join(' | ');
+                // Use a ref to track last logged caption to avoid spam
+                if (!window._lastLoggedCaptions || window._lastLoggedCaptions !== captionTexts) {
+                  console.log(`📺 Rendering ${allCaptions.length} caption(s):`, allCaptions.map(c => `${c.speaker}: "${c.text.substring(0, 30)}"`));
+                  window._lastLoggedCaptions = captionTexts;
+                }
               }
-              
+
               if (allCaptions.length > 0) {
+                // Show all captions (both your own and other participants')
+                // Only log when captions change (not on every render)
                 return allCaptions.map((caption, index) => {
-                  console.log(`📺 Rendering caption ${index + 1}:`, caption);
                   return (
-                    <div key={`${caption.id}-${index}`} className="caption-item">
-                      <span className="caption-speaker">{caption.speaker}:</span>
-                      <span className="caption-text">{caption.text}</span>
-                    </div>
+                    <div key={`${caption.id}-${caption.timestamp || index}`} className="caption-item">
+                    <span className="caption-speaker">{caption.speaker}:</span>
+                    <span className="caption-text">{caption.text}</span>
+                  </div>
                   );
                 });
-              } else if (captionText && captionText !== 'Listening for speech...') {
-                // Show status text
-                return <p className="caption-text caption-listening">{captionText}</p>;
               } else {
+                // Show appropriate status based on mic state
+                if (!isAudioEnabled) {
+                  // Mic is muted - only waiting for other users' captions
+                  return <p className="caption-text caption-listening">Waiting for others to speak...</p>;
+                } else {
+                  // Mic is unmuted - actively listening for your speech
                 return <p className="caption-text caption-listening">Listening for speech...</p>;
+                }
               }
             })()}
           </div>
