@@ -10,6 +10,7 @@
         "@syncfusion/ej2-react-calendars": "^31.1.21",
         "@syncfusion/ej2-react-dropdowns": "^31.1.20",
         "@syncfusion/ej2-react-grids": "^31.1.21",
+        "@syncfusion/ej2-react-inputs": "^31.2.15",
         "@syncfusion/ej2-react-interactive-chat": "^31.2.5",
         "@syncfusion/ej2-react-navigations": "^31.1.20",
         "@syncfusion/ej2-react-notifications": "^31.2.2",
