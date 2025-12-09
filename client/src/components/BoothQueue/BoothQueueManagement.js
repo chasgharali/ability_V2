@@ -899,7 +899,7 @@ export default function BoothQueueManagement() {
                               Remove
                             </button>
                           </>
-                        ) : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? (
+                        ) : queueEntry.status === 'invited' || queueEntry.status === 'in_meeting' || queueEntry.isInCall ? (
                           <>
                             <button
                               onClick={() => handleInviteToMeeting(queueEntry)}

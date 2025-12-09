@@ -83,24 +83,36 @@ router.post('/create', auth, async (req, res) => {
     }
 
     // CRITICAL FIX: Check if another recruiter from same booth already has active call with this job seeker
+    // Only consider calls that were started recently (within last 2 hours) to avoid blocking on stale calls
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const existingCallForJobSeeker = await VideoCall.findOne({
       booth: queueEntry.booth._id,
       jobSeeker: queueEntry.jobSeeker._id,
       status: 'active',
-      recruiter: { $ne: recruiterId }  // Different recruiter
+      recruiter: { $ne: recruiterId },  // Different recruiter
+      createdAt: { $gte: twoHoursAgo }  // Only consider recent calls
     });
 
     if (existingCallForJobSeeker) {
-      // Restore queue entry status
-      await BoothQueue.findByIdAndUpdate(queueId, {
-        $set: { status: 'invited' }
-      });
-      
-      return res.status(409).json({
-        error: 'Job seeker already in meeting',
-        message: 'This job seeker is already in a meeting with another recruiter from this booth',
-        existingCallId: existingCallForJobSeeker._id
-      });
+      // Verify the call is actually still valid by checking if queue entry status matches
+      const existingQueueEntry = await BoothQueue.findById(existingCallForJobSeeker.queueEntry);
+      if (existingQueueEntry && existingQueueEntry.status === 'in_meeting') {
+        // Call is still valid - restore queue entry status and return error
+        await BoothQueue.findByIdAndUpdate(queueId, {
+          $set: { status: 'invited' }
+        });
+        
+        return res.status(409).json({
+          error: 'Job seeker already in meeting',
+          message: 'This job seeker is already in a meeting with another recruiter from this booth',
+          existingCallId: existingCallForJobSeeker._id
+        });
+      } else {
+        // Call is stale - mark it as ended
+        existingCallForJobSeeker.status = 'ended';
+        await existingCallForJobSeeker.save();
+        console.log(`🧹 Cleaned up stale active call ${existingCallForJobSeeker._id} for job seeker ${queueEntry.jobSeeker._id}`);
+      }
     }
 
     // Generate unique room name

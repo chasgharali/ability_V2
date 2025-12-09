@@ -204,17 +204,25 @@ export const MultiSelect = ({
                                     return (
                                         <span key={val} className="form-multiselect-chip">
                                             {option?.label || val}
-                                            <button
-                                                type="button"
+                                            <span
+                                                role="button"
+                                                tabIndex={0}
                                                 className="form-multiselect-chip-remove"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleOptionToggle(val);
                                                 }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleOptionToggle(val);
+                                                    }
+                                                }}
                                                 aria-label={`Remove ${option?.label || val}`}
                                             >
                                                 ×
-                                            </button>
+                                            </span>
                                         </span>
                                     );
                                 })}

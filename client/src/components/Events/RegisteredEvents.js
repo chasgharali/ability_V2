@@ -37,11 +37,11 @@ export default function RegisteredEvents() {
   const formatDate = (dateString) => {
     if (!dateString) return 'Not specified';
     const date = new Date(dateString);
-    const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'America/New_York' });
-    const day = date.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'America/New_York' });
-    const year = date.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'America/New_York' });
-    const hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.toLocaleDateString('en-US', { day: 'numeric' });
+    const year = date.toLocaleDateString('en-US', { year: 'numeric' });
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours % 12 || 12;
     return `${month} ${day}, ${year}, ${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
