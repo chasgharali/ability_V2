@@ -167,6 +167,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const syncfusionCheckIntervalRef = useRef(null);
   // Ref to track if we're currently restarting the component (prevent multiple restarts)
   const isRestartingSyncfusionRef = useRef(false);
+  // Ref to track Syncfusion component listening state
+  const syncfusionListeningStateRef = useRef('Inactive');
 
   // Initialize call
   useEffect(() => {
@@ -1618,7 +1620,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     try {
       console.log('🎤 Attempting to start Syncfusion SpeechToText component...');
       
-      // First, check if component is already listening
+      // First, check if component is already listening using listeningState
+      const currentState = syncfusionListeningStateRef.current;
+      if (currentState === 'Listening') {
+        console.log('✅ Syncfusion SpeechToText is already listening');
+        lastTranscriptTimeRef.current = Date.now();
+        return true;
+      }
+      
+      // Also check button state as fallback
       const buttonElement = speechToTextRef.current.element?.querySelector('button');
       const isAlreadyListening = buttonElement && (
         buttonElement.getAttribute('aria-pressed') === 'true' ||
@@ -1627,7 +1637,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       );
 
       if (isAlreadyListening) {
-        console.log('✅ Syncfusion SpeechToText is already listening');
+        console.log('✅ Syncfusion SpeechToText is already listening (button state)');
+        syncfusionListeningStateRef.current = 'Listening';
         lastTranscriptTimeRef.current = Date.now();
         return true;
       }
@@ -1739,26 +1750,23 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       return;
     }
 
-    // Check if component is still listening
+    // Check if component is still listening using listeningState (preferred method)
+    const currentState = syncfusionListeningStateRef.current;
+    const isListening = currentState === 'Listening';
+    
+    // Also check button state as fallback
     const buttonElement = speechToTextRef.current.element?.querySelector('button');
-    const isListening = buttonElement && (
+    const isListeningByButton = buttonElement && (
       buttonElement.getAttribute('aria-pressed') === 'true' ||
       buttonElement.classList.contains('e-active') ||
       buttonElement.classList.contains('e-listening-state')
     );
-
-    // Check if recognition object exists and is active
-    let recognitionActive = false;
-    try {
-      recognitionActive = speechToTextRef.current.recognition && 
-        (speechToTextRef.current.recognition.state === 'listening' ||
-         speechToTextRef.current.recognition.state === 'starting');
-    } catch (e) {
-      // Recognition object might not be accessible
-    }
+    
+    // Use either method - if state says listening OR button says listening, it's active
+    const isActive = isListening || isListeningByButton;
 
     // If component appears stopped, restart it
-    if (!isListening && !recognitionActive) {
+    if (!isActive) {
       // Check if we've received transcripts recently
       // If we received transcripts recently (within last 20 seconds), component might just be processing
       const timeSinceLastTranscript = lastTranscriptTimeRef.current 
@@ -1793,7 +1801,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         
         attemptRestart();
       }
-    } else if (isListening || recognitionActive) {
+    } else if (isActive) {
+      // Component is active, update state if needed
+      if (syncfusionListeningStateRef.current !== 'Listening') {
+        syncfusionListeningStateRef.current = 'Listening';
+      }
       // Component is active, reset the last transcript time if it's been a while
       // This prevents false positives when user is just silent
       if (lastTranscriptTimeRef.current && (Date.now() - lastTranscriptTimeRef.current) > 30000) {
@@ -1815,40 +1827,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         if (speechToTextRef.current) {
           startSyncfusionComponent();
           
-          // Set up event listeners on the recognition object if available
-          try {
-            if (speechToTextRef.current.recognition) {
-              const recognition = speechToTextRef.current.recognition;
-              
-              // Listen for when recognition ends
-              recognition.onend = () => {
-                console.log('🔄 Syncfusion recognition ended - will check status and restart if needed');
-                // Don't restart immediately - let the periodic check handle it
-                // This prevents rapid restart loops
-                setTimeout(() => {
-                  if (isCaptionEnabledRef.current && actualAudioEnabled) {
-                    checkSyncfusionStatus();
-                  }
-                }, 1000);
-              };
-              
-              // Listen for errors
-              recognition.onerror = (event) => {
-                console.error('❌ Syncfusion recognition error:', event.error);
-                // Restart on certain errors
-                if (event.error === 'no-speech' || event.error === 'aborted' || event.error === 'network') {
-                  setTimeout(() => {
-                    if (isCaptionEnabledRef.current && actualAudioEnabled) {
-                      console.log('🔄 Restarting after recognition error...');
-                      startSyncfusionComponent();
-                    }
-                  }, 2000);
-                }
-              };
-            }
-          } catch (e) {
-            console.warn('⚠️ Could not set up recognition event listeners:', e);
-          }
+          // Note: We're now using Syncfusion's onStart, onStop, and onError props
+          // instead of accessing the internal recognition object directly
+          // This is the recommended approach per Syncfusion documentation
         } else {
           console.warn('⚠️ speechToTextRef.current is null - component may not be mounted yet');
         }
