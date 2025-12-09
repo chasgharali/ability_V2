@@ -140,6 +140,15 @@ videoCallSchema.index({ recruiter: 1, status: 1 });
 videoCallSchema.index({ jobSeeker: 1, status: 1 });
 videoCallSchema.index({ event: 1, booth: 1 });
 videoCallSchema.index({ status: 1, startedAt: -1 });
+// CRITICAL: Prevent duplicate active calls for the same queue entry
+videoCallSchema.index(
+  { queueEntry: 1, status: 1 },
+  { 
+    unique: true,
+    partialFilterExpression: { status: 'active' },
+    name: 'unique_active_call_per_queue'
+  }
+);
 
 // Static methods
 videoCallSchema.statics.findActiveCall = function(userId) {

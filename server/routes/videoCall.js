@@ -17,36 +17,90 @@ router.post('/create', auth, async (req, res) => {
     const { queueId } = req.body;
     const recruiterId = req.user._id;
 
-    // Find the queue entry
-    const queueEntry = await BoothQueue.findById(queueId)
-      .populate('jobSeeker booth event');
-
-    if (!queueEntry) {
-      return res.status(404).json({ error: 'Queue entry not found' });
-    }
-
     // Verify user is a recruiter (basic role check)
     if (!['Recruiter', 'Admin', 'GlobalSupport'].includes(req.user.role)) {
       return res.status(403).json({ error: 'Only recruiters can create video calls' });
     }
 
-    // Check if there's already an active call for this queue entry
+    // CRITICAL FIX: Atomic check-and-update of queue entry status
+    // This prevents race conditions where multiple recruiters try to create calls simultaneously
+    const queueEntry = await BoothQueue.findOneAndUpdate(
+      {
+        _id: queueId,
+        status: { $in: ['waiting', 'invited'] }  // Only update if not already in meeting
+      },
+      {
+        $set: {
+          status: 'in_meeting',
+          lastActivity: new Date()
+        }
+      },
+      { new: true }
+    ).populate('jobSeeker booth event');
+
+    if (!queueEntry) {
+      // Queue entry not found or already in meeting
+      const existingEntry = await BoothQueue.findById(queueId);
+      if (existingEntry && existingEntry.status === 'in_meeting') {
+        // Check if there's an active call
+        const existingCall = await VideoCall.findOne({
+          queueEntry: queueId,
+          status: 'active'
+        });
+        
+        if (existingCall) {
+          return res.status(409).json({
+            error: 'Job seeker already in meeting',
+            message: 'This job seeker is already in a meeting with another recruiter',
+            existingCallId: existingCall._id
+          });
+        }
+      }
+      return res.status(404).json({ 
+        error: 'Queue entry not available',
+        message: 'Queue entry not found or no longer available for meeting'
+      });
+    }
+
+    // CRITICAL FIX: Check if another recruiter already created a call for this queue entry
+    // This is a double-check after atomic update (handles edge cases)
     const existingCall = await VideoCall.findOne({
       queueEntry: queueId,
       status: 'active'
     });
 
     if (existingCall) {
-      // End the existing call and create a new one
-      console.log('Ending existing call and creating new one');
-      try {
-        await endRoom(existingCall.roomName);
-        existingCall.status = 'ended';
-        existingCall.endedAt = new Date();
-        await existingCall.save();
-      } catch (endError) {
-        console.error('Error ending existing call:', endError);
-      }
+      // Restore queue entry status since we couldn't create the call
+      await BoothQueue.findByIdAndUpdate(queueId, {
+        $set: { status: queueEntry.status === 'in_meeting' ? 'invited' : 'waiting' }
+      });
+      
+      return res.status(409).json({
+        error: 'Call already exists',
+        message: 'An active call already exists for this queue entry',
+        existingCallId: existingCall._id
+      });
+    }
+
+    // CRITICAL FIX: Check if another recruiter from same booth already has active call with this job seeker
+    const existingCallForJobSeeker = await VideoCall.findOne({
+      booth: queueEntry.booth._id,
+      jobSeeker: queueEntry.jobSeeker._id,
+      status: 'active',
+      recruiter: { $ne: recruiterId }  // Different recruiter
+    });
+
+    if (existingCallForJobSeeker) {
+      // Restore queue entry status
+      await BoothQueue.findByIdAndUpdate(queueId, {
+        $set: { status: 'invited' }
+      });
+      
+      return res.status(409).json({
+        error: 'Job seeker already in meeting',
+        message: 'This job seeker is already in a meeting with another recruiter from this booth',
+        existingCallId: existingCallForJobSeeker._id
+      });
     }
 
     // Generate unique room name
@@ -86,10 +140,8 @@ router.post('/create', auth, async (req, res) => {
     const recruiterToken = generateAccessToken(`recruiter_${recruiterId}_${timestamp}`, roomName);
     const jobSeekerToken = generateAccessToken(`jobseeker_${queueEntry.jobSeeker._id}_${timestamp}`, roomName);
 
-    // Update queue entry status
-    queueEntry.status = 'in_meeting';
-    await queueEntry.save();
-    console.log('✅ Queue entry status updated to in_meeting:', {
+    // Queue entry status already updated atomically above
+    console.log('✅ Queue entry status updated to in_meeting (atomic):', {
       queueId: queueEntry._id,
       jobSeeker: queueEntry.jobSeeker._id.toString(),
       status: queueEntry.status
@@ -203,9 +255,33 @@ router.post('/join', auth, async (req, res) => {
     const timestamp = Date.now();
 
     if (videoCall.recruiter._id.toString() === userId) {
+      // CRITICAL FIX: Check if this recruiter is already in the call
+      const recruiterAlreadyJoined = videoCall.participants.some(
+        p => p.user.toString() === userId && p.role === 'recruiter' && !p.leftAt
+      );
+      
+      if (recruiterAlreadyJoined) {
+        return res.status(409).json({
+          error: 'Already in call',
+          message: 'You are already a participant in this call'
+        });
+      }
+      
       userRole = 'recruiter';
       identity = `recruiter_${userId}_${timestamp}`;
     } else if (videoCall.jobSeeker._id.toString() === userId) {
+      // CRITICAL FIX: Check if this job seeker is already in the call
+      const jobSeekerAlreadyJoined = videoCall.participants.some(
+        p => p.user.toString() === userId && p.role === 'jobseeker' && !p.leftAt
+      );
+      
+      if (jobSeekerAlreadyJoined) {
+        return res.status(409).json({
+          error: 'Already in call',
+          message: 'You are already a participant in this call'
+        });
+      }
+      
       userRole = 'jobseeker';
       identity = `jobseeker_${userId}_${timestamp}`;
     } else {
