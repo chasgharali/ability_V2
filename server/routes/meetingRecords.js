@@ -83,7 +83,7 @@ router.get('/', authenticateToken, async (req, res) => {
             .populate('eventId', 'name slug')
             .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
-            .populate('jobseekerId', 'name email city state metadata')
+            .populate('jobseekerId', 'name email city state metadata resumeUrl')
             .populate('interpreterId', 'name email')
             .populate('queueId')
             .populate('videoCallId')
@@ -422,7 +422,7 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
 // Export meeting records (CSV)
 router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recruiter']), async (req, res) => {
     try {
-        const { recruiterId, eventId, startDate, endDate } = req.query;
+        const { recruiterId, eventId, boothId, status, startDate, endDate, search } = req.query;
 
         let query = {};
 
@@ -443,6 +443,8 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         }
 
         if (eventId) query.eventId = eventId;
+        if (boothId) query.boothId = boothId;
+        if (status) query.status = status;
 
         // Date range filtering
         if (startDate || endDate) {
@@ -451,13 +453,84 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             if (endDate) query.startTime.$lte = new Date(endDate);
         }
 
+        // Note: Text search is handled by populating and filtering in memory if needed
+        // For now, we'll export all records matching the other filters
+
+        // Get ALL records (no limit for export)
         const meetingRecords = await MeetingRecord.find(query)
-            .populate('eventId', 'name')
-            .populate('boothId', 'name')
-            .populate('recruiterId', 'name email')
-            .populate('jobseekerId', 'name email city state')
-            .populate('interpreterId', 'name')
-            .sort({ startTime: -1 });
+            .populate({
+                path: 'eventId',
+                select: 'name',
+                model: 'Event'
+            })
+            .populate({
+                path: 'boothId',
+                select: 'name',
+                model: 'Booth'
+            })
+            .populate({
+                path: 'recruiterId',
+                select: 'name email',
+                model: 'User'
+            })
+            .populate({
+                path: 'jobseekerId',
+                select: 'name email city state resumeUrl',
+                model: 'User'
+            })
+            .populate({
+                path: 'interpreterId',
+                select: 'name email',
+                model: 'User',
+                options: { strictPopulate: false } // Allow null interpreterId
+            })
+            .sort({ startTime: -1 })
+            .lean(); // Use lean() for better performance
+
+        console.log(`📊 Exporting ${meetingRecords.length} meeting records`);
+        if (meetingRecords.length > 0) {
+            console.log('📋 Sample record:', {
+                hasEvent: !!meetingRecords[0].eventId,
+                hasBooth: !!meetingRecords[0].boothId,
+                hasRecruiter: !!meetingRecords[0].recruiterId,
+                hasJobSeeker: !!meetingRecords[0].jobseekerId,
+                hasInterpreter: !!meetingRecords[0].interpreterId,
+                recruiterEmail: meetingRecords[0].recruiterId?.email,
+                jobSeekerEmail: meetingRecords[0].jobseekerId?.email
+            });
+        }
+
+        // Helper function to escape CSV fields properly
+        const escapeCSV = (value) => {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            const stringValue = String(value);
+            // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        };
+
+        // Helper function to format date consistently
+        const formatDate = (date) => {
+            if (!date) return '';
+            try {
+                const d = new Date(date);
+                if (isNaN(d.getTime())) return '';
+                // Format: YYYY-MM-DD HH:MM:SS
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                const seconds = String(d.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            } catch (e) {
+                return '';
+            }
+        };
 
         // Convert to CSV format
         const csvHeaders = [
@@ -468,6 +541,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             'Job Seeker Name',
             'Job Seeker Email',
             'Job Seeker Location',
+            'Job Seeker Resume Link',
             'Interpreter',
             'Start Time',
             'End Time',
@@ -478,39 +552,162 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             'Messages Count'
         ];
 
-        const csvRows = meetingRecords.map(record => {
-            // Calculate duration if missing
-            let duration = record.duration;
-            if (!duration && record.startTime && record.endTime) {
-                duration = Math.round((new Date(record.endTime) - new Date(record.startTime)) / (1000 * 60));
+        const csvRows = meetingRecords.map((record, index) => {
+            // Safely extract populated fields - handle both populated objects, ObjectIds, and null values
+            // Check if field exists and is an object (populated) or if it's null/undefined
+            const eventName = (record.eventId && typeof record.eventId === 'object' && !Array.isArray(record.eventId) && record.eventId.name) 
+                ? String(record.eventId.name).trim() 
+                : '';
+            const boothName = (record.boothId && typeof record.boothId === 'object' && !Array.isArray(record.boothId) && record.boothId.name) 
+                ? String(record.boothId.name).trim() 
+                : '';
+            const recruiterName = (record.recruiterId && typeof record.recruiterId === 'object' && !Array.isArray(record.recruiterId) && record.recruiterId.name) 
+                ? String(record.recruiterId.name).trim() 
+                : '';
+            const recruiterEmail = (record.recruiterId && typeof record.recruiterId === 'object' && !Array.isArray(record.recruiterId) && record.recruiterId.email) 
+                ? String(record.recruiterId.email).trim() 
+                : '';
+            const jobSeekerName = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.name) 
+                ? String(record.jobseekerId.name).trim() 
+                : '';
+            const jobSeekerEmail = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.email) 
+                ? String(record.jobseekerId.email).trim() 
+                : '';
+            const jobSeekerCity = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.city) 
+                ? String(record.jobseekerId.city).trim() 
+                : '';
+            const jobSeekerState = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.state) 
+                ? String(record.jobseekerId.state).trim() 
+                : '';
+            const jobSeekerResumeUrl = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.resumeUrl) 
+                ? String(record.jobseekerId.resumeUrl).trim() 
+                : '';
+            
+            // Interpreter can be null, so handle it specially
+            let interpreterName = '';
+            if (record.interpreterId && typeof record.interpreterId === 'object' && !Array.isArray(record.interpreterId)) {
+                interpreterName = record.interpreterId.name ? String(record.interpreterId.name).trim() : '';
+            }
+            if (!interpreterName) {
+                interpreterName = 'None';
+            }
+            
+            // Format location
+            let location = '';
+            if (jobSeekerCity && jobSeekerState) {
+                location = `${jobSeekerCity}, ${jobSeekerState}`;
+            } else if (jobSeekerCity) {
+                location = jobSeekerCity;
+            } else if (jobSeekerState) {
+                location = jobSeekerState;
             }
 
-            return [
-                record.eventId?.name || '',
-                record.boothId?.name || '',
-                record.recruiterId?.name || '',
-                record.recruiterId?.email || '',
-                record.jobseekerId?.name || '',
-                record.jobseekerId?.email || '',
-                `${record.jobseekerId?.city || ''}, ${record.jobseekerId?.state || ''}`.trim().replace(/^,\s*|,\s*$/g, ''),
-                record.interpreterId?.name || 'None',
-                record.startTime ? new Date(record.startTime).toLocaleString() : '',
-                record.endTime ? new Date(record.endTime).toLocaleString() : '',
-                duration || '',
-                record.status || '',
-                record.recruiterRating || '',
-                record.recruiterFeedback ? `"${record.recruiterFeedback.replace(/"/g, '""')}"` : '',
-                record.jobSeekerMessages?.length || 0
+            // Calculate duration if missing or 0
+            let duration = record.duration;
+            if ((!duration || duration === 0) && record.startTime && record.endTime) {
+                try {
+                    const start = new Date(record.startTime);
+                    const end = new Date(record.endTime);
+                    if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+                        duration = Math.round((end - start) / (1000 * 60));
+                    }
+                } catch (e) {
+                    console.warn(`Error calculating duration for record ${record._id}:`, e);
+                }
+            }
+            const durationValue = (duration !== null && duration !== undefined && duration !== '') 
+                ? String(duration) 
+                : '';
+
+            // Format status
+            const statusLabels = {
+                'scheduled': 'Scheduled',
+                'active': 'Active',
+                'completed': 'Completed',
+                'cancelled': 'Cancelled',
+                'failed': 'Failed',
+                'left_with_message': 'Left Message'
+            };
+            const status = statusLabels[record.status] || record.status || '';
+
+            // Format rating (ensure it's a number or empty)
+            const rating = (record.recruiterRating !== null && record.recruiterRating !== undefined && record.recruiterRating !== '') 
+                ? String(record.recruiterRating) 
+                : '';
+
+            // Format feedback - handle null, undefined, and empty string
+            const feedback = (record.recruiterFeedback !== null && record.recruiterFeedback !== undefined) 
+                ? String(record.recruiterFeedback).trim() 
+                : '';
+
+            // Messages count - ensure we always have a number
+            let messagesCount = '0';
+            if (Array.isArray(record.jobSeekerMessages)) {
+                messagesCount = String(record.jobSeekerMessages.length);
+            } else if (record.jobSeekerMessages !== null && record.jobSeekerMessages !== undefined) {
+                messagesCount = '0';
+            }
+
+            const row = [
+                escapeCSV(eventName),
+                escapeCSV(boothName),
+                escapeCSV(recruiterName),
+                escapeCSV(recruiterEmail),
+                escapeCSV(jobSeekerName),
+                escapeCSV(jobSeekerEmail),
+                escapeCSV(location),
+                escapeCSV(jobSeekerResumeUrl),
+                escapeCSV(interpreterName),
+                escapeCSV(formatDate(record.startTime)),
+                escapeCSV(formatDate(record.endTime)),
+                escapeCSV(durationValue),
+                escapeCSV(status),
+                escapeCSV(rating),
+                escapeCSV(feedback),
+                escapeCSV(messagesCount)
             ];
+
+            // Validate row has correct number of columns
+            if (row.length !== csvHeaders.length) {
+                console.error(`⚠️ Row ${index + 1} has ${row.length} columns, expected ${csvHeaders.length}. Record ID: ${record._id}`);
+                // Pad with empty strings if missing columns
+                while (row.length < csvHeaders.length) {
+                    row.push('');
+                }
+            }
+
+            return row;
         });
 
-        const csvContent = [csvHeaders, ...csvRows]
-            .map(row => row.join(','))
-            .join('\n');
+        // Validate all rows have correct number of columns
+        const expectedColumns = csvHeaders.length;
+        const invalidRows = csvRows.filter((row, idx) => row.length !== expectedColumns);
+        if (invalidRows.length > 0) {
+            console.warn(`⚠️ Found ${invalidRows.length} rows with incorrect column count`);
+        }
 
-        res.setHeader('Content-Type', 'text/csv');
+        // Build CSV content with proper escaping
+        const csvContent = [
+            csvHeaders.map(h => escapeCSV(h)).join(','),
+            ...csvRows.map(row => {
+                // Ensure row has exactly the right number of columns
+                const paddedRow = [...row];
+                while (paddedRow.length < expectedColumns) {
+                    paddedRow.push('');
+                }
+                return paddedRow.slice(0, expectedColumns).join(',');
+            })
+        ].join('\r\n');
+
+        // Add BOM for Excel compatibility (UTF-8 BOM)
+        const BOM = '\uFEFF';
+        const finalContent = BOM + csvContent;
+
+        console.log(`✅ CSV export complete: ${csvRows.length} rows, ${expectedColumns} columns`);
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="meeting-records.csv"');
-        res.send(csvContent);
+        res.send(finalContent);
 
     } catch (error) {
         console.error('Error exporting meeting records:', error);
