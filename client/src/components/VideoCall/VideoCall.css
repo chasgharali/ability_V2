@@ -602,6 +602,27 @@
   font-size: 0.95rem;
 }
 
+.caption-item {
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.caption-item:last-child {
+  margin-bottom: 0;
+}
+
+.caption-speaker {
+  color: #4fc3f7;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.caption-item .caption-text {
+  color: #ffffff;
+  text-align: left;
+  display: inline;
+}
+
 /* Caption display responsive */
 @media (max-width: 768px) {
   .caption-container {
