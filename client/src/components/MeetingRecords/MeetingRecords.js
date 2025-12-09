@@ -568,7 +568,7 @@ export default function MeetingRecords() {
     const eventTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.eventId?.name || 'N/A'}
             </div>
         );
@@ -577,7 +577,7 @@ export default function MeetingRecords() {
     const boothTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
                 {row.boothId?.name || 'N/A'}
             </div>
         );
@@ -588,13 +588,13 @@ export default function MeetingRecords() {
         // For left_with_message records, show "All Recruiters in Booth" instead of specific recruiter
         if (row.status === 'left_with_message') {
             return (
-                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ fontStyle: 'italic', color: '#6b7280' }}>All Recruiters in Booth</span>
                 </div>
             );
         }
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.recruiterId?.name || 'N/A'}
             </div>
         );
@@ -603,8 +603,31 @@ export default function MeetingRecords() {
     const jobSeekerTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.jobseekerId?.name || 'N/A'}
+            </div>
+        );
+    };
+
+    const jobSeekerEmailTemplate = (props) => {
+        const row = props;
+        const email = row.jobseekerId?.email || row.jobSeekerEmail || 'N/A';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {email !== 'N/A' ? (
+                    <a 
+                        href={`mailto:${email}`}
+                        style={{ color: '#111827', textDecoration: 'none' }}
+                        onClick={(e) => e.stopPropagation()}
+                        title={`Send email to ${email}`}
+                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                    >
+                        {email}
+                    </a>
+                ) : (
+                    <span style={{ color: '#111827' }}>N/A</span>
+                )}
             </div>
         );
     };
@@ -617,7 +640,7 @@ export default function MeetingRecords() {
             locationText = `${jobSeeker.city}, ${jobSeeker.state}`;
         }
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {locationText}
             </div>
         );
@@ -626,7 +649,7 @@ export default function MeetingRecords() {
     const startTimeTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {formatDateTime(row.startTime)}
             </div>
         );
@@ -635,7 +658,7 @@ export default function MeetingRecords() {
     const durationTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {formatDuration(row.duration)}
             </div>
         );
@@ -652,16 +675,18 @@ export default function MeetingRecords() {
             'left_with_message': 'Left Message'
         };
         return (
-            <span className={`status-badge status-${row.status}`}>
-                {statusLabels[row.status] || row.status}
-            </span>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                <span className={`status-badge status-${row.status}`}>
+                    {statusLabels[row.status] || row.status}
+                </span>
+            </div>
         );
     };
 
     const ratingTemplate = (props) => {
         const row = props;
         return (
-            <div className="rating-display">
+            <div className="rating-display" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                 <span className="stars">{renderStars(row.recruiterRating)}</span>
                 {row.recruiterRating && (
                     <span className="rating-number">({row.recruiterRating}/5)</span>
@@ -673,7 +698,7 @@ export default function MeetingRecords() {
     const messagesTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.jobSeekerMessages?.length || 0}
             </div>
         );
@@ -682,7 +707,7 @@ export default function MeetingRecords() {
     const interpreterTemplate = (props) => {
         const row = props;
         return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.interpreterId?.name || 'None'}
             </div>
         );
@@ -698,7 +723,11 @@ export default function MeetingRecords() {
                     wordWrap: 'break-word', 
                     whiteSpace: 'normal', 
                     padding: '8px 0',
-                    maxWidth: '300px'
+                    maxWidth: '300px',
+                    textAlign: 'center',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }}
                 title={notes || 'No notes'}
             >
@@ -1056,6 +1085,12 @@ export default function MeetingRecords() {
                                         return '';
                                     };
                                     
+                                    const getFieldEmail = (field) => {
+                                        if (!field) return '';
+                                        if (typeof field === 'object' && field.email) return field.email;
+                                        return '';
+                                    };
+                                    
                                     return {
                                         ...r, 
                                         id: r._id || r.id,
@@ -1064,6 +1099,7 @@ export default function MeetingRecords() {
                                         boothName: getFieldName(r.boothId),
                                         recruiterName: getFieldName(r.recruiterId),
                                         jobSeekerName: getFieldName(r.jobseekerId),
+                                        jobSeekerEmail: getFieldEmail(r.jobseekerId),
                                         jobSeekerCity: getFieldCity(r.jobseekerId),
                                         interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
                                         messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
@@ -1117,18 +1153,19 @@ export default function MeetingRecords() {
                                         />
                                     )}
                                     <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerEmail' headerText='Job Seeker Email' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerEmailTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='duration' headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowFiltering={true} />
                                     <ColumnDirective field='status' headerText='Status' width='130' textAlign='Center' template={statusTemplate} allowFiltering={true} />
                                     <ColumnDirective field='recruiterRating' headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} type='string' />
+                                    <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} type='string' textAlign='Center' />
                                     <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
-                                    <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective 
                                         headerText='Actions' 
                                         width='280' 
