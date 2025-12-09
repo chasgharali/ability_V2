@@ -1136,10 +1136,10 @@ const socketHandler = (io) => {
                 try {
                     const BoothQueue = require('../models/BoothQueue');
 
-                    // Find any active queue entries for this user
+                    // Find any active queue entries for this user (including in_meeting status)
                     const activeQueues = await BoothQueue.find({
                         jobSeeker: socket.userId,
-                        status: { $in: ['waiting', 'invited'] }
+                        status: { $in: ['waiting', 'invited', 'in_meeting'] }
                     });
 
                     // Leave all active queues

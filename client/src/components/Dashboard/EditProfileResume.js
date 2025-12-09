@@ -596,17 +596,30 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
                   width: '150px', 
                   height: '150px', 
                   borderRadius: '50%', 
-                  backgroundImage: `url(${pendingAvatarPreview})`, 
-                  backgroundSize: 'cover', 
-                  backgroundPosition: 'center',
                   border: '2px solid #e5e7eb',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  overflow: 'hidden'
                 }}
                 aria-label="New profile picture preview"
-              />
-              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Click Upload to Preview</p>
+              >
+                <img 
+                  src={pendingAvatarPreview} 
+                  alt="Preview" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover', 
+                    display: 'block'
+                  }}
+                  onError={(e) => {
+                    console.error('Preview image failed to load');
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Preview shown above. Click Upload to save.</p>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button 
                   type="button" 

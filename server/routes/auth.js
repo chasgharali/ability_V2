@@ -452,6 +452,46 @@ router.post('/logout', authenticateToken, async (req, res) => {
         const { refreshToken } = req.body;
         const { user } = req;
 
+        // Remove user from queue if they are a JobSeeker
+        if (user.role === 'JobSeeker') {
+            try {
+                const BoothQueue = require('../models/BoothQueue');
+
+                // Find all active queue entries for this user (including in_meeting status)
+                const activeQueues = await BoothQueue.find({
+                    jobSeeker: user._id,
+                    status: { $in: ['waiting', 'invited', 'in_meeting'] }
+                });
+
+                // Leave all active queues
+                for (const queueEntry of activeQueues) {
+                    await queueEntry.leaveQueue();
+
+                    // Notify booth management about queue update
+                    const io = req.app.get('io');
+                    if (io) {
+                        const updateData = {
+                            boothId: queueEntry.booth,
+                            action: 'left',
+                            queueEntry: {
+                                _id: queueEntry._id,
+                                jobSeeker: user.getPublicProfile(),
+                                position: queueEntry.position,
+                                status: 'left'
+                            }
+                        };
+                        io.to(`booth_${queueEntry.booth}`).emit('queue-updated', updateData);
+                        io.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', updateData);
+                    }
+
+                    logger.info(`Removed user ${user.email} from queue for booth ${queueEntry.booth} on logout`);
+                }
+            } catch (error) {
+                logger.error('Error removing user from queue on logout:', error);
+                // Don't fail logout if queue removal fails
+            }
+        }
+
         if (refreshToken) {
             // Remove specific refresh token
             user.refreshTokens = user.refreshTokens.filter(token => token.token !== refreshToken);
