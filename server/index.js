@@ -249,6 +249,10 @@ const startServer = async () => {
             // Start queue cleanup job
             const { startQueueCleanup } = require('./utils/queueCleanup');
             startQueueCleanup();
+            
+            // Start token cleanup job (cleans up expired refresh tokens)
+            const { startTokenCleanup } = require('./utils/tokenCleanup');
+            startTokenCleanup();
         });
 
         // Handle server errors

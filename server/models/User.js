@@ -159,12 +159,14 @@ const userSchema = new mongoose.Schema({
         default: {}
     },
     // Refresh tokens for JWT management
+    // NOTE: Do NOT use 'expires' on array subdocuments - MongoDB TTL indexes
+    // work at the document level, which would delete the entire User document!
+    // Token expiration should be handled in application logic instead.
     refreshTokens: [{
         token: String,
         createdAt: {
             type: Date,
-            default: Date.now,
-            expires: 604800 // 7 days
+            default: Date.now
         }
     }]
 }, {
