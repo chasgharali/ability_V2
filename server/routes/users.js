@@ -421,7 +421,9 @@ router.get('/verify-email-change', async (req, res) => {
  */
 router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
-        const { role, isActive, page = 1, limit = 50, search } = req.query;
+        const { role, isActive, page = 1, limit = 50, search, eventId } = req.query;
+
+        logger.info(`Get users request - role: ${role}, isActive: ${isActive}, search: ${search}, eventId: ${eventId}`);
 
         // Build query
         let query = {};
@@ -445,6 +447,57 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             ];
         }
 
+        // Filter by event registration
+        let eventFilterQuery = null;
+        if (eventId) {
+            const mongoose = require('mongoose');
+            // Convert to ObjectId if it's a valid MongoDB ID
+            if (mongoose.Types.ObjectId.isValid(eventId)) {
+                const objectId = new mongoose.Types.ObjectId(eventId);
+                // For Mixed schema fields, ObjectIds might be stored as ObjectId or converted to string
+                // Use $elemMatch with $or to handle all possible formats
+                eventFilterQuery = {
+                    'metadata.registeredEvents': {
+                        $elemMatch: {
+                            $or: [
+                                // Match ObjectId format (BSON ObjectId)
+                                { id: objectId },
+                                // Match string format (when ObjectId is stored as string)
+                                { id: eventId },
+                                // Match ObjectId.toString() format
+                                { id: objectId.toString() },
+                                // Also match by slug as additional fallback
+                                { slug: eventId }
+                            ]
+                        }
+                    }
+                };
+                logger.info(`Filtering users by event ID: ${eventId} (ObjectId: ${objectId.toString()})`);
+            } else {
+                // If not a valid ObjectId, search by slug only
+                eventFilterQuery = {
+                    'metadata.registeredEvents': {
+                        $elemMatch: {
+                            slug: eventId
+                        }
+                    }
+                };
+                logger.info(`Filtering users by event slug: ${eventId}`);
+            }
+        }
+
+        // Merge event filter with main query
+        if (eventFilterQuery) {
+            // Combine with existing query using $and to ensure both conditions are met
+            if (Object.keys(query).length > 0) {
+                query = { $and: [query, eventFilterQuery] };
+            } else {
+                query = eventFilterQuery;
+            }
+            // Log the final query structure for debugging
+            logger.info(`Final query structure: ${JSON.stringify(query, null, 2)}`);
+        }
+
         // Find users and populate booth information
         const users = await User.find(query)
             .select('-hashedPassword -refreshTokens')
@@ -455,6 +508,16 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
 
         // Get total count for pagination
         const totalCount = await User.countDocuments(query);
+        
+        logger.info(`Event filter query returned ${users.length} users out of ${totalCount} total`);
+
+        // Calculate server-side stats for filtered results
+        const activeCount = await User.countDocuments({ ...query, isActive: true });
+        const inactiveCount = await User.countDocuments({ ...query, isActive: false });
+        const verifiedCount = await User.countDocuments({ ...query, emailVerified: true });
+
+        logger.info(`Query returned ${users.length} users out of ${totalCount} total matching query`);
+        logger.info(`Stats - Active: ${activeCount}, Inactive: ${inactiveCount}, Verified: ${verifiedCount}`);
 
         res.json({
             users: users.map(user => user.getPublicProfile()),
@@ -464,6 +527,12 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
                 totalCount,
                 hasNext: page * limit < totalCount,
                 hasPrev: page > 1
+            },
+            stats: {
+                totalCount,
+                activeCount,
+                inactiveCount,
+                verifiedCount
             }
         });
     } catch (error) {
