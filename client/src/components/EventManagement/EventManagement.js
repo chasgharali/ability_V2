@@ -495,15 +495,15 @@ export default function EventManagement() {
     const eventPageUrlFor = (row) => row.link || `${window.location.origin}/event/${row.slug}`;
 
     // Grid template functions for custom column renders - using Syncfusion ButtonComponent
-    // Format date/time to show the time that was actually entered (using UTC hours/minutes)
+    // Format date/time to show the time converted to user's local timezone
     const formatEventDateTime = (dateString) => {
         if (!dateString) return '-';
         const date = new Date(dateString);
-        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        const day = date.getUTCDate().toString().padStart(2, '0');
-        const year = date.getUTCFullYear();
-        const hours = date.getUTCHours();
-        const minutes = date.getUTCMinutes();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
         const period = hours >= 12 ? 'PM' : 'AM';
         const displayHours = hours % 12 || 12;
         return `${month}/${day}/${year}, ${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
@@ -542,6 +542,55 @@ export default function EventManagement() {
     );
 
     const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+    const resetForm = () => {
+        // Clear RichTextEditor content first if ref exists
+        if (rteInfoRef.current) {
+            try {
+                rteInfoRef.current.value = '';
+                rteInfoRef.current.refresh();
+            } catch (e) {
+                // Ignore errors if RTE is not initialized
+                console.debug('RTE reset:', e);
+            }
+        }
+        setForm({
+            sendyId: '',
+            name: '',
+            link: '',
+            logoUrl: '',
+            maxBooths: 0,
+            maxRecruitersPerEvent: 0,
+            startTime: '',
+            endTime: '',
+            information: '',
+            termsId: '',
+            termsIds: [],
+            status: 'draft',
+            headerColor: '#ffffff',
+            headerTextColor: '#000000',
+            bodyColor: '#ff9800',
+            bodyTextColor: '#000000',
+            sidebarColor: '#ffffff',
+            sidebarTextColor: '#000000',
+            btnPrimaryColor: '#000000',
+            btnPrimaryTextColor: '#ffffff',
+            btnSecondaryColor: '#000000',
+            btnSecondaryTextColor: '#ffffff',
+            entranceFormColor: '#ff9800',
+            entranceFormTextColor: '#000000',
+            chatHeaderColor: '#eeeeee',
+            chatSidebarColor: '#000000',
+            addFooter: false,
+            isDemo: false,
+        });
+        setEditingId(null);
+    };
+
+    const handleNew = () => {
+        resetForm();
+        setMode('create');
+    };
 
     const onPickLogo = async (file) => {
         if (!file) return;
@@ -648,8 +697,8 @@ export default function EventManagement() {
                 await createEvent(payload);
             }
             await loadEvents();
+            resetForm();
             setMode('list');
-            setEditingId(null);
         } finally {
             setSaving(false);
         }
@@ -668,11 +717,11 @@ export default function EventManagement() {
                             <h2>Event Management</h2>
                             <div className="bm-header-actions">
                                 {mode === 'list' ? (
-                                    <ButtonComponent cssClass="e-primary" onClick={() => setMode('create')}>
+                                    <ButtonComponent cssClass="e-primary" onClick={handleNew}>
                                         Create Event
                                     </ButtonComponent>
                                 ) : (
-                                    <ButtonComponent cssClass="e-outline e-primary" onClick={() => setMode('list')}>
+                                    <ButtonComponent cssClass="e-outline e-primary" onClick={() => { resetForm(); setMode('list'); }}>
                                         Back to List
                                     </ButtonComponent>
                                 )}
