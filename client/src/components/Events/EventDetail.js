@@ -104,25 +104,25 @@ export default function EventDetail() {
                         <dt style={{ fontWeight: 700, display: 'inline' }}>Date: </dt>
                         <dd style={{ display: 'inline', marginInlineStart: 4 }}>{event.start ? (() => {
                           const d = new Date(event.start);
-                          return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
+                          return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
                         })() : '-'}</dd>
                       </div>
                       <div>
                         <dt style={{ fontWeight: 700, display: 'inline' }}>Time: </dt>
                         <dd style={{ display: 'inline', marginInlineStart: 4 }}>{event.start ? (() => {
                           const d = new Date(event.start);
-                          const hours = d.getUTCHours();
-                          const minutes = d.getUTCMinutes();
-                          const period = hours >= 12 ? 'PM' : 'AM';
-                          const displayHours = hours % 12 || 12;
-                          return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+                          return d.toLocaleString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          });
                         })() : '-'} - {event.end ? (() => {
                           const d = new Date(event.end);
-                          const hours = d.getUTCHours();
-                          const minutes = d.getUTCMinutes();
-                          const period = hours >= 12 ? 'PM' : 'AM';
-                          const displayHours = hours % 12 || 12;
-                          return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+                          return d.toLocaleString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          });
                         })() : '-'}</dd>
                       </div>
                     </dl>

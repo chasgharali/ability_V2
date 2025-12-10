@@ -15,6 +15,7 @@ import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
+import { listEvents } from '../../services/events';
 import axios from 'axios';
 import { 
   JOB_CATEGORY_LIST, 
@@ -84,12 +85,23 @@ export default function JobSeekerManagement() {
   const searchInputRef = useRef(null);
   const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [statusFilter, setStatusFilter] = useState('');
+  const [eventFilter, setEventFilter] = useState('');
+  const [events, setEvents] = useState([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [eventSearchLoading, setEventSearchLoading] = useState(false);
+  const [serverStats, setServerStats] = useState({
+    totalCount: 0,
+    activeCount: 0,
+    inactiveCount: 0,
+    verifiedCount: 0
+  });
   const toastRef = useRef(null);
   const gridRef = useRef(null);
   const deleteDialogRef = useRef(null);
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
+  const eventFilterRef = useRef('');
+  const eventDropdownRef = useRef(null);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -142,6 +154,17 @@ export default function JobSeekerManagement() {
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
   ], []);
+
+  // Event filter options - built from fetched events
+  const eventOptions = useMemo(() => {
+    const options = [{ value: '', label: 'All Events' }];
+    if (events && Array.isArray(events)) {
+      events.forEach(event => {
+        options.push({ value: event._id, label: event.name });
+      });
+    }
+    return options;
+  }, [events]);
 
   // Syncfusion Toast - memoized to prevent unnecessary re-renders
   const showToast = useCallback((message, type = 'Success', duration = 3000) => {
@@ -251,7 +274,7 @@ export default function JobSeekerManagement() {
     try {
       await deleteUserPermanently(rowPendingDelete.id);
       showToast('Job seeker deleted', 'Success');
-      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
     } catch (e) {
       console.error('Delete failed', e);
       const msg = e?.response?.data?.message || 'Delete failed';
@@ -267,7 +290,7 @@ export default function JobSeekerManagement() {
     setRowPendingDelete(null);
   };
 
-  const loadJobSeekers = useCallback(async (page, limit, search, isActive) => {
+  const loadJobSeekers = useCallback(async (page, limit, search, isActive, event) => {
     try {
       // Only set main loading for initial load or page changes, not for search
       const isSearch = search && search.trim();
@@ -294,7 +317,14 @@ export default function JobSeekerManagement() {
         params.isActive = 'false';
       }
       
+      // Add event filter if provided
+      if (event && event.trim()) {
+        params.eventId = event.trim();
+        console.log('Filtering by event ID:', event.trim());
+      }
+      
       const res = await listUsers(params);
+      console.log('API Response - Total Count:', res?.pagination?.totalCount);
       const items = (res?.users || []).filter(u => u.role === 'JobSeeker');
       
       // Batch state updates to prevent multiple re-renders
@@ -342,6 +372,16 @@ export default function JobSeekerManagement() {
           hasPrev: res.pagination.hasPrev
         });
       }
+
+      // Update server-side stats if provided
+      if (res?.stats) {
+        setServerStats({
+          totalCount: res.stats.totalCount || 0,
+          activeCount: res.stats.activeCount || 0,
+          inactiveCount: res.stats.inactiveCount || 0,
+          verifiedCount: res.stats.verifiedCount || 0
+        });
+      }
       
       setLiveMsg(`Loaded ${items.length} of ${res?.pagination?.totalCount || 0} job seekers`);
     } catch (e) {
@@ -350,6 +390,7 @@ export default function JobSeekerManagement() {
     } finally {
       setLoading(false);
       setSearchLoading(false);
+      setEventSearchLoading(false);
     }
   }, [showToast]);
 
@@ -368,9 +409,35 @@ export default function JobSeekerManagement() {
     statusFilterRef.current = statusFilter;
   }, [statusFilter]);
 
+  useEffect(() => {
+    eventFilterRef.current = eventFilter;
+  }, [eventFilter]);
+
+  // Load events on mount
+  useEffect(() => {
+    const loadEventsData = async () => {
+      try {
+        const res = await listEvents({ page: 1, limit: 200 });
+        setEvents(res.events || []);
+      } catch (e) {
+        console.error('Failed to load events', e);
+        showToast('Failed to load events', 'Error');
+      }
+    };
+    loadEventsData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Initial load on mount - only runs once
   useEffect(() => {
-    loadJobSeekers(1, pageSize, '', '');
+    // Reset server stats on initial load
+    setServerStats({
+      totalCount: 0,
+      activeCount: 0,
+      inactiveCount: 0,
+      verifiedCount: 0
+    });
+    loadJobSeekers(1, pageSize, '', '', '');
     isFirstRender.current = false; // Mark first render as complete
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -385,7 +452,7 @@ export default function JobSeekerManagement() {
       prevSearchFilter.current = activeSearchQuery;
       setCurrentPage(1);
       setSearchLoading(true);
-      loadJobSeekersRef.current(1, pageSize, activeSearchQuery, statusFilterRef.current);
+      loadJobSeekersRef.current(1, pageSize, activeSearchQuery, statusFilterRef.current, eventFilterRef.current);
     }
   }, [activeSearchQuery, pageSize]);
 
@@ -412,9 +479,38 @@ export default function JobSeekerManagement() {
       }
       // Status filter change - preserve current search filter
       // Note: Grid key includes statusFilter, so grid will reset automatically
-      loadJobSeekersRef.current(1, pageSize, activeSearchQuery || '', statusFilter);
+      loadJobSeekersRef.current(1, pageSize, activeSearchQuery || '', statusFilter, eventFilterRef.current);
     }
   }, [statusFilter, pageSize, activeSearchQuery]);
+
+  // Function to trigger event search - only called explicitly by button
+  const triggerEventSearch = useCallback(() => {
+    // Get the current value from the dropdown ref if available, otherwise use state
+    let currentEventValue = eventFilter;
+    if (eventDropdownRef.current && eventDropdownRef.current.value) {
+      currentEventValue = eventDropdownRef.current.value;
+    }
+    
+    if (!currentEventValue || !currentEventValue.trim()) {
+      showToast('Please select an event first', 'Warning');
+      return;
+    }
+    
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
+    }
+    
+    setEventSearchLoading(true);
+    setCurrentPage(1);
+    // Update both state and ref
+    setEventFilter(currentEventValue);
+    eventFilterRef.current = currentEventValue;
+    
+    console.log('Triggering event search with eventId:', currentEventValue);
+    loadJobSeekersRef.current(1, pageSize, activeSearchQuery || '', statusFilterRef.current, currentEventValue);
+  }, [eventFilter, pageSize, activeSearchQuery, showToast]);
 
   // Function to trigger search - only called explicitly by button or Enter key
   const triggerSearch = useCallback(() => {
@@ -431,7 +527,7 @@ export default function JobSeekerManagement() {
     prevSearchFilter.current = searchValue;
     searchFilterRef.current = searchValue;
     setCurrentPage(1);
-    loadJobSeekersRef.current(1, pageSize, searchValue, statusFilterRef.current);
+    loadJobSeekersRef.current(1, pageSize, searchValue, statusFilterRef.current, eventFilterRef.current);
   }, [pageSize]);
 
   // No automatic search on typing - search only on button click or Enter key
@@ -630,7 +726,7 @@ export default function JobSeekerManagement() {
         await reactivateUser(row.id);
         showToast(`${row.firstName} ${row.lastName} reactivated`, 'Success');
       }
-      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
     } catch (e) {
       console.error('Toggle active failed', e);
       showToast('Failed to update status', 'Error');
@@ -751,7 +847,7 @@ export default function JobSeekerManagement() {
       setEditingId(null);
       setSelectedJobSeeker(null);
       setForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', phoneNumber: '', city: '', state: '', country: '', avatarUrl: '' });
-      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
     } catch (e) {
       console.error('Update job seeker failed', e);
       const msg = e?.response?.data?.message || 'Failed to update job seeker';
@@ -770,7 +866,7 @@ export default function JobSeekerManagement() {
     try {
       await verifyUserEmail(rowPendingVerify.id);
       showToast(`Email verified for ${rowPendingVerify.firstName} ${rowPendingVerify.lastName}`, 'Success');
-      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current); // Refresh the list
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current); // Refresh the list
     } catch (e) {
       console.error('Verify email failed', e);
       const msg = e?.response?.data?.message || 'Failed to verify email';
@@ -1096,7 +1192,7 @@ export default function JobSeekerManagement() {
       showToast('Job seeker updated successfully', 'Success');
       
       // Refresh the list
-      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
       
       // Reset form
       setEditForm({
@@ -1487,13 +1583,22 @@ export default function JobSeekerManagement() {
     );
   };
 
-  // Memoize stats calculation - only recalculate when jobSeekers actually changes
+  // Use server-side stats when available, otherwise calculate from current page
   const stats = useMemo(() => {
+    // If we have server-side stats (from filtered query), use those
+    if (serverStats.totalCount > 0 || eventFilter) {
+      return {
+        activeCount: serverStats.activeCount,
+        inactiveCount: serverStats.inactiveCount,
+        verifiedCount: serverStats.verifiedCount
+      };
+    }
+    // Otherwise calculate from current page (for initial load without filters)
     const activeCount = jobSeekers.filter(js => js.isActive).length;
     const inactiveCount = jobSeekers.filter(js => !js.isActive).length;
     const verifiedCount = jobSeekers.filter(js => js.emailVerified).length;
     return { activeCount, inactiveCount, verifiedCount };
-  }, [jobSeekers]);
+  }, [jobSeekers, serverStats, eventFilter]);
 
   // Memoize grid data - only update when jobSeekers actually changes
   const gridDataSource = useMemo(() => jobSeekers, [jobSeekers]);
@@ -1946,7 +2051,7 @@ export default function JobSeekerManagement() {
 
             {/* Filters */}
             <div className="jsm-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-              {/* Status Filter - Left */}
+              {/* Status Filter */}
               <div style={{ width: '200px', flexShrink: 0 }}>
                 <DropDownListComponent
                   id="status-filter-dropdown"
@@ -1963,6 +2068,54 @@ export default function JobSeekerManagement() {
                   width="100%"
                 />
               </div>
+              {/* Event Filter */}
+              <div style={{ width: '250px', flexShrink: 0 }}>
+                <DropDownListComponent
+                  ref={eventDropdownRef}
+                  id="event-filter-dropdown"
+                  dataSource={eventOptions.map(e => ({ value: e.value, text: e.label }))}
+                  fields={{ value: 'value', text: 'text' }}
+                  value={eventFilter}
+                  change={(e) => {
+                    const selectedValue = e.value || e.itemData?.value || '';
+                    console.log('Event dropdown changed:', selectedValue, e);
+                    setEventFilter(selectedValue);
+                    eventFilterRef.current = selectedValue;
+                    // Don't auto-trigger search - user must click "Search by Event" button
+                  }}
+                  placeholder="Select Event"
+                  cssClass="event-filter-dropdown"
+                  popupHeight="300px"
+                  width="100%"
+                />
+              </div>
+              {/* Search by Event Button */}
+              <ButtonComponent
+                cssClass="e-primary e-small"
+                onClick={triggerEventSearch}
+                disabled={eventSearchLoading || !eventFilter}
+                aria-label="Search by event"
+                style={{ minWidth: '140px', height: '44px' }}
+              >
+                {eventSearchLoading ? 'Searching...' : 'Search by Event'}
+              </ButtonComponent>
+              {eventFilter && (
+                <ButtonComponent
+                  cssClass="e-outline e-primary e-small"
+                  onClick={() => {
+                    setEventFilter('');
+                    eventFilterRef.current = '';
+                    setCurrentPage(1);
+                    // Reload without event filter
+                    loadJobSeekersRef.current(1, pageSize, activeSearchQuery || '', statusFilterRef.current, '');
+                  }}
+                  disabled={eventSearchLoading}
+                  aria-label="Clear event filter"
+                  style={{ minWidth: '70px', height: '44px' }}
+                >
+                  Clear
+                </ButtonComponent>
+              )}
               {/* Search Section - Right - Using uncontrolled input for performance */}
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                 <div style={{ marginBottom: 0 }}>
@@ -2018,11 +2171,11 @@ export default function JobSeekerManagement() {
               </div>
             </div>
 
-            {/* Stats - memoized to prevent unnecessary recalculations */}
+            {/* Stats - using server-side filtered stats */}
             <div className="stats-row">
               <div className="stat-card">
                 <h4>Total Job Seekers</h4>
-                <span className="stat-number">{pagination.totalCount || 0}</span>
+                <span className="stat-number">{pagination.totalCount || serverStats.totalCount || 0}</span>
               </div>
               <div className="stat-card">
                 <h4>Active</h4>
@@ -2061,7 +2214,7 @@ export default function JobSeekerManagement() {
                   </div>
                 )}
                 <GridComponent
-                  key={`job-seekers-grid-${currentPage}-${pageSize}-${statusFilter}`}
+                  key={`job-seekers-grid-${currentPage}-${pageSize}-${statusFilter}-${eventFilter}`}
                   ref={gridRef}
                   dataSource={gridDataSource}
                   allowPaging={false}
@@ -2217,7 +2370,7 @@ export default function JobSeekerManagement() {
                         const newSize = parseInt(e.target.value);
                         setPageSize(newSize);
                         setCurrentPage(1);
-                        loadJobSeekers(1, newSize, searchFilterRef.current, statusFilterRef.current);
+                        loadJobSeekers(1, newSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
                       }}
                       style={{
                         padding: '6px 12px',
@@ -2247,7 +2400,7 @@ export default function JobSeekerManagement() {
                         if (currentPage > 1) {
                           const newPage = 1;
                           setCurrentPage(newPage);
-                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
                         }
                       }}
                       disabled={currentPage <= 1 || loading}
@@ -2269,7 +2422,7 @@ export default function JobSeekerManagement() {
                         if (currentPage > 1) {
                           const newPage = currentPage - 1;
                           setCurrentPage(newPage);
-                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
                         }
                       }}
                       disabled={currentPage <= 1 || loading}
@@ -2296,7 +2449,7 @@ export default function JobSeekerManagement() {
                         const val = parseInt(e.target.value);
                         if (val >= 1 && val <= (pagination.totalPages || 1)) {
                           setCurrentPage(val);
-                          loadJobSeekers(val, pageSize, searchFilterRef.current, statusFilterRef.current);
+                          loadJobSeekers(val, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
                         }
                       }}
                       style={{
@@ -2314,7 +2467,7 @@ export default function JobSeekerManagement() {
                         if (currentPage < (pagination.totalPages || 1)) {
                           const newPage = currentPage + 1;
                           setCurrentPage(newPage);
-                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
                         }
                       }}
                       disabled={currentPage >= (pagination.totalPages || 1) || loading}
@@ -2336,7 +2489,7 @@ export default function JobSeekerManagement() {
                         if (currentPage < (pagination.totalPages || 1)) {
                           const newPage = pagination.totalPages || 1;
                           setCurrentPage(newPage);
-                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current);
+                          loadJobSeekers(newPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
                         }
                       }}
                       disabled={currentPage >= (pagination.totalPages || 1) || loading}
