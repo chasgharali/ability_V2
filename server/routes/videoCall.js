@@ -82,8 +82,7 @@ router.post('/create', auth, async (req, res) => {
       });
     }
 
-    // CRITICAL FIX: Check if another recruiter from same booth already has active call with this job seeker
-    // Only consider calls that were started recently (within last 2 hours) to avoid blocking on stale calls
+
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const existingCallForJobSeeker = await VideoCall.findOne({
       booth: queueEntry.booth._id,
