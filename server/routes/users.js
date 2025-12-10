@@ -785,11 +785,6 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         .trim()
         .isLength({ max: 100 })
         .withMessage('State too long'),
-    body('country')
-        .optional({ nullable: true, checkFalsy: true })
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('Country too long'),
     body('role')
         .optional()
         .isIn(['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
