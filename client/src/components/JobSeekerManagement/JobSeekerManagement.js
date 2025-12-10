@@ -24,7 +24,8 @@ import {
   EXPERIENCE_LEVEL_LIST, 
   EDUCATION_LEVEL_LIST, 
   SECURITY_CLEARANCE_LIST,
-  MILITARY_EXPERIENCE_LIST 
+  MILITARY_EXPERIENCE_LIST,
+  COUNTRY_OF_ORIGIN_LIST
 } from '../../constants/options';
 
 export default function JobSeekerManagement() {
@@ -41,6 +42,19 @@ export default function JobSeekerManagement() {
       return ['Not provided'];
     }
     return values.map(value => getLabelFromValue(value, optionsList));
+  };
+
+  // Helper function to convert country name to 2-letter code
+  const getCountryCode = (countryValue) => {
+    if (!countryValue) return '';
+    // If it's already a 2-letter code, return it
+    if (countryValue.length === 2) return countryValue.toUpperCase();
+    // Otherwise, try to find it in the country list
+    const country = COUNTRY_OF_ORIGIN_LIST.find(c => 
+      c.name.toLowerCase() === countryValue.toLowerCase() || 
+      c.value.toLowerCase() === countryValue.toLowerCase()
+    );
+    return country ? country.value : countryValue;
   };
   const [mode, setMode] = useState('list'); // 'list' | 'view' | 'edit'
   const [editingId, setEditingId] = useState(null);
@@ -907,7 +921,7 @@ export default function JobSeekerManagement() {
       phone: row.phone || row.phoneNumber || '',
       city: row.city || '',
       state: row.state || '',
-      country: row.country || '',
+      country: getCountryCode(row.country || ''),
       password: '',
       confirmPassword: '',
       avatarUrl: row.avatarUrl || '',
@@ -1722,12 +1736,21 @@ export default function JobSeekerManagement() {
                         onChange={(e) => setEditField('state', e.target.value)}
                         placeholder="Enter state"
                       />
-                      <Input
-                        label="Country"
-                        value={editForm.country}
-                        onChange={(e) => setEditField('country', e.target.value)}
-                        placeholder="Enter country"
-                      />
+                      <div className="jsm-form-field-wrapper">
+                        <label className="jsm-field-label">Country</label>
+                        <select
+                          className="jsm-select"
+                          value={editForm.country || ''}
+                          onChange={(e) => setEditField('country', e.target.value)}
+                        >
+                          <option value="">Select Country</option>
+                          {COUNTRY_OF_ORIGIN_LIST.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       
                       {/* Profile Image Upload */}
                       <div className="jsm-upload-field">
