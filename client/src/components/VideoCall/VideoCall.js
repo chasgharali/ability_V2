@@ -142,7 +142,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [isCaptionEnabled, setIsCaptionEnabled] = useState(false);
   const [captionText, setCaptionText] = useState('');
   const [captionHistory, setCaptionHistory] = useState([]);
-  // Remote captions from all participants (Map of participantId -> {text, speaker, timestamp, isFinal})
+  // Remote captions from all participants (Map of participantId -> {text, speaker, role, timestamp, isFinal})
   const [remoteCaptions, setRemoteCaptions] = useState(new Map());
 
   // Refs
@@ -169,6 +169,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const isRestartingSyncfusionRef = useRef(false);
   // Ref to track Syncfusion component listening state
   const syncfusionListeningStateRef = useRef('Inactive');
+  // Ref for caption content container (for auto-scrolling)
+  const captionContentRef = useRef(null);
 
   // Initialize call
   useEffect(() => {
@@ -202,6 +204,19 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   }, []);
 
+  // Auto-scroll caption content to bottom when new captions are added
+  useEffect(() => {
+    if (captionContentRef.current && remoteCaptions.size > 0) {
+      // Scroll to bottom with smooth behavior
+      const timer = setTimeout(() => {
+        if (captionContentRef.current) {
+          captionContentRef.current.scrollTop = captionContentRef.current.scrollHeight;
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [remoteCaptions]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -209,6 +224,57 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       cleanup();
     };
   }, []);
+
+  // Helper function to get role from participant ID
+  const getParticipantRole = useCallback((participantId) => {
+    // Check if it's the local user
+    const localId = user?._id || user?.id;
+    if (participantId === localId || participantId === 'local') {
+      // Return local user's role
+      const userRole = user?.role?.toLowerCase();
+      if (userRole === 'recruiter') return 'Recruiter';
+      if (userRole === 'jobseeker') return 'Jobseeker';
+      if (userRole === 'interpreter' || userRole === 'globalinterpreter') return 'Interpreter';
+      return 'Participant';
+    }
+    
+    // Check callInfo participants for role
+    if (callInfo?.participants) {
+      // Check recruiter
+      const recruiterId = callInfo.participants.recruiter?._id || 
+                         callInfo.participants.recruiter?.id ||
+                         callInfo.recruiter?._id || 
+                         callInfo.recruiter?.id;
+      if (recruiterId && String(recruiterId) === String(participantId)) {
+        return 'Recruiter';
+      }
+      
+      // Check job seeker
+      const jobSeekerId = callInfo.participants.jobSeeker?._id || 
+                          callInfo.participants.jobSeeker?.id ||
+                          callInfo.jobSeeker?._id || 
+                          callInfo.jobSeeker?.id ||
+                          callInfo.jobSeekerId;
+      if (jobSeekerId && String(jobSeekerId) === String(participantId)) {
+        return 'Jobseeker';
+      }
+      
+      // Check interpreters
+      const interpreters = callInfo.participants.interpreters || [];
+      for (const interpreterEntry of interpreters) {
+        const interpreterId = interpreterEntry.interpreter?._id || 
+                             interpreterEntry.interpreter?.id ||
+                             interpreterEntry._id || 
+                             interpreterEntry.id;
+        if (interpreterId && String(interpreterId) === String(participantId)) {
+          return 'Interpreter';
+        }
+      }
+    }
+    
+    // Default fallback
+    return 'Participant';
+  }, [user, callInfo]);
 
   // Create caption transcription handler function (outside useEffect to avoid closure issues)
   const handleCaptionTranscription = useCallback((data) => {
@@ -243,23 +309,33 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // Extract data first
       const { participantId, participantName, text, isFinal, timestamp } = data;
       
-      // Deduplication: Skip if we've already processed this exact caption recently
-      const captionKey = `${participantId}_${text}_${timestamp}`;
-      if (!window._processedCaptions) {
-        window._processedCaptions = new Set();
+      // Improved deduplication: Skip if we've already processed this exact caption recently
+      // Use a combination of participantId, text, and a time window to prevent duplicates
+      const captionKey = `${participantId}_${text.trim().substring(0, 100)}`;
+      const now = Date.now();
+      
+      // Ensure _processedCaptions is always a Map (not a Set from previous code)
+      if (!window._processedCaptions || !(window._processedCaptions instanceof Map)) {
+        window._processedCaptions = new Map(); // Use Map to store timestamp
       }
       
-      // Clean old entries (keep only last 100)
-      if (window._processedCaptions.size > 100) {
-        const entries = Array.from(window._processedCaptions);
-        window._processedCaptions = new Set(entries.slice(-50));
+      // Clean old entries (older than 2 seconds)
+      const twoSecondsAgo = now - 2000;
+      for (const [key, time] of window._processedCaptions.entries()) {
+        if (time < twoSecondsAgo) {
+          window._processedCaptions.delete(key);
+        }
       }
       
-      if (window._processedCaptions.has(captionKey)) {
-        // Already processed this caption - skip to avoid duplicates
+      // Check if we've seen this exact caption in the last 2 seconds
+      const lastProcessed = window._processedCaptions.get(captionKey);
+      if (lastProcessed && (now - lastProcessed) < 2000) {
+        // Already processed this caption recently - skip to avoid duplicates
         return;
       }
-      window._processedCaptions.add(captionKey);
+      
+      // Mark as processed with current timestamp
+      window._processedCaptions.set(captionKey, now);
       
       // Log when we actually process captions (not when disabled)
       if (!window._lastCaptionLog || Date.now() - window._lastCaptionLog > 2000) {
@@ -296,14 +372,16 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         
         // Only update if text actually changed (avoid unnecessary re-renders)
         if (!existing || existing.text !== newText) {
+          const participantRole = getParticipantRole(participantId);
           const captionData = {
             text: newText,
             speaker: participantName || 'Participant',
+            role: participantRole,
             timestamp: newTimestamp,
             isFinal: isFinal !== false
           };
           newMap.set(participantId, captionData);
-          console.log(`✅ Updated OTHER user's caption: ${participantName} -> "${newText.substring(0, 50)}" (isFinal: ${isFinal})`);
+          console.log(`✅ Updated OTHER user's caption: ${participantRole} -> "${newText.substring(0, 50)}" (isFinal: ${isFinal})`);
           // Reset logged captions so new caption will be logged
           window._lastLoggedCaptions = null;
         } else {
@@ -337,7 +415,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           }
         }, 15000); // Increased from 5 to 15 seconds
       }
-  }, [isCaptionEnabled]); // Include isCaptionEnabled for debugging, but use ref for actual check
+  }, [isCaptionEnabled, getParticipantRole]); // Include isCaptionEnabled for debugging, but use ref for actual check
 
   // Socket event listeners
   useEffect(() => {
@@ -1362,9 +1440,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       
       // Only update if text actually changed (avoid unnecessary re-renders)
       if (!existing || existing.text !== transcript.trim()) {
+        const localRole = getParticipantRole(localId);
         const captionData = {
           text: transcript.trim(),
           speaker: localName,
+          role: localRole,
           timestamp: timestamp,
           isFinal: isFinal
         };
@@ -1414,7 +1494,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     } else {
       console.warn('⚠️ [Syncfusion SpeechToText] Cannot broadcast - missing socket or callInfo');
     }
-  }, [user, socket, callInfo]);
+  }, [user, socket, callInfo, getParticipantRole]);
 
   // Legacy function name for compatibility (not used anymore)
   const handleSpeechResult = useCallback((transcript, isFinal) => {
@@ -2494,43 +2574,51 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       {/* Caption Display */}
       {isCaptionEnabled && (
         <div className="caption-container" role="region" aria-live="polite" aria-label="Live captions">
-          <div className="caption-content">
+          <div 
+            className="caption-content"
+            ref={captionContentRef}
+          >
             {(() => {
-              // Collect all captions to display
+              // Collect all captions to display - each participant separately (like Google Meet)
               const allCaptions = [];
               
               // Add captions from remoteCaptions map (from Syncfusion SpeechToText and socket broadcasts)
+              // Each participant gets one caption entry (the latest one)
               remoteCaptions.forEach((caption, participantId) => {
                 if (caption && caption.text && caption.text.trim()) {
+                  // Use role from caption if available, otherwise get it
+                  const role = caption.role || getParticipantRole(participantId) || 'Participant';
                   allCaptions.push({
                     id: participantId,
-                    text: caption.text,
+                    text: caption.text.trim(),
+                    role: role,
                     speaker: caption.speaker || 'Participant',
                     isFinal: caption.isFinal,
-                    timestamp: caption.timestamp // Include timestamp for unique keys
+                    timestamp: caption.timestamp || new Date().toISOString()
                   });
                 }
               });
 
-              // Log only when captions actually change (not on every render)
-              if (allCaptions.length > 0) {
-                const captionTexts = allCaptions.map(c => c.text).join(' | ');
-                // Use a ref to track last logged caption to avoid spam
-                if (!window._lastLoggedCaptions || window._lastLoggedCaptions !== captionTexts) {
-                  console.log(`📺 Rendering ${allCaptions.length} caption(s):`, allCaptions.map(c => `${c.speaker}: "${c.text.substring(0, 30)}"`));
-                  window._lastLoggedCaptions = captionTexts;
-                }
-              }
+              // Sort by timestamp (oldest first, so newest appears at bottom after reverse)
+              allCaptions.sort((a, b) => {
+                const timeA = new Date(a.timestamp || 0).getTime();
+                const timeB = new Date(b.timestamp || 0).getTime();
+                return timeA - timeB; // Oldest first (will be reversed in display)
+              });
 
               if (allCaptions.length > 0) {
-                // Show all captions (both your own and other participants')
-                // Only log when captions change (not on every render)
-                return allCaptions.map((caption, index) => {
+                // Display each participant's caption separately (like Google Meet)
+                // Each participant gets their own caption line that updates dynamically
+                return allCaptions.map((caption) => {
+                  const roleDisplay = caption.role || 'Participant';
                   return (
-                    <div key={`${caption.id}-${caption.timestamp || index}`} className="caption-item">
-                    <span className="caption-speaker">{caption.speaker}:</span>
-                    <span className="caption-text">{caption.text}</span>
-                  </div>
+                    <div 
+                      key={`${caption.id}-${caption.timestamp}`} 
+                      className="caption-item"
+                    >
+                      <span className="caption-speaker">{roleDisplay}:</span>
+                      <span className="caption-text">{caption.text}</span>
+                    </div>
                   );
                 });
               } else {
