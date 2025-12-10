@@ -478,54 +478,142 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
         }
 
         // Filter by event registration
-        let eventFilterQuery = null;
         if (eventId) {
             const mongoose = require('mongoose');
             // Convert to ObjectId if it's a valid MongoDB ID
             if (mongoose.Types.ObjectId.isValid(eventId)) {
                 const objectId = new mongoose.Types.ObjectId(eventId);
+                const objectIdString = objectId.toString();
+                
                 // For Mixed schema fields, ObjectIds might be stored as ObjectId or converted to string
-                // Use $elemMatch with $or to handle all possible formats
-                eventFilterQuery = {
+                // We need to match both formats. The most reliable way is to use $expr with aggregation
+                // or use multiple conditions with $or
+                // First, let's try a simpler approach that should work for both ObjectId and string formats
+                const eventFilterCondition = {
                     'metadata.registeredEvents': {
                         $elemMatch: {
                             $or: [
-                                // Match ObjectId format (BSON ObjectId)
+                                // Match ObjectId format (BSON ObjectId) - try direct comparison
                                 { id: objectId },
-                                // Match string format (when ObjectId is stored as string)
+                                // Match string format - try as string
                                 { id: eventId },
                                 // Match ObjectId.toString() format
-                                { id: objectId.toString() },
+                                { id: objectIdString },
+                                // Also try matching the id field converted to string
+                                { $expr: { $eq: [{ $toString: '$id' }, objectIdString] } },
                                 // Also match by slug as additional fallback
                                 { slug: eventId }
                             ]
                         }
                     }
                 };
-                logger.info(`Filtering users by event ID: ${eventId} (ObjectId: ${objectId.toString()})`);
+                
+                // However, $expr inside $elemMatch might not work, so let's use a different approach
+                // Use $or at the top level with separate $elemMatch conditions
+                const eventFilterConditions = [
+                    // Match ObjectId format (BSON ObjectId)
+                    {
+                        'metadata.registeredEvents': {
+                            $elemMatch: {
+                                id: objectId
+                            }
+                        }
+                    },
+                    // Match string format (when ObjectId is stored as string)
+                    {
+                        'metadata.registeredEvents': {
+                            $elemMatch: {
+                                id: eventId
+                            }
+                        }
+                    },
+                    // Match ObjectId.toString() format
+                    {
+                        'metadata.registeredEvents': {
+                            $elemMatch: {
+                                id: objectIdString
+                            }
+                        }
+                    },
+                    // Match by slug as fallback
+                    {
+                        'metadata.registeredEvents': {
+                            $elemMatch: {
+                                slug: eventId
+                            }
+                        }
+                    }
+                ];
+                
+                // Add event filter to query
+                if (Object.keys(query).length > 0) {
+                    query = {
+                        $and: [
+                            query,
+                            { $or: eventFilterConditions }
+                        ]
+                    };
+                } else {
+                    query = { $or: eventFilterConditions };
+                }
+                logger.info(`Filtering users by event ID: ${eventId} (ObjectId: ${objectIdString})`);
+                logger.info(`Event filter conditions count: ${eventFilterConditions.length}`);
             } else {
                 // If not a valid ObjectId, search by slug only
-                eventFilterQuery = {
+                const eventFilterCondition = {
                     'metadata.registeredEvents': {
                         $elemMatch: {
                             slug: eventId
                         }
                     }
                 };
+                if (Object.keys(query).length > 0) {
+                    query = {
+                        $and: [
+                            query,
+                            eventFilterCondition
+                        ]
+                    };
+                } else {
+                    query = eventFilterCondition;
+                }
                 logger.info(`Filtering users by event slug: ${eventId}`);
-            }
-        }
-
-        // Merge event filter with main query
-        if (eventFilterQuery) {
-            // Combine with existing query using $and to ensure both conditions are met
-            if (Object.keys(query).length > 0) {
-                query = { $and: [query, eventFilterQuery] };
-            } else {
-                query = eventFilterQuery;
             }
             // Log the final query structure for debugging
             logger.info(`Final query structure: ${JSON.stringify(query, null, 2)}`);
+        }
+
+        // Debug: If eventId filter is active, log a sample of registered events data
+        if (eventId) {
+            const mongoose = require('mongoose');
+            if (mongoose.Types.ObjectId.isValid(eventId)) {
+                const objectId = new mongoose.Types.ObjectId(eventId);
+                const objectIdString = objectId.toString();
+                
+                // Test query to see what format the data is stored in
+                const testQuery = {
+                    role: 'JobSeeker',
+                    'metadata.registeredEvents': { $exists: true, $ne: [] }
+                };
+                const sampleUsers = await User.find(testQuery)
+                    .select('metadata.registeredEvents email')
+                    .limit(10)
+                    .lean();
+                logger.info(`Sample registeredEvents data from ${sampleUsers.length} users for eventId ${eventId}:`);
+                sampleUsers.forEach((user, idx) => {
+                    if (user.metadata?.registeredEvents) {
+                        const matchingEvents = user.metadata.registeredEvents.filter(reg => {
+                            const regId = reg.id;
+                            const regIdStr = regId ? (typeof regId === 'object' ? regId.toString() : String(regId)) : null;
+                            return regIdStr === objectIdString || regIdStr === eventId || reg.slug === eventId;
+                        });
+                        if (matchingEvents.length > 0) {
+                            logger.info(`User ${idx + 1} (${user.email}) has matching events:`, JSON.stringify(matchingEvents, null, 2));
+                            logger.info(`  - Event ID type: ${typeof matchingEvents[0].id}, value: ${matchingEvents[0].id}`);
+                        }
+                    }
+                });
+            }
         }
 
         // Find users and populate booth information
