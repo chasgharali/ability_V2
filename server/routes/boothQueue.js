@@ -971,6 +971,21 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
                 meetingId: meeting._id,
                 queueEntry: queueEntry.toJSON()
             });
+
+            // Notify all recruiters in the booth that the queue entry status has changed
+            // Reload the queue entry with populated fields to send complete data
+            const updatedQueueEntry = await BoothQueue.findById(queueEntry._id)
+                .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+                .populate('interpreterCategory', 'name code');
+            
+            const boothIdStr = boothId.toString();
+            const updateData = {
+                boothId: boothIdStr,
+                action: 'status_changed',
+                queueEntry: updatedQueueEntry.toJSON()
+            };
+            io.to(`booth_${boothIdStr}`).emit('queue-updated', updateData);
+            io.to(`booth_management_${boothIdStr}`).emit('queue-updated', updateData);
         }
 
         res.json({

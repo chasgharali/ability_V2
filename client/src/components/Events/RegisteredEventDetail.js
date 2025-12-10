@@ -125,7 +125,7 @@ export default function RegisteredEventDetail() {
                         <span className="datetime-value">
                           {event.start ? (() => {
                             const d = new Date(event.start);
-                            return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
+                            return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
                           })() : '-'}
                         </span>
                       </div>
@@ -134,15 +134,15 @@ export default function RegisteredEventDetail() {
                         <span className="datetime-value">
                           {event.start ? (() => {
                             const d = new Date(event.start);
-                            const hours = d.getUTCHours();
-                            const minutes = d.getUTCMinutes();
+                            const hours = d.getHours();
+                            const minutes = d.getMinutes();
                             const period = hours >= 12 ? 'PM' : 'AM';
                             const displayHours = hours % 12 || 12;
                             return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
                           })() : '-'} - {event.end ? (() => {
                             const d = new Date(event.end);
-                            const hours = d.getUTCHours();
-                            const minutes = d.getUTCMinutes();
+                            const hours = d.getHours();
+                            const minutes = d.getMinutes();
                             const period = hours >= 12 ? 'PM' : 'AM';
                             const displayHours = hours % 12 || 12;
                             return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
