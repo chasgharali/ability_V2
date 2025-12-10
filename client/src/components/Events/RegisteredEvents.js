@@ -40,11 +40,12 @@ export default function RegisteredEvents() {
     const month = date.toLocaleDateString('en-US', { month: 'short' });
     const day = date.toLocaleDateString('en-US', { day: 'numeric' });
     const year = date.toLocaleDateString('en-US', { year: 'numeric' });
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${month} ${day}, ${year}, ${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    const time = date.toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    return `${month} ${day}, ${year}, ${time}`;
   };
 
   const getEventStatus = (event) => {
