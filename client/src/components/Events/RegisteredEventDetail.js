@@ -134,18 +134,18 @@ export default function RegisteredEventDetail() {
                         <span className="datetime-value">
                           {event.start ? (() => {
                             const d = new Date(event.start);
-                            const hours = d.getHours();
-                            const minutes = d.getMinutes();
-                            const period = hours >= 12 ? 'PM' : 'AM';
-                            const displayHours = hours % 12 || 12;
-                            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+                            return d.toLocaleString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            });
                           })() : '-'} - {event.end ? (() => {
                             const d = new Date(event.end);
-                            const hours = d.getHours();
-                            const minutes = d.getMinutes();
-                            const period = hours >= 12 ? 'PM' : 'AM';
-                            const displayHours = hours % 12 || 12;
-                            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+                            return d.toLocaleString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            });
                           })() : '-'}
                         </span>
                       </div>
