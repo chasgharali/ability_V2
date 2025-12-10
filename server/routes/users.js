@@ -8,6 +8,29 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
+ * Normalize email for lookup (Gmail addresses: remove dots from local part for comparison)
+ * This ensures marge.plasmier@gmail.com and margeplasmier@gmail.com are treated as the same
+ * @param {string} email - Email address to normalize
+ * @returns {string} - Normalized email for lookup
+ */
+const normalizeEmailForLookup = (email) => {
+    if (!email || typeof email !== 'string') return email;
+    
+    const trimmed = email.toLowerCase().trim();
+    const [localPart, domain] = trimmed.split('@');
+    
+    // For Gmail addresses, remove dots from local part for comparison
+    // This ensures marge.plasmier@gmail.com and margeplasmier@gmail.com match
+    if (domain && (domain === 'gmail.com' || domain === 'googlemail.com')) {
+        const normalizedLocal = localPart.replace(/\./g, '');
+        return `${normalizedLocal}@${domain}`;
+    }
+    
+    // For non-Gmail addresses, just return lowercase trimmed version
+    return trimmed;
+};
+
+/**
  * DELETE /api/users/me
  * Deactivate current authenticated user's account
  */
@@ -201,7 +224,7 @@ router.put('/me', authenticateToken, [
 router.post('/me/change-email', authenticateToken, [
     body('newEmail')
         .isEmail()
-        .normalizeEmail()
+        .normalizeEmail({ gmail_remove_dots: false }) // Preserve dots as user typed them
         .withMessage('Please provide a valid email address')
 ], async (req, res) => {
     try {
@@ -216,6 +239,7 @@ router.post('/me/change-email', authenticateToken, [
 
         const { user } = req;
         const { newEmail } = req.body;
+        // Store email exactly as user typed it (preserve dots for Gmail addresses)
         const normalizedNewEmail = typeof newEmail === 'string' ? newEmail.toLowerCase().trim() : newEmail;
 
         // Re-fetch user to get latest data
@@ -227,16 +251,20 @@ router.post('/me/change-email', authenticateToken, [
             });
         }
 
-        // Check if new email is the same as current email
-        if (targetUser.email === normalizedNewEmail) {
+        // Check if new email is the same as current email (using normalized lookup for Gmail)
+        const normalizedCurrentEmail = normalizeEmailForLookup(targetUser.email);
+        const normalizedNewEmailForLookup = normalizeEmailForLookup(normalizedNewEmail);
+        if (normalizedCurrentEmail === normalizedNewEmailForLookup) {
             return res.status(400).json({
                 error: 'Invalid email',
                 message: 'The new email address is the same as your current email address'
             });
         }
 
-        // Check if new email is already in use
-        const existingUser = await User.findOne({ email: normalizedNewEmail });
+        // Check if new email is already in use (using normalized lookup for Gmail)
+        const normalizedNewEmailLookup = normalizeEmailForLookup(normalizedNewEmail);
+        const allUsers = await User.find({}).select('email');
+        const existingUser = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedNewEmailLookup);
         if (existingUser) {
             return res.status(409).json({
                 error: 'Email already in use',
@@ -353,8 +381,10 @@ router.get('/verify-email-change', async (req, res) => {
             return res.redirect(302, redirectUrl);
         }
 
-        // Check if pending email is already in use by another user
-        const existingUser = await User.findOne({ email: user.pendingEmail, _id: { $ne: user._id } });
+        // Check if pending email is already in use by another user (using normalized lookup for Gmail)
+        const normalizedPendingEmail = normalizeEmailForLookup(user.pendingEmail);
+        const allUsers = await User.find({ _id: { $ne: user._id } }).select('email');
+        const existingUser = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedPendingEmail);
         if (existingUser) {
             // Clear the pending email change
             user.pendingEmail = null;
