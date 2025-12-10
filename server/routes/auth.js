@@ -12,6 +12,29 @@ const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mail
 const router = express.Router();
 
 /**
+ * Normalize email for lookup (Gmail addresses: remove dots from local part for comparison)
+ * This ensures marge.plasmier@gmail.com and margeplasmier@gmail.com are treated as the same
+ * @param {string} email - Email address to normalize
+ * @returns {string} - Normalized email for lookup
+ */
+const normalizeEmailForLookup = (email) => {
+    if (!email || typeof email !== 'string') return email;
+    
+    const trimmed = email.toLowerCase().trim();
+    const [localPart, domain] = trimmed.split('@');
+    
+    // For Gmail addresses, remove dots from local part for comparison
+    // This ensures marge.plasmier@gmail.com and margeplasmier@gmail.com match
+    if (domain && (domain === 'gmail.com' || domain === 'googlemail.com')) {
+        const normalizedLocal = localPart.replace(/\./g, '');
+        return `${normalizedLocal}@${domain}`;
+    }
+    
+    // For non-Gmail addresses, just return lowercase trimmed version
+    return trimmed;
+};
+
+/**
  * Generate JWT tokens for a user
  * @param {Object} user - User object
  * @returns {Object} - Access and refresh tokens
@@ -54,7 +77,7 @@ router.post('/register', [
         .withMessage('Name must be between 2 and 100 characters'),
     body('email')
         .isEmail()
-        .normalizeEmail()
+        .normalizeEmail({ gmail_remove_dots: false }) // Preserve dots as user typed them
         .withMessage('Please provide a valid email address'),
     body('password')
         .isLength({ min: 8 })
@@ -99,9 +122,15 @@ router.post('/register', [
         // This ensures "user already exists" error takes priority over password/other validation errors
         if (email && emailErrors.length === 0) {
             // The email from req.body is already normalized by express-validator's normalizeEmail()
-            // User model stores emails in lowercase (due to lowercase: true), so we ensure it matches
-            const normalizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : email;
-            const existingUser = await User.findOne({ email: normalizedEmail });
+            // For Gmail addresses, we need to normalize for lookup (remove dots) to catch duplicates
+            // e.g., marge.plasmier@gmail.com and margeplasmier@gmail.com should be treated as the same
+            const normalizedEmailForLookup = normalizeEmailForLookup(email);
+            
+            // Find user by normalized email (for Gmail, this removes dots for comparison)
+            // We need to check all users and compare their normalized emails
+            const allUsers = await User.find({}).select('email');
+            const existingUser = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedEmailForLookup);
+            
             if (existingUser) {
                 return res.status(409).json({
                     error: 'User already exists',
@@ -152,9 +181,12 @@ router.post('/register', [
         }
 
         // Create new user
+        // Store email exactly as user typed it (preserve dots for Gmail addresses)
+        // The email is already normalized by express-validator but with gmail_remove_dots: false
+        // User model will lowercase it, but dots will be preserved
         const user = new User({
             name,
-            email,
+            email, // Store with dots preserved (as user typed it)
             hashedPassword: password, // Will be hashed by pre-save middleware
             role,
             phoneNumber,
@@ -281,7 +313,7 @@ router.post('/register', [
 router.post('/login', [
     body('email')
         .isEmail()
-        .normalizeEmail()
+        .normalizeEmail({ gmail_remove_dots: false }) // Preserve dots as user typed them
         .withMessage('Please provide a valid email address'),
     body('password')
         .notEmpty()
@@ -313,9 +345,20 @@ router.post('/login', [
 
         const { email, password, loginType } = req.body;
 
-        // Find user by email (include legacyPassword for migrated users)
-        // Populate assignedBooth to avoid issues in getPublicProfile()
-        const user = await User.findOne({ email }).select('+legacyPassword').populate('assignedBooth', 'name company');
+        // Normalize email for lookup (Gmail: remove dots for comparison)
+        const normalizedEmailForLookup = normalizeEmailForLookup(email);
+        
+        // Find user by normalized email (for Gmail, this handles both dotted and non-dotted versions)
+        // First try exact match (fast path)
+        let user = await User.findOne({ email }).select('+legacyPassword').populate('assignedBooth', 'name company');
+        
+        // If not found and it's a Gmail address, try finding by normalized email
+        if (!user && normalizedEmailForLookup !== email.toLowerCase().trim()) {
+            // Fetch all users and find by normalized email comparison
+            const allUsers = await User.find({}).select('+legacyPassword').populate('assignedBooth', 'name company');
+            user = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedEmailForLookup);
+        }
+        
         if (!user) {
             return res.status(401).json({
                 error: 'Invalid credentials',
@@ -835,7 +878,7 @@ router.get('/verify-email', async (req, res) => {
 router.post('/forgot-password', [
     body('email')
         .isEmail()
-        .normalizeEmail()
+        .normalizeEmail({ gmail_remove_dots: false }) // Preserve dots as user typed them
         .withMessage('Please provide a valid email address')
 ], async (req, res) => {
     try {
@@ -851,8 +894,19 @@ router.post('/forgot-password', [
 
         const { email } = req.body;
 
-        // Find user by email
-        const user = await User.findOne({ email });
+        // Normalize email for lookup (Gmail: remove dots for comparison)
+        const normalizedEmailForLookup = normalizeEmailForLookup(email);
+        
+        // Find user by normalized email (for Gmail, this handles both dotted and non-dotted versions)
+        // First try exact match (fast path)
+        let user = await User.findOne({ email });
+        
+        // If not found and it's a Gmail address, try finding by normalized email
+        if (!user && normalizedEmailForLookup !== email.toLowerCase().trim()) {
+            // Fetch all users and find by normalized email comparison
+            const allUsers = await User.find({}).select('email');
+            user = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedEmailForLookup) || null;
+        }
         
         // Always return success message (security best practice - don't reveal if email exists)
         // But only send email if user exists
