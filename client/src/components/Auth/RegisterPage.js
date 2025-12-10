@@ -190,7 +190,8 @@ const RegisterPage = () => {
                 password: formData.password,
                 role: 'JobSeeker',
                 phoneNumber: phoneNumber,
-                subscribeAnnouncements: !!formData.announcements
+                subscribeAnnouncements: !!formData.announcements,
+                redirectPath: redirectPath || undefined // Include redirect path for event registration redirect after email verification
             };
 
             const result = await register(userData);
