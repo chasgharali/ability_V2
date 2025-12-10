@@ -5,7 +5,7 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function listUsers({ page = 1, limit = 50, search, role, isActive } = {}) {
+export async function listUsers({ page = 1, limit = 50, search, role, isActive, eventId } = {}) {
   const params = { page, limit };
   
   // Only add parameters if they have valid values (following pattern from analytics service)
@@ -36,6 +36,14 @@ export async function listUsers({ page = 1, limit = 50, search, role, isActive }
       if (isActiveStr === 'true' || isActiveStr === 'false') {
         params.isActive = isActiveStr;
       }
+    }
+  }
+  
+  // Add eventId filter if provided
+  if (eventId !== undefined && eventId !== null && eventId !== '') {
+    const eventIdStr = String(eventId).trim();
+    if (eventIdStr) {
+      params.eventId = eventIdStr;
     }
   }
   

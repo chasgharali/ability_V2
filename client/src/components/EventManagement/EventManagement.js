@@ -495,18 +495,23 @@ export default function EventManagement() {
     const eventPageUrlFor = (row) => row.link || `${window.location.origin}/event/${row.slug}`;
 
     // Grid template functions for custom column renders - using Syncfusion ButtonComponent
-    // Format date/time to show the time converted to user's local timezone
+    // Format date/time to show the time in user's local timezone
     const formatEventDateTime = (dateString) => {
         if (!dateString) return '-';
         const date = new Date(dateString);
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        const year = date.getFullYear();
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
-        const period = hours >= 12 ? 'PM' : 'AM';
-        const displayHours = hours % 12 || 12;
-        return `${month}/${day}/${year}, ${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        // Format date in local timezone
+        const dateStr = date.toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric'
+        });
+        // Format time in local timezone
+        const timeStr = date.toLocaleString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        return `${dateStr}, ${timeStr}`;
     };
 
     const eventPageTemplate = (props) => (
@@ -608,6 +613,20 @@ export default function EventManagement() {
 
     const startEdit = (row) => {
         setEditingId(row.id);
+        
+        // Helper function to convert UTC date to local datetime-local format
+        const toLocalDateTimeString = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            // Get local date/time components
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        };
+        
         setForm(prev => ({
             ...prev,
             sendyId: row.sendyId || '',
@@ -616,8 +635,8 @@ export default function EventManagement() {
             logoUrl: row.logoUrl || '',
             maxBooths: row.maxBooths || 0,
             maxRecruitersPerEvent: row.maxRecruitersPerEvent || 0,
-            startTime: row.startTime ? new Date(row.startTime).toISOString().slice(0, 16) : '',
-            endTime: row.endTime ? new Date(row.endTime).toISOString().slice(0, 16) : '',
+            startTime: toLocalDateTimeString(row.startTime),
+            endTime: toLocalDateTimeString(row.endTime),
             information: row.description || '',
             status: row.status || 'draft',
             addFooter: row.addFooter || false,
@@ -656,11 +675,17 @@ export default function EventManagement() {
         }
         setSaving(true);
         try {
+            // Convert datetime-local format to ISO string
+            // datetime-local gives us "YYYY-MM-DDTHH:MM" in user's local time
+            // We need to convert it to ISO string for the server
+            const startISO = form.startTime ? new Date(form.startTime).toISOString() : undefined;
+            const endISO = form.endTime ? new Date(form.endTime).toISOString() : undefined;
+            
             const payload = {
                 name: form.name,
                 description: form.information,
-                start: form.startTime,
-                end: form.endTime,
+                start: startISO,
+                end: endISO,
                 logoUrl: form.logoUrl || undefined,
                 link: form.link || undefined,
                 sendyId: form.sendyId || undefined,
