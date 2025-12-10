@@ -12,14 +12,20 @@ const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mail
 const router = express.Router();
 
 /**
- * Normalize email for lookup (Gmail addresses: remove dots from local part for comparison)
- * This ensures marge.plasmier@gmail.com and margeplasmier@gmail.com are treated as the same
- * @param {string} email - Email address to normalize
- * @returns {string} - Normalized email for lookup
+ * Normalize email for lookup/comparison purposes ONLY (NOT for storage)
+ * This function is used to check for duplicate emails, especially for Gmail addresses
+ * where dots in the local part don't matter (e.g., marge.plasmier@gmail.com == margeplasmier@gmail.com)
+ * 
+ * IMPORTANT: Emails are stored exactly as the user types them (case-sensitive, with dots preserved).
+ * This function is ONLY used for duplicate detection, not for storing emails.
+ * 
+ * @param {string} email - Email address to normalize for comparison
+ * @returns {string} - Normalized email for lookup (lowercase, dots removed for Gmail)
  */
 const normalizeEmailForLookup = (email) => {
     if (!email || typeof email !== 'string') return email;
     
+    // For comparison only: lowercase and trim (emails are stored with original case)
     const trimmed = email.toLowerCase().trim();
     const [localPart, domain] = trimmed.split('@');
     
@@ -121,10 +127,11 @@ router.post('/register', [
         // If email format is valid (no email validation errors), check if user already exists BEFORE other validations
         // This ensures "user already exists" error takes priority over password/other validation errors
         if (email && emailErrors.length === 0) {
-            // The email from req.body is already normalized by express-validator's normalizeEmail()
-            // For Gmail addresses, we need to normalize for lookup (remove dots) to catch duplicates
+            // Store email exactly as user typed it (trimmed only)
+            // For duplicate checking, we normalize for lookup (remove dots from Gmail) to catch duplicates
             // e.g., marge.plasmier@gmail.com and margeplasmier@gmail.com should be treated as the same
-            const normalizedEmailForLookup = normalizeEmailForLookup(email);
+            const trimmedEmail = typeof email === 'string' ? email.trim() : email;
+            const normalizedEmailForLookup = normalizeEmailForLookup(trimmedEmail);
             
             // Find user by normalized email (for Gmail, this removes dots for comparison)
             // We need to check all users and compare their normalized emails
@@ -181,12 +188,11 @@ router.post('/register', [
         }
 
         // Create new user
-        // Store email exactly as user typed it (preserve dots for Gmail addresses)
-        // The email is already normalized by express-validator but with gmail_remove_dots: false
-        // User model will lowercase it, but dots will be preserved
+        // Store email exactly as user typed it (trimmed only, no normalization)
+        const trimmedEmail = typeof email === 'string' ? email.trim() : email;
         const user = new User({
             name,
-            email, // Store with dots preserved (as user typed it)
+            email: trimmedEmail, // Store exactly as user typed it (trimmed only)
             hashedPassword: password, // Will be hashed by pre-save middleware
             role,
             phoneNumber,
@@ -313,7 +319,7 @@ router.post('/register', [
 router.post('/login', [
     body('email')
         .isEmail()
-        .normalizeEmail({ gmail_remove_dots: false }) // Preserve dots as user typed them
+        .trim()
         .withMessage('Please provide a valid email address'),
     body('password')
         .notEmpty()
@@ -345,15 +351,18 @@ router.post('/login', [
 
         const { email, password, loginType } = req.body;
 
-        // Normalize email for lookup (Gmail: remove dots for comparison)
-        const normalizedEmailForLookup = normalizeEmailForLookup(email);
+        // Store email exactly as user typed it (trimmed only)
+        const trimmedEmail = typeof email === 'string' ? email.trim() : email;
+        
+        // Normalize email for lookup (Gmail: remove dots for comparison only)
+        const normalizedEmailForLookup = normalizeEmailForLookup(trimmedEmail);
         
         // Find user by normalized email (for Gmail, this handles both dotted and non-dotted versions)
         // First try exact match (fast path)
-        let user = await User.findOne({ email }).select('+legacyPassword').populate('assignedBooth', 'name company');
+        let user = await User.findOne({ email: trimmedEmail }).select('+legacyPassword').populate('assignedBooth', 'name company');
         
-        // If not found and it's a Gmail address, try finding by normalized email
-        if (!user && normalizedEmailForLookup !== email.toLowerCase().trim()) {
+        // If not found, try finding by normalized email (for Gmail addresses with/without dots)
+        if (!user) {
             // Fetch all users and find by normalized email comparison
             const allUsers = await User.find({}).select('+legacyPassword').populate('assignedBooth', 'name company');
             user = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedEmailForLookup);
@@ -878,7 +887,7 @@ router.get('/verify-email', async (req, res) => {
 router.post('/forgot-password', [
     body('email')
         .isEmail()
-        .normalizeEmail({ gmail_remove_dots: false }) // Preserve dots as user typed them
+        .trim()
         .withMessage('Please provide a valid email address')
 ], async (req, res) => {
     try {
@@ -894,15 +903,18 @@ router.post('/forgot-password', [
 
         const { email } = req.body;
 
-        // Normalize email for lookup (Gmail: remove dots for comparison)
-        const normalizedEmailForLookup = normalizeEmailForLookup(email);
+        // Store email exactly as user typed it (trimmed only)
+        const trimmedEmail = typeof email === 'string' ? email.trim() : email;
+        
+        // Normalize email for lookup (Gmail: remove dots for comparison only)
+        const normalizedEmailForLookup = normalizeEmailForLookup(trimmedEmail);
         
         // Find user by normalized email (for Gmail, this handles both dotted and non-dotted versions)
         // First try exact match (fast path)
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email: trimmedEmail });
         
-        // If not found and it's a Gmail address, try finding by normalized email
-        if (!user && normalizedEmailForLookup !== email.toLowerCase().trim()) {
+        // If not found, try finding by normalized email (for Gmail addresses with/without dots)
+        if (!user) {
             // Fetch all users and find by normalized email comparison
             const allUsers = await User.find({}).select('email');
             user = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedEmailForLookup) || null;

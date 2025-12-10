@@ -8,14 +8,20 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
- * Normalize email for lookup (Gmail addresses: remove dots from local part for comparison)
- * This ensures marge.plasmier@gmail.com and margeplasmier@gmail.com are treated as the same
- * @param {string} email - Email address to normalize
- * @returns {string} - Normalized email for lookup
+ * Normalize email for lookup/comparison purposes ONLY (NOT for storage)
+ * This function is used to check for duplicate emails, especially for Gmail addresses
+ * where dots in the local part don't matter (e.g., marge.plasmier@gmail.com == margeplasmier@gmail.com)
+ * 
+ * IMPORTANT: Emails are stored exactly as the user types them (case-sensitive, with dots preserved).
+ * This function is ONLY used for duplicate detection, not for storing emails.
+ * 
+ * @param {string} email - Email address to normalize for comparison
+ * @returns {string} - Normalized email for lookup (lowercase, dots removed for Gmail)
  */
 const normalizeEmailForLookup = (email) => {
     if (!email || typeof email !== 'string') return email;
     
+    // For comparison only: lowercase and trim (emails are stored with original case)
     const trimmed = email.toLowerCase().trim();
     const [localPart, domain] = trimmed.split('@');
     
@@ -224,7 +230,7 @@ router.put('/me', authenticateToken, [
 router.post('/me/change-email', authenticateToken, [
     body('newEmail')
         .isEmail()
-        .normalizeEmail({ gmail_remove_dots: false }) // Preserve dots as user typed them
+        .trim()
         .withMessage('Please provide a valid email address')
 ], async (req, res) => {
     try {
@@ -239,8 +245,8 @@ router.post('/me/change-email', authenticateToken, [
 
         const { user } = req;
         const { newEmail } = req.body;
-        // Store email exactly as user typed it (preserve dots for Gmail addresses)
-        const normalizedNewEmail = typeof newEmail === 'string' ? newEmail.toLowerCase().trim() : newEmail;
+        // Store email exactly as user typed it (no normalization)
+        const trimmedNewEmail = typeof newEmail === 'string' ? newEmail.trim() : newEmail;
 
         // Re-fetch user to get latest data
         const targetUser = await User.findById(user._id);
@@ -251,9 +257,9 @@ router.post('/me/change-email', authenticateToken, [
             });
         }
 
-        // Check if new email is the same as current email (using normalized lookup for Gmail)
+        // Check if new email is the same as current email (using normalized lookup for duplicate checking)
         const normalizedCurrentEmail = normalizeEmailForLookup(targetUser.email);
-        const normalizedNewEmailForLookup = normalizeEmailForLookup(normalizedNewEmail);
+        const normalizedNewEmailForLookup = normalizeEmailForLookup(trimmedNewEmail);
         if (normalizedCurrentEmail === normalizedNewEmailForLookup) {
             return res.status(400).json({
                 error: 'Invalid email',
@@ -261,8 +267,8 @@ router.post('/me/change-email', authenticateToken, [
             });
         }
 
-        // Check if new email is already in use (using normalized lookup for Gmail)
-        const normalizedNewEmailLookup = normalizeEmailForLookup(normalizedNewEmail);
+        // Check if new email is already in use (using normalized lookup for duplicate checking only)
+        const normalizedNewEmailLookup = normalizeEmailForLookup(trimmedNewEmail);
         const allUsers = await User.find({}).select('email');
         const existingUser = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedNewEmailLookup);
         if (existingUser) {
@@ -283,7 +289,7 @@ router.post('/me/change-email', authenticateToken, [
         // Generate email change token (24h expiry)
         const crypto = require('crypto');
         const token = crypto.randomBytes(32).toString('hex');
-        targetUser.pendingEmail = normalizedNewEmail;
+        targetUser.pendingEmail = trimmedNewEmail;
         targetUser.emailChangeToken = token;
         targetUser.emailChangeExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -764,7 +770,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
     body('email')
         .optional()
         .isEmail()
-        .normalizeEmail()
+        .trim()
         .withMessage('Please provide a valid email address'),
     body('password')
         .optional()
@@ -875,7 +881,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 
         // Store old email if email is being changed (for notifications)
         const oldEmail = targetUser.email;
-        const emailChanged = email !== undefined && email !== null && email.toLowerCase().trim() !== oldEmail.toLowerCase().trim();
+        const emailChanged = email !== undefined && email !== null && normalizeEmailForLookup(email.trim()) !== normalizeEmailForLookup(oldEmail);
 
         // Update allowed fields
         if (name !== undefined) targetUser.name = name;

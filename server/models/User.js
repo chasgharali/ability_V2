@@ -42,7 +42,6 @@ const userSchema = new mongoose.Schema({
     pendingEmail: {
         type: String,
         default: null,
-        lowercase: true,
         trim: true
     },
     emailChangeToken: {
@@ -57,9 +56,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Email is required'],
         unique: true,
-        lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/, 'Please enter a valid email']
+        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/i, 'Please enter a valid email']
     },
     hashedPassword: {
         type: String,
