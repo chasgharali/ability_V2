@@ -89,7 +89,7 @@ router.post('/register', [
         .toBoolean()
 ], async (req, res) => {
     try {
-        const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth, subscribeAnnouncements } = req.body;
+        const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth, subscribeAnnouncements, redirectPath } = req.body;
 
         // Check for validation errors, but separate email format validation
         const errors = validationResult(req);
@@ -160,7 +160,9 @@ router.post('/register', [
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
             assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined,
-            subscribeAnnouncements: subscribeAnnouncements !== undefined ? subscribeAnnouncements : false
+            subscribeAnnouncements: subscribeAnnouncements !== undefined ? subscribeAnnouncements : false,
+            // Store redirect path in metadata if provided (for event registration redirect after email verification)
+            metadata: redirectPath ? { pendingRedirectPath: redirectPath } : {}
         });
 
         // Generate email verification token (24h expiry)
@@ -205,7 +207,11 @@ router.post('/register', [
             }
             
             // Verification link points to API endpoint which will redirect to app
-            const verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+            // Include redirectPath in verification link if it exists
+            let verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+            if (redirectPath) {
+                verifyLink += `&redirect=${encodeURIComponent(redirectPath)}`;
+            }
             const ok = await sendVerificationEmail(user.email, verifyLink);
             if (!ok) {
                 logger.warn(`Failed to send verification email to ${user.email} (phoneNumber: ${phoneNumber ? 'provided' : 'not provided'}, subscribeAnnouncements: ${subscribeAnnouncements})`);
@@ -772,7 +778,7 @@ router.put('/survey', authenticateToken, [
  */
 router.get('/verify-email', async (req, res) => {
     try {
-        const { token } = req.query;
+        const { token, redirect: redirectPath } = req.query;
         if (!token || typeof token !== 'string') {
             return res.status(400).send('Invalid verification link');
         }
@@ -783,9 +789,17 @@ router.get('/verify-email', async (req, res) => {
         if (!user) {
             return res.status(400).send('Verification link is invalid or has expired');
         }
+        
+        // Get redirect path from URL parameter or from user metadata (fallback)
+        const finalRedirectPath = redirectPath || (user.metadata && user.metadata.pendingRedirectPath) || null;
+        
         user.emailVerified = true;
         user.emailVerificationToken = null;
         user.emailVerificationExpires = null;
+        // Clear the pending redirect path from metadata after verification
+        if (user.metadata && user.metadata.pendingRedirectPath) {
+            delete user.metadata.pendingRedirectPath;
+        }
         await user.save();
 
         // Determine the correct base URL for redirect
@@ -802,7 +816,11 @@ router.get('/verify-email', async (req, res) => {
                 appBase = 'http://localhost:3000';
             }
         }
-        const redirectUrl = `${appBase}/email-verified`;
+        // Include redirect path in the email-verified page URL if it exists
+        let redirectUrl = `${appBase}/email-verified`;
+        if (finalRedirectPath) {
+            redirectUrl += `?redirect=${encodeURIComponent(finalRedirectPath)}`;
+        }
         return res.redirect(302, redirectUrl);
     } catch (error) {
         logger.error('Verify email error:', error);
