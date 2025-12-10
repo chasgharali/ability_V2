@@ -302,6 +302,7 @@ export default function JobSeekerManagement() {
         const parts = (u.name || '').trim().split(/\s+/);
         const firstName = parts[0] || '';
         const lastName = parts.slice(1).join(' ') || '';
+        const registeredEvents = (u.metadata?.registeredEvents || []);
         return {
           id: u._id,
           firstName,
@@ -319,6 +320,7 @@ export default function JobSeekerManagement() {
           resumeUrl: u.resumeUrl,
           survey: u.survey || {},
           metadata: u.metadata || {},
+          registeredEvents: registeredEvents, // Extract registered events for display
           avatarUrl: u.avatarUrl,
           usesScreenMagnifier: u.usesScreenMagnifier,
           usesScreenReader: u.usesScreenReader,
@@ -1165,6 +1167,30 @@ export default function JobSeekerManagement() {
   const lastLoginTemplate = (props) => {
     const row = props;
     return row.lastLogin ? new Date(row.lastLogin).toLocaleDateString() : 'Never';
+  };
+
+  const registeredEventsTemplate = (props) => {
+    const row = props;
+    const registeredEvents = row.registeredEvents || [];
+    
+    if (!Array.isArray(registeredEvents) || registeredEvents.length === 0) {
+      return (
+        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', color: '#6b7280', textAlign: 'left' }}>
+          None
+        </div>
+      );
+    }
+    
+    // Extract event names from registered events
+    const eventNames = registeredEvents
+      .map(reg => reg.name || reg.slug || 'Unknown Event')
+      .filter(Boolean);
+    
+    return (
+      <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'left' }}>
+        {eventNames.join(', ')}
+      </div>
+    );
   };
 
   const actionsTemplate = (props) => {
@@ -2152,6 +2178,13 @@ export default function JobSeekerManagement() {
                       {lastLoginTemplate(props)}
                     </div>
                   )}
+                />
+                <ColumnDirective 
+                  field='registeredEvents' 
+                  headerText='Event Registrations' 
+                  width='300' 
+                  allowFiltering={true}
+                  template={registeredEventsTemplate}
                 />
                 <ColumnDirective 
                   headerText='Actions' 
