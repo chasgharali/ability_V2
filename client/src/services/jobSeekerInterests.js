@@ -50,6 +50,23 @@ export const jobSeekerInterestsAPI = {
         const response = await axios.put(`/api/job-seeker-interests/${interestId}/toggle`, {}, { headers: authHeaders() });
         return response.data;
     },
+
+    // Export interests as CSV
+    exportCSV: async (filters = {}) => {
+        const params = new URLSearchParams();
+        
+        Object.keys(filters).forEach(key => {
+            if (filters[key] !== undefined && filters[key] !== '') {
+                params.append(key, filters[key]);
+            }
+        });
+
+        const response = await axios.get(`/api/job-seeker-interests/export/csv?${params.toString()}`, {
+            headers: authHeaders(),
+            responseType: 'blob'
+        });
+        return response.data;
+    },
 };
 
 export default jobSeekerInterestsAPI;

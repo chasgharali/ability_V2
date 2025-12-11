@@ -427,6 +427,38 @@ const JobSeekerInterests = () => {
         }));
     };
 
+    const handleExport = async () => {
+        try {
+            setLoadingData(true);
+            
+            // Build export filters (same as current filters but without pagination)
+            const exportFilters = {
+                eventId: filters.eventId || '',
+                boothId: filters.boothId || '',
+                recruiterId: filters.recruiterId || '',
+                search: filters.search || ''
+            };
+            
+            const blob = await jobSeekerInterestsAPI.exportCSV(exportFilters);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'job-seeker-interests.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showToast('Job seeker interests exported successfully', 'Success');
+        } catch (error) {
+            console.error('Error exporting interests:', error);
+            showToast('Failed to export job seeker interests', 'Error');
+        } finally {
+            setLoadingData(false);
+        }
+    };
+
     const handlePageSizeChange = (newSize) => {
         if (!newSize || newSize === filters.limit) return;
         setFilters(prev => ({
@@ -680,6 +712,15 @@ const JobSeekerInterests = () => {
                                             Clear
                                         </ButtonComponent>
                                     )}
+                                    <ButtonComponent
+                                        cssClass="e-primary e-small"
+                                        onClick={handleExport}
+                                        disabled={loadingData}
+                                        aria-label="Export job seeker interests to CSV"
+                                        style={{ minWidth: '100px', height: '44px' }}
+                                    >
+                                        Export CSV
+                                    </ButtonComponent>
                                 </div>
                             </div>
 

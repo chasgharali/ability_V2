@@ -475,7 +475,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             })
             .populate({
                 path: 'jobseekerId',
-                select: 'name email city state resumeUrl',
+                select: 'name email phoneNumber city state country resumeUrl metadata',
                 model: 'User'
             })
             .populate({
@@ -538,9 +538,19 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             'Booth',
             'Recruiter Name',
             'Recruiter Email',
-            'Job Seeker Name',
+            'Job Seeker First Name',
+            'Job Seeker Last Name',
             'Job Seeker Email',
+            'Job Seeker Phone',
             'Job Seeker Location',
+            'Job Seeker Headline',
+            'Job Seeker Keywords',
+            'Work Experience Level',
+            'Highest Education Level',
+            'Employment Types',
+            'Language(s)',
+            'Security Clearance',
+            'Veteran/Military Status',
             'Job Seeker Resume Link',
             'Interpreter',
             'Start Time',
@@ -567,21 +577,47 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             const recruiterEmail = (record.recruiterId && typeof record.recruiterId === 'object' && !Array.isArray(record.recruiterId) && record.recruiterId.email) 
                 ? String(record.recruiterId.email).trim() 
                 : '';
-            const jobSeekerName = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.name) 
-                ? String(record.jobseekerId.name).trim() 
+            // Extract job seeker basic info
+            const jobSeeker = record.jobseekerId;
+            const jobSeekerName = (jobSeeker && typeof jobSeeker === 'object' && !Array.isArray(jobSeeker) && jobSeeker.name) 
+                ? String(jobSeeker.name).trim() 
                 : '';
-            const jobSeekerEmail = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.email) 
-                ? String(record.jobseekerId.email).trim() 
+            
+            // Split name into first and last name
+            const nameParts = jobSeekerName ? jobSeekerName.split(/\s+/) : [];
+            const jobSeekerFirstName = nameParts[0] || '';
+            const jobSeekerLastName = nameParts.slice(1).join(' ') || '';
+            
+            const jobSeekerEmail = (jobSeeker && typeof jobSeeker === 'object' && !Array.isArray(jobSeeker) && jobSeeker.email) 
+                ? String(jobSeeker.email).trim() 
                 : '';
-            const jobSeekerCity = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.city) 
-                ? String(record.jobseekerId.city).trim() 
+            const jobSeekerPhone = (jobSeeker && typeof jobSeeker === 'object' && !Array.isArray(jobSeeker) && jobSeeker.phoneNumber) 
+                ? String(jobSeeker.phoneNumber).trim() 
                 : '';
-            const jobSeekerState = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.state) 
-                ? String(record.jobseekerId.state).trim() 
+            const jobSeekerCity = (jobSeeker && typeof jobSeeker === 'object' && !Array.isArray(jobSeeker) && jobSeeker.city) 
+                ? String(jobSeeker.city).trim() 
                 : '';
-            const jobSeekerResumeUrl = (record.jobseekerId && typeof record.jobseekerId === 'object' && !Array.isArray(record.jobseekerId) && record.jobseekerId.resumeUrl) 
-                ? String(record.jobseekerId.resumeUrl).trim() 
+            const jobSeekerState = (jobSeeker && typeof jobSeeker === 'object' && !Array.isArray(jobSeeker) && jobSeeker.state) 
+                ? String(jobSeeker.state).trim() 
                 : '';
+            const jobSeekerResumeUrl = (jobSeeker && typeof jobSeeker === 'object' && !Array.isArray(jobSeeker) && jobSeeker.resumeUrl) 
+                ? String(jobSeeker.resumeUrl).trim() 
+                : '';
+            
+            // Extract profile data from metadata
+            const profile = (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? jobSeeker.metadata.profile : null;
+            const headline = profile && profile.headline ? String(profile.headline).trim() : '';
+            const keywords = profile && profile.keywords ? String(profile.keywords).trim() : '';
+            const workLevel = profile && profile.workLevel ? String(profile.workLevel).trim() : '';
+            const educationLevel = profile && profile.educationLevel ? String(profile.educationLevel).trim() : '';
+            const employmentTypes = (profile && Array.isArray(profile.employmentTypes)) 
+                ? profile.employmentTypes.filter(Boolean).join(', ') 
+                : '';
+            const languages = (profile && Array.isArray(profile.languages)) 
+                ? profile.languages.filter(Boolean).join(', ') 
+                : '';
+            const clearance = profile && profile.clearance ? String(profile.clearance).trim() : '';
+            const veteranStatus = profile && profile.veteranStatus ? String(profile.veteranStatus).trim() : '';
             
             // Interpreter can be null, so handle it specially
             let interpreterName = '';
@@ -653,9 +689,19 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 escapeCSV(boothName),
                 escapeCSV(recruiterName),
                 escapeCSV(recruiterEmail),
-                escapeCSV(jobSeekerName),
+                escapeCSV(jobSeekerFirstName),
+                escapeCSV(jobSeekerLastName),
                 escapeCSV(jobSeekerEmail),
+                escapeCSV(jobSeekerPhone),
                 escapeCSV(location),
+                escapeCSV(headline),
+                escapeCSV(keywords),
+                escapeCSV(workLevel),
+                escapeCSV(educationLevel),
+                escapeCSV(employmentTypes),
+                escapeCSV(languages),
+                escapeCSV(clearance),
+                escapeCSV(veteranStatus),
                 escapeCSV(jobSeekerResumeUrl),
                 escapeCSV(interpreterName),
                 escapeCSV(formatDate(record.startTime)),
