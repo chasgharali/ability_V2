@@ -215,7 +215,17 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         }
 
         // Apply additional filters
-        if (eventId) query.event = eventId;
+        // Handle legacy event IDs - check both event field and legacyEventId field
+        if (eventId) {
+            // Check if it's a legacy event ID (not a valid ObjectId format)
+            if (mongoose.Types.ObjectId.isValid(eventId)) {
+                // Regular event ID
+                query.event = eventId;
+            } else {
+                // Legacy event ID - search by legacyEventId field
+                query.legacyEventId = eventId;
+            }
+        }
         if (boothId) query.booth = boothId;
 
         // Pagination
@@ -227,9 +237,21 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
 
         // Execute query with population
         const interests = await JobSeekerInterest.find(query)
-            .populate('jobSeeker', 'name email phoneNumber city state country metadata')
-            .populate('event', 'name slug')
-            .populate('booth', 'name description')
+            .populate({
+                path: 'jobSeeker',
+                select: 'name email phoneNumber city state country metadata',
+                options: { strictPopulate: false } // Allow null jobSeeker
+            })
+            .populate({
+                path: 'event',
+                select: 'name slug',
+                options: { strictPopulate: false } // Allow null event
+            })
+            .populate({
+                path: 'booth',
+                select: 'name description',
+                options: { strictPopulate: false } // Allow null booth
+            })
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit))
@@ -240,25 +262,69 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
 
         console.log('Found interests:', interests.length, 'Total in DB:', totalInterests);
 
-        // Handle legacy data - fetch actual user/event/booth data when populate returns null
+        // Handle missing or unpopulated data - fetch actual user/event/booth data when populate returns null or string ID
         const User = require('../models/User');
         const Event = require('../models/Event');
         const Booth = require('../models/Booth');
 
-        // Collect all legacy IDs that need to be looked up
+        // Collect all job seeker IDs that need to be looked up (both missing and legacy)
+        const jobSeekerIdsToFetch = new Set();
         const legacyJobSeekerIds = [];
         const legacyEventIds = [];
         const legacyBoothIds = [];
 
         for (const interest of interests) {
-            if (!interest.jobSeeker && interest.legacyJobSeekerId) {
-                legacyJobSeekerIds.push(interest.legacyJobSeekerId);
+            // Check if jobSeeker is missing, null, or just an ObjectId string
+            if (!interest.jobSeeker || typeof interest.jobSeeker === 'string') {
+                const jsId = typeof interest.jobSeeker === 'string' 
+                    ? interest.jobSeeker 
+                    : (interest.jobSeeker?._id ? String(interest.jobSeeker._id) : null);
+                
+                if (jsId && mongoose.Types.ObjectId.isValid(jsId)) {
+                    jobSeekerIdsToFetch.add(jsId);
+                } else if (interest.legacyJobSeekerId) {
+                    legacyJobSeekerIds.push(interest.legacyJobSeekerId);
+                }
             }
-            if (!interest.event && interest.legacyEventId && mongoose.Types.ObjectId.isValid(interest.legacyEventId)) {
-                legacyEventIds.push(new mongoose.Types.ObjectId(interest.legacyEventId));
+            
+            // Check for missing events
+            if (!interest.event || typeof interest.event === 'string') {
+                if (interest.legacyEventId && mongoose.Types.ObjectId.isValid(interest.legacyEventId)) {
+                    legacyEventIds.push(new mongoose.Types.ObjectId(interest.legacyEventId));
+                } else if (typeof interest.event === 'string' && mongoose.Types.ObjectId.isValid(interest.event)) {
+                    legacyEventIds.push(new mongoose.Types.ObjectId(interest.event));
+                }
             }
-            if (!interest.booth && interest.legacyBoothId && mongoose.Types.ObjectId.isValid(interest.legacyBoothId)) {
-                legacyBoothIds.push(new mongoose.Types.ObjectId(interest.legacyBoothId));
+            
+            // Check for missing booths
+            if (!interest.booth || typeof interest.booth === 'string') {
+                if (interest.legacyBoothId && mongoose.Types.ObjectId.isValid(interest.legacyBoothId)) {
+                    legacyBoothIds.push(new mongoose.Types.ObjectId(interest.legacyBoothId));
+                } else if (typeof interest.booth === 'string' && mongoose.Types.ObjectId.isValid(interest.booth)) {
+                    legacyBoothIds.push(new mongoose.Types.ObjectId(interest.booth));
+                }
+            }
+        }
+
+        // Batch fetch missing job seekers
+        let jobSeekersMap = {};
+        if (jobSeekerIdsToFetch.size > 0) {
+            try {
+                const jobSeekerIdsArray = Array.from(jobSeekerIdsToFetch)
+                    .filter(id => mongoose.Types.ObjectId.isValid(id))
+                    .map(id => new mongoose.Types.ObjectId(id));
+                
+                const jobSeekers = await User.find({ _id: { $in: jobSeekerIdsArray } })
+                    .select('name email phoneNumber city state country metadata')
+                    .lean();
+                
+                jobSeekers.forEach(user => {
+                    jobSeekersMap[String(user._id)] = user;
+                });
+                
+                console.log(`📋 Batch fetched ${jobSeekers.length} missing job seekers`);
+            } catch (error) {
+                console.error('Error batch fetching missing job seekers:', error);
             }
         }
 
@@ -307,16 +373,45 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             }
         }
 
-        // Populate legacy data in interests
+        // Populate missing data in interests (both regular and legacy)
         for (const interest of interests) {
-            if (!interest.jobSeeker && interest.legacyJobSeekerId && legacyUsersMap[interest.legacyJobSeekerId]) {
-                interest.jobSeeker = legacyUsersMap[interest.legacyJobSeekerId];
+            // Handle job seeker - try regular fetch first, then legacy
+            if (!interest.jobSeeker || typeof interest.jobSeeker === 'string') {
+                const jsId = typeof interest.jobSeeker === 'string' 
+                    ? interest.jobSeeker 
+                    : (interest.jobSeeker?._id ? String(interest.jobSeeker._id) : null);
+                
+                if (jsId && jobSeekersMap[jsId]) {
+                    interest.jobSeeker = jobSeekersMap[jsId];
+                } else if (interest.legacyJobSeekerId && legacyUsersMap[interest.legacyJobSeekerId]) {
+                    interest.jobSeeker = legacyUsersMap[interest.legacyJobSeekerId];
+                }
             }
-            if (!interest.event && interest.legacyEventId && legacyEventsMap[interest.legacyEventId]) {
-                interest.event = legacyEventsMap[interest.legacyEventId];
+            
+            // Handle event - try regular fetch first, then legacy
+            if (!interest.event || typeof interest.event === 'string') {
+                const eventId = typeof interest.event === 'string' 
+                    ? interest.event 
+                    : (interest.event?._id ? String(interest.event._id) : null);
+                
+                if (eventId && legacyEventsMap[eventId]) {
+                    interest.event = legacyEventsMap[eventId];
+                } else if (interest.legacyEventId && legacyEventsMap[interest.legacyEventId]) {
+                    interest.event = legacyEventsMap[interest.legacyEventId];
+                }
             }
-            if (!interest.booth && interest.legacyBoothId && legacyBoothsMap[interest.legacyBoothId]) {
-                interest.booth = legacyBoothsMap[interest.legacyBoothId];
+            
+            // Handle booth - try regular fetch first, then legacy
+            if (!interest.booth || typeof interest.booth === 'string') {
+                const boothId = typeof interest.booth === 'string' 
+                    ? interest.booth 
+                    : (interest.booth?._id ? String(interest.booth._id) : null);
+                
+                if (boothId && legacyBoothsMap[boothId]) {
+                    interest.booth = legacyBoothsMap[boothId];
+                } else if (interest.legacyBoothId && legacyBoothsMap[interest.legacyBoothId]) {
+                    interest.booth = legacyBoothsMap[interest.legacyBoothId];
+                }
             }
         }
 
@@ -540,28 +635,215 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             }
         }
 
-        // Get ALL interests (no pagination for export)
+        // First, get ALL job seeker IDs from interests (before populate) to ensure we capture all IDs
+        const User = require('../models/User');
+        const rawInterests = await JobSeekerInterest.find(query)
+            .select('_id jobSeeker legacyJobSeekerId')
+            .lean();
+        
+        // Create a map: interest._id -> jobSeeker ID for easy lookup later
+        const interestToJobSeekerMap = {};
+        
+        // Collect ALL job seeker IDs (both regular and legacy)
+        const allJobSeekerIds = new Set();
+        rawInterests.forEach((interest, idx) => {
+            // Store mapping for this interest
+            const interestId = String(interest._id);
+            // Get job seeker ID from the raw document
+            // When using .lean(), jobSeeker will be an ObjectId object (not populated)
+            if (interest.jobSeeker) {
+                let jsId = null;
+                
+                // Handle ObjectId object (from Mongoose .lean())
+                try {
+                    // Try multiple methods to extract the ID
+                    if (typeof interest.jobSeeker === 'string') {
+                        jsId = interest.jobSeeker.trim();
+                    } else if (interest.jobSeeker.toString && typeof interest.jobSeeker.toString === 'function') {
+                        // Call toString() to get the string representation
+                        jsId = String(interest.jobSeeker.toString()).trim();
+                    } else if (interest.jobSeeker._id) {
+                        jsId = String(interest.jobSeeker._id).trim();
+                    } else {
+                        // Last resort: try String() conversion
+                        jsId = String(interest.jobSeeker).trim();
+                    }
+                    
+                    // Validate and add
+                    if (jsId && mongoose.Types.ObjectId.isValid(jsId)) {
+                        allJobSeekerIds.add(jsId);
+                        // Store mapping
+                        interestToJobSeekerMap[interestId] = jsId;
+                    } else if (idx < 3) {
+                        console.warn(`⚠️ Invalid job seeker ID found at index ${idx}:`, {
+                            jsId,
+                            jobSeekerType: typeof interest.jobSeeker,
+                            jobSeekerValue: interest.jobSeeker,
+                            hasToString: !!(interest.jobSeeker && interest.jobSeeker.toString),
+                            constructor: interest.jobSeeker?.constructor?.name
+                        });
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Error extracting job seeker ID at index ${idx}:`, e.message, {
+                        jobSeekerType: typeof interest.jobSeeker,
+                        jobSeekerValue: interest.jobSeeker
+                    });
+                }
+            }
+            // Also add legacy IDs
+            if (interest.legacyJobSeekerId) {
+                const legacyId = String(interest.legacyJobSeekerId).trim();
+                if (legacyId) {
+                    allJobSeekerIds.add(legacyId);
+                    // Store mapping with legacy ID as well
+                    if (!interestToJobSeekerMap[interestId]) {
+                        interestToJobSeekerMap[interestId] = legacyId;
+                    }
+                }
+            }
+        });
+        
+        console.log(`📋 Found ${allJobSeekerIds.size} unique job seeker IDs to fetch`);
+        if (allJobSeekerIds.size > 0) {
+            const sampleIds = Array.from(allJobSeekerIds).slice(0, 5);
+            console.log(`📋 Sample IDs (first 5):`, sampleIds);
+            console.log(`📋 Sample ID types:`, sampleIds.map(id => ({ id, isValid: mongoose.Types.ObjectId.isValid(id) })));
+        }
+        
+        // Batch fetch ALL job seekers upfront
+        const jobSeekersMap = {};
+        if (allJobSeekerIds.size > 0) {
+            try {
+                // Separate valid ObjectIds from legacy IDs
+                const validObjectIds = [];
+                const legacyIds = [];
+                
+                allJobSeekerIds.forEach(id => {
+                    const idStr = String(id).trim();
+                    if (mongoose.Types.ObjectId.isValid(idStr)) {
+                        try {
+                            // Create ObjectId instance - handle both string and ObjectId input
+                            const objectId = idStr instanceof mongoose.Types.ObjectId 
+                                ? idStr 
+                                : new mongoose.Types.ObjectId(idStr);
+                            validObjectIds.push(objectId);
+                        } catch (e) {
+                            console.warn(`⚠️ Failed to create ObjectId from: ${idStr}`, e.message);
+                            legacyIds.push(idStr);
+                        }
+                    } else {
+                        legacyIds.push(idStr);
+                    }
+                });
+                
+                console.log(`📋 Converted ${validObjectIds.length} to ObjectIds, ${legacyIds.length} legacy IDs`);
+                
+                // Fetch by _id for valid ObjectIds
+                if (validObjectIds.length > 0) {
+                    console.log(`📋 Attempting to fetch ${validObjectIds.length} job seekers by _id`);
+                    console.log(`📋 Sample ObjectIds to fetch (first 3):`, validObjectIds.slice(0, 3).map(id => id.toString()));
+                    
+                    // Test query with first ID to see if query works
+                    if (validObjectIds.length > 0) {
+                        try {
+                            const testUser = await User.findById(validObjectIds[0]).lean();
+                            console.log(`📋 Test query for first ID:`, {
+                                id: validObjectIds[0].toString(),
+                                found: !!testUser,
+                                hasMetadata: !!(testUser && testUser.metadata),
+                                hasProfile: !!(testUser && testUser.metadata && testUser.metadata.profile)
+                            });
+                        } catch (testError) {
+                            console.error(`📋 Test query error:`, testError.message);
+                        }
+                    }
+                    
+                    // Don't use .select() to ensure we get all fields including full metadata
+                    const jobSeekers = await User.find({ _id: { $in: validObjectIds } })
+                        .lean();
+                    
+                    console.log(`📋 Query executed, found ${jobSeekers.length} job seekers`);
+                    
+                    jobSeekers.forEach(js => {
+                        // Store with both _id and any legacyId for lookup
+                        const jsId = String(js._id);
+                        jobSeekersMap[jsId] = js;
+                        if (js.legacyId) {
+                            jobSeekersMap[String(js.legacyId)] = js;
+                        }
+                    });
+                    
+                    console.log(`📋 Batch fetched ${jobSeekers.length} job seekers by _id (expected ${validObjectIds.length})`);
+                    console.log(`📋 Job seekers map size: ${Object.keys(jobSeekersMap).length}`);
+                    
+                    if (jobSeekers.length > 0) {
+                        // Debug: Check if metadata is present
+                        const sample = jobSeekers[0];
+                        console.log(`📋 Sample job seeker metadata check:`, {
+                            id: String(sample._id),
+                            hasMetadata: !!sample.metadata,
+                            metadataType: typeof sample.metadata,
+                            hasProfile: !!(sample.metadata && sample.metadata.profile),
+                            profileKeys: (sample.metadata && sample.metadata.profile) ? Object.keys(sample.metadata.profile) : []
+                        });
+                    }
+                    
+                    if (jobSeekers.length < validObjectIds.length) {
+                        console.warn(`⚠️ Missing ${validObjectIds.length - jobSeekers.length} job seekers - they may not exist in database`);
+                        // Debug: Show which IDs were not found
+                        const foundIds = new Set(jobSeekers.map(js => String(js._id)));
+                        const missingIds = validObjectIds.filter(id => !foundIds.has(String(id))).slice(0, 5);
+                        if (missingIds.length > 0) {
+                            console.warn(`⚠️ Sample missing IDs (first 5):`, missingIds.map(id => id.toString()));
+                        }
+                    }
+                }
+                
+                // Fetch by legacyId for legacy IDs
+                if (legacyIds.length > 0) {
+                    // Don't use .select() to ensure we get all fields including full metadata
+                    const legacyJobSeekers = await User.find({ legacyId: { $in: legacyIds } })
+                        .lean();
+                    
+                    legacyJobSeekers.forEach(js => {
+                        if (js.legacyId) {
+                            jobSeekersMap[String(js.legacyId)] = js;
+                        }
+                        // Also map by _id for easier lookup
+                        jobSeekersMap[String(js._id)] = js;
+                    });
+                    
+                    console.log(`📋 Batch fetched ${legacyJobSeekers.length} job seekers by legacyId`);
+                }
+            } catch (fetchError) {
+                console.error('Error batch fetching job seekers:', fetchError);
+            }
+        }
+
+        // Get ALL interests (no pagination for export) - use populated data and enhance with batch-fetched
         let interests;
         try {
+            // Use the populated interests we already fetched, but re-fetch with full populate for events/booths
             interests = await JobSeekerInterest.find(query)
                 .populate({
                     path: 'jobSeeker',
-                    select: 'name email phoneNumber city state country metadata',
-                    options: { strictPopulate: false } // Allow null jobSeeker
+                    select: 'name email phoneNumber city state country resumeUrl metadata',
+                    model: 'User',
+                    options: { strictPopulate: false }
                 })
                 .populate({
                     path: 'event',
                     select: 'name slug',
-                    options: { strictPopulate: false } // Allow null event
+                    options: { strictPopulate: false }
                 })
                 .populate({
                     path: 'booth',
                     select: 'name description administrators',
-                    options: { strictPopulate: false }, // Allow null booth
+                    options: { strictPopulate: false },
                     populate: {
                         path: 'administrators',
                         select: '_id name email',
-                        options: { strictPopulate: false } // Allow null administrators
+                        options: { strictPopulate: false }
                     }
                 })
                 .sort({ createdAt: -1 })
@@ -576,6 +858,9 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                     hasJobSeeker: !!sample.jobSeeker,
                     jobSeekerType: typeof sample.jobSeeker,
                     isJobSeekerObject: sample.jobSeeker && typeof sample.jobSeeker === 'object',
+                    jobSeekerValue: sample.jobSeeker,
+                    hasLegacyId: !!sample.legacyJobSeekerId,
+                    legacyJobSeekerId: sample.legacyJobSeekerId,
                     hasMetadata: !!(sample.jobSeeker && sample.jobSeeker.metadata),
                     hasProfile: !!(sample.jobSeeker && sample.jobSeeker.metadata && sample.jobSeeker.metadata.profile),
                     profileKeys: (sample.jobSeeker && sample.jobSeeker.metadata && sample.jobSeeker.metadata.profile) 
@@ -583,53 +868,53 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                         : []
                 });
             }
+            
+            // If populate failed (jobSeeker is null), we need to fetch by legacy IDs
+            // Collect all legacy job seeker IDs from interests where populate failed
+            const legacyJobSeekerIdsToFetch = new Set();
+            interests.forEach(interest => {
+                if (!interest.jobSeeker || (typeof interest.jobSeeker === 'object' && !interest.jobSeeker._id)) {
+                    // Populate failed - try legacy ID
+                    if (interest.legacyJobSeekerId) {
+                        legacyJobSeekerIdsToFetch.add(String(interest.legacyJobSeekerId));
+                    }
+                }
+            });
+            
+            // Batch fetch users by legacyId
+            if (legacyJobSeekerIdsToFetch.size > 0) {
+                console.log(`📋 Found ${legacyJobSeekerIdsToFetch.size} interests with legacy IDs, fetching users...`);
+                try {
+                    const legacyUsers = await User.find({ 
+                        legacyId: { $in: Array.from(legacyJobSeekerIdsToFetch) } 
+                    })
+                    .select('name email phoneNumber city state country resumeUrl metadata legacyId')
+                    .lean();
+                    
+                    legacyUsers.forEach(user => {
+                        if (user.legacyId) {
+                            jobSeekersMap[String(user.legacyId)] = user;
+                        }
+                        // Also map by _id
+                        jobSeekersMap[String(user._id)] = user;
+                    });
+                    
+                    console.log(`📋 Batch fetched ${legacyUsers.length} users by legacyId`);
+                    if (legacyUsers.length > 0) {
+                        const sample = legacyUsers[0];
+                        console.log(`📋 Sample legacy user:`, {
+                            legacyId: sample.legacyId,
+                            hasMetadata: !!sample.metadata,
+                            hasProfile: !!(sample.metadata && sample.metadata.profile)
+                        });
+                    }
+                } catch (legacyError) {
+                    console.error('Error fetching legacy users:', legacyError);
+                }
+            }
         } catch (queryError) {
             logger.error('Error querying interests for export:', queryError);
             throw new Error(`Failed to query interests: ${queryError.message}`);
-        }
-
-        // Batch fetch job seekers that weren't populated properly or are missing metadata
-        const User = require('../models/User');
-        const jobSeekerIdsToFetch = new Set();
-        interests.forEach((interest, idx) => {
-            const jobSeeker = interest.jobSeeker;
-            // Check if job seeker is not populated, is a string ID, or is missing metadata
-            if (!jobSeeker || 
-                typeof jobSeeker === 'string' ||
-                (typeof jobSeeker === 'object' && (!jobSeeker.metadata || !jobSeeker.metadata.profile))) {
-                const jsId = (jobSeeker && typeof jobSeeker === 'object' && jobSeeker._id) 
-                    ? String(jobSeeker._id) 
-                    : (jobSeeker ? String(jobSeeker) : '');
-                if (jsId && mongoose.Types.ObjectId.isValid(jsId)) {
-                    jobSeekerIdsToFetch.add(jsId);
-                } else if (interest.legacyJobSeekerId) {
-                    jobSeekerIdsToFetch.add(interest.legacyJobSeekerId);
-                }
-            }
-        });
-        
-        // Batch fetch job seekers with metadata
-        const jobSeekersMap = {};
-        if (jobSeekerIdsToFetch.size > 0) {
-            try {
-                const jobSeekerIdsArray = Array.from(jobSeekerIdsToFetch)
-                    .filter(id => mongoose.Types.ObjectId.isValid(id))
-                    .map(id => new mongoose.Types.ObjectId(id));
-                
-                if (jobSeekerIdsArray.length > 0) {
-                    const jobSeekers = await User.find({ _id: { $in: jobSeekerIdsArray } })
-                        .select('name email phoneNumber city state country metadata')
-                        .lean();
-                    
-                    jobSeekers.forEach(js => {
-                        jobSeekersMap[String(js._id)] = js;
-                    });
-                    
-                    console.log(`📋 Batch fetched ${jobSeekers.length} job seekers with metadata`);
-                }
-            } catch (fetchError) {
-                console.warn('Error batch fetching job seekers:', fetchError.message);
-            }
         }
         
         // Batch fetch recruiters for booths that weren't populated properly
@@ -729,7 +1014,17 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             const rawBoothId = interest.booth ? (typeof interest.booth === 'object' && interest.booth._id ? String(interest.booth._id) : String(interest.booth)) : '';
             
             // Extract job seeker info - handle null/undefined/array cases like Meeting Records
-            const jobSeeker = interest.jobSeeker;
+            let jobSeeker = interest.jobSeeker;
+            
+            // If populate failed (jobSeeker is null or invalid), try to get from legacy ID
+            if (!jobSeeker || (typeof jobSeeker === 'object' && !jobSeeker._id && !jobSeeker.name)) {
+                if (interest.legacyJobSeekerId && jobSeekersMap[String(interest.legacyJobSeekerId)]) {
+                    jobSeeker = jobSeekersMap[String(interest.legacyJobSeekerId)];
+                    if (index < 3) {
+                        console.log(`✅ Found job seeker ${index + 1} by legacy ID: ${interest.legacyJobSeekerId}`);
+                    }
+                }
+            }
             
             // Debug first few records to see what's happening
             if (index < 3) {
@@ -742,7 +1037,8 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                     metadataType: jobSeeker && jobSeeker.metadata ? typeof jobSeeker.metadata : 'none',
                     metadataKeys: jobSeeker && jobSeeker.metadata ? Object.keys(jobSeeker.metadata) : [],
                     hasProfile: !!(jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile),
-                    profileType: (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? typeof jobSeeker.metadata.profile : 'none'
+                    profileType: (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? typeof jobSeeker.metadata.profile : 'none',
+                    legacyId: interest.legacyJobSeekerId
                 });
             }
             
@@ -750,18 +1046,108 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             // First, try to get from populated data, then fallback to batch-fetched map
             let jobSeekerData = jobSeeker;
             
-            // If job seeker is not properly populated or missing metadata, try batch-fetched map
-            if (!jobSeekerData || 
-                typeof jobSeekerData === 'string' ||
-                (typeof jobSeekerData === 'object' && (!jobSeekerData.metadata || !jobSeekerData.metadata.profile))) {
-                // Try to get from batch-fetched map
-                const jsId = (jobSeekerData && typeof jobSeekerData === 'object' && jobSeekerData._id) 
-                    ? String(jobSeekerData._id) 
-                    : (jobSeekerData ? String(jobSeekerData) : (interest.jobSeeker ? String(interest.jobSeeker) : ''));
-                
-                if (jsId && jobSeekersMap[jsId]) {
-                    jobSeekerData = jobSeekersMap[jsId];
+            // Get the job seeker ID to lookup in batch-fetched map
+            // Use the mapping we created earlier for reliable lookup
+            let jsIdForLookup = null;
+            const interestId = String(interest._id);
+            
+            // First, try to get ID from our mapping (most reliable)
+            if (interestToJobSeekerMap[interestId]) {
+                jsIdForLookup = interestToJobSeekerMap[interestId];
+            } else {
+                // Fallback: try to get ID from the raw interest document
+                const rawInterest = rawInterests.find(ri => String(ri._id) === interestId);
+                if (rawInterest && rawInterest.jobSeeker) {
+                    try {
+                        // Extract ID from raw ObjectId
+                        if (typeof rawInterest.jobSeeker === 'string') {
+                            jsIdForLookup = rawInterest.jobSeeker.trim();
+                        } else if (rawInterest.jobSeeker.toString && typeof rawInterest.jobSeeker.toString === 'function') {
+                            jsIdForLookup = String(rawInterest.jobSeeker.toString()).trim();
+                        } else if (rawInterest.jobSeeker._id) {
+                            jsIdForLookup = String(rawInterest.jobSeeker._id).trim();
+                        } else {
+                            jsIdForLookup = String(rawInterest.jobSeeker).trim();
+                        }
+                    } catch (e) {
+                        // Fallback
+                        jsIdForLookup = String(rawInterest.jobSeeker).trim();
+                    }
                 }
+            }
+            
+            // Fallback: try to get from populated jobSeeker
+            if (!jsIdForLookup && jobSeekerData) {
+                if (typeof jobSeekerData === 'object' && jobSeekerData._id) {
+                    jsIdForLookup = String(jobSeekerData._id);
+                } else if (typeof jobSeekerData === 'string') {
+                    jsIdForLookup = jobSeekerData;
+                } else if (jobSeekerData && jobSeekerData.toString) {
+                    jsIdForLookup = String(jobSeekerData);
+                }
+            }
+            
+            // Also check the raw interest.jobSeeker field (might be ObjectId)
+            if (!jsIdForLookup && interest.jobSeeker) {
+                const rawJsId = interest.jobSeeker;
+                if (typeof rawJsId === 'object' && rawJsId._id) {
+                    jsIdForLookup = String(rawJsId._id);
+                } else if (typeof rawJsId === 'string') {
+                    jsIdForLookup = rawJsId;
+                } else if (rawJsId && rawJsId.toString) {
+                    jsIdForLookup = String(rawJsId);
+                }
+            }
+            
+            // Check legacy ID
+            if (!jsIdForLookup && interest.legacyJobSeekerId) {
+                jsIdForLookup = String(interest.legacyJobSeekerId);
+            }
+            
+            // Debug first few lookups
+            if (index < 3) {
+                console.log(`🔍 Record ${index + 1} lookup:`, {
+                    jsIdForLookup,
+                    hasInMap: jsIdForLookup ? !!jobSeekersMap[jsIdForLookup] : false,
+                    mapSize: Object.keys(jobSeekersMap).length,
+                    sampleMapKeys: Object.keys(jobSeekersMap).slice(0, 3)
+                });
+            }
+            
+            // Use populated data if available (Mongoose successfully resolved it)
+            // If populate failed, try legacy ID lookup
+            if (jobSeekerData && typeof jobSeekerData === 'object' && jobSeekerData._id && jobSeekerData.name) {
+                // Populated data exists and is valid - use it
+                if (index < 3) {
+                    console.log(`✅ Using populated job seeker ${index + 1}:`, {
+                        id: String(jobSeekerData._id),
+                        hasMetadata: !!jobSeekerData.metadata,
+                        hasProfile: !!(jobSeekerData.metadata && jobSeekerData.metadata.profile),
+                        profileKeys: (jobSeekerData.metadata && jobSeekerData.metadata.profile) 
+                            ? Object.keys(jobSeekerData.metadata.profile) 
+                            : []
+                    });
+                }
+            } else if (interest.legacyJobSeekerId && jobSeekersMap[String(interest.legacyJobSeekerId)]) {
+                // Populate failed - use legacy ID lookup (most common case for legacy data)
+                jobSeekerData = jobSeekersMap[String(interest.legacyJobSeekerId)];
+                if (index < 3) {
+                    console.log(`✅ Using batch-fetched job seeker ${index + 1} by legacy ID: ${interest.legacyJobSeekerId}`);
+                }
+            } else if (jsIdForLookup && jobSeekersMap[jsIdForLookup]) {
+                // Try regular ID lookup as fallback
+                jobSeekerData = jobSeekersMap[jsIdForLookup];
+                if (index < 3) {
+                    console.log(`✅ Using batch-fetched job seeker ${index + 1} by ID: ${jsIdForLookup}`);
+                }
+            } else if (index < 3) {
+                console.warn(`⚠️ Job seeker ${index + 1} data missing.`, {
+                    hasPopulated: !!(jobSeekerData && typeof jobSeekerData === 'object' && jobSeekerData._id),
+                    lookupId: jsIdForLookup,
+                    legacyId: interest.legacyJobSeekerId,
+                    mapSize: Object.keys(jobSeekersMap).length,
+                    mapHasLegacyId: interest.legacyJobSeekerId ? !!jobSeekersMap[String(interest.legacyJobSeekerId)] : false
+                });
             }
             
             let jobSeekerName = '';
@@ -773,7 +1159,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             let profile = null;
             
             if (jobSeekerData && typeof jobSeekerData === 'object' && !Array.isArray(jobSeekerData)) {
-                // Populated job seeker object
+                // Populated job seeker object or batch-fetched object
                 jobSeekerName = jobSeekerData.name ? String(jobSeekerData.name).trim() : '';
                 email = jobSeekerData.email ? String(jobSeekerData.email).trim() : '';
                 phone = jobSeekerData.phoneNumber ? String(jobSeekerData.phoneNumber).trim() : '';
@@ -783,17 +1169,34 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 
                 // Extract metadata.profile - handle different metadata structures
                 if (jobSeekerData.metadata) {
-                    if (typeof jobSeekerData.metadata === 'object' && jobSeekerData.metadata.profile) {
-                        profile = jobSeekerData.metadata.profile;
+                    if (typeof jobSeekerData.metadata === 'object') {
+                        // Check if profile exists directly
+                        if (jobSeekerData.metadata.profile) {
+                            profile = jobSeekerData.metadata.profile;
+                        } else if (index < 3) {
+                            // Debug: log what's actually in metadata
+                            console.log(`🔍 Job seeker ${index + 1} metadata structure:`, {
+                                metadataKeys: Object.keys(jobSeekerData.metadata),
+                                metadataType: typeof jobSeekerData.metadata,
+                                hasProfile: !!jobSeekerData.metadata.profile
+                            });
+                        }
                     } else if (typeof jobSeekerData.metadata === 'string') {
                         // Metadata might be a JSON string
                         try {
                             const parsedMetadata = JSON.parse(jobSeekerData.metadata);
-                            profile = parsedMetadata && parsedMetadata.profile ? parsedMetadata.profile : null;
+                            if (parsedMetadata && parsedMetadata.profile) {
+                                profile = parsedMetadata.profile;
+                            }
                         } catch (e) {
                             // Not JSON, ignore
+                            if (index < 3) {
+                                console.warn(`⚠️ Failed to parse metadata as JSON for job seeker ${index + 1}`);
+                            }
                         }
                     }
+                } else if (index < 3) {
+                    console.warn(`⚠️ Job seeker ${index + 1} has no metadata field`);
                 }
             } else if (jobSeekerData && typeof jobSeekerData === 'string') {
                 // jobSeeker is just an ObjectId string - try batch-fetched map
@@ -805,8 +1208,19 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                     city = fetched.city ? String(fetched.city).trim() : '';
                     state = fetched.state ? String(fetched.state).trim() : '';
                     country = fetched.country ? String(fetched.country).trim() : '';
-                    if (fetched.metadata && typeof fetched.metadata === 'object' && fetched.metadata.profile) {
-                        profile = fetched.metadata.profile;
+                    if (fetched.metadata) {
+                        if (typeof fetched.metadata === 'object' && fetched.metadata.profile) {
+                            profile = fetched.metadata.profile;
+                        } else if (typeof fetched.metadata === 'string') {
+                            try {
+                                const parsedMetadata = JSON.parse(fetched.metadata);
+                                if (parsedMetadata && parsedMetadata.profile) {
+                                    profile = parsedMetadata.profile;
+                                }
+                            } catch (e) {
+                                // Not JSON, ignore
+                            }
+                        }
                     }
                 }
             }
@@ -837,6 +1251,19 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 : '';
             const clearance = (profile && profile.clearance) ? String(profile.clearance).trim() : '';
             const veteranStatus = (profile && profile.veteranStatus) ? String(profile.veteranStatus).trim() : '';
+            
+            // Debug: Log profile extraction for first few records
+            if (index < 3) {
+                console.log(`📋 Profile extraction for record ${index + 1}:`, {
+                    hasProfile: !!profile,
+                    profileType: typeof profile,
+                    profileKeys: profile ? Object.keys(profile) : [],
+                    headline: headline || 'empty',
+                    keywords: keywords || 'empty',
+                    workLevel: workLevel || 'empty',
+                    educationLevel: educationLevel || 'empty'
+                });
+            }
             
             // Extract interest info - IDs and names
             // Event ID and Name - handle both populated objects and raw ObjectIds

@@ -114,6 +114,7 @@ const JobSeekerInterests = () => {
     const [interests, setInterests] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
+    const [legacyEventIds, setLegacyEventIds] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
@@ -333,8 +334,14 @@ const JobSeekerInterests = () => {
                 }
                 
                 // Load interests with current filters
-                console.log('Loading interests with filters:', filters);
-                const response = await jobSeekerInterestsAPI.getInterests(filters);
+                // Handle legacy event IDs (format: "legacy_<id>")
+                const filtersForAPI = { ...filters };
+                if (filtersForAPI.eventId && filtersForAPI.eventId.startsWith('legacy_')) {
+                    // Extract the legacy event ID
+                    filtersForAPI.eventId = filtersForAPI.eventId.replace('legacy_', '');
+                }
+                console.log('Loading interests with filters:', filtersForAPI);
+                const response = await jobSeekerInterestsAPI.getInterests(filtersForAPI);
 
                 if (cancelled) return;
 
@@ -342,6 +349,15 @@ const JobSeekerInterests = () => {
 
                 const interests = response.interests || [];
                 setInterests(interests);
+                
+                // Extract unique legacy event IDs from interests for filter dropdown
+                const legacyEventIds = new Set();
+                interests.forEach(interest => {
+                    if (interest.legacyEventId && !interest.event) {
+                        legacyEventIds.add(interest.legacyEventId);
+                    }
+                });
+                setLegacyEventIds(Array.from(legacyEventIds));
 
                 // Update pagination from API response
                 if (response.pagination) {
@@ -433,8 +449,15 @@ const JobSeekerInterests = () => {
             setLoadingData(true);
             
             // Build export filters (same as current filters but without pagination)
+            // Handle legacy event IDs (format: "legacy_<id>")
+            let eventIdForExport = filters.eventId || '';
+            if (eventIdForExport.startsWith('legacy_')) {
+                // Extract the legacy event ID
+                eventIdForExport = eventIdForExport.replace('legacy_', '');
+            }
+            
             const exportFilters = {
-                eventId: filters.eventId || '',
+                eventId: eventIdForExport,
                 boothId: filters.boothId || '',
                 recruiterId: filters.recruiterId || '',
                 search: filters.search || ''
@@ -713,7 +736,14 @@ const JobSeekerInterests = () => {
                                 <div style={{ width: '200px', flexShrink: 0 }}>
                                     <DropDownListComponent
                                         id="event-filter-dropdown-main"
-                                        dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
+                                        dataSource={[
+                                            { value: '', text: 'All Events' }, 
+                                            ...events.map(e => ({ value: e._id, text: e.name })),
+                                            ...legacyEventIds.map(legacyId => ({ 
+                                                value: `legacy_${legacyId}`, 
+                                                text: `Legacy Event (${legacyId})` 
+                                            }))
+                                        ]}
                                         fields={{ value: 'value', text: 'text' }}
                                         value={filters.eventId}
                                         change={(e) => handleFilterChange('eventId', e.value || '')}
