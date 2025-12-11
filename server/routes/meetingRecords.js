@@ -487,18 +487,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             .sort({ startTime: -1 })
             .lean(); // Use lean() for better performance
 
-        console.log(`📊 Exporting ${meetingRecords.length} meeting records`);
-        if (meetingRecords.length > 0) {
-            console.log('📋 Sample record:', {
-                hasEvent: !!meetingRecords[0].eventId,
-                hasBooth: !!meetingRecords[0].boothId,
-                hasRecruiter: !!meetingRecords[0].recruiterId,
-                hasJobSeeker: !!meetingRecords[0].jobseekerId,
-                hasInterpreter: !!meetingRecords[0].interpreterId,
-                recruiterEmail: meetingRecords[0].recruiterId?.email,
-                jobSeekerEmail: meetingRecords[0].jobseekerId?.email
-            });
-        }
 
         // Helper function to escape CSV fields properly
         const escapeCSV = (value) => {
@@ -715,7 +703,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
             // Validate row has correct number of columns
             if (row.length !== csvHeaders.length) {
-                console.error(`⚠️ Row ${index + 1} has ${row.length} columns, expected ${csvHeaders.length}. Record ID: ${record._id}`);
                 // Pad with empty strings if missing columns
                 while (row.length < csvHeaders.length) {
                     row.push('');
@@ -727,10 +714,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
         // Validate all rows have correct number of columns
         const expectedColumns = csvHeaders.length;
-        const invalidRows = csvRows.filter((row, idx) => row.length !== expectedColumns);
-        if (invalidRows.length > 0) {
-            console.warn(`⚠️ Found ${invalidRows.length} rows with incorrect column count`);
-        }
 
         // Build CSV content with proper escaping
         const csvContent = [
@@ -748,8 +731,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         // Add BOM for Excel compatibility (UTF-8 BOM)
         const BOM = '\uFEFF';
         const finalContent = BOM + csvContent;
-
-        console.log(`✅ CSV export complete: ${csvRows.length} rows, ${expectedColumns} columns`);
 
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="meeting-records.csv"');
