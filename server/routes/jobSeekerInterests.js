@@ -551,8 +551,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             ? req.query.recruiterId 
             : undefined;
 
-        console.log('📥 Export CSV request received:', { eventId, boothId, recruiterId, user: req.user.role });
-        console.log('📋 Query params received:', req.query);
 
         // Build query based on user role and filters (same logic as GET endpoint)
         // When no filters are provided, this will export ALL interests (for Admin/GlobalSupport)
@@ -675,19 +673,9 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                         // Store mapping
                         interestToJobSeekerMap[interestId] = jsId;
                     } else if (idx < 3) {
-                        console.warn(`⚠️ Invalid job seeker ID found at index ${idx}:`, {
-                            jsId,
-                            jobSeekerType: typeof interest.jobSeeker,
-                            jobSeekerValue: interest.jobSeeker,
-                            hasToString: !!(interest.jobSeeker && interest.jobSeeker.toString),
-                            constructor: interest.jobSeeker?.constructor?.name
-                        });
                     }
                 } catch (e) {
-                    console.warn(`⚠️ Error extracting job seeker ID at index ${idx}:`, e.message, {
-                        jobSeekerType: typeof interest.jobSeeker,
-                        jobSeekerValue: interest.jobSeeker
-                    });
+                    // Ignore extraction errors
                 }
             }
             // Also add legacy IDs
@@ -703,12 +691,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             }
         });
         
-        console.log(`📋 Found ${allJobSeekerIds.size} unique job seeker IDs to fetch`);
-        if (allJobSeekerIds.size > 0) {
-            const sampleIds = Array.from(allJobSeekerIds).slice(0, 5);
-            console.log(`📋 Sample IDs (first 5):`, sampleIds);
-            console.log(`📋 Sample ID types:`, sampleIds.map(id => ({ id, isValid: mongoose.Types.ObjectId.isValid(id) })));
-        }
         
         // Batch fetch ALL job seekers upfront
         const jobSeekersMap = {};
@@ -728,7 +710,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                                 : new mongoose.Types.ObjectId(idStr);
                             validObjectIds.push(objectId);
                         } catch (e) {
-                            console.warn(`⚠️ Failed to create ObjectId from: ${idStr}`, e.message);
                             legacyIds.push(idStr);
                         }
                     } else {
@@ -736,33 +717,11 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                     }
                 });
                 
-                console.log(`📋 Converted ${validObjectIds.length} to ObjectIds, ${legacyIds.length} legacy IDs`);
-                
                 // Fetch by _id for valid ObjectIds
                 if (validObjectIds.length > 0) {
-                    console.log(`📋 Attempting to fetch ${validObjectIds.length} job seekers by _id`);
-                    console.log(`📋 Sample ObjectIds to fetch (first 3):`, validObjectIds.slice(0, 3).map(id => id.toString()));
-                    
-                    // Test query with first ID to see if query works
-                    if (validObjectIds.length > 0) {
-                        try {
-                            const testUser = await User.findById(validObjectIds[0]).lean();
-                            console.log(`📋 Test query for first ID:`, {
-                                id: validObjectIds[0].toString(),
-                                found: !!testUser,
-                                hasMetadata: !!(testUser && testUser.metadata),
-                                hasProfile: !!(testUser && testUser.metadata && testUser.metadata.profile)
-                            });
-                        } catch (testError) {
-                            console.error(`📋 Test query error:`, testError.message);
-                        }
-                    }
-                    
                     // Don't use .select() to ensure we get all fields including full metadata
                     const jobSeekers = await User.find({ _id: { $in: validObjectIds } })
                         .lean();
-                    
-                    console.log(`📋 Query executed, found ${jobSeekers.length} job seekers`);
                     
                     jobSeekers.forEach(js => {
                         // Store with both _id and any legacyId for lookup
@@ -772,31 +731,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                             jobSeekersMap[String(js.legacyId)] = js;
                         }
                     });
-                    
-                    console.log(`📋 Batch fetched ${jobSeekers.length} job seekers by _id (expected ${validObjectIds.length})`);
-                    console.log(`📋 Job seekers map size: ${Object.keys(jobSeekersMap).length}`);
-                    
-                    if (jobSeekers.length > 0) {
-                        // Debug: Check if metadata is present
-                        const sample = jobSeekers[0];
-                        console.log(`📋 Sample job seeker metadata check:`, {
-                            id: String(sample._id),
-                            hasMetadata: !!sample.metadata,
-                            metadataType: typeof sample.metadata,
-                            hasProfile: !!(sample.metadata && sample.metadata.profile),
-                            profileKeys: (sample.metadata && sample.metadata.profile) ? Object.keys(sample.metadata.profile) : []
-                        });
-                    }
-                    
-                    if (jobSeekers.length < validObjectIds.length) {
-                        console.warn(`⚠️ Missing ${validObjectIds.length - jobSeekers.length} job seekers - they may not exist in database`);
-                        // Debug: Show which IDs were not found
-                        const foundIds = new Set(jobSeekers.map(js => String(js._id)));
-                        const missingIds = validObjectIds.filter(id => !foundIds.has(String(id))).slice(0, 5);
-                        if (missingIds.length > 0) {
-                            console.warn(`⚠️ Sample missing IDs (first 5):`, missingIds.map(id => id.toString()));
-                        }
-                    }
                 }
                 
                 // Fetch by legacyId for legacy IDs
@@ -813,7 +747,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                         jobSeekersMap[String(js._id)] = js;
                     });
                     
-                    console.log(`📋 Batch fetched ${legacyJobSeekers.length} job seekers by legacyId`);
                 }
             } catch (fetchError) {
                 console.error('Error batch fetching job seekers:', fetchError);
@@ -849,26 +782,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 .sort({ createdAt: -1 })
                 .lean();
             
-            console.log(`📊 Exporting ${interests.length} job seeker interests`);
-            
-            // Debug: Check a sample interest to verify data structure
-            if (interests.length > 0) {
-                const sample = interests[0];
-                console.log('📋 Sample interest structure:', {
-                    hasJobSeeker: !!sample.jobSeeker,
-                    jobSeekerType: typeof sample.jobSeeker,
-                    isJobSeekerObject: sample.jobSeeker && typeof sample.jobSeeker === 'object',
-                    jobSeekerValue: sample.jobSeeker,
-                    hasLegacyId: !!sample.legacyJobSeekerId,
-                    legacyJobSeekerId: sample.legacyJobSeekerId,
-                    hasMetadata: !!(sample.jobSeeker && sample.jobSeeker.metadata),
-                    hasProfile: !!(sample.jobSeeker && sample.jobSeeker.metadata && sample.jobSeeker.metadata.profile),
-                    profileKeys: (sample.jobSeeker && sample.jobSeeker.metadata && sample.jobSeeker.metadata.profile) 
-                        ? Object.keys(sample.jobSeeker.metadata.profile) 
-                        : []
-                });
-            }
-            
             // If populate failed (jobSeeker is null), we need to fetch by legacy IDs
             // Collect all legacy job seeker IDs from interests where populate failed
             const legacyJobSeekerIdsToFetch = new Set();
@@ -883,7 +796,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             
             // Batch fetch users by legacyId
             if (legacyJobSeekerIdsToFetch.size > 0) {
-                console.log(`📋 Found ${legacyJobSeekerIdsToFetch.size} interests with legacy IDs, fetching users...`);
                 try {
                     const legacyUsers = await User.find({ 
                         legacyId: { $in: Array.from(legacyJobSeekerIdsToFetch) } 
@@ -898,18 +810,8 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                         // Also map by _id
                         jobSeekersMap[String(user._id)] = user;
                     });
-                    
-                    console.log(`📋 Batch fetched ${legacyUsers.length} users by legacyId`);
-                    if (legacyUsers.length > 0) {
-                        const sample = legacyUsers[0];
-                        console.log(`📋 Sample legacy user:`, {
-                            legacyId: sample.legacyId,
-                            hasMetadata: !!sample.metadata,
-                            hasProfile: !!(sample.metadata && sample.metadata.profile)
-                        });
-                    }
                 } catch (legacyError) {
-                    console.error('Error fetching legacy users:', legacyError);
+                    logger.error('Error fetching legacy users:', legacyError);
                 }
             }
         } catch (queryError) {
@@ -961,7 +863,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                         }
                     });
                     
-                    console.log(`📋 Batch fetched recruiters for ${booths.length} booths`);
                 }
             } catch (fetchError) {
                 console.warn('Error batch fetching booth recruiters:', fetchError.message);
@@ -1020,26 +921,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             if (!jobSeeker || (typeof jobSeeker === 'object' && !jobSeeker._id && !jobSeeker.name)) {
                 if (interest.legacyJobSeekerId && jobSeekersMap[String(interest.legacyJobSeekerId)]) {
                     jobSeeker = jobSeekersMap[String(interest.legacyJobSeekerId)];
-                    if (index < 3) {
-                        console.log(`✅ Found job seeker ${index + 1} by legacy ID: ${interest.legacyJobSeekerId}`);
-                    }
                 }
-            }
-            
-            // Debug first few records to see what's happening
-            if (index < 3) {
-                console.log(`🔍 Record ${index + 1}:`, {
-                    hasJobSeeker: !!jobSeeker,
-                    jobSeekerType: typeof jobSeeker,
-                    isObject: jobSeeker && typeof jobSeeker === 'object',
-                    isArray: Array.isArray(jobSeeker),
-                    hasMetadata: !!(jobSeeker && jobSeeker.metadata),
-                    metadataType: jobSeeker && jobSeeker.metadata ? typeof jobSeeker.metadata : 'none',
-                    metadataKeys: jobSeeker && jobSeeker.metadata ? Object.keys(jobSeeker.metadata) : [],
-                    hasProfile: !!(jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile),
-                    profileType: (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? typeof jobSeeker.metadata.profile : 'none',
-                    legacyId: interest.legacyJobSeekerId
-                });
             }
             
             // Handle jobSeeker - could be ObjectId string, populated object, or null
@@ -1104,50 +986,16 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 jsIdForLookup = String(interest.legacyJobSeekerId);
             }
             
-            // Debug first few lookups
-            if (index < 3) {
-                console.log(`🔍 Record ${index + 1} lookup:`, {
-                    jsIdForLookup,
-                    hasInMap: jsIdForLookup ? !!jobSeekersMap[jsIdForLookup] : false,
-                    mapSize: Object.keys(jobSeekersMap).length,
-                    sampleMapKeys: Object.keys(jobSeekersMap).slice(0, 3)
-                });
-            }
-            
             // Use populated data if available (Mongoose successfully resolved it)
             // If populate failed, try legacy ID lookup
             if (jobSeekerData && typeof jobSeekerData === 'object' && jobSeekerData._id && jobSeekerData.name) {
                 // Populated data exists and is valid - use it
-                if (index < 3) {
-                    console.log(`✅ Using populated job seeker ${index + 1}:`, {
-                        id: String(jobSeekerData._id),
-                        hasMetadata: !!jobSeekerData.metadata,
-                        hasProfile: !!(jobSeekerData.metadata && jobSeekerData.metadata.profile),
-                        profileKeys: (jobSeekerData.metadata && jobSeekerData.metadata.profile) 
-                            ? Object.keys(jobSeekerData.metadata.profile) 
-                            : []
-                    });
-                }
             } else if (interest.legacyJobSeekerId && jobSeekersMap[String(interest.legacyJobSeekerId)]) {
                 // Populate failed - use legacy ID lookup (most common case for legacy data)
                 jobSeekerData = jobSeekersMap[String(interest.legacyJobSeekerId)];
-                if (index < 3) {
-                    console.log(`✅ Using batch-fetched job seeker ${index + 1} by legacy ID: ${interest.legacyJobSeekerId}`);
-                }
             } else if (jsIdForLookup && jobSeekersMap[jsIdForLookup]) {
                 // Try regular ID lookup as fallback
                 jobSeekerData = jobSeekersMap[jsIdForLookup];
-                if (index < 3) {
-                    console.log(`✅ Using batch-fetched job seeker ${index + 1} by ID: ${jsIdForLookup}`);
-                }
-            } else if (index < 3) {
-                console.warn(`⚠️ Job seeker ${index + 1} data missing.`, {
-                    hasPopulated: !!(jobSeekerData && typeof jobSeekerData === 'object' && jobSeekerData._id),
-                    lookupId: jsIdForLookup,
-                    legacyId: interest.legacyJobSeekerId,
-                    mapSize: Object.keys(jobSeekersMap).length,
-                    mapHasLegacyId: interest.legacyJobSeekerId ? !!jobSeekersMap[String(interest.legacyJobSeekerId)] : false
-                });
             }
             
             let jobSeekerName = '';
@@ -1173,13 +1021,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                         // Check if profile exists directly
                         if (jobSeekerData.metadata.profile) {
                             profile = jobSeekerData.metadata.profile;
-                        } else if (index < 3) {
-                            // Debug: log what's actually in metadata
-                            console.log(`🔍 Job seeker ${index + 1} metadata structure:`, {
-                                metadataKeys: Object.keys(jobSeekerData.metadata),
-                                metadataType: typeof jobSeekerData.metadata,
-                                hasProfile: !!jobSeekerData.metadata.profile
-                            });
                         }
                     } else if (typeof jobSeekerData.metadata === 'string') {
                         // Metadata might be a JSON string
@@ -1190,13 +1031,8 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                             }
                         } catch (e) {
                             // Not JSON, ignore
-                            if (index < 3) {
-                                console.warn(`⚠️ Failed to parse metadata as JSON for job seeker ${index + 1}`);
-                            }
                         }
                     }
-                } else if (index < 3) {
-                    console.warn(`⚠️ Job seeker ${index + 1} has no metadata field`);
                 }
             } else if (jobSeekerData && typeof jobSeekerData === 'string') {
                 // jobSeeker is just an ObjectId string - try batch-fetched map
@@ -1251,19 +1087,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 : '';
             const clearance = (profile && profile.clearance) ? String(profile.clearance).trim() : '';
             const veteranStatus = (profile && profile.veteranStatus) ? String(profile.veteranStatus).trim() : '';
-            
-            // Debug: Log profile extraction for first few records
-            if (index < 3) {
-                console.log(`📋 Profile extraction for record ${index + 1}:`, {
-                    hasProfile: !!profile,
-                    profileType: typeof profile,
-                    profileKeys: profile ? Object.keys(profile) : [],
-                    headline: headline || 'empty',
-                    keywords: keywords || 'empty',
-                    workLevel: workLevel || 'empty',
-                    educationLevel: educationLevel || 'empty'
-                });
-            }
             
             // Extract interest info - IDs and names
             // Event ID and Name - handle both populated objects and raw ObjectIds
@@ -1406,7 +1229,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
 
             // Validate row has correct number of columns
             if (row.length !== csvHeaders.length) {
-                console.error(`⚠️ Row ${index + 1} has ${row.length} columns, expected ${csvHeaders.length}. Interest ID: ${interest._id}`);
                 // Pad with empty strings if missing columns
                 while (row.length < csvHeaders.length) {
                     row.push('');
@@ -1426,22 +1248,9 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             ...csvRows.map(row => row.join(','))
         ].join('\r\n');
         
-        // If no rows, just return headers
-        if (csvRows.length === 0) {
-            console.log('⚠️ No interests found to export, returning CSV with headers only');
-        }
-
         // Add BOM for Excel compatibility
         const BOM = '\uFEFF';
         const finalContent = BOM + csvContent;
-
-        console.log(`✅ CSV export generated: ${csvRows.length} rows, ${finalContent.length} bytes`);
-        console.log(`📋 CSV headers count: ${csvHeaders.length}, Sample row columns count: ${csvRows.length > 0 ? csvRows[0].length : 0}`);
-        
-        // Debug: Log first row to verify data
-        if (csvRows.length > 0) {
-            console.log('📋 First row sample (first 10 columns):', csvRows[0].slice(0, 10));
-        }
 
         // Set response headers
         res.setHeader('Content-Type', 'text/csv;charset=utf-8;');
@@ -1450,7 +1259,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
         // Send response - use res.end() for binary data to avoid encoding issues
         try {
             res.end(finalContent, 'utf8');
-            console.log('✅ CSV response sent successfully');
         } catch (sendError) {
             // If response already sent, just log the error
             if (!res.headersSent) {
