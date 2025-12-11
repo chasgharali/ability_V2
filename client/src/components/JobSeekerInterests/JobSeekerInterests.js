@@ -429,6 +429,7 @@ const JobSeekerInterests = () => {
 
     const handleExport = async () => {
         try {
+            console.log('📤 Starting export...');
             setLoadingData(true);
             
             // Build export filters (same as current filters but without pagination)
@@ -439,21 +440,70 @@ const JobSeekerInterests = () => {
                 search: filters.search || ''
             };
             
+            // Remove empty filters
+            Object.keys(exportFilters).forEach(key => {
+                if (exportFilters[key] === '') {
+                    delete exportFilters[key];
+                }
+            });
+            
+            console.log('📋 Export filters:', exportFilters);
+            console.log('📋 Current filters state:', filters);
+            
             const blob = await jobSeekerInterestsAPI.exportCSV(exportFilters);
+            console.log('✅ Received blob:', blob?.size, 'bytes, type:', blob?.type);
+            
+            // Log blob details for debugging
+            if (blob) {
+                console.log('📦 Blob details:', {
+                    size: blob.size,
+                    type: blob.type,
+                    hasData: blob.size > 0
+                });
+            }
+            
+            // Check if blob is valid
+            if (!blob || blob.size === 0) {
+                throw new Error('Empty response from server');
+            }
+            
+            // Check if response is actually an error (JSON error response)
+            if (blob.type === 'application/json') {
+                const text = await blob.text();
+                const errorData = JSON.parse(text);
+                throw new Error(errorData.message || errorData.error || 'Export failed');
+            }
+            
+            // Create download link and trigger download
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
             a.download = 'job-seeker-interests.csv';
             document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+                a.click();
+                
+                // Clean up after a delay to ensure download starts
+                setTimeout(() => {
+                    try {
+                        window.URL.revokeObjectURL(url);
+                        if (document.body.contains(a)) {
+                            document.body.removeChild(a);
+                        }
+                    } catch (cleanupError) {
+                        console.warn('Cleanup error (non-critical):', cleanupError);
+                    }
+                }, 300);
+            });
             
             showToast('Job seeker interests exported successfully', 'Success');
         } catch (error) {
             console.error('Error exporting interests:', error);
-            showToast('Failed to export job seeker interests', 'Error');
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to export job seeker interests';
+            showToast(errorMessage, 'Error', 5000);
         } finally {
             setLoadingData(false);
         }
