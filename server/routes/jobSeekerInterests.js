@@ -223,7 +223,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
 
         // Execute query with population
         const interests = await JobSeekerInterest.find(query)
-            .populate('jobSeeker', 'name email city state')
+            .populate('jobSeeker', 'name email phoneNumber city state country metadata')
             .populate('event', 'name slug')
             .populate('booth', 'name description')
             .sort(sortOptions)
@@ -263,7 +263,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         if (legacyJobSeekerIds.length > 0) {
             try {
                 const legacyUsers = await User.find({ legacyId: { $in: legacyJobSeekerIds } })
-                    .select('name email city state legacyId')
+                    .select('name email phoneNumber city state country metadata legacyId')
                     .lean();
                 legacyUsers.forEach(user => {
                     legacyUsersMap[user.legacyId] = user;
@@ -431,6 +431,236 @@ router.put('/:interestId/toggle', authenticateToken, requireRole(['JobSeeker']),
         res.status(500).json({
             error: 'Failed to toggle interest',
             message: 'An error occurred while updating your interest'
+        });
+    }
+});
+
+/**
+ * GET /api/job-seeker-interests/export/csv
+ * Export job seeker interests as CSV
+ */
+router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const {
+            eventId,
+            boothId,
+            recruiterId
+        } = req.query;
+
+        // Build query based on user role and filters (same logic as GET endpoint)
+        let query = { isInterested: true };
+
+        // Role-based filtering
+        if (req.user.role === 'Recruiter') {
+            const Booth = require('../models/Booth');
+            const User = require('../models/User');
+            
+            const recruiter = await User.findById(req.user._id).select('assignedBooth');
+            const boothIds = new Set();
+            
+            if (recruiter && recruiter.assignedBooth) {
+                const boothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
+                boothIds.add(boothId.toString());
+            }
+            
+            const adminBooths = await Booth.find({
+                administrators: req.user._id
+            }).select('_id');
+            
+            adminBooths.forEach(booth => {
+                boothIds.add(booth._id.toString());
+            });
+            
+            const boothIdsArray = Array.from(boothIds).map(id => mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id);
+            
+            if (boothIdsArray.length === 0) {
+                return res.json({ interests: [] });
+            }
+
+            query.booth = { $in: boothIdsArray };
+        } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
+            if (recruiterId) {
+                const Booth = require('../models/Booth');
+                const User = require('../models/User');
+                
+                const recruiter = await User.findById(recruiterId).select('assignedBooth');
+                const boothIds = new Set();
+                
+                if (recruiter && recruiter.assignedBooth) {
+                    const boothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
+                    boothIds.add(boothId.toString());
+                }
+                
+                const adminBooths = await Booth.find({
+                    administrators: recruiterId
+                }).select('_id');
+                
+                adminBooths.forEach(booth => {
+                    boothIds.add(booth._id.toString());
+                });
+                
+                const boothIdsArray = Array.from(boothIds).map(id => mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id);
+                query.booth = { $in: boothIdsArray };
+            }
+        }
+
+        // Apply additional filters
+        if (eventId) query.event = eventId;
+        if (boothId) query.booth = boothId;
+
+        // Get ALL interests (no pagination for export)
+        const interests = await JobSeekerInterest.find(query)
+            .populate('jobSeeker', 'name email phoneNumber city state country metadata')
+            .populate('event', 'name slug')
+            .populate('booth', 'name description')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Helper function to escape CSV fields
+        const escapeCSV = (value) => {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            const stringValue = String(value);
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        };
+
+        // CSV Headers
+        const csvHeaders = [
+            'Event Name',
+            'Booth Name',
+            'Company',
+            'Job Seeker First Name',
+            'Job Seeker Last Name',
+            'Job Seeker Email',
+            'Job Seeker Phone',
+            'Job Seeker Location',
+            'Job Seeker Headline',
+            'Job Seeker Keywords',
+            'Work Experience Level',
+            'Highest Education Level',
+            'Employment Types',
+            'Language(s)',
+            'Security Clearance',
+            'Veteran/Military Status',
+            'Interest Level',
+            'Notes',
+            'Date Expressed'
+        ];
+
+        const csvRows = interests.map(interest => {
+            // Extract job seeker info
+            const jobSeeker = interest.jobSeeker;
+            const jobSeekerName = (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.name) 
+                ? String(jobSeeker.name).trim() 
+                : '';
+            
+            // Split name
+            const nameParts = jobSeekerName ? jobSeekerName.split(/\s+/) : [];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
+            const email = (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.email) 
+                ? String(jobSeeker.email).trim() 
+                : '';
+            const phone = (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.phoneNumber) 
+                ? String(jobSeeker.phoneNumber).trim() 
+                : '';
+            const city = (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.city) 
+                ? String(jobSeeker.city).trim() 
+                : '';
+            const state = (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.state) 
+                ? String(jobSeeker.state).trim() 
+                : '';
+            
+            // Format location
+            let location = '';
+            if (city && state) {
+                location = `${city}, ${state}`;
+            } else if (city) {
+                location = city;
+            } else if (state) {
+                location = state;
+            }
+            
+            // Extract profile data
+            const profile = (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? jobSeeker.metadata.profile : null;
+            const headline = profile && profile.headline ? String(profile.headline).trim() : '';
+            const keywords = profile && profile.keywords ? String(profile.keywords).trim() : '';
+            const workLevel = profile && profile.workLevel ? String(profile.workLevel).trim() : '';
+            const educationLevel = profile && profile.educationLevel ? String(profile.educationLevel).trim() : '';
+            const employmentTypes = (profile && Array.isArray(profile.employmentTypes)) 
+                ? profile.employmentTypes.filter(Boolean).join(', ') 
+                : '';
+            const languages = (profile && Array.isArray(profile.languages)) 
+                ? profile.languages.filter(Boolean).join(', ') 
+                : '';
+            const clearance = profile && profile.clearance ? String(profile.clearance).trim() : '';
+            const veteranStatus = profile && profile.veteranStatus ? String(profile.veteranStatus).trim() : '';
+            
+            // Extract interest info
+            const eventName = (interest.event && typeof interest.event === 'object' && interest.event.name) 
+                ? String(interest.event.name).trim() 
+                : '';
+            const boothName = (interest.booth && typeof interest.booth === 'object' && interest.booth.name) 
+                ? String(interest.booth.name).trim() 
+                : '';
+            const company = interest.company ? String(interest.company).trim() : '';
+            const interestLevel = interest.interestLevel ? String(interest.interestLevel).trim() : '';
+            const notes = interest.notes ? String(interest.notes).trim() : '';
+            
+            // Format date
+            const dateExpressed = interest.createdAt 
+                ? new Date(interest.createdAt).toISOString().replace('T', ' ').substring(0, 19)
+                : '';
+
+            return [
+                escapeCSV(eventName),
+                escapeCSV(boothName),
+                escapeCSV(company),
+                escapeCSV(firstName),
+                escapeCSV(lastName),
+                escapeCSV(email),
+                escapeCSV(phone),
+                escapeCSV(location),
+                escapeCSV(headline),
+                escapeCSV(keywords),
+                escapeCSV(workLevel),
+                escapeCSV(educationLevel),
+                escapeCSV(employmentTypes),
+                escapeCSV(languages),
+                escapeCSV(clearance),
+                escapeCSV(veteranStatus),
+                escapeCSV(interestLevel),
+                escapeCSV(notes),
+                escapeCSV(dateExpressed)
+            ];
+        });
+
+        // Build CSV content
+        const csvContent = [
+            csvHeaders.map(h => escapeCSV(h)).join(','),
+            ...csvRows.map(row => row.join(','))
+        ].join('\r\n');
+
+        // Add BOM for Excel compatibility
+        const BOM = '\uFEFF';
+        const finalContent = BOM + csvContent;
+
+        // Set response headers
+        res.setHeader('Content-Type', 'text/csv;charset=utf-8;');
+        res.setHeader('Content-Disposition', 'attachment; filename="job-seeker-interests.csv"');
+        
+        res.send(finalContent);
+
+    } catch (error) {
+        logger.error('Export job seeker interests error:', error);
+        res.status(500).json({
+            error: 'Failed to export interests',
+            message: 'An error occurred while exporting interests'
         });
     }
 });

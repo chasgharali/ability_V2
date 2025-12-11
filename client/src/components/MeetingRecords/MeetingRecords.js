@@ -625,9 +625,19 @@ export default function MeetingRecords() {
             'Booth',
             'Recruiter Name',
             'Recruiter Email',
-            'Job Seeker Name',
+            'Job Seeker First Name',
+            'Job Seeker Last Name',
             'Job Seeker Email',
+            'Job Seeker Phone',
             'Job Seeker Location',
+            'Job Seeker Headline',
+            'Job Seeker Keywords',
+            'Work Experience Level',
+            'Highest Education Level',
+            'Employment Types',
+            'Language(s)',
+            'Security Clearance',
+            'Veteran/Military Status',
             'Job Seeker Resume Link',
             'Interpreter',
             'Start Time',
@@ -698,7 +708,19 @@ export default function MeetingRecords() {
                 const recruiterName = record.recruiterName || getFieldName(record.recruiterId);
                 const recruiterEmail = getFieldEmail(record.recruiterId);
                 const jobSeekerName = record.jobSeekerName || getFieldName(record.jobseekerId);
+                
+                // Split name into first and last name
+                const nameParts = jobSeekerName ? jobSeekerName.split(/\s+/) : [];
+                const jobSeekerFirstName = nameParts[0] || '';
+                const jobSeekerLastName = nameParts.slice(1).join(' ') || '';
+                
                 const jobSeekerEmail = record.jobSeekerEmail || getFieldEmail(record.jobseekerId);
+                
+                // Extract phone number
+                const jobSeekerPhone = (record.jobseekerId && typeof record.jobseekerId === 'object' && record.jobseekerId.phoneNumber) 
+                    ? String(record.jobseekerId.phoneNumber).trim() 
+                    : '';
+                
                 const jobSeekerResumeUrl = record.jobSeekerResumeUrl || getFieldResumeUrl(record.jobseekerId);
                 const jobSeekerCity = record.jobSeekerCity || getFieldCity(record.jobseekerId);
                 const jobSeekerState = getFieldState(record.jobseekerId);
@@ -711,6 +733,22 @@ export default function MeetingRecords() {
                 } else if (jobSeekerState) {
                     location = jobSeekerState;
                 }
+                
+                // Extract profile data from metadata
+                const jobSeeker = record.jobseekerId;
+                const profile = (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? jobSeeker.metadata.profile : null;
+                const headline = profile && profile.headline ? String(profile.headline).trim() : '';
+                const keywords = profile && profile.keywords ? String(profile.keywords).trim() : '';
+                const workLevel = profile && profile.workLevel ? String(profile.workLevel).trim() : '';
+                const educationLevel = profile && profile.educationLevel ? String(profile.educationLevel).trim() : '';
+                const employmentTypes = (profile && Array.isArray(profile.employmentTypes)) 
+                    ? profile.employmentTypes.filter(Boolean).join(', ') 
+                    : '';
+                const languages = (profile && Array.isArray(profile.languages)) 
+                    ? profile.languages.filter(Boolean).join(', ') 
+                    : '';
+                const clearance = profile && profile.clearance ? String(profile.clearance).trim() : '';
+                const veteranStatus = profile && profile.veteranStatus ? String(profile.veteranStatus).trim() : '';
                 
                 const interpreterName = (record.interpreterId && typeof record.interpreterId === 'object' && record.interpreterId.name) 
                     ? record.interpreterId.name 
@@ -733,9 +771,19 @@ export default function MeetingRecords() {
                     escapeCSV(boothName),
                     escapeCSV(recruiterName),
                     escapeCSV(recruiterEmail),
-                    escapeCSV(jobSeekerName),
+                    escapeCSV(jobSeekerFirstName),
+                    escapeCSV(jobSeekerLastName),
                     escapeCSV(jobSeekerEmail),
+                    escapeCSV(jobSeekerPhone),
                     escapeCSV(location),
+                    escapeCSV(headline),
+                    escapeCSV(keywords),
+                    escapeCSV(workLevel),
+                    escapeCSV(educationLevel),
+                    escapeCSV(employmentTypes),
+                    escapeCSV(languages),
+                    escapeCSV(clearance),
+                    escapeCSV(veteranStatus),
                     escapeCSV(jobSeekerResumeUrl),
                     escapeCSV(interpreterName),
                     escapeCSV(formatDateForCSV(record.startTime)),
