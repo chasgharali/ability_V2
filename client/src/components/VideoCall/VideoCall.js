@@ -144,6 +144,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [captionHistory, setCaptionHistory] = useState([]);
   // Remote captions from all participants (Map of participantId -> {text, speaker, role, timestamp, isFinal})
   const [remoteCaptions, setRemoteCaptions] = useState(new Map());
+  // Track caption history for each speaker to create new lines after pauses (using ref for synchronous access)
+  // Map of participantId -> array of {text, timestamp, isFinal}
+  const captionHistoryBySpeakerRef = useRef(new Map());
 
   // Refs
   // Cleanup / lifecycle guards
@@ -171,6 +174,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const syncfusionListeningStateRef = useRef('Inactive');
   // Ref for caption content container (for auto-scrolling)
   const captionContentRef = useRef(null);
+  // State for scroll button visibility
+  const [showScrollUp, setShowScrollUp] = useState(false);
+  const [showScrollDown, setShowScrollDown] = useState(false);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
 
   // Initialize call
   useEffect(() => {
@@ -204,18 +211,93 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   }, []);
 
-  // Auto-scroll caption content to bottom when new captions are added
+  // Check scroll position and update scroll button visibility
+  const checkScrollPosition = useCallback(() => {
+    if (!captionContentRef.current) return;
+    
+    const container = captionContentRef.current;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isAtTop = scrollTop <= 10;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+    const canScroll = scrollHeight > clientHeight;
+    
+    setShowScrollUp(canScroll && !isAtTop);
+    setShowScrollDown(canScroll && !isAtBottom);
+    
+    // If user manually scrolls, disable auto-scroll temporarily
+    if (!isAtBottom && isAutoScrolling) {
+      setIsAutoScrolling(false);
+    }
+    // Re-enable auto-scroll if user scrolls back to bottom
+    if (isAtBottom && !isAutoScrolling) {
+      setIsAutoScrolling(true);
+    }
+  }, [isAutoScrolling]);
+
+  // Auto-scroll caption content to bottom when new captions are added (only if auto-scroll is enabled)
   useEffect(() => {
-    if (captionContentRef.current && remoteCaptions.size > 0) {
+    if (captionContentRef.current && remoteCaptions.size > 0 && isAutoScrolling) {
       // Scroll to bottom with smooth behavior
       const timer = setTimeout(() => {
-        if (captionContentRef.current) {
-          captionContentRef.current.scrollTop = captionContentRef.current.scrollHeight;
+        if (captionContentRef.current && isAutoScrolling) {
+          const container = captionContentRef.current;
+          container.scrollTop = container.scrollHeight;
+          checkScrollPosition();
         }
       }, 50);
       return () => clearTimeout(timer);
+    } else if (captionContentRef.current) {
+      // Update scroll button visibility even if not auto-scrolling
+      checkScrollPosition();
     }
-  }, [remoteCaptions]);
+  }, [remoteCaptions, isAutoScrolling, checkScrollPosition]);
+
+  // Check scroll position on scroll events
+  useEffect(() => {
+    const container = captionContentRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      checkScrollPosition();
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    // Also check on resize
+    window.addEventListener('resize', checkScrollPosition);
+    
+    // Initial check when captions are enabled
+    if (isCaptionEnabled) {
+      setTimeout(() => {
+        checkScrollPosition();
+      }, 100);
+    }
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', checkScrollPosition);
+    };
+  }, [checkScrollPosition, isCaptionEnabled]);
+
+  // Scroll functions
+  const scrollToTop = useCallback(() => {
+    if (captionContentRef.current) {
+      captionContentRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      setIsAutoScrolling(false);
+    }
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    if (captionContentRef.current) {
+      captionContentRef.current.scrollTo({
+        top: captionContentRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+      setIsAutoScrolling(true);
+    }
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -282,29 +364,16 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // The ref is updated synchronously when captions are enabled/disabled
       const captionsCurrentlyEnabled = isCaptionEnabledRef.current;
       
-      // Debug logging to help diagnose the issue
-      if (!captionsCurrentlyEnabled) {
-        // Only log once every 5 seconds to reduce spam
-        if (!window._lastCaptionDisabledWarning || Date.now() - window._lastCaptionDisabledWarning > 5000) {
-          console.warn('📝 Caption received but captions are disabled');
-          console.warn('🔍 Debug info:', {
-            isCaptionEnabledRef: isCaptionEnabledRef.current,
-            isCaptionEnabledState: isCaptionEnabled,
-            hasData: !!data,
-            participantId: data?.participantId,
-            text: data?.text?.substring(0, 30),
-            timestamp: new Date().toISOString()
-          });
-          console.warn('💡 Toggle captions off/on to refresh the socket listener');
-          window._lastCaptionDisabledWarning = Date.now();
-        }
+      // Always process captions from socket (they're broadcast by other participants)
+      // We'll only display them if captions are enabled locally
+      // This ensures captions work independently for each participant
+      
+      if (!data) {
         return;
       }
       
-      if (!data) {
-        console.warn('📝 Caption received but data is null/undefined');
-        return;
-      }
+      // Process caption even if local CC is disabled (store it, but only display if enabled)
+      // This allows captions to be ready when user enables CC
       
       // Extract data first
       const { participantId, participantName, text, isFinal, timestamp } = data;
@@ -344,49 +413,109 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         window._lastCaptionLog = Date.now();
       }
       
-      // Verify ref is still true (double-check)
-      if (!isCaptionEnabledRef.current) {
-        console.warn('⚠️ Ref became false during processing - skipping');
-        return;
-      }
-      
       if (!participantId || !text) {
-        console.error('📝 Invalid caption data received:', { participantId, text: text?.substring(0, 30), fullData: data });
         return;
       }
 
-      // Only log unique captions
-      const logKey = `${participantId}_${text.substring(0, 50)}_${timestamp}`;
-      if (!window._lastLoggedCaptionKey || window._lastLoggedCaptionKey !== logKey) {
-        console.log('✅ Processing REMOTE caption:', { participantId, participantName, text: text.substring(0, 50), isFinal, timestamp });
-        window._lastLoggedCaptionKey = logKey;
+      // Always process and store captions, but only display if CC is enabled
+      // This ensures captions are available when user enables CC
+      const newText = text.trim();
+      const newTimestamp = timestamp || new Date().toISOString();
+      const timestampMs = new Date(newTimestamp).getTime();
+      
+      // Check if speaker has been silent for more than 2 seconds (should create new line)
+      let shouldCreateNewLine = false;
+      const speakerHistory = captionHistoryBySpeakerRef.current.get(participantId) || [];
+      
+      if (speakerHistory.length > 0) {
+        const lastEntry = speakerHistory[speakerHistory.length - 1];
+        const lastTimestampMs = new Date(lastEntry.timestamp).getTime();
+        const timeSinceLastSpeech = timestampMs - lastTimestampMs;
+        
+        // If more than 2 seconds passed and this is a final transcript, create new line
+        if (timeSinceLastSpeech > 2000 && isFinal && lastEntry.isFinal) {
+          shouldCreateNewLine = true;
+        }
       }
+      
+      // Add new entry to history (update ref synchronously)
+      const updatedHistory = [...speakerHistory, {
+        text: newText,
+        timestamp: newTimestamp,
+        isFinal: isFinal !== false
+      }].slice(-10); // Keep last 10 entries per speaker
+      
+      captionHistoryBySpeakerRef.current.set(participantId, updatedHistory);
 
       // Update remote captions map with OTHER participant's transcript
       // This ensures OTHER users' captions show up on YOUR screen
       setRemoteCaptions(prev => {
         const newMap = new Map(prev);
-        const existing = newMap.get(participantId);
-        const newText = text.trim();
-        const newTimestamp = timestamp || new Date().toISOString();
+        const participantRole = getParticipantRole(participantId);
+        
+        // If creating new line, use a unique key by appending timestamp
+        // Otherwise, update the existing entry for this participant
+        const captionKey = shouldCreateNewLine 
+          ? `${participantId}_${timestampMs}` 
+          : participantId;
+        
+        // Remove old entries for this participant to prevent duplicates
+        // Keep only entries that are for new lines (have timestamp in key)
+        if (!shouldCreateNewLine) {
+          // Remove all old entries for this participant (including new line entries)
+          for (const [key, caption] of newMap.entries()) {
+            const keyParticipantId = key.includes('_') 
+              ? key.split('_').slice(0, -1).join('_') 
+              : key;
+            if (keyParticipantId === participantId && key !== captionKey) {
+              newMap.delete(key);
+            }
+          }
+        } else {
+          // When creating new line, keep the most recent old entry but remove others
+          // Find the most recent entry for this participant
+          let mostRecentKey = null;
+          let mostRecentTime = 0;
+          for (const [key, caption] of newMap.entries()) {
+            const keyParticipantId = key.includes('_') 
+              ? key.split('_').slice(0, -1).join('_') 
+              : key;
+            if (keyParticipantId === participantId) {
+              const captionTime = new Date(caption.timestamp || 0).getTime();
+              if (captionTime > mostRecentTime) {
+                mostRecentTime = captionTime;
+                mostRecentKey = key;
+              }
+            }
+          }
+          // Remove all entries except the most recent one (which we'll keep)
+          for (const [key] of newMap.entries()) {
+            const keyParticipantId = key.includes('_') 
+              ? key.split('_').slice(0, -1).join('_') 
+              : key;
+            if (keyParticipantId === participantId && key !== mostRecentKey && key !== captionKey) {
+              newMap.delete(key);
+            }
+          }
+        }
         
         // Only update if text actually changed (avoid unnecessary re-renders)
+        const existing = newMap.get(captionKey);
         if (!existing || existing.text !== newText) {
-          const participantRole = getParticipantRole(participantId);
           const captionData = {
             text: newText,
             speaker: participantName || 'Participant',
             role: participantRole,
             timestamp: newTimestamp,
-            isFinal: isFinal !== false
+            isFinal: isFinal !== false,
+            captionKey: captionKey // Store unique key for new lines
           };
-          newMap.set(participantId, captionData);
-          console.log(`✅ Updated OTHER user's caption: ${participantRole} -> "${newText.substring(0, 50)}" (isFinal: ${isFinal})`);
+          newMap.set(captionKey, captionData);
           // Reset logged captions so new caption will be logged
           window._lastLoggedCaptions = null;
         } else {
           // Text is same, but update timestamp and isFinal status
-          newMap.set(participantId, {
+          newMap.set(captionKey, {
             ...existing,
             timestamp: newTimestamp,
             isFinal: isFinal !== false
@@ -399,16 +528,20 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // The remoteCaptions state update is enough to trigger a re-render
 
       // Clear this participant's caption after 15 seconds if final (longer timeout to keep captions visible)
-      if (isFinal) {
+      // Only clear if CC is enabled (to avoid unnecessary state updates)
+      if (isFinal && isCaptionEnabledRef.current) {
         setTimeout(() => {
           if (isCaptionEnabledRef.current) {
             setRemoteCaptions(prev => {
               const newMap = new Map(prev);
-              const existing = newMap.get(participantId);
-              // Only clear if this is still the same caption (not overwritten by newer speech)
-              if (existing && existing.timestamp === timestamp) {
-                console.log(`🧹 Clearing old caption for ${participantName} after 15 seconds`);
-                newMap.delete(participantId);
+              // Clear all caption entries for this participant (including new line entries)
+              for (const [key, caption] of newMap.entries()) {
+                const keyParticipantId = key.includes('_') 
+                  ? key.split('_').slice(0, -1).join('_') 
+                  : key;
+                if (keyParticipantId === participantId && caption.timestamp === newTimestamp) {
+                  newMap.delete(key);
+                }
               }
               return newMap;
             });
@@ -1364,7 +1497,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       // When muted, stop Syncfusion SpeechToText (no point capturing if mic is off)
       // But keep captions enabled to receive other users' captions via socket
-      if (isCaptionEnabledRef.current && speechToTextRef.current) {
+      if (speechToTextRef.current) {
         console.log('🔇 Muted - Stopping Syncfusion SpeechToText (no mic input)');
         console.log('📝 You will still receive OTHER users\' captions via socket');
         try {
@@ -1381,10 +1514,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       audioTrack.enable();
       setIsAudioEnabled(true);
 
-      // When unmuted, Syncfusion SpeechToText will resume automatically if captions are enabled
-      if (isCaptionEnabledRef.current && speechToTextRef.current) {
-        console.log('🔊 Unmuted - Syncfusion SpeechToText will resume capturing YOUR speech');
-    }
+      // When unmuted, Syncfusion SpeechToText will resume automatically
+      // Transcription always runs when mic is enabled (regardless of display toggle)
+      console.log('🔊 Unmuted - Syncfusion SpeechToText will resume capturing YOUR speech');
     }
   }, [localTracks, isAudioEnabled, user, callInfo]);
 
@@ -1425,34 +1557,109 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       window._lastProcessedSyncfusionTranscript = transcript.trim();
     }
     
-    if (!isCaptionEnabledRef.current) {
-      return;
-    }
-
+    // Always process and broadcast captions regardless of local CC setting
+    // This ensures others can see your captions even if you don't have CC enabled
     const localId = user?._id || user?.id || 'local';
     const localName = user?.name || 'You';
     const timestamp = new Date().toISOString();
+    
+    // Always store captions in remoteCaptions map (for when user enables display)
+    // Only show locally if CC display is enabled
+    const shouldDisplayLocally = isCaptionEnabledRef.current;
 
-    // Update remote captions map with local user's transcript
+    // Always update remote captions map (so data is available when display is enabled)
+    // This ensures captions are stored even when display is off
     setRemoteCaptions(prev => {
       const newMap = new Map(prev);
-      const existing = newMap.get(localId);
+      const timestampMs = new Date(timestamp).getTime();
+      
+      // Check if speaker has been silent for more than 2 seconds (should create new line)
+      let shouldCreateNewLine = false;
+      const speakerHistory = captionHistoryBySpeakerRef.current.get(localId) || [];
+      
+      if (speakerHistory.length > 0) {
+        const lastEntry = speakerHistory[speakerHistory.length - 1];
+        const lastTimestampMs = new Date(lastEntry.timestamp).getTime();
+        const timeSinceLastSpeech = timestampMs - lastTimestampMs;
+        
+        // If more than 2 seconds passed and this is a final transcript, create new line
+        if (timeSinceLastSpeech > 2000 && isFinal && lastEntry.isFinal) {
+          shouldCreateNewLine = true;
+        }
+      }
+      
+      // Add new entry to history (update ref synchronously)
+      const updatedHistory = [...speakerHistory, {
+        text: transcript.trim(),
+        timestamp: timestamp,
+        isFinal: isFinal
+      }].slice(-10); // Keep last 10 entries per speaker
+      
+      captionHistoryBySpeakerRef.current.set(localId, updatedHistory);
+      
+      // If creating new line, use a unique key by appending timestamp
+      // Otherwise, update the existing entry for this participant
+      const captionKey = shouldCreateNewLine 
+        ? `${localId}_${timestampMs}` 
+        : localId;
+      
+      // Remove old entries for this participant to prevent duplicates
+      if (!shouldCreateNewLine) {
+        // Remove all old entries for this participant (including new line entries)
+        for (const [key] of newMap.entries()) {
+          const keyParticipantId = key.includes('_') 
+            ? key.split('_').slice(0, -1).join('_') 
+            : key;
+          if (keyParticipantId === localId && key !== captionKey) {
+            newMap.delete(key);
+          }
+        }
+      } else {
+        // When creating new line, keep the most recent old entry but remove others
+        // Find the most recent entry for this participant
+        let mostRecentKey = null;
+        let mostRecentTime = 0;
+        for (const [key, caption] of newMap.entries()) {
+          const keyParticipantId = key.includes('_') 
+            ? key.split('_').slice(0, -1).join('_') 
+            : key;
+          if (keyParticipantId === localId) {
+            const captionTime = new Date(caption.timestamp || 0).getTime();
+            if (captionTime > mostRecentTime) {
+              mostRecentTime = captionTime;
+              mostRecentKey = key;
+            }
+          }
+        }
+        // Remove all entries except the most recent one (which we'll keep)
+        for (const [key] of newMap.entries()) {
+          const keyParticipantId = key.includes('_') 
+            ? key.split('_').slice(0, -1).join('_') 
+            : key;
+          if (keyParticipantId === localId && key !== mostRecentKey && key !== captionKey) {
+            newMap.delete(key);
+          }
+        }
+      }
       
       // Only update if text actually changed (avoid unnecessary re-renders)
+      const existing = newMap.get(captionKey);
       if (!existing || existing.text !== transcript.trim()) {
         const localRole = getParticipantRole(localId);
+        
         const captionData = {
           text: transcript.trim(),
           speaker: localName,
           role: localRole,
           timestamp: timestamp,
-          isFinal: isFinal
+          isFinal: isFinal,
+          captionKey: captionKey // Store unique key for new lines
         };
-        newMap.set(localId, captionData);
+        newMap.set(captionKey, captionData);
         window._lastLoggedCaptions = null; // Reset to allow new caption logging
       } else {
         // Text is same, but update timestamp and isFinal status
-        newMap.set(localId, {
+        newMap.set(captionKey, {
           ...existing,
           timestamp: timestamp,
           isFinal: isFinal
@@ -1461,7 +1668,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       return newMap;
     });
 
-    // Broadcast YOUR caption to other participants via socket
+    // Always broadcast YOUR caption to other participants via socket
+    // This ensures others can see your captions even if they don't have CC enabled
     if (socket && callInfo) {
       const callId = callInfo.id || callInfo.callId || callInfo._id;
       // Server requires roomName (not connectionKey)
@@ -1490,6 +1698,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         window._lastBroadcastedTranscript = transcript.trim();
       }
 
+      // Always broadcast captions regardless of local CC setting
+      // This ensures others can see your captions even if they don't have CC enabled
       socket.emit('caption-transcription-broadcast', broadcastData);
     } else {
       console.warn('⚠️ [Syncfusion SpeechToText] Cannot broadcast - missing socket or callInfo');
@@ -1539,7 +1749,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         return newMap;
       });
 
-      // Broadcast to other participants via socket (so they see your captions too)
+      // Always broadcast to other participants via socket (so they see your captions too)
+      // This ensures others can see your captions even if they don't have CC enabled
       if (socket && callInfo) {
         const roomName = callInfo.roomName;
         const callId = callInfo.id || callInfo.callId || callInfo._id;
@@ -1586,11 +1797,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   }, [user, socket, callInfo]);
 
-  // Toggle captions using Syncfusion SpeechToText component
+  // Toggle captions - only controls DISPLAY, not transcription
+  // Transcription always runs when mic is enabled so others can see your captions
   const toggleCaption = useCallback(() => {
     if (isCaptionEnabledRef.current) {
-      // Turn off captions
-      console.log('🔇 Disabling captions...');
+      // Turn off caption DISPLAY (but keep transcription running)
+      console.log('🔇 Disabling caption display...');
       isCaptionEnabledRef.current = false;
 
       // Clear any pending caption clear timeout
@@ -1599,22 +1811,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         captionClearTimeoutRef.current = null;
       }
 
-      // Stop Syncfusion SpeechToText component
-      if (speechToTextRef.current) {
-        try {
-          if (typeof speechToTextRef.current.stop === 'function') {
-            speechToTextRef.current.stop();
-          }
-          console.log('✅ [Syncfusion SpeechToText] Stopped');
-        } catch (e) {
-          console.warn('⚠️ Error stopping Syncfusion SpeechToText:', e);
-        }
-      }
+      // DO NOT stop SpeechToText - transcription should continue
+      // This allows others to see your captions even if you don't have display enabled
+      console.log('📝 Transcription continues running - others can still see your captions');
 
       setIsCaptionEnabled(false);
       setCaptionText('');
-      setRemoteCaptions(new Map());
-      console.log('✅ Captions disabled');
+      // Clear local display but keep remoteCaptions map for when user re-enables
+      // setRemoteCaptions(new Map()); // Don't clear - keep data for when re-enabled
+      console.log('✅ Caption display disabled (transcription still active)');
     } else {
       // Turn on captions
       console.log('🎤 Enabling captions with Syncfusion SpeechToText...');
@@ -1895,13 +2100,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   }, [isAudioEnabled, localTracks, startSyncfusionComponent]);
 
-  // Auto-start Syncfusion SpeechToText component when enabled
+  // Auto-start Syncfusion SpeechToText component when mic is enabled
+  // Transcription always runs (regardless of subtitle display toggle) so others can see your captions
   useEffect(() => {
     // Check actual audio track state
     const audioTrack = localTracks.find(track => track.kind === 'audio');
     const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
     
-    if (isCaptionEnabled && actualAudioEnabled) {
+    // Always start transcription when mic is enabled (not dependent on caption display)
+    if (actualAudioEnabled) {
       // Wait for component to mount, then start it
       const timer = setTimeout(() => {
         if (speechToTextRef.current) {
@@ -1929,13 +2136,13 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         }
       };
     } else {
-      // Clear interval if captions are disabled or mic is muted
+      // Clear interval if mic is muted
       if (syncfusionCheckIntervalRef.current) {
         clearInterval(syncfusionCheckIntervalRef.current);
         syncfusionCheckIntervalRef.current = null;
       }
     }
-  }, [isCaptionEnabled, isAudioEnabled, localTracks, startSyncfusionComponent, checkSyncfusionStatus]);
+  }, [isAudioEnabled, localTracks, startSyncfusionComponent, checkSyncfusionStatus]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -2539,11 +2746,14 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       })()}
 
       {/* Syncfusion SpeechToText Component - Must be visible (but off-screen) for microphone access */}
+      {/* Always render when mic is enabled (regardless of subtitle display toggle) */}
+      {/* This ensures transcription always runs so others can see your captions */}
       {(() => {
         const audioTrack = localTracks.find(track => track.kind === 'audio');
         const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
         
-        if (isCaptionEnabled && actualAudioEnabled) {
+        // Always render SpeechToText when mic is enabled (not dependent on caption display)
+        if (actualAudioEnabled) {
           return (
             <div 
               style={{ 
@@ -2578,18 +2788,51 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             className="caption-content"
             ref={captionContentRef}
           >
+            {/* Scroll Buttons */}
+            {(showScrollUp || showScrollDown) && (
+              <div className="caption-scroll-buttons">
+                {showScrollUp && (
+                  <button
+                    type="button"
+                    className="caption-scroll-button"
+                    onClick={scrollToTop}
+                    aria-label="Scroll to top"
+                    title="Scroll to top"
+                  >
+                    ↑
+                  </button>
+                )}
+                {showScrollDown && (
+                  <button
+                    type="button"
+                    className="caption-scroll-button"
+                    onClick={scrollToBottom}
+                    aria-label="Scroll to bottom"
+                    title="Scroll to bottom"
+                  >
+                    ↓
+                  </button>
+                )}
+              </div>
+            )}
             {(() => {
               // Collect all captions to display - each participant separately (like Google Meet)
               const allCaptions = [];
               
               // Add captions from remoteCaptions map (from Syncfusion SpeechToText and socket broadcasts)
-              // Each participant gets one caption entry (the latest one)
-              remoteCaptions.forEach((caption, participantId) => {
+              // Support multiple caption entries per participant for new lines after pauses
+              remoteCaptions.forEach((caption, captionKey) => {
                 if (caption && caption.text && caption.text.trim()) {
+                  // Extract participant ID from captionKey (might be "participantId" or "participantId_timestamp")
+                  const participantId = captionKey.includes('_') 
+                    ? captionKey.split('_').slice(0, -1).join('_') 
+                    : captionKey;
+                  
                   // Use role from caption if available, otherwise get it
                   const role = caption.role || getParticipantRole(participantId) || 'Participant';
                   allCaptions.push({
-                    id: participantId,
+                    id: captionKey, // Use captionKey to support multiple entries per speaker
+                    participantId: participantId, // Store original participant ID for grouping
                     text: caption.text.trim(),
                     role: role,
                     speaker: caption.speaker || 'Participant',
@@ -2599,22 +2842,72 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
                 }
               });
 
-              // Sort by timestamp (oldest first, so newest appears at bottom after reverse)
-              allCaptions.sort((a, b) => {
+              // Deduplicate: For each participant, keep only the latest caption unless it's a new line entry
+              // Also remove exact duplicates (same text and participant)
+              const deduplicatedCaptions = [];
+              const participantLatestCaptions = new Map();
+              const seenTextKeys = new Set(); // Track seen text to prevent exact duplicates
+              
+              // First pass: collect all captions and find the latest for each participant
+              allCaptions.forEach(caption => {
+                const isNewLineEntry = caption.id.includes('_') && caption.id.split('_').length > 1;
+                const textKey = `${caption.participantId}_${caption.text.trim()}`;
+                
+                // Skip if we've already seen this exact text from this participant (duplicate)
+                if (seenTextKeys.has(textKey)) {
+                  return;
+                }
+                seenTextKeys.add(textKey);
+                
+                if (isNewLineEntry) {
+                  // This is a new line entry (has timestamp in key) - keep it
+                  deduplicatedCaptions.push(caption);
+                } else {
+                  // This is a regular caption entry - keep only the latest one per participant
+                  const existing = participantLatestCaptions.get(caption.participantId);
+                  if (!existing || new Date(caption.timestamp).getTime() > new Date(existing.timestamp).getTime()) {
+                    participantLatestCaptions.set(caption.participantId, caption);
+                  }
+                }
+              });
+              
+              // Add the latest captions for each participant (only if not already added as new line entry)
+              participantLatestCaptions.forEach(caption => {
+                // Check if this caption is already in deduplicatedCaptions (as a new line entry)
+                const alreadyAdded = deduplicatedCaptions.some(c => 
+                  c.participantId === caption.participantId && 
+                  c.text === caption.text &&
+                  Math.abs(new Date(c.timestamp).getTime() - new Date(caption.timestamp).getTime()) < 1000
+                );
+                if (!alreadyAdded) {
+                  deduplicatedCaptions.push(caption);
+                }
+              });
+              
+              // Sort by timestamp (oldest first, so newest appears at bottom)
+              deduplicatedCaptions.sort((a, b) => {
                 const timeA = new Date(a.timestamp || 0).getTime();
                 const timeB = new Date(b.timestamp || 0).getTime();
-                return timeA - timeB; // Oldest first (will be reversed in display)
+                return timeA - timeB; // Oldest first
               });
+              
+              const allCaptionsToDisplay = deduplicatedCaptions;
 
-              if (allCaptions.length > 0) {
+              if (allCaptionsToDisplay.length > 0) {
                 // Display each participant's caption separately (like Google Meet)
                 // Each participant gets their own caption line that updates dynamically
-                return allCaptions.map((caption) => {
+                return allCaptionsToDisplay.map((caption, index) => {
                   const roleDisplay = caption.role || 'Participant';
+                  // Check if this is a new line (different from previous caption by same speaker)
+                  const isNewLine = index === 0 || 
+                    allCaptionsToDisplay[index - 1].participantId !== caption.participantId ||
+                    (allCaptionsToDisplay[index - 1].participantId === caption.participantId && 
+                     new Date(caption.timestamp).getTime() - new Date(allCaptionsToDisplay[index - 1].timestamp).getTime() > 2000);
+                  
                   return (
                     <div 
                       key={`${caption.id}-${caption.timestamp}`} 
-                      className="caption-item"
+                      className={`caption-item ${isNewLine ? 'caption-new-line' : ''}`}
                     >
                       <span className="caption-speaker">{roleDisplay}:</span>
                       <span className="caption-text">{caption.text}</span>
