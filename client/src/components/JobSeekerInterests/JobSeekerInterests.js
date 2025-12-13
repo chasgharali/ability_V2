@@ -119,7 +119,9 @@ const JobSeekerInterests = () => {
     const gridRef = useRef(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const initialLoadDone = useRef(false);
-    const fetchInProgress = useRef(false);
+    const loadingInterestsRef = useRef(false);
+    const loadingRecruitersRef = useRef(false);
+    const loadingEventsRef = useRef(false);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -284,109 +286,110 @@ const JobSeekerInterests = () => {
         };
     }, [interests, loadingData]);
 
-    // Load all data when component mounts or filters change
+    // Load recruiters - only once on mount for Admin/GlobalSupport
+    const loadRecruiters = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingRecruitersRef.current) return;
+        if (initialLoadDone.current) return; // Already loaded
+        if (user?.role === 'Recruiter') return; // Recruiters don't need this
+        
+        try {
+            loadingRecruitersRef.current = true;
+            const recruiterResponse = await listUsers({ role: 'Recruiter', limit: 1000 });
+            setRecruiters(recruiterResponse.users || []);
+        } catch (error) {
+            console.error('Error loading recruiters:', error);
+        } finally {
+            loadingRecruitersRef.current = false;
+        }
+    }, [user?.role]);
+
+    // Load events - only once on mount
+    const loadEvents = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingEventsRef.current) return;
+        if (initialLoadDone.current) return; // Already loaded
+        
+        try {
+            loadingEventsRef.current = true;
+            const eventsResponse = await listEvents({ limit: 1000 });
+            setEvents(eventsResponse.events || []);
+        } catch (error) {
+            console.error('Error loading events:', error);
+        } finally {
+            loadingEventsRef.current = false;
+        }
+    }, []);
+
+    // Load interests with current filters
+    const loadInterests = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingInterestsRef.current) return;
+        
+        try {
+            loadingInterestsRef.current = true;
+            setLoadingData(true);
+            
+            console.log('Loading interests with filters:', filters);
+            const response = await jobSeekerInterestsAPI.getInterests(filters);
+
+            console.log('API Response:', response);
+
+            const interests = response.interests || [];
+            setInterests(interests);
+
+            // Update pagination from API response
+            if (response.pagination) {
+                console.log('Setting pagination:', response.pagination);
+                setPagination(response.pagination);
+            }
+
+            // Calculate stats - use totalInterests from pagination for accurate count
+            const totalInterests = response.pagination?.totalInterests || interests.length;
+            const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
+            const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
+            const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
+
+            setStats({
+                totalInterests: totalInterests,
+                uniqueJobSeekers,
+                uniqueBooths,
+                averageInterestsPerJobSeeker: avgInterests
+            });
+
+            if (interests.length === 0) {
+                console.log('No interests found. This could be because:');
+                console.log('1. No job seekers have expressed interest in booths yet');
+                console.log('2. User role restrictions are filtering out data');
+                console.log('3. Current filters are too restrictive');
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
+            showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
+        } finally {
+            loadingInterestsRef.current = false;
+            setLoadingData(false);
+        }
+    }, [filters, showToast]);
+
+    // Load recruiters and events on initial mount
     useEffect(() => {
         if (!user) return;
+        if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) return;
+        if (initialLoadDone.current) return;
 
-        // Only make request if user role is valid
-        if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) {
-            return;
-        }
+        loadRecruiters();
+        loadEvents();
+        initialLoadDone.current = true;
+    }, [user, loadRecruiters, loadEvents]);
 
-        // Prevent duplicate requests
-        if (fetchInProgress.current) {
-            console.log('Fetch already in progress, skipping...');
-            return;
-        }
+    // Load interests when filters change
+    useEffect(() => {
+        if (!user) return;
+        if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) return;
 
-        let cancelled = false;
-
-        const fetchAllData = async () => {
-            fetchInProgress.current = true;
-            
-            try {
-                setLoadingData(true);
-                
-                // Load recruiters and events only on initial load
-                if (!initialLoadDone.current) {
-                    if (user.role !== 'Recruiter') {
-                        try {
-                            const recruiterResponse = await listUsers({ role: 'Recruiter', limit: 1000 });
-                            if (!cancelled) {
-                                setRecruiters(recruiterResponse.users || []);
-                            }
-                        } catch (error) {
-                            console.error('Error loading recruiters:', error);
-                        }
-                    }
-                    
-                    try {
-                        const eventsResponse = await listEvents({ limit: 1000 });
-                        if (!cancelled) {
-                            setEvents(eventsResponse.events || []);
-                        }
-                    } catch (error) {
-                        console.error('Error loading events:', error);
-                    }
-                    
-                    initialLoadDone.current = true;
-                }
-                
-                // Load interests with current filters
-                console.log('Loading interests with filters:', filters);
-                const response = await jobSeekerInterestsAPI.getInterests(filters);
-
-                if (cancelled) return;
-
-                console.log('API Response:', response);
-
-                const interests = response.interests || [];
-                setInterests(interests);
-
-                // Update pagination from API response
-                if (response.pagination) {
-                    console.log('Setting pagination:', response.pagination);
-                    setPagination(response.pagination);
-                }
-
-                // Calculate stats - use totalInterests from pagination for accurate count
-                const totalInterests = response.pagination?.totalInterests || interests.length;
-                const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
-                const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
-                const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
-
-                setStats({
-                    totalInterests: totalInterests,
-                    uniqueJobSeekers,
-                    uniqueBooths,
-                    averageInterestsPerJobSeeker: avgInterests
-                });
-
-                if (interests.length === 0) {
-                    console.log('No interests found. This could be because:');
-                    console.log('1. No job seekers have expressed interest in booths yet');
-                    console.log('2. User role restrictions are filtering out data');
-                    console.log('3. Current filters are too restrictive');
-                }
-            } catch (error) {
-                if (cancelled) return;
-                console.error('Error loading data:', error);
-                showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
-            } finally {
-                if (!cancelled) {
-                    setLoadingData(false);
-                    fetchInProgress.current = false;
-                }
-            }
-        };
-
-        fetchAllData();
-
-        return () => {
-            cancelled = true;
-            fetchInProgress.current = false;
-        };
-    }, [user, filters.page, filters.limit, filters.eventId, filters.boothId, filters.recruiterId, filters.search, showToast]);
+        loadInterests();
+    }, [user, loadInterests]);
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({
@@ -750,8 +753,15 @@ const JobSeekerInterests = () => {
                             </div>
 
                             {/* Data Grid */}
-                            <div className="data-grid-container">
-                                {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                            <div className="data-grid-container" style={{ position: 'relative' }}>
+                                {loadingData && (
+                                    <div className="jsi-grid-loading-overlay">
+                                        <div className="jsi-loading-container">
+                                            <div className="jsi-loading-spinner" aria-label="Loading job seeker interests" role="status" aria-live="polite"></div>
+                                            <div className="jsi-loading-text">Loading job seeker interests...</div>
+                                        </div>
+                                    </div>
+                                )}
                                 <GridComponent
                                     ref={gridRef}
                                     dataSource={interests.map(r => ({ 

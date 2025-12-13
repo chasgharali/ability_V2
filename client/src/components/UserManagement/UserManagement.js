@@ -37,6 +37,7 @@ export default function UserManagement() {
   const toastRef = useRef(null);
   const deleteDialogRef = useRef(null);
   const gridRef = useRef(null);
+  const loadingUsersRef = useRef(false);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -130,7 +131,11 @@ export default function UserManagement() {
   }, []);
 
   const loadUsers = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (loadingUsersRef.current) return;
+    
     try {
+      loadingUsersRef.current = true;
       setLoading(true);
       // Only pass role parameter if roleFilter has a value
       // When "All Roles" is selected, don't pass role parameter at all
@@ -175,7 +180,10 @@ export default function UserManagement() {
     } catch (e) {
       console.error('Failed to load users', e);
       showToast('Failed to load users', 'Error');
-    } finally { setLoading(false); }
+    } finally { 
+      loadingUsersRef.current = false;
+      setLoading(false); 
+    }
   }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker]);
 
   const loadBoothsAndEvents = async () => {
@@ -587,7 +595,7 @@ export default function UserManagement() {
             </div>
 
             {mode === 'list' ? (
-              <div className="bm-grid-wrap">
+              <div className="bm-grid-wrap" style={{ position: 'relative' }}>
                 <div className="um-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                   {/* Role Filter - Left */}
                   <div style={{ width: '200px', flexShrink: 0 }}>
@@ -648,7 +656,14 @@ export default function UserManagement() {
                   </div>
                 </div>
                 <div aria-live="polite" className="sr-only">{liveMsg}</div>
-                {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                {loading && (
+                  <div className="um-grid-loading-overlay">
+                    <div className="um-loading-container">
+                      <div className="um-loading-spinner" aria-label="Loading users" role="status" aria-live="polite"></div>
+                      <div className="um-loading-text">Loading users...</div>
+                    </div>
+                  </div>
+                )}
                 <GridComponent
                   ref={gridRef}
                   dataSource={users.slice((currentPage - 1) * pageSize, currentPage * pageSize)}

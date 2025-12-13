@@ -111,6 +111,7 @@ export default function EventManagement() {
     const toastRef = useRef(null);
     const deleteDialogRef = useRef(null);
     const gridRef = useRef(null);
+    const loadingListRef = useRef(false);
 
     // RTE image upload helpers (Event Information editor)
     const rteInfoRef = useRef(null);
@@ -220,7 +221,11 @@ export default function EventManagement() {
     ];
 
     const loadEvents = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingListRef.current) return;
+        
         try {
+            loadingListRef.current = true;
             setLoadingList(true);
             // Fetch a very large number (10000) to ensure ALL records are loaded for client-side pagination and filtering
             // This allows all events to be displayed whether searching or not
@@ -308,11 +313,12 @@ export default function EventManagement() {
             console.error('Failed to load events', err);
             setEvents([]);
         } finally {
+            loadingListRef.current = false;
             setLoadingList(false);
         }
     }, [statusFilter, activeSearchQuery]);
 
-    const loadTerms = async () => {
+    const loadTerms = useCallback(async () => {
         try {
             const res = await termsConditionsAPI.getAll({ page: 1, limit: 100 });
             const list = res?.terms || [];
@@ -320,9 +326,21 @@ export default function EventManagement() {
         } catch (e) {
             console.error('Failed to load terms', e);
         }
-    };
+    }, []);
 
-    useEffect(() => { if (!loading) { loadEvents(); loadTerms(); } }, [loading, loadEvents]);
+    // Load events on mount and when filters change
+    useEffect(() => { 
+        if (!loading) { 
+            loadEvents(); 
+        } 
+    }, [loading, loadEvents]);
+
+    // Load terms only when user enters create or edit mode (not needed for list view)
+    useEffect(() => {
+        if ((mode === 'create' || mode === 'edit') && termsOptions.length === 0) {
+            loadTerms();
+        }
+    }, [mode, loadTerms, termsOptions.length]);
 
     // Sync header and content horizontal scrolling
     useEffect(() => {
@@ -754,7 +772,7 @@ export default function EventManagement() {
                         </div>
 
                         {mode === 'list' ? (
-                            <div className="bm-grid-wrap">
+                            <div className="bm-grid-wrap" style={{ position: 'relative' }}>
                                 <div className="em-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                                     {/* Status Filter - Left */}
                                     <div style={{ width: '200px', flexShrink: 0 }}>
@@ -815,7 +833,14 @@ export default function EventManagement() {
                                         )}
                                     </div>
                                 </div>
-                                {loadingList && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                                {loadingList && (
+                                    <div className="em-grid-loading-overlay">
+                                        <div className="em-loading-container">
+                                            <div className="em-loading-spinner" aria-label="Loading events" role="status" aria-live="polite"></div>
+                                            <div className="em-loading-text">Loading events...</div>
+                                        </div>
+                                    </div>
+                                )}
                                 <GridComponent
                                     ref={gridRef}
                                     dataSource={events.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
