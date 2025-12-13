@@ -264,12 +264,26 @@ const validateRefreshToken = async (req, res, next) => {
             });
         }
 
-        const tokenExists = user.refreshTokens.some(token => token.token === refreshToken);
+        // Find the token and check if it's expired (7 days)
+        const { isTokenExpired } = require('../utils/tokenCleanup');
+        const tokenObj = user.refreshTokens.find(t => t.token === refreshToken);
 
-        if (!tokenExists) {
+        if (!tokenObj) {
             return res.status(401).json({
                 error: 'Invalid refresh token',
                 message: 'Refresh token not found'
+            });
+        }
+
+        // Check if token is expired (older than 7 days)
+        if (isTokenExpired(tokenObj)) {
+            // Remove the expired token
+            user.refreshTokens = user.refreshTokens.filter(t => t.token !== refreshToken);
+            await user.save();
+            
+            return res.status(401).json({
+                error: 'Refresh token expired',
+                message: 'Your refresh token has expired. Please log in again.'
             });
         }
 
