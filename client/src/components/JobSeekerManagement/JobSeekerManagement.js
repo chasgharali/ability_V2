@@ -112,6 +112,8 @@ export default function JobSeekerManagement() {
   const toastRef = useRef(null);
   const gridRef = useRef(null);
   const deleteDialogRef = useRef(null);
+  const loadingJobSeekersRef = useRef(false);
+  const loadingEventsRef = useRef(false);
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
   const eventFilterRef = useRef('');
@@ -305,7 +307,11 @@ export default function JobSeekerManagement() {
   };
 
   const loadJobSeekers = useCallback(async (page, limit, search, isActive, event) => {
+    // Prevent multiple simultaneous fetches
+    if (loadingJobSeekersRef.current) return;
+    
     try {
+      loadingJobSeekersRef.current = true;
       // Only set main loading for initial load or page changes, not for search
       const isSearch = search && search.trim();
       if (!isSearch) {
@@ -402,6 +408,7 @@ export default function JobSeekerManagement() {
       console.error('Load failed', e);
       showToast('Failed to load job seekers', 'Error');
     } finally {
+      loadingJobSeekersRef.current = false;
       setLoading(false);
       setSearchLoading(false);
       setEventSearchLoading(false);
@@ -427,20 +434,27 @@ export default function JobSeekerManagement() {
     eventFilterRef.current = eventFilter;
   }, [eventFilter]);
 
-  // Load events on mount
+  // Load events on mount - memoized to prevent unnecessary re-renders
+  const loadEventsData = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (loadingEventsRef.current) return;
+    
+    try {
+      loadingEventsRef.current = true;
+      const res = await listEvents({ page: 1, limit: 200 });
+      setEvents(res.events || []);
+    } catch (e) {
+      console.error('Failed to load events', e);
+      showToast('Failed to load events', 'Error');
+    } finally {
+      loadingEventsRef.current = false;
+    }
+  }, [showToast]);
+
+  // Load events on mount - only runs once
   useEffect(() => {
-    const loadEventsData = async () => {
-      try {
-        const res = await listEvents({ page: 1, limit: 200 });
-        setEvents(res.events || []);
-      } catch (e) {
-        console.error('Failed to load events', e);
-        showToast('Failed to load events', 'Error');
-      }
-    };
     loadEventsData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadEventsData]);
 
   // Initial load on mount - only runs once
   useEffect(() => {
@@ -2215,9 +2229,16 @@ export default function JobSeekerManagement() {
             </div>
 
             {/* Data Grid */}
-            {loading && <div style={{ marginBottom: 12 }}>Loading…</div>}
             {mode === 'list' && !isTransitioning && (
               <div className="bm-grid-wrap" style={{ position: 'relative', display: isTransitioning ? 'none' : 'block' }}>
+                {loading && (
+                  <div className="jsm-grid-loading-overlay">
+                    <div className="jsm-loading-container">
+                      <div className="jsm-loading-spinner" aria-label="Loading job seekers" role="status" aria-live="polite"></div>
+                      <div className="jsm-loading-text">Loading job seekers...</div>
+                    </div>
+                  </div>
+                )}
                 {searchLoading && (
                   <div style={{
                     position: 'absolute',
