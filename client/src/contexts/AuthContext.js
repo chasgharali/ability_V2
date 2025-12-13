@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
 
     // Refresh auth token function
     const refreshAuthToken = async () => {
-        const refreshToken = sessionStorage.getItem('refreshToken');
+        const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
             throw new Error('No refresh token available');
         }
@@ -29,14 +29,14 @@ export const AuthProvider = ({ children }) => {
             });
 
             const { tokens } = response.data;
-            sessionStorage.setItem('token', tokens.accessToken);
-            sessionStorage.setItem('refreshToken', tokens.refreshToken);
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
             
             return tokens.accessToken;
         } catch (error) {
             // Refresh failed, clear auth and redirect to login
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('refreshToken');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
             setUser(null);
             window.location.href = '/login';
             throw error;
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
         // Request interceptor - add token to requests
         const requestInterceptor = axios.interceptors.request.use(
             (config) => {
-                const token = sessionStorage.getItem('token');
+                const token = localStorage.getItem('token');
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }
@@ -131,7 +131,7 @@ export const AuthProvider = ({ children }) => {
 
     // Check for existing token on mount
     useEffect(() => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         if (token) {
             // Verify token with backend
             verifyToken(token);
@@ -148,8 +148,8 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data.user);
         } catch (error) {
             console.error('Token verification failed:', error);
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('refreshToken');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
         } finally {
             setLoading(false);
         }
@@ -159,7 +159,7 @@ export const AuthProvider = ({ children }) => {
     const updateProfile = async (profileData) => {
         try {
             setError(null);
-            const token = sessionStorage.getItem('token');
+            const token = localStorage.getItem('token');
             const response = await axios.put('/api/auth/profile', profileData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -177,7 +177,7 @@ export const AuthProvider = ({ children }) => {
     const changePassword = async (currentPassword, newPassword) => {
         try {
             setError(null);
-            const token = sessionStorage.getItem('token');
+            const token = localStorage.getItem('token');
             const response = await axios.post('/api/auth/change-password', { currentPassword, newPassword }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -199,8 +199,8 @@ export const AuthProvider = ({ children }) => {
             });
 
             const { tokens, user } = response.data;
-            sessionStorage.setItem('token', tokens.accessToken);
-            sessionStorage.setItem('refreshToken', tokens.refreshToken);
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
             setUser(user);
             return { success: true };
         } catch (error) {
@@ -228,8 +228,8 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.post('/api/auth/register', userData);
 
             const { tokens, user } = response.data;
-            sessionStorage.setItem('token', tokens.accessToken);
-            sessionStorage.setItem('refreshToken', tokens.refreshToken);
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
             setUser(user);
             return { success: true };
         } catch (error) {
@@ -240,8 +240,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('refreshToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         setUser(null);
         setError(null);
     };

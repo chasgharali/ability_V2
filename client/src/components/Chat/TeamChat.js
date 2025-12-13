@@ -88,7 +88,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
 
     // Initialize socket connection
     useEffect(() => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         if (!token || !user) {
             console.log('⚠️ Skipping socket connection - no token or user');
             return;

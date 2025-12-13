@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 function authHeaders() {
-    const token = sessionStorage.getItem('token');
+    const token = localStorage.getItem('token');
     return { Authorization: `Bearer ${token}` };
 }
 
