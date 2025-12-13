@@ -1010,7 +1010,7 @@ export default function JobSeekerManagement() {
     setUploading(true);
     setUploadingType(fileType);
     try {
-      const token = sessionStorage.getItem('token');
+      const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
       // Request presigned URL

@@ -19,8 +19,8 @@ export default function QueueInviteResolver() {
 
         // Step 1: Check if user is logged in
         if (!user) {
-          // Store the invite slug in sessionStorage to redirect back after login
-          sessionStorage.setItem('pendingQueueInvite', inviteSlug);
+          // Store the invite slug in localStorage to redirect back after login
+          localStorage.setItem('pendingQueueInvite', inviteSlug);
           navigate('/login', { 
             state: { 
               from: `/queue/${inviteSlug}`,

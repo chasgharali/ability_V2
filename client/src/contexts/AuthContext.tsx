@@ -141,8 +141,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check for existing auth on mount
     useEffect(() => {
         const checkAuth = async () => {
-            const token = sessionStorage.getItem('token');
-            const refreshToken = sessionStorage.getItem('refreshToken');
+            const token = localStorage.getItem('token');
+            const refreshToken = localStorage.getItem('refreshToken');
 
             if (token && refreshToken) {
                 try {
@@ -165,8 +165,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         await refreshAuthToken();
                     } catch (refreshError) {
                         // Refresh failed, clear auth
-                        sessionStorage.removeItem('token');
-                        sessionStorage.removeItem('refreshToken');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('refreshToken');
                         dispatch({ type: 'AUTH_LOGOUT' });
                     }
                 }
@@ -201,8 +201,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const { user, tokens } = response.data;
 
             // Store tokens
-            sessionStorage.setItem('token', tokens.accessToken);
-            sessionStorage.setItem('refreshToken', tokens.refreshToken);
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
 
             // Set token in API headers
             api.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
@@ -241,8 +241,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const { user, tokens } = response.data;
 
             // Store tokens
-            sessionStorage.setItem('token', tokens.accessToken);
-            sessionStorage.setItem('refreshToken', tokens.refreshToken);
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
 
             // Set token in API headers
             api.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
@@ -269,8 +269,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Logout function
     const logout = (): void => {
         // Clear tokens
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('refreshToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
 
         // Clear API headers
         delete api.defaults.headers.common['Authorization'];
@@ -294,8 +294,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const { tokens } = response.data;
 
             // Store new tokens
-            sessionStorage.setItem('token', tokens.accessToken);
-            sessionStorage.setItem('refreshToken', tokens.refreshToken);
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
 
             // Set new token in API headers
             api.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;

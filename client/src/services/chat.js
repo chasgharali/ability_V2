@@ -2,9 +2,9 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api/chats';
 
-// Get auth token from sessionStorage
+// Get auth token from localStorage
 const getAuthToken = () => {
-    const token = sessionStorage.getItem('token');
+    const token = localStorage.getItem('token');
     return token ? `Bearer ${token}` : '';
 };
 

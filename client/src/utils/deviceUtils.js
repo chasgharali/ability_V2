@@ -16,7 +16,7 @@ export const isDeviceIdValid = (deviceId, availableDevices) => {
 };
 
 /**
- * Validates and clears invalid device IDs from sessionStorage
+ * Validates and clears invalid device IDs from localStorage
  * This should be called before attempting to use stored device preferences
  * @returns {Promise<{audioDeviceId: string | null, videoDeviceId: string | null}>}
  */
@@ -41,23 +41,23 @@ export const validateAndCleanDevicePreferences = async () => {
     const audioDevices = devices.filter(d => d.kind === 'audioinput');
     const videoDevices = devices.filter(d => d.kind === 'videoinput');
 
-    const savedAudioDeviceId = sessionStorage.getItem('preferredAudioDeviceId');
-    const savedVideoDeviceId = sessionStorage.getItem('preferredVideoDeviceId');
+    const savedAudioDeviceId = localStorage.getItem('preferredAudioDeviceId');
+    const savedVideoDeviceId = localStorage.getItem('preferredVideoDeviceId');
 
     let validAudioDeviceId = savedAudioDeviceId;
     let validVideoDeviceId = savedVideoDeviceId;
 
     // Validate audio device
     if (savedAudioDeviceId && !isDeviceIdValid(savedAudioDeviceId, audioDevices)) {
-      console.warn('Invalid audio device ID found in sessionStorage, clearing:', savedAudioDeviceId);
-      sessionStorage.removeItem('preferredAudioDeviceId');
+      console.warn('Invalid audio device ID found in localStorage, clearing:', savedAudioDeviceId);
+      localStorage.removeItem('preferredAudioDeviceId');
       validAudioDeviceId = null;
     }
 
     // Validate video device
     if (savedVideoDeviceId && !isDeviceIdValid(savedVideoDeviceId, videoDevices)) {
-      console.warn('Invalid video device ID found in sessionStorage, clearing:', savedVideoDeviceId);
-      sessionStorage.removeItem('preferredVideoDeviceId');
+      console.warn('Invalid video device ID found in localStorage, clearing:', savedVideoDeviceId);
+      localStorage.removeItem('preferredVideoDeviceId');
       validVideoDeviceId = null;
     }
 
@@ -68,8 +68,8 @@ export const validateAndCleanDevicePreferences = async () => {
   } catch (error) {
     console.error('Error validating device preferences:', error);
     // On error, clear both preferences to be safe
-    sessionStorage.removeItem('preferredAudioDeviceId');
-    sessionStorage.removeItem('preferredVideoDeviceId');
+    localStorage.removeItem('preferredAudioDeviceId');
+    localStorage.removeItem('preferredVideoDeviceId');
     return {
       audioDeviceId: null,
       videoDeviceId: null

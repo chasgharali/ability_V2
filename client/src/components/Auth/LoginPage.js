@@ -31,9 +31,9 @@ const LoginPage = () => {
     useEffect(() => {
         if (!loading && user && !isLoggingInRef.current) {
             // Check for pending queue invite first (highest priority)
-            const pendingQueueInvite = sessionStorage.getItem('pendingQueueInvite');
+            const pendingQueueInvite = localStorage.getItem('pendingQueueInvite');
             if (pendingQueueInvite) {
-                sessionStorage.removeItem('pendingQueueInvite');
+                localStorage.removeItem('pendingQueueInvite');
                 navigate(`/queue/${pendingQueueInvite}`, { replace: true });
                 return;
             }
@@ -108,17 +108,17 @@ const LoginPage = () => {
             const result = await login(formData.email, formData.password, loginType);
             if (result.success) {
                 // Check for pending queue invite first (highest priority)
-                const pendingQueueInvite = sessionStorage.getItem('pendingQueueInvite');
+                const pendingQueueInvite = localStorage.getItem('pendingQueueInvite');
                 if (pendingQueueInvite) {
-                    sessionStorage.removeItem('pendingQueueInvite');
+                    localStorage.removeItem('pendingQueueInvite');
                     isLoggingInRef.current = false;
                     // Navigate immediately - useEffect will be blocked by isLoggingInRef
                     navigate(`/queue/${pendingQueueInvite}`, { replace: true });
                     return;
                 }
                 
-                // Clear stored redirect path from sessionStorage
-                sessionStorage.removeItem('eventRegistrationRedirect');
+                // Clear stored redirect path from localStorage
+                localStorage.removeItem('eventRegistrationRedirect');
                 // Navigate to redirect path if available, otherwise to dashboard
                 isLoggingInRef.current = false;
                 if (redirectPath) {

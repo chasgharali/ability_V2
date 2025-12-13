@@ -547,12 +547,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
           // Clear invalid device IDs
           if (videoDeviceId) {
-            sessionStorage.removeItem('preferredVideoDeviceId');
-            console.log('Cleared invalid video device ID from sessionStorage');
+            localStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from localStorage');
           }
           if (audioDeviceId) {
-            sessionStorage.removeItem('preferredAudioDeviceId');
-            console.log('Cleared invalid audio device ID from sessionStorage');
+            localStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from localStorage');
           }
 
           // Retry without device constraints
@@ -689,12 +689,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
           // Clear invalid device IDs
           if (videoDeviceId) {
-            sessionStorage.removeItem('preferredVideoDeviceId');
-            console.log('Cleared invalid video device ID from sessionStorage');
+            localStorage.removeItem('preferredVideoDeviceId');
+            console.log('Cleared invalid video device ID from localStorage');
           }
           if (audioDeviceId) {
-            sessionStorage.removeItem('preferredAudioDeviceId');
-            console.log('Cleared invalid audio device ID from sessionStorage');
+            localStorage.removeItem('preferredAudioDeviceId');
+            console.log('Cleared invalid audio device ID from localStorage');
           }
 
           // Retry without device constraints
