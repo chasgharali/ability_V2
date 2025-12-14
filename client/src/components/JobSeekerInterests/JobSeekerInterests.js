@@ -123,6 +123,7 @@ const JobSeekerInterests = () => {
     const loadingInterestsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
+    const fetchInProgress = useRef(false);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -346,6 +347,52 @@ const JobSeekerInterests = () => {
                 const response = await jobSeekerInterestsAPI.getInterests(filtersForAPI);
 
                 if (cancelled) return;
+
+                const interests = response.interests || [];
+                setInterests(interests);
+
+                // Extract unique legacy event IDs from interests for filter dropdown
+                const legacyEventIds = new Set();
+                interests.forEach(interest => {
+                    if (interest.legacyEventId && !interest.event) {
+                        legacyEventIds.add(interest.legacyEventId);
+                    }
+                });
+                setLegacyEventIds(Array.from(legacyEventIds));
+
+                // Update pagination from API response
+                if (response.pagination) {
+                    console.log('Setting pagination:', response.pagination);
+                    setPagination(response.pagination);
+                }
+
+                // Calculate stats
+                const totalInterests = response.pagination?.totalInterests || interests.length;
+                const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
+                const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
+                const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
+
+                setStats({
+                    totalInterests: totalInterests,
+                    uniqueJobSeekers,
+                    uniqueBooths,
+                    averageInterestsPerJobSeeker: avgInterests
+                });
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                fetchInProgress.current = false;
+                setLoadingData(false);
+            }
+        };
+
+        fetchAllData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [user, filters]);
+
     // Load recruiters - only once on mount for Admin/GlobalSupport
     const loadRecruiters = useCallback(async () => {
         // Prevent multiple simultaneous fetches
@@ -397,10 +444,8 @@ const JobSeekerInterests = () => {
 
             const interests = response.interests || [];
             setInterests(interests);
-                const interests = response.interests || [];
-                setInterests(interests);
                 
-                // Extract unique legacy event IDs from interests for filter dropdown
+            // Extract unique legacy event IDs from interests for filter dropdown
                 const legacyEventIds = new Set();
                 interests.forEach(interest => {
                     if (interest.legacyEventId && !interest.event) {
