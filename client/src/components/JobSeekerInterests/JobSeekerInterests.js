@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { listEvents } from '../../services/events';
 import { listUsers } from '../../services/users';
+import { listBooths } from '../../services/booths';
 import AdminHeader from '../Layout/AdminHeader';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import AdminSidebar from '../Layout/AdminSidebar';
@@ -114,6 +115,7 @@ const JobSeekerInterests = () => {
     const [interests, setInterests] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
+    const [booths, setBooths] = useState([]);
     const [legacyEventIds, setLegacyEventIds] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
@@ -123,6 +125,7 @@ const JobSeekerInterests = () => {
     const loadingInterestsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
+    const loadingBoothsRef = useRef(false);
     const fetchInProgress = useRef(false);
 
     // Filters
@@ -428,6 +431,23 @@ const JobSeekerInterests = () => {
         }
     }, []);
 
+    // Load booths - only once on mount
+    const loadBooths = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingBoothsRef.current) return;
+        if (initialLoadDone.current) return; // Already loaded
+        
+        try {
+            loadingBoothsRef.current = true;
+            const boothsResponse = await listBooths({ limit: 1000 });
+            setBooths(boothsResponse.booths || []);
+        } catch (error) {
+            console.error('Error loading booths:', error);
+        } finally {
+            loadingBoothsRef.current = false;
+        }
+    }, []);
+
     // Load interests with current filters
     const loadInterests = useCallback(async () => {
         // Prevent multiple simultaneous fetches
@@ -488,7 +508,7 @@ const JobSeekerInterests = () => {
         }
     }, [filters, showToast]);
 
-    // Load recruiters and events on initial mount
+    // Load recruiters, events, and booths on initial mount
     useEffect(() => {
         if (!user) return;
         if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) return;
@@ -496,8 +516,9 @@ const JobSeekerInterests = () => {
 
         loadRecruiters();
         loadEvents();
+        loadBooths();
         initialLoadDone.current = true;
-    }, [user, loadRecruiters, loadEvents]);
+    }, [user, loadRecruiters, loadEvents, loadBooths]);
 
     // Load interests when filters change
     useEffect(() => {
@@ -954,12 +975,22 @@ const JobSeekerInterests = () => {
                                             </div>
                                         )}
                                         {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                            <Input
-                                                label="Booth ID"
-                                                value={filters.boothId}
-                                                onChange={(e) => handleFilterChange('boothId', e.target.value)}
-                                                placeholder="Enter booth ID..."
-                                            />
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label htmlFor="booth-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
+                                                    Booth
+                                                </label>
+                                                <DropDownListComponent
+                                                    id="booth-filter-dropdown"
+                                                    dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
+                                                    fields={{ value: 'value', text: 'text' }}
+                                                    value={filters.boothId}
+                                                    change={(e) => handleFilterChange('boothId', e.value || '')}
+                                                    placeholder="Select Booth"
+                                                    cssClass="filter-dropdown"
+                                                    popupHeight="300px"
+                                                    width="100%"
+                                                />
+                                            </div>
                                         )}
                                         <div className="filter-actions">
                                             <ButtonComponent
