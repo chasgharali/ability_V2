@@ -910,13 +910,27 @@ export default function UserManagement() {
                 )}
               </div>
             ) : (
-              <form className="account-form" onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
+              <form className="account-form" onSubmit={(e) => { e.preventDefault(); }} style={{ maxWidth: 720 }}>
                 <Input label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
                 <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
                 <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
                 <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
                 <div className="password-field-container">
-                  <Input label={editingId ? "New Password (leave blank to keep current)" : "Password"} type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setField('password', e.target.value)} required={!editingId} />
+                  <Input 
+                    label={editingId ? "New Password (leave blank to keep current)" : "Password"} 
+                    type={showPwd ? 'text' : 'password'} 
+                    value={form.password} 
+                    onChange={(e) => setField('password', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                      }
+                    }}
+                    autoComplete="new-password"
+                    required={!editingId} 
+                  />
                   <ButtonComponent 
                     cssClass="e-outline e-primary e-small password-toggle-btn" 
                     aria-pressed={showPwd} 
@@ -927,7 +941,21 @@ export default function UserManagement() {
                   </ButtonComponent>
                 </div>
                 <div className="password-field-container">
-                  <Input label={editingId ? "Confirm New Password (leave blank to keep current)" : "Confirm Password"} type={showConfirmPwd ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required={!editingId} />
+                  <Input 
+                    label={editingId ? "Confirm New Password (leave blank to keep current)" : "Confirm Password"} 
+                    type={showConfirmPwd ? 'text' : 'password'} 
+                    value={form.confirmPassword} 
+                    onChange={(e) => setField('confirmPassword', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                      }
+                    }}
+                    autoComplete="new-password"
+                    required={!editingId} 
+                  />
                   <ButtonComponent 
                     cssClass="e-outline e-primary e-small password-toggle-btn" 
                     aria-pressed={showConfirmPwd} 
