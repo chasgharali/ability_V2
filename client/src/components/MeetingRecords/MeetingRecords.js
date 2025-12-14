@@ -9,7 +9,6 @@ import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
-import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
 import { Input } from '../UI/FormComponents';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
@@ -17,6 +16,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
 import { listEvents } from '../../services/events';
+import { listBooths } from '../../services/booths';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 
@@ -116,6 +116,7 @@ export default function MeetingRecords() {
     const [meetingRecords, setMeetingRecords] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
+    const [booths, setBooths] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
@@ -123,6 +124,7 @@ export default function MeetingRecords() {
     const loadingStatsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
+    const loadingBoothsRef = useRef(false);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -425,6 +427,21 @@ export default function MeetingRecords() {
         }
     }, []);
 
+    const loadBooths = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingBoothsRef.current) return;
+        
+        try {
+            loadingBoothsRef.current = true;
+            const response = await listBooths({ limit: 1000 });
+            setBooths(response.booths || []);
+        } catch (error) {
+            console.error('Error loading booths:', error);
+        } finally {
+            loadingBoothsRef.current = false;
+        }
+    }, []);
+
     // Load data when user is available or filters change
     useEffect(() => {
         if (user) {
@@ -432,8 +449,9 @@ export default function MeetingRecords() {
             loadStats();
             loadRecruiters();
             loadEvents();
+            loadBooths();
         }
-    }, [user, loadMeetingRecords, loadStats, loadRecruiters, loadEvents, location.key]);
+    }, [user, loadMeetingRecords, loadStats, loadRecruiters, loadEvents, loadBooths, location.key]);
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({
@@ -853,9 +871,7 @@ export default function MeetingRecords() {
         setFilters({
             recruiterId: '',
             eventId: '',
-            status: '',
-            startDate: '',
-            endDate: '',
+            boothId: '',
             search: '',
             page: 1,
             limit: 10,
@@ -1242,31 +1258,9 @@ export default function MeetingRecords() {
                             </div>
                         </div>
 
-                        {/* Search and Status Filter Row */}
+                        {/* Search Row */}
                         <div className="mr-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            {/* Status Filter - Left */}
-                            <div style={{ width: '200px', flexShrink: 0 }}>
-                                <DropDownListComponent
-                                    id="status-filter-dropdown-main"
-                                    dataSource={[
-                                        { value: '', text: 'All Statuses' },
-                                        { value: 'scheduled', text: 'Scheduled' },
-                                        { value: 'active', text: 'Active' },
-                                        { value: 'completed', text: 'Completed' },
-                                        { value: 'cancelled', text: 'Cancelled' },
-                                        { value: 'failed', text: 'Failed' },
-                                        { value: 'left_with_message', text: 'Left Message' }
-                                    ]}
-                                    fields={{ value: 'value', text: 'text' }}
-                                    value={filters.status}
-                                    change={(e) => handleFilterChange('status', e.value || '')}
-                                    placeholder="Select Status"
-                                    cssClass="status-filter-dropdown"
-                                    popupHeight="300px"
-                                    width="100%"
-                                />
-                            </div>
-                            {/* Search Section - Right */}
+                            {/* Search Section */}
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                 <div style={{ marginBottom: 0 }}>
                                     <Input
@@ -1326,7 +1320,7 @@ export default function MeetingRecords() {
                             >
                                 <h3>
                                     Filters
-                                    {(filters.recruiterId || filters.eventId || filters.startDate || filters.endDate) && (
+                                    {(filters.recruiterId || filters.eventId || filters.boothId) && (
                                         <span className="active-filters-indicator">●</span>
                                     )}
                                 </h3>
@@ -1371,53 +1365,19 @@ export default function MeetingRecords() {
                                     />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="status-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        Status
+                                    <label htmlFor="booth-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
+                                        Booth
                                     </label>
                                     <DropDownListComponent
-                                        id="status-filter-dropdown"
-                                        dataSource={[
-                                            { value: '', text: 'All Statuses' },
-                                            { value: 'scheduled', text: 'Scheduled' },
-                                            { value: 'active', text: 'Active' },
-                                            { value: 'completed', text: 'Completed' },
-                                            { value: 'cancelled', text: 'Cancelled' },
-                                            { value: 'failed', text: 'Failed' },
-                                            { value: 'left_with_message', text: 'Left Message' }
-                                        ]}
+                                        id="booth-filter-dropdown"
+                                        dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
                                         fields={{ value: 'value', text: 'text' }}
-                                        value={filters.status}
-                                        change={(e) => handleFilterChange('status', e.value || '')}
-                                        placeholder="Select Status"
+                                        value={filters.boothId}
+                                        change={(e) => handleFilterChange('boothId', e.value || '')}
+                                        placeholder="Select Booth"
                                         cssClass="filter-dropdown"
                                         popupHeight="300px"
                                         width="100%"
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="start-date-picker" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        Start Date
-                                    </label>
-                                    <DateTimePickerComponent
-                                        id="start-date-picker"
-                                        value={filters.startDate ? new Date(filters.startDate) : null}
-                                        change={(e) => handleFilterChange('startDate', e.value ? e.value.toISOString() : '')}
-                                        placeholder="Select Start Date"
-                                        width="100%"
-                                        cssClass="filter-datetime"
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="end-date-picker" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        End Date
-                                    </label>
-                                    <DateTimePickerComponent
-                                        id="end-date-picker"
-                                        value={filters.endDate ? new Date(filters.endDate) : null}
-                                        change={(e) => handleFilterChange('endDate', e.value ? e.value.toISOString() : '')}
-                                        placeholder="Select End Date"
-                                        width="100%"
-                                        cssClass="filter-datetime"
                                     />
                                 </div>
                                 <div className="filter-actions">
