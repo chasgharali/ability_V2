@@ -31,10 +31,10 @@ export default function BoothQueueEntry() {
       // Load event, booth, and interpreter categories
       const [eventRes, boothRes, interpreterRes] = await Promise.all([
         fetch(`/api/events/slug/${eventSlug}`, {
-          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }),
         fetch(`/api/booths/${boothId}`, {
-          headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }),
         interpreterCategoriesAPI.getActive()
       ]);
@@ -123,14 +123,14 @@ export default function BoothQueueEntry() {
 
   const handleExit = () => {
     // Don't leave queue on exit from entry form - user hasn't joined yet
-    // Clear any sessionStorage data for this booth to prevent restoration logic from triggering
+    // Clear any localStorage data for this booth to prevent restoration logic from triggering
     try {
       
-      sessionStorage.removeItem(`queuePos_${boothId}`);
-      sessionStorage.removeItem(`serving_${boothId}`);
-      sessionStorage.removeItem(`queueToken_${boothId}`);
+      localStorage.removeItem(`queuePos_${boothId}`);
+      localStorage.removeItem(`serving_${boothId}`);
+      localStorage.removeItem(`queueToken_${boothId}`);
     } catch (e) {
-      // Ignore sessionStorage errors
+      // Ignore localStorage errors
     }
     // Use eventSlug from URL params - same as how handleCallEnd and handleLeaveQueue work in BoothQueueWaiting
     // This ensures we navigate to the same event page the user came from

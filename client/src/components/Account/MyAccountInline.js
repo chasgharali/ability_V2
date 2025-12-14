@@ -322,7 +322,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
 
     setSavingEmail(true);
     try {
-      const token = sessionStorage.getItem('token');
+      const token = localStorage.getItem('token');
       const response = await axios.post('/api/users/me/change-email', 
         { newEmail: emailForm.newEmail },
         { headers: { Authorization: `Bearer ${token}` } }

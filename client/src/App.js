@@ -85,7 +85,7 @@ function App() {
             // Check if this is a queue invite link - store it for redirect after login
             if (location.pathname.startsWith('/queue/')) {
                 const inviteSlug = location.pathname.replace('/queue/', '');
-                sessionStorage.setItem('pendingQueueInvite', inviteSlug);
+                localStorage.setItem('pendingQueueInvite', inviteSlug);
             }
             // Pass the original location so login can redirect back
             return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;

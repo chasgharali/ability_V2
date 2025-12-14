@@ -23,7 +23,7 @@ const Chat = () => {
 
     // Initialize socket connection
     useEffect(() => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         if (!token) return;
 
         const socketUrl = getSocketUrl();

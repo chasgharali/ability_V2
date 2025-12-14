@@ -119,6 +119,10 @@ export default function MeetingRecords() {
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
+    const loadingMeetingRecordsRef = useRef(false);
+    const loadingStatsRef = useRef(false);
+    const loadingRecruitersRef = useRef(false);
+    const loadingEventsRef = useRef(false);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -304,7 +308,11 @@ export default function MeetingRecords() {
     };
 
     const loadMeetingRecords = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingMeetingRecordsRef.current) return;
+        
         try {
+            loadingMeetingRecordsRef.current = true;
             setLoadingData(true);
             console.log('📡 Loading meeting records with filters:', filters);
             const response = await meetingRecordsAPI.getMeetingRecords(filters);
@@ -365,39 +373,59 @@ export default function MeetingRecords() {
                 hasPrev: false
             });
         } finally {
+            loadingMeetingRecordsRef.current = false;
             setLoadingData(false);
         }
     }, [filters]);
 
     const loadStats = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingStatsRef.current) return;
+        
         try {
+            loadingStatsRef.current = true;
             const statsData = await meetingRecordsAPI.getStats(filters);
             setStats(statsData);
         } catch (error) {
             console.error('Error loading stats:', error);
+        } finally {
+            loadingStatsRef.current = false;
         }
     }, [filters]);
 
     const loadRecruiters = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingRecruitersRef.current) return;
+        
         try {
+            loadingRecruitersRef.current = true;
             if (['Admin', 'GlobalSupport'].includes(user?.role)) {
                 const response = await listUsers({ role: 'Recruiter', limit: 1000 });
                 setRecruiters(response.users || []);
             }
         } catch (error) {
             console.error('Error loading recruiters:', error);
+        } finally {
+            loadingRecruitersRef.current = false;
         }
     }, [user?.role]);
 
     const loadEvents = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingEventsRef.current) return;
+        
         try {
+            loadingEventsRef.current = true;
             const response = await listEvents({ limit: 1000 });
             setEvents(response.events || []);
         } catch (error) {
             console.error('Error loading events:', error);
+        } finally {
+            loadingEventsRef.current = false;
         }
     }, []);
 
+    // Load data when user is available or filters change
     useEffect(() => {
         if (user) {
             loadMeetingRecords();
@@ -405,8 +433,7 @@ export default function MeetingRecords() {
             loadRecruiters();
             loadEvents();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, filters, location.key]);
+    }, [user, loadMeetingRecords, loadStats, loadRecruiters, loadEvents, location.key]);
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({
@@ -1444,8 +1471,15 @@ export default function MeetingRecords() {
                         )}
 
                         {/* Data Grid */}
-                        <div className="data-grid-container">
-                            {loadingData && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                        <div className="data-grid-container" style={{ position: 'relative' }}>
+                            {loadingData && (
+                                <div className="mr-grid-loading-overlay">
+                                    <div className="mr-loading-container">
+                                        <div className="mr-loading-spinner" aria-label="Loading meeting records" role="status" aria-live="polite"></div>
+                                        <div className="mr-loading-text">Loading meeting records...</div>
+                                    </div>
+                                </div>
+                            )}
                             <GridComponent
                                 ref={gridRef}
                                 dataSource={meetingRecords.map(r => {
