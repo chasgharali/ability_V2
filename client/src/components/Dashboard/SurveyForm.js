@@ -67,8 +67,8 @@ export default function SurveyForm({ onValidationChange }) {
   };
 
   // Always read the latest token from storage
-  const getToken = () => sessionStorage.getItem('token');
-  const getRefreshToken = () => sessionStorage.getItem('refreshToken');
+  const getToken = () => localStorage.getItem('token');
+  const getRefreshToken = () => localStorage.getItem('refreshToken');
 
   const tryRefreshToken = async () => {
     try {
@@ -76,8 +76,8 @@ export default function SurveyForm({ onValidationChange }) {
       if (!refreshToken) return false;
       const res = await axios.post('/api/auth/refresh', { refreshToken });
       const { accessToken, refreshToken: newRefresh } = res.data?.tokens || {};
-      if (accessToken) sessionStorage.setItem('token', accessToken);
-      if (newRefresh) sessionStorage.setItem('refreshToken', newRefresh);
+      if (accessToken) localStorage.setItem('token', accessToken);
+      if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
       return !!accessToken;
     } catch {
       return false;

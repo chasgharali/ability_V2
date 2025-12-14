@@ -9,8 +9,8 @@ const InterpreterInvitationModal = ({ invitation, onAccept, onReject }) => {
 
   // Load saved device preferences
   useEffect(() => {
-    const savedAudioDevice = sessionStorage.getItem('preferredAudioDeviceId');
-    const savedVideoDevice = sessionStorage.getItem('preferredVideoDeviceId');
+    const savedAudioDevice = localStorage.getItem('preferredAudioDeviceId');
+    const savedVideoDevice = localStorage.getItem('preferredVideoDeviceId');
     
     if (savedAudioDevice) setSelectedAudioDevice(savedAudioDevice);
     if (savedVideoDevice) setSelectedVideoDevice(savedVideoDevice);
@@ -56,10 +56,10 @@ const InterpreterInvitationModal = ({ invitation, onAccept, onReject }) => {
   const handleAccept = () => {
     // Save device preferences
     if (selectedAudioDevice) {
-      sessionStorage.setItem('preferredAudioDeviceId', selectedAudioDevice);
+      localStorage.setItem('preferredAudioDeviceId', selectedAudioDevice);
     }
     if (selectedVideoDevice) {
-      sessionStorage.setItem('preferredVideoDeviceId', selectedVideoDevice);
+      localStorage.setItem('preferredVideoDeviceId', selectedVideoDevice);
     }
 
     // Pass invitation and device selections to parent

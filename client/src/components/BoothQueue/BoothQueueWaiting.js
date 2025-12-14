@@ -26,11 +26,11 @@ export default function BoothQueueWaiting() {
   // Persist numbers across refresh
   const initialQueuePos = (() => {
     const fromState = location.state?.queuePosition;
-    const fromStorage = sessionStorage.getItem(`queuePos_${boothId}`);
+    const fromStorage = localStorage.getItem(`queuePos_${boothId}`);
     return typeof fromState === 'number' ? fromState : (fromStorage ? Number(fromStorage) : 0);
   })();
   const initialServing = (() => {
-    const fromStorage = sessionStorage.getItem(`serving_${boothId}`);
+    const fromStorage = localStorage.getItem(`serving_${boothId}`);
     return fromStorage ? Number(fromStorage) : 0;
   })();
   const [queuePosition, setQueuePosition] = useState(initialQueuePos);
@@ -185,8 +185,8 @@ export default function BoothQueueWaiting() {
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
           try {
-            sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
-            sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+            localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
+            localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
           } catch (e) { }
         }
       } catch (e) {
@@ -280,8 +280,8 @@ export default function BoothQueueWaiting() {
           }
           
           try {
-            sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
-            sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+            localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
+            localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
           } catch (e) { }
         } else {
           // Not in queue or backend returned a non-successful shape
@@ -344,8 +344,8 @@ export default function BoothQueueWaiting() {
         setQueueToken(queueData.token);
         setQueueEntryId(queueData.queueEntry?._id);
         try {
-          sessionStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
-          sessionStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+          localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
+          localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
         } catch (e) { }
       }
     } catch (e) {
@@ -358,7 +358,7 @@ export default function BoothQueueWaiting() {
       setQueuePosition(data.queueEntry.position);
       setQueueEntryId(data.queueEntry._id);
       try {
-        sessionStorage.setItem(`queuePos_${boothId}`, String(data.queueEntry.position));
+        localStorage.setItem(`queuePos_${boothId}`, String(data.queueEntry.position));
       } catch (e) { }
       speak(`Your position has been updated to ${data.queueEntry.position}.`, 'polite');
       // Refresh queue status to update waitingCount
@@ -373,7 +373,7 @@ export default function BoothQueueWaiting() {
     if (data.boothId === boothId) {
       const oldServing = currentServing;
       setCurrentServing(data.currentServing);
-      try { sessionStorage.setItem(`serving_${boothId}`, String(data.currentServing)); } catch (e) { }
+      try { localStorage.setItem(`serving_${boothId}`, String(data.currentServing)); } catch (e) { }
 
       // Refresh queue status to update waitingCount
       refreshQueueStatus();
@@ -464,8 +464,8 @@ export default function BoothQueueWaiting() {
       const videos = devices.filter(d => d.kind === 'videoinput');
       setAudioInputs(audios);
       setVideoInputs(videos);
-      const savedAudio = sessionStorage.getItem('preferredAudioDeviceId');
-      const savedVideo = sessionStorage.getItem('preferredVideoDeviceId');
+      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
       setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
       setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
       setShowInviteModal(true);
@@ -551,8 +551,8 @@ export default function BoothQueueWaiting() {
 
   const handleAcceptInvite = () => {
     if (!pendingInvitation) return;
-    if (selectedAudioId) sessionStorage.setItem('preferredAudioDeviceId', selectedAudioId);
-    if (selectedVideoId) sessionStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+    if (selectedAudioId) localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+    if (selectedVideoId) localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
     // Build callData for VideoCall
     const data = pendingInvitation;
     setCallInvitation({
@@ -693,8 +693,8 @@ export default function BoothQueueWaiting() {
       setVideoInputs(videos);
 
       // Load saved preferences
-      const savedAudio = sessionStorage.getItem('preferredAudioDeviceId');
-      const savedVideo = sessionStorage.getItem('preferredVideoDeviceId');
+      const savedAudio = localStorage.getItem('preferredAudioDeviceId');
+      const savedVideo = localStorage.getItem('preferredVideoDeviceId');
       setSelectedAudioId(savedAudio || audios[0]?.deviceId || '');
       setSelectedVideoId(savedVideo || videos[0]?.deviceId || '');
 
@@ -708,10 +708,10 @@ export default function BoothQueueWaiting() {
 
   const handleDeviceSave = () => {
     if (selectedAudioId) {
-      sessionStorage.setItem('preferredAudioDeviceId', selectedAudioId);
+      localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
     }
     if (selectedVideoId) {
-      sessionStorage.setItem('preferredVideoDeviceId', selectedVideoId);
+      localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
     }
 
     setShowDeviceModal(false);

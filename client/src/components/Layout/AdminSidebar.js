@@ -92,7 +92,7 @@ export default function AdminSidebar({ active = 'booths' }) {
   // send the job seeker directly into the queue entry flow.
   const handleDemoEventClick = async () => {
     try {
-      const token = sessionStorage.getItem('token');
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/events/slug/demonstration', {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });

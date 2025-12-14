@@ -22,7 +22,7 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         // Only connect if user is authenticated
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         
         if (!token || !user) {
             // Clean up any existing socket connection

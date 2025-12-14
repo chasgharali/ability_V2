@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -62,6 +62,8 @@ export default function BoothManagement() {
   const gridRef = useRef(null);
   const deleteDialogRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
+  const loadingBoothsRef = useRef(false);
+  const loadingEventsRef = useRef(false);
   // RTE image upload helpers
   const rteFirstRef = React.useRef(null);
   const rteSecondRef = React.useRef(null);
@@ -197,8 +199,12 @@ export default function BoothManagement() {
     return exceeded;
   };
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (loadingEventsRef.current) return;
+    
     try {
+      loadingEventsRef.current = true;
       setLoadingEvents(true);
       const res = await listEvents({ page: 1, limit: 200 });
       const items = res?.events || [];
@@ -227,13 +233,14 @@ export default function BoothManagement() {
       console.error('Failed to load events for booth', err);
       setEventOptions([]);
     } finally {
+      loadingEventsRef.current = false;
       setLoadingEvents(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [loadEvents]);
 
   // Center delete dialog when it opens
   useEffect(() => {
@@ -478,8 +485,12 @@ export default function BoothManagement() {
     setCurrentPage(1); // Reset to first page when clearing
   };
 
-  const loadBooths = async () => {
+  const loadBooths = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (loadingBoothsRef.current) return;
+    
     try {
+      loadingBoothsRef.current = true;
       setLoadingBooths(true);
       // When searching, fetch a very large number (10000) to ensure ALL matching records are loaded
       // When not searching, fetch 50 for initial load (grid handles client-side pagination)
@@ -522,10 +533,15 @@ export default function BoothManagement() {
     } catch (e) {
       console.error('Failed to load booths', e);
       setBooths([]);
-    } finally { setLoadingBooths(false); }
-  };
+    } finally { 
+      loadingBoothsRef.current = false;
+      setLoadingBooths(false); 
+    }
+  }, [activeSearchQuery, baseUrl]);
 
-  useEffect(() => { loadBooths(); }, [activeSearchQuery]);
+  useEffect(() => { 
+    loadBooths(); 
+  }, [loadBooths]);
 
   // Set CSS variable for filter icon and make it trigger column menu
   useEffect(() => {
@@ -818,7 +834,7 @@ export default function BoothManagement() {
             </div>
 
             {boothMode === 'list' ? (
-              <div className="bm-grid-wrap">
+              <div className="bm-grid-wrap" style={{ position: 'relative' }}>
                 <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {/* Search Section - Right Aligned */}
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -856,7 +872,14 @@ export default function BoothManagement() {
                     )}
                   </div>
                 </div>
-                {loadingBooths && <div style={{ marginBottom: 12 }}>Loading…</div>}
+                {loadingBooths && (
+                  <div className="bm-grid-loading-overlay">
+                    <div className="bm-loading-container">
+                      <div className="bm-loading-spinner" aria-label="Loading booths" role="status" aria-live="polite"></div>
+                      <div className="bm-loading-text">Loading booths...</div>
+                    </div>
+                  </div>
+                )}
                 <GridComponent
                   ref={gridRef}
                   dataSource={booths.slice((currentPage - 1) * pageSize, currentPage * pageSize)}

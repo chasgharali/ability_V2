@@ -834,7 +834,7 @@ function DeleteAccountPanel({ onDeleted }) {
     const [working, setWorking] = useState(false);
     const [error, setError] = useState('');
 
-    const getToken = () => sessionStorage.getItem('token');
+    const getToken = () => localStorage.getItem('token');
 
     const handleDelete = async () => {
         setWorking(true);
@@ -852,8 +852,8 @@ function DeleteAccountPanel({ onDeleted }) {
                 throw new Error(text || 'Failed to delete account');
             }
             // Clear tokens client-side
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('refreshToken');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
             if (typeof onDeleted === 'function') onDeleted();
         } catch (e) {
             setError(e.message || 'Failed to delete account');
