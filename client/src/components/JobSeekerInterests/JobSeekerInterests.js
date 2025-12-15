@@ -140,8 +140,8 @@ const JobSeekerInterests = () => {
         sortOrder: 'desc'
     });
     
-    // Search query state for input field
-    const [searchQuery, setSearchQuery] = useState('');
+    // Search input ref (uncontrolled to avoid live filtering on typing)
+    const searchInputRef = useRef(null);
 
     // Statistics
     const [stats, setStats] = useState({
@@ -537,7 +537,9 @@ const JobSeekerInterests = () => {
     };
 
     const clearFilters = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setFilters({
             recruiterId: '',
             eventId: '',
@@ -551,15 +553,18 @@ const JobSeekerInterests = () => {
     };
     
     const handleSearch = () => {
+        const query = (searchInputRef.current?.value || '').trim();
         setFilters(prev => ({
             ...prev,
-            search: searchQuery.trim(),
+            search: query,
             page: 1 // Reset to first page when searching
         }));
     };
     
     const handleClearSearch = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setFilters(prev => ({
             ...prev,
             search: '',
@@ -880,11 +885,11 @@ const JobSeekerInterests = () => {
                                 {/* Search Section - Right */}
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                     <div style={{ marginBottom: 0 }}>
-                                        <Input
+                                        <input
+                                            ref={searchInputRef}
                                             id="jsi-search-input"
                                             type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            defaultValue=""
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
@@ -892,8 +897,8 @@ const JobSeekerInterests = () => {
                                                 }
                                             }}
                                             placeholder="Search by name, email, or any field..."
-                                            style={{ width: '300px', marginBottom: 0 }}
-                                            className="jsi-search-input-no-label"
+                                            style={{ width: '300px', marginBottom: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                                            className="jsi-search-input-native"
                                         />
                                     </div>
                                     <ButtonComponent
@@ -905,7 +910,7 @@ const JobSeekerInterests = () => {
                                     >
                                         Search
                                     </ButtonComponent>
-                                    {(searchQuery || filters.search) && (
+                                    {((searchInputRef.current && searchInputRef.current.value) || filters.search) && (
                                         <ButtonComponent
                                             cssClass="e-outline e-primary e-small"
                                             onClick={handleClearSearch}
