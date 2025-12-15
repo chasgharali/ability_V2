@@ -140,6 +140,7 @@ export default function MeetingRecords() {
     const [filters, setFilters] = useState({
         recruiterId: '',
         eventId: '',
+        boothId: '',
         status: '',
         startDate: '',
         endDate: '',
@@ -1324,7 +1325,7 @@ export default function MeetingRecords() {
                             >
                                 <h3>
                                     Filters
-                                    {(filters.recruiterId || filters.eventId || filters.boothId) && (
+                                    {(filters.eventId || filters.boothId) && (
                                         <span className="active-filters-indicator">●</span>
                                     )}
                                 </h3>
@@ -1332,26 +1333,12 @@ export default function MeetingRecords() {
                                     {filtersExpanded ? '▼' : '▶'}
                                 </span>
                             </div>
-                            {filtersExpanded && (
-                                <div id="filters-content" className="filters-grid">
-                                {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label htmlFor="recruiter-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                            Recruiter
-                                        </label>
-                                        <DropDownListComponent
-                                            id="recruiter-filter-dropdown"
-                                            dataSource={[{ value: '', text: 'All Recruiters' }, ...recruiters.map(r => ({ value: r._id, text: r.name }))]}
-                                            fields={{ value: 'value', text: 'text' }}
-                                            value={filters.recruiterId}
-                                            change={(e) => handleFilterChange('recruiterId', e.value || '')}
-                                            placeholder="Select Recruiter"
-                                            cssClass="filter-dropdown"
-                                            popupHeight="300px"
-                                            width="100%"
-                                        />
-                                    </div>
-                                )}
+                                {filtersExpanded && (
+                                    <div
+                                        id="filters-content"
+                                        className="filters-grid"
+                                        style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '380px' }}
+                                    >
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label htmlFor="event-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
                                         Event
