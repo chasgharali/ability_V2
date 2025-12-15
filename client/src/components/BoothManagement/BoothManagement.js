@@ -837,9 +837,9 @@ export default function BoothManagement() {
 
             {boothMode === 'list' ? (
               <div className="bm-grid-wrap" style={{ position: 'relative' }}>
-                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <div className="form-row bm-search-row">
                   {/* Search Section - Right Aligned */}
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                  <div className="bm-search-row-inner">
                     <input
                       ref={searchInputRef}
                       id="booth-search-input"
@@ -856,7 +856,7 @@ export default function BoothManagement() {
                       className="bm-search-input-native"
                     />
                     <ButtonComponent
-                      cssClass="e-primary"
+                      cssClass="e-primary bm-search-button"
                       onClick={handleSearch}
                       disabled={loadingBooths}
                       aria-label="Search booths"
@@ -865,7 +865,7 @@ export default function BoothManagement() {
                     </ButtonComponent>
                     {activeSearchQuery && (
                       <ButtonComponent
-                        cssClass="e-outline e-primary"
+                        cssClass="e-outline e-primary bm-search-button"
                         onClick={handleClearSearch}
                         disabled={loadingBooths}
                         aria-label="Clear search"
