@@ -164,6 +164,33 @@ const JobSeekerInterests = () => {
     const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
     const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
 
+    // Build Event dropdown options, ensuring that the currently selected legacy
+    // event stays in the list even if the latest API call returned no interests
+    // for that legacy ID (so the dropdown doesn't reset to "All Events").
+    const getEventFilterOptions = () => {
+        const options = [
+            { value: '', text: 'All Events' },
+            ...events.map(e => ({ value: e._id, text: e.name })),
+            ...legacyEventIds.map(legacyId => ({
+                value: `legacy_${legacyId}`,
+                text: `Legacy Event (${legacyId})`
+            }))
+        ];
+
+        if (filters.eventId && filters.eventId.startsWith('legacy_')) {
+            const exists = options.some(opt => opt.value === filters.eventId);
+            if (!exists) {
+                const legacyId = filters.eventId.replace('legacy_', '');
+                options.push({
+                    value: filters.eventId,
+                    text: `Legacy Event (${legacyId})`
+                });
+            }
+        }
+
+        return options;
+    };
+
     // Syncfusion Toast
     const showToast = useCallback((message, type = 'Success', duration = 3000) => {
         if (toastRef.current) {
@@ -355,13 +382,18 @@ const JobSeekerInterests = () => {
                 setInterests(interests);
 
                 // Extract unique legacy event IDs from interests for filter dropdown
-                const legacyEventIds = new Set();
-                interests.forEach(interest => {
-                    if (interest.legacyEventId && !interest.event) {
-                        legacyEventIds.add(interest.legacyEventId);
-                    }
+                // Accumulate all legacy events found, don't replace the list
+                setLegacyEventIds(prevLegacyIds => {
+                    const newLegacyEventIds = new Set(prevLegacyIds);
+                    interests.forEach(interest => {
+                        if (interest.legacyEventId && !interest.event) {
+                            // Add legacy event ID (handle both string and ObjectId)
+                            const legacyId = String(interest.legacyEventId);
+                            newLegacyEventIds.add(legacyId);
+                        }
+                    });
+                    return Array.from(newLegacyEventIds);
                 });
-                setLegacyEventIds(Array.from(legacyEventIds));
 
                 // Update pagination from API response
                 if (response.pagination) {
@@ -466,13 +498,18 @@ const JobSeekerInterests = () => {
             setInterests(interests);
                 
             // Extract unique legacy event IDs from interests for filter dropdown
-                const legacyEventIds = new Set();
+            // Accumulate all legacy events found, don't replace the list
+            setLegacyEventIds(prevLegacyIds => {
+                const newLegacyEventIds = new Set(prevLegacyIds);
                 interests.forEach(interest => {
                     if (interest.legacyEventId && !interest.event) {
-                        legacyEventIds.add(interest.legacyEventId);
+                        // Add legacy event ID (handle both string and ObjectId)
+                        const legacyId = String(interest.legacyEventId);
+                        newLegacyEventIds.add(legacyId);
                     }
                 });
-                setLegacyEventIds(Array.from(legacyEventIds));
+                return Array.from(newLegacyEventIds);
+            });
 
             // Update pagination from API response
             if (response.pagination) {
@@ -865,14 +902,7 @@ const JobSeekerInterests = () => {
                                 <div style={{ width: '200px', flexShrink: 0 }}>
                                     <DropDownListComponent
                                         id="event-filter-dropdown-main"
-                                        dataSource={[
-                                            { value: '', text: 'All Events' }, 
-                                            ...events.map(e => ({ value: e._id, text: e.name })),
-                                            ...legacyEventIds.map(legacyId => ({ 
-                                                value: `legacy_${legacyId}`, 
-                                                text: `Legacy Event (${legacyId})` 
-                                            }))
-                                        ]}
+                                        dataSource={getEventFilterOptions()}
                                         fields={{ value: 'value', text: 'text' }}
                                         value={filters.eventId}
                                         change={(e) => handleFilterChange('eventId', e.value || '')}
@@ -949,36 +979,34 @@ const JobSeekerInterests = () => {
                                     aria-expanded={filtersExpanded}
                                     aria-controls="filters-content"
                                 >
-                                    <h3>
-                                        Filters
-                                        {(filters.recruiterId || (user?.role !== 'Recruiter' && filters.boothId)) && (
-                                            <span className="active-filters-indicator">●</span>
-                                        )}
-                                    </h3>
+                                <h3>
+                                    Filters
+                                    {((user?.role !== 'Recruiter' && filters.boothId) || filters.eventId) && (
+                                        <span className="active-filters-indicator">●</span>
+                                    )}
+                                </h3>
                                     <span className={`filter-toggle ${filtersExpanded ? 'expanded' : ''}`}>
                                         {filtersExpanded ? '▼' : '▶'}
                                     </span>
                                 </div>
                                 {filtersExpanded && (
                                     <div id="filters-content" className="filters-grid">
-                                        {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label htmlFor="recruiter-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                                    Recruiter
-                                                </label>
-                                                <DropDownListComponent
-                                                    id="recruiter-filter-dropdown"
-                                                    dataSource={[{ value: '', text: 'All Recruiters' }, ...recruiters.map(r => ({ value: r._id, text: r.name }))]}
-                                                    fields={{ value: 'value', text: 'text' }}
-                                                    value={filters.recruiterId}
-                                                    change={(e) => handleFilterChange('recruiterId', e.value || '')}
-                                                    placeholder="Select Recruiter"
-                                                    cssClass="filter-dropdown"
-                                                    popupHeight="300px"
-                                                    width="100%"
-                                                />
-                                            </div>
-                                        )}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label htmlFor="event-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
+                                                Event
+                                            </label>
+                                            <DropDownListComponent
+                                                id="event-filter-dropdown"
+                                                dataSource={getEventFilterOptions()}
+                                                fields={{ value: 'value', text: 'text' }}
+                                                value={filters.eventId}
+                                                change={(e) => handleFilterChange('eventId', e.value || '')}
+                                                placeholder="Select Event"
+                                                cssClass="filter-dropdown"
+                                                popupHeight="300px"
+                                                width="100%"
+                                            />
+                                        </div>
                                         {['Admin', 'GlobalSupport'].includes(user.role) && (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 <label htmlFor="booth-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
