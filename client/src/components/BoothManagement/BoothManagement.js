@@ -53,7 +53,6 @@ export default function BoothManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loadingBooths, setLoadingBooths] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(''); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -61,6 +60,7 @@ export default function BoothManagement() {
   const toastRef = useRef(null);
   const gridRef = useRef(null);
   const deleteDialogRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
   const loadingBoothsRef = useRef(false);
   const loadingEventsRef = useRef(false);
@@ -474,13 +474,15 @@ export default function BoothManagement() {
   };
 
   const handleSearch = () => {
-    // Set the active search query to trigger API call
-    setActiveSearchQuery(searchQuery.trim());
+    const query = (searchInputRef.current?.value || '').trim();
+    setActiveSearchQuery(query);
     setCurrentPage(1); // Reset to first page when searching
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
     setActiveSearchQuery('');
     setCurrentPage(1); // Reset to first page when clearing
   };
@@ -838,11 +840,11 @@ export default function BoothManagement() {
                 <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {/* Search Section - Right Aligned */}
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    <Input
+                    <input
+                      ref={searchInputRef}
                       id="booth-search-input"
                       type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      defaultValue=""
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -851,6 +853,7 @@ export default function BoothManagement() {
                       }}
                       placeholder="Search by name, event, or any field..."
                       style={{ minWidth: '250px', maxWidth: '400px' }}
+                      className="bm-search-input-native"
                     />
                     <ButtonComponent
                       cssClass="e-primary"
@@ -860,7 +863,7 @@ export default function BoothManagement() {
                     >
                       Search
                     </ButtonComponent>
-                    {(searchQuery || activeSearchQuery) && (
+                    {activeSearchQuery && (
                       <ButtonComponent
                         cssClass="e-outline e-primary"
                         onClick={handleClearSearch}
