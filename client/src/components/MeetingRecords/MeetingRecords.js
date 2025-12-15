@@ -9,7 +9,6 @@ import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
-import { Input } from '../UI/FormComponents';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -151,8 +150,8 @@ export default function MeetingRecords() {
         sortOrder: 'desc'
     });
     
-    // Search query state for input field
-    const [searchQuery, setSearchQuery] = useState('');
+    // Search input ref (uncontrolled to avoid live filtering on typing)
+    const searchInputRef = useRef(null);
 
     // Pagination
     const [pagination, setPagination] = useState({
@@ -867,7 +866,9 @@ export default function MeetingRecords() {
     };
 
     const clearFilters = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setFilters({
             recruiterId: '',
             eventId: '',
@@ -881,15 +882,18 @@ export default function MeetingRecords() {
     };
     
     const handleSearch = () => {
+        const query = (searchInputRef.current?.value || '').trim();
         setFilters(prev => ({
             ...prev,
-            search: searchQuery.trim(),
+            search: query,
             page: 1 // Reset to first page when searching
         }));
     };
     
     const handleClearSearch = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setFilters(prev => ({
             ...prev,
             search: '',
@@ -1263,11 +1267,11 @@ export default function MeetingRecords() {
                             {/* Search Section */}
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                 <div style={{ marginBottom: 0 }}>
-                                    <Input
+                                    <input
+                                        ref={searchInputRef}
                                         id="meeting-records-search-input"
                                         type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        defaultValue=""
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
@@ -1275,8 +1279,8 @@ export default function MeetingRecords() {
                                             }
                                         }}
                                         placeholder="Search by name, email, or any field..."
-                                        style={{ width: '300px', marginBottom: 0 }}
-                                        className="mr-search-input-no-label"
+                                        style={{ width: '300px', marginBottom: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                                        className="mr-search-input-native"
                                     />
                                 </div>
                                 <ButtonComponent
@@ -1288,7 +1292,7 @@ export default function MeetingRecords() {
                                 >
                                     Search
                                 </ButtonComponent>
-                                {(searchQuery || filters.search) && (
+                                {((searchInputRef.current && searchInputRef.current.value) || filters.search) && (
                                     <ButtonComponent
                                         cssClass="e-outline e-primary e-small"
                                         onClick={handleClearSearch}
