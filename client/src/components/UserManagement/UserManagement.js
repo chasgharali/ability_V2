@@ -33,9 +33,23 @@ export default function UserManagement() {
     return '';
   };
 
+  // Load search query from sessionStorage on mount (per-table persistence for search)
+  const loadSearchQueryFromSession = () => {
+    try {
+      const saved = sessionStorage.getItem('userManagement_searchQuery');
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Error loading User Management search query from sessionStorage:', error);
+    }
+    return '';
+  };
+
   const [roleFilter, setRoleFilter] = useState(loadRoleFilterFromSession);
-  const [searchQuery, setSearchQuery] = useState(''); // Input field value
-  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
+  const savedSearchQuery = loadSearchQueryFromSession();
+  const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
+  const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -68,6 +82,19 @@ export default function UserManagement() {
       console.error('Error saving User Management role filter to sessionStorage:', error);
     }
   }, [roleFilter]);
+
+  // Persist search query in sessionStorage so it survives navigation within the session
+  useEffect(() => {
+    try {
+      if (activeSearchQuery && activeSearchQuery.trim()) {
+        sessionStorage.setItem('userManagement_searchQuery', activeSearchQuery.trim());
+      } else {
+        sessionStorage.removeItem('userManagement_searchQuery');
+      }
+    } catch (error) {
+      console.error('Error saving User Management search query to sessionStorage:', error);
+    }
+  }, [activeSearchQuery]);
 
   const roleOptionsAll = useMemo(() => [
     { value: 'Admin', label: 'Admin' },
@@ -154,6 +181,12 @@ export default function UserManagement() {
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
     setActiveSearchQuery('');
+    // Clear from sessionStorage
+    try {
+      sessionStorage.removeItem('userManagement_searchQuery');
+    } catch (error) {
+      console.error('Error clearing User Management search query from sessionStorage:', error);
+    }
     // loadUsers will be called automatically via useEffect when activeSearchQuery changes
   }, []);
 
