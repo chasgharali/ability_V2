@@ -193,19 +193,35 @@ export default function EventManagement() {
     const [loadingList, setLoadingList] = useState(false);
     const [termsOptions, setTermsOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const [statusFilter, setStatusFilter] = useState('');
-    const [searchQuery, setSearchQuery] = useState(''); // Input field value
+    const [pageSize, setPageSize] = useState(50);
+
+    // Load status filter from sessionStorage on mount (per-table persistence)
+    const loadStatusFilterFromSession = () => {
+        try {
+            const saved = sessionStorage.getItem('eventManagement_statusFilter');
+            if (saved) {
+                return saved;
+            }
+        } catch (error) {
+            console.error('Error loading Event Management status filter from sessionStorage:', error);
+        }
+        return '';
+    };
+
+    const [statusFilter, setStatusFilter] = useState(loadStatusFilterFromSession);
+    const searchInputRef = useRef(null); // Uncontrolled input to avoid live filtering on typing
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
 
     const handleSearch = useCallback(() => {
-        // Set the active search query to trigger filtering
-        setActiveSearchQuery(searchQuery.trim());
+        const query = (searchInputRef.current?.value || '').trim();
+        setActiveSearchQuery(query);
         setCurrentPage(1); // Reset to first page when searching
-    }, [searchQuery]);
+    }, []);
 
     const handleClearSearch = useCallback(() => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setActiveSearchQuery('');
         // loadEvents will be called automatically via useEffect when activeSearchQuery changes
         setCurrentPage(1); // Reset to first page when clearing
@@ -219,6 +235,19 @@ export default function EventManagement() {
         { value: 'completed', label: 'Completed' },
         { value: 'cancelled', label: 'Cancelled' },
     ];
+
+    // Persist status filter in sessionStorage so it survives navigation during the session
+    useEffect(() => {
+        try {
+            if (statusFilter) {
+                sessionStorage.setItem('eventManagement_statusFilter', statusFilter);
+            } else {
+                sessionStorage.removeItem('eventManagement_statusFilter');
+            }
+        } catch (error) {
+            console.error('Error saving Event Management status filter to sessionStorage:', error);
+        }
+    }, [statusFilter]);
 
     const loadEvents = useCallback(async () => {
         // Prevent multiple simultaneous fetches
@@ -795,11 +824,11 @@ export default function EventManagement() {
                                     {/* Search Section - Right */}
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                         <div style={{ marginBottom: 0 }}>
-                                            <Input
+                                            <input
+                                                ref={searchInputRef}
                                                 id="event-search-input"
                                                 type="text"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                defaultValue=""
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
@@ -807,8 +836,8 @@ export default function EventManagement() {
                                                     }
                                                 }}
                                                 placeholder="Search by name, email, or any field..."
-                                                style={{ width: '300px', marginBottom: 0 }}
-                                                className="em-search-input-no-label"
+                                                style={{ width: '300px', marginBottom: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                                                className="em-search-input-native"
                                             />
                                         </div>
                                         <ButtonComponent
@@ -820,7 +849,7 @@ export default function EventManagement() {
                                         >
                                             Search
                                         </ButtonComponent>
-                                        {(searchQuery || activeSearchQuery) && (
+                                        {((searchInputRef.current && searchInputRef.current.value) || activeSearchQuery) && (
                                             <ButtonComponent
                                                 cssClass="e-outline e-primary e-small"
                                                 onClick={handleClearSearch}
@@ -1034,8 +1063,6 @@ export default function EventManagement() {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <option value={10}>10</option>
-                                                <option value={20}>20</option>
                                                 <option value={50}>50</option>
                                                 <option value={100}>100</option>
                                                 <option value={200}>200</option>

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { listEvents } from '../../services/events';
 import { listUsers } from '../../services/users';
+import { listBooths } from '../../services/booths';
 import AdminHeader from '../Layout/AdminHeader';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import AdminSidebar from '../Layout/AdminSidebar';
@@ -115,29 +116,99 @@ const JobSeekerInterests = () => {
     const [interests, setInterests] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
+    const [booths, setBooths] = useState([]);
+    const [legacyEventIds, setLegacyEventIds] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
-    const [filtersExpanded, setFiltersExpanded] = useState(false);
     const initialLoadDone = useRef(false);
     const loadingInterestsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
+    const loadingBoothsRef = useRef(false);
+    const fetchInProgress = useRef(false);
+
+    // Load search query from sessionStorage on mount (per-table persistence for search)
+    const loadSearchQueryFromSession = () => {
+        try {
+            const saved = sessionStorage.getItem('jobSeekerInterests_searchQuery');
+            if (saved) {
+                return saved;
+            }
+        } catch (error) {
+            console.error('Error loading Job Seeker Interests search query from sessionStorage:', error);
+        }
+        return '';
+    };
+
+    // Load filters from sessionStorage on mount
+    const loadFiltersFromSession = () => {
+        try {
+            const savedFilters = sessionStorage.getItem('jobSeekerInterests_filters');
+            const savedSearchQuery = loadSearchQueryFromSession();
+            if (savedFilters) {
+                const parsed = JSON.parse(savedFilters);
+                return {
+                    recruiterId: parsed.recruiterId || '',
+                    eventId: parsed.eventId || '',
+                    boothId: parsed.boothId || '',
+                    search: savedSearchQuery,
+                    page: 1,
+                    limit: 50,
+                    sortBy: parsed.sortBy || 'createdAt',
+                    sortOrder: parsed.sortOrder || 'desc'
+                };
+            }
+        } catch (error) {
+            console.error('Error loading filters from sessionStorage:', error);
+        }
+        const savedSearchQuery = loadSearchQueryFromSession();
+        return {
+            recruiterId: '',
+            eventId: '',
+            boothId: '',
+            search: savedSearchQuery,
+            page: 1,
+            limit: 50,
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+        };
+    };
 
     // Filters
-    const [filters, setFilters] = useState({
-        recruiterId: '',
-        eventId: '',
-        boothId: '',
-        search: '',
-        page: 1,
-        limit: 50,
-        sortBy: 'createdAt',
-        sortOrder: 'desc'
-    });
+    const [filters, setFilters] = useState(loadFiltersFromSession);
     
-    // Search query state for input field
-    const [searchQuery, setSearchQuery] = useState('');
+    // Search input ref (uncontrolled to avoid live filtering on typing)
+    const searchInputRef = useRef(null);
+
+    // Set search input value from sessionStorage on mount
+    useEffect(() => {
+        const savedSearchQuery = loadSearchQueryFromSession();
+        if (searchInputRef.current && savedSearchQuery) {
+            searchInputRef.current.value = savedSearchQuery;
+        }
+    }, []);
+
+    // Persist search query in sessionStorage so it survives navigation within the session
+    useEffect(() => {
+        try {
+            if (filters.search && filters.search.trim()) {
+                sessionStorage.setItem('jobSeekerInterests_searchQuery', filters.search.trim());
+                // Also update the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = filters.search.trim();
+                }
+            } else {
+                sessionStorage.removeItem('jobSeekerInterests_searchQuery');
+                // Also clear the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = '';
+                }
+            }
+        } catch (error) {
+            console.error('Error saving Job Seeker Interests search query to sessionStorage:', error);
+        }
+    }, [filters.search]);
 
     // Statistics
     const [stats, setStats] = useState({
@@ -162,6 +233,33 @@ const JobSeekerInterests = () => {
 
     // Resume export state
     const [isExportingResumes, setIsExportingResumes] = useState(false);
+
+    // Build Event dropdown options, ensuring that the currently selected legacy
+    // event stays in the list even if the latest API call returned no interests
+    // for that legacy ID (so the dropdown doesn't reset to "All Events").
+    const getEventFilterOptions = () => {
+        const options = [
+            { value: '', text: 'All Events' },
+            ...events.map(e => ({ value: e._id, text: e.name })),
+            ...legacyEventIds.map(legacyId => ({
+                value: `legacy_${legacyId}`,
+                text: `Legacy Event (${legacyId})`
+            }))
+        ];
+
+        if (filters.eventId && filters.eventId.startsWith('legacy_')) {
+            const exists = options.some(opt => opt.value === filters.eventId);
+            if (!exists) {
+                const legacyId = filters.eventId.replace('legacy_', '');
+                options.push({
+                    value: filters.eventId,
+                    text: `Legacy Event (${legacyId})`
+                });
+            }
+        }
+
+        return options;
+    };
 
     // Syncfusion Toast
     const showToast = useCallback((message, type = 'Success', duration = 3000) => {
@@ -290,6 +388,116 @@ const JobSeekerInterests = () => {
         };
     }, [interests, loadingData]);
 
+    // Load all data when component mounts or filters change
+    useEffect(() => {
+        if (!user) return;
+
+        // Only make request if user role is valid
+        if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) {
+            return;
+        }
+
+        // Prevent duplicate requests
+        if (fetchInProgress.current) {
+            console.log('Fetch already in progress, skipping...');
+            return;
+        }
+
+        let cancelled = false;
+
+        const fetchAllData = async () => {
+            fetchInProgress.current = true;
+            
+            try {
+                setLoadingData(true);
+                
+                // Load recruiters and events only on initial load
+                if (!initialLoadDone.current) {
+                    if (user.role !== 'Recruiter') {
+                        try {
+                            const recruiterResponse = await listUsers({ role: 'Recruiter', limit: 1000 });
+                            if (!cancelled) {
+                                setRecruiters(recruiterResponse.users || []);
+                            }
+                        } catch (error) {
+                            console.error('Error loading recruiters:', error);
+                        }
+                    }
+                    
+                    try {
+                        const eventsResponse = await listEvents({ limit: 1000 });
+                        if (!cancelled) {
+                            setEvents(eventsResponse.events || []);
+                        }
+                    } catch (error) {
+                        console.error('Error loading events:', error);
+                    }
+                    
+                    initialLoadDone.current = true;
+                }
+                
+                // Load interests with current filters
+                // Handle legacy event IDs (format: "legacy_<id>")
+                const filtersForAPI = { ...filters };
+                if (filtersForAPI.eventId && filtersForAPI.eventId.startsWith('legacy_')) {
+                    // Extract the legacy event ID
+                    filtersForAPI.eventId = filtersForAPI.eventId.replace('legacy_', '');
+                }
+                console.log('Loading interests with filters:', filtersForAPI);
+                const response = await jobSeekerInterestsAPI.getInterests(filtersForAPI);
+
+                if (cancelled) return;
+
+                const interests = response.interests || [];
+                setInterests(interests);
+
+                // Extract unique legacy event IDs from interests for filter dropdown
+                // Accumulate all legacy events found, don't replace the list
+                setLegacyEventIds(prevLegacyIds => {
+                    const newLegacyEventIds = new Set(prevLegacyIds);
+                    interests.forEach(interest => {
+                        if (interest.legacyEventId && !interest.event) {
+                            // Add legacy event ID (handle both string and ObjectId)
+                            const legacyId = String(interest.legacyEventId);
+                            newLegacyEventIds.add(legacyId);
+                        }
+                    });
+                    return Array.from(newLegacyEventIds);
+                });
+
+                // Update pagination from API response
+                if (response.pagination) {
+                    console.log('Setting pagination:', response.pagination);
+                    setPagination(response.pagination);
+                }
+
+                // Calculate stats
+                const totalInterests = response.pagination?.totalInterests || interests.length;
+                const uniqueJobSeekers = new Set(interests.map(i => i.jobSeeker?._id || i.legacyJobSeekerId).filter(Boolean)).size;
+                const uniqueBooths = new Set(interests.map(i => i.booth?._id || i.legacyBoothId).filter(Boolean)).size;
+                const avgInterests = uniqueJobSeekers > 0 ? (totalInterests / uniqueJobSeekers).toFixed(1) : 0;
+
+                setStats({
+                    totalInterests: totalInterests,
+                    uniqueJobSeekers,
+                    uniqueBooths,
+                    averageInterestsPerJobSeeker: avgInterests
+                });
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                fetchInProgress.current = false;
+                setLoadingData(false);
+            }
+        };
+
+        fetchAllData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [user, filters]);
+
     // Load recruiters - only once on mount for Admin/GlobalSupport
     const loadRecruiters = useCallback(async () => {
         // Prevent multiple simultaneous fetches
@@ -325,6 +533,23 @@ const JobSeekerInterests = () => {
         }
     }, []);
 
+    // Load booths - only once on mount
+    const loadBooths = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingBoothsRef.current) return;
+        if (initialLoadDone.current) return; // Already loaded
+        
+        try {
+            loadingBoothsRef.current = true;
+            const boothsResponse = await listBooths({ limit: 1000 });
+            setBooths(boothsResponse.booths || []);
+        } catch (error) {
+            console.error('Error loading booths:', error);
+        } finally {
+            loadingBoothsRef.current = false;
+        }
+    }, []);
+
     // Load interests with current filters
     const loadInterests = useCallback(async () => {
         // Prevent multiple simultaneous fetches
@@ -341,6 +566,20 @@ const JobSeekerInterests = () => {
 
             const interests = response.interests || [];
             setInterests(interests);
+                
+            // Extract unique legacy event IDs from interests for filter dropdown
+            // Accumulate all legacy events found, don't replace the list
+            setLegacyEventIds(prevLegacyIds => {
+                const newLegacyEventIds = new Set(prevLegacyIds);
+                interests.forEach(interest => {
+                    if (interest.legacyEventId && !interest.event) {
+                        // Add legacy event ID (handle both string and ObjectId)
+                        const legacyId = String(interest.legacyEventId);
+                        newLegacyEventIds.add(legacyId);
+                    }
+                });
+                return Array.from(newLegacyEventIds);
+            });
 
             // Update pagination from API response
             if (response.pagination) {
@@ -376,7 +615,7 @@ const JobSeekerInterests = () => {
         }
     }, [filters, showToast]);
 
-    // Load recruiters and events on initial mount
+    // Load recruiters, events, and booths on initial mount
     useEffect(() => {
         if (!user) return;
         if (!['Admin', 'GlobalSupport', 'Recruiter'].includes(user.role)) return;
@@ -384,8 +623,9 @@ const JobSeekerInterests = () => {
 
         loadRecruiters();
         loadEvents();
+        loadBooths();
         initialLoadDone.current = true;
-    }, [user, loadRecruiters, loadEvents]);
+    }, [user, loadRecruiters, loadEvents, loadBooths]);
 
     // Load interests when filters change
     useEffect(() => {
@@ -396,15 +636,40 @@ const JobSeekerInterests = () => {
     }, [user, loadInterests]);
 
     const handleFilterChange = (key, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [key]: value,
-            page: 1 // Reset to first page when filters change
-        }));
+        setFilters(prev => {
+            const newFilters = {
+                ...prev,
+                [key]: value,
+                page: 1 // Reset to first page when filters change
+            };
+            // Save filters to sessionStorage (excluding page, search, limit)
+            try {
+                const filtersToSave = {
+                    recruiterId: newFilters.recruiterId,
+                    eventId: newFilters.eventId,
+                    boothId: newFilters.boothId,
+                    sortBy: newFilters.sortBy,
+                    sortOrder: newFilters.sortOrder
+                };
+                sessionStorage.setItem('jobSeekerInterests_filters', JSON.stringify(filtersToSave));
+            } catch (error) {
+                console.error('Error saving filters to sessionStorage:', error);
+            }
+            return newFilters;
+        });
     };
 
     const clearFilters = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
+        // Clear sessionStorage
+        try {
+            sessionStorage.removeItem('jobSeekerInterests_filters');
+            sessionStorage.removeItem('jobSeekerInterests_searchQuery');
+        } catch (error) {
+            console.error('Error clearing filters from sessionStorage:', error);
+        }
         setFilters({
             recruiterId: '',
             eventId: '',
@@ -418,20 +683,118 @@ const JobSeekerInterests = () => {
     };
     
     const handleSearch = () => {
+        const query = (searchInputRef.current?.value || '').trim();
         setFilters(prev => ({
             ...prev,
-            search: searchQuery.trim(),
+            search: query,
             page: 1 // Reset to first page when searching
         }));
     };
     
     const handleClearSearch = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setFilters(prev => ({
             ...prev,
             search: '',
             page: 1
         }));
+        // Clear from sessionStorage
+        try {
+            sessionStorage.removeItem('jobSeekerInterests_searchQuery');
+        } catch (error) {
+            console.error('Error clearing Job Seeker Interests search query from sessionStorage:', error);
+        }
+    };
+
+    const handleExport = async () => {
+        try {
+            console.log('📤 Starting export...');
+            setLoadingData(true);
+            
+            // Build export filters (same as current filters but without pagination)
+            // Handle legacy event IDs (format: "legacy_<id>")
+            let eventIdForExport = filters.eventId || '';
+            if (eventIdForExport.startsWith('legacy_')) {
+                // Extract the legacy event ID
+                eventIdForExport = eventIdForExport.replace('legacy_', '');
+            }
+            
+            const exportFilters = {
+                eventId: eventIdForExport,
+                boothId: filters.boothId || '',
+                recruiterId: filters.recruiterId || '',
+                search: filters.search || ''
+            };
+            
+            // Remove empty filters
+            Object.keys(exportFilters).forEach(key => {
+                if (exportFilters[key] === '') {
+                    delete exportFilters[key];
+                }
+            });
+            
+            console.log('📋 Export filters:', exportFilters);
+            console.log('📋 Current filters state:', filters);
+            
+            const blob = await jobSeekerInterestsAPI.exportCSV(exportFilters);
+            console.log('✅ Received blob:', blob?.size, 'bytes, type:', blob?.type);
+            
+            // Log blob details for debugging
+            if (blob) {
+                console.log('📦 Blob details:', {
+                    size: blob.size,
+                    type: blob.type,
+                    hasData: blob.size > 0
+                });
+            }
+            
+            // Check if blob is valid
+            if (!blob || blob.size === 0) {
+                throw new Error('Empty response from server');
+            }
+            
+            // Check if response is actually an error (JSON error response)
+            if (blob.type === 'application/json') {
+                const text = await blob.text();
+                const errorData = JSON.parse(text);
+                throw new Error(errorData.message || errorData.error || 'Export failed');
+            }
+            
+            // Create download link and trigger download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'job-seeker-interests.csv';
+            document.body.appendChild(a);
+            
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+                a.click();
+                
+                // Clean up after a delay to ensure download starts
+                setTimeout(() => {
+                    try {
+                        window.URL.revokeObjectURL(url);
+                        if (document.body.contains(a)) {
+                            document.body.removeChild(a);
+                        }
+                    } catch (cleanupError) {
+                        console.warn('Cleanup error (non-critical):', cleanupError);
+                    }
+                }, 300);
+            });
+            
+            showToast('Job seeker interests exported successfully', 'Success');
+        } catch (error) {
+            console.error('Error exporting interests:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to export job seeker interests';
+            showToast(errorMessage, 'Error', 5000);
+        } finally {
+            setLoadingData(false);
+        }
     };
 
     const handleExportResumes = async () => {
@@ -845,28 +1208,44 @@ const JobSeekerInterests = () => {
 
                             {/* Search and Event Filter Row */}
                             <div className="jsi-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                {/* Event Filter - Left */}
+                                {/* Event Filter */}
                                 <div style={{ width: '200px', flexShrink: 0 }}>
                                     <DropDownListComponent
                                         id="event-filter-dropdown-main"
-                                        dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
+                                        dataSource={getEventFilterOptions()}
                                         fields={{ value: 'value', text: 'text' }}
                                         value={filters.eventId}
                                         change={(e) => handleFilterChange('eventId', e.value || '')}
-                                        placeholder="Select Event"
+                                        placeholder="All Events"
                                         cssClass="event-filter-dropdown"
                                         popupHeight="300px"
                                         width="100%"
                                     />
                                 </div>
+                                {/* Booth Filter - Only for Admin/GlobalSupport */}
+                                {['Admin', 'GlobalSupport'].includes(user?.role) && (
+                                    <div style={{ width: '200px', flexShrink: 0 }}>
+                                        <DropDownListComponent
+                                            id="booth-filter-dropdown"
+                                            dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
+                                            fields={{ value: 'value', text: 'text' }}
+                                            value={filters.boothId}
+                                            change={(e) => handleFilterChange('boothId', e.value || '')}
+                                            placeholder="All Booths"
+                                            cssClass="filter-dropdown"
+                                            popupHeight="300px"
+                                            width="100%"
+                                        />
+                                    </div>
+                                )}
                                 {/* Search Section - Right */}
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                     <div style={{ marginBottom: 0 }}>
-                                        <Input
+                                        <input
+                                            ref={searchInputRef}
                                             id="jsi-search-input"
                                             type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            defaultValue=""
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
@@ -874,8 +1253,8 @@ const JobSeekerInterests = () => {
                                                 }
                                             }}
                                             placeholder="Search by name, email, or any field..."
-                                            style={{ width: '300px', marginBottom: 0 }}
-                                            className="jsi-search-input-no-label"
+                                            style={{ width: '300px', marginBottom: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                                            className="jsi-search-input-native"
                                         />
                                     </div>
                                     <ButtonComponent
@@ -887,7 +1266,7 @@ const JobSeekerInterests = () => {
                                     >
                                         Search
                                     </ButtonComponent>
-                                    {(searchQuery || filters.search) && (
+                                    {((searchInputRef.current && searchInputRef.current.value) || filters.search) && (
                                         <ButtonComponent
                                             cssClass="e-outline e-primary e-small"
                                             onClick={handleClearSearch}
@@ -898,73 +1277,16 @@ const JobSeekerInterests = () => {
                                             Clear
                                         </ButtonComponent>
                                     )}
+                                    <ButtonComponent
+                                        cssClass="e-primary e-small"
+                                        onClick={handleExport}
+                                        disabled={loadingData}
+                                        aria-label="Export job seeker interests to CSV"
+                                        style={{ minWidth: '100px', height: '44px' }}
+                                    >
+                                        Export CSV
+                                    </ButtonComponent>
                                 </div>
-                            </div>
-
-                            {/* Filters */}
-                            <div className="filters-section">
-                                <div
-                                    className="filters-header"
-                                    onClick={() => setFiltersExpanded(!filtersExpanded)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            setFiltersExpanded(!filtersExpanded);
-                                        }
-                                    }}
-                                    role="button"
-                                    tabIndex={0}
-                                    aria-expanded={filtersExpanded}
-                                    aria-controls="filters-content"
-                                >
-                                    <h3>
-                                        Filters
-                                        {(filters.recruiterId || (user?.role !== 'Recruiter' && filters.boothId)) && (
-                                            <span className="active-filters-indicator">●</span>
-                                        )}
-                                    </h3>
-                                    <span className={`filter-toggle ${filtersExpanded ? 'expanded' : ''}`}>
-                                        {filtersExpanded ? '▼' : '▶'}
-                                    </span>
-                                </div>
-                                {filtersExpanded && (
-                                    <div id="filters-content" className="filters-grid">
-                                        {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label htmlFor="recruiter-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                                    Recruiter
-                                                </label>
-                                                <DropDownListComponent
-                                                    id="recruiter-filter-dropdown"
-                                                    dataSource={[{ value: '', text: 'All Recruiters' }, ...recruiters.map(r => ({ value: r._id, text: r.name }))]}
-                                                    fields={{ value: 'value', text: 'text' }}
-                                                    value={filters.recruiterId}
-                                                    change={(e) => handleFilterChange('recruiterId', e.value || '')}
-                                                    placeholder="Select Recruiter"
-                                                    cssClass="filter-dropdown"
-                                                    popupHeight="300px"
-                                                    width="100%"
-                                                />
-                                            </div>
-                                        )}
-                                        {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                            <Input
-                                                label="Booth ID"
-                                                value={filters.boothId}
-                                                onChange={(e) => handleFilterChange('boothId', e.target.value)}
-                                                placeholder="Enter booth ID..."
-                                            />
-                                        )}
-                                        <div className="filter-actions">
-                                            <ButtonComponent
-                                                cssClass="e-outline e-primary"
-                                                onClick={clearFilters}
-                                            >
-                                                Clear Filters
-                                            </ButtonComponent>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
                             {/* Data Grid */}
@@ -1055,8 +1377,6 @@ const JobSeekerInterests = () => {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <option value={10}>10</option>
-                                                <option value={20}>20</option>
                                                 <option value={50}>50</option>
                                                 <option value={100}>100</option>
                                                 <option value={200}>200</option>

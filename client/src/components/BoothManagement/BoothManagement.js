@@ -51,16 +51,31 @@ export default function BoothManagement() {
   });
   const [booths, setBooths] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(50);
   const [loadingBooths, setLoadingBooths] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(''); // Input field value
-  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
+  
+  // Load search query from sessionStorage on mount (per-table persistence for search)
+  const loadSearchQueryFromSession = () => {
+    try {
+      const saved = sessionStorage.getItem('boothManagement_searchQuery');
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Error loading Booth Management search query from sessionStorage:', error);
+    }
+    return '';
+  };
+
+  const savedSearchQuery = loadSearchQueryFromSession();
+  const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   const toastRef = useRef(null);
   const gridRef = useRef(null);
   const deleteDialogRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
   const loadingBoothsRef = useRef(false);
   const loadingEventsRef = useRef(false);
@@ -473,16 +488,53 @@ export default function BoothManagement() {
     } finally { setBoothSaving(false); }
   };
 
+  // Set search input value from sessionStorage on mount
+  useEffect(() => {
+    const savedSearchQuery = loadSearchQueryFromSession();
+    if (searchInputRef.current && savedSearchQuery) {
+      searchInputRef.current.value = savedSearchQuery;
+    }
+  }, []);
+
+  // Persist search query in sessionStorage so it survives navigation within the session
+  useEffect(() => {
+    try {
+      if (activeSearchQuery && activeSearchQuery.trim()) {
+        sessionStorage.setItem('boothManagement_searchQuery', activeSearchQuery.trim());
+        // Also update the input field if it exists
+        if (searchInputRef.current) {
+          searchInputRef.current.value = activeSearchQuery.trim();
+        }
+      } else {
+        sessionStorage.removeItem('boothManagement_searchQuery');
+        // Also clear the input field if it exists
+        if (searchInputRef.current) {
+          searchInputRef.current.value = '';
+        }
+      }
+    } catch (error) {
+      console.error('Error saving Booth Management search query to sessionStorage:', error);
+    }
+  }, [activeSearchQuery]);
+
   const handleSearch = () => {
-    // Set the active search query to trigger API call
-    setActiveSearchQuery(searchQuery.trim());
+    const query = (searchInputRef.current?.value || '').trim();
+    setActiveSearchQuery(query);
     setCurrentPage(1); // Reset to first page when searching
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
     setActiveSearchQuery('');
     setCurrentPage(1); // Reset to first page when clearing
+    // Clear from sessionStorage
+    try {
+      sessionStorage.removeItem('boothManagement_searchQuery');
+    } catch (error) {
+      console.error('Error clearing Booth Management search query from sessionStorage:', error);
+    }
   };
 
   const loadBooths = useCallback(async () => {
@@ -835,14 +887,14 @@ export default function BoothManagement() {
 
             {boothMode === 'list' ? (
               <div className="bm-grid-wrap" style={{ position: 'relative' }}>
-                <div className="form-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <div className="form-row bm-search-row">
                   {/* Search Section - Right Aligned */}
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    <Input
+                  <div className="bm-search-row-inner">
+                    <input
+                      ref={searchInputRef}
                       id="booth-search-input"
                       type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      defaultValue=""
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -851,18 +903,19 @@ export default function BoothManagement() {
                       }}
                       placeholder="Search by name, event, or any field..."
                       style={{ minWidth: '250px', maxWidth: '400px' }}
+                      className="bm-search-input-native"
                     />
                     <ButtonComponent
-                      cssClass="e-primary"
+                      cssClass="e-primary bm-search-button"
                       onClick={handleSearch}
                       disabled={loadingBooths}
                       aria-label="Search booths"
                     >
                       Search
                     </ButtonComponent>
-                    {(searchQuery || activeSearchQuery) && (
+                    {activeSearchQuery && (
                       <ButtonComponent
-                        cssClass="e-outline e-primary"
+                        cssClass="e-outline e-primary bm-search-button"
                         onClick={handleClearSearch}
                         disabled={loadingBooths}
                         aria-label="Clear search"
@@ -1047,8 +1100,6 @@ export default function BoothManagement() {
                                     cursor: 'pointer'
                                 }}
                             >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
                                 <option value={50}>50</option>
                                 <option value={100}>100</option>
                                 <option value={200}>200</option>

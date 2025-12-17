@@ -19,12 +19,40 @@ export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [roleFilter, setRoleFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // Input field value
-  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
+
+  // Load filters from sessionStorage on mount (per-table persistence for role filter)
+  const loadRoleFilterFromSession = () => {
+    try {
+      const saved = sessionStorage.getItem('userManagement_roleFilter');
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Error loading User Management role filter from sessionStorage:', error);
+    }
+    return '';
+  };
+
+  // Load search query from sessionStorage on mount (per-table persistence for search)
+  const loadSearchQueryFromSession = () => {
+    try {
+      const saved = sessionStorage.getItem('userManagement_searchQuery');
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Error loading User Management search query from sessionStorage:', error);
+    }
+    return '';
+  };
+
+  const [roleFilter, setRoleFilter] = useState(loadRoleFilterFromSession);
+  const savedSearchQuery = loadSearchQueryFromSession();
+  const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
+  const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(50);
 
   const [boothOptions, setBoothOptions] = useState([]);
   const [eventOptions, setEventOptions] = useState([]);
@@ -41,6 +69,32 @@ export default function UserManagement() {
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
+
+  // Persist role filter in sessionStorage so it survives navigation within the session
+  useEffect(() => {
+    try {
+      if (roleFilter) {
+        sessionStorage.setItem('userManagement_roleFilter', roleFilter);
+      } else {
+        sessionStorage.removeItem('userManagement_roleFilter');
+      }
+    } catch (error) {
+      console.error('Error saving User Management role filter to sessionStorage:', error);
+    }
+  }, [roleFilter]);
+
+  // Persist search query in sessionStorage so it survives navigation within the session
+  useEffect(() => {
+    try {
+      if (activeSearchQuery && activeSearchQuery.trim()) {
+        sessionStorage.setItem('userManagement_searchQuery', activeSearchQuery.trim());
+      } else {
+        sessionStorage.removeItem('userManagement_searchQuery');
+      }
+    } catch (error) {
+      console.error('Error saving User Management search query to sessionStorage:', error);
+    }
+  }, [activeSearchQuery]);
 
   const roleOptionsAll = useMemo(() => [
     { value: 'Admin', label: 'Admin' },
@@ -127,6 +181,12 @@ export default function UserManagement() {
   const handleClearSearch = useCallback(() => {
     setSearchQuery('');
     setActiveSearchQuery('');
+    // Clear from sessionStorage
+    try {
+      sessionStorage.removeItem('userManagement_searchQuery');
+    } catch (error) {
+      console.error('Error clearing User Management search query from sessionStorage:', error);
+    }
     // loadUsers will be called automatically via useEffect when activeSearchQuery changes
   }, []);
 
@@ -785,8 +845,6 @@ export default function UserManagement() {
                                     cursor: 'pointer'
                                 }}
                             >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
                                 <option value={50}>50</option>
                                 <option value={100}>100</option>
                                 <option value={200}>200</option>
@@ -910,13 +968,27 @@ export default function UserManagement() {
                 )}
               </div>
             ) : (
-              <form className="account-form" onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
+              <form className="account-form" onSubmit={(e) => { e.preventDefault(); }} style={{ maxWidth: 720 }}>
                 <Input label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
                 <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
                 <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
                 <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
                 <div className="password-field-container">
-                  <Input label={editingId ? "New Password (leave blank to keep current)" : "Password"} type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setField('password', e.target.value)} required={!editingId} />
+                  <Input 
+                    label={editingId ? "New Password (leave blank to keep current)" : "Password"} 
+                    type={showPwd ? 'text' : 'password'} 
+                    value={form.password} 
+                    onChange={(e) => setField('password', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                      }
+                    }}
+                    autoComplete="new-password"
+                    required={!editingId} 
+                  />
                   <ButtonComponent 
                     cssClass="e-outline e-primary e-small password-toggle-btn" 
                     aria-pressed={showPwd} 
@@ -927,7 +999,21 @@ export default function UserManagement() {
                   </ButtonComponent>
                 </div>
                 <div className="password-field-container">
-                  <Input label={editingId ? "Confirm New Password (leave blank to keep current)" : "Confirm Password"} type={showConfirmPwd ? 'text' : 'password'} value={form.confirmPassword} onChange={(e) => setField('confirmPassword', e.target.value)} required={!editingId} />
+                  <Input 
+                    label={editingId ? "Confirm New Password (leave blank to keep current)" : "Confirm Password"} 
+                    type={showConfirmPwd ? 'text' : 'password'} 
+                    value={form.confirmPassword} 
+                    onChange={(e) => setField('confirmPassword', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                      }
+                    }}
+                    autoComplete="new-password"
+                    required={!editingId} 
+                  />
                   <ButtonComponent 
                     cssClass="e-outline e-primary e-small password-toggle-btn" 
                     aria-pressed={showConfirmPwd} 
