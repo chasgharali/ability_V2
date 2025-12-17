@@ -98,8 +98,30 @@ export default function JobSeekerManagement() {
   // Use ref for search input to avoid re-renders on every keystroke
   const searchInputRef = useRef(null);
   const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
-  const [statusFilter, setStatusFilter] = useState('');
-  const [eventFilter, setEventFilter] = useState('');
+
+  // Load filters from sessionStorage on mount (per-table persistence)
+  const loadFiltersFromSession = () => {
+    try {
+      const savedFilters = sessionStorage.getItem('jobSeekerManagement_filters');
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+        return {
+          statusFilter: parsed.statusFilter || '',
+          eventFilter: parsed.eventFilter || '',
+        };
+      }
+    } catch (error) {
+      console.error('Error loading Job Seeker Management filters from sessionStorage:', error);
+    }
+    return {
+      statusFilter: '',
+      eventFilter: '',
+    };
+  };
+
+  const initialFilters = loadFiltersFromSession();
+  const [statusFilter, setStatusFilter] = useState(initialFilters.statusFilter);
+  const [eventFilter, setEventFilter] = useState(initialFilters.eventFilter);
   const [events, setEvents] = useState([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [eventSearchLoading, setEventSearchLoading] = useState(false);
@@ -433,6 +455,19 @@ export default function JobSeekerManagement() {
   useEffect(() => {
     eventFilterRef.current = eventFilter;
   }, [eventFilter]);
+
+  // Persist filters per-table in sessionStorage so they survive navigation
+  useEffect(() => {
+    try {
+      const filtersToSave = {
+        statusFilter,
+        eventFilter,
+      };
+      sessionStorage.setItem('jobSeekerManagement_filters', JSON.stringify(filtersToSave));
+    } catch (error) {
+      console.error('Error saving Job Seeker Management filters to sessionStorage:', error);
+    }
+  }, [statusFilter, eventFilter]);
 
   // Load events on mount - memoized to prevent unnecessary re-renders
   const loadEventsData = useCallback(async () => {

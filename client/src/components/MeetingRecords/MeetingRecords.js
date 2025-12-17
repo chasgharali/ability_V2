@@ -135,20 +135,46 @@ export default function MeetingRecords() {
     const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
     const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
 
+    // Load filters from sessionStorage on mount
+    const loadFiltersFromSession = () => {
+        try {
+            const savedFilters = sessionStorage.getItem('meetingRecords_filters');
+            if (savedFilters) {
+                const parsed = JSON.parse(savedFilters);
+                return {
+                    recruiterId: parsed.recruiterId || '',
+                    eventId: parsed.eventId || '',
+                    boothId: parsed.boothId || '',
+                    status: parsed.status || '',
+                    startDate: parsed.startDate || '',
+                    endDate: parsed.endDate || '',
+                    search: '',
+                    page: 1,
+                    limit: 50,
+                    sortBy: parsed.sortBy || 'startTime',
+                    sortOrder: parsed.sortOrder || 'desc'
+                };
+            }
+        } catch (error) {
+            console.error('Error loading filters from sessionStorage:', error);
+        }
+        return {
+            recruiterId: '',
+            eventId: '',
+            boothId: '',
+            status: '',
+            startDate: '',
+            endDate: '',
+            search: '',
+            page: 1,
+            limit: 50,
+            sortBy: 'startTime',
+            sortOrder: 'desc'
+        };
+    };
+
     // Filters
-    const [filters, setFilters] = useState({
-        recruiterId: '',
-        eventId: '',
-        boothId: '',
-        status: '',
-        startDate: '',
-        endDate: '',
-        search: '',
-        page: 1,
-        limit: 50,
-        sortBy: 'startTime',
-        sortOrder: 'desc'
-    });
+    const [filters, setFilters] = useState(loadFiltersFromSession);
     
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
@@ -453,11 +479,30 @@ export default function MeetingRecords() {
     }, [user, loadMeetingRecords, loadStats, loadRecruiters, loadEvents, loadBooths, location.key]);
 
     const handleFilterChange = (field, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [field]: value,
-            page: 1 // Reset to first page when filters change
-        }));
+        setFilters(prev => {
+            const newFilters = {
+                ...prev,
+                [field]: value,
+                page: 1 // Reset to first page when filters change
+            };
+            // Save filters to sessionStorage (excluding page, search, limit)
+            try {
+                const filtersToSave = {
+                    recruiterId: newFilters.recruiterId,
+                    eventId: newFilters.eventId,
+                    boothId: newFilters.boothId,
+                    status: newFilters.status,
+                    startDate: newFilters.startDate,
+                    endDate: newFilters.endDate,
+                    sortBy: newFilters.sortBy,
+                    sortOrder: newFilters.sortOrder
+                };
+                sessionStorage.setItem('meetingRecords_filters', JSON.stringify(filtersToSave));
+            } catch (error) {
+                console.error('Error saving filters to sessionStorage:', error);
+            }
+            return newFilters;
+        });
     };
 
     const handlePageChange = (page) => {
@@ -869,10 +914,19 @@ export default function MeetingRecords() {
         if (searchInputRef.current) {
             searchInputRef.current.value = '';
         }
+        // Clear sessionStorage
+        try {
+            sessionStorage.removeItem('meetingRecords_filters');
+        } catch (error) {
+            console.error('Error clearing filters from sessionStorage:', error);
+        }
         setFilters({
             recruiterId: '',
             eventId: '',
             boothId: '',
+            status: '',
+            startDate: '',
+            endDate: '',
             search: '',
             page: 1,
             limit: 50,

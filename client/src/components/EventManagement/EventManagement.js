@@ -194,7 +194,21 @@ export default function EventManagement() {
     const [termsOptions, setTermsOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(50);
-    const [statusFilter, setStatusFilter] = useState('');
+
+    // Load status filter from sessionStorage on mount (per-table persistence)
+    const loadStatusFilterFromSession = () => {
+        try {
+            const saved = sessionStorage.getItem('eventManagement_statusFilter');
+            if (saved) {
+                return saved;
+            }
+        } catch (error) {
+            console.error('Error loading Event Management status filter from sessionStorage:', error);
+        }
+        return '';
+    };
+
+    const [statusFilter, setStatusFilter] = useState(loadStatusFilterFromSession);
     const searchInputRef = useRef(null); // Uncontrolled input to avoid live filtering on typing
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
 
@@ -221,6 +235,19 @@ export default function EventManagement() {
         { value: 'completed', label: 'Completed' },
         { value: 'cancelled', label: 'Cancelled' },
     ];
+
+    // Persist status filter in sessionStorage so it survives navigation during the session
+    useEffect(() => {
+        try {
+            if (statusFilter) {
+                sessionStorage.setItem('eventManagement_statusFilter', statusFilter);
+            } else {
+                sessionStorage.removeItem('eventManagement_statusFilter');
+            }
+        } catch (error) {
+            console.error('Error saving Event Management status filter to sessionStorage:', error);
+        }
+    }, [statusFilter]);
 
     const loadEvents = useCallback(async () => {
         // Prevent multiple simultaneous fetches
