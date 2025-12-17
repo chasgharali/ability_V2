@@ -568,22 +568,26 @@
 /* Caption Display */
 .caption-container {
   position: absolute;
-  bottom: 100px;
-  left: 50%;
+  bottom: 110px;
+  left: 54%;
   transform: translateX(-50%);
-  max-width: 80%;
-  min-width: 300px;
+  width: 600px; /* Fixed width */
   z-index: 25;
-  pointer-events: none;
+  pointer-events: none; /* Container itself doesn't capture pointer events */
+}
+
+.caption-container .caption-content {
+  pointer-events: auto; /* But content can be interacted with (scrolling, buttons) */
 }
 
 .caption-content {
   background: rgba(0, 0, 0, 0.85);
   border-radius: 8px;
-  padding: 12px 20px;
+  padding: 12px 20px 40px 20px; /* Extra bottom padding for scroll button */
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  max-height: 250px;
+  height: 100px; /* Fixed height: 100px */
+  width: 100%; /* Full width of container */
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -591,6 +595,7 @@
   gap: 6px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.5);
+  position: relative;
 }
 
 .caption-content::-webkit-scrollbar {
@@ -634,6 +639,15 @@
   word-wrap: break-word;
   padding: 4px 0;
   animation: fadeIn 0.3s ease-in;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.caption-item.caption-new-line {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @keyframes fadeIn {
@@ -659,16 +673,61 @@
   display: inline;
 }
 
+/* Caption scroll buttons */
+.caption-scroll-buttons {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.caption-scroll-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.caption-scroll-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.caption-scroll-button:active {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.caption-scroll-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.caption-scroll-button.hidden {
+  display: none;
+}
+
 /* Caption display responsive */
 @media (max-width: 768px) {
   .caption-container {
     bottom: 110px;
-    max-width: 90%;
-    min-width: 250px;
+    width: 90%; /* Responsive width on mobile */
+    max-width: 600px;
   }
 
   .caption-content {
-    padding: 10px 16px;
+    padding: 10px 16px 40px 16px; /* Keep bottom padding for scroll button */
+    height: 100px; /* Keep fixed height */
   }
 
   .caption-text {
