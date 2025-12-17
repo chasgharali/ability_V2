@@ -19,6 +19,7 @@ import { listUsers } from '../../services/users';
 import { listEvents } from '../../services/events';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
+import JSZip from 'jszip';
 
 export default function MeetingRecords() {
     const { user, loading } = useAuth();
@@ -134,6 +135,9 @@ export default function MeetingRecords() {
     // Job Seeker Profile Modal state
     const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
     const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
+
+    // Resume export state
+    const [isExportingResumes, setIsExportingResumes] = useState(false);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -800,6 +804,217 @@ export default function MeetingRecords() {
         showToast(`Exported ${recordsToExport.length} meeting record(s) successfully`, 'Success');
     };
 
+    const handleExportResumes = async () => {
+        try {
+            setIsExportingResumes(true);
+            
+            // Helper function to extract resume URL from job seeker data
+            const getResumeUrl = (jobseekerId) => {
+                if (!jobseekerId) return null;
+                if (typeof jobseekerId === 'object' && jobseekerId.resumeUrl) {
+                    return jobseekerId.resumeUrl;
+                }
+                return null;
+            };
+
+            // Helper function to get job seeker name
+            const getJobSeekerName = (jobseekerId) => {
+                if (!jobseekerId) return 'Unknown';
+                if (typeof jobseekerId === 'object' && jobseekerId.name) {
+                    return jobseekerId.name;
+                }
+                return 'Unknown';
+            };
+
+            // Helper function to get file extension from URL
+            const getFileExtension = (url) => {
+                if (!url) return 'pdf';
+                try {
+                    const urlObj = new URL(url);
+                    const pathname = urlObj.pathname;
+                    const match = pathname.match(/\.([a-zA-Z0-9]+)(\?|$)/);
+                    if (match) {
+                        return match[1].toLowerCase();
+                    }
+                } catch (e) {
+                    // If URL parsing fails, try to extract from string
+                    const match = url.match(/\.([a-zA-Z0-9]+)(\?|$)/);
+                    if (match) {
+                        return match[1].toLowerCase();
+                    }
+                }
+                return 'pdf'; // Default to pdf
+            };
+
+            // Helper function to sanitize filename
+            const sanitizeFileName = (name) => {
+                return name.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 100);
+            };
+
+            let recordsToProcess = [];
+
+            // Determine which records to process
+            if (selectedRecords.length > 0) {
+                // Use selected records
+                recordsToProcess = meetingRecords.filter(r => selectedRecords.includes(r._id));
+                showToast(`Exporting resumes for ${selectedRecords.length} selected job seeker(s)...`, 'Info', 2000);
+            } else {
+                // Fetch all records matching current filters (not paginated)
+                showToast('Fetching all job seekers matching current filters...', 'Info', 2000);
+                const exportFilters = {
+                    ...filters,
+                    page: 1,
+                    limit: 100000 // Large limit to get all records
+                };
+                
+                const response = await meetingRecordsAPI.getMeetingRecords(exportFilters);
+                recordsToProcess = response.meetingRecords || [];
+                showToast(`Exporting resumes for ${recordsToProcess.length} job seeker(s)...`, 'Info', 2000);
+            }
+
+            if (recordsToProcess.length === 0) {
+                showToast('No records found to export resumes', 'Warning');
+                return;
+            }
+
+            // Extract unique job seekers with resume URLs
+            const jobSeekersMap = new Map();
+            recordsToProcess.forEach(record => {
+                const jobSeeker = record.jobseekerId;
+                if (!jobSeeker) return;
+
+                const resumeUrl = getResumeUrl(jobSeeker);
+                if (!resumeUrl || !resumeUrl.trim()) return; // Skip if no resume URL
+
+                const jobSeekerId = typeof jobSeeker === 'object' ? jobSeeker._id : jobSeeker;
+                const jobSeekerName = getJobSeekerName(jobSeeker);
+
+                // Only add if not already in map (to avoid duplicates)
+                if (!jobSeekersMap.has(jobSeekerId)) {
+                    jobSeekersMap.set(jobSeekerId, {
+                        id: jobSeekerId,
+                        name: jobSeekerName,
+                        resumeUrl: resumeUrl.trim()
+                    });
+                }
+            });
+
+            const uniqueJobSeekers = Array.from(jobSeekersMap.values());
+
+            if (uniqueJobSeekers.length === 0) {
+                showToast('No job seekers with resume URLs found', 'Warning');
+                return;
+            }
+
+            showToast(`Downloading ${uniqueJobSeekers.length} resume(s)...`, 'Info', 3000);
+
+            // Create zip file
+            const zip = new JSZip();
+
+            // Download each resume and add to zip
+            let successCount = 0;
+            let failCount = 0;
+            const errors = [];
+
+            for (let i = 0; i < uniqueJobSeekers.length; i++) {
+                const jobSeeker = uniqueJobSeekers[i];
+                try {
+                    // Fetch the resume file
+                    let response;
+                    try {
+                        response = await fetch(jobSeeker.resumeUrl, {
+                            method: 'GET',
+                            mode: 'cors'
+                        });
+                    } catch (fetchError) {
+                        // If CORS fails, try without explicit mode
+                        if (fetchError.name === 'TypeError' && fetchError.message.includes('CORS')) {
+                            response = await fetch(jobSeeker.resumeUrl, {
+                                method: 'GET'
+                            });
+                        } else {
+                            throw fetchError;
+                        }
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const blob = await response.blob();
+                    
+                    // Get file extension
+                    const extension = getFileExtension(jobSeeker.resumeUrl);
+                    const sanitizedName = sanitizeFileName(jobSeeker.name);
+                    const fileName = `${sanitizedName}_${jobSeeker.id}.${extension}`;
+
+                    // Add to zip
+                    zip.file(fileName, blob);
+                    successCount++;
+
+                    // Update progress
+                    if ((i + 1) % 10 === 0 || i === uniqueJobSeekers.length - 1) {
+                        showToast(`Downloaded ${i + 1}/${uniqueJobSeekers.length} resumes...`, 'Info', 2000);
+                    }
+                } catch (error) {
+                    console.error(`Error downloading resume for ${jobSeeker.name}:`, error);
+                    failCount++;
+                    errors.push(`${jobSeeker.name}: ${error.message}`);
+                }
+            }
+
+            if (successCount === 0) {
+                showToast('Failed to download any resumes. Please check the resume URLs.', 'Error', 5000);
+                return;
+            }
+
+            // Generate zip file
+            showToast('Creating zip file...', 'Info', 2000);
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+            // Download the zip file
+            const url = window.URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            
+            // Generate filename based on filters
+            let filename = 'job-seeker-resumes';
+            if (filters.eventId) {
+                const event = events.find(e => e._id === filters.eventId);
+                if (event) {
+                    filename = `${sanitizeFileName(event.name)}-resumes`;
+                }
+            }
+            if (selectedRecords.length > 0) {
+                filename = `selected-${selectedRecords.length}-resumes`;
+            }
+            filename += '.zip';
+            
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // Show success message with summary
+            let message = `Successfully exported ${successCount} resume(s)`;
+            if (failCount > 0) {
+                message += `. ${failCount} resume(s) failed to download.`;
+            }
+            showToast(message, successCount > 0 ? 'Success' : 'Warning', 5000);
+
+            if (errors.length > 0 && errors.length <= 5) {
+                console.warn('Resume download errors:', errors);
+            }
+        } catch (error) {
+            console.error('Error exporting resumes:', error);
+            showToast(`Failed to export resumes: ${error.message}`, 'Error', 5000);
+        } finally {
+            setIsExportingResumes(false);
+        }
+    };
+
     const clearFilters = () => {
         setSearchQuery('');
         setFilters({
@@ -1162,6 +1377,14 @@ export default function MeetingRecords() {
                                         {isDeleting ? 'Deleting...' : `Delete Selected (${selectedRecords.length})`}
                                     </ButtonComponent>
                                 )}
+                                <ButtonComponent 
+                                    cssClass="e-primary"
+                                    onClick={handleExportResumes}
+                                    disabled={isExportingResumes || loadingData}
+                                    aria-label="Export job seeker resumes as zip file"
+                                >
+                                    {isExportingResumes ? 'Exporting Resumes...' : 'Export Resumes'}
+                                </ButtonComponent>
                                 <ButtonComponent 
                                     cssClass="e-primary"
                                     onClick={handleExport}
