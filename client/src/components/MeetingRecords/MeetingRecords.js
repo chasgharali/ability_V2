@@ -124,7 +124,6 @@ export default function MeetingRecords() {
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
     const loadingBoothsRef = useRef(false);
-    const [filtersExpanded, setFiltersExpanded] = useState(false);
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectAllPages, setSelectAllPages] = useState(false);
@@ -146,7 +145,7 @@ export default function MeetingRecords() {
         endDate: '',
         search: '',
         page: 1,
-        limit: 10,
+        limit: 50,
         sortBy: 'startTime',
         sortOrder: 'desc'
     });
@@ -876,7 +875,7 @@ export default function MeetingRecords() {
             boothId: '',
             search: '',
             page: 1,
-            limit: 10,
+            limit: 50,
             sortBy: 'startTime',
             sortOrder: 'desc'
         });
@@ -1263,8 +1262,36 @@ export default function MeetingRecords() {
                             </div>
                         </div>
 
-                        {/* Search Row */}
+                        {/* Search and Filter Row */}
                         <div className="mr-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            {/* Event Filter */}
+                            <div style={{ width: '200px', flexShrink: 0 }}>
+                                <DropDownListComponent
+                                    id="event-filter-dropdown"
+                                    dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
+                                    fields={{ value: 'value', text: 'text' }}
+                                    value={filters.eventId}
+                                    change={(e) => handleFilterChange('eventId', e.value || '')}
+                                    placeholder="All Events"
+                                    cssClass="filter-dropdown"
+                                    popupHeight="300px"
+                                    width="100%"
+                                />
+                            </div>
+                            {/* Booth Filter */}
+                            <div style={{ width: '200px', flexShrink: 0 }}>
+                                <DropDownListComponent
+                                    id="booth-filter-dropdown"
+                                    dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
+                                    fields={{ value: 'value', text: 'text' }}
+                                    value={filters.boothId}
+                                    change={(e) => handleFilterChange('boothId', e.value || '')}
+                                    placeholder="All Booths"
+                                    cssClass="filter-dropdown"
+                                    popupHeight="300px"
+                                    width="100%"
+                                />
+                            </div>
                             {/* Search Section */}
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                 <div style={{ marginBottom: 0 }}>
@@ -1305,82 +1332,6 @@ export default function MeetingRecords() {
                                     </ButtonComponent>
                                 )}
                             </div>
-                        </div>
-
-                        {/* Filters */}
-                        <div className="filters-section">
-                            <div 
-                                className="filters-header" 
-                                onClick={() => setFiltersExpanded(!filtersExpanded)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        setFiltersExpanded(!filtersExpanded);
-                                    }
-                                }}
-                                role="button"
-                                tabIndex={0}
-                                aria-expanded={filtersExpanded}
-                                aria-controls="filters-content"
-                            >
-                                <h3>
-                                    Filters
-                                    {(filters.eventId || filters.boothId) && (
-                                        <span className="active-filters-indicator">●</span>
-                                    )}
-                                </h3>
-                                <span className={`filter-toggle ${filtersExpanded ? 'expanded' : ''}`}>
-                                    {filtersExpanded ? '▼' : '▶'}
-                                </span>
-                            </div>
-                                {filtersExpanded && (
-                                    <div
-                                        id="filters-content"
-                                        className="filters-grid"
-                                        style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '380px' }}
-                                    >
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="event-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        Event
-                                    </label>
-                                    <DropDownListComponent
-                                        id="event-filter-dropdown"
-                                        dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
-                                        fields={{ value: 'value', text: 'text' }}
-                                        value={filters.eventId}
-                                        change={(e) => handleFilterChange('eventId', e.value || '')}
-                                        placeholder="Select Event"
-                                        cssClass="filter-dropdown"
-                                        popupHeight="300px"
-                                        width="100%"
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="booth-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        Booth
-                                    </label>
-                                    <DropDownListComponent
-                                        id="booth-filter-dropdown"
-                                        dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
-                                        fields={{ value: 'value', text: 'text' }}
-                                        value={filters.boothId}
-                                        change={(e) => handleFilterChange('boothId', e.value || '')}
-                                        placeholder="Select Booth"
-                                        cssClass="filter-dropdown"
-                                        popupHeight="300px"
-                                        width="100%"
-                                    />
-                                </div>
-                                <div className="filter-actions">
-                                    <ButtonComponent 
-                                        cssClass="e-outline e-primary"
-                                        onClick={clearFilters}
-                                    >
-                                        Clear Filters
-                                    </ButtonComponent>
-                                </div>
-                            </div>
-                            )}
                         </div>
 
                         {/* Select All Pages Banner */}
@@ -1579,8 +1530,6 @@ export default function MeetingRecords() {
                                                 cursor: 'pointer'
                                             }}
                                         >
-                                            <option value={10}>10</option>
-                                            <option value={20}>20</option>
                                             <option value={50}>50</option>
                                             <option value={100}>100</option>
                                             <option value={200}>200</option>

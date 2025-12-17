@@ -120,7 +120,6 @@ const JobSeekerInterests = () => {
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
-    const [filtersExpanded, setFiltersExpanded] = useState(false);
     const initialLoadDone = useRef(false);
     const loadingInterestsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
@@ -898,7 +897,7 @@ const JobSeekerInterests = () => {
 
                             {/* Search and Event Filter Row */}
                             <div className="jsi-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                {/* Event Filter - Left */}
+                                {/* Event Filter */}
                                 <div style={{ width: '200px', flexShrink: 0 }}>
                                     <DropDownListComponent
                                         id="event-filter-dropdown-main"
@@ -906,12 +905,28 @@ const JobSeekerInterests = () => {
                                         fields={{ value: 'value', text: 'text' }}
                                         value={filters.eventId}
                                         change={(e) => handleFilterChange('eventId', e.value || '')}
-                                        placeholder="Select Event"
+                                        placeholder="All Events"
                                         cssClass="event-filter-dropdown"
                                         popupHeight="300px"
                                         width="100%"
                                     />
                                 </div>
+                                {/* Booth Filter - Only for Admin/GlobalSupport */}
+                                {['Admin', 'GlobalSupport'].includes(user?.role) && (
+                                    <div style={{ width: '200px', flexShrink: 0 }}>
+                                        <DropDownListComponent
+                                            id="booth-filter-dropdown"
+                                            dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
+                                            fields={{ value: 'value', text: 'text' }}
+                                            value={filters.boothId}
+                                            change={(e) => handleFilterChange('boothId', e.value || '')}
+                                            placeholder="All Booths"
+                                            cssClass="filter-dropdown"
+                                            popupHeight="300px"
+                                            width="100%"
+                                        />
+                                    </div>
+                                )}
                                 {/* Search Section - Right */}
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                     <div style={{ marginBottom: 0 }}>
@@ -961,80 +976,6 @@ const JobSeekerInterests = () => {
                                         Export CSV
                                     </ButtonComponent>
                                 </div>
-                            </div>
-
-                            {/* Filters */}
-                            <div className="filters-section">
-                                <div
-                                    className="filters-header"
-                                    onClick={() => setFiltersExpanded(!filtersExpanded)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            setFiltersExpanded(!filtersExpanded);
-                                        }
-                                    }}
-                                    role="button"
-                                    tabIndex={0}
-                                    aria-expanded={filtersExpanded}
-                                    aria-controls="filters-content"
-                                >
-                                <h3>
-                                    Filters
-                                    {((user?.role !== 'Recruiter' && filters.boothId) || filters.eventId) && (
-                                        <span className="active-filters-indicator">●</span>
-                                    )}
-                                </h3>
-                                    <span className={`filter-toggle ${filtersExpanded ? 'expanded' : ''}`}>
-                                        {filtersExpanded ? '▼' : '▶'}
-                                    </span>
-                                </div>
-                                {filtersExpanded && (
-                                    <div id="filters-content" className="filters-grid">
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label htmlFor="event-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                                Event
-                                            </label>
-                                            <DropDownListComponent
-                                                id="event-filter-dropdown"
-                                                dataSource={getEventFilterOptions()}
-                                                fields={{ value: 'value', text: 'text' }}
-                                                value={filters.eventId}
-                                                change={(e) => handleFilterChange('eventId', e.value || '')}
-                                                placeholder="Select Event"
-                                                cssClass="filter-dropdown"
-                                                popupHeight="300px"
-                                                width="100%"
-                                            />
-                                        </div>
-                                        {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label htmlFor="booth-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                                    Booth
-                                                </label>
-                                                <DropDownListComponent
-                                                    id="booth-filter-dropdown"
-                                                    dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
-                                                    fields={{ value: 'value', text: 'text' }}
-                                                    value={filters.boothId}
-                                                    change={(e) => handleFilterChange('boothId', e.value || '')}
-                                                    placeholder="Select Booth"
-                                                    cssClass="filter-dropdown"
-                                                    popupHeight="300px"
-                                                    width="100%"
-                                                />
-                                            </div>
-                                        )}
-                                        <div className="filter-actions">
-                                            <ButtonComponent
-                                                cssClass="e-outline e-primary"
-                                                onClick={clearFilters}
-                                            >
-                                                Clear Filters
-                                            </ButtonComponent>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
                             {/* Data Grid */}
@@ -1125,8 +1066,6 @@ const JobSeekerInterests = () => {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <option value={10}>10</option>
-                                                <option value={20}>20</option>
                                                 <option value={50}>50</option>
                                                 <option value={100}>100</option>
                                                 <option value={200}>200</option>
