@@ -195,17 +195,19 @@ export default function EventManagement() {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [statusFilter, setStatusFilter] = useState('');
-    const [searchQuery, setSearchQuery] = useState(''); // Input field value
+    const searchInputRef = useRef(null); // Uncontrolled input to avoid live filtering on typing
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
 
     const handleSearch = useCallback(() => {
-        // Set the active search query to trigger filtering
-        setActiveSearchQuery(searchQuery.trim());
+        const query = (searchInputRef.current?.value || '').trim();
+        setActiveSearchQuery(query);
         setCurrentPage(1); // Reset to first page when searching
-    }, [searchQuery]);
+    }, []);
 
     const handleClearSearch = useCallback(() => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setActiveSearchQuery('');
         // loadEvents will be called automatically via useEffect when activeSearchQuery changes
         setCurrentPage(1); // Reset to first page when clearing
@@ -795,11 +797,11 @@ export default function EventManagement() {
                                     {/* Search Section - Right */}
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                         <div style={{ marginBottom: 0 }}>
-                                            <Input
+                                            <input
+                                                ref={searchInputRef}
                                                 id="event-search-input"
                                                 type="text"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                defaultValue=""
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
@@ -807,8 +809,8 @@ export default function EventManagement() {
                                                     }
                                                 }}
                                                 placeholder="Search by name, email, or any field..."
-                                                style={{ width: '300px', marginBottom: 0 }}
-                                                className="em-search-input-no-label"
+                                                style={{ width: '300px', marginBottom: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                                                className="em-search-input-native"
                                             />
                                         </div>
                                         <ButtonComponent
@@ -820,7 +822,7 @@ export default function EventManagement() {
                                         >
                                             Search
                                         </ButtonComponent>
-                                        {(searchQuery || activeSearchQuery) && (
+                                        {((searchInputRef.current && searchInputRef.current.value) || activeSearchQuery) && (
                                             <ButtonComponent
                                                 cssClass="e-outline e-primary e-small"
                                                 onClick={handleClearSearch}

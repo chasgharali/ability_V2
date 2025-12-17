@@ -71,3 +71,252 @@
 2025-12-13 19:32:47:3247 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
 2025-12-13 19:32:47:3247 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
 2025-12-13 19:32:47:3247 [32minfo[39m: [32mRedis Client Connected[39m
+2025-12-14 23:56:43:5643 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2025-12-14 23:56:43:5643 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2025-12-14 23:57:13:5713 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2025-12-14 23:57:13:5713 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mConnected to Redis[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2025-12-14 23:57:13:5713 [32minfo[39m: [32mRedis Client Connected[39m
+2025-12-14 23:57:23:5723 [31merror[39m: [31mToken cleanup error: Operation `users.updateMany()` buffering timed out after 10000ms[39m
+2025-12-14 23:57:29:5729 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2025-12-15 00:00:09:09 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-12-15 00:00:23:023 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2025-12-15 00:00:23:023 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mMongoDB Connected: ac-u8nckeo-shard-00-00.ik2v2ci.mongodb.net[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mConnected to Redis[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2025-12-15 00:00:26:026 [32minfo[39m: [32mRedis Client Connected[39m
+2025-12-15 00:01:47:147 [32minfo[39m: [32mUser logged in: localj@gmail.com[39m
+2025-12-15 00:01:48:148 [32minfo[39m: [32mUser localj@gmail.com connected via socket[39m
+2025-12-15 00:05:18:518 [32minfo[39m: [32mUser localj@gmail.com disconnected: client namespace disconnect[39m
+2025-12-15 00:05:24:524 [32minfo[39m: [32mUser logged in: locala@gmail.com[39m
+2025-12-15 00:05:24:524 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:05:33:533 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:05:34:534 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:05:34:534 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:05:34:534 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:06:23:623 [32minfo[39m: [32mUser locala@gmail.com disconnected: transport close[39m
+2025-12-15 00:06:25:625 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:06:25:625 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:06:25:625 [32minfo[39m: [32mUser locala@gmail.com disconnected: client namespace disconnect[39m
+2025-12-15 00:06:25:625 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:06:25:625 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:06:26:626 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:06:26:626 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:06:44:644 [32minfo[39m: [32mUser updated: admin@ability.com by locala@gmail.com[39m
+2025-12-15 00:06:44:644 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:06:44:644 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:06:45:645 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:06:45:645 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:07:28:728 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:07:29:729 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:07:29:729 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:07:29:729 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:07:54:754 [32minfo[39m: [32mUser locala@gmail.com disconnected: transport close[39m
+2025-12-15 00:07:57:757 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:07:57:757 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:07:57:757 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:07:58:758 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:07:58:758 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:08:27:827 [32minfo[39m: [32mUser locala@gmail.com disconnected: transport close[39m
+2025-12-15 00:08:28:828 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:08:29:829 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:08:29:829 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:08:30:830 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:08:30:830 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:08:53:853 [32minfo[39m: [32mUser updated: admin@ability.com by locala@gmail.com[39m
+2025-12-15 00:08:53:853 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:08:54:854 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:08:55:855 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:08:55:855 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:12:17:1217 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:12:17:1217 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:12:18:1218 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:12:18:1218 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:12:25:1225 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:12:26:1226 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:12:26:1226 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:12:26:1226 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:12:42:1242 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:12:42:1242 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:12:43:1243 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:12:43:1243 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:12:51:1251 [32minfo[39m: [32mUser locala@gmail.com disconnected: transport close[39m
+2025-12-15 00:12:53:1253 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:12:53:1253 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:12:54:1254 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:12:55:1255 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:12:55:1255 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:13:23:1323 [32minfo[39m: [32mUser locala@gmail.com disconnected: transport close[39m
+2025-12-15 00:13:24:1324 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:13:24:1324 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:13:25:1325 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:13:25:1325 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:13:25:1325 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:13:51:1351 [32minfo[39m: [32mUser updated: admin@ability.com by locala@gmail.com[39m
+2025-12-15 00:13:51:1351 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:13:52:1352 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:13:52:1352 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:13:52:1352 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 00:15:11:1511 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:15:12:1512 [32minfo[39m: [32mEvent filter query returned 1 users out of 1 total[39m
+2025-12-15 00:15:13:1513 [32minfo[39m: [32mQuery returned 1 users out of 1 total matching query[39m
+2025-12-15 00:15:13:1513 [32minfo[39m: [32mStats - Active: 1, Inactive: 0, Verified: 0[39m
+2025-12-15 00:15:21:1521 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:15:21:1521 [32minfo[39m: [32mEvent filter query returned 1 users out of 1 total[39m
+2025-12-15 00:15:22:1522 [32minfo[39m: [32mQuery returned 1 users out of 1 total matching query[39m
+2025-12-15 00:15:22:1522 [32minfo[39m: [32mStats - Active: 1, Inactive: 0, Verified: 0[39m
+2025-12-15 00:15:22:1522 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:15:23:1523 [32minfo[39m: [32mEvent filter query returned 1 users out of 1 total[39m
+2025-12-15 00:15:23:1523 [32minfo[39m: [32mQuery returned 1 users out of 1 total matching query[39m
+2025-12-15 00:15:23:1523 [32minfo[39m: [32mStats - Active: 1, Inactive: 0, Verified: 0[39m
+2025-12-15 00:15:33:1533 [32minfo[39m: [32mUser locala@gmail.com disconnected: transport close[39m
+2025-12-15 00:15:34:1534 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:15:34:1534 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 00:15:35:1535 [32minfo[39m: [32mEvent filter query returned 1 users out of 1 total[39m
+2025-12-15 00:15:35:1535 [32minfo[39m: [32mQuery returned 1 users out of 1 total matching query[39m
+2025-12-15 00:15:35:1535 [32minfo[39m: [32mStats - Active: 1, Inactive: 0, Verified: 0[39m
+2025-12-15 00:15:36:1536 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:15:36:1536 [32minfo[39m: [32mEvent filter query returned 1 users out of 1 total[39m
+2025-12-15 00:15:37:1537 [32minfo[39m: [32mQuery returned 1 users out of 1 total matching query[39m
+2025-12-15 00:15:37:1537 [32minfo[39m: [32mStats - Active: 1, Inactive: 0, Verified: 0[39m
+2025-12-15 00:15:43:1543 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:15:43:1543 [32minfo[39m: [32mEvent filter query returned 1 users out of 1 total[39m
+2025-12-15 00:15:44:1544 [32minfo[39m: [32mQuery returned 1 users out of 1 total matching query[39m
+2025-12-15 00:15:44:1544 [32minfo[39m: [32mStats - Active: 1, Inactive: 0, Verified: 0[39m
+2025-12-15 00:15:58:1558 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 00:15:58:1558 [32minfo[39m: [32mEvent filter query returned 3 users out of 3 total[39m
+2025-12-15 00:15:59:1559 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2025-12-15 00:15:59:1559 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 0[39m
+2025-12-15 01:02:37:237 [32minfo[39m: [32mUser locala@gmail.com disconnected: transport close[39m
+2025-12-15 01:02:38:238 [32minfo[39m: [32mUser locala@gmail.com connected via socket[39m
+2025-12-15 11:25:28:2528 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:25:28:2528 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:25:30:2530 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-12-15 11:25:30:2530 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:46:21:4621 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:46:21:4621 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:46:33:4633 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-12-15 11:46:33:4633 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:49:44:4944 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:49:44:4944 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:49:55:4955 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-12-15 11:49:55:4955 [32minfo[39m: [32mMongoDB reconnected[39m
+2025-12-15 11:50:17:5017 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-12-15 11:50:19:5019 [33mwarn[39m: [33mMongoDB disconnected[39m
+2025-12-15 11:50:30:5030 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2025-12-15 11:50:30:5030 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mConnected to Redis[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2025-12-15 11:50:33:5033 [32minfo[39m: [32mRedis Client Connected[39m
+2025-12-15 11:51:51:5151 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2025-12-15 11:51:51:5151 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:51:5151 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:51:5151 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:51:5151 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:51:5151 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:52:5152 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:52:5152 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:52:5152 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:53:5153 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:53:5153 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:54:5154 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:55:5155 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:55:5155 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:56:5156 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:57:5157 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:57:5157 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:58:5158 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:51:59:5159 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:52:00:520 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:52:01:521 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:52:02:522 [31merror[39m: [31mRedis Client Error: connect ECONNREFUSED 127.0.0.1:6379[39m
+2025-12-15 11:52:03:523 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-12-15 11:54:07:547 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2025-12-15 11:54:07:547 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mConnected to Redis[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2025-12-15 11:54:09:549 [32minfo[39m: [32mRedis Client Connected[39m
+2025-12-15 11:58:00:580 [32minfo[39m: [32mUser logged in: rec1demo@gmail.com[39m
+2025-12-15 11:58:00:580 [32minfo[39m: [32mUser rec1demo@gmail.com connected via socket[39m
+2025-12-15 11:58:00:580 [32minfo[39m: [32mUser rec1demo@gmail.com connected via socket[39m
+2025-12-15 11:58:00:580 [32minfo[39m: [32mSending online users list to rec1demo@gmail.com: 0 users[39m
+2025-12-15 11:58:03:583 [32minfo[39m: [32mUser rec1demo@gmail.com disconnected: client namespace disconnect[39m
+2025-12-15 11:58:03:583 [32minfo[39m: [32mUser rec1demo@gmail.com disconnected: client namespace disconnect[39m
+2025-12-15 12:04:55:455 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2025-12-15 13:55:10:5510 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2025-12-15 13:55:10:5510 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mMongoDB connection attempted[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mConnected to Redis[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mServer is ready to accept connections[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2025-12-15 13:55:13:5513 [32minfo[39m: [32mRedis Client Connected[39m
+2025-12-15 14:01:07:17 [32minfo[39m: [32mUser logged in: marge@ability.email[39m
+2025-12-15 14:01:07:17 [32minfo[39m: [32mUser marge@ability.email connected via socket[39m
+2025-12-15 14:01:25:125 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:01:26:126 [32minfo[39m: [32mEvent filter query returned 50 users out of 21447 total[39m
+2025-12-15 14:01:27:127 [32minfo[39m: [32mQuery returned 50 users out of 21447 total matching query[39m
+2025-12-15 14:01:27:127 [32minfo[39m: [32mStats - Active: 21446, Inactive: 1, Verified: 20772[39m
+2025-12-15 14:02:11:211 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:02:12:212 [32minfo[39m: [32mEvent filter query returned 50 users out of 21447 total[39m
+2025-12-15 14:02:13:213 [32minfo[39m: [32mQuery returned 50 users out of 21447 total matching query[39m
+2025-12-15 14:02:13:213 [32minfo[39m: [32mStats - Active: 21446, Inactive: 1, Verified: 20772[39m
+2025-12-15 14:07:57:757 [32minfo[39m: [32mUser marge@ability.email disconnected: transport close[39m
+2025-12-15 14:08:00:80 [32minfo[39m: [32mUser marge@ability.email connected via socket[39m
+2025-12-15 14:08:21:821 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:08:23:823 [32minfo[39m: [32mEvent filter query returned 222 users out of 222 total[39m
+2025-12-15 14:08:24:824 [32minfo[39m: [32mQuery returned 222 users out of 222 total matching query[39m
+2025-12-15 14:08:24:824 [32minfo[39m: [32mStats - Active: 222, Inactive: 0, Verified: 1[39m
+2025-12-15 14:08:31:831 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:08:33:833 [32minfo[39m: [32mEvent filter query returned 222 users out of 222 total[39m
+2025-12-15 14:08:34:834 [32minfo[39m: [32mQuery returned 222 users out of 222 total matching query[39m
+2025-12-15 14:08:34:834 [32minfo[39m: [32mStats - Active: 222, Inactive: 0, Verified: 1[39m
+2025-12-15 14:11:44:1144 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:11:45:1145 [32minfo[39m: [32mEvent filter query returned 50 users out of 21447 total[39m
+2025-12-15 14:11:45:1145 [32minfo[39m: [32mQuery returned 50 users out of 21447 total matching query[39m
+2025-12-15 14:11:45:1145 [32minfo[39m: [32mStats - Active: 21446, Inactive: 1, Verified: 20772[39m
+2025-12-15 14:11:51:1151 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:11:53:1153 [32minfo[39m: [32mEvent filter query returned 222 users out of 222 total[39m
+2025-12-15 14:11:53:1153 [32minfo[39m: [32mQuery returned 222 users out of 222 total matching query[39m
+2025-12-15 14:11:53:1153 [32minfo[39m: [32mStats - Active: 222, Inactive: 0, Verified: 1[39m
+2025-12-15 14:13:09:139 [32minfo[39m: [32mUser marge@ability.email disconnected: transport close[39m
+2025-12-15 14:13:11:1311 [32minfo[39m: [32mUser marge@ability.email connected via socket[39m
+2025-12-15 14:13:15:1315 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:13:18:1318 [32minfo[39m: [32mEvent filter query returned 222 users out of 222 total[39m
+2025-12-15 14:13:18:1318 [32minfo[39m: [32mQuery returned 222 users out of 222 total matching query[39m
+2025-12-15 14:13:18:1318 [32minfo[39m: [32mStats - Active: 222, Inactive: 0, Verified: 1[39m
+2025-12-15 14:13:32:1332 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:13:34:1334 [32minfo[39m: [32mEvent filter query returned 196 users out of 196 total[39m
+2025-12-15 14:13:34:1334 [32minfo[39m: [32mQuery returned 196 users out of 196 total matching query[39m
+2025-12-15 14:13:34:1334 [32minfo[39m: [32mStats - Active: 196, Inactive: 0, Verified: 1[39m
+2025-12-15 14:13:35:1335 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined[39m
+2025-12-15 14:13:35:1335 [32minfo[39m: [32mEvent filter query returned 196 users out of 196 total[39m
+2025-12-15 14:13:36:1336 [32minfo[39m: [32mQuery returned 196 users out of 196 total matching query[39m
+2025-12-15 14:13:36:1336 [32minfo[39m: [32mStats - Active: 196, Inactive: 0, Verified: 1[39m
