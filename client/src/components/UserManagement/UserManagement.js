@@ -24,7 +24,7 @@ export default function UserManagement() {
   const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(50);
 
   const [boothOptions, setBoothOptions] = useState([]);
   const [eventOptions, setEventOptions] = useState([]);
@@ -785,8 +785,6 @@ export default function UserManagement() {
                                     cursor: 'pointer'
                                 }}
                             >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
                                 <option value={50}>50</option>
                                 <option value={100}>100</option>
                                 <option value={200}>200</option>
