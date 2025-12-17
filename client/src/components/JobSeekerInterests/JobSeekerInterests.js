@@ -127,17 +127,31 @@ const JobSeekerInterests = () => {
     const loadingBoothsRef = useRef(false);
     const fetchInProgress = useRef(false);
 
+    // Load search query from sessionStorage on mount (per-table persistence for search)
+    const loadSearchQueryFromSession = () => {
+        try {
+            const saved = sessionStorage.getItem('jobSeekerInterests_searchQuery');
+            if (saved) {
+                return saved;
+            }
+        } catch (error) {
+            console.error('Error loading Job Seeker Interests search query from sessionStorage:', error);
+        }
+        return '';
+    };
+
     // Load filters from sessionStorage on mount
     const loadFiltersFromSession = () => {
         try {
             const savedFilters = sessionStorage.getItem('jobSeekerInterests_filters');
+            const savedSearchQuery = loadSearchQueryFromSession();
             if (savedFilters) {
                 const parsed = JSON.parse(savedFilters);
                 return {
                     recruiterId: parsed.recruiterId || '',
                     eventId: parsed.eventId || '',
                     boothId: parsed.boothId || '',
-                    search: '',
+                    search: savedSearchQuery,
                     page: 1,
                     limit: 50,
                     sortBy: parsed.sortBy || 'createdAt',
@@ -147,11 +161,12 @@ const JobSeekerInterests = () => {
         } catch (error) {
             console.error('Error loading filters from sessionStorage:', error);
         }
+        const savedSearchQuery = loadSearchQueryFromSession();
         return {
             recruiterId: '',
             eventId: '',
             boothId: '',
-            search: '',
+            search: savedSearchQuery,
             page: 1,
             limit: 50,
             sortBy: 'createdAt',
@@ -164,6 +179,35 @@ const JobSeekerInterests = () => {
     
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
+
+    // Set search input value from sessionStorage on mount
+    useEffect(() => {
+        const savedSearchQuery = loadSearchQueryFromSession();
+        if (searchInputRef.current && savedSearchQuery) {
+            searchInputRef.current.value = savedSearchQuery;
+        }
+    }, []);
+
+    // Persist search query in sessionStorage so it survives navigation within the session
+    useEffect(() => {
+        try {
+            if (filters.search && filters.search.trim()) {
+                sessionStorage.setItem('jobSeekerInterests_searchQuery', filters.search.trim());
+                // Also update the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = filters.search.trim();
+                }
+            } else {
+                sessionStorage.removeItem('jobSeekerInterests_searchQuery');
+                // Also clear the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = '';
+                }
+            }
+        } catch (error) {
+            console.error('Error saving Job Seeker Interests search query to sessionStorage:', error);
+        }
+    }, [filters.search]);
 
     // Statistics
     const [stats, setStats] = useState({
@@ -618,6 +662,7 @@ const JobSeekerInterests = () => {
         // Clear sessionStorage
         try {
             sessionStorage.removeItem('jobSeekerInterests_filters');
+            sessionStorage.removeItem('jobSeekerInterests_searchQuery');
         } catch (error) {
             console.error('Error clearing filters from sessionStorage:', error);
         }
@@ -651,6 +696,12 @@ const JobSeekerInterests = () => {
             search: '',
             page: 1
         }));
+        // Clear from sessionStorage
+        try {
+            sessionStorage.removeItem('jobSeekerInterests_searchQuery');
+        } catch (error) {
+            console.error('Error clearing Job Seeker Interests search query from sessionStorage:', error);
+        }
     };
 
     const handleExport = async () => {

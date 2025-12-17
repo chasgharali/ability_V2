@@ -135,10 +135,24 @@ export default function MeetingRecords() {
     const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
     const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
 
+    // Load search query from sessionStorage on mount (per-table persistence for search)
+    const loadSearchQueryFromSession = () => {
+        try {
+            const saved = sessionStorage.getItem('meetingRecords_searchQuery');
+            if (saved) {
+                return saved;
+            }
+        } catch (error) {
+            console.error('Error loading Meeting Records search query from sessionStorage:', error);
+        }
+        return '';
+    };
+
     // Load filters from sessionStorage on mount
     const loadFiltersFromSession = () => {
         try {
             const savedFilters = sessionStorage.getItem('meetingRecords_filters');
+            const savedSearchQuery = loadSearchQueryFromSession();
             if (savedFilters) {
                 const parsed = JSON.parse(savedFilters);
                 return {
@@ -148,7 +162,7 @@ export default function MeetingRecords() {
                     status: parsed.status || '',
                     startDate: parsed.startDate || '',
                     endDate: parsed.endDate || '',
-                    search: '',
+                    search: savedSearchQuery,
                     page: 1,
                     limit: 50,
                     sortBy: parsed.sortBy || 'startTime',
@@ -158,6 +172,7 @@ export default function MeetingRecords() {
         } catch (error) {
             console.error('Error loading filters from sessionStorage:', error);
         }
+        const savedSearchQuery = loadSearchQueryFromSession();
         return {
             recruiterId: '',
             eventId: '',
@@ -165,7 +180,7 @@ export default function MeetingRecords() {
             status: '',
             startDate: '',
             endDate: '',
-            search: '',
+            search: savedSearchQuery,
             page: 1,
             limit: 50,
             sortBy: 'startTime',
@@ -178,6 +193,35 @@ export default function MeetingRecords() {
     
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
+
+    // Set search input value from sessionStorage on mount
+    useEffect(() => {
+        const savedSearchQuery = loadSearchQueryFromSession();
+        if (searchInputRef.current && savedSearchQuery) {
+            searchInputRef.current.value = savedSearchQuery;
+        }
+    }, []);
+
+    // Persist search query in sessionStorage so it survives navigation within the session
+    useEffect(() => {
+        try {
+            if (filters.search && filters.search.trim()) {
+                sessionStorage.setItem('meetingRecords_searchQuery', filters.search.trim());
+                // Also update the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = filters.search.trim();
+                }
+            } else {
+                sessionStorage.removeItem('meetingRecords_searchQuery');
+                // Also clear the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = '';
+                }
+            }
+        } catch (error) {
+            console.error('Error saving Meeting Records search query to sessionStorage:', error);
+        }
+    }, [filters.search]);
 
     // Pagination
     const [pagination, setPagination] = useState({
@@ -917,6 +961,7 @@ export default function MeetingRecords() {
         // Clear sessionStorage
         try {
             sessionStorage.removeItem('meetingRecords_filters');
+            sessionStorage.removeItem('meetingRecords_searchQuery');
         } catch (error) {
             console.error('Error clearing filters from sessionStorage:', error);
         }
@@ -953,6 +998,12 @@ export default function MeetingRecords() {
             search: '',
             page: 1
         }));
+        // Clear from sessionStorage
+        try {
+            sessionStorage.removeItem('meetingRecords_searchQuery');
+        } catch (error) {
+            console.error('Error clearing Meeting Records search query from sessionStorage:', error);
+        }
     };
 
     const formatDuration = (minutes) => {

@@ -53,7 +53,22 @@ export default function BoothManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [loadingBooths, setLoadingBooths] = useState(false);
-  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
+  
+  // Load search query from sessionStorage on mount (per-table persistence for search)
+  const loadSearchQueryFromSession = () => {
+    try {
+      const saved = sessionStorage.getItem('boothManagement_searchQuery');
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Error loading Booth Management search query from sessionStorage:', error);
+    }
+    return '';
+  };
+
+  const savedSearchQuery = loadSearchQueryFromSession();
+  const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -473,6 +488,35 @@ export default function BoothManagement() {
     } finally { setBoothSaving(false); }
   };
 
+  // Set search input value from sessionStorage on mount
+  useEffect(() => {
+    const savedSearchQuery = loadSearchQueryFromSession();
+    if (searchInputRef.current && savedSearchQuery) {
+      searchInputRef.current.value = savedSearchQuery;
+    }
+  }, []);
+
+  // Persist search query in sessionStorage so it survives navigation within the session
+  useEffect(() => {
+    try {
+      if (activeSearchQuery && activeSearchQuery.trim()) {
+        sessionStorage.setItem('boothManagement_searchQuery', activeSearchQuery.trim());
+        // Also update the input field if it exists
+        if (searchInputRef.current) {
+          searchInputRef.current.value = activeSearchQuery.trim();
+        }
+      } else {
+        sessionStorage.removeItem('boothManagement_searchQuery');
+        // Also clear the input field if it exists
+        if (searchInputRef.current) {
+          searchInputRef.current.value = '';
+        }
+      }
+    } catch (error) {
+      console.error('Error saving Booth Management search query to sessionStorage:', error);
+    }
+  }, [activeSearchQuery]);
+
   const handleSearch = () => {
     const query = (searchInputRef.current?.value || '').trim();
     setActiveSearchQuery(query);
@@ -485,6 +529,12 @@ export default function BoothManagement() {
     }
     setActiveSearchQuery('');
     setCurrentPage(1); // Reset to first page when clearing
+    // Clear from sessionStorage
+    try {
+      sessionStorage.removeItem('boothManagement_searchQuery');
+    } catch (error) {
+      console.error('Error clearing Booth Management search query from sessionStorage:', error);
+    }
   };
 
   const loadBooths = useCallback(async () => {
