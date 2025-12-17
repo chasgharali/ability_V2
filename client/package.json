@@ -24,6 +24,7 @@
         "date-fns": "^2.30.0",
         "focus-trap-react": "^10.2.3",
         "framer-motion": "^10.16.16",
+        "jszip": "^3.10.1",
         "react": "^18.2.0",
         "react-aria": "^3.30.0",
         "react-dom": "^18.2.0",
