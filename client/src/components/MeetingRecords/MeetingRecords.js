@@ -9,14 +9,13 @@ import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
-import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
-import { Input } from '../UI/FormComponents';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
 import { listEvents } from '../../services/events';
+import { listBooths } from '../../services/booths';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 import JSZip from 'jszip';
@@ -117,6 +116,7 @@ export default function MeetingRecords() {
     const [meetingRecords, setMeetingRecords] = useState([]);
     const [recruiters, setRecruiters] = useState([]);
     const [events, setEvents] = useState([]);
+    const [booths, setBooths] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
@@ -124,7 +124,7 @@ export default function MeetingRecords() {
     const loadingStatsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
-    const [filtersExpanded, setFiltersExpanded] = useState(false);
+    const loadingBoothsRef = useRef(false);
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectAllPages, setSelectAllPages] = useState(false);
@@ -139,22 +139,93 @@ export default function MeetingRecords() {
     // Resume export state
     const [isExportingResumes, setIsExportingResumes] = useState(false);
 
+    // Load search query from sessionStorage on mount (per-table persistence for search)
+    const loadSearchQueryFromSession = () => {
+        try {
+            const saved = sessionStorage.getItem('meetingRecords_searchQuery');
+            if (saved) {
+                return saved;
+            }
+        } catch (error) {
+            console.error('Error loading Meeting Records search query from sessionStorage:', error);
+        }
+        return '';
+    };
+
+    // Load filters from sessionStorage on mount
+    const loadFiltersFromSession = () => {
+        try {
+            const savedFilters = sessionStorage.getItem('meetingRecords_filters');
+            const savedSearchQuery = loadSearchQueryFromSession();
+            if (savedFilters) {
+                const parsed = JSON.parse(savedFilters);
+                return {
+                    recruiterId: parsed.recruiterId || '',
+                    eventId: parsed.eventId || '',
+                    boothId: parsed.boothId || '',
+                    status: parsed.status || '',
+                    startDate: parsed.startDate || '',
+                    endDate: parsed.endDate || '',
+                    search: savedSearchQuery,
+                    page: 1,
+                    limit: 50,
+                    sortBy: parsed.sortBy || 'startTime',
+                    sortOrder: parsed.sortOrder || 'desc'
+                };
+            }
+        } catch (error) {
+            console.error('Error loading filters from sessionStorage:', error);
+        }
+        const savedSearchQuery = loadSearchQueryFromSession();
+        return {
+            recruiterId: '',
+            eventId: '',
+            boothId: '',
+            status: '',
+            startDate: '',
+            endDate: '',
+            search: savedSearchQuery,
+            page: 1,
+            limit: 50,
+            sortBy: 'startTime',
+            sortOrder: 'desc'
+        };
+    };
+
     // Filters
-    const [filters, setFilters] = useState({
-        recruiterId: '',
-        eventId: '',
-        status: '',
-        startDate: '',
-        endDate: '',
-        search: '',
-        page: 1,
-        limit: 10,
-        sortBy: 'startTime',
-        sortOrder: 'desc'
-    });
+    const [filters, setFilters] = useState(loadFiltersFromSession);
     
-    // Search query state for input field
-    const [searchQuery, setSearchQuery] = useState('');
+    // Search input ref (uncontrolled to avoid live filtering on typing)
+    const searchInputRef = useRef(null);
+
+    // Set search input value from sessionStorage on mount
+    useEffect(() => {
+        const savedSearchQuery = loadSearchQueryFromSession();
+        if (searchInputRef.current && savedSearchQuery) {
+            searchInputRef.current.value = savedSearchQuery;
+        }
+    }, []);
+
+    // Persist search query in sessionStorage so it survives navigation within the session
+    useEffect(() => {
+        try {
+            if (filters.search && filters.search.trim()) {
+                sessionStorage.setItem('meetingRecords_searchQuery', filters.search.trim());
+                // Also update the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = filters.search.trim();
+                }
+            } else {
+                sessionStorage.removeItem('meetingRecords_searchQuery');
+                // Also clear the input field if it exists
+                if (searchInputRef.current) {
+                    searchInputRef.current.value = '';
+                }
+            }
+        } catch (error) {
+            console.error('Error saving Meeting Records search query to sessionStorage:', error);
+        }
+    }, [filters.search]);
 
     // Pagination
     const [pagination, setPagination] = useState({
@@ -429,6 +500,21 @@ export default function MeetingRecords() {
         }
     }, []);
 
+    const loadBooths = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (loadingBoothsRef.current) return;
+        
+        try {
+            loadingBoothsRef.current = true;
+            const response = await listBooths({ limit: 1000 });
+            setBooths(response.booths || []);
+        } catch (error) {
+            console.error('Error loading booths:', error);
+        } finally {
+            loadingBoothsRef.current = false;
+        }
+    }, []);
+
     // Load data when user is available or filters change
     useEffect(() => {
         if (user) {
@@ -436,15 +522,35 @@ export default function MeetingRecords() {
             loadStats();
             loadRecruiters();
             loadEvents();
+            loadBooths();
         }
-    }, [user, loadMeetingRecords, loadStats, loadRecruiters, loadEvents, location.key]);
+    }, [user, loadMeetingRecords, loadStats, loadRecruiters, loadEvents, loadBooths, location.key]);
 
     const handleFilterChange = (field, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [field]: value,
-            page: 1 // Reset to first page when filters change
-        }));
+        setFilters(prev => {
+            const newFilters = {
+                ...prev,
+                [field]: value,
+                page: 1 // Reset to first page when filters change
+            };
+            // Save filters to sessionStorage (excluding page, search, limit)
+            try {
+                const filtersToSave = {
+                    recruiterId: newFilters.recruiterId,
+                    eventId: newFilters.eventId,
+                    boothId: newFilters.boothId,
+                    status: newFilters.status,
+                    startDate: newFilters.startDate,
+                    endDate: newFilters.endDate,
+                    sortBy: newFilters.sortBy,
+                    sortOrder: newFilters.sortOrder
+                };
+                sessionStorage.setItem('meetingRecords_filters', JSON.stringify(filtersToSave));
+            } catch (error) {
+                console.error('Error saving filters to sessionStorage:', error);
+            }
+            return newFilters;
+        });
     };
 
     const handlePageChange = (page) => {
@@ -656,9 +762,19 @@ export default function MeetingRecords() {
             'Booth',
             'Recruiter Name',
             'Recruiter Email',
-            'Job Seeker Name',
+            'Job Seeker First Name',
+            'Job Seeker Last Name',
             'Job Seeker Email',
+            'Job Seeker Phone',
             'Job Seeker Location',
+            'Job Seeker Headline',
+            'Job Seeker Keywords',
+            'Work Experience Level',
+            'Highest Education Level',
+            'Employment Types',
+            'Language(s)',
+            'Security Clearance',
+            'Veteran/Military Status',
             'Job Seeker Resume Link',
             'Interpreter',
             'Start Time',
@@ -729,7 +845,19 @@ export default function MeetingRecords() {
                 const recruiterName = record.recruiterName || getFieldName(record.recruiterId);
                 const recruiterEmail = getFieldEmail(record.recruiterId);
                 const jobSeekerName = record.jobSeekerName || getFieldName(record.jobseekerId);
+                
+                // Split name into first and last name
+                const nameParts = jobSeekerName ? jobSeekerName.split(/\s+/) : [];
+                const jobSeekerFirstName = nameParts[0] || '';
+                const jobSeekerLastName = nameParts.slice(1).join(' ') || '';
+                
                 const jobSeekerEmail = record.jobSeekerEmail || getFieldEmail(record.jobseekerId);
+                
+                // Extract phone number
+                const jobSeekerPhone = (record.jobseekerId && typeof record.jobseekerId === 'object' && record.jobseekerId.phoneNumber) 
+                    ? String(record.jobseekerId.phoneNumber).trim() 
+                    : '';
+                
                 const jobSeekerResumeUrl = record.jobSeekerResumeUrl || getFieldResumeUrl(record.jobseekerId);
                 const jobSeekerCity = record.jobSeekerCity || getFieldCity(record.jobseekerId);
                 const jobSeekerState = getFieldState(record.jobseekerId);
@@ -742,6 +870,22 @@ export default function MeetingRecords() {
                 } else if (jobSeekerState) {
                     location = jobSeekerState;
                 }
+                
+                // Extract profile data from metadata
+                const jobSeeker = record.jobseekerId;
+                const profile = (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? jobSeeker.metadata.profile : null;
+                const headline = profile && profile.headline ? String(profile.headline).trim() : '';
+                const keywords = profile && profile.keywords ? String(profile.keywords).trim() : '';
+                const workLevel = profile && profile.workLevel ? String(profile.workLevel).trim() : '';
+                const educationLevel = profile && profile.educationLevel ? String(profile.educationLevel).trim() : '';
+                const employmentTypes = (profile && Array.isArray(profile.employmentTypes)) 
+                    ? profile.employmentTypes.filter(Boolean).join(', ') 
+                    : '';
+                const languages = (profile && Array.isArray(profile.languages)) 
+                    ? profile.languages.filter(Boolean).join(', ') 
+                    : '';
+                const clearance = profile && profile.clearance ? String(profile.clearance).trim() : '';
+                const veteranStatus = profile && profile.veteranStatus ? String(profile.veteranStatus).trim() : '';
                 
                 const interpreterName = (record.interpreterId && typeof record.interpreterId === 'object' && record.interpreterId.name) 
                     ? record.interpreterId.name 
@@ -764,9 +908,19 @@ export default function MeetingRecords() {
                     escapeCSV(boothName),
                     escapeCSV(recruiterName),
                     escapeCSV(recruiterEmail),
-                    escapeCSV(jobSeekerName),
+                    escapeCSV(jobSeekerFirstName),
+                    escapeCSV(jobSeekerLastName),
                     escapeCSV(jobSeekerEmail),
+                    escapeCSV(jobSeekerPhone),
                     escapeCSV(location),
+                    escapeCSV(headline),
+                    escapeCSV(keywords),
+                    escapeCSV(workLevel),
+                    escapeCSV(educationLevel),
+                    escapeCSV(employmentTypes),
+                    escapeCSV(languages),
+                    escapeCSV(clearance),
+                    escapeCSV(veteranStatus),
                     escapeCSV(jobSeekerResumeUrl),
                     escapeCSV(interpreterName),
                     escapeCSV(formatDateForCSV(record.startTime)),
@@ -1016,36 +1170,55 @@ export default function MeetingRecords() {
     };
 
     const clearFilters = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
+        // Clear sessionStorage
+        try {
+            sessionStorage.removeItem('meetingRecords_filters');
+            sessionStorage.removeItem('meetingRecords_searchQuery');
+        } catch (error) {
+            console.error('Error clearing filters from sessionStorage:', error);
+        }
         setFilters({
             recruiterId: '',
             eventId: '',
+            boothId: '',
             status: '',
             startDate: '',
             endDate: '',
             search: '',
             page: 1,
-            limit: 10,
+            limit: 50,
             sortBy: 'startTime',
             sortOrder: 'desc'
         });
     };
     
     const handleSearch = () => {
+        const query = (searchInputRef.current?.value || '').trim();
         setFilters(prev => ({
             ...prev,
-            search: searchQuery.trim(),
+            search: query,
             page: 1 // Reset to first page when searching
         }));
     };
     
     const handleClearSearch = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setFilters(prev => ({
             ...prev,
             search: '',
             page: 1
         }));
+        // Clear from sessionStorage
+        try {
+            sessionStorage.removeItem('meetingRecords_searchQuery');
+        } catch (error) {
+            console.error('Error clearing Meeting Records search query from sessionStorage:', error);
+        }
     };
 
     const formatDuration = (minutes) => {
@@ -1417,38 +1590,44 @@ export default function MeetingRecords() {
                             </div>
                         </div>
 
-                        {/* Search and Status Filter Row */}
+                        {/* Search and Filter Row */}
                         <div className="mr-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            {/* Status Filter - Left */}
+                            {/* Event Filter */}
                             <div style={{ width: '200px', flexShrink: 0 }}>
                                 <DropDownListComponent
-                                    id="status-filter-dropdown-main"
-                                    dataSource={[
-                                        { value: '', text: 'All Statuses' },
-                                        { value: 'scheduled', text: 'Scheduled' },
-                                        { value: 'active', text: 'Active' },
-                                        { value: 'completed', text: 'Completed' },
-                                        { value: 'cancelled', text: 'Cancelled' },
-                                        { value: 'failed', text: 'Failed' },
-                                        { value: 'left_with_message', text: 'Left Message' }
-                                    ]}
+                                    id="event-filter-dropdown"
+                                    dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
                                     fields={{ value: 'value', text: 'text' }}
-                                    value={filters.status}
-                                    change={(e) => handleFilterChange('status', e.value || '')}
-                                    placeholder="Select Status"
-                                    cssClass="status-filter-dropdown"
+                                    value={filters.eventId}
+                                    change={(e) => handleFilterChange('eventId', e.value || '')}
+                                    placeholder="All Events"
+                                    cssClass="filter-dropdown"
                                     popupHeight="300px"
                                     width="100%"
                                 />
                             </div>
-                            {/* Search Section - Right */}
+                            {/* Booth Filter */}
+                            <div style={{ width: '200px', flexShrink: 0 }}>
+                                <DropDownListComponent
+                                    id="booth-filter-dropdown"
+                                    dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
+                                    fields={{ value: 'value', text: 'text' }}
+                                    value={filters.boothId}
+                                    change={(e) => handleFilterChange('boothId', e.value || '')}
+                                    placeholder="All Booths"
+                                    cssClass="filter-dropdown"
+                                    popupHeight="300px"
+                                    width="100%"
+                                />
+                            </div>
+                            {/* Search Section */}
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                 <div style={{ marginBottom: 0 }}>
-                                    <Input
+                                    <input
+                                        ref={searchInputRef}
                                         id="meeting-records-search-input"
                                         type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        defaultValue=""
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
@@ -1456,8 +1635,8 @@ export default function MeetingRecords() {
                                             }
                                         }}
                                         placeholder="Search by name, email, or any field..."
-                                        style={{ width: '300px', marginBottom: 0 }}
-                                        className="mr-search-input-no-label"
+                                        style={{ width: '300px', marginBottom: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                                        className="mr-search-input-native"
                                     />
                                 </div>
                                 <ButtonComponent
@@ -1469,7 +1648,7 @@ export default function MeetingRecords() {
                                 >
                                     Search
                                 </ButtonComponent>
-                                {(searchQuery || filters.search) && (
+                                {((searchInputRef.current && searchInputRef.current.value) || filters.search) && (
                                     <ButtonComponent
                                         cssClass="e-outline e-primary e-small"
                                         onClick={handleClearSearch}
@@ -1481,130 +1660,6 @@ export default function MeetingRecords() {
                                     </ButtonComponent>
                                 )}
                             </div>
-                        </div>
-
-                        {/* Filters */}
-                        <div className="filters-section">
-                            <div 
-                                className="filters-header" 
-                                onClick={() => setFiltersExpanded(!filtersExpanded)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        setFiltersExpanded(!filtersExpanded);
-                                    }
-                                }}
-                                role="button"
-                                tabIndex={0}
-                                aria-expanded={filtersExpanded}
-                                aria-controls="filters-content"
-                            >
-                                <h3>
-                                    Filters
-                                    {(filters.recruiterId || filters.eventId || filters.startDate || filters.endDate) && (
-                                        <span className="active-filters-indicator">●</span>
-                                    )}
-                                </h3>
-                                <span className={`filter-toggle ${filtersExpanded ? 'expanded' : ''}`}>
-                                    {filtersExpanded ? '▼' : '▶'}
-                                </span>
-                            </div>
-                            {filtersExpanded && (
-                                <div id="filters-content" className="filters-grid">
-                                {['Admin', 'GlobalSupport'].includes(user.role) && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label htmlFor="recruiter-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                            Recruiter
-                                        </label>
-                                        <DropDownListComponent
-                                            id="recruiter-filter-dropdown"
-                                            dataSource={[{ value: '', text: 'All Recruiters' }, ...recruiters.map(r => ({ value: r._id, text: r.name }))]}
-                                            fields={{ value: 'value', text: 'text' }}
-                                            value={filters.recruiterId}
-                                            change={(e) => handleFilterChange('recruiterId', e.value || '')}
-                                            placeholder="Select Recruiter"
-                                            cssClass="filter-dropdown"
-                                            popupHeight="300px"
-                                            width="100%"
-                                        />
-                                    </div>
-                                )}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="event-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        Event
-                                    </label>
-                                    <DropDownListComponent
-                                        id="event-filter-dropdown"
-                                        dataSource={[{ value: '', text: 'All Events' }, ...events.map(e => ({ value: e._id, text: e.name }))]}
-                                        fields={{ value: 'value', text: 'text' }}
-                                        value={filters.eventId}
-                                        change={(e) => handleFilterChange('eventId', e.value || '')}
-                                        placeholder="Select Event"
-                                        cssClass="filter-dropdown"
-                                        popupHeight="300px"
-                                        width="100%"
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="status-filter-dropdown" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        Status
-                                    </label>
-                                    <DropDownListComponent
-                                        id="status-filter-dropdown"
-                                        dataSource={[
-                                            { value: '', text: 'All Statuses' },
-                                            { value: 'scheduled', text: 'Scheduled' },
-                                            { value: 'active', text: 'Active' },
-                                            { value: 'completed', text: 'Completed' },
-                                            { value: 'cancelled', text: 'Cancelled' },
-                                            { value: 'failed', text: 'Failed' },
-                                            { value: 'left_with_message', text: 'Left Message' }
-                                        ]}
-                                        fields={{ value: 'value', text: 'text' }}
-                                        value={filters.status}
-                                        change={(e) => handleFilterChange('status', e.value || '')}
-                                        placeholder="Select Status"
-                                        cssClass="filter-dropdown"
-                                        popupHeight="300px"
-                                        width="100%"
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="start-date-picker" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        Start Date
-                                    </label>
-                                    <DateTimePickerComponent
-                                        id="start-date-picker"
-                                        value={filters.startDate ? new Date(filters.startDate) : null}
-                                        change={(e) => handleFilterChange('startDate', e.value ? e.value.toISOString() : '')}
-                                        placeholder="Select Start Date"
-                                        width="100%"
-                                        cssClass="filter-datetime"
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label htmlFor="end-date-picker" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', marginBottom: '4px' }}>
-                                        End Date
-                                    </label>
-                                    <DateTimePickerComponent
-                                        id="end-date-picker"
-                                        value={filters.endDate ? new Date(filters.endDate) : null}
-                                        change={(e) => handleFilterChange('endDate', e.value ? e.value.toISOString() : '')}
-                                        placeholder="Select End Date"
-                                        width="100%"
-                                        cssClass="filter-datetime"
-                                    />
-                                </div>
-                                <div className="filter-actions">
-                                    <ButtonComponent 
-                                        cssClass="e-outline e-primary"
-                                        onClick={clearFilters}
-                                    >
-                                        Clear Filters
-                                    </ButtonComponent>
-                                </div>
-                            </div>
-                            )}
                         </div>
 
                         {/* Select All Pages Banner */}
@@ -1803,8 +1858,6 @@ export default function MeetingRecords() {
                                                 cursor: 'pointer'
                                             }}
                                         >
-                                            <option value={10}>10</option>
-                                            <option value={20}>20</option>
                                             <option value={50}>50</option>
                                             <option value={100}>100</option>
                                             <option value={200}>200</option>

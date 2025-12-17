@@ -50,6 +50,57 @@ export const jobSeekerInterestsAPI = {
         const response = await axios.put(`/api/job-seeker-interests/${interestId}/toggle`, {}, { headers: authHeaders() });
         return response.data;
     },
+
+    // Export interests as CSV
+    exportCSV: async (filters = {}) => {
+        const params = new URLSearchParams();
+        
+        Object.keys(filters).forEach(key => {
+            if (filters[key] !== undefined && filters[key] !== '') {
+                params.append(key, filters[key]);
+            }
+        });
+
+        try {
+            // Build URL - if no params, just use base URL (will export all)
+            const url = Object.keys(filters).length > 0 
+                ? `/api/job-seeker-interests/export/csv?${params.toString()}`
+                : '/api/job-seeker-interests/export/csv';
+            
+            console.log('🌐 Export URL:', url);
+            
+            const response = await axios.get(url, {
+                headers: authHeaders(),
+                responseType: 'blob',
+                validateStatus: function (status) {
+                    // Accept both success and error status codes
+                    return status >= 200 && status < 500;
+                }
+            });
+            
+            // Check if response is an error (status >= 400)
+            if (response.status >= 400) {
+                // Try to parse error message from blob
+                const text = await response.data.text();
+                let errorData;
+                try {
+                    errorData = JSON.parse(text);
+                } catch {
+                    errorData = { message: `Server error: ${response.status}` };
+                }
+                throw new Error(errorData.message || errorData.error || 'Export failed');
+            }
+            
+            return response.data;
+        } catch (error) {
+            // If it's already an Error with message, re-throw it
+            if (error.message) {
+                throw error;
+            }
+            // Otherwise, wrap axios errors
+            throw new Error(error.response?.data?.message || error.message || 'Failed to export CSV');
+        }
+    },
 };
 
 export default jobSeekerInterestsAPI;

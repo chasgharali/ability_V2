@@ -201,6 +201,84 @@
    Beautiful Search Field Styling (from EventManagement)
    ======================================== */
 
+/* Booth Management - custom search bar */
+.bm-search-input-native {
+  height: 48px !important;
+  min-width: 280px !important;
+  padding: 12px 16px !important;
+  border: 1.5px solid #d5d8dc !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+  color: #111827 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.2s ease !important;
+}
+
+.bm-search-input-native::placeholder {
+  color: #9aa3b5 !important;
+  font-weight: 400 !important;
+}
+
+.bm-search-input-native:focus {
+  outline: none !important;
+  border-color: #111111 !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.10) !important;
+  transform: translateY(-1px) !important;
+}
+
+.bm-search-input-native:hover {
+  border-color: #cfd4db !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08) !important;
+}
+
+.bm-search-button.e-btn {
+  height: 48px !important;
+  min-width: 110px !important;
+  padding: 0 18px !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.2s ease !important;
+}
+
+.bm-search-button.e-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.16) !important;
+}
+
+.bm-search-button.e-btn:active,
+.bm-search-button.e-btn:focus {
+  transform: translateY(0) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.14) !important;
+}
+
+.bm-search-row {
+  margin-bottom: 12px;
+  padding: 14px 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  background: #fdfefe;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  overflow: visible;
+}
+
+.bm-search-row-inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
 /* Syncfusion Grid Toolbar - ensure it's visible */
 .e-grid .e-toolbar {
   background: #f8f9fa !important;

@@ -97,9 +97,46 @@ export default function JobSeekerManagement() {
   const [searchLoading, setSearchLoading] = useState(false);
   // Use ref for search input to avoid re-renders on every keystroke
   const searchInputRef = useRef(null);
-  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
-  const [statusFilter, setStatusFilter] = useState('');
-  const [eventFilter, setEventFilter] = useState('');
+  
+  // Load search query from sessionStorage on mount (per-table persistence for search)
+  const loadSearchQueryFromSession = () => {
+    try {
+      const saved = sessionStorage.getItem('jobSeekerManagement_searchQuery');
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Error loading Job Seeker Management search query from sessionStorage:', error);
+    }
+    return '';
+  };
+
+  const savedSearchQuery = loadSearchQueryFromSession();
+  const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+
+  // Load filters from sessionStorage on mount (per-table persistence)
+  const loadFiltersFromSession = () => {
+    try {
+      const savedFilters = sessionStorage.getItem('jobSeekerManagement_filters');
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+        return {
+          statusFilter: parsed.statusFilter || '',
+          eventFilter: parsed.eventFilter || '',
+        };
+      }
+    } catch (error) {
+      console.error('Error loading Job Seeker Management filters from sessionStorage:', error);
+    }
+    return {
+      statusFilter: '',
+      eventFilter: '',
+    };
+  };
+
+  const initialFilters = loadFiltersFromSession();
+  const [statusFilter, setStatusFilter] = useState(initialFilters.statusFilter);
+  const [eventFilter, setEventFilter] = useState(initialFilters.eventFilter);
   const [events, setEvents] = useState([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [eventSearchLoading, setEventSearchLoading] = useState(false);
@@ -434,6 +471,48 @@ export default function JobSeekerManagement() {
     eventFilterRef.current = eventFilter;
   }, [eventFilter]);
 
+  // Persist filters per-table in sessionStorage so they survive navigation
+  useEffect(() => {
+    try {
+      const filtersToSave = {
+        statusFilter,
+        eventFilter,
+      };
+      sessionStorage.setItem('jobSeekerManagement_filters', JSON.stringify(filtersToSave));
+    } catch (error) {
+      console.error('Error saving Job Seeker Management filters to sessionStorage:', error);
+    }
+  }, [statusFilter, eventFilter]);
+
+  // Set search input value from sessionStorage on mount
+  useEffect(() => {
+    const savedSearchQuery = loadSearchQueryFromSession();
+    if (searchInputRef.current && savedSearchQuery) {
+      searchInputRef.current.value = savedSearchQuery;
+    }
+  }, []);
+
+  // Persist search query in sessionStorage so it survives navigation within the session
+  useEffect(() => {
+    try {
+      if (activeSearchQuery && activeSearchQuery.trim()) {
+        sessionStorage.setItem('jobSeekerManagement_searchQuery', activeSearchQuery.trim());
+        // Also update the input field if it exists
+        if (searchInputRef.current) {
+          searchInputRef.current.value = activeSearchQuery.trim();
+        }
+      } else {
+        sessionStorage.removeItem('jobSeekerManagement_searchQuery');
+        // Also clear the input field if it exists
+        if (searchInputRef.current) {
+          searchInputRef.current.value = '';
+        }
+      }
+    } catch (error) {
+      console.error('Error saving Job Seeker Management search query to sessionStorage:', error);
+    }
+  }, [activeSearchQuery]);
+
   // Load events on mount - memoized to prevent unnecessary re-renders
   const loadEventsData = useCallback(async () => {
     // Prevent multiple simultaneous fetches
@@ -465,7 +544,8 @@ export default function JobSeekerManagement() {
       inactiveCount: 0,
       verifiedCount: 0
     });
-    loadJobSeekers(1, pageSize, '', '', '');
+    // Load with saved search query if available
+    loadJobSeekers(1, pageSize, savedSearchQuery || '', initialFilters.statusFilter || '', initialFilters.eventFilter || '');
     isFirstRender.current = false; // Mark first render as complete
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2196,6 +2276,12 @@ export default function JobSeekerManagement() {
                         searchInputRef.current.value = '';
                       }
                       setActiveSearchQuery('');
+                      // Clear from sessionStorage
+                      try {
+                        sessionStorage.removeItem('jobSeekerManagement_searchQuery');
+                      } catch (error) {
+                        console.error('Error clearing Job Seeker Management search query from sessionStorage:', error);
+                      }
                       // loadJobSeekers will be called automatically via useEffect when activeSearchQuery changes
                     }}
                     disabled={searchLoading}
@@ -2424,8 +2510,6 @@ export default function JobSeekerManagement() {
                         cursor: 'pointer'
                       }}
                     >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
                       <option value={50}>50</option>
                       <option value={100}>100</option>
                       <option value={200}>200</option>
