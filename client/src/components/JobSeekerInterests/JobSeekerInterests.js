@@ -127,17 +127,40 @@ const JobSeekerInterests = () => {
     const loadingBoothsRef = useRef(false);
     const fetchInProgress = useRef(false);
 
+    // Load filters from sessionStorage on mount
+    const loadFiltersFromSession = () => {
+        try {
+            const savedFilters = sessionStorage.getItem('jobSeekerInterests_filters');
+            if (savedFilters) {
+                const parsed = JSON.parse(savedFilters);
+                return {
+                    recruiterId: parsed.recruiterId || '',
+                    eventId: parsed.eventId || '',
+                    boothId: parsed.boothId || '',
+                    search: '',
+                    page: 1,
+                    limit: 50,
+                    sortBy: parsed.sortBy || 'createdAt',
+                    sortOrder: parsed.sortOrder || 'desc'
+                };
+            }
+        } catch (error) {
+            console.error('Error loading filters from sessionStorage:', error);
+        }
+        return {
+            recruiterId: '',
+            eventId: '',
+            boothId: '',
+            search: '',
+            page: 1,
+            limit: 50,
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+        };
+    };
+
     // Filters
-    const [filters, setFilters] = useState({
-        recruiterId: '',
-        eventId: '',
-        boothId: '',
-        search: '',
-        page: 1,
-        limit: 50,
-        sortBy: 'createdAt',
-        sortOrder: 'desc'
-    });
+    const [filters, setFilters] = useState(loadFiltersFromSession);
     
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
@@ -565,16 +588,38 @@ const JobSeekerInterests = () => {
     }, [user, loadInterests]);
 
     const handleFilterChange = (key, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [key]: value,
-            page: 1 // Reset to first page when filters change
-        }));
+        setFilters(prev => {
+            const newFilters = {
+                ...prev,
+                [key]: value,
+                page: 1 // Reset to first page when filters change
+            };
+            // Save filters to sessionStorage (excluding page, search, limit)
+            try {
+                const filtersToSave = {
+                    recruiterId: newFilters.recruiterId,
+                    eventId: newFilters.eventId,
+                    boothId: newFilters.boothId,
+                    sortBy: newFilters.sortBy,
+                    sortOrder: newFilters.sortOrder
+                };
+                sessionStorage.setItem('jobSeekerInterests_filters', JSON.stringify(filtersToSave));
+            } catch (error) {
+                console.error('Error saving filters to sessionStorage:', error);
+            }
+            return newFilters;
+        });
     };
 
     const clearFilters = () => {
         if (searchInputRef.current) {
             searchInputRef.current.value = '';
+        }
+        // Clear sessionStorage
+        try {
+            sessionStorage.removeItem('jobSeekerInterests_filters');
+        } catch (error) {
+            console.error('Error clearing filters from sessionStorage:', error);
         }
         setFilters({
             recruiterId: '',

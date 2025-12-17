@@ -19,7 +19,21 @@ export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [roleFilter, setRoleFilter] = useState('');
+
+  // Load filters from sessionStorage on mount (per-table persistence for role filter)
+  const loadRoleFilterFromSession = () => {
+    try {
+      const saved = sessionStorage.getItem('userManagement_roleFilter');
+      if (saved) {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Error loading User Management role filter from sessionStorage:', error);
+    }
+    return '';
+  };
+
+  const [roleFilter, setRoleFilter] = useState(loadRoleFilterFromSession);
   const [searchQuery, setSearchQuery] = useState(''); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [editingId, setEditingId] = useState(null);
@@ -41,6 +55,19 @@ export default function UserManagement() {
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
+
+  // Persist role filter in sessionStorage so it survives navigation within the session
+  useEffect(() => {
+    try {
+      if (roleFilter) {
+        sessionStorage.setItem('userManagement_roleFilter', roleFilter);
+      } else {
+        sessionStorage.removeItem('userManagement_roleFilter');
+      }
+    } catch (error) {
+      console.error('Error saving User Management role filter to sessionStorage:', error);
+    }
+  }, [roleFilter]);
 
   const roleOptionsAll = useMemo(() => [
     { value: 'Admin', label: 'Admin' },
