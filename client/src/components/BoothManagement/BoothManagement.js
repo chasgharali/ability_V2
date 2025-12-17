@@ -51,7 +51,7 @@ export default function BoothManagement() {
   });
   const [booths, setBooths] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(50);
   const [loadingBooths, setLoadingBooths] = useState(false);
   const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used in API
   const [previewBooth, setPreviewBooth] = useState(null);
@@ -1050,8 +1050,6 @@ export default function BoothManagement() {
                                     cursor: 'pointer'
                                 }}
                             >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
                                 <option value={50}>50</option>
                                 <option value={100}>100</option>
                                 <option value={200}>200</option>

@@ -193,7 +193,7 @@ export default function EventManagement() {
     const [loadingList, setLoadingList] = useState(false);
     const [termsOptions, setTermsOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(50);
     const [statusFilter, setStatusFilter] = useState('');
     const searchInputRef = useRef(null); // Uncontrolled input to avoid live filtering on typing
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
@@ -1036,8 +1036,6 @@ export default function EventManagement() {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <option value={10}>10</option>
-                                                <option value={20}>20</option>
                                                 <option value={50}>50</option>
                                                 <option value={100}>100</option>
                                                 <option value={200}>200</option>
