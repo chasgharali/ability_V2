@@ -213,9 +213,6 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
                 query.booth = { $in: boothIdsArray };
             }
         }
-
-        // Apply additional filters
-        // Handle legacy event IDs - check both event field and legacyEventId field
         if (eventId) {
             // Strip "legacy_" prefix if present (client sends "legacy_<id>" format)
             const cleanEventId = eventId.toString().replace(/^legacy_/, '');
