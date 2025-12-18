@@ -797,16 +797,53 @@ const JobSeekerInterests = () => {
         }
     };
 
+    // Get selected records from grid when needed (for export, etc.)
+    const getSelectedRecordsFromGrid = useCallback(() => {
+        if (!gridRef.current) return [];
+        try {
+            const selectedRows = gridRef.current.getSelectedRowsData();
+            return selectedRows.map(row => row._id || row.id).filter(Boolean);
+        } catch (error) {
+            console.error('Error getting selected rows:', error);
+            return [];
+        }
+    }, []);
+
     const handleExportResumes = async () => {
         try {
             setIsExportingResumes(true);
             
             // Helper function to extract resume URL from job seeker data
+            // Handles both populated objects and migrated data structures
             const getResumeUrl = (jobSeeker) => {
-                if (!jobSeeker) return null;
-                if (typeof jobSeeker === 'object' && jobSeeker.resumeUrl) {
-                    return jobSeeker.resumeUrl;
+                if (!jobSeeker) {
+                    console.log('⚠️ getResumeUrl: jobSeeker is null/undefined');
+                    return null;
                 }
+                
+                // Handle populated object
+                if (typeof jobSeeker === 'object') {
+                    // Check direct resumeUrl field
+                    if (jobSeeker.resumeUrl) {
+                        console.log('✅ Found resumeUrl in jobSeeker.resumeUrl:', jobSeeker.resumeUrl);
+                        return jobSeeker.resumeUrl;
+                    }
+                    
+                    // Check if it's an ObjectId string (not populated)
+                    if (typeof jobSeeker === 'string' || (jobSeeker._id && !jobSeeker.name)) {
+                        console.log('⚠️ getResumeUrl: jobSeeker appears to be an ID, not populated');
+                        return null;
+                    }
+                    
+                    // Log the structure for debugging
+                    console.log('⚠️ getResumeUrl: jobSeeker object structure:', {
+                        hasResumeUrl: !!jobSeeker.resumeUrl,
+                        keys: Object.keys(jobSeeker),
+                        _id: jobSeeker._id,
+                        name: jobSeeker.name
+                    });
+                }
+                
                 return null;
             };
 
@@ -846,17 +883,47 @@ const JobSeekerInterests = () => {
 
             let interestsToProcess = [];
 
-            // Fetch all interests matching current filters (not paginated)
-            showToast('Fetching all job seekers matching current filters...', 'Info', 2000);
-            const exportFilters = {
-                ...filters,
-                page: 1,
-                limit: 100000 // Large limit to get all records
-            };
-            
-            const response = await jobSeekerInterestsAPI.getInterests(exportFilters);
-            interestsToProcess = response.interests || [];
-            showToast(`Exporting resumes for ${interestsToProcess.length} job seeker(s)...`, 'Info', 2000);
+            // Get selected records from grid directly
+            const selectedFromGrid = getSelectedRecordsFromGrid();
+            console.log('📋 Selected records from grid:', selectedFromGrid);
+
+            // Determine which records to process
+            if (selectedFromGrid.length > 0) {
+                // Use selected records from grid - filter by IDs
+                interestsToProcess = interests.filter(r => {
+                    const recordId = r._id || r.id;
+                    return selectedFromGrid.includes(recordId);
+                });
+                console.log(`✅ Exporting resumes for ${selectedFromGrid.length} selected record(s)`, {
+                    selectedIds: selectedFromGrid,
+                    filteredRecords: interestsToProcess.length,
+                    totalInterests: interests.length
+                });
+                showToast(`Exporting resumes for ${selectedFromGrid.length} selected job seeker(s)...`, 'Info', 2000);
+            } else {
+                // No selection - fetch all interests matching current filters (not paginated)
+                // This allows exporting all resumes for the selected event/filter without requiring row selection
+                const exportFilters = { ...filters };
+                
+                // Handle legacy event IDs (format: "legacy_<id>") - strip prefix before sending to API
+                if (exportFilters.eventId && exportFilters.eventId.startsWith('legacy_')) {
+                    exportFilters.eventId = exportFilters.eventId.replace('legacy_', '');
+                }
+                
+                exportFilters.page = 1;
+                exportFilters.limit = 100000; // Large limit to get all records
+                
+                console.log('📤 Export filters (after legacy handling):', exportFilters);
+                
+                showToast('Fetching all job seekers matching current filters...', 'Info', 2000);
+                const response = await jobSeekerInterestsAPI.getInterests(exportFilters);
+                interestsToProcess = response.interests || [];
+                console.log(`📥 Received ${interestsToProcess.length} interests for export`);
+                
+                if (interestsToProcess.length > 0) {
+                    showToast(`Exporting resumes for ${interestsToProcess.length} job seeker(s)...`, 'Info', 2000);
+                }
+            }
 
             if (interestsToProcess.length === 0) {
                 showToast('No records found to export resumes', 'Warning');
@@ -865,12 +932,57 @@ const JobSeekerInterests = () => {
 
             // Extract unique job seekers with resume URLs
             const jobSeekersMap = new Map();
-            interestsToProcess.forEach(interest => {
+            let skippedCount = 0;
+            let skippedReasons = { noJobSeeker: 0, noResumeUrl: 0, emptyResumeUrl: 0 };
+            
+            console.log(`📋 Processing ${interestsToProcess.length} interests for resume export`);
+            console.log(`📋 Sample interest structure:`, interestsToProcess.length > 0 ? {
+                hasJobSeeker: !!interestsToProcess[0].jobSeeker,
+                jobSeekerType: typeof interestsToProcess[0].jobSeeker,
+                jobSeekerKeys: interestsToProcess[0].jobSeeker && typeof interestsToProcess[0].jobSeeker === 'object' 
+                    ? Object.keys(interestsToProcess[0].jobSeeker) 
+                    : 'N/A',
+                hasResumeUrl: interestsToProcess[0].jobSeeker && typeof interestsToProcess[0].jobSeeker === 'object'
+                    ? !!interestsToProcess[0].jobSeeker.resumeUrl
+                    : false,
+                legacyEventId: interestsToProcess[0].legacyEventId,
+                eventId: interestsToProcess[0].event
+            } : 'No interests');
+            
+            interestsToProcess.forEach((interest, index) => {
                 const jobSeeker = interest.jobSeeker;
-                if (!jobSeeker) return;
+                
+                if (!jobSeeker) {
+                    skippedReasons.noJobSeeker++;
+                    if (index < 5) {
+                        console.log(`⚠️ Interest ${index}: No jobSeeker found`, {
+                            interestId: interest._id,
+                            legacyEventId: interest.legacyEventId,
+                            eventId: interest.event
+                        });
+                    }
+                    return;
+                }
 
                 const resumeUrl = getResumeUrl(jobSeeker);
-                if (!resumeUrl || !resumeUrl.trim()) return; // Skip if no resume URL
+                
+                if (!resumeUrl || !resumeUrl.trim()) {
+                    skippedReasons.noResumeUrl++;
+                    if (index < 5) {
+                        console.log(`⚠️ Interest ${index}: No resume URL found for job seeker:`, {
+                            interestId: interest._id,
+                            jobSeekerId: typeof jobSeeker === 'object' ? jobSeeker._id : jobSeeker,
+                            jobSeekerName: typeof jobSeeker === 'object' ? jobSeeker.name : 'Unknown',
+                            jobSeekerType: typeof jobSeeker,
+                            jobSeekerKeys: typeof jobSeeker === 'object' ? Object.keys(jobSeeker) : [],
+                            hasResumeUrl: typeof jobSeeker === 'object' ? !!jobSeeker.resumeUrl : false,
+                            resumeUrlValue: typeof jobSeeker === 'object' ? jobSeeker.resumeUrl : 'N/A',
+                            legacyEventId: interest.legacyEventId,
+                            eventId: interest.event
+                        });
+                    }
+                    return; // Skip if no resume URL
+                }
 
                 const jobSeekerId = typeof jobSeeker === 'object' ? jobSeeker._id : jobSeeker;
                 const jobSeekerName = getJobSeekerName(jobSeeker);
@@ -882,13 +994,25 @@ const JobSeekerInterests = () => {
                         name: jobSeekerName,
                         resumeUrl: resumeUrl.trim()
                     });
+                    if (jobSeekersMap.size <= 5) {
+                        console.log(`✅ Added job seeker to export: ${jobSeekerName} (${jobSeekerId})`);
+                    }
                 }
+            });
+            
+            console.log(`📊 Resume export summary:`, {
+                totalInterests: interestsToProcess.length,
+                uniqueJobSeekersWithResume: jobSeekersMap.size,
+                skipped: skippedReasons.noJobSeeker + skippedReasons.noResumeUrl,
+                skippedReasons
             });
 
             const uniqueJobSeekers = Array.from(jobSeekersMap.values());
 
             if (uniqueJobSeekers.length === 0) {
-                showToast('No job seekers with resume URLs found', 'Warning');
+                const message = `No job seekers with resume URLs found. Skipped: ${skippedReasons.noJobSeeker} (no job seeker), ${skippedReasons.noResumeUrl} (no resume URL). Check console for details.`;
+                console.error('❌ Resume export failed:', message);
+                showToast(message, 'Warning', 8000);
                 return;
             }
 
@@ -905,29 +1029,27 @@ const JobSeekerInterests = () => {
             for (let i = 0; i < uniqueJobSeekers.length; i++) {
                 const jobSeeker = uniqueJobSeekers[i];
                 try {
-                    // Fetch the resume file
-                    let response;
-                    try {
-                        response = await fetch(jobSeeker.resumeUrl, {
-                            method: 'GET',
-                            mode: 'cors'
-                        });
-                    } catch (fetchError) {
-                        // If CORS fails, try without explicit mode
-                        if (fetchError.name === 'TypeError' && fetchError.message.includes('CORS')) {
-                            response = await fetch(jobSeeker.resumeUrl, {
-                                method: 'GET'
-                            });
-                        } else {
-                            throw fetchError;
+                    // Fetch the resume file through proxy endpoint to avoid CORS issues
+                    const token = localStorage.getItem('token');
+                    const proxyUrl = `/api/uploads/proxy/download?url=${encodeURIComponent(jobSeeker.resumeUrl)}`;
+                    
+                    const response = await fetch(proxyUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
                         }
-                    }
+                    });
 
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
 
                     const blob = await response.blob();
+                    
+                    // Validate blob - check if it's not empty
+                    if (!blob || blob.size === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
                     
                     // Get file extension
                     const extension = getFileExtension(jobSeeker.resumeUrl);
@@ -966,7 +1088,11 @@ const JobSeekerInterests = () => {
             
             // Generate filename based on filters
             let filename = 'job-seeker-resumes';
-            if (filters.eventId) {
+            const selectedCount = selectedFromGrid.length;
+            
+            if (selectedCount > 0) {
+                filename = `selected-${selectedCount}-resumes`;
+            } else if (filters.eventId) {
                 const event = events.find(e => e._id === filters.eventId);
                 if (event) {
                     filename = `${sanitizeFileName(event.name)}-resumes`;
@@ -1327,11 +1453,22 @@ const JobSeekerInterests = () => {
                                     allowResizing={true}
                                     allowReordering={true}
                                     toolbar={['ColumnChooser']}
-                                    selectionSettings={{ type: 'None' }}
+                                    selectionSettings={['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) ? { 
+                                        type: 'Multiple', 
+                                        checkboxOnly: true,
+                                        persistSelection: false,
+                                        enableSimpleMultiRowSelection: false
+                                    } : { type: 'None' }}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
                                 >
                                     <ColumnsDirective>
+                                        {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && (
+                                            <ColumnDirective 
+                                                type='checkbox' 
+                                                width='50' 
+                                            />
+                                        )}
                                         <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                         <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />

@@ -22,6 +22,35 @@ router.get('/', authenticateToken, async (req, res) => {
             sortOrder = 'desc'
         } = req.query;
 
+        // Validate and sanitize inputs
+        const mongoose = require('mongoose');
+        const parsedPage = Math.max(1, parseInt(page) || 1);
+        const parsedLimit = Math.min(1000, Math.max(1, parseInt(limit) || 10)); // Cap at 1000 to prevent memory issues
+        const validSortFields = ['startTime', 'endTime', 'duration', 'status', 'createdAt'];
+        const validSortOrder = ['asc', 'desc'];
+        const finalSortBy = validSortFields.includes(sortBy) ? sortBy : 'startTime';
+        const finalSortOrder = validSortOrder.includes(sortOrder.toLowerCase()) ? sortOrder.toLowerCase() : 'desc';
+
+        // Validate ObjectIds if provided
+        if (eventId && !mongoose.Types.ObjectId.isValid(eventId)) {
+            return res.status(400).json({ 
+                message: 'Invalid eventId format',
+                error: 'eventId must be a valid MongoDB ObjectId'
+            });
+        }
+        if (boothId && !mongoose.Types.ObjectId.isValid(boothId)) {
+            return res.status(400).json({ 
+                message: 'Invalid boothId format',
+                error: 'boothId must be a valid MongoDB ObjectId'
+            });
+        }
+        if (recruiterId && !mongoose.Types.ObjectId.isValid(recruiterId)) {
+            return res.status(400).json({ 
+                message: 'Invalid recruiterId format',
+                error: 'recruiterId must be a valid MongoDB ObjectId'
+            });
+        }
+
         // Build query based on user role and filters
         let query = {};
 
@@ -74,9 +103,9 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         // Pagination
-        const skip = (page - 1) * limit;
+        const skip = (parsedPage - 1) * parsedLimit;
         const sortOptions = {};
-        sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+        sortOptions[finalSortBy] = finalSortOrder === 'desc' ? -1 : 1;
 
         // Execute query with population
         const meetingRecords = await MeetingRecord.find(query)
@@ -89,7 +118,7 @@ router.get('/', authenticateToken, async (req, res) => {
             .populate('videoCallId')
             .sort(sortOptions)
             .skip(skip)
-            .limit(parseInt(limit));
+            .limit(parsedLimit);
 
         console.log(`Found ${meetingRecords.length} meeting records`);
         if (meetingRecords.length > 0) {
@@ -159,17 +188,23 @@ router.get('/', authenticateToken, async (req, res) => {
         res.json({
             meetingRecords: processedRecords,
             pagination: {
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(finalCount / limit),
+                currentPage: parsedPage,
+                totalPages: Math.ceil(finalCount / parsedLimit),
                 totalRecords: finalCount,
-                hasNext: page * limit < finalCount,
-                hasPrev: page > 1
+                hasNext: parsedPage * parsedLimit < finalCount,
+                hasPrev: parsedPage > 1
             }
         });
 
     } catch (error) {
         console.error('Error fetching meeting records:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        const logger = require('../utils/logger');
+        logger.error('Error fetching meeting records:', error);
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
@@ -352,7 +387,29 @@ router.post('/:id/rating', authenticateToken, requireRole(['Recruiter', 'Admin',
 // Get meeting statistics
 router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recruiter']), async (req, res) => {
     try {
-        const { recruiterId, eventId, startDate, endDate } = req.query;
+        const { recruiterId, eventId, boothId, status, startDate, endDate } = req.query;
+        const mongoose = require('mongoose');
+        const logger = require('../utils/logger');
+
+        // Validate ObjectIds if provided
+        if (eventId && !mongoose.Types.ObjectId.isValid(eventId)) {
+            return res.status(400).json({ 
+                message: 'Invalid eventId format',
+                error: 'eventId must be a valid MongoDB ObjectId'
+            });
+        }
+        if (boothId && !mongoose.Types.ObjectId.isValid(boothId)) {
+            return res.status(400).json({ 
+                message: 'Invalid boothId format',
+                error: 'boothId must be a valid MongoDB ObjectId'
+            });
+        }
+        if (recruiterId && !mongoose.Types.ObjectId.isValid(recruiterId)) {
+            return res.status(400).json({ 
+                message: 'Invalid recruiterId format',
+                error: 'recruiterId must be a valid MongoDB ObjectId'
+            });
+        }
 
         let matchQuery = {};
 
@@ -363,16 +420,37 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
             const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
             
             if (recruiterBoothId) {
+                // Filter by boothId to show all records from the assigned booth
                 matchQuery.boothId = recruiterBoothId;
+                
+                // Apply status filter if provided
+                if (status) {
+                    matchQuery.status = status;
+                }
             } else {
                 // If no booth assigned, only show their own records
                 matchQuery.recruiterId = req.user._id;
+                if (status) {
+                    matchQuery.status = status;
+                }
             }
-        } else if (recruiterId) {
-            matchQuery.recruiterId = recruiterId;
+        } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
+            // Admins can filter by recruiter or see all
+            if (recruiterId) {
+                matchQuery.recruiterId = new mongoose.Types.ObjectId(recruiterId);
+            }
+            if (status) {
+                matchQuery.status = status;
+            }
         }
 
-        if (eventId) matchQuery.eventId = eventId;
+        // Apply additional filters (these apply to all conditions)
+        if (eventId) {
+            matchQuery.eventId = new mongoose.Types.ObjectId(eventId);
+        }
+        if (boothId) {
+            matchQuery.boothId = new mongoose.Types.ObjectId(boothId);
+        }
 
         // Date range filtering
         if (startDate || endDate) {
@@ -381,6 +459,8 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
             if (endDate) matchQuery.startTime.$lte = new Date(endDate);
         }
 
+        logger.info(`Stats query: ${JSON.stringify(matchQuery)}`);
+
         const stats = await MeetingRecord.aggregate([
             { $match: matchQuery },
             {
@@ -388,7 +468,20 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
                     _id: null,
                     totalMeetings: { $sum: 1 },
                     completedMeetings: {
-                        $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
+                        $sum: { 
+                            $cond: [
+                                { 
+                                    $or: [
+                                        { $eq: [{ $toLower: '$status' }, 'completed'] },
+                                        { $eq: ['$status', 'completed'] },
+                                        { $eq: ['$status', 'Completed'] },
+                                        { $eq: ['$status', 'COMPLETED'] }
+                                    ]
+                                }, 
+                                1, 
+                                0
+                            ] 
+                        }
                     },
                     averageDuration: { $avg: '$duration' },
                     averageRating: { $avg: '$recruiterRating' },
@@ -405,16 +498,20 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
         const result = stats[0] || {
             totalMeetings: 0,
             completedMeetings: 0,
-            averageDuration: 0,
-            averageRating: 0,
+            averageDuration: null,
+            averageRating: null,
             totalWithRating: 0,
             totalWithInterpreter: 0
         };
+
+        logger.info(`Stats result: ${JSON.stringify(result)}`);
 
         res.json(result);
 
     } catch (error) {
         console.error('Error fetching meeting stats:', error);
+        const logger = require('../utils/logger');
+        logger.error('Error fetching meeting stats:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });

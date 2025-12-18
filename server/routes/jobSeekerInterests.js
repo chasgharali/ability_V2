@@ -217,13 +217,18 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         // Apply additional filters
         // Handle legacy event IDs - check both event field and legacyEventId field
         if (eventId) {
+            // Strip "legacy_" prefix if present (client sends "legacy_<id>" format)
+            const cleanEventId = eventId.toString().replace(/^legacy_/, '');
+            
             // Check if it's a legacy event ID (not a valid ObjectId format)
-            if (mongoose.Types.ObjectId.isValid(eventId)) {
+            if (mongoose.Types.ObjectId.isValid(cleanEventId)) {
                 // Regular event ID
-                query.event = eventId;
+                query.event = cleanEventId;
+                console.log('📅 Filtering by regular event ID:', cleanEventId);
             } else {
                 // Legacy event ID - search by legacyEventId field
-                query.legacyEventId = eventId;
+                query.legacyEventId = cleanEventId;
+                console.log('📅 Filtering by legacy event ID:', cleanEventId);
             }
         }
         if (boothId) query.booth = boothId;
@@ -239,7 +244,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         const interests = await JobSeekerInterest.find(query)
             .populate({
                 path: 'jobSeeker',
-                select: 'name email phoneNumber city state country metadata',
+                select: 'name email phoneNumber city state country resumeUrl metadata',
                 options: { strictPopulate: false } // Allow null jobSeeker
             })
             .populate({
@@ -315,7 +320,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
                     .map(id => new mongoose.Types.ObjectId(id));
                 
                 const jobSeekers = await User.find({ _id: { $in: jobSeekerIdsArray } })
-                    .select('name email phoneNumber city state country metadata')
+                    .select('name email phoneNumber city state country resumeUrl metadata')
                     .lean();
                 
                 jobSeekers.forEach(user => {
@@ -333,7 +338,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         if (legacyJobSeekerIds.length > 0) {
             try {
                 const legacyUsers = await User.find({ legacyId: { $in: legacyJobSeekerIds } })
-                    .select('name email phoneNumber city state country metadata legacyId')
+                    .select('name email phoneNumber city state country resumeUrl metadata legacyId')
                     .lean();
                 legacyUsers.forEach(user => {
                     legacyUsersMap[user.legacyId] = user;
