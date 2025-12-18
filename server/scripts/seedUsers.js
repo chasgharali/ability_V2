@@ -17,20 +17,13 @@ const testUsers = [
             phone: '+1-555-0101'
         }
     },
-    {
-        name: 'Test Admin',
-        email: 't2admin@gmal.com',
-        password: 'Qwe123!@#',
-        role: 'Admin',
-        avatarUrl: null,
-        metadata: {}
-    }
+  
 ];
 
 async function seedUsers() {
     try {
         // Connect to MongoDB
-        const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://daniotech:JHogHMs8nvUmvWHO@cluster-ability.okhfe.mongodb.net/Ability_v2_dev';
+        const mongoUri = process.env.MONGODB_URI;
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 
@@ -39,12 +32,23 @@ async function seedUsers() {
         // Hash passwords and create users
         const createdUsers = [];
 
+        // Check if --force flag is passed to delete existing users
+        const forceMode = process.argv.includes('--force');
+        if (forceMode) {
+            console.log('⚠️  Force mode: Will delete and recreate existing users');
+        }
+
         for (const userData of testUsers) {
             // Check if user already exists
             const existingUser = await User.findOne({ email: userData.email });
             if (existingUser) {
-                console.log(`User ${userData.email} already exists, skipping...`);
-                continue;
+                if (forceMode) {
+                    await User.deleteOne({ email: userData.email });
+                    console.log(`🗑️  Deleted existing user: ${userData.email}`);
+                } else {
+                    console.log(`User ${userData.email} already exists, skipping... (use --force to recreate)`);
+                    continue;
+                }
             }
 
             // Create user with plain password - the pre-save middleware will hash it
@@ -54,7 +58,9 @@ async function seedUsers() {
                 hashedPassword: userData.password, // Store plain password, middleware will hash it
                 role: userData.role,
                 avatarUrl: userData.avatarUrl,
-                metadata: userData.metadata
+                metadata: userData.metadata,
+                isActive: true,           // Required for login
+                emailVerified: true       // Skip email verification for seeded users
             });
 
             await user.save();

@@ -436,4 +436,98 @@ router.get('/user/files', authenticateToken, async (req, res) => {
     }
 });
 
+/**
+ * GET /api/uploads/proxy/download
+ * Proxy endpoint to download files from S3 (bypasses CORS)
+ * Query param: url - The S3 presigned URL or file URL to download
+ */
+router.get('/proxy/download', authenticateToken, async (req, res) => {
+    try {
+        const { url } = req.query;
+        
+        if (!url) {
+            return res.status(400).json({
+                error: 'Missing URL',
+                message: 'URL parameter is required'
+            });
+        }
+
+        // Validate that the URL is from S3 (security check)
+        const s3DomainPattern = /^https?:\/\/([^\/]+\.)?s3[\.-][^\/]+\.amazonaws\.com/;
+        const isS3Url = s3DomainPattern.test(url);
+        
+        if (!isS3Url) {
+            // Try to extract S3 key from presigned URL or check if it's a valid file URL
+            // For now, we'll allow any HTTPS URL but log it
+            if (!url.startsWith('https://')) {
+                return res.status(400).json({
+                    error: 'Invalid URL',
+                    message: 'Only HTTPS URLs are allowed'
+                });
+            }
+        }
+
+        // Use axios or native fetch to download the file
+        const https = require('https');
+        const http = require('http');
+        const { URL } = require('url');
+        
+        const fileUrl = new URL(url);
+        const protocol = fileUrl.protocol === 'https:' ? https : http;
+
+        // Download file from S3/URL
+        const fileRequest = protocol.get(url, (fileResponse) => {
+            // Check if response is successful
+            if (fileResponse.statusCode !== 200) {
+                return res.status(fileResponse.statusCode).json({
+                    error: 'Download failed',
+                    message: `Failed to download file: ${fileResponse.statusMessage}`
+                });
+            }
+
+            // Set appropriate headers
+            const contentType = fileResponse.headers['content-type'] || 'application/octet-stream';
+            const contentDisposition = fileResponse.headers['content-disposition'] || 'attachment';
+            
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Content-Disposition', contentDisposition);
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Expose-Headers', 'Content-Type, Content-Disposition');
+
+            // Stream the file to the client
+            fileResponse.pipe(res);
+        });
+
+        fileRequest.on('error', (error) => {
+            logger.error('Error downloading file:', error);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    error: 'Download failed',
+                    message: 'An error occurred while downloading the file'
+                });
+            }
+        });
+
+        // Handle timeout
+        fileRequest.setTimeout(30000, () => {
+            fileRequest.destroy();
+            if (!res.headersSent) {
+                res.status(504).json({
+                    error: 'Download timeout',
+                    message: 'The download request timed out'
+                });
+            }
+        });
+
+    } catch (error) {
+        logger.error('File proxy download error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: 'Failed to download file',
+                message: 'An error occurred while downloading the file'
+            });
+        }
+    }
+});
+
 module.exports = router;

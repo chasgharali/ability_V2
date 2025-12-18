@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import '../Dashboard/Dashboard.css';
 import './MeetingRecords.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -382,6 +382,12 @@ export default function MeetingRecords() {
         }
     };
 
+    // Use ref to store latest filters to avoid recreating callback
+    const filtersRef = useRef(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+
     const loadMeetingRecords = useCallback(async () => {
         // Prevent multiple simultaneous fetches
         if (loadingMeetingRecordsRef.current) return;
@@ -389,8 +395,9 @@ export default function MeetingRecords() {
         try {
             loadingMeetingRecordsRef.current = true;
             setLoadingData(true);
-            console.log('📡 Loading meeting records with filters:', filters);
-            const response = await meetingRecordsAPI.getMeetingRecords(filters);
+            const currentFilters = filtersRef.current;
+            console.log('📡 Loading meeting records with filters:', currentFilters);
+            const response = await meetingRecordsAPI.getMeetingRecords(currentFilters);
             console.log('✅ Meeting records response:', response);
             
             // Ensure we have valid data structure
@@ -451,7 +458,7 @@ export default function MeetingRecords() {
             loadingMeetingRecordsRef.current = false;
             setLoadingData(false);
         }
-    }, [filters]);
+    }, []); // No dependencies - uses ref for filters
 
     const loadStats = useCallback(async () => {
         // Prevent multiple simultaneous fetches
@@ -459,14 +466,34 @@ export default function MeetingRecords() {
         
         try {
             loadingStatsRef.current = true;
-            const statsData = await meetingRecordsAPI.getStats(filters);
-            setStats(statsData);
+            const currentFilters = filtersRef.current;
+            console.log('📊 Loading stats with filters:', currentFilters);
+            const statsData = await meetingRecordsAPI.getStats(currentFilters);
+            console.log('✅ Stats data received:', statsData);
+            setStats({
+                totalMeetings: statsData.totalMeetings || 0,
+                completedMeetings: statsData.completedMeetings || 0,
+                averageDuration: statsData.averageDuration || null,
+                averageRating: statsData.averageRating || null,
+                totalWithRating: statsData.totalWithRating || 0,
+                totalWithInterpreter: statsData.totalWithInterpreter || 0
+            });
         } catch (error) {
-            console.error('Error loading stats:', error);
+            console.error('❌ Error loading stats:', error);
+            console.error('Error details:', error.response?.data || error.message);
+            // Set default stats on error
+            setStats({
+                totalMeetings: 0,
+                completedMeetings: 0,
+                averageDuration: null,
+                averageRating: null,
+                totalWithRating: 0,
+                totalWithInterpreter: 0
+            });
         } finally {
             loadingStatsRef.current = false;
         }
-    }, [filters]);
+    }, []); // No dependencies - uses ref for filters
 
     const loadRecruiters = useCallback(async () => {
         // Prevent multiple simultaneous fetches
@@ -524,7 +551,24 @@ export default function MeetingRecords() {
             loadEvents();
             loadBooths();
         }
-    }, [user, loadMeetingRecords, loadStats, loadRecruiters, loadEvents, loadBooths, location.key]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, location.key]);
+
+    // Reload meeting records when filters change
+    useEffect(() => {
+        if (user) {
+            loadMeetingRecords();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, filters.eventId, filters.boothId, filters.recruiterId, filters.status, filters.startDate, filters.endDate, filters.search, filters.page, filters.limit]);
+
+    // Reload stats when filters change (excluding page and limit which don't affect stats)
+    useEffect(() => {
+        if (user) {
+            loadStats();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, filters.eventId, filters.boothId, filters.recruiterId, filters.status, filters.startDate, filters.endDate, filters.search]);
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => {
@@ -1007,14 +1051,33 @@ export default function MeetingRecords() {
 
             let recordsToProcess = [];
 
+            // ALWAYS get selected records from grid directly (not from state, which might be stale)
+            const selectedFromGrid = getSelectedRecordsFromGrid();
+            console.log('📋 Selected records from grid:', selectedFromGrid);
+            console.log('📋 Selected records from state:', selectedRecords);
+            console.log('📋 Current meeting records count:', meetingRecords.length);
+
             // Determine which records to process
-            if (selectedRecords.length > 0) {
-                // Use selected records
+            if (selectedFromGrid.length > 0) {
+                // Use selected records from grid - filter by IDs
+                recordsToProcess = meetingRecords.filter(r => {
+                    const recordId = r._id || r.id;
+                    return selectedFromGrid.includes(recordId);
+                });
+                console.log(`✅ Exporting resumes for ${selectedFromGrid.length} selected record(s)`, {
+                    selectedIds: selectedFromGrid,
+                    filteredRecords: recordsToProcess.length,
+                    totalMeetingRecords: meetingRecords.length
+                });
+                showToast(`Exporting resumes for ${selectedFromGrid.length} selected job seeker(s)...`, 'Info', 2000);
+            } else if (selectedRecords.length > 0) {
+                // Fallback to state if grid doesn't have selection
                 recordsToProcess = meetingRecords.filter(r => selectedRecords.includes(r._id));
+                console.log(`⚠️ Using state selection (${selectedRecords.length} records) - grid selection was empty`);
                 showToast(`Exporting resumes for ${selectedRecords.length} selected job seeker(s)...`, 'Info', 2000);
             } else {
-                // Fetch all records matching current filters (not paginated)
-                showToast('Fetching all job seekers matching current filters...', 'Info', 2000);
+                // No selection - fetch all records matching current filters (not paginated)
+                showToast('No records selected. Fetching all job seekers matching current filters...', 'Info', 2000);
                 const exportFilters = {
                     ...filters,
                     page: 1,
@@ -1055,8 +1118,10 @@ export default function MeetingRecords() {
 
             const uniqueJobSeekers = Array.from(jobSeekersMap.values());
 
+            console.log(`📊 Found ${uniqueJobSeekers.length} unique job seekers with resume URLs out of ${recordsToProcess.length} records`);
+
             if (uniqueJobSeekers.length === 0) {
-                showToast('No job seekers with resume URLs found', 'Warning');
+                showToast('No job seekers with resume URLs found in selected records', 'Warning');
                 return;
             }
 
@@ -1073,29 +1138,27 @@ export default function MeetingRecords() {
             for (let i = 0; i < uniqueJobSeekers.length; i++) {
                 const jobSeeker = uniqueJobSeekers[i];
                 try {
-                    // Fetch the resume file
-                    let response;
-                    try {
-                        response = await fetch(jobSeeker.resumeUrl, {
-                            method: 'GET',
-                            mode: 'cors'
-                        });
-                    } catch (fetchError) {
-                        // If CORS fails, try without explicit mode
-                        if (fetchError.name === 'TypeError' && fetchError.message.includes('CORS')) {
-                            response = await fetch(jobSeeker.resumeUrl, {
-                                method: 'GET'
-                            });
-                        } else {
-                            throw fetchError;
+                    // Fetch the resume file through proxy endpoint to avoid CORS issues
+                    const token = localStorage.getItem('token');
+                    const proxyUrl = `/api/uploads/proxy/download?url=${encodeURIComponent(jobSeeker.resumeUrl)}`;
+                    
+                    const response = await fetch(proxyUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
                         }
-                    }
+                    });
 
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
 
                     const blob = await response.blob();
+                    
+                    // Validate blob - check if it's not empty
+                    if (!blob || blob.size === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
                     
                     // Get file extension
                     const extension = getFileExtension(jobSeeker.resumeUrl);
@@ -1105,13 +1168,16 @@ export default function MeetingRecords() {
                     // Add to zip
                     zip.file(fileName, blob);
                     successCount++;
+                    console.log(`✅ Downloaded resume ${i + 1}/${uniqueJobSeekers.length}: ${fileName} (${blob.size} bytes)`);
 
                     // Update progress
                     if ((i + 1) % 10 === 0 || i === uniqueJobSeekers.length - 1) {
                         showToast(`Downloaded ${i + 1}/${uniqueJobSeekers.length} resumes...`, 'Info', 2000);
                     }
                 } catch (error) {
-                    console.error(`Error downloading resume for ${jobSeeker.name}:`, error);
+                    console.error(`❌ Error downloading resume for ${jobSeeker.name} (${jobSeeker.id}):`, error);
+                    console.error(`   Resume URL: ${jobSeeker.resumeUrl}`);
+                    console.error(`   Error details:`, error.message, error.stack);
                     failCount++;
                     errors.push(`${jobSeeker.name}: ${error.message}`);
                 }
@@ -1134,14 +1200,15 @@ export default function MeetingRecords() {
             
             // Generate filename based on filters
             let filename = 'job-seeker-resumes';
-            if (filters.eventId) {
+            const selectedCount = selectedFromGrid.length > 0 ? selectedFromGrid.length : selectedRecords.length;
+            
+            if (selectedCount > 0) {
+                filename = `selected-${selectedCount}-resumes`;
+            } else if (filters.eventId) {
                 const event = events.find(e => e._id === filters.eventId);
                 if (event) {
                     filename = `${sanitizeFileName(event.name)}-resumes`;
                 }
-            }
-            if (selectedRecords.length > 0) {
-                filename = `selected-${selectedRecords.length}-resumes`;
             }
             filename += '.zip';
             
@@ -1270,7 +1337,7 @@ export default function MeetingRecords() {
         }
     };
 
-    const handleSelectRecord = (recordId) => {
+    const handleSelectRecord = useCallback((recordId) => {
         setSelectedRecords(prev => {
             if (prev.includes(recordId)) {
                 return prev.filter(id => id !== recordId);
@@ -1278,7 +1345,67 @@ export default function MeetingRecords() {
                 return [...prev, recordId];
             }
         });
-    };
+    }, []);
+
+    // Memoize the dataSource transformation to prevent unnecessary re-renders
+    const gridDataSource = useMemo(() => {
+        // Safely extract populated field values
+        // Backend populates these fields, so they can be objects or null
+        const getFieldName = (field) => {
+            if (!field) return '';
+            if (typeof field === 'string') return field;
+            if (typeof field === 'object' && field.name) return field.name;
+            return '';
+        };
+        
+        const getFieldCity = (field) => {
+            if (!field) return '';
+            if (typeof field === 'object' && field.city) return field.city;
+            return '';
+        };
+        
+        const getFieldEmail = (field) => {
+            if (!field) return '';
+            if (typeof field === 'object' && field.email) return field.email;
+            return '';
+        };
+        
+        const getFieldResumeUrl = (field) => {
+            if (!field) return '';
+            if (typeof field === 'object' && field.resumeUrl) return field.resumeUrl;
+            return '';
+        };
+        
+        return meetingRecords.map(r => ({
+            ...r, 
+            id: r._id || r.id,
+            // Flatten nested fields for sorting and filtering
+            eventName: getFieldName(r.eventId),
+            boothName: getFieldName(r.boothId),
+            recruiterName: getFieldName(r.recruiterId),
+            jobSeekerName: getFieldName(r.jobseekerId),
+            jobSeekerEmail: getFieldEmail(r.jobseekerId),
+            jobSeekerResumeUrl: getFieldResumeUrl(r.jobseekerId),
+            jobSeekerCity: getFieldCity(r.jobseekerId),
+            interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
+            messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
+        }));
+    }, [meetingRecords]);
+
+    // Get selected records from grid when needed (for delete, export, etc.)
+    const getSelectedRecordsFromGrid = useCallback(() => {
+        if (!gridRef.current) return [];
+        try {
+            const selectedRows = gridRef.current.getSelectedRowsData();
+            return selectedRows.map(row => row._id || row.id).filter(Boolean);
+        } catch (error) {
+            console.error('Error getting selected rows:', error);
+            return [];
+        }
+    }, []);
+
+    // REMOVED selectionChange handler - it was causing infinite loops
+    // We'll read selections directly from grid when needed (export, delete, etc.)
 
     const handleBulkDelete = () => {
         if (selectedRecords.length === 0) {
@@ -1580,7 +1707,11 @@ export default function MeetingRecords() {
                             </div>
                             <div className="stat-card">
                                 <h3>Avg Duration</h3>
-                                <div className="stat-value">{formatDuration(Math.round(stats.averageDuration))}</div>
+                                <div className="stat-value">
+                                    {stats.averageDuration && !isNaN(stats.averageDuration) 
+                                        ? formatDuration(Math.round(stats.averageDuration)) 
+                                        : 'N/A'}
+                                </div>
                             </div>
                             <div className="stat-card">
                                 <h3>Avg Rating</h3>
@@ -1712,49 +1843,7 @@ export default function MeetingRecords() {
                             )}
                             <GridComponent
                                 ref={gridRef}
-                                dataSource={meetingRecords.map(r => {
-                                    // Safely extract populated field values
-                                    // Backend populates these fields, so they can be objects or null
-                                    const getFieldName = (field) => {
-                                        if (!field) return '';
-                                        if (typeof field === 'string') return field;
-                                        if (typeof field === 'object' && field.name) return field.name;
-                                        return '';
-                                    };
-                                    
-                                    const getFieldCity = (field) => {
-                                        if (!field) return '';
-                                        if (typeof field === 'object' && field.city) return field.city;
-                                        return '';
-                                    };
-                                    
-                                    const getFieldEmail = (field) => {
-                                        if (!field) return '';
-                                        if (typeof field === 'object' && field.email) return field.email;
-                                        return '';
-                                    };
-                                    
-                                    const getFieldResumeUrl = (field) => {
-                                        if (!field) return '';
-                                        if (typeof field === 'object' && field.resumeUrl) return field.resumeUrl;
-                                        return '';
-                                    };
-                                    
-                                    return {
-                                        ...r, 
-                                        id: r._id || r.id,
-                                        // Flatten nested fields for sorting and filtering
-                                        eventName: getFieldName(r.eventId),
-                                        boothName: getFieldName(r.boothId),
-                                        recruiterName: getFieldName(r.recruiterId),
-                                        jobSeekerName: getFieldName(r.jobseekerId),
-                                        jobSeekerEmail: getFieldEmail(r.jobseekerId),
-                                        jobSeekerResumeUrl: getFieldResumeUrl(r.jobseekerId),
-                                        jobSeekerCity: getFieldCity(r.jobseekerId),
-                                        interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
-                                        messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
-                                    };
-                                })}
+                                dataSource={gridDataSource}
                                 allowPaging={false}
                                 allowSorting={true}
                                 allowFiltering={true}
@@ -1770,30 +1859,8 @@ export default function MeetingRecords() {
                                 allowResizing={true}
                                 allowReordering={true}
                                 toolbar={['ColumnChooser']}
-                                selectionSettings={['Admin', 'GlobalSupport'].includes(user?.role) ? { 
-                                    type: 'Multiple', 
-                                    checkboxOnly: true,
-                                    persistSelection: true,
-                                    enableSimpleMultiRowSelection: true
-                                } : { type: 'None' }}
                                 enableHover={true}
                                 allowRowDragAndDrop={false}
-                                rowSelected={(args) => {
-                                    if (['Admin', 'GlobalSupport'].includes(user?.role)) {
-                                        const recordId = args.data._id || args.data.id;
-                                        if (!selectedRecords.includes(recordId)) {
-                                            handleSelectRecord(recordId);
-                                        }
-                                    }
-                                }}
-                                rowDeselected={(args) => {
-                                    if (['Admin', 'GlobalSupport'].includes(user?.role)) {
-                                        const recordId = args.data._id || args.data.id;
-                                        if (selectedRecords.includes(recordId)) {
-                                            handleSelectRecord(recordId);
-                                        }
-                                    }
-                                }}
                             >
                                 <ColumnsDirective>
                                     {['Admin', 'GlobalSupport'].includes(user?.role) && (
