@@ -1,0 +1,10 @@
+
+mongodump --uri="mongodb+srv://username:password@cluster-url" --db Ability
+
+
+
+mongorestore --uri="mongodb+srv://daniotech:JHogHMs8nvUmvWHO@cluster-ability.okhfe.mongodb.net/" \
+  --nsInclude="Ability_v2_dev.*" \
+  --nsFrom="Ability_v2_dev.*" \
+  --nsTo="Ability_NewProd.*" \
+  .
