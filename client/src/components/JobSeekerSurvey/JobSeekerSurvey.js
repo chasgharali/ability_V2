@@ -766,7 +766,7 @@ const JobSeekerSurvey = () => {
                                 >
                                     <ColumnsDirective>
                                         <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-                                        <ColumnDirective field='name' headerText='Name' width='200' clipMode='EllipsisWithTooltip' template={nameTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='name' headerText='Name' width='200' clipMode='EllipsisWithTooltip' template={nameTemplate} allowFiltering={true} visible={false} showInColumnChooser={false} />
                                         <ColumnDirective field='race' headerText='Race' width='180' clipMode='EllipsisWithTooltip' template={raceTemplate} allowFiltering={true} />
                                         <ColumnDirective field='genderIdentity' headerText='Gender' width='140' clipMode='EllipsisWithTooltip' template={genderTemplate} allowFiltering={true} />
                                         <ColumnDirective field='ageGroup' headerText='Age Group' width='140' clipMode='EllipsisWithTooltip' template={ageGroupTemplate} allowFiltering={true} />
