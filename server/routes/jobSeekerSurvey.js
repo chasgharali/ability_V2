@@ -178,10 +178,8 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             return stringValue;
         };
 
-        // CSV Headers
+        // CSV Headers (Name and Email removed for anonymity)
         const csvHeaders = [
-            'Job Seeker Name',
-            'Email',
             'Phone Number',
             'City',
             'State',
@@ -202,8 +200,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             const disabilitiesArray = Array.isArray(survey.disabilities) ? survey.disabilities : [];
             
             const row = [
-                escapeCSV(user.name),
-                escapeCSV(user.email),
                 escapeCSV(user.phoneNumber),
                 escapeCSV(user.city),
                 escapeCSV(user.state),
