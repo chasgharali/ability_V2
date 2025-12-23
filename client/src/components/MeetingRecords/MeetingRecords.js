@@ -1,3 +1,4 @@
+// @refresh reset
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import '../Dashboard/Dashboard.css';
 import './MeetingRecords.css';
@@ -1006,42 +1007,11 @@ export default function MeetingRecords() {
         try {
             setIsExportingResumes(true);
             
-            // Helper function to extract resume URL from job seeker data
-            const getResumeUrl = (jobseekerId) => {
-                if (!jobseekerId) return null;
-                if (typeof jobseekerId === 'object' && jobseekerId.resumeUrl) {
-                    return jobseekerId.resumeUrl;
-                }
-                return null;
-            };
-
-            // Helper function to get job seeker name
-            const getJobSeekerName = (jobseekerId) => {
-                if (!jobseekerId) return 'Unknown';
-                if (typeof jobseekerId === 'object' && jobseekerId.name) {
-                    return jobseekerId.name;
-                }
-                return 'Unknown';
-            };
-
             // Helper function to get file extension from URL
             const getFileExtension = (url) => {
                 if (!url) return 'pdf';
-                try {
-                    const urlObj = new URL(url);
-                    const pathname = urlObj.pathname;
-                    const match = pathname.match(/\.([a-zA-Z0-9]+)(\?|$)/);
-                    if (match) {
-                        return match[1].toLowerCase();
-                    }
-                } catch (e) {
-                    // If URL parsing fails, try to extract from string
-                    const match = url.match(/\.([a-zA-Z0-9]+)(\?|$)/);
-                    if (match) {
-                        return match[1].toLowerCase();
-                    }
-                }
-                return 'pdf'; // Default to pdf
+                const match = url.match(/\.([a-zA-Z0-9]+)(\?|$)/);
+                return match ? match[1].toLowerCase() : 'pdf';
             };
 
             // Helper function to sanitize filename
@@ -1049,79 +1019,27 @@ export default function MeetingRecords() {
                 return name.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 100);
             };
 
-            let recordsToProcess = [];
-
-            // ALWAYS get selected records from grid directly (not from state, which might be stale)
+            // Get selected records from grid
             const selectedFromGrid = getSelectedRecordsFromGrid();
-            console.log('📋 Selected records from grid:', selectedFromGrid);
-            console.log('📋 Selected records from state:', selectedRecords);
-            console.log('📋 Current meeting records count:', meetingRecords.length);
+            let selectedIds = null;
 
             // Determine which records to process
             if (selectedFromGrid.length > 0) {
-                // Use selected records from grid - filter by IDs
-                recordsToProcess = meetingRecords.filter(r => {
-                    const recordId = r._id || r.id;
-                    return selectedFromGrid.includes(recordId);
-                });
-                console.log(`✅ Exporting resumes for ${selectedFromGrid.length} selected record(s)`, {
-                    selectedIds: selectedFromGrid,
-                    filteredRecords: recordsToProcess.length,
-                    totalMeetingRecords: meetingRecords.length
-                });
-                showToast(`Exporting resumes for ${selectedFromGrid.length} selected job seeker(s)...`, 'Info', 2000);
+                selectedIds = selectedFromGrid;
+                showToast(`Fetching resumes for ${selectedFromGrid.length} selected job seeker(s)...`, 'Info', 2000);
             } else if (selectedRecords.length > 0) {
-                // Fallback to state if grid doesn't have selection
-                recordsToProcess = meetingRecords.filter(r => selectedRecords.includes(r._id));
-                console.log(`⚠️ Using state selection (${selectedRecords.length} records) - grid selection was empty`);
-                showToast(`Exporting resumes for ${selectedRecords.length} selected job seeker(s)...`, 'Info', 2000);
+                selectedIds = selectedRecords;
+                showToast(`Fetching resumes for ${selectedRecords.length} selected job seeker(s)...`, 'Info', 2000);
             } else {
-                // No selection - fetch all records matching current filters (not paginated)
                 showToast('No records selected. Fetching all job seekers matching current filters...', 'Info', 2000);
-                const exportFilters = {
-                    ...filters,
-                    page: 1,
-                    limit: 100000 // Large limit to get all records
-                };
-                
-                const response = await meetingRecordsAPI.getMeetingRecords(exportFilters);
-                recordsToProcess = response.meetingRecords || [];
-                showToast(`Exporting resumes for ${recordsToProcess.length} job seeker(s)...`, 'Info', 2000);
             }
 
-            if (recordsToProcess.length === 0) {
-                showToast('No records found to export resumes', 'Warning');
-                return;
-            }
-
-            // Extract unique job seekers with resume URLs
-            const jobSeekersMap = new Map();
-            recordsToProcess.forEach(record => {
-                const jobSeeker = record.jobseekerId;
-                if (!jobSeeker) return;
-
-                const resumeUrl = getResumeUrl(jobSeeker);
-                if (!resumeUrl || !resumeUrl.trim()) return; // Skip if no resume URL
-
-                const jobSeekerId = typeof jobSeeker === 'object' ? jobSeeker._id : jobSeeker;
-                const jobSeekerName = getJobSeekerName(jobSeeker);
-
-                // Only add if not already in map (to avoid duplicates)
-                if (!jobSeekersMap.has(jobSeekerId)) {
-                    jobSeekersMap.set(jobSeekerId, {
-                        id: jobSeekerId,
-                        name: jobSeekerName,
-                        resumeUrl: resumeUrl.trim()
-                    });
-                }
-            });
-
-            const uniqueJobSeekers = Array.from(jobSeekersMap.values());
-
-            console.log(`📊 Found ${uniqueJobSeekers.length} unique job seekers with resume URLs out of ${recordsToProcess.length} records`);
+            // Call the API endpoint to get job seekers with proper filtering
+            const response = await meetingRecordsAPI.getJobSeekersForResumeExport(filters, selectedIds);
+            const uniqueJobSeekers = response.jobSeekers || [];
 
             if (uniqueJobSeekers.length === 0) {
-                showToast('No job seekers with resume URLs found in selected records', 'Warning');
+                showToast('No job seekers with resume URLs found', 'Warning');
                 return;
             }
 
@@ -1395,23 +1313,38 @@ export default function MeetingRecords() {
     // Get selected records from grid when needed (for delete, export, etc.)
     const getSelectedRecordsFromGrid = useCallback(() => {
         if (!gridRef.current) return [];
+        
         try {
-            const selectedRows = gridRef.current.getSelectedRowsData();
-            return selectedRows.map(row => row._id || row.id).filter(Boolean);
+            // Try the most common method first for speed
+            if (typeof gridRef.current.getSelectedRecords === 'function') {
+                const selectedRows = gridRef.current.getSelectedRecords();
+                return selectedRows.map(row => row._id || row.id).filter(Boolean);
+            }
+            
+            // Fallback methods
+            if (typeof gridRef.current.getSelectedRowsData === 'function') {
+                const selectedRows = gridRef.current.getSelectedRowsData();
+                return selectedRows.map(row => row._id || row.id).filter(Boolean);
+            }
+            
+            return [];
         } catch (error) {
             console.error('Error getting selected rows:', error);
             return [];
         }
     }, []);
 
-    // REMOVED selectionChange handler - it was causing infinite loops
-    // We'll read selections directly from grid when needed (export, delete, etc.)
+    // Use ref to track selection update timeout
+    const selectionUpdateTimeoutRef = useRef(null);
 
     const handleBulkDelete = () => {
-        if (selectedRecords.length === 0) {
+        // Get fresh selection from grid
+        const currentSelection = getSelectedRecordsFromGrid();
+        if (currentSelection.length === 0) {
             showToast('Please select records to delete', 'Warning');
             return;
         }
+        setSelectedRecords(currentSelection);
         setConfirmDeleteOpen(true);
     };
 
