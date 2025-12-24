@@ -926,6 +926,167 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
     }
 });
 
+// Export resumes - Get meeting records for resume export with proper filtering
+router.get('/export/resumes', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recruiter']), async (req, res) => {
+    try {
+        const { recruiterId, eventId, boothId, status, startDate, endDate, selectedIds } = req.query;
+        const mongoose = require('mongoose');
+
+        console.log('🎯 Resume Export Request:', {
+            user: req.user.email,
+            role: req.user.role,
+            selectedIds: selectedIds ? (Array.isArray(selectedIds) ? selectedIds.length : selectedIds.split(',').length) : 'none',
+            filters: { recruiterId, eventId, boothId, status, startDate, endDate }
+        });
+
+        // Validate ObjectIds if provided
+        if (eventId && !mongoose.Types.ObjectId.isValid(eventId)) {
+            return res.status(400).json({ 
+                message: 'Invalid eventId format',
+                error: 'eventId must be a valid MongoDB ObjectId'
+            });
+        }
+        if (boothId && !mongoose.Types.ObjectId.isValid(boothId)) {
+            return res.status(400).json({ 
+                message: 'Invalid boothId format',
+                error: 'boothId must be a valid MongoDB ObjectId'
+            });
+        }
+        if (recruiterId && !mongoose.Types.ObjectId.isValid(recruiterId)) {
+            return res.status(400).json({ 
+                message: 'Invalid recruiterId format',
+                error: 'recruiterId must be a valid MongoDB ObjectId'
+            });
+        }
+
+        let query = {};
+
+        // If specific record IDs are provided, use those (selected records)
+        if (selectedIds) {
+            const idsArray = Array.isArray(selectedIds) ? selectedIds : selectedIds.split(',');
+            const validIds = idsArray.filter(id => mongoose.Types.ObjectId.isValid(id));
+            
+            if (validIds.length === 0) {
+                return res.status(400).json({ message: 'No valid record IDs provided' });
+            }
+            
+            query._id = { $in: validIds.map(id => new mongoose.Types.ObjectId(id)) };
+            
+            console.log(`✅ Using selected IDs: ${validIds.length} record(s)`);
+        } else {
+            // No selection - apply filters
+            console.log('📋 No selection - applying filters and role-based access');
+            
+            // Role-based filtering
+            if (req.user.role === 'Recruiter') {
+                // Get recruiter's assigned booth and filter by boothId to show all records from the booth
+                const recruiter = await User.findById(req.user._id).select('assignedBooth').populate('assignedBooth');
+                const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
+                
+                if (recruiterBoothId) {
+                    query.boothId = recruiterBoothId;
+                    console.log(`👤 Recruiter booth filter: ${recruiterBoothId}`);
+                    
+                    // Apply status filter if provided
+                    if (status) {
+                        query.status = status;
+                        console.log(`📊 Status filter: ${status}`);
+                    }
+                } else {
+                    // If no booth assigned, only show their own records
+                    query.recruiterId = req.user._id;
+                    console.log(`👤 Recruiter ID filter (no booth): ${req.user._id}`);
+                    if (status) {
+                        query.status = status;
+                        console.log(`📊 Status filter: ${status}`);
+                    }
+                }
+            } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
+                console.log(`👑 Admin/GlobalSupport - applying filters`);
+                // Admins can filter by recruiter or see all
+                if (recruiterId) {
+                    query.recruiterId = new mongoose.Types.ObjectId(recruiterId);
+                    console.log(`👤 Recruiter filter: ${recruiterId}`);
+                }
+                if (status) {
+                    query.status = status;
+                    console.log(`📊 Status filter: ${status}`);
+                }
+            }
+
+            // Apply additional filters (these apply to all conditions)
+            if (eventId) {
+                query.eventId = new mongoose.Types.ObjectId(eventId);
+                console.log(`🎪 Event filter: ${eventId}`);
+            }
+            if (boothId) {
+                query.boothId = new mongoose.Types.ObjectId(boothId);
+                console.log(`🏢 Booth filter: ${boothId}`);
+            }
+
+            // Date range filtering
+            if (startDate || endDate) {
+                query.startTime = {};
+                if (startDate) {
+                    query.startTime.$gte = new Date(startDate);
+                    console.log(`📅 Start date filter: ${startDate}`);
+                }
+                if (endDate) {
+                    query.startTime.$lte = new Date(endDate);
+                    console.log(`📅 End date filter: ${endDate}`);
+                }
+            }
+
+            console.log(`📋 Final query:`, JSON.stringify(query));
+        }
+
+        // Get ALL records matching the query (no pagination for export)
+        const meetingRecords = await MeetingRecord.find(query)
+            .populate('jobseekerId', 'name email resumeUrl')
+            .select('jobseekerId')
+            .lean();
+
+        console.log(`✅ Found ${meetingRecords.length} meeting records for resume export`);
+
+        // Extract unique job seekers with resume URLs
+        const uniqueJobSeekers = [];
+        const seenJobSeekerIds = new Set();
+
+        meetingRecords.forEach(record => {
+            const jobSeeker = record.jobseekerId;
+            if (!jobSeeker) return;
+
+            const jobSeekerId = jobSeeker._id.toString();
+            
+            // Skip if already processed
+            if (seenJobSeekerIds.has(jobSeekerId)) return;
+            
+            // Skip if no resume URL
+            if (!jobSeeker.resumeUrl || !jobSeeker.resumeUrl.trim()) return;
+
+            seenJobSeekerIds.add(jobSeekerId);
+            uniqueJobSeekers.push({
+                id: jobSeekerId,
+                name: jobSeeker.name || 'Unknown',
+                email: jobSeeker.email || '',
+                resumeUrl: jobSeeker.resumeUrl.trim()
+            });
+        });
+
+        console.log(`✅ Returning ${uniqueJobSeekers.length} unique job seekers with resume URLs`);
+
+        res.json({
+            jobSeekers: uniqueJobSeekers,
+            totalRecords: meetingRecords.length,
+            uniqueJobSeekers: uniqueJobSeekers.length
+        });
+
+    } catch (error) {
+        console.error('❌ Error fetching records for resume export:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 // Bulk delete meeting records (Admin/GlobalSupport only)
 router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
