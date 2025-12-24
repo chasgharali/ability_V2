@@ -16,6 +16,7 @@ router.get('/', authenticateToken, async (req, res) => {
             status,
             startDate,
             endDate,
+            search,
             page = 1,
             limit = 10,
             sortBy = 'startTime',
@@ -102,38 +103,86 @@ router.get('/', authenticateToken, async (req, res) => {
             if (endDate) query.startTime.$lte = new Date(endDate);
         }
 
-        // Pagination
-        const skip = (parsedPage - 1) * parsedLimit;
+        // Sort options
         const sortOptions = {};
         sortOptions[finalSortBy] = finalSortOrder === 'desc' ? -1 : 1;
 
-        // Execute query with population
-        const meetingRecords = await MeetingRecord.find(query)
-            .populate('eventId', 'name slug')
-            .populate('boothId', 'name logoUrl')
-            .populate('recruiterId', 'name email')
-            .populate('jobseekerId', 'name email city state metadata resumeUrl')
-            .populate('interpreterId', 'name email')
-            .populate('queueId')
-            .populate('videoCallId')
-            .sort(sortOptions)
-            .skip(skip)
-            .limit(parsedLimit);
+        // Helper function to check if record matches search term
+        const matchesSearch = (record, searchTerm) => {
+            if (record.eventId?.name && record.eventId.name.toLowerCase().includes(searchTerm)) return true;
+            if (record.boothId?.name && record.boothId.name.toLowerCase().includes(searchTerm)) return true;
+            if (record.recruiterId?.name && record.recruiterId.name.toLowerCase().includes(searchTerm)) return true;
+            if (record.recruiterId?.email && record.recruiterId.email.toLowerCase().includes(searchTerm)) return true;
+            if (record.jobseekerId?.name && record.jobseekerId.name.toLowerCase().includes(searchTerm)) return true;
+            if (record.jobseekerId?.email && record.jobseekerId.email.toLowerCase().includes(searchTerm)) return true;
+            if (record.jobseekerId?.phoneNumber && record.jobseekerId.phoneNumber.toLowerCase().includes(searchTerm)) return true;
+            if (record.jobseekerId?.city && record.jobseekerId.city.toLowerCase().includes(searchTerm)) return true;
+            if (record.jobseekerId?.state && record.jobseekerId.state.toLowerCase().includes(searchTerm)) return true;
+            if (record.jobseekerId?.country && record.jobseekerId.country.toLowerCase().includes(searchTerm)) return true;
+            if (record.jobseekerId?.metadata?.profile) {
+                const profile = record.jobseekerId.metadata.profile;
+                if (profile.headline && profile.headline.toLowerCase().includes(searchTerm)) return true;
+                if (profile.keywords && profile.keywords.toLowerCase().includes(searchTerm)) return true;
+                if (profile.workLevel && profile.workLevel.toLowerCase().includes(searchTerm)) return true;
+                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(searchTerm)) return true;
+                if (profile.clearance && profile.clearance.toLowerCase().includes(searchTerm)) return true;
+                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(searchTerm)) return true;
+                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et.toLowerCase().includes(searchTerm))) return true;
+                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang.toLowerCase().includes(searchTerm))) return true;
+            }
+            if (record.interpreterId?.name && record.interpreterId.name.toLowerCase().includes(searchTerm)) return true;
+            if (record.interpreterId?.email && record.interpreterId.email.toLowerCase().includes(searchTerm)) return true;
+            if (record.status && record.status.toLowerCase().includes(searchTerm)) return true;
+            if (record.recruiterFeedback && record.recruiterFeedback.toLowerCase().includes(searchTerm)) return true;
+            return false;
+        };
 
-        console.log(`Found ${meetingRecords.length} meeting records`);
-        if (meetingRecords.length > 0) {
-            console.log('Sample record statuses:', meetingRecords.map(r => r.status));
+        // Fetch ALL records matching the base query (without pagination) if search is provided
+        // Otherwise, fetch with pagination for better performance
+        let allRecords;
+        if (search && search.trim()) {
+            // Fetch all records for search filtering
+            allRecords = await MeetingRecord.find(query)
+                .populate('eventId', 'name slug')
+                .populate('boothId', 'name logoUrl')
+                .populate('recruiterId', 'name email')
+                .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
+                .populate('interpreterId', 'name email')
+                .populate('queueId')
+                .populate('videoCallId')
+                .sort(sortOptions)
+                .lean();
+        } else {
+            // Fetch with pagination for better performance when no search
+            const skip = (parsedPage - 1) * parsedLimit;
+            allRecords = await MeetingRecord.find(query)
+                .populate('eventId', 'name slug')
+                .populate('boothId', 'name logoUrl')
+                .populate('recruiterId', 'name email')
+                .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
+                .populate('interpreterId', 'name email')
+                .populate('queueId')
+                .populate('videoCallId')
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(parsedLimit)
+                .lean();
         }
 
         // Calculate duration for records that don't have it
-        let processedRecords = meetingRecords.map(record => {
-            const recordObj = record.toObject();
+        let processedRecords = allRecords.map(record => {
             // If duration is null but we have start and end times, calculate it
-            if (!recordObj.duration && recordObj.startTime && recordObj.endTime) {
-                recordObj.duration = Math.round((new Date(recordObj.endTime) - new Date(recordObj.startTime)) / (1000 * 60));
+            if (!record.duration && record.startTime && record.endTime) {
+                record.duration = Math.round((new Date(record.endTime) - new Date(record.startTime)) / (1000 * 60));
             }
-            return recordObj;
+            return record;
         });
+
+        // Apply search filter if provided (search across all populated fields)
+        if (search && search.trim()) {
+            const searchTerm = search.trim().toLowerCase();
+            processedRecords = processedRecords.filter(record => matchesSearch(record, searchTerm));
+        }
 
         // Deduplicate left_with_message records by queueId
         // If multiple left_with_message records exist for the same queueId, keep only one
@@ -152,38 +201,76 @@ router.get('/', authenticateToken, async (req, res) => {
             });
         }
 
-        // Get total count for pagination
-        // Note: For recruiters, count may include duplicates from old records (especially left_with_message)
-        // but the deduplication filter above will remove them from display
-        const totalRecords = await MeetingRecord.countDocuments(query);
-        
-        // Adjust count for recruiters to account for deduplication of left_with_message records
-        // Count unique left_with_message records by queueId
-        let adjustedCount = totalRecords;
-        if (req.user.role === 'Recruiter') {
-            // Count how many duplicate left_with_message records exist
-            const duplicateQuery = {
-                ...query,
-                status: 'left_with_message'
-            };
-            const leftMessageRecords = await MeetingRecord.find(duplicateQuery).select('queueId');
-            const uniqueQueueIds = new Set();
-            let duplicateCount = 0;
-            leftMessageRecords.forEach(record => {
-                const queueIdStr = record.queueId?.toString();
-                if (queueIdStr) {
-                    if (uniqueQueueIds.has(queueIdStr)) {
-                        duplicateCount++;
-                    } else {
-                        uniqueQueueIds.add(queueIdStr);
-                    }
-                }
-            });
-            adjustedCount = totalRecords - duplicateCount;
+        // Apply pagination if search was used (since we fetched all records)
+        if (search && search.trim()) {
+            const skip = (parsedPage - 1) * parsedLimit;
+            processedRecords = processedRecords.slice(skip, skip + parsedLimit);
         }
 
-        // Use adjusted count for pagination if we deduplicated
-        const finalCount = adjustedCount;
+        // Calculate total count for pagination
+        // If search was used, we already have the filtered count from processedRecords
+        // Otherwise, we need to count from database
+        let finalCount;
+        if (search && search.trim()) {
+            // Count is based on filtered and deduplicated records
+            // We need to recalculate the full filtered list to get accurate count
+            // (since we already filtered above, we can use that count)
+            const allRecordsForCount = await MeetingRecord.find(query)
+                .populate('eventId', 'name slug')
+                .populate('boothId', 'name logoUrl')
+                .populate('recruiterId', 'name email')
+                .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
+                .populate('interpreterId', 'name email')
+                .populate('queueId')
+                .lean();
+            
+            const searchTerm = search.trim().toLowerCase();
+            let filteredForCount = allRecordsForCount.filter(record => matchesSearch(record, searchTerm));
+            
+            // Apply deduplication for recruiters
+            if (req.user.role === 'Recruiter') {
+                const seenQueueIds = new Set();
+                filteredForCount = filteredForCount.filter(record => {
+                    if (record.status === 'left_with_message' && record.queueId) {
+                        const queueIdStr = record.queueId._id?.toString() || record.queueId.toString();
+                        if (seenQueueIds.has(queueIdStr)) {
+                            return false;
+                        }
+                        seenQueueIds.add(queueIdStr);
+                    }
+                    return true;
+                });
+            }
+            
+            finalCount = filteredForCount.length;
+        } else {
+            // No search - count from database
+            let totalRecords = await MeetingRecord.countDocuments(query);
+            
+            // Adjust count for recruiters to account for deduplication of left_with_message records
+            if (req.user.role === 'Recruiter') {
+                const duplicateQuery = {
+                    ...query,
+                    status: 'left_with_message'
+                };
+                const leftMessageRecords = await MeetingRecord.find(duplicateQuery).select('queueId');
+                const uniqueQueueIds = new Set();
+                let duplicateCount = 0;
+                leftMessageRecords.forEach(record => {
+                    const queueIdStr = record.queueId?.toString();
+                    if (queueIdStr) {
+                        if (uniqueQueueIds.has(queueIdStr)) {
+                            duplicateCount++;
+                        } else {
+                            uniqueQueueIds.add(queueIdStr);
+                        }
+                    }
+                });
+                finalCount = totalRecords - duplicateCount;
+            } else {
+                finalCount = totalRecords;
+            }
+        }
         
         res.json({
             meetingRecords: processedRecords,
@@ -215,7 +302,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
             .populate('eventId', 'name slug')
             .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
-            .populate('jobseekerId', 'name email city state metadata resumeUrl')
+            .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
             .populate('interpreterId', 'name email')
             .populate('queueId')
             .populate('videoCallId');
