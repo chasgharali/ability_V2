@@ -21,21 +21,26 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             race,
             genderIdentity,
             ageGroup,
-            countryOfOrigin
+            countryOfOrigin,
+            eventId,
+            boothId
         } = req.query;
 
-        // Build query - only get JobSeekers with survey data
+        // Build query - only get JobSeekers
         let query = {
-            role: 'JobSeeker',
-            $or: [
-                { 'survey.race': { $exists: true, $ne: [], $not: { $size: 0 } } },
-                { 'survey.genderIdentity': { $exists: true, $ne: '' } },
-                { 'survey.ageGroup': { $exists: true, $ne: '' } },
-                { 'survey.countryOfOrigin': { $exists: true, $ne: '' } },
-                { 'survey.disabilities': { $exists: true, $ne: [], $not: { $size: 0 } } },
-                { 'survey.updatedAt': { $exists: true, $ne: null } }
-            ]
+            role: 'JobSeeker'
         };
+
+        // Filter by event or booth using MeetingRecord
+        if (eventId || boothId) {
+            const MeetingRecord = require('../models/MeetingRecord');
+            const meetingQuery = {};
+            if (eventId) meetingQuery.eventId = new mongoose.Types.ObjectId(eventId);
+            if (boothId) meetingQuery.boothId = new mongoose.Types.ObjectId(boothId);
+            
+            const meetings = await MeetingRecord.find(meetingQuery).distinct('jobseekerId');
+            query._id = { $in: meetings };
+        }
 
         // Search filter (by name or email)
         if (search && search.trim()) {
@@ -108,56 +113,30 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
 
 /**
  * GET /api/job-seeker-survey/export/csv
- * Export job seeker survey data as CSV
+ * Export job seeker survey data as CSV with demographic breakdowns
  */
 router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const {
-            search = '',
-            race,
-            genderIdentity,
-            ageGroup,
-            countryOfOrigin
+            eventId,
+            boothId
         } = req.query;
 
-        // Build query (same as GET endpoint, but no pagination)
+        // Build query - only get JobSeekers with survey data
         let query = {
-            role: 'JobSeeker',
-            $or: [
-                { 'survey.race': { $exists: true, $ne: [], $not: { $size: 0 } } },
-                { 'survey.genderIdentity': { $exists: true, $ne: '' } },
-                { 'survey.ageGroup': { $exists: true, $ne: '' } },
-                { 'survey.countryOfOrigin': { $exists: true, $ne: '' } },
-                { 'survey.disabilities': { $exists: true, $ne: [], $not: { $size: 0 } } },
-                { 'survey.updatedAt': { $exists: true, $ne: null } }
-            ]
+            role: 'JobSeeker'
         };
 
-        // Search filter
-        if (search && search.trim()) {
-            const searchRegex = new RegExp(search.trim(), 'i');
-            query.$and = [
-                {
-                    $or: [
-                        { name: searchRegex },
-                        { email: searchRegex }
-                    ]
-                }
-            ];
-        }
-
-        // Apply filters (race is an array field)
-        if (race && race.trim()) {
-            query['survey.race'] = race.trim();
-        }
-        if (genderIdentity && genderIdentity.trim()) {
-            query['survey.genderIdentity'] = genderIdentity.trim();
-        }
-        if (ageGroup && ageGroup.trim()) {
-            query['survey.ageGroup'] = ageGroup.trim();
-        }
-        if (countryOfOrigin && countryOfOrigin.trim()) {
-            query['survey.countryOfOrigin'] = countryOfOrigin.trim();
+        // Filter by event or booth using MeetingRecord
+        if (eventId || boothId) {
+            const MeetingRecord = require('../models/MeetingRecord');
+            const meetingQuery = {};
+            if (eventId) meetingQuery.eventId = new mongoose.Types.ObjectId(eventId);
+            if (boothId) meetingQuery.boothId = new mongoose.Types.ObjectId(boothId);
+            
+            const meetings = await MeetingRecord.find(meetingQuery).distinct('jobseekerId');
+            logger.info(`Found ${meetings.length} job seekers in meetings for eventId=${eventId}, boothId=${boothId}`);
+            query._id = { $in: meetings };
         }
 
         // Get all users (no pagination for export)
@@ -165,6 +144,38 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             .select('name email phoneNumber city state country survey createdAt updatedAt')
             .sort({ 'survey.updatedAt': -1 })
             .lean();
+
+        logger.info(`Export: Found ${users.length} users for eventId=${eventId}, boothId=${boothId}`);
+
+        // Helper function to calculate stats for a field
+        const calculateStats = (field) => {
+            const counts = {};
+            let total = 0;
+
+            users.forEach(user => {
+                let value;
+                if (field === 'country') {
+                    value = user.country || user.survey?.country;
+                } else {
+                    value = user.survey?.[field];
+                }
+                
+                if (field === 'race' && Array.isArray(value)) {
+                    value.forEach(v => {
+                        if (v && v.trim()) {
+                            counts[v] = (counts[v] || 0) + 1;
+                            total++;
+                        }
+                    });
+                } else if (value && typeof value === 'string' && value.trim()) {
+                    counts[value] = (counts[value] || 0) + 1;
+                    total++;
+                }
+            });
+
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            return { counts: sorted, total };
+        };
 
         // Helper function to escape CSV fields
         const escapeCSV = (value) => {
@@ -178,50 +189,37 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             return stringValue;
         };
 
-        // CSV Headers (Name and Email removed for anonymity)
-        const csvHeaders = [
-            'Phone Number',
-            'City',
-            'State',
-            'Country',
-            'Race',
-            'Gender Identity',
-            'Age Group',
-            'Country of Origin',
-            'Disabilities',
-            'Other Disability',
-            'Survey Updated At',
-            'Profile Created At'
+        // Build CSV sections
+        const sections = [
+            { field: 'countryOfOrigin', title: 'Country of Origin' },
+            { field: 'country', title: 'Country' },
+            { field: 'race', title: 'Race' },
+            { field: 'genderIdentity', title: 'Gender' },
+            { field: 'ageGroup', title: 'Age Group' }
         ];
 
-        const csvRows = users.map((user) => {
-            const survey = user.survey || {};
-            const raceArray = Array.isArray(survey.race) ? survey.race : [];
-            const disabilitiesArray = Array.isArray(survey.disabilities) ? survey.disabilities : [];
+        const csvLines = [];
+        
+        sections.forEach((section, idx) => {
+            const { counts, total } = calculateStats(section.field);
             
-            const row = [
-                escapeCSV(user.phoneNumber),
-                escapeCSV(user.city),
-                escapeCSV(user.state),
-                escapeCSV(user.country),
-                escapeCSV(raceArray.join('; ')),
-                escapeCSV(survey.genderIdentity || ''),
-                escapeCSV(survey.ageGroup || ''),
-                escapeCSV(survey.countryOfOrigin || ''),
-                escapeCSV(disabilitiesArray.join('; ')),
-                escapeCSV(survey.otherDisability || ''),
-                escapeCSV(survey.updatedAt ? new Date(survey.updatedAt).toISOString() : ''),
-                escapeCSV(user.createdAt ? new Date(user.createdAt).toISOString() : '')
-            ];
-
-            return row;
+            // Add section header
+            if (idx > 0) csvLines.push(''); // Empty line between sections
+            csvLines.push(`Distribution of '${section.title}'`);
+            csvLines.push(`${section.title},Count of ${section.title},% of ${section.title}`);
+            
+            // Add data rows
+            counts.forEach(([name, count]) => {
+                const percentage = total > 0 ? ((count / total) * 100).toFixed(2) : 0;
+                csvLines.push(`${escapeCSV(name)},${count},${percentage}%`);
+            });
+            
+            // Add grand total
+            csvLines.push(`Grand Total,${total},100.00%`);
         });
 
         // Build CSV content
-        const csvContent = [
-            csvHeaders.map(h => escapeCSV(h)).join(','),
-            ...csvRows.map(row => row.join(','))
-        ].join('\r\n');
+        const csvContent = csvLines.join('\r\n');
         
         // Add BOM for Excel compatibility
         const BOM = '\uFEFF';

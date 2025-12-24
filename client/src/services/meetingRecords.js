@@ -97,6 +97,31 @@ export const meetingRecordsAPI = {
             data: { recordIds }
         });
         return response.data;
+    },
+
+    // Get job seekers for resume export with proper filtering
+    getJobSeekersForResumeExport: async (filters = {}, selectedIds = null) => {
+        const params = {};
+        
+        // If specific IDs are provided, ONLY use those (ignore filters)
+        if (selectedIds && selectedIds.length > 0) {
+            params.selectedIds = selectedIds.join(',');
+        } else {
+            // No selection - apply filters
+            Object.keys(filters).forEach(key => {
+                // Exclude pagination and search params for export
+                if (key !== 'page' && key !== 'limit' && key !== 'search' && key !== 'sortBy' && key !== 'sortOrder' &&
+                    filters[key] !== '' && filters[key] !== null && filters[key] !== undefined) {
+                    params[key] = filters[key];
+                }
+            });
+        }
+
+        const response = await axios.get('/api/meeting-records/export/resumes', {
+            params,
+            headers: authHeaders()
+        });
+        return response.data;
     }
 };
 
