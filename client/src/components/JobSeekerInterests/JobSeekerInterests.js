@@ -11,6 +11,7 @@ import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
@@ -119,6 +120,9 @@ const JobSeekerInterests = () => {
     const [booths, setBooths] = useState([]);
     const [legacyEventIds, setLegacyEventIds] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
+    const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+    const [selectedInterests, setSelectedInterests] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
     const initialLoadDone = useRef(false);
@@ -273,6 +277,59 @@ const JobSeekerInterests = () => {
             });
         }
     }, []);
+
+    // Get selected interests from grid
+    const getSelectedInterestsFromGrid = useCallback(() => {
+        if (!gridRef.current) return [];
+        
+        try {
+            if (typeof gridRef.current.getSelectedRecords === 'function') {
+                const selectedRows = gridRef.current.getSelectedRecords();
+                return selectedRows.map(row => row.id || row._id).filter(Boolean);
+            }
+            
+            if (typeof gridRef.current.getSelectedRowsData === 'function') {
+                const selectedRows = gridRef.current.getSelectedRowsData();
+                return selectedRows.map(row => row.id || row._id).filter(Boolean);
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('Error getting selected rows:', error);
+            return [];
+        }
+    }, []);
+
+    const handleBulkDelete = () => {
+        const currentSelection = getSelectedInterestsFromGrid();
+        if (currentSelection.length === 0) {
+            showToast('Please select interests to delete', 'Warning');
+            return;
+        }
+        setSelectedInterests(currentSelection);
+        setConfirmBulkDeleteOpen(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        try {
+            setIsDeleting(true);
+            const response = await jobSeekerInterestsAPI.bulkDelete(selectedInterests);
+            showToast(response.message || 'Interests deleted successfully', 'Success');
+            setSelectedInterests([]);
+            await loadInterests();
+        } catch (error) {
+            console.error('Error deleting interests:', error);
+            showToast(error.response?.data?.message || 'Failed to delete interests', 'Error');
+        } finally {
+            setIsDeleting(false);
+            setConfirmBulkDeleteOpen(false);
+        }
+    };
+
+    const cancelBulkDelete = () => {
+        setConfirmBulkDeleteOpen(false);
+        setSelectedInterests([]);
+    };
 
     // Sync header and content horizontal scrolling
     useEffect(() => {
@@ -1460,6 +1517,53 @@ const JobSeekerInterests = () => {
                                     </div>
                                 )}
                                 <div className="header-actions" style={{ marginTop: '1rem', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                    {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && selectedInterests.length > 0 && (
+                                        <>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    id="select-all-interests"
+                                                    checked={selectedInterests.length > 0 && selectedInterests.length === interests.length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            // Select all rows
+                                                            if (gridRef.current) {
+                                                                gridRef.current.selectRows(Array.from({ length: interests.length }, (_, i) => i));
+                                                                // Manually update state to ensure checkbox reflects selection immediately
+                                                                setTimeout(() => {
+                                                                    const currentSelection = getSelectedInterestsFromGrid();
+                                                                    setSelectedInterests(currentSelection);
+                                                                }, 100);
+                                                            }
+                                                        } else {
+                                                            // Deselect all rows
+                                                            if (gridRef.current) {
+                                                                gridRef.current.clearSelection();
+                                                                setSelectedInterests([]);
+                                                            }
+                                                        }
+                                                    }}
+                                                    style={{ 
+                                                        width: '18px', 
+                                                        height: '18px', 
+                                                        cursor: 'pointer',
+                                                        accentColor: '#000000'
+                                                    }}
+                                                />
+                                                <label htmlFor="select-all-interests" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                                                    Select All
+                                                </label>
+                                            </div>
+                                            <ButtonComponent 
+                                                cssClass="e-danger"
+                                                onClick={handleBulkDelete}
+                                                disabled={isDeleting}
+                                                aria-label={`Delete ${selectedInterests.length} selected interests`}
+                                            >
+                                                {isDeleting ? 'Deleting...' : `Delete Selected (${selectedInterests.length})`}
+                                            </ButtonComponent>
+                                        </>
+                                    )}
                                     <ButtonComponent 
                                         cssClass="e-primary"
                                         onClick={handleExportResumes}
@@ -1657,6 +1761,18 @@ const JobSeekerInterests = () => {
                                     } : { type: 'None' }}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
+                                    rowSelected={() => {
+                                        setTimeout(() => {
+                                            const currentSelection = getSelectedInterestsFromGrid();
+                                            setSelectedInterests(currentSelection);
+                                        }, 50);
+                                    }}
+                                    rowDeselected={() => {
+                                        setTimeout(() => {
+                                            const currentSelection = getSelectedInterestsFromGrid();
+                                            setSelectedInterests(currentSelection);
+                                        }, 50);
+                                    }}
                                 >
                                     <ColumnsDirective>
                                         {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && (
@@ -1693,7 +1809,7 @@ const JobSeekerInterests = () => {
                                             visible={true}
                                         />
                                     </ColumnsDirective>
-                                    <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                                    <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>
                                 
                                 {/* Custom Pagination Footer */}
@@ -1829,6 +1945,46 @@ const JobSeekerInterests = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
+            {['Admin', 'GlobalSupport'].includes(user?.role) && (
+                <DialogComponent
+                    width="450px"
+                    isModal={true}
+                    showCloseIcon={true}
+                    visible={confirmBulkDeleteOpen}
+                    header="Bulk Delete Interests"
+                    closeOnEscape={true}
+                    close={cancelBulkDelete}
+                    cssClass="jsm-delete-dialog"
+                    buttons={[
+                        {
+                            buttonModel: {
+                                content: 'Cancel',
+                                isPrimary: false,
+                                cssClass: 'e-outline e-primary'
+                            },
+                            click: () => {
+                                cancelBulkDelete();
+                            }
+                        },
+                        {
+                            buttonModel: {
+                                content: isDeleting ? 'Deleting...' : 'Delete',
+                                isPrimary: true,
+                                cssClass: 'e-danger'
+                            },
+                            click: () => {
+                                confirmBulkDelete();
+                            }
+                        }
+                    ]}
+                >
+                    <p style={{ margin: 0, lineHeight: '1.5' }}>
+                        Are you sure you want to permanently delete <strong>{selectedInterests.length} interest(s)</strong>? This action cannot be undone.
+                    </p>
+                </DialogComponent>
+            )}
 
             {/* Syncfusion ToastComponent */}
             <ToastComponent

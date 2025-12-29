@@ -98,6 +98,15 @@ export async function bulkDeleteUsers(userIds) {
   return res.data;
 }
 
+// Bulk delete job seekers (uses same endpoint but specifically for JobSeeker role)
+export async function bulkDeleteJobSeekers(jobSeekerIds) {
+  const res = await axios.delete('/api/users/bulk-delete', {
+    headers: authHeaders(),
+    data: { userIds: jobSeekerIds }
+  });
+  return res.data;
+}
+
 // Admin manually verify user's email
 export async function verifyUserEmail(id) {
   const res = await axios.post(`/api/users/${id}/verify-email`, {}, { headers: authHeaders() });
