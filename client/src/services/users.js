@@ -89,6 +89,15 @@ export async function deleteUserPermanently(id) {
   }
 }
 
+// Bulk delete users
+export async function bulkDeleteUsers(userIds) {
+  const res = await axios.delete('/api/users/bulk-delete', {
+    headers: authHeaders(),
+    data: { userIds }
+  });
+  return res.data;
+}
+
 // Admin manually verify user's email
 export async function verifyUserEmail(id) {
   const res = await axios.post(`/api/users/${id}/verify-email`, {}, { headers: authHeaders() });
