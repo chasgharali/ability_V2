@@ -122,6 +122,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             eventId,
             boothId,
             recruiterId,
+            search,
             page = 1,
             limit = 50,
             sortBy = 'createdAt',
@@ -230,37 +231,117 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         }
         if (boothId) query.booth = boothId;
 
-        // Pagination
-        const skip = (page - 1) * limit;
+        // Sort options
         const sortOptions = {};
         sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
         console.log('Final query:', JSON.stringify(query, null, 2));
 
-        // Execute query with population
-        const interests = await JobSeekerInterest.find(query)
-            .populate({
-                path: 'jobSeeker',
-                select: 'name email phoneNumber city state country resumeUrl metadata',
-                options: { strictPopulate: false } // Allow null jobSeeker
-            })
-            .populate({
-                path: 'event',
-                select: 'name slug',
-                options: { strictPopulate: false } // Allow null event
-            })
-            .populate({
-                path: 'booth',
-                select: 'name description',
-                options: { strictPopulate: false } // Allow null booth
-            })
-            .sort(sortOptions)
-            .skip(skip)
-            .limit(parseInt(limit))
-            .lean(); // Use lean() for better performance and to work with the data directly
+        // Helper function to check if interest matches search term
+        const matchesSearch = (interest, searchTerm) => {
+            // Search in event name
+            if (interest.event?.name && interest.event.name.toLowerCase().includes(searchTerm)) return true;
+            // Search in booth name
+            if (interest.booth?.name && interest.booth.name.toLowerCase().includes(searchTerm)) return true;
+            // Search in job seeker name, email, phone, city, state, country
+            if (interest.jobSeeker?.name && interest.jobSeeker.name.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.email && interest.jobSeeker.email.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.phoneNumber && interest.jobSeeker.phoneNumber.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.city && interest.jobSeeker.city.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.state && interest.jobSeeker.state.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.country && interest.jobSeeker.country.toLowerCase().includes(searchTerm)) return true;
+            // Search in job seeker profile fields (metadata.profile)
+            if (interest.jobSeeker?.metadata?.profile) {
+                const profile = interest.jobSeeker.metadata.profile;
+                if (profile.headline && profile.headline.toLowerCase().includes(searchTerm)) return true;
+                if (profile.keywords && profile.keywords.toLowerCase().includes(searchTerm)) return true;
+                if (profile.workLevel && profile.workLevel.toLowerCase().includes(searchTerm)) return true;
+                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(searchTerm)) return true;
+                if (profile.clearance && profile.clearance.toLowerCase().includes(searchTerm)) return true;
+                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(searchTerm)) return true;
+                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et && et.toLowerCase().includes(searchTerm))) return true;
+                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang && lang.toLowerCase().includes(searchTerm))) return true;
+            }
+            // Search in interest level and notes
+            if (interest.interestLevel && interest.interestLevel.toLowerCase().includes(searchTerm)) return true;
+            if (interest.notes && interest.notes.toLowerCase().includes(searchTerm)) return true;
+            // Search in company name (legacy field)
+            if (interest.company && interest.company.toLowerCase().includes(searchTerm)) return true;
+            return false;
+        };
 
-        // Get total count for pagination
-        const totalInterests = await JobSeekerInterest.countDocuments(query);
+        // Fetch ALL records matching the base query (without pagination) if search is provided
+        // Otherwise, fetch with pagination for better performance
+        let allInterests;
+        if (search && search.trim()) {
+            // Fetch all records for search filtering
+            allInterests = await JobSeekerInterest.find(query)
+                .populate({
+                    path: 'jobSeeker',
+                    select: 'name email phoneNumber city state country resumeUrl metadata',
+                    options: { strictPopulate: false }
+                })
+                .populate({
+                    path: 'event',
+                    select: 'name slug',
+                    options: { strictPopulate: false }
+                })
+                .populate({
+                    path: 'booth',
+                    select: 'name description',
+                    options: { strictPopulate: false }
+                })
+                .sort(sortOptions)
+                .lean();
+        } else {
+            // Fetch with pagination for better performance when no search
+            const skip = (page - 1) * limit;
+            allInterests = await JobSeekerInterest.find(query)
+                .populate({
+                    path: 'jobSeeker',
+                    select: 'name email phoneNumber city state country resumeUrl metadata',
+                    options: { strictPopulate: false }
+                })
+                .populate({
+                    path: 'event',
+                    select: 'name slug',
+                    options: { strictPopulate: false }
+                })
+                .populate({
+                    path: 'booth',
+                    select: 'name description',
+                    options: { strictPopulate: false }
+                })
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(parseInt(limit))
+                .lean();
+        }
+
+        // Apply search filter if provided
+        let interests = allInterests;
+        if (search && search.trim()) {
+            const searchTerm = search.trim().toLowerCase();
+            interests = allInterests.filter(interest => matchesSearch(interest, searchTerm));
+        }
+
+        // Apply pagination if search was used (since we fetched all records)
+        if (search && search.trim()) {
+            const skip = (page - 1) * limit;
+            interests = interests.slice(skip, skip + parseInt(limit));
+        }
+
+        // Calculate total count for pagination
+        let totalInterests;
+        if (search && search.trim()) {
+            // Count is based on filtered records
+            const searchTerm = search.trim().toLowerCase();
+            const filteredCount = allInterests.filter(interest => matchesSearch(interest, searchTerm)).length;
+            totalInterests = filteredCount;
+        } else {
+            // No search - count from database
+            totalInterests = await JobSeekerInterest.countDocuments(query);
+        }
 
         console.log('Found interests:', interests.length, 'Total in DB:', totalInterests);
 

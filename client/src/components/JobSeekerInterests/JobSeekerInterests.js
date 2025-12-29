@@ -1261,6 +1261,165 @@ const JobSeekerInterests = () => {
         );
     };
 
+    // Helper function to extract profile data from job seeker
+    const getJobSeekerProfile = (jobSeeker) => {
+        if (!jobSeeker || typeof jobSeeker !== 'object') return null;
+        
+        // Handle metadata.profile structure
+        if (jobSeeker.metadata && jobSeeker.metadata.profile) {
+            return jobSeeker.metadata.profile;
+        }
+        
+        // Handle string metadata (JSON)
+        if (jobSeeker.metadata && typeof jobSeeker.metadata === 'string') {
+            try {
+                const parsed = JSON.parse(jobSeeker.metadata);
+                return parsed?.profile || null;
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        return null;
+    };
+
+    // Helper function to split name into first and last
+    const splitName = (name) => {
+        if (!name) return { firstName: '', lastName: '' };
+        const parts = name.trim().split(/\s+/);
+        return {
+            firstName: parts[0] || '',
+            lastName: parts.slice(1).join(' ') || ''
+        };
+    };
+
+    // Template functions for job seeker data columns
+    const firstNameTemplate = (props) => {
+        const row = props;
+        const firstName = row.jobSeekerFirstName || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {firstName || 'N/A'}
+            </div>
+        );
+    };
+
+    const lastNameTemplate = (props) => {
+        const row = props;
+        const lastName = row.jobSeekerLastName || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {lastName || 'N/A'}
+            </div>
+        );
+    };
+
+    const emailTemplate = (props) => {
+        const row = props;
+        const email = row.jobSeekerEmail || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {email || 'N/A'}
+            </div>
+        );
+    };
+
+    const phoneTemplate = (props) => {
+        const row = props;
+        const phone = row.jobSeekerPhone || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {phone || 'N/A'}
+            </div>
+        );
+    };
+
+    const headlineTemplate = (props) => {
+        const row = props;
+        const headline = row.jobSeekerHeadline || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {headline || 'N/A'}
+            </div>
+        );
+    };
+
+    const keywordsTemplate = (props) => {
+        const row = props;
+        const keywords = row.jobSeekerKeywords || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {keywords || 'N/A'}
+            </div>
+        );
+    };
+
+    const workExperienceLevelTemplate = (props) => {
+        const row = props;
+        const workLevel = row.jobSeekerWorkLevel || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {workLevel || 'N/A'}
+            </div>
+        );
+    };
+
+    const educationLevelTemplate = (props) => {
+        const row = props;
+        const educationLevel = row.jobSeekerEducationLevel || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {educationLevel || 'N/A'}
+            </div>
+        );
+    };
+
+    const employmentTypesTemplate = (props) => {
+        const row = props;
+        const employmentTypes = row.jobSeekerEmploymentTypes || [];
+        const displayValue = Array.isArray(employmentTypes) && employmentTypes.length > 0
+            ? employmentTypes.filter(Boolean).join(', ')
+            : '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {displayValue || 'N/A'}
+            </div>
+        );
+    };
+
+    const languagesTemplate = (props) => {
+        const row = props;
+        const languages = row.jobSeekerLanguages || [];
+        const displayValue = Array.isArray(languages) && languages.length > 0
+            ? languages.filter(Boolean).join(', ')
+            : '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {displayValue || 'N/A'}
+            </div>
+        );
+    };
+
+    const securityClearanceTemplate = (props) => {
+        const row = props;
+        const clearance = row.jobSeekerClearance || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {clearance || 'N/A'}
+            </div>
+        );
+    };
+
+    const veteranStatusTemplate = (props) => {
+        const row = props;
+        const veteranStatus = row.jobSeekerVeteranStatus || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {veteranStatus || 'N/A'}
+            </div>
+        );
+    };
+
     if (loading) {
         return (
             <div className="dashboard">
@@ -1427,17 +1586,54 @@ const JobSeekerInterests = () => {
                                 )}
                                 <GridComponent
                                     ref={gridRef}
-                                    dataSource={interests.map(r => ({ 
-                                        ...r, 
-                                        id: r._id,
-                                        // Flatten nested fields for sorting
-                                        jobSeekerName: r.jobSeeker?.name || (r.legacyJobSeekerId ? 'Legacy User' : ''),
-                                        jobSeekerEmail: r.jobSeeker?.email || '',
-                                        eventName: r.event?.name || (r.legacyEventId ? 'Legacy Event' : ''),
-                                        boothName: r.booth?.name || r.company || (r.legacyBoothId ? 'Legacy Booth' : ''),
-                                        jobSeekerCity: r.jobSeeker?.city || '',
-                                        jobSeekerState: r.jobSeeker?.state || ''
-                                    }))}
+                                    dataSource={interests.map(r => {
+                                        // Helper to get profile
+                                        const getProfile = (jobSeeker) => {
+                                            if (!jobSeeker || typeof jobSeeker !== 'object') return null;
+                                            if (jobSeeker.metadata?.profile) return jobSeeker.metadata.profile;
+                                            if (typeof jobSeeker.metadata === 'string') {
+                                                try {
+                                                    return JSON.parse(jobSeeker.metadata)?.profile || null;
+                                                } catch (e) {
+                                                    return null;
+                                                }
+                                            }
+                                            return null;
+                                        };
+
+                                        // Split name
+                                        const name = r.jobSeeker?.name || '';
+                                        const nameParts = name ? name.trim().split(/\s+/) : [];
+                                        const firstName = nameParts[0] || '';
+                                        const lastName = nameParts.slice(1).join(' ') || '';
+
+                                        // Get profile
+                                        const profile = getProfile(r.jobSeeker);
+
+                                        return {
+                                            ...r, 
+                                            id: r._id,
+                                            // Flatten nested fields for sorting
+                                            jobSeekerName: name || (r.legacyJobSeekerId ? 'Legacy User' : ''),
+                                            jobSeekerFirstName: firstName,
+                                            jobSeekerLastName: lastName,
+                                            jobSeekerEmail: r.jobSeeker?.email || '',
+                                            jobSeekerPhone: r.jobSeeker?.phoneNumber || '',
+                                            jobSeekerCity: r.jobSeeker?.city || '',
+                                            jobSeekerState: r.jobSeeker?.state || '',
+                                            jobSeekerCountry: r.jobSeeker?.country || '',
+                                            jobSeekerHeadline: profile?.headline || '',
+                                            jobSeekerKeywords: profile?.keywords || '',
+                                            jobSeekerWorkLevel: profile?.workLevel || '',
+                                            jobSeekerEducationLevel: profile?.educationLevel || '',
+                                            jobSeekerEmploymentTypes: profile?.employmentTypes || [],
+                                            jobSeekerLanguages: profile?.languages || [],
+                                            jobSeekerClearance: profile?.clearance || '',
+                                            jobSeekerVeteranStatus: profile?.veteranStatus || '',
+                                            eventName: r.event?.name || (r.legacyEventId ? 'Legacy Event' : ''),
+                                            boothName: r.booth?.name || r.company || (r.legacyBoothId ? 'Legacy Booth' : '')
+                                        };
+                                    })}
                                     allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}
@@ -1471,9 +1667,21 @@ const JobSeekerInterests = () => {
                                         )}
                                         <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                         <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='jobSeekerFirstName' headerText='Firstname' width='150' clipMode='EllipsisWithTooltip' template={firstNameTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerLastName' headerText='Lastname' width='150' clipMode='EllipsisWithTooltip' template={lastNameTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerEmail' headerText='Email' width='220' clipMode='EllipsisWithTooltip' template={emailTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerPhone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' template={phoneTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='jobSeekerHeadline' headerText='Headline' width='200' clipMode='EllipsisWithTooltip' template={headlineTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerKeywords' headerText='Keywords' width='200' clipMode='EllipsisWithTooltip' template={keywordsTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerWorkLevel' headerText='Work Experience Level' width='180' clipMode='EllipsisWithTooltip' template={workExperienceLevelTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerClearance' headerText='Security Clearance' width='180' clipMode='EllipsisWithTooltip' template={securityClearanceTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerVeteranStatus' headerText='Veteran/Military Status' width='200' clipMode='EllipsisWithTooltip' template={veteranStatusTemplate} allowFiltering={true} visible={false} />
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
                                         <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
                                         <ColumnDirective 
                                             headerText='Actions' 
