@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { jobSeekerSurveyAPI } from '../../services/jobSeekerSurvey';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
+import { TabComponent, TabItemDirective, TabItemsDirective } from '@syncfusion/ej2-react-navigations';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerSurvey.css';
 
@@ -15,8 +15,6 @@ const JobSeekerSurvey = () => {
     const { user, loading } = useAuth();
     const navigate = useNavigate();
     const toastRef = useRef(null);
-    const gridRef = useRef(null);
-    const searchInputRef = useRef(null);
     const fetchInProgress = useRef(false);
 
     // Redirect if not authenticated or not authorized
@@ -32,6 +30,12 @@ const JobSeekerSurvey = () => {
 
     const [surveys, setSurveys] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
+    const [events, setEvents] = useState([]);
+    const [booths, setBooths] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState('');
+    const [selectedBooth, setSelectedBooth] = useState('');
+    const [pendingEvent, setPendingEvent] = useState('');
+    const [pendingBooth, setPendingBooth] = useState('');
     const [stats, setStats] = useState({
         totalWithSurvey: 0,
         totalJobSeekers: 0,
@@ -40,65 +44,6 @@ const JobSeekerSurvey = () => {
         distinctAgeGroups: 0,
         distinctCountriesOfOrigin: 0
     });
-
-    // Load filters from sessionStorage
-    const loadFiltersFromSession = () => {
-        try {
-            const savedFilters = sessionStorage.getItem('jobSeekerSurvey_filters');
-            const savedSearchQuery = sessionStorage.getItem('jobSeekerSurvey_searchQuery') || '';
-            if (savedFilters) {
-                const parsed = JSON.parse(savedFilters);
-                return {
-                    race: parsed.race || '',
-                    genderIdentity: parsed.genderIdentity || '',
-                    ageGroup: parsed.ageGroup || '',
-                    countryOfOrigin: parsed.countryOfOrigin || '',
-                    search: savedSearchQuery,
-                    page: 1,
-                    limit: 50,
-                    sortBy: parsed.sortBy || 'survey.updatedAt',
-                    sortOrder: parsed.sortOrder || 'desc'
-                };
-            }
-        } catch (error) {
-            console.error('Error loading filters from sessionStorage:', error);
-        }
-        return {
-            race: '',
-            genderIdentity: '',
-            ageGroup: '',
-            countryOfOrigin: '',
-            search: '',
-            page: 1,
-            limit: 50,
-            sortBy: 'survey.updatedAt',
-            sortOrder: 'desc'
-        };
-    };
-
-    const [filters, setFilters] = useState(loadFiltersFromSession);
-    // Pending filters - not applied until "Go" button is clicked
-    const [pendingFilters, setPendingFilters] = useState({
-        race: loadFiltersFromSession().race || '',
-        genderIdentity: loadFiltersFromSession().genderIdentity || '',
-        ageGroup: loadFiltersFromSession().ageGroup || '',
-        countryOfOrigin: loadFiltersFromSession().countryOfOrigin || ''
-    });
-    const [pagination, setPagination] = useState({
-        currentPage: 1,
-        totalPages: 0,
-        totalSurveys: 0,
-        hasNext: false,
-        hasPrev: false
-    });
-
-    // Load search input value from sessionStorage
-    useEffect(() => {
-        const savedSearchQuery = sessionStorage.getItem('jobSeekerSurvey_searchQuery') || '';
-        if (searchInputRef.current && savedSearchQuery) {
-            searchInputRef.current.value = savedSearchQuery;
-        }
-    }, []);
 
     // Syncfusion Toast
     const showToast = useCallback((message, type = 'Success', duration = 3000) => {
@@ -113,169 +58,18 @@ const JobSeekerSurvey = () => {
         }
     }, []);
 
-    // Sync header and content horizontal scrolling and match widths
-    useEffect(() => {
-        let scrollSyncActive = false;
-
-        const syncScroll = () => {
-            const grids = document.querySelectorAll('.jobseeker-survey-container .e-grid, .data-grid-container .e-grid');
-            grids.forEach(grid => {
-                const header = grid.querySelector('.e-gridheader');
-                const content = grid.querySelector('.e-content');
-                if (!header || !content) return;
-
-                // Force enable scrolling on header
-                header.style.overflowX = 'auto';
-                header.style.overflowY = 'hidden';
-                header.style.position = 'relative';
-                header.style.display = 'block';
-                header.style.width = '100%';
-
-                // Match header table width to content table width for synchronized scrolling
-                const matchTableWidths = () => {
-                    const contentTable = content.querySelector('table');
-                    const headerTable = header.querySelector('table');
-                    const headerContent = header.querySelector('.e-headercontent');
-                    
-                    if (contentTable && headerTable) {
-                        // Force layout recalculation
-                        void contentTable.offsetWidth;
-                        void headerTable.offsetWidth;
-                        
-                        // Get content table's full scroll width (includes all columns)
-                        const contentScrollWidth = contentTable.scrollWidth || contentTable.offsetWidth;
-                        const headerContainerWidth = header.offsetWidth || header.clientWidth;
-                        
-                        // Always set header table width to match content table exactly
-                        if (contentScrollWidth > 0) {
-                            headerTable.style.width = contentScrollWidth + 'px';
-                            headerTable.style.minWidth = contentScrollWidth + 'px';
-                            headerTable.style.maxWidth = 'none';
-                            
-                            if (headerContent) {
-                                headerContent.style.width = contentScrollWidth + 'px';
-                                headerContent.style.minWidth = contentScrollWidth + 'px';
-                                headerContent.style.maxWidth = 'none';
-                            }
-
-                            // Match individual column widths from content to header
-                            const headerRow = headerTable.querySelector('thead tr');
-                            const contentRows = contentTable.querySelectorAll('tbody tr');
-                            
-                            if (headerRow && contentRows.length > 0) {
-                                const headerCells = headerRow.querySelectorAll('th');
-                                const firstContentRow = contentRows[0];
-                                const contentCells = firstContentRow.querySelectorAll('td');
-                                
-                                if (headerCells.length === contentCells.length) {
-                                    headerCells.forEach((headerCell, index) => {
-                                        const contentCell = contentCells[index];
-                                        if (headerCell && contentCell) {
-                                            const cellWidth = contentCell.getBoundingClientRect().width;
-                                            if (cellWidth > 0) {
-                                                headerCell.style.width = cellWidth + 'px';
-                                                headerCell.style.minWidth = cellWidth + 'px';
-                                                headerCell.style.maxWidth = cellWidth + 'px';
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                        
-                        // Enable scrolling if content is scrollable
-                        if (contentScrollWidth > headerContainerWidth) {
-                            header.style.overflowX = 'auto';
-                            header.style.overflowY = 'hidden';
-                        }
-                    }
-                };
-                
-                // Match widths with multiple attempts to catch grid render timing
-                matchTableWidths();
-                setTimeout(matchTableWidths, 50);
-                setTimeout(matchTableWidths, 200);
-                setTimeout(matchTableWidths, 500);
-                setTimeout(matchTableWidths, 1000);
-
-                // Sync scroll positions
-                const syncContentToHeader = () => {
-                    if (!scrollSyncActive) {
-                        scrollSyncActive = true;
-                        header.scrollLeft = content.scrollLeft;
-                        requestAnimationFrame(() => {
-                            scrollSyncActive = false;
-                        });
-                    }
-                };
-
-                const syncHeaderToContent = () => {
-                    if (!scrollSyncActive) {
-                        scrollSyncActive = true;
-                        content.scrollLeft = header.scrollLeft;
-                        requestAnimationFrame(() => {
-                            scrollSyncActive = false;
-                        });
-                    }
-                };
-
-                // Remove old listeners
-                content.removeEventListener('scroll', syncContentToHeader);
-                header.removeEventListener('scroll', syncHeaderToContent);
-
-                // Add new listeners
-                content.addEventListener('scroll', syncContentToHeader, { passive: true });
-                header.addEventListener('scroll', syncHeaderToContent, { passive: true });
-
-                // Initial sync
-                header.scrollLeft = content.scrollLeft;
-            });
-        };
-
-        // Run immediately and after delays
-        syncScroll();
-        const timer1 = setTimeout(syncScroll, 100);
-        const timer2 = setTimeout(syncScroll, 500);
-        const timer3 = setTimeout(syncScroll, 1000);
-        
-        const observer = new MutationObserver(() => {
-            setTimeout(syncScroll, 50);
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        return () => {
-            clearTimeout(timer1);
-            clearTimeout(timer2);
-            clearTimeout(timer3);
-            observer.disconnect();
-        };
-    }, [surveys, loadingData]);
-
     // Load survey data
     const loadSurveys = useCallback(async () => {
         if (fetchInProgress.current) return;
         if (!user || !['Admin', 'GlobalSupport'].includes(user.role)) return;
 
-        let cancelled = false;
         fetchInProgress.current = true;
 
         try {
             setLoadingData(true);
-
-            // Load surveys with filters
-            const response = await jobSeekerSurveyAPI.getSurveys(filters);
-
-            if (cancelled) return;
-
+            const response = await jobSeekerSurveyAPI.getSurveys({ eventId: selectedEvent, boothId: selectedBooth });
             setSurveys(response.surveys || []);
-            setPagination(response.pagination || {
-                currentPage: 1,
-                totalPages: 0,
-                totalSurveys: 0,
-                hasNext: false,
-                hasPrev: false
-            });
-
+            
             // Load stats
             try {
                 const statsResponse = await jobSeekerSurveyAPI.getStats();
@@ -290,148 +84,261 @@ const JobSeekerSurvey = () => {
             fetchInProgress.current = false;
             setLoadingData(false);
         }
+    }, [user, selectedEvent, selectedBooth, showToast]);
 
-        return () => {
-            cancelled = true;
-        };
-    }, [user, filters, showToast]);
-
-    // Initialize pending filters from saved filters on mount
+    // Load events and booths
     useEffect(() => {
-        const savedFilters = loadFiltersFromSession();
-        setPendingFilters({
-            race: savedFilters.race || '',
-            genderIdentity: savedFilters.genderIdentity || '',
-            ageGroup: savedFilters.ageGroup || '',
-            countryOfOrigin: savedFilters.countryOfOrigin || ''
-        });
-    }, []);
+        const loadFilters = async () => {
+            try {
+                const [eventsRes, boothsRes] = await Promise.all([
+                    fetch('/api/events', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+                    fetch('/api/booths', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+                ]);
+                const eventsData = await eventsRes.json();
+                const boothsData = await boothsRes.json();
+                setEvents(eventsData.events || eventsData || []);
+                setBooths(boothsData.booths || boothsData || []);
+            } catch (error) {
+                console.error('Error loading filters:', error);
+            }
+        };
+        if (user) loadFilters();
+    }, [user]);
 
-    // Load surveys on mount and when filters change
+    // Load surveys when filters change
     useEffect(() => {
         if (!user || !['Admin', 'GlobalSupport'].includes(user.role)) return;
+        // Only load on initial mount
         loadSurveys();
-    }, [user, filters, loadSurveys]);
-
-    // Handle pending filter changes (don't apply yet, just update local state)
-    const handlePendingFilterChange = (key, value) => {
-        setPendingFilters(prev => ({
-            ...prev,
-            [key]: value || ''
-        }));
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     // Apply filters when "Go" button is clicked
-    const handleApplyFilters = () => {
-        setFilters(prev => {
-            const newFilters = {
-                ...prev,
-                race: pendingFilters.race,
-                genderIdentity: pendingFilters.genderIdentity,
-                ageGroup: pendingFilters.ageGroup,
-                countryOfOrigin: pendingFilters.countryOfOrigin,
-                page: 1
-            };
-            // Save filters to sessionStorage
+    const handleApplyFilters = async () => {
+        const newEvent = pendingEvent;
+        const newBooth = pendingBooth;
+        
+        setSelectedEvent(newEvent);
+        setSelectedBooth(newBooth);
+        
+        // Trigger reload with new filters
+        if (user && ['Admin', 'GlobalSupport'].includes(user.role)) {
+            if (fetchInProgress.current) return;
+            fetchInProgress.current = true;
+
             try {
-                const filtersToSave = {
-                    race: newFilters.race,
-                    genderIdentity: newFilters.genderIdentity,
-                    ageGroup: newFilters.ageGroup,
-                    countryOfOrigin: newFilters.countryOfOrigin,
-                    sortBy: newFilters.sortBy,
-                    sortOrder: newFilters.sortOrder
-                };
-                sessionStorage.setItem('jobSeekerSurvey_filters', JSON.stringify(filtersToSave));
+                setLoadingData(true);
+                const response = await jobSeekerSurveyAPI.getSurveys({ eventId: newEvent, boothId: newBooth });
+                setSurveys(response.surveys || []);
+                
+                // Load stats
+                try {
+                    const statsResponse = await jobSeekerSurveyAPI.getStats();
+                    setStats(statsResponse);
+                } catch (error) {
+                    console.error('Error loading stats:', error);
+                }
             } catch (error) {
-                console.error('Error saving filters to sessionStorage:', error);
+                console.error('Error loading survey data:', error);
+                showToast(`Failed to load survey data: ${error.message}`, 'Error', 5000);
+            } finally {
+                fetchInProgress.current = false;
+                setLoadingData(false);
             }
-            return newFilters;
-        });
+        }
     };
 
-    // Clear all filters
-    const handleClearFilters = () => {
-        setPendingFilters({
-            race: '',
-            genderIdentity: '',
-            ageGroup: '',
-            countryOfOrigin: ''
-        });
-        setFilters(prev => {
-            const newFilters = {
-                ...prev,
-                race: '',
-                genderIdentity: '',
-                ageGroup: '',
-                countryOfOrigin: '',
-                page: 1
-            };
+    // Clear filters
+    const handleClearFilters = async () => {
+        setPendingEvent('');
+        setPendingBooth('');
+        setSelectedEvent('');
+        setSelectedBooth('');
+        
+        if (user && ['Admin', 'GlobalSupport'].includes(user.role)) {
+            if (fetchInProgress.current) return;
+            fetchInProgress.current = true;
+
             try {
-                sessionStorage.removeItem('jobSeekerSurvey_filters');
+                setLoadingData(true);
+                const response = await jobSeekerSurveyAPI.getSurveys({ eventId: '', boothId: '' });
+                setSurveys(response.surveys || []);
+                
+                // Load stats
+                try {
+                    const statsResponse = await jobSeekerSurveyAPI.getStats();
+                    setStats(statsResponse);
+                } catch (error) {
+                    console.error('Error loading stats:', error);
+                }
             } catch (error) {
-                console.error('Error clearing filters from sessionStorage:', error);
+                console.error('Error loading survey data:', error);
+                showToast(`Failed to load survey data: ${error.message}`, 'Error', 5000);
+            } finally {
+                fetchInProgress.current = false;
+                setLoadingData(false);
             }
-            return newFilters;
-        });
+        }
     };
 
-    // Handle search
-    const handleSearch = () => {
-        const query = (searchInputRef.current?.value || '').trim();
-        setFilters(prev => ({
-            ...prev,
-            search: query,
-            page: 1
-        }));
-        try {
-            if (query) {
-                sessionStorage.setItem('jobSeekerSurvey_searchQuery', query);
+    // Calculate statistics for each field
+    const calculateStats = (field) => {
+        const counts = {};
+        let total = 0;
+
+        surveys.forEach(survey => {
+            let value;
+            // For 'country', check both survey.country and top-level country
+            if (field === 'country') {
+                value = survey.country || survey.survey?.country;
             } else {
-                sessionStorage.removeItem('jobSeekerSurvey_searchQuery');
+                value = survey.survey?.[field];
             }
-        } catch (error) {
-            console.error('Error saving search query:', error);
-        }
-    };
-
-    // Clear search
-    const handleClearSearch = () => {
-        if (searchInputRef.current) {
-            searchInputRef.current.value = '';
-        }
-        setFilters(prev => ({
-            ...prev,
-            search: '',
-            page: 1
-        }));
-        try {
-            sessionStorage.removeItem('jobSeekerSurvey_searchQuery');
-        } catch (error) {
-            console.error('Error clearing search query:', error);
-        }
-    };
-
-    // Pagination handlers
-    const goToPage = (page) => {
-        setFilters(prev => {
-            const newFilters = { ...prev, page };
-            return newFilters;
+            
+            if (field === 'race' && Array.isArray(value)) {
+                value.forEach(v => {
+                    if (v && v.trim()) {
+                        counts[v] = (counts[v] || 0) + 1;
+                        total++;
+                    }
+                });
+            } else if (value && typeof value === 'string' && value.trim()) {
+                counts[value] = (counts[value] || 0) + 1;
+                total++;
+            }
         });
+
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        return { counts: sorted, total };
     };
 
-    const handlePageSizeChange = (limit) => {
-        setFilters(prev => {
-            const newFilters = { ...prev, limit, page: 1 };
-            return newFilters;
-        });
+    // Render table for a field
+    const renderFieldTab = (field, title) => {
+        const { counts, total } = calculateStats(field);
+
+        return (
+            <div style={{ padding: '20px' }}>
+                <h3 style={{ marginBottom: '16px' }}>Distribution of '{title}'</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
+                    <thead>
+                        <tr style={{ backgroundColor: '#f3f4f6' }}>
+                            <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: 600 }}>{title}</th>
+                            <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #e5e7eb', fontWeight: 600 }}>Count of {title}</th>
+                            <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #e5e7eb', fontWeight: 600 }}>% of {title}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {counts.map(([name, count], idx) => (
+                            <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                                <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb' }}>{name}</td>
+                                <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>{count}</td>
+                                <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>
+                                    {total > 0 ? ((count / total) * 100).toFixed(2) : 0}%
+                                </td>
+                            </tr>
+                        ))}
+                        <tr style={{ backgroundColor: '#f3f4f6', fontWeight: 600 }}>
+                            <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb' }}>Grand Total</td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>{total}</td>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>100.00%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        );
     };
 
     // Export CSV
     const handleExport = async () => {
         try {
             setLoadingData(true);
-            const blob = await jobSeekerSurveyAPI.exportCSV(filters);
+            
+            // Use the same data that's displayed on screen
+            if (!surveys || surveys.length === 0) {
+                showToast('No data to export', 'Warning', 3000);
+                return;
+            }
+
+            // Helper function to calculate stats for a field (same as frontend)
+            const calculateStats = (field) => {
+                const counts = {};
+                let total = 0;
+
+                surveys.forEach(survey => {
+                    let value;
+                    if (field === 'country') {
+                        value = survey.country || survey.survey?.country;
+                    } else {
+                        value = survey.survey?.[field];
+                    }
+                    
+                    if (field === 'race' && Array.isArray(value)) {
+                        value.forEach(v => {
+                            if (v && v.trim()) {
+                                counts[v] = (counts[v] || 0) + 1;
+                                total++;
+                            }
+                        });
+                    } else if (value && typeof value === 'string' && value.trim()) {
+                        counts[value] = (counts[value] || 0) + 1;
+                        total++;
+                    }
+                });
+
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                return { counts: sorted, total };
+            };
+
+            // Helper function to escape CSV fields
+            const escapeCSV = (value) => {
+                if (value === null || value === undefined || value === '') {
+                    return '';
+                }
+                const stringValue = String(value);
+                if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+                    return `"${stringValue.replace(/"/g, '""')}"`;
+                }
+                return stringValue;
+            };
+
+            // Build CSV sections
+            const sections = [
+                { field: 'countryOfOrigin', title: 'Country of Origin' },
+                { field: 'country', title: 'Country' },
+                { field: 'race', title: 'Race' },
+                { field: 'genderIdentity', title: 'Gender' },
+                { field: 'ageGroup', title: 'Age Group' }
+            ];
+
+            const csvLines = [];
+            
+            sections.forEach((section, idx) => {
+                const { counts, total } = calculateStats(section.field);
+                
+                // Add section header
+                if (idx > 0) csvLines.push(''); // Empty line between sections
+                csvLines.push(`Distribution of '${section.title}'`);
+                csvLines.push(`${section.title},Count of ${section.title},% of ${section.title}`);
+                
+                // Add data rows
+                counts.forEach(([name, count]) => {
+                    const percentage = total > 0 ? ((count / total) * 100).toFixed(2) : 0;
+                    csvLines.push(`${escapeCSV(name)},${count},${percentage}%`);
+                });
+                
+                // Add grand total
+                csvLines.push(`Grand Total,${total},100.00%`);
+            });
+
+            // Build CSV content
+            const csvContent = csvLines.join('\r\n');
+            
+            // Add BOM for Excel compatibility
+            const BOM = '\uFEFF';
+            const finalContent = BOM + csvContent;
+
+            // Create and download file
+            const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -440,6 +347,7 @@ const JobSeekerSurvey = () => {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+            
             showToast('Survey data exported successfully', 'Success');
         } catch (error) {
             console.error('Export error:', error);
@@ -449,116 +357,12 @@ const JobSeekerSurvey = () => {
         }
     };
 
-    // Grid templates
-    const nameTemplate = (props) => {
-        return (
-            <div style={{ padding: '8px' }}>
-                <div style={{ fontWeight: 500 }}>{props.name || 'N/A'}</div>
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>{props.email || ''}</div>
-            </div>
-        );
-    };
-
-    const raceTemplate = (props) => {
-        const race = props.survey?.race || [];
-        return (
-            <div style={{ padding: '8px' }}>
-                {Array.isArray(race) && race.length > 0 ? race.join(', ') : 'N/A'}
-            </div>
-        );
-    };
-
-    const genderTemplate = (props) => {
-        return (
-            <div style={{ padding: '8px' }}>
-                {props.survey?.genderIdentity || 'N/A'}
-            </div>
-        );
-    };
-
-    const ageGroupTemplate = (props) => {
-        return (
-            <div style={{ padding: '8px' }}>
-                {props.survey?.ageGroup || 'N/A'}
-            </div>
-        );
-    };
-
-    const countryTemplate = (props) => {
-        return (
-            <div style={{ padding: '8px' }}>
-                {props.survey?.countryOfOrigin || 'N/A'}
-            </div>
-        );
-    };
-
-    const disabilitiesTemplate = (props) => {
-        const disabilities = props.survey?.disabilities || [];
-        const otherDisability = props.survey?.otherDisability || '';
-        const allDisabilities = [...disabilities];
-        if (otherDisability) {
-            allDisabilities.push(otherDisability);
-        }
-        return (
-            <div style={{ padding: '8px' }}>
-                {allDisabilities.length > 0 ? allDisabilities.join(', ') : 'N/A'}
-            </div>
-        );
-    };
-
-    const locationTemplate = (props) => {
-        const parts = [];
-        if (props.city) parts.push(props.city);
-        if (props.state) parts.push(props.state);
-        if (props.country) parts.push(props.country);
-        return (
-            <div style={{ padding: '8px' }}>
-                {parts.length > 0 ? parts.join(', ') : 'N/A'}
-            </div>
-        );
-    };
-
-    const dateTemplate = (props) => {
-        const date = props.survey?.updatedAt || props.createdAt;
-        if (!date) return <div style={{ padding: '8px' }}>N/A</div>;
-        try {
-            const dateObj = new Date(date);
-            return (
-                <div style={{ padding: '8px' }}>
-                    {dateObj.toLocaleDateString()} {dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-            );
-        } catch (error) {
-            return <div style={{ padding: '8px' }}>N/A</div>;
-        }
-    };
-
-    // Get unique filter options from surveys
-    const getUniqueValues = (field) => {
-        const values = new Set();
-        surveys.forEach(survey => {
-            const value = survey.survey?.[field];
-            if (value) {
-                if (Array.isArray(value)) {
-                    value.forEach(v => {
-                        if (v && v.trim()) values.add(v.trim());
-                    });
-                } else if (typeof value === 'string' && value.trim()) {
-                    values.add(value.trim());
-                }
-            }
-        });
-        return Array.from(values).sort();
-    };
-
-    const raceOptions = [{ value: '', text: 'All Races' }, ...getUniqueValues('race').map(r => ({ value: r, text: r }))];
-    const genderOptions = [{ value: '', text: 'All Genders' }, ...getUniqueValues('genderIdentity').map(g => ({ value: g, text: g }))];
-    const ageGroupOptions = [{ value: '', text: 'All Age Groups' }, ...getUniqueValues('ageGroup').map(a => ({ value: a, text: a }))];
-    const countryOptions = [{ value: '', text: 'All Countries' }, ...getUniqueValues('countryOfOrigin').map(c => ({ value: c, text: c }))];
-
     if (loading || !user) {
         return <div>Loading...</div>;
     }
+
+    const eventOptions = [{ _id: '', name: 'All Events' }, ...events];
+    const boothOptions = [{ _id: '', name: 'All Booths' }, ...(pendingEvent ? booths.filter(b => b.eventId === pendingEvent) : booths)];
 
     return (
         <div className="dashboard-container">
@@ -584,323 +388,104 @@ const JobSeekerSurvey = () => {
                             </div>
 
                             {/* Statistics Cards */}
-                            <div className="stats-grid">
-                                <div className="stat-card">
-                                    <h3>Total with Survey</h3>
-                                    <div className="stat-value">{stats.totalWithSurvey}</div>
+                            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', paddingLeft: '20px', paddingRight: '20px' }}>
+                                <div className="stat-card" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                                    <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total with Survey</h3>
+                                    <div className="stat-value" style={{ fontSize: '32px', fontWeight: 600, color: '#111827' }}>{stats.totalWithSurvey}</div>
                                 </div>
-                                <div className="stat-card">
-                                    <h3>Total Job Seekers</h3>
-                                    <div className="stat-value">{stats.totalJobSeekers}</div>
+                                <div className="stat-card" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                                    <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Job Seekers</h3>
+                                    <div className="stat-value" style={{ fontSize: '32px', fontWeight: 600, color: '#111827' }}>{stats.totalJobSeekers}</div>
                                 </div>
-                                <div className="stat-card">
-                                    <h3>Distinct Races</h3>
-                                    <div className="stat-value">{stats.distinctRaces}</div>
+                                <div className="stat-card" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                                    <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Distinct Races</h3>
+                                    <div className="stat-value" style={{ fontSize: '32px', fontWeight: 600, color: '#111827' }}>{stats.distinctRaces}</div>
                                 </div>
-                                <div className="stat-card">
-                                    <h3>Distinct Genders</h3>
-                                    <div className="stat-value">{stats.distinctGenders}</div>
+                                <div className="stat-card" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                                    <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Distinct Genders</h3>
+                                    <div className="stat-value" style={{ fontSize: '32px', fontWeight: 600, color: '#111827' }}>{stats.distinctGenders}</div>
                                 </div>
-                                <div className="stat-card">
-                                    <h3>Distinct Age Groups</h3>
-                                    <div className="stat-value">{stats.distinctAgeGroups}</div>
+                                <div className="stat-card" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                                    <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Distinct Age Groups</h3>
+                                    <div className="stat-value" style={{ fontSize: '32px', fontWeight: 600, color: '#111827' }}>{stats.distinctAgeGroups}</div>
                                 </div>
-                                <div className="stat-card">
-                                    <h3>Distinct Countries</h3>
-                                    <div className="stat-value">{stats.distinctCountriesOfOrigin}</div>
+                                <div className="stat-card" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                                    <h3 style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Distinct Countries</h3>
+                                    <div className="stat-value" style={{ fontSize: '32px', fontWeight: 600, color: '#111827' }}>{stats.distinctCountriesOfOrigin}</div>
                                 </div>
                             </div>
 
-                            {/* Filters Row */}
-                            <div style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px' }}>
-                                <div className="jsi-filters-row" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
-                                    {/* Race Filter */}
-                                    <div style={{ width: '200px', flexShrink: 0 }}>
-                                        <DropDownListComponent
-                                            dataSource={raceOptions}
-                                            fields={{ value: 'value', text: 'text' }}
-                                            value={pendingFilters.race}
-                                            change={(e) => handlePendingFilterChange('race', e.value || '')}
-                                            placeholder="All Races"
-                                            cssClass="filter-dropdown"
-                                            popupHeight="300px"
-                                            width="100%"
-                                        />
-                                    </div>
-                                    {/* Gender Filter */}
-                                    <div style={{ width: '200px', flexShrink: 0 }}>
-                                        <DropDownListComponent
-                                            dataSource={genderOptions}
-                                            fields={{ value: 'value', text: 'text' }}
-                                            value={pendingFilters.genderIdentity}
-                                            change={(e) => handlePendingFilterChange('genderIdentity', e.value || '')}
-                                            placeholder="All Genders"
-                                            cssClass="filter-dropdown"
-                                            popupHeight="300px"
-                                            width="100%"
-                                        />
-                                    </div>
-                                    {/* Age Group Filter */}
-                                    <div style={{ width: '200px', flexShrink: 0 }}>
-                                        <DropDownListComponent
-                                            dataSource={ageGroupOptions}
-                                            fields={{ value: 'value', text: 'text' }}
-                                            value={pendingFilters.ageGroup}
-                                            change={(e) => handlePendingFilterChange('ageGroup', e.value || '')}
-                                            placeholder="All Age Groups"
-                                            cssClass="filter-dropdown"
-                                            popupHeight="300px"
-                                            width="100%"
-                                        />
-                                    </div>
-                                    {/* Country Filter */}
-                                    <div style={{ width: '200px', flexShrink: 0 }}>
-                                        <DropDownListComponent
-                                            dataSource={countryOptions}
-                                            fields={{ value: 'value', text: 'text' }}
-                                            value={pendingFilters.countryOfOrigin}
-                                            change={(e) => handlePendingFilterChange('countryOfOrigin', e.value || '')}
-                                            placeholder="All Countries"
-                                            cssClass="filter-dropdown"
-                                            popupHeight="300px"
-                                            width="100%"
-                                        />
-                                    </div>
-                                    {/* Go and Clear Buttons */}
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <ButtonComponent
-                                            cssClass="e-primary e-small"
-                                            onClick={handleApplyFilters}
-                                            disabled={loadingData}
-                                            aria-label="Apply filters"
-                                            style={{ minWidth: '70px', height: '44px' }}
-                                        >
-                                            Go
-                                        </ButtonComponent>
-                                        <ButtonComponent
-                                            cssClass="e-outline e-primary e-small"
-                                            onClick={handleClearFilters}
-                                            disabled={loadingData}
-                                            aria-label="Clear filters"
-                                            style={{ minWidth: '70px', height: '44px' }}
-                                        >
-                                            Clear
-                                        </ButtonComponent>
-                                    </div>
+                            {/* Filters */}
+                            <div style={{ marginBottom: 24, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
+                                <div style={{ width: '250px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Event</label>
+                                    <DropDownListComponent
+                                        dataSource={eventOptions}
+                                        fields={{ value: '_id', text: 'name' }}
+                                        value={pendingEvent}
+                                        change={(e) => {
+                                            setPendingEvent(e.value || '');
+                                            setPendingBooth('');
+                                        }}
+                                        placeholder="Select Event"
+                                        popupHeight="300px"
+                                        width="100%"
+                                    />
                                 </div>
-                                {/* Search Section - Moved below filters on left side */}
-                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                    <div style={{ marginBottom: 0 }}>
-                                        <input
-                                            ref={searchInputRef}
-                                            type="text"
-                                            defaultValue=""
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    handleSearch();
-                                                }
-                                            }}
-                                            placeholder="Search by name or email..."
-                                            style={{ width: '300px', marginBottom: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '14px' }}
-                                        />
-                                    </div>
+                                <div style={{ width: '250px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Booth</label>
+                                    <DropDownListComponent
+                                        dataSource={boothOptions}
+                                        fields={{ value: '_id', text: 'name' }}
+                                        value={pendingBooth}
+                                        change={(e) => setPendingBooth(e.value || '')}
+                                        placeholder="Select Booth"
+                                        popupHeight="300px"
+                                        width="100%"
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
                                     <ButtonComponent
-                                        cssClass="e-primary e-small"
-                                        onClick={handleSearch}
+                                        cssClass="e-primary"
+                                        onClick={handleApplyFilters}
                                         disabled={loadingData}
-                                        aria-label="Search survey data"
+                                        aria-label="Apply filters"
                                         style={{ minWidth: '80px', height: '44px' }}
                                     >
-                                        Search
+                                        Go
                                     </ButtonComponent>
-                                    {((searchInputRef.current && searchInputRef.current.value) || filters.search) && (
-                                        <ButtonComponent
-                                            cssClass="e-outline e-primary e-small"
-                                            onClick={handleClearSearch}
-                                            disabled={loadingData}
-                                            aria-label="Clear search"
-                                            style={{ minWidth: '70px', height: '44px' }}
-                                        >
-                                            Clear
-                                        </ButtonComponent>
-                                    )}
+                                    <ButtonComponent
+                                        cssClass="e-outline e-primary"
+                                        onClick={handleClearFilters}
+                                        disabled={loadingData}
+                                        aria-label="Clear filters"
+                                        style={{ minWidth: '80px', height: '44px' }}
+                                    >
+                                        Clear
+                                    </ButtonComponent>
                                 </div>
                             </div>
 
-                            {/* Data Grid */}
-                            <div className="data-grid-container" style={{ position: 'relative' }}>
-                                {loadingData && (
-                                    <div className="jsi-grid-loading-overlay">
-                                        <div className="jsi-loading-container">
-                                            <div className="jsi-loading-spinner" aria-label="Loading survey data" role="status" aria-live="polite"></div>
-                                            <div className="jsi-loading-text">Loading survey data...</div>
-                                        </div>
-                                    </div>
-                                )}
-                                <GridComponent
-                                    ref={gridRef}
-                                    dataSource={surveys.map(s => ({
-                                        ...s,
-                                        id: s._id,
-                                        race: s.survey?.race || [],
-                                        genderIdentity: s.survey?.genderIdentity || '',
-                                        ageGroup: s.survey?.ageGroup || '',
-                                        countryOfOrigin: s.survey?.countryOfOrigin || '',
-                                        disabilities: s.survey?.disabilities || []
-                                    }))}
-                                    allowPaging={false}
-                                    allowSorting={true}
-                                    allowFiltering={true}
-                                    filterSettings={{ 
-                                        type: 'Menu',
-                                        showFilterBarStatus: true,
-                                        immediateModeDelay: 0
-                                    }}
-                                    showColumnMenu={true}
-                                    showColumnChooser={true}
-                                    allowResizing={true}
-                                    allowReordering={true}
-                                    toolbar={['ColumnChooser']}
-                                    enableHover={true}
-                                >
-                                    <ColumnsDirective>
-                                        <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-                                        <ColumnDirective field='name' headerText='Name' width='200' clipMode='EllipsisWithTooltip' template={nameTemplate} allowFiltering={true} visible={false} showInColumnChooser={false} />
-                                        <ColumnDirective field='race' headerText='Race' width='180' clipMode='EllipsisWithTooltip' template={raceTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='genderIdentity' headerText='Gender' width='140' clipMode='EllipsisWithTooltip' template={genderTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='ageGroup' headerText='Age Group' width='140' clipMode='EllipsisWithTooltip' template={ageGroupTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='countryOfOrigin' headerText='Country of Origin' width='200' clipMode='EllipsisWithTooltip' template={countryTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='disabilities' headerText='Disabilities' width='250' clipMode='EllipsisWithTooltip' template={disabilitiesTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='city' headerText='Location' width='180' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='survey.updatedAt' headerText='Survey Updated' width='180' clipMode='EllipsisWithTooltip' template={dateTemplate} allowFiltering={true} />
-                                    </ColumnsDirective>
-                                    <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
-                                </GridComponent>
-                                
-                                {/* Custom Pagination Footer */}
-                                {(pagination.totalPages || 1) > 0 && (
-                                    <div className="custom-pagination" style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '16px',
-                                        backgroundColor: '#f9fafb',
-                                        borderTop: '1px solid #e5e7eb',
-                                        marginTop: '0'
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <span style={{ fontSize: '14px', color: '#374151' }}>
-                                                Rows per page:
-                                            </span>
-                                            <select
-                                                value={filters.limit}
-                                                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                                                style={{
-                                                    padding: '6px 12px',
-                                                    borderRadius: '6px',
-                                                    border: '1px solid #d1d5db',
-                                                    fontSize: '14px',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <option value={50}>50</option>
-                                                <option value={100}>100</option>
-                                                <option value={200}>200</option>
-                                            </select>
-                                        </div>
+                            {/* Loading Overlay */}
+                            {loadingData && (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div className="jsi-loading-spinner" aria-label="Loading survey data" role="status" aria-live="polite"></div>
+                                    <div className="jsi-loading-text">Loading survey data...</div>
+                                </div>
+                            )}
 
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '14px', color: '#374151' }}>
-                                                Page {pagination.currentPage || filters.page} of {pagination.totalPages || 1} ({pagination.totalSurveys || surveys.length} total)
-                                            </span>
-                                        </div>
-
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <button
-                                                onClick={() => goToPage(1)}
-                                                disabled={(pagination.currentPage || filters.page) <= 1 || loadingData}
-                                                style={{
-                                                    padding: '8px 12px',
-                                                    borderRadius: '6px',
-                                                    border: '1px solid #d1d5db',
-                                                    backgroundColor: (pagination.currentPage || filters.page) <= 1 ? '#f3f4f6' : '#fff',
-                                                    cursor: (pagination.currentPage || filters.page) <= 1 ? 'not-allowed' : 'pointer',
-                                                    fontSize: '14px',
-                                                    color: (pagination.currentPage || filters.page) <= 1 ? '#9ca3af' : '#374151'
-                                                }}
-                                            >
-                                                ⟨⟨
-                                            </button>
-                                            <button
-                                                onClick={() => goToPage((pagination.currentPage || filters.page) - 1)}
-                                                disabled={(pagination.currentPage || filters.page) <= 1 || loadingData}
-                                                style={{
-                                                    padding: '8px 12px',
-                                                    borderRadius: '6px',
-                                                    border: '1px solid #d1d5db',
-                                                    backgroundColor: (pagination.currentPage || filters.page) <= 1 ? '#f3f4f6' : '#fff',
-                                                    cursor: (pagination.currentPage || filters.page) <= 1 ? 'not-allowed' : 'pointer',
-                                                    fontSize: '14px',
-                                                    color: (pagination.currentPage || filters.page) <= 1 ? '#9ca3af' : '#374151'
-                                                }}
-                                            >
-                                                ⟨ Prev
-                                            </button>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                max={pagination.totalPages || 1}
-                                                value={pagination.currentPage || filters.page}
-                                                onChange={(e) => {
-                                                    const val = parseInt(e.target.value);
-                                                    if (val >= 1 && val <= (pagination.totalPages || 1)) {
-                                                        goToPage(val);
-                                                    }
-                                                }}
-                                                style={{
-                                                    width: '60px',
-                                                    padding: '6px 8px',
-                                                    borderRadius: '6px',
-                                                    border: '1px solid #d1d5db',
-                                                    fontSize: '14px',
-                                                    textAlign: 'center'
-                                                }}
-                                            />
-                                            <button
-                                                onClick={() => goToPage((pagination.currentPage || filters.page) + 1)}
-                                                disabled={(pagination.currentPage || filters.page) >= (pagination.totalPages || 1) || loadingData}
-                                                style={{
-                                                    padding: '8px 12px',
-                                                    borderRadius: '6px',
-                                                    border: '1px solid #d1d5db',
-                                                    backgroundColor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
-                                                    cursor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
-                                                    fontSize: '14px',
-                                                    color: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
-                                                }}
-                                            >
-                                                Next ⟩
-                                            </button>
-                                            <button
-                                                onClick={() => goToPage(pagination.totalPages || filters.page)}
-                                                disabled={(pagination.currentPage || filters.page) >= (pagination.totalPages || 1) || loadingData}
-                                                style={{
-                                                    padding: '8px 12px',
-                                                    borderRadius: '6px',
-                                                    border: '1px solid #d1d5db',
-                                                    backgroundColor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#f3f4f6' : '#fff',
-                                                    cursor: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? 'not-allowed' : 'pointer',
-                                                    fontSize: '14px',
-                                                    color: (pagination.currentPage || filters.page) >= (pagination.totalPages || 1) ? '#9ca3af' : '#374151'
-                                                }}
-                                            >
-                                                ⟩⟩
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {/* Tabs */}
+                            {!loadingData && (
+                                <TabComponent>
+                                    <TabItemsDirective>
+                                        <TabItemDirective header={{ text: 'Country of Origin' }} content={() => renderFieldTab('countryOfOrigin', 'CountryOfOrigin')} />
+                                        <TabItemDirective header={{ text: 'Country' }} content={() => renderFieldTab('country', 'Country')} />
+                                        <TabItemDirective header={{ text: 'Race' }} content={() => renderFieldTab('race', 'Race')} />
+                                        <TabItemDirective header={{ text: 'Gender' }} content={() => renderFieldTab('genderIdentity', 'Gender')} />
+                                        <TabItemDirective header={{ text: 'Age Group' }} content={() => renderFieldTab('ageGroup', 'AgeGroup')} />
+                                    </TabItemsDirective>
+                                </TabComponent>
+                            )}
                         </div>
                     </div>
                 </main>
@@ -919,4 +504,3 @@ const JobSeekerSurvey = () => {
 };
 
 export default JobSeekerSurvey;
-
