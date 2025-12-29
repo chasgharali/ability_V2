@@ -725,14 +725,52 @@ export default function UserManagement() {
                 {mode === 'list' ? (
                   <>
                     {selectedUsers.length > 0 && (
-                      <ButtonComponent 
-                        cssClass="e-danger"
-                        onClick={handleBulkDelete}
-                        disabled={isDeleting}
-                        aria-label={`Delete ${selectedUsers.length} selected users`}
-                      >
-                        {isDeleting ? 'Deleting...' : `Delete Selected (${selectedUsers.length})`}
-                      </ButtonComponent>
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '12px' }}>
+                          <input
+                            type="checkbox"
+                            id="select-all-users"
+                            checked={selectedUsers.length > 0 && selectedUsers.length === users.slice((currentPage - 1) * pageSize, currentPage * pageSize).length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                // Select all rows on current page
+                                if (gridRef.current) {
+                                  const pageData = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+                                  gridRef.current.selectRows(Array.from({ length: pageData.length }, (_, i) => i));
+                                  // Manually update state to ensure checkbox reflects selection immediately
+                                  setTimeout(() => {
+                                    const currentSelection = getSelectedUsersFromGrid();
+                                    setSelectedUsers(currentSelection);
+                                  }, 100);
+                                }
+                              } else {
+                                // Deselect all rows
+                                if (gridRef.current) {
+                                  gridRef.current.clearSelection();
+                                  setSelectedUsers([]);
+                                }
+                              }
+                            }}
+                            style={{ 
+                              width: '18px', 
+                              height: '18px', 
+                              cursor: 'pointer',
+                              accentColor: '#000000'
+                            }}
+                          />
+                          <label htmlFor="select-all-users" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                            Select All
+                          </label>
+                        </div>
+                        <ButtonComponent 
+                          cssClass="e-danger"
+                          onClick={handleBulkDelete}
+                          disabled={isDeleting}
+                          aria-label={`Delete ${selectedUsers.length} selected users`}
+                        >
+                          {isDeleting ? 'Deleting...' : `Delete Selected (${selectedUsers.length})`}
+                        </ButtonComponent>
+                      </>
                     )}
                     <ButtonComponent cssClass="e-primary" onClick={() => setMode('create')} aria-label="Create new user">
                       Create User
@@ -838,9 +876,22 @@ export default function UserManagement() {
                   enableHover={true}
                   allowRowDragAndDrop={false}
                   enableHeaderFocus={false}
+                  rowSelected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedUsersFromGrid();
+                      setSelectedUsers(currentSelection);
+                    }, 50);
+                  }}
+                  rowDeselected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedUsersFromGrid();
+                      setSelectedUsers(currentSelection);
+                    }, 50);
+                  }}
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />
+                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                     <ColumnDirective 
                       field='firstName' 
                       headerText='First Name' 
