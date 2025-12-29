@@ -1164,6 +1164,81 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 });
 
 /**
+ * DELETE /api/users/bulk-delete
+ * Bulk permanently delete users (Admin/GlobalSupport only)
+ * Automatically deactivates active users before deleting them
+ */
+router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        const { user: currentUser } = req;
+
+        if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({ message: 'No user IDs provided' });
+        }
+
+        // Prevent self-deletion
+        const selfIdIndex = userIds.findIndex(id => id === currentUser._id.toString());
+        if (selfIdIndex !== -1) {
+            return res.status(400).json({ 
+                message: 'Cannot delete your own account',
+                error: 'Self-deletion is not allowed'
+            });
+        }
+
+        // Find all users to be deleted
+        const usersToDelete = await User.find({ _id: { $in: userIds } });
+
+        // Separate active and inactive users
+        const activeUsers = usersToDelete.filter(u => u.isActive);
+        const inactiveUsers = usersToDelete.filter(u => !u.isActive);
+
+        // Deactivate active users first
+        let deactivatedCount = 0;
+        if (activeUsers.length > 0) {
+            const activeUserIds = activeUsers.map(u => u._id);
+            await User.updateMany(
+                { _id: { $in: activeUserIds } },
+                { 
+                    $set: { 
+                        isActive: false,
+                        refreshTokens: [] // Invalidate all refresh tokens
+                    } 
+                }
+            );
+            deactivatedCount = activeUsers.length;
+            logger.info(`Bulk deactivated ${deactivatedCount} active users before deletion by ${currentUser.email}`);
+        }
+
+        // Now delete all users (all should be inactive at this point)
+        const allUserIds = usersToDelete.map(u => u._id);
+        const result = await User.deleteMany({
+            _id: { $in: allUserIds }
+        });
+
+        logger.info(`Bulk deleted ${result.deletedCount} users (${deactivatedCount} were deactivated first) by ${currentUser.email}`);
+
+        let message = `Successfully deleted ${result.deletedCount} user(s)`;
+        if (deactivatedCount > 0) {
+            message += `. ${deactivatedCount} active user(s) were automatically deactivated before deletion.`;
+        }
+
+        res.json({
+            message,
+            deletedCount: result.deletedCount,
+            deactivatedCount
+        });
+
+    } catch (error) {
+        logger.error('Bulk delete users error:', error);
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message 
+        });
+    }
+});
+
+/**
  * DELETE /api/users/:id
  * Deactivate or permanently delete user account (Admin/GlobalSupport only)
  */
