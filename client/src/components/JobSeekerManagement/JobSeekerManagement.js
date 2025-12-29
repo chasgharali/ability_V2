@@ -2571,6 +2571,24 @@ export default function JobSeekerManagement() {
                   template={emailVerifiedTemplate}
                 />
                 <ColumnDirective 
+                  field='createdAt' 
+                  headerText='Registration Date' 
+                  width='180' 
+                  allowFiltering={true}
+                  allowSorting={true}
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.createdAt ? new Date(props.createdAt).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'N/A'}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
                   field='lastLogin' 
                   headerText='Last Login' 
                   width='150' 
