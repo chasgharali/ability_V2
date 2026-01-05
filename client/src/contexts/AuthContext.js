@@ -81,8 +81,10 @@ export const AuthProvider = ({ children }) => {
             async (error) => {
                 const originalRequest = error.config;
 
-                // Don't intercept refresh token requests to avoid infinite loops
-                if (originalRequest.url?.includes('/auth/refresh')) {
+                // Don't intercept login or refresh token requests
+                if (originalRequest.url?.includes('/auth/refresh') || 
+                    originalRequest.url?.includes('/auth/login') ||
+                    originalRequest.url?.includes('/auth/register')) {
                     return Promise.reject(error);
                 }
 
@@ -209,7 +211,16 @@ export const AuthProvider = ({ children }) => {
             let errorMessage;
 
             if (status === 401) {
-                errorMessage = 'Invalid email or password';
+                // Use the specific error message from the backend
+                if (data?.error === 'Email not found') {
+                    errorMessage = data?.message || 'User does not exist. Please enter a valid email.';
+                } else if (data?.error === 'Incorrect password') {
+                    errorMessage = data?.message || 'Incorrect password.';
+                } else if (data?.error === 'Account deactivated') {
+                    errorMessage = data?.message || 'Your account has been deactivated. Please contact support.';
+                } else {
+                    errorMessage = data?.message || 'Invalid email or password';
+                }
             } else if (status === 403 && (data?.error === 'Role not allowed' || /Please use the (Company|Job) Seeker login/i.test(data?.message || ''))) {
                 errorMessage = data?.message || 'This account type is not allowed on the selected login. Try the other login tab.';
             } else if (status === 403 || data?.error === 'Account deactivated' || /deactivated/i.test(data?.message || '')) {
@@ -217,6 +228,7 @@ export const AuthProvider = ({ children }) => {
             } else {
                 errorMessage = data?.message || 'Login failed';
             }
+            
             setError(errorMessage);
             return { success: false, error: errorMessage };
         }

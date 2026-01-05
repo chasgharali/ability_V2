@@ -106,6 +106,7 @@ const LoginPage = () => {
         try {
             const loginType = userType === 'jobseeker' ? 'jobseeker' : 'company';
             const result = await login(formData.email, formData.password, loginType);
+            
             if (result.success) {
                 // Check for pending queue invite first (highest priority)
                 const pendingQueueInvite = localStorage.getItem('pendingQueueInvite');
