@@ -14,7 +14,7 @@ import { Input } from '../UI/FormComponents';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser, bulkDeleteJobSeekers } from '../../services/users';
 import { listEvents } from '../../services/events';
 import axios from 'axios';
 import { 
@@ -159,6 +159,10 @@ export default function JobSeekerManagement() {
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
+  // Bulk delete
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [selectedJobSeekers, setSelectedJobSeekers] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
   const [rowPendingVerify, setRowPendingVerify] = useState(null);
@@ -341,6 +345,59 @@ export default function JobSeekerManagement() {
   const cancelDelete = () => {
     setConfirmOpen(false);
     setRowPendingDelete(null);
+  };
+
+  // Get selected job seekers from grid
+  const getSelectedJobSeekersFromGrid = useCallback(() => {
+    if (!gridRef.current) return [];
+    
+    try {
+      if (typeof gridRef.current.getSelectedRecords === 'function') {
+        const selectedRows = gridRef.current.getSelectedRecords();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      if (typeof gridRef.current.getSelectedRowsData === 'function') {
+        const selectedRows = gridRef.current.getSelectedRowsData();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error getting selected rows:', error);
+      return [];
+    }
+  }, []);
+
+  const handleBulkDelete = () => {
+    const currentSelection = getSelectedJobSeekersFromGrid();
+    if (currentSelection.length === 0) {
+      showToast('Please select job seekers to delete', 'Warning');
+      return;
+    }
+    setSelectedJobSeekers(currentSelection);
+    setConfirmBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await bulkDeleteJobSeekers(selectedJobSeekers);
+      showToast(response.message || 'Job seekers deleted successfully', 'Success');
+      setSelectedJobSeekers([]);
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
+    } catch (error) {
+      console.error('Error deleting job seekers:', error);
+      showToast(error.response?.data?.message || 'Failed to delete job seekers', 'Error');
+    } finally {
+      setIsDeleting(false);
+      setConfirmBulkDeleteOpen(false);
+    }
+  };
+
+  const cancelBulkDelete = () => {
+    setConfirmBulkDeleteOpen(false);
+    setSelectedJobSeekers([]);
   };
 
   const loadJobSeekers = useCallback(async (page, limit, search, isActive, event) => {
@@ -2161,9 +2218,58 @@ export default function JobSeekerManagement() {
             </div>
           ) : (
           <div className="dashboard-content">
-            <div className="page-header">
-              <h2>Job Seeker Management</h2>
-              <p>Manage job seeker accounts and profiles</p>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2>Job Seeker Management</h2>
+                <p>Manage job seeker accounts and profiles</p>
+              </div>
+              {mode === 'list' && selectedJobSeekers.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      id="select-all-jobseekers"
+                      checked={selectedJobSeekers.length > 0 && selectedJobSeekers.length === jobSeekers.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          // Select all rows
+                          if (gridRef.current) {
+                            gridRef.current.selectRows(Array.from({ length: jobSeekers.length }, (_, i) => i));
+                            // Manually update state to ensure checkbox reflects selection immediately
+                            setTimeout(() => {
+                              const currentSelection = getSelectedJobSeekersFromGrid();
+                              setSelectedJobSeekers(currentSelection);
+                            }, 100);
+                          }
+                        } else {
+                          // Deselect all rows
+                          if (gridRef.current) {
+                            gridRef.current.clearSelection();
+                            setSelectedJobSeekers([]);
+                          }
+                        }
+                      }}
+                      style={{ 
+                        width: '18px', 
+                        height: '18px', 
+                        cursor: 'pointer',
+                        accentColor: '#000000'
+                      }}
+                    />
+                    <label htmlFor="select-all-jobseekers" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                      Select All
+                    </label>
+                  </div>
+                  <ButtonComponent 
+                    cssClass="e-danger"
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    aria-label={`Delete ${selectedJobSeekers.length} selected job seekers`}
+                  >
+                    {isDeleting ? 'Deleting...' : `Delete Selected (${selectedJobSeekers.length})`}
+                  </ButtonComponent>
+                </div>
+              )}
             </div>
 
             {/* Filters */}
@@ -2366,9 +2472,22 @@ export default function JobSeekerManagement() {
                   enableHover={true}
                   allowRowDragAndDrop={false}
                   enableHeaderFocus={false}
+                  rowSelected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedJobSeekersFromGrid();
+                      setSelectedJobSeekers(currentSelection);
+                    }, 50);
+                  }}
+                  rowDeselected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedJobSeekersFromGrid();
+                      setSelectedJobSeekers(currentSelection);
+                    }, 50);
+                  }}
                 >
               <ColumnsDirective>
                 <ColumnDirective type='checkbox' width='50' />
+                <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                 <ColumnDirective 
                   field='firstName' 
                   headerText='First Name' 
@@ -2450,6 +2569,24 @@ export default function JobSeekerManagement() {
                   textAlign='Center'
                   allowFiltering={true}
                   template={emailVerifiedTemplate}
+                />
+                <ColumnDirective 
+                  field='createdAt' 
+                  headerText='Registration Date' 
+                  width='180' 
+                  allowFiltering={true}
+                  allowSorting={true}
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.createdAt ? new Date(props.createdAt).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'N/A'}
+                    </div>
+                  )}
                 />
                 <ColumnDirective 
                   field='lastLogin' 
@@ -2685,6 +2822,44 @@ export default function JobSeekerManagement() {
             Are you sure you want to permanently delete <strong>{rowPendingDelete?.firstName} {rowPendingDelete?.lastName}</strong>? This action cannot be undone.
           </p>
         </div>
+      </DialogComponent>
+
+      {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
+      <DialogComponent
+        width="450px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={confirmBulkDeleteOpen}
+        header="Bulk Delete Job Seekers"
+        closeOnEscape={true}
+        close={cancelBulkDelete}
+        cssClass="jsm-delete-dialog"
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelBulkDelete();
+            }
+          },
+          {
+            buttonModel: {
+              content: isDeleting ? 'Deleting...' : 'Delete',
+              isPrimary: true,
+              cssClass: 'e-danger'
+            },
+            click: () => {
+              confirmBulkDelete();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Are you sure you want to permanently delete <strong>{selectedJobSeekers.length} job seeker(s)</strong>? This action cannot be undone. Active users will be automatically deactivated before deletion.
+        </p>
       </DialogComponent>
 
       {/* Verify Email confirm modal - Syncfusion DialogComponent */}

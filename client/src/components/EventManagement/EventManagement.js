@@ -12,7 +12,7 @@ import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input, DateTimePicker, Checkbox, Select, MultiSelect } from '../UI/FormComponents';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
 import { uploadImageToS3 } from '../../services/uploads';
-import { listEvents, createEvent, updateEvent, deleteEvent } from '../../services/events';
+import { listEvents, createEvent, updateEvent, deleteEvent, bulkDeleteEvents } from '../../services/events';
 import { termsConditionsAPI } from '../../services/termsConditions';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -108,6 +108,9 @@ export default function EventManagement() {
     const [saving, setSaving] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [rowPendingDelete, setRowPendingDelete] = useState(null);
+    const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+    const [selectedEvents, setSelectedEvents] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
     const toastRef = useRef(null);
     const deleteDialogRef = useRef(null);
     const gridRef = useRef(null);
@@ -357,12 +360,60 @@ export default function EventManagement() {
         }
     }, []);
 
+    // Get selected events from grid
+    const getSelectedEventsFromGrid = useCallback(() => {
+        if (!gridRef.current) return [];
+        
+        try {
+            if (typeof gridRef.current.getSelectedRecords === 'function') {
+                const selectedRows = gridRef.current.getSelectedRecords();
+                return selectedRows.map(row => row.id || row._id).filter(Boolean);
+            }
+            
+            if (typeof gridRef.current.getSelectedRowsData === 'function') {
+                const selectedRows = gridRef.current.getSelectedRowsData();
+                return selectedRows.map(row => row.id || row._id).filter(Boolean);
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('Error getting selected rows:', error);
+            return [];
+        }
+    }, []);
+
     // Load events on mount and when filters change
     useEffect(() => { 
         if (!loading) { 
             loadEvents(); 
         } 
     }, [loading, loadEvents]);
+
+    // Track selection changes from grid
+    useEffect(() => {
+        if (!gridRef.current) return;
+        
+        const updateSelection = () => {
+            const currentSelection = getSelectedEventsFromGrid();
+            setSelectedEvents(currentSelection);
+        };
+
+        // Listen for selection events
+        const grid = gridRef.current;
+        if (grid.element) {
+            const handleSelectionChange = () => {
+                setTimeout(updateSelection, 100);
+            };
+            
+            grid.element.addEventListener('click', handleSelectionChange);
+            
+            return () => {
+                if (grid.element) {
+                    grid.element.removeEventListener('click', handleSelectionChange);
+                }
+            };
+        }
+    }, [events, getSelectedEventsFromGrid]);
 
     // Load terms only when user enters create or edit mode (not needed for list view)
     useEffect(() => {
@@ -716,6 +767,37 @@ export default function EventManagement() {
         setRowPendingDelete(null);
     };
 
+    const handleBulkDelete = () => {
+        const currentSelection = getSelectedEventsFromGrid();
+        if (currentSelection.length === 0) {
+            showToast('Please select events to delete', 'Warning');
+            return;
+        }
+        setSelectedEvents(currentSelection);
+        setConfirmBulkDeleteOpen(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        try {
+            setIsDeleting(true);
+            const response = await bulkDeleteEvents(selectedEvents);
+            showToast(response.message || 'Events deleted successfully', 'Success');
+            setSelectedEvents([]);
+            await loadEvents();
+        } catch (error) {
+            console.error('Error deleting events:', error);
+            showToast(error.response?.data?.message || 'Failed to delete events', 'Error');
+        } finally {
+            setIsDeleting(false);
+            setConfirmBulkDeleteOpen(false);
+        }
+    };
+
+    const cancelBulkDelete = () => {
+        setConfirmBulkDeleteOpen(false);
+        setSelectedEvents([]);
+    };
+
     const handleSubmit = async (e) => {
         if (e && e.preventDefault) {
             e.preventDefault();
@@ -789,9 +871,59 @@ export default function EventManagement() {
                             <h2>Event Management</h2>
                             <div className="bm-header-actions">
                                 {mode === 'list' ? (
-                                    <ButtonComponent cssClass="e-primary" onClick={handleNew}>
-                                        Create Event
-                                    </ButtonComponent>
+                                    <>
+                                        {selectedEvents.length > 0 && (
+                                            <>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '12px' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="select-all-events"
+                                                        checked={selectedEvents.length > 0 && selectedEvents.length === events.slice((currentPage - 1) * pageSize, currentPage * pageSize).length}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                // Select all rows on current page
+                                                                if (gridRef.current) {
+                                                                    const pageData = events.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+                                                                    gridRef.current.selectRows(Array.from({ length: pageData.length }, (_, i) => i));
+                                                                    // Manually update state to ensure checkbox reflects selection immediately
+                                                                    setTimeout(() => {
+                                                                        const currentSelection = getSelectedEventsFromGrid();
+                                                                        setSelectedEvents(currentSelection);
+                                                                    }, 100);
+                                                                }
+                                                            } else {
+                                                                // Deselect all rows
+                                                                if (gridRef.current) {
+                                                                    gridRef.current.clearSelection();
+                                                                    setSelectedEvents([]);
+                                                                }
+                                                            }
+                                                        }}
+                                                        style={{ 
+                                                            width: '18px', 
+                                                            height: '18px', 
+                                                            cursor: 'pointer',
+                                                            accentColor: '#000000'
+                                                        }}
+                                                    />
+                                                    <label htmlFor="select-all-events" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                                                        Select All
+                                                    </label>
+                                                </div>
+                                                <ButtonComponent 
+                                                    cssClass="e-danger"
+                                                    onClick={handleBulkDelete}
+                                                    disabled={isDeleting}
+                                                    aria-label={`Delete ${selectedEvents.length} selected events`}
+                                                >
+                                                    {isDeleting ? 'Deleting...' : `Delete Selected (${selectedEvents.length})`}
+                                                </ButtonComponent>
+                                            </>
+                                        )}
+                                        <ButtonComponent cssClass="e-primary" onClick={handleNew}>
+                                            Create Event
+                                        </ButtonComponent>
+                                    </>
                                 ) : (
                                     <ButtonComponent cssClass="e-outline e-primary" onClick={() => { resetForm(); setMode('list'); }}>
                                         Back to List
@@ -888,13 +1020,20 @@ export default function EventManagement() {
                                     allowResizing={true}
                                     allowReordering={true}
                                     toolbar={['ColumnChooser']}
-                                    selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
+                                    selectionSettings={{ 
+                                        type: 'Multiple', 
+                                        checkboxOnly: true,
+                                        persistSelection: false,
+                                        enableSimpleMultiRowSelection: false,
+                                        checkboxMode: 'Default'
+                                    }}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
                                     enableHeaderFocus={false}
                                 >
                                     <ColumnsDirective>
                                         <ColumnDirective type='checkbox' width='50' />
+                                        <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                         <ColumnDirective 
                                             field='name' 
                                             headerText='Event Name' 
@@ -1355,6 +1494,44 @@ export default function EventManagement() {
             >
                 <p style={{ margin: 0, lineHeight: '1.5' }}>
                     Are you sure you want to delete <strong>{rowPendingDelete?.name}</strong>? This action cannot be undone.
+                </p>
+            </DialogComponent>
+
+            {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
+            <DialogComponent
+                width="450px"
+                isModal={true}
+                showCloseIcon={true}
+                visible={confirmBulkDeleteOpen}
+                header="Bulk Delete Events"
+                closeOnEscape={true}
+                close={cancelBulkDelete}
+                cssClass="em-delete-dialog"
+                buttons={[
+                    {
+                        buttonModel: {
+                            content: 'Cancel',
+                            isPrimary: false,
+                            cssClass: 'e-outline e-primary'
+                        },
+                        click: () => {
+                            cancelBulkDelete();
+                        }
+                    },
+                    {
+                        buttonModel: {
+                            content: isDeleting ? 'Deleting...' : 'Delete',
+                            isPrimary: true,
+                            cssClass: 'e-danger'
+                        },
+                        click: () => {
+                            confirmBulkDelete();
+                        }
+                    }
+                ]}
+            >
+                <p style={{ margin: 0, lineHeight: '1.5' }}>
+                    Are you sure you want to permanently delete <strong>{selectedEvents.length} event(s)</strong>? This action cannot be undone.
                 </p>
             </DialogComponent>
 

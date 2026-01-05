@@ -409,6 +409,53 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
 });
 
 /**
+ * DELETE /api/events/bulk-delete
+ * Bulk delete events (Admin/GlobalSupport/AdminEvent only)
+ */
+router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'AdminEvent']), async (req, res) => {
+    try {
+        const { eventIds } = req.body;
+        const { user } = req;
+
+        if (!eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {
+            return res.status(400).json({ message: 'No event IDs provided' });
+        }
+
+        // For AdminEvent role, only allow deletion of events they manage
+        if (user.role === 'AdminEvent') {
+            const events = await Event.find({ _id: { $in: eventIds } });
+            const unauthorizedEvents = events.filter(event => !event.canUserAccess(user));
+            
+            if (unauthorizedEvents.length > 0) {
+                return res.status(403).json({
+                    message: 'You do not have permission to delete some of the selected events',
+                    error: 'Access denied'
+                });
+            }
+        }
+
+        // Delete the events
+        const result = await Event.deleteMany({
+            _id: { $in: eventIds }
+        });
+
+        logger.info(`Bulk deleted ${result.deletedCount} events by ${user.email}`);
+
+        res.json({
+            message: `Successfully deleted ${result.deletedCount} event(s)`,
+            deletedCount: result.deletedCount
+        });
+
+    } catch (error) {
+        logger.error('Bulk delete events error:', error);
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message 
+        });
+    }
+});
+
+/**
  * DELETE /api/events/:id
  * Delete an event
  */
