@@ -476,12 +476,9 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             query.isActive = isActive === 'true';
         }
 
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
-            ];
-        }
+        // Note: Search will be applied after fetching records to support searching in nested fields
+        // (metadata.profile, survey fields, etc.) which are difficult to query directly in MongoDB
+        const searchTerm = search && search.trim() ? search.trim() : null;
 
         // Filter by event registration
         if (eventId) {
@@ -622,29 +619,144 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             }
         }
 
-        // Find users and populate booth information
-        const users = await User.find(query)
-            .select('-hashedPassword -refreshTokens')
-            .populate('assignedBooth', 'name company')
-            .sort({ createdAt: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
+        // Helper function to check if user matches search term across all fields
+        const matchesSearch = (user, searchTerm) => {
+            const term = searchTerm.toLowerCase();
+            
+            // Basic fields
+            if (user.name && user.name.toLowerCase().includes(term)) return true;
+            if (user.email && user.email.toLowerCase().includes(term)) return true;
+            if (user.phoneNumber && user.phoneNumber.toLowerCase().includes(term)) return true;
+            if (user.city && user.city.toLowerCase().includes(term)) return true;
+            if (user.state && user.state.toLowerCase().includes(term)) return true;
+            if (user.country && user.country.toLowerCase().includes(term)) return true;
+            
+            // Profile fields (metadata.profile)
+            if (user.metadata?.profile) {
+                const profile = user.metadata.profile;
+                if (profile.headline && profile.headline.toLowerCase().includes(term)) return true;
+                if (profile.keywords && profile.keywords.toLowerCase().includes(term)) return true;
+                if (profile.workLevel && profile.workLevel.toLowerCase().includes(term)) return true;
+                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(term)) return true;
+                if (profile.clearance && profile.clearance.toLowerCase().includes(term)) return true;
+                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(term)) return true;
+                if (profile.workAuthorization && profile.workAuthorization.toLowerCase().includes(term)) return true;
+                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et && et.toLowerCase().includes(term))) return true;
+                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang && lang.toLowerCase().includes(term))) return true;
+                if (Array.isArray(profile.primaryExperience) && profile.primaryExperience.some(exp => exp && exp.toLowerCase().includes(term))) return true;
+            }
+            
+            // Survey fields
+            if (user.survey) {
+                if (Array.isArray(user.survey.race) && user.survey.race.some(r => r && r.toLowerCase().includes(term))) return true;
+                if (user.survey.genderIdentity && user.survey.genderIdentity.toLowerCase().includes(term)) return true;
+                if (user.survey.ageGroup && user.survey.ageGroup.toLowerCase().includes(term)) return true;
+                if (user.survey.countryOfOrigin && user.survey.countryOfOrigin.toLowerCase().includes(term)) return true;
+                if (Array.isArray(user.survey.disabilities) && user.survey.disabilities.some(d => d && d.toLowerCase().includes(term))) return true;
+                if (user.survey.otherDisability && user.survey.otherDisability.toLowerCase().includes(term)) return true;
+            }
+            
+            // Role and status
+            if (user.role && user.role.toLowerCase().includes(term)) return true;
+            if (user.isActive !== undefined) {
+                if ((user.isActive && 'active'.includes(term)) || (!user.isActive && 'inactive'.includes(term))) return true;
+            }
+            if (user.emailVerified !== undefined) {
+                if ((user.emailVerified && 'verified'.includes(term)) || (!user.emailVerified && 'unverified'.includes(term))) return true;
+            }
+            
+            return false;
+        };
 
-        // Get total count for pagination
-        const totalCount = await User.countDocuments(query);
+        // Fetch ALL users matching the base query (without pagination) if search is provided
+        // Otherwise, fetch with pagination for better performance
+        let allUsers;
+        if (searchTerm) {
+            // Fetch all records for search filtering
+            allUsers = await User.find(query)
+                .select('-hashedPassword -refreshTokens')
+                .populate('assignedBooth', 'name company')
+                .sort({ createdAt: -1 })
+                .lean();
+        } else {
+            // Fetch with pagination for better performance when no search
+            const skip = (page - 1) * limit;
+            allUsers = await User.find(query)
+                .select('-hashedPassword -refreshTokens')
+                .populate('assignedBooth', 'name company')
+                .sort({ createdAt: -1 })
+                .limit(limit * 1)
+                .skip(skip)
+                .lean();
+        }
+
+        // Apply search filter if provided
+        let filteredUsers = allUsers;
+        if (searchTerm) {
+            filteredUsers = allUsers.filter(user => matchesSearch(user, searchTerm));
+        }
+
+        // Apply pagination if search was used (since we fetched all records)
+        if (searchTerm) {
+            const skip = (page - 1) * limit;
+            filteredUsers = filteredUsers.slice(skip, skip + parseInt(limit));
+        }
+
+        // Convert to public profile format
+        const users = filteredUsers.map(user => {
+            // Convert lean object to public profile format
+            const publicProfile = {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phoneNumber: user.phoneNumber,
+                city: user.city,
+                state: user.state,
+                country: user.country,
+                avatarUrl: user.avatarUrl,
+                isActive: user.isActive,
+                emailVerified: user.emailVerified,
+                lastLogin: user.lastLogin,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                metadata: user.metadata,
+                survey: user.survey,
+                assignedBooth: user.assignedBooth
+            };
+            return publicProfile;
+        });
+
+        // Calculate total count for pagination
+        let totalCount;
+        if (searchTerm) {
+            // Count is based on filtered records
+            totalCount = allUsers.filter(user => matchesSearch(user, searchTerm)).length;
+        } else {
+            // No search - count from database
+            totalCount = await User.countDocuments(query);
+        }
         
-        logger.info(`Event filter query returned ${users.length} users out of ${totalCount} total`);
+        logger.info(`Query returned ${users.length} users out of ${totalCount} total matching query`);
 
         // Calculate server-side stats for filtered results
-        const activeCount = await User.countDocuments({ ...query, isActive: true });
-        const inactiveCount = await User.countDocuments({ ...query, isActive: false });
-        const verifiedCount = await User.countDocuments({ ...query, emailVerified: true });
+        // For search, we need to recalculate stats from filtered results
+        let activeCount, inactiveCount, verifiedCount;
+        if (searchTerm) {
+            const filteredForStats = allUsers.filter(user => matchesSearch(user, searchTerm));
+            activeCount = filteredForStats.filter(u => u.isActive === true).length;
+            inactiveCount = filteredForStats.filter(u => u.isActive === false).length;
+            verifiedCount = filteredForStats.filter(u => u.emailVerified === true).length;
+        } else {
+            activeCount = await User.countDocuments({ ...query, isActive: true });
+            inactiveCount = await User.countDocuments({ ...query, isActive: false });
+            verifiedCount = await User.countDocuments({ ...query, emailVerified: true });
+        }
 
-        logger.info(`Query returned ${users.length} users out of ${totalCount} total matching query`);
         logger.info(`Stats - Active: ${activeCount}, Inactive: ${inactiveCount}, Verified: ${verifiedCount}`);
 
         res.json({
-            users: users.map(user => user.getPublicProfile()),
+            users: users,
             pagination: {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(totalCount / limit),
