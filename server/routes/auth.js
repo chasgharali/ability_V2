@@ -370,8 +370,8 @@ router.post('/login', [
         
         if (!user) {
             return res.status(401).json({
-                error: 'Invalid credentials',
-                message: 'Email or password is incorrect'
+                error: 'Email not found',
+                message: 'User does not exist. Please enter a valid email.'
             });
         }
 
@@ -384,11 +384,18 @@ router.post('/login', [
         }
 
         // Verify password
-        const isPasswordValid = await user.comparePassword(password);
+        let isPasswordValid = false;
+        try {
+            isPasswordValid = await user.comparePassword(password);
+        } catch (passwordError) {
+            console.error('Password comparison error:', passwordError);
+            isPasswordValid = false;
+        }
+        
         if (!isPasswordValid) {
             return res.status(401).json({
-                error: 'Invalid credentials',
-                message: 'Email or password is incorrect'
+                error: 'Incorrect password',
+                message: 'Incorrect password.'
             });
         }
 
