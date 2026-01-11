@@ -1164,6 +1164,60 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 });
 
 /**
+ * POST /api/users/bulk-delete
+ * Bulk delete multiple users (Admin/GlobalSupport/AdminEvent only)
+ * Only allows deletion of inactive users
+ */
+router.post('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'AdminEvent']), async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        const { user } = req;
+
+        // Validate input
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({
+                error: 'Invalid input',
+                message: 'userIds must be a non-empty array'
+            });
+        }
+
+        // Prevent self-deletion
+        if (userIds.includes(user._id.toString())) {
+            return res.status(400).json({
+                error: 'Cannot delete self',
+                message: 'You cannot delete your own account'
+            });
+        }
+
+        // Find all users to delete
+        const usersToDelete = await User.find({ _id: { $in: userIds } });
+
+        if (usersToDelete.length === 0) {
+            return res.status(404).json({
+                error: 'No users found',
+                message: 'None of the specified users exist'
+            });
+        }
+
+        // Delete all users (both active and inactive)
+        const result = await User.deleteMany({ _id: { $in: userIds } });
+
+        logger.info(`Bulk deleted ${result.deletedCount} users by ${user.email}`);
+
+        res.json({
+            message: `Successfully deleted ${result.deletedCount} user(s)`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        logger.error('Bulk delete users error:', error);
+        res.status(500).json({
+            error: 'Failed to delete users',
+            message: 'An error occurred while deleting users'
+        });
+    }
+});
+
+/**
  * DELETE /api/users/:id
  * Deactivate or permanently delete user account (Admin/GlobalSupport only)
  */
@@ -1190,14 +1244,7 @@ router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
         }
 
         if (permanent === 'true') {
-            // Permanent deletion - only allow for inactive users
-            if (targetUser.isActive) {
-                return res.status(400).json({
-                    error: 'Cannot permanently delete active user',
-                    message: 'User must be deactivated before permanent deletion'
-                });
-            }
-
+            // Permanent deletion - allow for both active and inactive users
             // Permanently delete the user
             await User.findByIdAndDelete(id);
 

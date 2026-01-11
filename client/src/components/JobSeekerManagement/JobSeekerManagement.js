@@ -14,7 +14,7 @@ import { Input } from '../UI/FormComponents';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
-import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser } from '../../services/users';
+import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser, bulkDeleteJobSeekers } from '../../services/users';
 import { listEvents } from '../../services/events';
 import axios from 'axios';
 import { 
@@ -27,6 +27,19 @@ import {
   MILITARY_EXPERIENCE_LIST,
   COUNTRY_OF_ORIGIN_LIST
 } from '../../constants/options';
+
+// Helper function to convert country name to 2-letter code - moved outside component for stability
+const getCountryCode = (countryValue) => {
+  if (!countryValue) return '';
+  // If it's already a 2-letter code, return it
+  if (countryValue.length === 2) return countryValue.toUpperCase();
+  // Otherwise, try to find it in the country list
+  const country = COUNTRY_OF_ORIGIN_LIST.find(c => 
+    c.name.toLowerCase() === countryValue.toLowerCase() || 
+    c.value.toLowerCase() === countryValue.toLowerCase()
+  );
+  return country ? country.value : countryValue;
+};
 
 export default function JobSeekerManagement() {
   // Helper function to get label from value using options list
@@ -43,22 +56,13 @@ export default function JobSeekerManagement() {
     }
     return values.map(value => getLabelFromValue(value, optionsList));
   };
-
-  // Helper function to convert country name to 2-letter code
-  const getCountryCode = (countryValue) => {
-    if (!countryValue) return '';
-    // If it's already a 2-letter code, return it
-    if (countryValue.length === 2) return countryValue.toUpperCase();
-    // Otherwise, try to find it in the country list
-    const country = COUNTRY_OF_ORIGIN_LIST.find(c => 
-      c.name.toLowerCase() === countryValue.toLowerCase() || 
-      c.value.toLowerCase() === countryValue.toLowerCase()
-    );
-    return country ? country.value : countryValue;
-  };
   const [mode, setMode] = useState('list'); // 'list' | 'view' | 'edit'
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectAllPages, setSelectAllPages] = useState(false);
+  const [allJobSeekerIds, setAllJobSeekerIds] = useState([]);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
@@ -151,10 +155,13 @@ export default function JobSeekerManagement() {
   const deleteDialogRef = useRef(null);
   const loadingJobSeekersRef = useRef(false);
   const loadingEventsRef = useRef(false);
+  const selectionUpdateRef = useRef(false); // Prevent multiple simultaneous selection updates
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
   const eventFilterRef = useRef('');
   const eventDropdownRef = useRef(null);
+  const currentPageRef = useRef(1);
+  const pageSizeRef = useRef(50);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -198,6 +205,15 @@ export default function JobSeekerManagement() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  
+  // Keep refs in sync with state for stable callback dependencies
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+  
+  useEffect(() => {
+    pageSizeRef.current = pageSize;
+  }, [pageSize]);
 
   // Accessibility live region message
   const [liveMsg, setLiveMsg] = useState('');
@@ -316,11 +332,11 @@ export default function JobSeekerManagement() {
     };
   }, [jobSeekers]);
 
-  const handleDelete = (row) => {
+  const handleDelete = useCallback((row) => {
     if (row.isActive) return; // safety - can't delete active users
     setRowPendingDelete(row);
     setConfirmOpen(true);
-  };
+  }, []);
 
   const confirmDelete = async () => {
     if (!rowPendingDelete) return;
@@ -342,6 +358,124 @@ export default function JobSeekerManagement() {
     setConfirmOpen(false);
     setRowPendingDelete(null);
   };
+
+  const handleBulkDelete = () => {
+    if (selectedItems.length === 0) {
+      showToast('Please select items to delete', 'Warning');
+      return;
+    }
+    setBulkDeleteConfirmOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedItems.length === 0) return;
+    
+    try {
+      // Use selectedItems directly - it will contain all IDs when selectAllPages is true
+      await bulkDeleteJobSeekers(selectedItems);
+      showToast(`Successfully deleted ${selectedItems.length} job seeker(s)`, 'Success');
+      setSelectedItems([]);
+      setSelectAllPages(false);
+      setAllJobSeekerIds([]);
+      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
+    } catch (e) {
+      console.error('Bulk delete failed', e);
+      const msg = e?.response?.data?.message || 'Failed to delete selected items';
+      showToast(msg, 'Error', 5000);
+    } finally {
+      setBulkDeleteConfirmOpen(false);
+    }
+  };
+
+  const cancelBulkDelete = () => {
+    setBulkDeleteConfirmOpen(false);
+  };
+
+  // Optimized row selection handler with debouncing to improve performance
+  const handleRowSelected = useCallback(() => {
+    // Prevent multiple simultaneous updates
+    if (selectionUpdateRef.current) return;
+    
+    selectionUpdateRef.current = true;
+    
+    // Use requestAnimationFrame to batch updates and avoid blocking the UI
+    requestAnimationFrame(() => {
+      if (gridRef.current) {
+        try {
+          const selectedRecords = gridRef.current.getSelectedRecords();
+          const selectedIds = selectedRecords.map(record => record.id || record._id);
+          
+          // If user is manually selecting/deselecting rows, clear "select all pages" mode
+          // because they're now managing selection manually
+          if (selectAllPages) {
+            setSelectAllPages(false);
+            setAllJobSeekerIds([]);
+          }
+          
+          setSelectedItems(selectedIds);
+        } catch (error) {
+          console.warn('Error getting selected records:', error);
+        }
+      }
+      selectionUpdateRef.current = false;
+    });
+  }, [selectAllPages]);
+
+  const handleSelectAll = () => {
+    if (gridRef.current) {
+      gridRef.current.selectRows(Array.from({ length: gridRef.current.currentViewData.length }, (_, i) => i));
+    }
+  };
+
+  const handleDeselectAll = () => {
+    if (gridRef.current) {
+      gridRef.current.clearSelection();
+    }
+    setSelectedItems([]);
+    setSelectAllPages(false);
+    setAllJobSeekerIds([]);
+  };
+
+  const handleSelectAllPages = useCallback(async () => {
+    try {
+      // Fetch all job seeker IDs (without pagination) with current filters
+      const allFilters = {
+        page: 1,
+        limit: 99999, // Large limit to get all records
+        role: 'JobSeeker'
+      };
+      
+      // Apply current filters
+      const search = searchFilterRef.current;
+      if (search && search.trim()) {
+        allFilters.search = search.trim();
+      }
+      
+      const statusFilter = statusFilterRef.current;
+      if (statusFilter === 'active') {
+        allFilters.isActive = 'true';
+      } else if (statusFilter === 'inactive') {
+        allFilters.isActive = 'false';
+      }
+      
+      const eventFilter = eventFilterRef.current;
+      if (eventFilter && eventFilter.trim()) {
+        allFilters.eventId = eventFilter.trim();
+      }
+      
+      const res = await listUsers(allFilters);
+      const items = (res?.users || []).filter(u => u.role === 'JobSeeker');
+      const allIds = items.map(u => u._id);
+      
+      setAllJobSeekerIds(allIds);
+      setSelectedItems(allIds);
+      setSelectAllPages(true);
+      showToast(`Selected all ${allIds.length} job seeker(s) across all pages`, 'Info');
+    } catch (error) {
+      console.error('Error fetching all job seekers:', error);
+      showToast('Failed to select all job seekers', 'Error');
+    }
+  }, [showToast]);
 
   const loadJobSeekers = useCallback(async (page, limit, search, isActive, event) => {
     // Prevent multiple simultaneous fetches
@@ -825,7 +959,7 @@ export default function JobSeekerManagement() {
     }
   }, [confirmOpen]);
 
-  const handleToggleActive = async (row) => {
+  const handleToggleActive = useCallback(async (row) => {
     try {
       if (row.isActive) {
         await deactivateUser(row.id);
@@ -834,14 +968,14 @@ export default function JobSeekerManagement() {
         await reactivateUser(row.id);
         showToast(`${row.firstName} ${row.lastName} reactivated`, 'Success');
       }
-      await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
+      await loadJobSeekers(currentPageRef.current, pageSizeRef.current, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
     } catch (e) {
       console.error('Toggle active failed', e);
       showToast('Failed to update status', 'Error');
     }
-  };
+  }, [showToast, loadJobSeekers]); // Removed currentPage and pageSize from dependencies, using refs instead
 
-  const handleViewProfile = (row) => {
+  const handleViewProfile = useCallback((row) => {
     console.log('View Profile clicked for:', row);
     
     // Clear any active toasts before switching modes to prevent DOM errors
@@ -880,7 +1014,7 @@ export default function JobSeekerManagement() {
         setIsTransitioning(false);
       }, 50);
     }, 100); // Delay to allow grid to be hidden first
-  };
+  }, []);
 
   const startEdit = (row) => {
     const firstName = row.firstName || '';
@@ -963,11 +1097,11 @@ export default function JobSeekerManagement() {
     }
   };
 
-  const handleVerifyEmail = (row) => {
+  const handleVerifyEmail = useCallback((row) => {
     if (row.emailVerified) return; // safety check
     setRowPendingVerify(row);
     setVerifyEmailOpen(true);
-  };
+  }, []);
 
   const confirmVerifyEmail = async () => {
     if (!rowPendingVerify) return;
@@ -990,7 +1124,7 @@ export default function JobSeekerManagement() {
     setRowPendingVerify(null);
   };
 
-  const handleEdit = (row) => {
+  const handleEdit = useCallback((row) => {
     // Clear any active toasts before switching modes
     if (toastRef.current) {
       try {
@@ -1089,7 +1223,7 @@ export default function JobSeekerManagement() {
         setIsTransitioning(false);
       }, 50);
     }, 100);
-  };
+  }, []); // Removed getCountryCode from dependencies since it's now a stable function outside component
 
   const setEditField = (k, v) => setEditForm(prev => ({ ...prev, [k]: v }));
 
@@ -1349,31 +1483,31 @@ export default function JobSeekerManagement() {
   };
 
 
-  // Grid template functions for custom column renders - using Syncfusion ButtonComponent
-  const statusTemplate = (props) => {
+  // Grid template functions for custom column renders - memoized to prevent re-renders
+  const statusTemplate = useCallback((props) => {
     const row = props;
     return (
       <span className={`status-badge ${row.isActive ? 'active' : 'inactive'}`}>
         {row.isActive ? 'Active' : 'Inactive'}
       </span>
     );
-  };
+  }, []);
 
-  const emailVerifiedTemplate = (props) => {
+  const emailVerifiedTemplate = useCallback((props) => {
     const row = props;
     return (
       <span className={`status-badge ${row.emailVerified ? 'verified' : 'unverified'}`}>
         {row.emailVerified ? 'Yes' : 'No'}
       </span>
     );
-  };
+  }, []);
 
-  const lastLoginTemplate = (props) => {
+  const lastLoginTemplate = useCallback((props) => {
     const row = props;
     return row.lastLogin ? new Date(row.lastLogin).toLocaleDateString() : 'Never';
-  };
+  }, []);
 
-  const registeredEventsTemplate = (props) => {
+  const registeredEventsTemplate = useCallback((props) => {
     const row = props;
     const registeredEvents = row.registeredEvents || [];
     
@@ -1395,9 +1529,9 @@ export default function JobSeekerManagement() {
         {eventNames.join(', ')}
       </div>
     );
-  };
+  }, []);
 
-  const actionsTemplate = (props) => {
+  const actionsTemplate = useCallback((props) => {
     const row = props;
     return (
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1442,7 +1576,7 @@ export default function JobSeekerManagement() {
         )}
       </div>
     );
-  };
+  }, [handleViewProfile, handleEdit, handleVerifyEmail, handleToggleActive, handleDelete]);
 
   const renderJobSeekerProfile = () => {
     console.log('renderJobSeekerProfile called, selectedJobSeeker:', selectedJobSeeker);
@@ -1709,7 +1843,40 @@ export default function JobSeekerManagement() {
   }, [jobSeekers, serverStats, eventFilter]);
 
   // Memoize grid data - only update when jobSeekers actually changes
-  const gridDataSource = useMemo(() => jobSeekers, [jobSeekers]);
+  // Memoize the paginated dataSource to prevent re-renders when selection changes
+  const paginatedDataSource = useMemo(() => {
+    return jobSeekers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [jobSeekers, currentPage, pageSize]);
+
+  // Memoize grid settings to prevent unnecessary re-renders
+  const gridFilterSettings = useMemo(() => ({
+    type: 'Menu',
+    showFilterBarStatus: true,
+    immediateModeDelay: 0,
+    showFilterBarOperator: true,
+    enableCaseSensitivity: false
+  }), []);
+
+  const gridToolbar = useMemo(() => ['ColumnChooser'], []);
+
+  const gridSelectionSettings = useMemo(() => ({
+    type: 'Multiple',
+    checkboxOnly: true
+  }), []);
+
+  // Memoize column templates to prevent re-renders
+  const textTemplate = useCallback((props, field) => (
+    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+      {props[field] || ''}
+    </div>
+  ), []);
+
+  const firstNameTemplate = useCallback((props) => textTemplate(props, 'firstName'), [textTemplate]);
+  const lastNameTemplate = useCallback((props) => textTemplate(props, 'lastName'), [textTemplate]);
+  const emailTemplate = useCallback((props) => textTemplate(props, 'email'), [textTemplate]);
+  const phoneTemplate = useCallback((props) => textTemplate(props, 'phone'), [textTemplate]);
+  const cityTemplate = useCallback((props) => textTemplate(props, 'city'), [textTemplate]);
+  const stateTemplate = useCallback((props) => textTemplate(props, 'state'), [textTemplate]);
 
   return (
     <div className="dashboard">
@@ -2168,6 +2335,30 @@ export default function JobSeekerManagement() {
 
             {/* Filters */}
             <div className="jsm-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Bulk Action Buttons */}
+              <ButtonComponent 
+                cssClass="e-outline e-primary e-small" 
+                onClick={handleSelectAll}
+                aria-label="Select all items on current page"
+              >
+                Select All
+              </ButtonComponent>
+              <ButtonComponent 
+                cssClass="e-outline e-primary e-small" 
+                onClick={handleDeselectAll}
+                disabled={selectedItems.length === 0}
+                aria-label="Deselect all items"
+              >
+                Deselect All
+              </ButtonComponent>
+              <ButtonComponent 
+                cssClass="e-danger e-small" 
+                onClick={handleBulkDelete} 
+                disabled={selectedItems.length === 0}
+                aria-label={`Delete ${selectedItems.length} selected item(s)`}
+              >
+                Delete Selected ({selectedItems.length})
+              </ButtonComponent>
               {/* Status Filter */}
               <div style={{ width: '200px', flexShrink: 0 }}>
                 <DropDownListComponent
@@ -2294,6 +2485,51 @@ export default function JobSeekerManagement() {
               </div>
             </div>
 
+            {/* Select All Pages Banner */}
+            {selectedItems.length === jobSeekers.length && jobSeekers.length > 0 && !selectAllPages && pagination.totalCount > jobSeekers.length && (
+              <div style={{
+                background: '#e3f2fd',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                marginLeft: '20px',
+                marginRight: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                border: '1px solid #90caf9'
+              }}>
+                <span style={{ color: '#1976d2', fontWeight: '500' }}>
+                  All {jobSeekers.length} job seeker(s) on this page are selected. 
+                  {pagination.totalCount > jobSeekers.length && ` There are ${pagination.totalCount - jobSeekers.length} more job seeker(s) on other pages.`}
+                </span>
+                <ButtonComponent 
+                  cssClass="e-primary e-small" 
+                  onClick={handleSelectAllPages}
+                  aria-label="Select all job seekers across all pages"
+                >
+                  Select All {pagination.totalCount} Job Seekers
+                </ButtonComponent>
+              </div>
+            )}
+
+            {/* All Pages Selected Banner */}
+            {selectAllPages && (
+              <div style={{
+                background: '#c8e6c9',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                marginLeft: '20px',
+                marginRight: '20px',
+                border: '1px solid #81c784'
+              }}>
+                <span style={{ color: '#2e7d32', fontWeight: '600' }}>
+                  ✓ All {selectedItems.length} job seeker(s) across all pages are selected.
+                </span>
+              </div>
+            )}
+
             {/* Stats - using server-side filtered stats */}
             <div className="stats-row">
               <div className="stat-card">
@@ -2344,28 +2580,24 @@ export default function JobSeekerManagement() {
                   </div>
                 )}
                 <GridComponent
-                  key={`job-seekers-grid-${currentPage}-${pageSize}-${statusFilter}-${eventFilter}`}
                   ref={gridRef}
-                  dataSource={gridDataSource}
+                  dataSource={paginatedDataSource}
                   allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
-                  filterSettings={{ 
-                    type: 'Menu',
-                    showFilterBarStatus: true,
-                    immediateModeDelay: 0,
-                    showFilterBarOperator: true,
-                    enableCaseSensitivity: false
-                  }}
+                  enablePersistence={false}
+                  filterSettings={gridFilterSettings}
                   showColumnMenu={true}
                   showColumnChooser={true}
                   allowResizing={true}
                   allowReordering={true}
-                  toolbar={['ColumnChooser']}
-                  selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
+                  toolbar={gridToolbar}
+                  selectionSettings={gridSelectionSettings}
                   enableHover={true}
                   allowRowDragAndDrop={false}
                   enableHeaderFocus={false}
+                  rowSelected={handleRowSelected}
+                  rowDeselected={handleRowSelected}
                 >
               <ColumnsDirective>
                 <ColumnDirective type='checkbox' width='50' />
@@ -2374,66 +2606,42 @@ export default function JobSeekerManagement() {
                   headerText='First Name' 
                   width='150' 
                   allowFiltering={true}
-                  template={(props) => (
-                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                      {props.firstName || ''}
-                    </div>
-                  )}
+                  template={firstNameTemplate}
                 />
                 <ColumnDirective 
                   field='lastName' 
                   headerText='Last Name' 
                   width='150' 
                   allowFiltering={true}
-                  template={(props) => (
-                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                      {props.lastName || ''}
-                    </div>
-                  )}
+                  template={lastNameTemplate}
                 />
                 <ColumnDirective 
                   field='email' 
                   headerText='Email' 
                   width='250' 
                   allowFiltering={true}
-                  template={(props) => (
-                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                      {props.email || ''}
-                    </div>
-                  )}
+                  template={emailTemplate}
                 />
                 <ColumnDirective 
                   field='phone' 
                   headerText='Phone' 
                   width='150' 
                   allowFiltering={true}
-                  template={(props) => (
-                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                      {props.phone || ''}
-                    </div>
-                  )}
+                  template={phoneTemplate}
                 />
                 <ColumnDirective 
                   field='city' 
                   headerText='City' 
                   width='120' 
                   allowFiltering={true}
-                  template={(props) => (
-                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                      {props.city || ''}
-                    </div>
-                  )}
+                  template={cityTemplate}
                 />
                 <ColumnDirective 
                   field='state' 
                   headerText='State' 
                   width='120' 
                   allowFiltering={true}
-                  template={(props) => (
-                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                      {props.state || ''}
-                    </div>
-                  )}
+                  template={stateTemplate}
                 />
                 <ColumnDirective 
                   field='statusText' 
@@ -2456,11 +2664,7 @@ export default function JobSeekerManagement() {
                   headerText='Last Login' 
                   width='150' 
                   allowFiltering={true}
-                  template={(props) => (
-                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                      {lastLoginTemplate(props)}
-                    </div>
-                  )}
+                  template={lastLoginTemplate}
                 />
                 <ColumnDirective 
                   field='registeredEvents' 
@@ -2721,6 +2925,46 @@ export default function JobSeekerManagement() {
       >
         <p style={{ margin: 0, lineHeight: '1.5' }}>
           Verify email for <strong>{rowPendingVerify?.firstName} {rowPendingVerify?.lastName}</strong> ({rowPendingVerify?.email})?
+        </p>
+      </DialogComponent>
+
+      {/* Bulk Delete confirm modal */}
+      <DialogComponent
+        width="500px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={bulkDeleteConfirmOpen}
+        header="Delete Multiple Job Seekers"
+        closeOnEscape={true}
+        close={cancelBulkDelete}
+        cssClass="bulk-delete-dialog"
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelBulkDelete();
+            }
+          },
+          {
+            buttonModel: {
+              content: 'Delete All',
+              isPrimary: true,
+              cssClass: 'e-danger'
+            },
+            click: () => {
+              confirmBulkDelete();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Are you sure you want to permanently delete <strong>{selectedItems.length}</strong> selected job seeker(s)? 
+          <br /><br />
+          This action cannot be undone.
         </p>
       </DialogComponent>
 
