@@ -543,35 +543,34 @@ router.get('/booth/:boothId', authenticateToken, requireRole(['Recruiter', 'Admi
 
 /**
  * DELETE /api/job-seeker-interests/bulk-delete
- * Bulk delete job seeker interests (Admin/GlobalSupport/AdminEvent/Recruiter only)
+ * Bulk delete job seeker interests (Admin/GlobalSupport only)
  */
-router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'AdminEvent', 'Recruiter']), async (req, res) => {
+router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { interestIds } = req.body;
+        const { user } = req;
 
-        // Validate input
-        if (!Array.isArray(interestIds) || interestIds.length === 0) {
-            return res.status(400).json({
-                error: 'Invalid input',
-                message: 'interestIds must be a non-empty array'
-            });
+        if (!interestIds || !Array.isArray(interestIds) || interestIds.length === 0) {
+            return res.status(400).json({ message: 'No interest IDs provided' });
         }
 
-        // Delete all interests
-        const result = await JobSeekerInterest.deleteMany({ _id: { $in: interestIds } });
+        // Delete the interests
+        const result = await JobSeekerInterest.deleteMany({
+            _id: { $in: interestIds }
+        });
 
-        logger.info(`Bulk deleted ${result.deletedCount} job seeker interests by ${req.user.email}`);
+        logger.info(`Bulk deleted ${result.deletedCount} job seeker interests by ${user.email}`);
 
         res.json({
-            success: true,
             message: `Successfully deleted ${result.deletedCount} interest(s)`,
             deletedCount: result.deletedCount
         });
+
     } catch (error) {
         logger.error('Bulk delete job seeker interests error:', error);
-        res.status(500).json({
-            error: 'Failed to delete interests',
-            message: 'An error occurred while deleting interests'
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message 
         });
     }
 });

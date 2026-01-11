@@ -31,6 +31,17 @@ export async function deleteBooth(id) {
   return res.data;
 }
 
+// Bulk delete booths
+export async function bulkDeleteBooths(boothIds) {
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+  const res = await axios.delete('/api/booths/bulk-delete', {
+    headers,
+    data: { boothIds }
+  });
+  return res.data;
+}
+
 export async function updateBoothRichSections(id, sections) {
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };

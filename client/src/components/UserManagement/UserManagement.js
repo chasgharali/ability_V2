@@ -70,7 +70,10 @@ export default function UserManagement() {
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
-  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+  // Bulk delete
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Persist role filter in sessionStorage so it survives navigation within the session
   useEffect(() => {
@@ -174,41 +177,57 @@ export default function UserManagement() {
     setRowPendingDelete(null);
   };
 
+  // Get selected users from grid
+  const getSelectedUsersFromGrid = useCallback(() => {
+    if (!gridRef.current) return [];
+    
+    try {
+      if (typeof gridRef.current.getSelectedRecords === 'function') {
+        const selectedRows = gridRef.current.getSelectedRecords();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      if (typeof gridRef.current.getSelectedRowsData === 'function') {
+        const selectedRows = gridRef.current.getSelectedRowsData();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error getting selected rows:', error);
+      return [];
+    }
+  }, []);
+
   const handleBulkDelete = () => {
-    if (selectedUsers.length === 0) {
+    const currentSelection = getSelectedUsersFromGrid();
+    if (currentSelection.length === 0) {
       showToast('Please select users to delete', 'Warning');
       return;
     }
-    setBulkDeleteConfirmOpen(true);
+    setSelectedUsers(currentSelection);
+    setConfirmBulkDeleteOpen(true);
   };
 
   const confirmBulkDelete = async () => {
-    if (selectedUsers.length === 0) return;
-    
     try {
-      const result = await bulkDeleteUsers(selectedUsers);
-      showToast(result.message || `Successfully deleted ${result.deletedCount} user(s)`, 'Success');
+      setIsDeleting(true);
+      const response = await bulkDeleteUsers(selectedUsers);
+      showToast(response.message || 'Users deleted successfully', 'Success');
       setSelectedUsers([]);
       await loadUsers();
-    } catch (e) {
-      console.error('Bulk delete failed', e);
-      const msg = e?.response?.data?.message || 'Failed to delete selected users';
-      showToast(msg, 'Error', 5000);
+    } catch (error) {
+      console.error('Error deleting users:', error);
+      showToast(error.response?.data?.message || 'Failed to delete users', 'Error');
     } finally {
-      setBulkDeleteConfirmOpen(false);
+      setIsDeleting(false);
+      setConfirmBulkDeleteOpen(false);
     }
   };
 
   const cancelBulkDelete = () => {
-    setBulkDeleteConfirmOpen(false);
-  };
-
-  const handleRowSelected = (args) => {
-    if (gridRef.current) {
-      const selectedRecords = gridRef.current.getSelectedRecords();
-      const selectedIds = selectedRecords.map(record => record.id);
-      setSelectedUsers(selectedIds);
-    }
+    setConfirmBulkDeleteOpen(false);
+    setSelectedUsers([]);
   };
 
   const handleSearch = useCallback(() => {
@@ -299,6 +318,32 @@ export default function UserManagement() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
+
+  // Track selection changes from grid
+  useEffect(() => {
+    if (!gridRef.current) return;
+    
+    const updateSelection = () => {
+      const currentSelection = getSelectedUsersFromGrid();
+      setSelectedUsers(currentSelection);
+    };
+
+    // Listen for selection events
+    const grid = gridRef.current;
+    if (grid.element) {
+      const handleSelectionChange = () => {
+        setTimeout(updateSelection, 100);
+      };
+      
+      grid.element.addEventListener('click', handleSelectionChange);
+      
+      return () => {
+        if (grid.element) {
+          grid.element.removeEventListener('click', handleSelectionChange);
+        }
+      };
+    }
+  }, [users, getSelectedUsersFromGrid]);
 
   // Set CSS variable for filter icon and make it trigger column menu
   useEffect(() => {
@@ -529,40 +574,29 @@ export default function UserManagement() {
           Edit
         </ButtonComponent>
         {row.isActive ? (
-          <>
-            <ButtonComponent 
-              cssClass="e-outline e-primary e-small" 
-              onClick={() => handleDeactivate(row)}
-              aria-label={`Deactivate ${row.firstName} ${row.lastName}`}
-            >
-              Deactivate
-            </ButtonComponent>
-            <ButtonComponent 
-              cssClass="e-outline e-danger e-small" 
-              onClick={() => handleDelete(row)}
-              aria-label={`Delete ${row.firstName} ${row.lastName}`}
-            >
-              Delete
-            </ButtonComponent>
-          </>
+          <ButtonComponent 
+            cssClass="e-outline e-primary e-small" 
+            onClick={() => handleDeactivate(row)}
+            aria-label={`Deactivate ${row.firstName} ${row.lastName}`}
+          >
+            Deactivate
+          </ButtonComponent>
         ) : (
-          <>
-            <ButtonComponent 
-              cssClass="e-primary e-small" 
-              onClick={() => handleReactivate(row)}
-              aria-label={`Reactivate ${row.firstName} ${row.lastName}`}
-            >
-              Reactivate
-            </ButtonComponent>
-            <ButtonComponent 
-              cssClass="e-outline e-danger e-small" 
-              onClick={() => handleDelete(row)}
-              aria-label={`Delete ${row.firstName} ${row.lastName}`}
-            >
-              Delete
-            </ButtonComponent>
-          </>
+          <ButtonComponent 
+            cssClass="e-primary e-small" 
+            onClick={() => handleReactivate(row)}
+            aria-label={`Reactivate ${row.firstName} ${row.lastName}`}
+          >
+            Reactivate
+          </ButtonComponent>
         )}
+        <ButtonComponent 
+          cssClass="e-outline e-danger e-small" 
+          onClick={() => handleDelete(row)}
+          aria-label={`Delete ${row.firstName} ${row.lastName}`}
+        >
+          Delete
+        </ButtonComponent>
       </div>
     );
   };
@@ -691,14 +725,54 @@ export default function UserManagement() {
               <div className="bm-header-actions">
                 {mode === 'list' ? (
                   <>
-                    <ButtonComponent 
-                      cssClass="e-danger" 
-                      onClick={handleBulkDelete} 
-                      disabled={selectedUsers.length === 0}
-                      aria-label={`Delete ${selectedUsers.length} selected user(s)`}
-                    >
-                      Delete Selected ({selectedUsers.length})
-                    </ButtonComponent>
+                    {selectedUsers.length > 0 && (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '12px' }}>
+                          <input
+                            type="checkbox"
+                            id="select-all-users"
+                            checked={selectedUsers.length > 0 && selectedUsers.length === users.slice((currentPage - 1) * pageSize, currentPage * pageSize).length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                // Select all rows on current page
+                                if (gridRef.current) {
+                                  const pageData = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+                                  gridRef.current.selectRows(Array.from({ length: pageData.length }, (_, i) => i));
+                                  // Manually update state to ensure checkbox reflects selection immediately
+                                  setTimeout(() => {
+                                    const currentSelection = getSelectedUsersFromGrid();
+                                    setSelectedUsers(currentSelection);
+                                  }, 100);
+                                }
+                              } else {
+                                // Deselect all rows
+                                if (gridRef.current) {
+                                  gridRef.current.clearSelection();
+                                  setSelectedUsers([]);
+                                }
+                              }
+                            }}
+                            style={{ 
+                              width: '18px', 
+                              height: '18px', 
+                              cursor: 'pointer',
+                              accentColor: '#000000'
+                            }}
+                          />
+                          <label htmlFor="select-all-users" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                            Select All
+                          </label>
+                        </div>
+                        <ButtonComponent 
+                          cssClass="e-danger"
+                          onClick={handleBulkDelete}
+                          disabled={isDeleting}
+                          aria-label={`Delete ${selectedUsers.length} selected users`}
+                        >
+                          {isDeleting ? 'Deleting...' : `Delete Selected (${selectedUsers.length})`}
+                        </ButtonComponent>
+                      </>
+                    )}
                     <ButtonComponent cssClass="e-primary" onClick={() => setMode('create')} aria-label="Create new user">
                       Create User
                     </ButtonComponent>
@@ -803,11 +877,22 @@ export default function UserManagement() {
                   enableHover={true}
                   allowRowDragAndDrop={false}
                   enableHeaderFocus={false}
-                  rowSelected={handleRowSelected}
-                  rowDeselected={handleRowSelected}
+                  rowSelected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedUsersFromGrid();
+                      setSelectedUsers(currentSelection);
+                    }, 50);
+                  }}
+                  rowDeselected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedUsersFromGrid();
+                      setSelectedUsers(currentSelection);
+                    }, 50);
+                  }}
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />
+                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                     <ColumnDirective 
                       field='firstName' 
                       headerText='First Name' 
@@ -1142,11 +1227,11 @@ export default function UserManagement() {
 
       {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent
-        width="500px"
+        width="450px"
         isModal={true}
         showCloseIcon={true}
-        visible={bulkDeleteConfirmOpen}
-        header="Delete Multiple Users"
+        visible={confirmBulkDeleteOpen}
+        header="Bulk Delete Users"
         closeOnEscape={true}
         close={cancelBulkDelete}
         cssClass="um-delete-dialog"
@@ -1163,7 +1248,7 @@ export default function UserManagement() {
           },
           {
             buttonModel: {
-              content: 'Delete All',
+              content: isDeleting ? 'Deleting...' : 'Delete',
               isPrimary: true,
               cssClass: 'e-danger'
             },
@@ -1174,9 +1259,7 @@ export default function UserManagement() {
         ]}
       >
         <p style={{ margin: 0, lineHeight: '1.5' }}>
-          Are you sure you want to permanently delete <strong>{selectedUsers.length}</strong> selected user(s)? 
-          <br /><br />
-          This action cannot be undone.
+          Are you sure you want to permanently delete <strong>{selectedUsers.length} user(s)</strong>? This action cannot be undone. Only inactive users can be permanently deleted.
         </p>
       </DialogComponent>
 

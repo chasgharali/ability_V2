@@ -57,6 +57,15 @@ export const jobSeekerInterestsAPI = {
         return response.data;
     },
 
+    // Bulk delete interests
+    bulkDelete: async (interestIds) => {
+        const response = await axios.delete('/api/job-seeker-interests/bulk-delete', {
+            headers: authHeaders(),
+            data: { interestIds }
+        });
+        return response.data;
+    },
+
     // Export interests as CSV
     exportCSV: async (filters = {}) => {
         const params = new URLSearchParams();

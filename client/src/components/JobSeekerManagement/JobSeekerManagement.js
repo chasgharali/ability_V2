@@ -166,6 +166,10 @@ export default function JobSeekerManagement() {
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
+  // Bulk delete
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [selectedJobSeekers, setSelectedJobSeekers] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
   const [rowPendingVerify, setRowPendingVerify] = useState(null);
@@ -359,123 +363,58 @@ export default function JobSeekerManagement() {
     setRowPendingDelete(null);
   };
 
+  // Get selected job seekers from grid
+  const getSelectedJobSeekersFromGrid = useCallback(() => {
+    if (!gridRef.current) return [];
+    
+    try {
+      if (typeof gridRef.current.getSelectedRecords === 'function') {
+        const selectedRows = gridRef.current.getSelectedRecords();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      if (typeof gridRef.current.getSelectedRowsData === 'function') {
+        const selectedRows = gridRef.current.getSelectedRowsData();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error getting selected rows:', error);
+      return [];
+    }
+  }, []);
+
   const handleBulkDelete = () => {
-    if (selectedItems.length === 0) {
-      showToast('Please select items to delete', 'Warning');
+    const currentSelection = getSelectedJobSeekersFromGrid();
+    if (currentSelection.length === 0) {
+      showToast('Please select job seekers to delete', 'Warning');
       return;
     }
-    setBulkDeleteConfirmOpen(true);
+    setSelectedJobSeekers(currentSelection);
+    setConfirmBulkDeleteOpen(true);
   };
 
   const confirmBulkDelete = async () => {
-    if (selectedItems.length === 0) return;
-    
     try {
-      // Use selectedItems directly - it will contain all IDs when selectAllPages is true
-      await bulkDeleteJobSeekers(selectedItems);
-      showToast(`Successfully deleted ${selectedItems.length} job seeker(s)`, 'Success');
-      setSelectedItems([]);
-      setSelectAllPages(false);
-      setAllJobSeekerIds([]);
+      setIsDeleting(true);
+      const response = await bulkDeleteJobSeekers(selectedJobSeekers);
+      showToast(response.message || 'Job seekers deleted successfully', 'Success');
+      setSelectedJobSeekers([]);
       await loadJobSeekers(currentPage, pageSize, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
-    } catch (e) {
-      console.error('Bulk delete failed', e);
-      const msg = e?.response?.data?.message || 'Failed to delete selected items';
-      showToast(msg, 'Error', 5000);
+    } catch (error) {
+      console.error('Error deleting job seekers:', error);
+      showToast(error.response?.data?.message || 'Failed to delete job seekers', 'Error');
     } finally {
-      setBulkDeleteConfirmOpen(false);
+      setIsDeleting(false);
+      setConfirmBulkDeleteOpen(false);
     }
   };
 
   const cancelBulkDelete = () => {
-    setBulkDeleteConfirmOpen(false);
+    setConfirmBulkDeleteOpen(false);
+    setSelectedJobSeekers([]);
   };
-
-  // Optimized row selection handler with debouncing to improve performance
-  const handleRowSelected = useCallback(() => {
-    // Prevent multiple simultaneous updates
-    if (selectionUpdateRef.current) return;
-    
-    selectionUpdateRef.current = true;
-    
-    // Use requestAnimationFrame to batch updates and avoid blocking the UI
-    requestAnimationFrame(() => {
-      if (gridRef.current) {
-        try {
-          const selectedRecords = gridRef.current.getSelectedRecords();
-          const selectedIds = selectedRecords.map(record => record.id || record._id);
-          
-          // If user is manually selecting/deselecting rows, clear "select all pages" mode
-          // because they're now managing selection manually
-          if (selectAllPages) {
-            setSelectAllPages(false);
-            setAllJobSeekerIds([]);
-          }
-          
-          setSelectedItems(selectedIds);
-        } catch (error) {
-          console.warn('Error getting selected records:', error);
-        }
-      }
-      selectionUpdateRef.current = false;
-    });
-  }, [selectAllPages]);
-
-  const handleSelectAll = () => {
-    if (gridRef.current) {
-      gridRef.current.selectRows(Array.from({ length: gridRef.current.currentViewData.length }, (_, i) => i));
-    }
-  };
-
-  const handleDeselectAll = () => {
-    if (gridRef.current) {
-      gridRef.current.clearSelection();
-    }
-    setSelectedItems([]);
-    setSelectAllPages(false);
-    setAllJobSeekerIds([]);
-  };
-
-  const handleSelectAllPages = useCallback(async () => {
-    try {
-      // Fetch all job seeker IDs (without pagination) with current filters
-      const allFilters = {
-        page: 1,
-        limit: 99999, // Large limit to get all records
-        role: 'JobSeeker'
-      };
-      
-      // Apply current filters
-      const search = searchFilterRef.current;
-      if (search && search.trim()) {
-        allFilters.search = search.trim();
-      }
-      
-      const statusFilter = statusFilterRef.current;
-      if (statusFilter === 'active') {
-        allFilters.isActive = 'true';
-      } else if (statusFilter === 'inactive') {
-        allFilters.isActive = 'false';
-      }
-      
-      const eventFilter = eventFilterRef.current;
-      if (eventFilter && eventFilter.trim()) {
-        allFilters.eventId = eventFilter.trim();
-      }
-      
-      const res = await listUsers(allFilters);
-      const items = (res?.users || []).filter(u => u.role === 'JobSeeker');
-      const allIds = items.map(u => u._id);
-      
-      setAllJobSeekerIds(allIds);
-      setSelectedItems(allIds);
-      setSelectAllPages(true);
-      showToast(`Selected all ${allIds.length} job seeker(s) across all pages`, 'Info');
-    } catch (error) {
-      console.error('Error fetching all job seekers:', error);
-      showToast('Failed to select all job seekers', 'Error');
-    }
-  }, [showToast]);
 
   const loadJobSeekers = useCallback(async (page, limit, search, isActive, event) => {
     // Prevent multiple simultaneous fetches
@@ -2328,9 +2267,58 @@ export default function JobSeekerManagement() {
             </div>
           ) : (
           <div className="dashboard-content">
-            <div className="page-header">
-              <h2>Job Seeker Management</h2>
-              <p>Manage job seeker accounts and profiles</p>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2>Job Seeker Management</h2>
+                <p>Manage job seeker accounts and profiles</p>
+              </div>
+              {mode === 'list' && selectedJobSeekers.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      id="select-all-jobseekers"
+                      checked={selectedJobSeekers.length > 0 && selectedJobSeekers.length === jobSeekers.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          // Select all rows
+                          if (gridRef.current) {
+                            gridRef.current.selectRows(Array.from({ length: jobSeekers.length }, (_, i) => i));
+                            // Manually update state to ensure checkbox reflects selection immediately
+                            setTimeout(() => {
+                              const currentSelection = getSelectedJobSeekersFromGrid();
+                              setSelectedJobSeekers(currentSelection);
+                            }, 100);
+                          }
+                        } else {
+                          // Deselect all rows
+                          if (gridRef.current) {
+                            gridRef.current.clearSelection();
+                            setSelectedJobSeekers([]);
+                          }
+                        }
+                      }}
+                      style={{ 
+                        width: '18px', 
+                        height: '18px', 
+                        cursor: 'pointer',
+                        accentColor: '#000000'
+                      }}
+                    />
+                    <label htmlFor="select-all-jobseekers" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                      Select All
+                    </label>
+                  </div>
+                  <ButtonComponent 
+                    cssClass="e-danger"
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    aria-label={`Delete ${selectedJobSeekers.length} selected job seekers`}
+                  >
+                    {isDeleting ? 'Deleting...' : `Delete Selected (${selectedJobSeekers.length})`}
+                  </ButtonComponent>
+                </div>
+              )}
             </div>
 
             {/* Filters */}
@@ -2596,11 +2584,22 @@ export default function JobSeekerManagement() {
                   enableHover={true}
                   allowRowDragAndDrop={false}
                   enableHeaderFocus={false}
-                  rowSelected={handleRowSelected}
-                  rowDeselected={handleRowSelected}
+                  rowSelected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedJobSeekersFromGrid();
+                      setSelectedJobSeekers(currentSelection);
+                    }, 50);
+                  }}
+                  rowDeselected={() => {
+                    setTimeout(() => {
+                      const currentSelection = getSelectedJobSeekersFromGrid();
+                      setSelectedJobSeekers(currentSelection);
+                    }, 50);
+                  }}
                 >
               <ColumnsDirective>
                 <ColumnDirective type='checkbox' width='50' />
+                <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                 <ColumnDirective 
                   field='firstName' 
                   headerText='First Name' 
@@ -2658,6 +2657,35 @@ export default function JobSeekerManagement() {
                   textAlign='Center'
                   allowFiltering={true}
                   template={emailVerifiedTemplate}
+                />
+                <ColumnDirective 
+                  field='createdAt' 
+                  headerText='Registration Date' 
+                  width='180' 
+                  allowFiltering={true}
+                  allowSorting={true}
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.createdAt ? new Date(props.createdAt).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'N/A'}
+                    </div>
+                  )}
+                />
+                <ColumnDirective 
+                  field='createdAt' 
+                  headerText='Registration Date' 
+                  width='180' 
+                  allowFiltering={true}
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {lastLoginTemplate(props)}
+                    </div>
+                  )}
                 />
                 <ColumnDirective 
                   field='lastLogin' 
@@ -2889,6 +2917,44 @@ export default function JobSeekerManagement() {
             Are you sure you want to permanently delete <strong>{rowPendingDelete?.firstName} {rowPendingDelete?.lastName}</strong>? This action cannot be undone.
           </p>
         </div>
+      </DialogComponent>
+
+      {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
+      <DialogComponent
+        width="450px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={confirmBulkDeleteOpen}
+        header="Bulk Delete Job Seekers"
+        closeOnEscape={true}
+        close={cancelBulkDelete}
+        cssClass="jsm-delete-dialog"
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelBulkDelete();
+            }
+          },
+          {
+            buttonModel: {
+              content: isDeleting ? 'Deleting...' : 'Delete',
+              isPrimary: true,
+              cssClass: 'e-danger'
+            },
+            click: () => {
+              confirmBulkDelete();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Are you sure you want to permanently delete <strong>{selectedJobSeekers.length} job seeker(s)</strong>? This action cannot be undone. Active users will be automatically deactivated before deletion.
+        </p>
       </DialogComponent>
 
       {/* Verify Email confirm modal - Syncfusion DialogComponent */}
