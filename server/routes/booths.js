@@ -263,6 +263,81 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 });
 
 /**
+ * DELETE /api/booths/bulk-delete
+ * Bulk delete booths (Admin/GlobalSupport/AdminEvent only)
+ */
+router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'AdminEvent']), async (req, res) => {
+    try {
+        const { boothIds } = req.body;
+        const { user } = req;
+        const Event = require('../models/Event');
+
+        if (!boothIds || !Array.isArray(boothIds) || boothIds.length === 0) {
+            return res.status(400).json({ message: 'No booth IDs provided' });
+        }
+
+        // Find all booths to be deleted
+        const boothsToDelete = await Booth.find({ _id: { $in: boothIds } });
+
+        // For AdminEvent role, only allow deletion of booths they manage
+        if (user.role === 'AdminEvent') {
+            const unauthorizedBooths = boothsToDelete.filter(booth => {
+                // Check if user can access the event this booth belongs to
+                const event = booth.eventId;
+                if (!event || !event.canUserAccess) {
+                    // If event is populated, check access
+                    if (typeof event === 'object' && event.administrators) {
+                        return !event.administrators.some(adminId => adminId.toString() === user._id.toString());
+                    }
+                    return true;
+                }
+                return !event.canUserAccess(user);
+            });
+            
+            if (unauthorizedBooths.length > 0) {
+                return res.status(403).json({
+                    message: 'You do not have permission to delete some of the selected booths',
+                    error: 'Access denied'
+                });
+            }
+        }
+
+        // Get unique event IDs
+        const eventIds = [...new Set(boothsToDelete.map(b => b.eventId?.toString() || b.eventId).filter(Boolean))];
+
+        // Remove booths from events' booths arrays
+        for (const eventId of eventIds) {
+            const boothIdsForEvent = boothsToDelete
+                .filter(b => (b.eventId?.toString() || b.eventId) === eventId)
+                .map(b => b._id);
+            
+            if (boothIdsForEvent.length > 0) {
+                await Event.findByIdAndUpdate(eventId, { $pull: { booths: { $in: boothIdsForEvent } } });
+            }
+        }
+
+        // Delete the booths
+        const result = await Booth.deleteMany({
+            _id: { $in: boothIds }
+        });
+
+        logger.info(`Bulk deleted ${result.deletedCount} booths by ${user.email}`);
+
+        res.json({
+            message: `Successfully deleted ${result.deletedCount} booth(s)`,
+            deletedCount: result.deletedCount
+        });
+
+    } catch (error) {
+        logger.error('Bulk delete booths error:', error);
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message 
+        });
+    }
+});
+
+/**
  * DELETE /api/booths/:id
  * Delete a booth
  */

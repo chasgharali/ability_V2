@@ -9,7 +9,194 @@ const User = require('../models/User');
 const testUsers = [
     {
         name: 'Admin User',
-        email: 'admin@ability.com',
+        email: 'admin@ability2.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability2.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@abilit32.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability4.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability5.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability6.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability2.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@abilit72.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability8.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability9.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability10.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability11.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability12.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability13.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability14.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability15.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability16.com',
+        password: 'Admin123!',
+        role: 'Admin',
+        avatarUrl: null,
+        metadata: {
+            department: 'IT',
+            phone: '+1-555-0101'
+        }
+    },
+    {
+        name: 'Admin User',
+        email: 'admin@ability17.com',
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,

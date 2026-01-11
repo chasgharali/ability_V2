@@ -13,7 +13,7 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
 import { listEvents } from '../../services/events';
-import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections } from '../../services/booths';
+import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections, bulkDeleteBooths } from '../../services/booths';
 import { uploadBoothLogoToS3, uploadImageToS3 } from '../../services/uploads';
 import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
@@ -72,6 +72,9 @@ export default function BoothManagement() {
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [selectedBooths, setSelectedBooths] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const toastRef = useRef(null);
   const gridRef = useRef(null);
   const deleteDialogRef = useRef(null);
@@ -591,9 +594,57 @@ export default function BoothManagement() {
     }
   }, [activeSearchQuery, baseUrl]);
 
+  // Get selected booths from grid
+  const getSelectedBoothsFromGrid = useCallback(() => {
+    if (!gridRef.current) return [];
+    
+    try {
+      if (typeof gridRef.current.getSelectedRecords === 'function') {
+        const selectedRows = gridRef.current.getSelectedRecords();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      if (typeof gridRef.current.getSelectedRowsData === 'function') {
+        const selectedRows = gridRef.current.getSelectedRowsData();
+        return selectedRows.map(row => row.id || row._id).filter(Boolean);
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error getting selected rows:', error);
+      return [];
+    }
+  }, []);
+
   useEffect(() => { 
     loadBooths(); 
   }, [loadBooths]);
+
+  // Track selection changes from grid
+  useEffect(() => {
+    if (!gridRef.current) return;
+    
+    const updateSelection = () => {
+      const currentSelection = getSelectedBoothsFromGrid();
+      setSelectedBooths(currentSelection);
+    };
+
+    // Listen for selection events
+    const grid = gridRef.current;
+    if (grid.element) {
+      const handleSelectionChange = () => {
+        setTimeout(updateSelection, 100);
+      };
+      
+      grid.element.addEventListener('click', handleSelectionChange);
+      
+      return () => {
+        if (grid.element) {
+          grid.element.removeEventListener('click', handleSelectionChange);
+        }
+      };
+    }
+  }, [booths, getSelectedBoothsFromGrid]);
 
   // Set CSS variable for filter icon and make it trigger column menu
   useEffect(() => {
@@ -829,6 +880,37 @@ export default function BoothManagement() {
   };
   const cancelDelete = () => { setConfirmOpen(false); setRowPendingDelete(null); };
 
+  const handleBulkDelete = () => {
+    const currentSelection = getSelectedBoothsFromGrid();
+    if (currentSelection.length === 0) {
+      showToast('Please select booths to delete', 'Warning');
+      return;
+    }
+    setSelectedBooths(currentSelection);
+    setConfirmBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await bulkDeleteBooths(selectedBooths);
+      showToast(response.message || 'Booths deleted successfully', 'Success');
+      setSelectedBooths([]);
+      await loadBooths();
+    } catch (error) {
+      console.error('Error deleting booths:', error);
+      showToast(error.response?.data?.message || 'Failed to delete booths', 'Error');
+    } finally {
+      setIsDeleting(false);
+      setConfirmBulkDeleteOpen(false);
+    }
+  };
+
+  const cancelBulkDelete = () => {
+    setConfirmBulkDeleteOpen(false);
+    setSelectedBooths([]);
+  };
+
   // Invite link copy - Syncfusion Toast
   const showToast = (message, type = 'Success', duration = 3000) => {
     if (toastRef.current) {
@@ -874,9 +956,59 @@ export default function BoothManagement() {
               <h2>Booth Management</h2>
               <div className="bm-header-actions">
                 {boothMode === 'list' ? (
-                  <ButtonComponent cssClass="e-primary" onClick={() => setBoothMode('create')}>
-                    Create Booth
-                  </ButtonComponent>
+                  <>
+                    {selectedBooths.length > 0 && (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '12px' }}>
+                          <input
+                            type="checkbox"
+                            id="select-all-booths"
+                            checked={selectedBooths.length > 0 && selectedBooths.length === booths.slice((currentPage - 1) * pageSize, currentPage * pageSize).length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                // Select all rows on current page
+                                if (gridRef.current) {
+                                  const pageData = booths.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+                                  gridRef.current.selectRows(Array.from({ length: pageData.length }, (_, i) => i));
+                                  // Manually update state to ensure checkbox reflects selection immediately
+                                  setTimeout(() => {
+                                    const currentSelection = getSelectedBoothsFromGrid();
+                                    setSelectedBooths(currentSelection);
+                                  }, 100);
+                                }
+                              } else {
+                                // Deselect all rows
+                                if (gridRef.current) {
+                                  gridRef.current.clearSelection();
+                                  setSelectedBooths([]);
+                                }
+                              }
+                            }}
+                            style={{ 
+                              width: '18px', 
+                              height: '18px', 
+                              cursor: 'pointer',
+                              accentColor: '#000000'
+                            }}
+                          />
+                          <label htmlFor="select-all-booths" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                            Select All
+                          </label>
+                        </div>
+                        <ButtonComponent 
+                          cssClass="e-danger"
+                          onClick={handleBulkDelete}
+                          disabled={isDeleting}
+                          aria-label={`Delete ${selectedBooths.length} selected booths`}
+                        >
+                          {isDeleting ? 'Deleting...' : `Delete Selected (${selectedBooths.length})`}
+                        </ButtonComponent>
+                      </>
+                    )}
+                    <ButtonComponent cssClass="e-primary" onClick={() => setBoothMode('create')}>
+                      Create Booth
+                    </ButtonComponent>
+                  </>
                 ) : (
                   <ButtonComponent cssClass="e-outline e-primary" onClick={() => setBoothMode('list')}>
                     Back to List
@@ -1496,6 +1628,44 @@ export default function BoothManagement() {
       >
         <p style={{ margin: 0, lineHeight: '1.5' }}>
           Are you sure you want to delete <strong>{rowPendingDelete?.name}</strong>? This action cannot be undone.
+        </p>
+      </DialogComponent>
+
+      {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
+      <DialogComponent
+        width="450px"
+        isModal={true}
+        showCloseIcon={true}
+        visible={confirmBulkDeleteOpen}
+        header="Bulk Delete Booths"
+        closeOnEscape={true}
+        close={cancelBulkDelete}
+        cssClass="bm-delete-dialog"
+        buttons={[
+          {
+            buttonModel: {
+              content: 'Cancel',
+              isPrimary: false,
+              cssClass: 'e-outline e-primary'
+            },
+            click: () => {
+              cancelBulkDelete();
+            }
+          },
+          {
+            buttonModel: {
+              content: isDeleting ? 'Deleting...' : 'Delete',
+              isPrimary: true,
+              cssClass: 'e-danger'
+            },
+            click: () => {
+              confirmBulkDelete();
+            }
+          }
+        ]}
+      >
+        <p style={{ margin: 0, lineHeight: '1.5' }}>
+          Are you sure you want to permanently delete <strong>{selectedBooths.length} booth(s)</strong>? This action cannot be undone.
         </p>
       </DialogComponent>
 

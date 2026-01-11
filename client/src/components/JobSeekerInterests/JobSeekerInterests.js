@@ -11,6 +11,7 @@ import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
+import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
@@ -120,8 +121,9 @@ const JobSeekerInterests = () => {
     const [booths, setBooths] = useState([]);
     const [legacyEventIds, setLegacyEventIds] = useState([]);
     const [loadingData, setLoadingData] = useState(true);
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+    const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+    const [selectedInterests, setSelectedInterests] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
     const selectionUpdateRef = useRef(false); // Prevent multiple simultaneous selection updates
@@ -277,6 +279,59 @@ const JobSeekerInterests = () => {
             });
         }
     }, []);
+
+    // Get selected interests from grid
+    const getSelectedInterestsFromGrid = useCallback(() => {
+        if (!gridRef.current) return [];
+        
+        try {
+            if (typeof gridRef.current.getSelectedRecords === 'function') {
+                const selectedRows = gridRef.current.getSelectedRecords();
+                return selectedRows.map(row => row.id || row._id).filter(Boolean);
+            }
+            
+            if (typeof gridRef.current.getSelectedRowsData === 'function') {
+                const selectedRows = gridRef.current.getSelectedRowsData();
+                return selectedRows.map(row => row.id || row._id).filter(Boolean);
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('Error getting selected rows:', error);
+            return [];
+        }
+    }, []);
+
+    const handleBulkDelete = () => {
+        const currentSelection = getSelectedInterestsFromGrid();
+        if (currentSelection.length === 0) {
+            showToast('Please select interests to delete', 'Warning');
+            return;
+        }
+        setSelectedInterests(currentSelection);
+        setConfirmBulkDeleteOpen(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        try {
+            setIsDeleting(true);
+            const response = await jobSeekerInterestsAPI.bulkDelete(selectedInterests);
+            showToast(response.message || 'Interests deleted successfully', 'Success');
+            setSelectedInterests([]);
+            await loadInterests();
+        } catch (error) {
+            console.error('Error deleting interests:', error);
+            showToast(error.response?.data?.message || 'Failed to delete interests', 'Error');
+        } finally {
+            setIsDeleting(false);
+            setConfirmBulkDeleteOpen(false);
+        }
+    };
+
+    const cancelBulkDelete = () => {
+        setConfirmBulkDeleteOpen(false);
+        setSelectedInterests([]);
+    };
 
     // Sync header and content horizontal scrolling
     useEffect(() => {
@@ -1603,29 +1658,53 @@ const JobSeekerInterests = () => {
                                     </div>
                                 )}
                                 <div className="header-actions" style={{ marginTop: '1rem', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                                    <ButtonComponent 
-                                        cssClass="e-outline e-primary e-small" 
-                                        onClick={handleSelectAll}
-                                        aria-label="Select all items on current page"
-                                    >
-                                        Select All
-                                    </ButtonComponent>
-                                    <ButtonComponent 
-                                        cssClass="e-outline e-primary e-small" 
-                                        onClick={handleDeselectAll}
-                                        disabled={selectedItems.length === 0}
-                                        aria-label="Deselect all items"
-                                    >
-                                        Deselect All
-                                    </ButtonComponent>
-                                    <ButtonComponent 
-                                        cssClass="e-danger e-small" 
-                                        onClick={handleBulkDelete} 
-                                        disabled={selectedItems.length === 0}
-                                        aria-label={`Delete ${selectedItems.length} selected item(s)`}
-                                    >
-                                        Delete Selected ({selectedItems.length})
-                                    </ButtonComponent>
+                                    {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && selectedInterests.length > 0 && (
+                                        <>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    id="select-all-interests"
+                                                    checked={selectedInterests.length > 0 && selectedInterests.length === interests.length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            // Select all rows
+                                                            if (gridRef.current) {
+                                                                gridRef.current.selectRows(Array.from({ length: interests.length }, (_, i) => i));
+                                                                // Manually update state to ensure checkbox reflects selection immediately
+                                                                setTimeout(() => {
+                                                                    const currentSelection = getSelectedInterestsFromGrid();
+                                                                    setSelectedInterests(currentSelection);
+                                                                }, 100);
+                                                            }
+                                                        } else {
+                                                            // Deselect all rows
+                                                            if (gridRef.current) {
+                                                                gridRef.current.clearSelection();
+                                                                setSelectedInterests([]);
+                                                            }
+                                                        }
+                                                    }}
+                                                    style={{ 
+                                                        width: '18px', 
+                                                        height: '18px', 
+                                                        cursor: 'pointer',
+                                                        accentColor: '#000000'
+                                                    }}
+                                                />
+                                                <label htmlFor="select-all-interests" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '14px', fontWeight: '500' }}>
+                                                    Select All
+                                                </label>
+                                            </div>
+                                            <ButtonComponent 
+                                                cssClass="e-danger"
+                                                onClick={handleBulkDelete}
+                                                disabled={isDeleting}
+                                                aria-label={`Delete ${selectedInterests.length} selected interests`}
+                                            >
+                                                {isDeleting ? 'Deleting...' : `Delete Selected (${selectedInterests.length})`}
+                                            </ButtonComponent>
+                                        </>
+                                    )}
                                     <ButtonComponent 
                                         cssClass="e-primary"
                                         onClick={handleExportResumes}
@@ -1766,8 +1845,18 @@ const JobSeekerInterests = () => {
                                     selectionSettings={['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) ? gridSelectionSettings : gridNoSelectionSettings}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
-                                    rowSelected={handleRowSelected}
-                                    rowDeselected={handleRowSelected}
+                                    rowSelected={() => {
+                                        setTimeout(() => {
+                                            const currentSelection = getSelectedInterestsFromGrid();
+                                            setSelectedInterests(currentSelection);
+                                        }, 50);
+                                    }}
+                                    rowDeselected={() => {
+                                        setTimeout(() => {
+                                            const currentSelection = getSelectedInterestsFromGrid();
+                                            setSelectedInterests(currentSelection);
+                                        }, 50);
+                                    }}
                                 >
                                     <ColumnsDirective>
                                         {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && (
@@ -1778,19 +1867,19 @@ const JobSeekerInterests = () => {
                                         )}
                                         <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                         <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='jobSeekerFirstName' headerText='Firstname' width='150' clipMode='EllipsisWithTooltip' template={firstNameTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerLastName' headerText='Lastname' width='150' clipMode='EllipsisWithTooltip' template={lastNameTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerEmail' headerText='Email' width='220' clipMode='EllipsisWithTooltip' template={emailTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerPhone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' template={phoneTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerFirstName' headerText='Firstname' width='150' clipMode='EllipsisWithTooltip' template={firstNameTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerLastName' headerText='Lastname' width='150' clipMode='EllipsisWithTooltip' template={lastNameTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerEmail' headerText='Email' width='220' clipMode='EllipsisWithTooltip' template={emailTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerPhone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' template={phoneTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='jobSeekerHeadline' headerText='Headline' width='200' clipMode='EllipsisWithTooltip' template={headlineTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerKeywords' headerText='Keywords' width='200' clipMode='EllipsisWithTooltip' template={keywordsTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerWorkLevel' headerText='Work Experience Level' width='180' clipMode='EllipsisWithTooltip' template={workExperienceLevelTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerClearance' headerText='Security Clearance' width='180' clipMode='EllipsisWithTooltip' template={securityClearanceTemplate} allowFiltering={true} visible={false} />
-                                        <ColumnDirective field='jobSeekerVeteranStatus' headerText='Veteran/Military Status' width='200' clipMode='EllipsisWithTooltip' template={veteranStatusTemplate} allowFiltering={true} visible={false} />
+                                        <ColumnDirective field='jobSeekerHeadline' headerText='Headline' width='200' clipMode='EllipsisWithTooltip' template={headlineTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerKeywords' headerText='Keywords' width='200' clipMode='EllipsisWithTooltip' template={keywordsTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerWorkLevel' headerText='Work Experience Level' width='180' clipMode='EllipsisWithTooltip' template={workExperienceLevelTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerClearance' headerText='Security Clearance' width='180' clipMode='EllipsisWithTooltip' template={securityClearanceTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerVeteranStatus' headerText='Veteran/Military Status' width='200' clipMode='EllipsisWithTooltip' template={veteranStatusTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
                                         <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
@@ -1804,7 +1893,7 @@ const JobSeekerInterests = () => {
                                             visible={true}
                                         />
                                     </ColumnsDirective>
-                                    <GridInject services={[Page, Sort, Filter, GridToolbar, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                                    <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
                                 </GridComponent>
                                 
                                 {/* Custom Pagination Footer */}
@@ -1940,6 +2029,46 @@ const JobSeekerInterests = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
+            {['Admin', 'GlobalSupport'].includes(user?.role) && (
+                <DialogComponent
+                    width="450px"
+                    isModal={true}
+                    showCloseIcon={true}
+                    visible={confirmBulkDeleteOpen}
+                    header="Bulk Delete Interests"
+                    closeOnEscape={true}
+                    close={cancelBulkDelete}
+                    cssClass="jsm-delete-dialog"
+                    buttons={[
+                        {
+                            buttonModel: {
+                                content: 'Cancel',
+                                isPrimary: false,
+                                cssClass: 'e-outline e-primary'
+                            },
+                            click: () => {
+                                cancelBulkDelete();
+                            }
+                        },
+                        {
+                            buttonModel: {
+                                content: isDeleting ? 'Deleting...' : 'Delete',
+                                isPrimary: true,
+                                cssClass: 'e-danger'
+                            },
+                            click: () => {
+                                confirmBulkDelete();
+                            }
+                        }
+                    ]}
+                >
+                    <p style={{ margin: 0, lineHeight: '1.5' }}>
+                        Are you sure you want to permanently delete <strong>{selectedInterests.length} interest(s)</strong>? This action cannot be undone.
+                    </p>
+                </DialogComponent>
+            )}
 
             {/* Syncfusion ToastComponent */}
             <ToastComponent

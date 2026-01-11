@@ -1164,55 +1164,76 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 });
 
 /**
- * POST /api/users/bulk-delete
- * Bulk delete multiple users (Admin/GlobalSupport/AdminEvent only)
- * Only allows deletion of inactive users
+ * DELETE /api/users/bulk-delete
+ * Bulk permanently delete users (Admin/GlobalSupport only)
+ * Automatically deactivates active users before deleting them
  */
-router.post('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'AdminEvent']), async (req, res) => {
+router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { userIds } = req.body;
-        const { user } = req;
+        const { user: currentUser } = req;
 
-        // Validate input
-        if (!Array.isArray(userIds) || userIds.length === 0) {
-            return res.status(400).json({
-                error: 'Invalid input',
-                message: 'userIds must be a non-empty array'
-            });
+        if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({ message: 'No user IDs provided' });
         }
 
         // Prevent self-deletion
-        if (userIds.includes(user._id.toString())) {
-            return res.status(400).json({
-                error: 'Cannot delete self',
-                message: 'You cannot delete your own account'
+        const selfIdIndex = userIds.findIndex(id => id === currentUser._id.toString());
+        if (selfIdIndex !== -1) {
+            return res.status(400).json({ 
+                message: 'Cannot delete your own account',
+                error: 'Self-deletion is not allowed'
             });
         }
 
-        // Find all users to delete
+        // Find all users to be deleted
         const usersToDelete = await User.find({ _id: { $in: userIds } });
 
-        if (usersToDelete.length === 0) {
-            return res.status(404).json({
-                error: 'No users found',
-                message: 'None of the specified users exist'
-            });
+        // Separate active and inactive users
+        const activeUsers = usersToDelete.filter(u => u.isActive);
+        const inactiveUsers = usersToDelete.filter(u => !u.isActive);
+
+        // Deactivate active users first
+        let deactivatedCount = 0;
+        if (activeUsers.length > 0) {
+            const activeUserIds = activeUsers.map(u => u._id);
+            await User.updateMany(
+                { _id: { $in: activeUserIds } },
+                { 
+                    $set: { 
+                        isActive: false,
+                        refreshTokens: [] // Invalidate all refresh tokens
+                    } 
+                }
+            );
+            deactivatedCount = activeUsers.length;
+            logger.info(`Bulk deactivated ${deactivatedCount} active users before deletion by ${currentUser.email}`);
         }
 
-        // Delete all users (both active and inactive)
-        const result = await User.deleteMany({ _id: { $in: userIds } });
+        // Now delete all users (all should be inactive at this point)
+        const allUserIds = usersToDelete.map(u => u._id);
+        const result = await User.deleteMany({
+            _id: { $in: allUserIds }
+        });
 
-        logger.info(`Bulk deleted ${result.deletedCount} users by ${user.email}`);
+        logger.info(`Bulk deleted ${result.deletedCount} users (${deactivatedCount} were deactivated first) by ${currentUser.email}`);
+
+        let message = `Successfully deleted ${result.deletedCount} user(s)`;
+        if (deactivatedCount > 0) {
+            message += `. ${deactivatedCount} active user(s) were automatically deactivated before deletion.`;
+        }
 
         res.json({
-            message: `Successfully deleted ${result.deletedCount} user(s)`,
-            deletedCount: result.deletedCount
+            message,
+            deletedCount: result.deletedCount,
+            deactivatedCount
         });
+
     } catch (error) {
         logger.error('Bulk delete users error:', error);
-        res.status(500).json({
-            error: 'Failed to delete users',
-            message: 'An error occurred while deleting users'
+        res.status(500).json({ 
+            message: 'Server error', 
+            error: error.message 
         });
     }
 });

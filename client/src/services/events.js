@@ -39,6 +39,15 @@ export async function getEvent(idOrSlug) {
   return res.data;
 }
 
+// Bulk delete events
+export async function bulkDeleteEvents(eventIds) {
+  const res = await axios.delete('/api/events/bulk-delete', {
+    headers: authHeaders(),
+    data: { eventIds }
+  });
+  return res.data;
+}
+
 export async function listUpcomingEvents({ page = 1, limit = 20 } = {}) {
   const params = { page, limit };
   const res = await axios.get('/api/events/upcoming', { params, headers: authHeaders() });

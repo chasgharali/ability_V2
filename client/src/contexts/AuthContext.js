@@ -194,6 +194,9 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password, loginType) => {
         try {
             setError(null);
+            console.log("pooo");
+            console.log("Making request to:", '/api/auth/login');
+            console.log("Request data:", { email, password, loginType });
             const response = await axios.post('/api/auth/login', {
                 email,
                 password,
@@ -205,12 +208,15 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('refreshToken', tokens.refreshToken);
             setUser(user);
             return { success: true };
-        } catch (error) {
+        } catch (error) {            
             const status = error.response?.status;
             const data = error.response?.data || {};
             let errorMessage;
 
-            if (status === 401) {
+            if (status === undefined) {
+                // Network error or no response from server
+                errorMessage = 'Unable to connect. Please check your connection and try again.';
+            } else if (status === 401) {
                 // Use the specific error message from the backend
                 if (data?.error === 'Email not found') {
                     errorMessage = data?.message || 'User does not exist. Please enter a valid email.';
