@@ -113,14 +113,3 @@ export async function verifyUserEmail(id) {
   return res.data;
 }
 
-// Bulk delete users (permanent delete for both active and inactive users)
-export async function bulkDeleteUsers(userIds) {
-  const res = await axios.post('/api/users/bulk-delete', { userIds }, { headers: authHeaders() });
-  return res.data;
-}
-
-// Bulk delete job seekers (permanent delete)
-export async function bulkDeleteJobSeekers(userIds) {
-  const res = await axios.post('/api/users/bulk-delete', { userIds }, { headers: authHeaders() });
-  return res.data;
-}
