@@ -72,7 +72,6 @@ export default function UserManagement() {
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   // Bulk delete
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Persist role filter in sessionStorage so it survives navigation within the session

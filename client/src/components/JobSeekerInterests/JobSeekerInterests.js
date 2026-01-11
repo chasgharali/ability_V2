@@ -13,7 +13,6 @@ import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject,
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
-import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
 import filterIcon from '../../assets/filter.png';
@@ -301,37 +300,6 @@ const JobSeekerInterests = () => {
             return [];
         }
     }, []);
-
-    const handleBulkDelete = () => {
-        const currentSelection = getSelectedInterestsFromGrid();
-        if (currentSelection.length === 0) {
-            showToast('Please select interests to delete', 'Warning');
-            return;
-        }
-        setSelectedInterests(currentSelection);
-        setConfirmBulkDeleteOpen(true);
-    };
-
-    const confirmBulkDelete = async () => {
-        try {
-            setIsDeleting(true);
-            const response = await jobSeekerInterestsAPI.bulkDelete(selectedInterests);
-            showToast(response.message || 'Interests deleted successfully', 'Success');
-            setSelectedInterests([]);
-            await loadInterests();
-        } catch (error) {
-            console.error('Error deleting interests:', error);
-            showToast(error.response?.data?.message || 'Failed to delete interests', 'Error');
-        } finally {
-            setIsDeleting(false);
-            setConfirmBulkDeleteOpen(false);
-        }
-    };
-
-    const cancelBulkDelete = () => {
-        setConfirmBulkDeleteOpen(false);
-        setSelectedInterests([]);
-    };
 
     // Sync header and content horizontal scrolling
     useEffect(() => {
@@ -768,32 +736,32 @@ const JobSeekerInterests = () => {
     };
 
     const handleBulkDelete = () => {
-        if (selectedItems.length === 0) {
+        if (selectedInterests.length === 0) {
             showToast('Please select items to delete', 'Warning');
             return;
         }
-        setBulkDeleteConfirmOpen(true);
+        setConfirmBulkDeleteOpen(true);
     };
 
     const confirmBulkDelete = async () => {
-        if (selectedItems.length === 0) return;
+        if (selectedInterests.length === 0) return;
         
         try {
-            await jobSeekerInterestsAPI.bulkDelete(selectedItems);
-            showToast(`Successfully deleted ${selectedItems.length} interest(s)`, 'Success');
-            setSelectedItems([]);
+            await jobSeekerInterestsAPI.bulkDelete(selectedInterests);
+            showToast(`Successfully deleted ${selectedInterests.length} interest(s)`, 'Success');
+            setSelectedInterests([]);
             await loadInterests();
         } catch (e) {
             console.error('Bulk delete failed', e);
             const msg = e?.response?.data?.message || 'Failed to delete selected items';
             showToast(msg, 'Error', 5000);
         } finally {
-            setBulkDeleteConfirmOpen(false);
+            setConfirmBulkDeleteOpen(false);
         }
     };
 
     const cancelBulkDelete = () => {
-        setBulkDeleteConfirmOpen(false);
+        setConfirmBulkDeleteOpen(false);
     };
 
     const handleRowSelected = useCallback(() => {
@@ -808,7 +776,7 @@ const JobSeekerInterests = () => {
                 try {
                     const selectedRecords = gridRef.current.getSelectedRecords();
                     const selectedIds = selectedRecords.map(record => record.id || record._id);
-                    setSelectedItems(selectedIds);
+                    setSelectedInterests(selectedIds);
                 } catch (error) {
                     console.warn('Error getting selected records:', error);
                 }
@@ -827,7 +795,7 @@ const JobSeekerInterests = () => {
         if (gridRef.current) {
             gridRef.current.clearSelection();
         }
-        setSelectedItems([]);
+        setSelectedInterests([]);
     };
 
     // Memoize grid dataSource to prevent expensive transformations on every render
@@ -2094,7 +2062,7 @@ const JobSeekerInterests = () => {
                 width="500px"
                 isModal={true}
                 showCloseIcon={true}
-                visible={bulkDeleteConfirmOpen}
+                visible={confirmBulkDeleteOpen}
                 header="Delete Multiple Interests"
                 closeOnEscape={true}
                 close={cancelBulkDelete}
@@ -2123,7 +2091,7 @@ const JobSeekerInterests = () => {
                 ]}
             >
                 <p style={{ margin: 0, lineHeight: '1.5' }}>
-                    Are you sure you want to permanently delete <strong>{selectedItems.length}</strong> selected interest(s)? 
+                    Are you sure you want to permanently delete <strong>{selectedInterests.length}</strong> selected interest(s)? 
                     <br /><br />
                     This action cannot be undone.
                 </p>
