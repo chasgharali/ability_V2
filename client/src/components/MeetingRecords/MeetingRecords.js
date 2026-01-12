@@ -126,6 +126,7 @@ export default function MeetingRecords() {
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
     const loadingBoothsRef = useRef(false);
+    const selectionUpdateRef = useRef(false); // Prevent multiple simultaneous selection updates
     const [selectedRecords, setSelectedRecords] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectAllPages, setSelectAllPages] = useState(false);
@@ -1226,17 +1227,18 @@ export default function MeetingRecords() {
         return '★'.repeat(rating) + '☆'.repeat(5 - rating);
     };
 
-    const handleSelectAll = (e) => {
-        if (e.target.checked) {
-            // Select all on current page
-            const currentPageIds = meetingRecords.map(r => r._id);
-            setSelectedRecords(prev => [...new Set([...prev, ...currentPageIds])]);
-        } else {
-            // Deselect all on current page
-            const currentPageIds = meetingRecords.map(r => r._id);
-            setSelectedRecords(prev => prev.filter(id => !currentPageIds.includes(id)));
-            setSelectAllPages(false);
+    const handleSelectAll = () => {
+        if (gridRef.current) {
+            gridRef.current.selectRows(Array.from({ length: gridRef.current.currentViewData.length }, (_, i) => i));
         }
+    };
+
+    const handleDeselectAll = () => {
+        if (gridRef.current) {
+            gridRef.current.clearSelection();
+        }
+        setSelectedRecords([]);
+        setSelectAllPages(false);
     };
 
     const handleSelectAllPages = async () => {
@@ -1262,6 +1264,27 @@ export default function MeetingRecords() {
             } else {
                 return [...prev, recordId];
             }
+        });
+    }, []);
+
+    const handleRowSelected = useCallback(() => {
+        // Prevent multiple simultaneous updates
+        if (selectionUpdateRef.current) return;
+        
+        selectionUpdateRef.current = true;
+        
+        // Use requestAnimationFrame to batch updates and avoid blocking the UI
+        requestAnimationFrame(() => {
+            if (gridRef.current) {
+                try {
+                    const selectedRecords = gridRef.current.getSelectedRecords();
+                    const selectedIds = selectedRecords.map(record => record.id || record._id);
+                    setSelectedRecords(selectedIds);
+                } catch (error) {
+                    console.warn('Error getting selected records:', error);
+                }
+            }
+            selectionUpdateRef.current = false;
         });
     }, []);
 
@@ -1363,6 +1386,22 @@ export default function MeetingRecords() {
         });
     }, [meetingRecords]);
 
+    // Memoize grid settings to prevent unnecessary re-renders
+    const gridFilterSettings = useMemo(() => ({
+        type: 'Menu',
+        showFilterBarStatus: true,
+        immediateModeDelay: 0,
+        showFilterBarOperator: true,
+        enableCaseSensitivity: false
+    }), []);
+
+    const gridToolbar = useMemo(() => ['ColumnChooser'], []);
+
+    const gridSelectionSettings = useMemo(() => ({
+        type: 'Multiple',
+        checkboxOnly: true
+    }), []);
+
     // Get selected records from grid when needed (for delete, export, etc.)
     const getSelectedRecordsFromGrid = useCallback(() => {
         if (!gridRef.current) return [];
@@ -1423,26 +1462,26 @@ export default function MeetingRecords() {
         setConfirmDeleteOpen(false);
     };
 
-    // Grid template functions for custom column renders - using Syncfusion ButtonComponent
-    const eventTemplate = (props) => {
+    // Grid template functions for custom column renders - memoized to prevent re-renders
+    const eventTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.eventId?.name || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const boothTemplate = (props) => {
+    const boothTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
                 {row.boothId?.name || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const recruiterTemplate = (props) => {
+    const recruiterTemplate = useCallback((props) => {
         const row = props;
         // For left_with_message records, show "All Recruiters in Booth" instead of specific recruiter
         if (row.status === 'left_with_message') {
@@ -1457,18 +1496,18 @@ export default function MeetingRecords() {
                 {row.recruiterId?.name || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const jobSeekerTemplate = (props) => {
+    const jobSeekerTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.jobseekerId?.name || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const jobSeekerEmailTemplate = (props) => {
+    const jobSeekerEmailTemplate = useCallback((props) => {
         const row = props;
         const email = row.jobseekerId?.email || row.jobSeekerEmail || 'N/A';
         return (
@@ -1489,9 +1528,9 @@ export default function MeetingRecords() {
                 )}
             </div>
         );
-    };
+    }, []);
 
-    const locationTemplate = (props) => {
+    const locationTemplate = useCallback((props) => {
         const row = props;
         const jobSeeker = row.jobseekerId;
         let locationText = 'N/A';
@@ -1503,27 +1542,27 @@ export default function MeetingRecords() {
                 {locationText}
             </div>
         );
-    };
+    }, []);
 
-    const startTimeTemplate = (props) => {
+    const startTimeTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {formatDateTime(row.startTime)}
             </div>
         );
-    };
+    }, []);
 
-    const durationTemplate = (props) => {
+    const durationTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {formatDuration(row.duration)}
             </div>
         );
-    };
+    }, []);
 
-    const statusTemplate = (props) => {
+    const statusTemplate = useCallback((props) => {
         const row = props;
         const statusLabels = {
             'scheduled': 'Scheduled',
@@ -1540,9 +1579,9 @@ export default function MeetingRecords() {
                 </span>
             </div>
         );
-    };
+    }, []);
 
-    const ratingTemplate = (props) => {
+    const ratingTemplate = useCallback((props) => {
         const row = props;
         return (
             <div className="rating-display" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
@@ -1552,27 +1591,27 @@ export default function MeetingRecords() {
                 )}
             </div>
         );
-    };
+    }, []);
 
-    const messagesTemplate = (props) => {
+    const messagesTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.jobSeekerMessages?.length || 0}
             </div>
         );
-    };
+    }, []);
 
-    const interpreterTemplate = (props) => {
+    const interpreterTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {row.interpreterId?.name || 'None'}
             </div>
         );
-    };
+    }, []);
 
-    const meetingNotesTemplate = (props) => {
+    const meetingNotesTemplate = useCallback((props) => {
         const row = props;
         const notes = row.recruiterFeedback || '';
         const truncatedNotes = notes.length > 100 ? notes.substring(0, 100) + '...' : notes;
@@ -1593,10 +1632,10 @@ export default function MeetingRecords() {
                 {notes ? truncatedNotes : 'N/A'}
             </div>
         );
-    };
+    }, []);
 
     // Template functions for job seeker data columns
-    const firstNameTemplate = (props) => {
+    const firstNameTemplate = useCallback((props) => {
         const row = props;
         const firstName = row.jobSeekerFirstName || '';
         return (
@@ -1604,9 +1643,9 @@ export default function MeetingRecords() {
                 {firstName || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const lastNameTemplate = (props) => {
+    const lastNameTemplate = useCallback((props) => {
         const row = props;
         const lastName = row.jobSeekerLastName || '';
         return (
@@ -1614,9 +1653,9 @@ export default function MeetingRecords() {
                 {lastName || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const phoneTemplate = (props) => {
+    const phoneTemplate = useCallback((props) => {
         const row = props;
         const phone = row.jobSeekerPhone || '';
         return (
@@ -1624,9 +1663,9 @@ export default function MeetingRecords() {
                 {phone || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const headlineTemplate = (props) => {
+    const headlineTemplate = useCallback((props) => {
         const row = props;
         const headline = row.jobSeekerHeadline || '';
         return (
@@ -1634,9 +1673,9 @@ export default function MeetingRecords() {
                 {headline || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const keywordsTemplate = (props) => {
+    const keywordsTemplate = useCallback((props) => {
         const row = props;
         const keywords = row.jobSeekerKeywords || '';
         return (
@@ -1644,9 +1683,9 @@ export default function MeetingRecords() {
                 {keywords || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const workExperienceLevelTemplate = (props) => {
+    const workExperienceLevelTemplate = useCallback((props) => {
         const row = props;
         const workLevel = row.jobSeekerWorkLevel || '';
         return (
@@ -1654,9 +1693,9 @@ export default function MeetingRecords() {
                 {workLevel || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const educationLevelTemplate = (props) => {
+    const educationLevelTemplate = useCallback((props) => {
         const row = props;
         const educationLevel = row.jobSeekerEducationLevel || '';
         return (
@@ -1664,9 +1703,9 @@ export default function MeetingRecords() {
                 {educationLevel || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const employmentTypesTemplate = (props) => {
+    const employmentTypesTemplate = useCallback((props) => {
         const row = props;
         const employmentTypes = row.jobSeekerEmploymentTypes || [];
         const displayValue = Array.isArray(employmentTypes) && employmentTypes.length > 0
@@ -1677,9 +1716,9 @@ export default function MeetingRecords() {
                 {displayValue || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const languagesTemplate = (props) => {
+    const languagesTemplate = useCallback((props) => {
         const row = props;
         const languages = row.jobSeekerLanguages || [];
         const displayValue = Array.isArray(languages) && languages.length > 0
@@ -1690,9 +1729,9 @@ export default function MeetingRecords() {
                 {displayValue || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const securityClearanceTemplate = (props) => {
+    const securityClearanceTemplate = useCallback((props) => {
         const row = props;
         const clearance = row.jobSeekerClearance || '';
         return (
@@ -1700,9 +1739,9 @@ export default function MeetingRecords() {
                 {clearance || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const veteranStatusTemplate = (props) => {
+    const veteranStatusTemplate = useCallback((props) => {
         const row = props;
         const veteranStatus = row.jobSeekerVeteranStatus || '';
         return (
@@ -1710,9 +1749,9 @@ export default function MeetingRecords() {
                 {veteranStatus || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const actionsTemplate = (props) => {
+    const actionsTemplate = useCallback((props) => {
         const row = props;
         // Handle both populated jobseekerId object and jobseekerId string
         const jobSeekerData = row.jobseekerId || row.jobSeekerId;
@@ -1742,7 +1781,7 @@ export default function MeetingRecords() {
                 )}
             </div>
         );
-    };
+    }, [navigate, setSelectedJobSeekerForModal, setShowJobSeekerModal]);
 
     if (loading || !user) {
         return (
@@ -1771,11 +1810,27 @@ export default function MeetingRecords() {
                                 </div>
                             )}
                             <div className="header-actions">
-                                {['Admin', 'GlobalSupport'].includes(user?.role) && selectedRecords.length > 0 && (
+                                <ButtonComponent 
+                                    cssClass="e-outline e-primary e-small" 
+                                    onClick={handleSelectAll}
+                                    aria-label="Select all items on current page"
+                                >
+                                    Select All
+                                </ButtonComponent>
+                                <ButtonComponent 
+                                    cssClass="e-outline e-primary e-small" 
+                                    onClick={handleDeselectAll}
+                                    disabled={selectedRecords.length === 0}
+                                    aria-label="Deselect all items"
+                                >
+                                    Deselect All
+                                </ButtonComponent>
+                                {['Admin', 'GlobalSupport', 'AdminEvent'].includes(user?.role) && (
                                     <ButtonComponent 
-                                        cssClass="e-danger"
+                                        cssClass="e-danger e-small"
                                         onClick={handleBulkDelete}
-                                        disabled={isDeleting}
+                                        disabled={selectedRecords.length === 0 || isDeleting}
+                                        aria-label={`Delete ${selectedRecords.length} selected item(s)`}
                                     >
                                         {isDeleting ? 'Deleting...' : `Delete Selected (${selectedRecords.length})`}
                                     </ButtonComponent>
@@ -1950,23 +2005,21 @@ export default function MeetingRecords() {
                                 allowPaging={false}
                                 allowSorting={true}
                                 allowFiltering={true}
-                                filterSettings={{ 
-                                    type: 'Menu',
-                                    showFilterBarStatus: true,
-                                    immediateModeDelay: 0,
-                                    showFilterBarOperator: true,
-                                    enableCaseSensitivity: false
-                                }}
+                                enablePersistence={false}
+                                filterSettings={gridFilterSettings}
                                 showColumnMenu={true}
                                 showColumnChooser={true}
                                 allowResizing={true}
                                 allowReordering={true}
-                                toolbar={['ColumnChooser']}
+                                toolbar={gridToolbar}
+                                selectionSettings={gridSelectionSettings}
                                 enableHover={true}
                                 allowRowDragAndDrop={false}
+                                rowSelected={handleRowSelected}
+                                rowDeselected={handleRowSelected}
                             >
-                                <ColumnsDirective>
-                                    {['Admin', 'GlobalSupport'].includes(user?.role) && (
+                                    <ColumnsDirective>
+                                    {['Admin', 'GlobalSupport', 'AdminEvent'].includes(user?.role) && (
                                         <ColumnDirective 
                                             type='checkbox' 
                                             width='50' 

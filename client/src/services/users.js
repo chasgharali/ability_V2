@@ -112,3 +112,4 @@ export async function verifyUserEmail(id) {
   const res = await axios.post(`/api/users/${id}/verify-email`, {}, { headers: authHeaders() });
   return res.data;
 }
+

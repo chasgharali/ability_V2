@@ -45,6 +45,12 @@ export const jobSeekerInterestsAPI = {
         return response.data;
     },
 
+    // Bulk delete interests
+    bulkDelete: async (interestIds) => {
+        const response = await axios.post('/api/job-seeker-interests/bulk-delete', { interestIds }, { headers: authHeaders() });
+        return response.data;
+    },
+
     // Toggle interest status
     toggleInterest: async (interestId) => {
         const response = await axios.put(`/api/job-seeker-interests/${interestId}/toggle`, {}, { headers: authHeaders() });
@@ -109,6 +115,15 @@ export const jobSeekerInterestsAPI = {
             // Otherwise, wrap axios errors
             throw new Error(error.response?.data?.message || error.message || 'Failed to export CSV');
         }
+    },
+
+    // Bulk delete interests
+    bulkDelete: async (interestIds) => {
+        const response = await axios.delete('/api/job-seeker-interests/bulk-delete', {
+            headers: authHeaders(),
+            data: { interestIds }
+        });
+        return response.data;
     },
 };
 

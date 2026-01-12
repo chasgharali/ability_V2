@@ -1265,14 +1265,7 @@ router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
         }
 
         if (permanent === 'true') {
-            // Permanent deletion - only allow for inactive users
-            if (targetUser.isActive) {
-                return res.status(400).json({
-                    error: 'Cannot permanently delete active user',
-                    message: 'User must be deactivated before permanent deletion'
-                });
-            }
-
+            // Permanent deletion - allow for both active and inactive users
             // Permanently delete the user
             await User.findByIdAndDelete(id);
 
