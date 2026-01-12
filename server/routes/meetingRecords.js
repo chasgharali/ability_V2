@@ -1087,8 +1087,8 @@ router.get('/export/resumes', authenticateToken, requireRole(['Admin', 'GlobalSu
     }
 });
 
-// Bulk delete meeting records (Admin/GlobalSupport only)
-router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+// Bulk delete meeting records (Admin/GlobalSupport/AdminEvent only)
+router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'AdminEvent']), async (req, res) => {
     try {
         const { recordIds } = req.body;
 

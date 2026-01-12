@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { useNavigate } from 'react-router-dom';
@@ -125,6 +125,7 @@ const JobSeekerInterests = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const toastRef = useRef(null);
     const gridRef = useRef(null);
+    const selectionUpdateRef = useRef(false); // Prevent multiple simultaneous selection updates
     const initialLoadDone = useRef(false);
     const loadingInterestsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
@@ -299,37 +300,6 @@ const JobSeekerInterests = () => {
             return [];
         }
     }, []);
-
-    const handleBulkDelete = () => {
-        const currentSelection = getSelectedInterestsFromGrid();
-        if (currentSelection.length === 0) {
-            showToast('Please select interests to delete', 'Warning');
-            return;
-        }
-        setSelectedInterests(currentSelection);
-        setConfirmBulkDeleteOpen(true);
-    };
-
-    const confirmBulkDelete = async () => {
-        try {
-            setIsDeleting(true);
-            const response = await jobSeekerInterestsAPI.bulkDelete(selectedInterests);
-            showToast(response.message || 'Interests deleted successfully', 'Success');
-            setSelectedInterests([]);
-            await loadInterests();
-        } catch (error) {
-            console.error('Error deleting interests:', error);
-            showToast(error.response?.data?.message || 'Failed to delete interests', 'Error');
-        } finally {
-            setIsDeleting(false);
-            setConfirmBulkDeleteOpen(false);
-        }
-    };
-
-    const cancelBulkDelete = () => {
-        setConfirmBulkDeleteOpen(false);
-        setSelectedInterests([]);
-    };
 
     // Sync header and content horizontal scrolling
     useEffect(() => {
@@ -764,6 +734,145 @@ const JobSeekerInterests = () => {
             console.error('Error clearing Job Seeker Interests search query from sessionStorage:', error);
         }
     };
+
+    const handleBulkDelete = () => {
+        if (selectedInterests.length === 0) {
+            showToast('Please select items to delete', 'Warning');
+            return;
+        }
+        setConfirmBulkDeleteOpen(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        if (selectedInterests.length === 0) return;
+        
+        try {
+            await jobSeekerInterestsAPI.bulkDelete(selectedInterests);
+            showToast(`Successfully deleted ${selectedInterests.length} interest(s)`, 'Success');
+            setSelectedInterests([]);
+            await loadInterests();
+        } catch (e) {
+            console.error('Bulk delete failed', e);
+            const msg = e?.response?.data?.message || 'Failed to delete selected items';
+            showToast(msg, 'Error', 5000);
+        } finally {
+            setConfirmBulkDeleteOpen(false);
+        }
+    };
+
+    const cancelBulkDelete = () => {
+        setConfirmBulkDeleteOpen(false);
+    };
+
+    const handleRowSelected = useCallback(() => {
+        // Prevent multiple simultaneous updates
+        if (selectionUpdateRef.current) return;
+        
+        selectionUpdateRef.current = true;
+        
+        // Use requestAnimationFrame to batch updates and avoid blocking the UI
+        requestAnimationFrame(() => {
+            if (gridRef.current) {
+                try {
+                    const selectedRecords = gridRef.current.getSelectedRecords();
+                    const selectedIds = selectedRecords.map(record => record.id || record._id);
+                    setSelectedInterests(selectedIds);
+                } catch (error) {
+                    console.warn('Error getting selected records:', error);
+                }
+            }
+            selectionUpdateRef.current = false;
+        });
+    }, []);
+
+    const handleSelectAll = () => {
+        if (gridRef.current) {
+            gridRef.current.selectRows(Array.from({ length: gridRef.current.currentViewData.length }, (_, i) => i));
+        }
+    };
+
+    const handleDeselectAll = () => {
+        if (gridRef.current) {
+            gridRef.current.clearSelection();
+        }
+        setSelectedInterests([]);
+    };
+
+    // Memoize grid dataSource to prevent expensive transformations on every render
+    const gridDataSource = useMemo(() => {
+        return interests.map(r => {
+            // Helper to get profile
+            const getProfile = (jobSeeker) => {
+                if (!jobSeeker || typeof jobSeeker !== 'object') return null;
+                if (jobSeeker.metadata?.profile) return jobSeeker.metadata.profile;
+                if (typeof jobSeeker.metadata === 'string') {
+                    try {
+                        return JSON.parse(jobSeeker.metadata)?.profile || null;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                return null;
+            };
+
+            // Split name
+            const name = r.jobSeeker?.name || '';
+            const nameParts = name ? name.trim().split(/\s+/) : [];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            // Get profile
+            const profile = getProfile(r.jobSeeker);
+
+            return {
+                ...r, 
+                id: r._id,
+                // Flatten nested fields for sorting
+                jobSeekerName: name || (r.legacyJobSeekerId ? 'Legacy User' : ''),
+                jobSeekerFirstName: firstName,
+                jobSeekerLastName: lastName,
+                jobSeekerEmail: r.jobSeeker?.email || '',
+                jobSeekerPhone: r.jobSeeker?.phoneNumber || '',
+                jobSeekerCity: r.jobSeeker?.city || '',
+                jobSeekerState: r.jobSeeker?.state || '',
+                jobSeekerCountry: r.jobSeeker?.country || '',
+                jobSeekerHeadline: profile?.headline || '',
+                jobSeekerKeywords: profile?.keywords || '',
+                jobSeekerWorkLevel: profile?.workLevel || '',
+                jobSeekerEducationLevel: profile?.educationLevel || '',
+                jobSeekerEmploymentTypes: profile?.employmentTypes || [],
+                jobSeekerLanguages: profile?.languages || [],
+                jobSeekerClearance: profile?.clearance || '',
+                jobSeekerVeteranStatus: profile?.veteranStatus || '',
+                jobSeekerResumeUrl: r.jobSeeker?.resumeUrl || '',
+                boothName: r.booth?.name || (r.legacyBoothId ? 'Legacy Booth' : ''),
+                boothCompany: r.booth?.company || '',
+                eventName: r.event?.name || (r.legacyEventId ? 'Legacy Event' : ''),
+                recruiterName: r.recruiter?.name || '',
+                createdAtFormatted: r.createdAt ? new Date(r.createdAt).toLocaleString() : ''
+            };
+        });
+    }, [interests]);
+
+    // Memoize grid settings to prevent unnecessary re-renders
+    const gridFilterSettings = useMemo(() => ({
+        type: 'Menu',
+        showFilterBarStatus: true,
+        immediateModeDelay: 0,
+        showFilterBarOperator: true,
+        enableCaseSensitivity: false
+    }), []);
+
+    const gridToolbar = useMemo(() => ['ColumnChooser'], []);
+
+    const gridSelectionSettings = useMemo(() => ({
+        type: 'Multiple',
+        checkboxOnly: true
+    }), []);
+
+    const gridNoSelectionSettings = useMemo(() => ({
+        type: 'None'
+    }), []);
 
     const handleExport = async () => {
         try {
@@ -1210,8 +1319,8 @@ const JobSeekerInterests = () => {
         return level.charAt(0).toUpperCase() + level.slice(1);
     };
 
-    // Grid template functions for custom column renders
-    const jobSeekerTemplate = (props) => {
+    // Grid template functions for custom column renders - memoized to prevent re-renders
+    const jobSeekerTemplate = useCallback((props) => {
         const row = props;
         const jobSeekerName = row.jobSeeker?.name || (row.legacyJobSeekerId ? 'Legacy User' : 'N/A');
         const jobSeekerEmail = row.jobSeeker?.email || (row.legacyJobSeekerId ? 'N/A' : 'N/A');
@@ -1221,9 +1330,9 @@ const JobSeekerInterests = () => {
                 <div className="job-seeker-email">{jobSeekerEmail}</div>
             </div>
         );
-    };
+    }, []);
 
-    const eventTemplate = (props) => {
+    const eventTemplate = useCallback((props) => {
         const row = props;
         const eventName = row.event?.name || (row.legacyEventId ? 'Legacy Event' : 'N/A');
         return (
@@ -1231,9 +1340,9 @@ const JobSeekerInterests = () => {
                 {eventName}
             </div>
         );
-    };
+    }, []);
 
-    const boothTemplate = (props) => {
+    const boothTemplate = useCallback((props) => {
         const row = props;
         const boothName = row.booth?.name || row.company || (row.legacyBoothId ? 'Legacy Booth' : 'N/A');
         return (
@@ -1241,9 +1350,9 @@ const JobSeekerInterests = () => {
                 {boothName}
             </div>
         );
-    };
+    }, []);
 
-    const locationTemplate = (props) => {
+    const locationTemplate = useCallback((props) => {
         const row = props;
         let locationText = 'N/A';
         if (row.jobSeeker?.city && row.jobSeeker?.state) {
@@ -1258,27 +1367,27 @@ const JobSeekerInterests = () => {
                 {locationText}
             </div>
         );
-    };
+    }, []);
 
-    const interestLevelTemplate = (props) => {
+    const interestLevelTemplate = useCallback((props) => {
         const row = props;
         return (
             <span className={`interest-level interest-level-${row.interestLevel}`}>
                 {formatInterestLevel(row.interestLevel)}
             </span>
         );
-    };
+    }, []);
 
-    const dateExpressedTemplate = (props) => {
+    const dateExpressedTemplate = useCallback((props) => {
         const row = props;
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                 {formatDateTime(row.createdAt)}
             </div>
         );
-    };
+    }, []);
 
-    const actionsTemplate = (props) => {
+    const actionsTemplate = useCallback((props) => {
         const row = props;
         // Handle both populated jobSeeker object and jobSeeker ID
         const jobSeekerData = row.jobSeeker || (row.jobSeekerId ? { _id: row.jobSeekerId } : null) || (row.legacyJobSeekerId ? { _id: row.legacyJobSeekerId } : null);
@@ -1301,9 +1410,9 @@ const JobSeekerInterests = () => {
                 </ButtonComponent>
             </div>
         );
-    };
+    }, []); // setState functions are stable, no need to include in dependencies
 
-    const notesTemplate = (props) => {
+    const notesTemplate = useCallback((props) => {
         const row = props;
         return (
             <div className="notes-cell" style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -1316,7 +1425,7 @@ const JobSeekerInterests = () => {
                 )}
             </div>
         );
-    };
+    }, []);
 
     // Helper function to extract profile data from job seeker
     const getJobSeekerProfile = (jobSeeker) => {
@@ -1350,8 +1459,8 @@ const JobSeekerInterests = () => {
         };
     };
 
-    // Template functions for job seeker data columns
-    const firstNameTemplate = (props) => {
+    // Template functions for job seeker data columns - memoized to prevent re-renders
+    const firstNameTemplate = useCallback((props) => {
         const row = props;
         const firstName = row.jobSeekerFirstName || '';
         return (
@@ -1359,9 +1468,9 @@ const JobSeekerInterests = () => {
                 {firstName || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const lastNameTemplate = (props) => {
+    const lastNameTemplate = useCallback((props) => {
         const row = props;
         const lastName = row.jobSeekerLastName || '';
         return (
@@ -1369,9 +1478,9 @@ const JobSeekerInterests = () => {
                 {lastName || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const emailTemplate = (props) => {
+    const emailTemplate = useCallback((props) => {
         const row = props;
         const email = row.jobSeekerEmail || '';
         return (
@@ -1379,9 +1488,9 @@ const JobSeekerInterests = () => {
                 {email || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const phoneTemplate = (props) => {
+    const phoneTemplate = useCallback((props) => {
         const row = props;
         const phone = row.jobSeekerPhone || '';
         return (
@@ -1389,9 +1498,9 @@ const JobSeekerInterests = () => {
                 {phone || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const headlineTemplate = (props) => {
+    const headlineTemplate = useCallback((props) => {
         const row = props;
         const headline = row.jobSeekerHeadline || '';
         return (
@@ -1399,9 +1508,9 @@ const JobSeekerInterests = () => {
                 {headline || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const keywordsTemplate = (props) => {
+    const keywordsTemplate = useCallback((props) => {
         const row = props;
         const keywords = row.jobSeekerKeywords || '';
         return (
@@ -1409,9 +1518,9 @@ const JobSeekerInterests = () => {
                 {keywords || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const workExperienceLevelTemplate = (props) => {
+    const workExperienceLevelTemplate = useCallback((props) => {
         const row = props;
         const workLevel = row.jobSeekerWorkLevel || '';
         return (
@@ -1419,9 +1528,9 @@ const JobSeekerInterests = () => {
                 {workLevel || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const educationLevelTemplate = (props) => {
+    const educationLevelTemplate = useCallback((props) => {
         const row = props;
         const educationLevel = row.jobSeekerEducationLevel || '';
         return (
@@ -1429,9 +1538,9 @@ const JobSeekerInterests = () => {
                 {educationLevel || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const employmentTypesTemplate = (props) => {
+    const employmentTypesTemplate = useCallback((props) => {
         const row = props;
         const employmentTypes = row.jobSeekerEmploymentTypes || [];
         const displayValue = Array.isArray(employmentTypes) && employmentTypes.length > 0
@@ -1442,9 +1551,9 @@ const JobSeekerInterests = () => {
                 {displayValue || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const languagesTemplate = (props) => {
+    const languagesTemplate = useCallback((props) => {
         const row = props;
         const languages = row.jobSeekerLanguages || [];
         const displayValue = Array.isArray(languages) && languages.length > 0
@@ -1455,9 +1564,9 @@ const JobSeekerInterests = () => {
                 {displayValue || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const securityClearanceTemplate = (props) => {
+    const securityClearanceTemplate = useCallback((props) => {
         const row = props;
         const clearance = row.jobSeekerClearance || '';
         return (
@@ -1465,9 +1574,9 @@ const JobSeekerInterests = () => {
                 {clearance || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
-    const veteranStatusTemplate = (props) => {
+    const veteranStatusTemplate = useCallback((props) => {
         const row = props;
         const veteranStatus = row.jobSeekerVeteranStatus || '';
         return (
@@ -1475,7 +1584,7 @@ const JobSeekerInterests = () => {
                 {veteranStatus || 'N/A'}
             </div>
         );
-    };
+    }, []);
 
     if (loading) {
         return (
@@ -1690,75 +1799,18 @@ const JobSeekerInterests = () => {
                                 )}
                                 <GridComponent
                                     ref={gridRef}
-                                    dataSource={interests.map(r => {
-                                        // Helper to get profile
-                                        const getProfile = (jobSeeker) => {
-                                            if (!jobSeeker || typeof jobSeeker !== 'object') return null;
-                                            if (jobSeeker.metadata?.profile) return jobSeeker.metadata.profile;
-                                            if (typeof jobSeeker.metadata === 'string') {
-                                                try {
-                                                    return JSON.parse(jobSeeker.metadata)?.profile || null;
-                                                } catch (e) {
-                                                    return null;
-                                                }
-                                            }
-                                            return null;
-                                        };
-
-                                        // Split name
-                                        const name = r.jobSeeker?.name || '';
-                                        const nameParts = name ? name.trim().split(/\s+/) : [];
-                                        const firstName = nameParts[0] || '';
-                                        const lastName = nameParts.slice(1).join(' ') || '';
-
-                                        // Get profile
-                                        const profile = getProfile(r.jobSeeker);
-
-                                        return {
-                                            ...r, 
-                                            id: r._id,
-                                            // Flatten nested fields for sorting
-                                            jobSeekerName: name || (r.legacyJobSeekerId ? 'Legacy User' : ''),
-                                            jobSeekerFirstName: firstName,
-                                            jobSeekerLastName: lastName,
-                                            jobSeekerEmail: r.jobSeeker?.email || '',
-                                            jobSeekerPhone: r.jobSeeker?.phoneNumber || '',
-                                            jobSeekerCity: r.jobSeeker?.city || '',
-                                            jobSeekerState: r.jobSeeker?.state || '',
-                                            jobSeekerCountry: r.jobSeeker?.country || '',
-                                            jobSeekerHeadline: profile?.headline || '',
-                                            jobSeekerKeywords: profile?.keywords || '',
-                                            jobSeekerWorkLevel: profile?.workLevel || '',
-                                            jobSeekerEducationLevel: profile?.educationLevel || '',
-                                            jobSeekerEmploymentTypes: profile?.employmentTypes || [],
-                                            jobSeekerLanguages: profile?.languages || [],
-                                            jobSeekerClearance: profile?.clearance || '',
-                                            jobSeekerVeteranStatus: profile?.veteranStatus || '',
-                                            eventName: r.event?.name || (r.legacyEventId ? 'Legacy Event' : ''),
-                                            boothName: r.booth?.name || r.company || (r.legacyBoothId ? 'Legacy Booth' : '')
-                                        };
-                                    })}
+                                    dataSource={gridDataSource}
                                     allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}
-                                    filterSettings={{ 
-                                        type: 'Menu',
-                                        showFilterBarStatus: true,
-                                        immediateModeDelay: 0,
-                                        showFilterBarOperator: true,
-                                        enableCaseSensitivity: false
-                                    }}
+                                    enablePersistence={false}
+                                    filterSettings={gridFilterSettings}
                                     showColumnMenu={true}
                                     showColumnChooser={true}
                                     allowResizing={true}
                                     allowReordering={true}
-                                    toolbar={['ColumnChooser']}
-                                    selectionSettings={['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) ? { 
-                                        type: 'Multiple', 
-                                        checkboxOnly: true,
-                                        persistSelection: false,
-                                        enableSimpleMultiRowSelection: false
-                                    } : { type: 'None' }}
+                                    toolbar={gridToolbar}
+                                    selectionSettings={['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) ? gridSelectionSettings : gridNoSelectionSettings}
                                     enableHover={true}
                                     allowRowDragAndDrop={false}
                                     rowSelected={() => {
@@ -2004,6 +2056,46 @@ const JobSeekerInterests = () => {
                 }}
                 jobSeeker={selectedJobSeekerForModal}
             />
+
+            {/* Bulk Delete confirm modal */}
+            <DialogComponent
+                width="500px"
+                isModal={true}
+                showCloseIcon={true}
+                visible={confirmBulkDeleteOpen}
+                header="Delete Multiple Interests"
+                closeOnEscape={true}
+                close={cancelBulkDelete}
+                cssClass="bulk-delete-dialog"
+                buttons={[
+                    {
+                        buttonModel: {
+                            content: 'Cancel',
+                            isPrimary: false,
+                            cssClass: 'e-outline e-primary'
+                        },
+                        click: () => {
+                            cancelBulkDelete();
+                        }
+                    },
+                    {
+                        buttonModel: {
+                            content: 'Delete All',
+                            isPrimary: true,
+                            cssClass: 'e-danger'
+                        },
+                        click: () => {
+                            confirmBulkDelete();
+                        }
+                    }
+                ]}
+            >
+                <p style={{ margin: 0, lineHeight: '1.5' }}>
+                    Are you sure you want to permanently delete <strong>{selectedInterests.length}</strong> selected interest(s)? 
+                    <br /><br />
+                    This action cannot be undone.
+                </p>
+            </DialogComponent>
         </div>
     );
 };

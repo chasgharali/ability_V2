@@ -19,6 +19,7 @@ export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]); // Track selected user IDs for bulk delete
 
   // Load filters from sessionStorage on mount (per-table persistence for role filter)
   const loadRoleFilterFromSession = () => {
@@ -71,7 +72,6 @@ export default function UserManagement() {
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   // Bulk delete
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Persist role filter in sessionStorage so it survives navigation within the session
