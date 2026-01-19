@@ -1,10 +1,51 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const BoothQueue = require('../models/BoothQueue');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { toCountryDisplayName } = require('../utils/countryNames');
+const { toRaceDisplayName } = require('../utils/raceNames');
+const { toGenderDisplayName } = require('../utils/genderNames');
 const logger = require('../utils/logger');
 
 const router = express.Router();
+
+/**
+ * Resolve job seeker IDs for event/booth filter.
+ * - eventId only: job seekers who registered for the event (metadata.registeredEvents)
+ * - eventId + boothId: job seekers who joined the booth queue (BoothQueue)
+ * - boothId only: job seekers who joined that booth's queue
+ * Returns null when no filter is applied.
+ */
+async function getJobSeekerIdsForEvent(eventId, boothId) {
+  const e = (v) => (v && String(v).trim()) || '';
+  const ev = e(eventId);
+  const bv = e(boothId);
+
+  if (bv && mongoose.Types.ObjectId.isValid(boothId)) {
+    const q = { booth: new mongoose.Types.ObjectId(boothId) };
+    if (ev && mongoose.Types.ObjectId.isValid(eventId)) q.event = new mongoose.Types.ObjectId(eventId);
+    const ids = await BoothQueue.find(q).distinct('jobSeeker');
+    return ids.length ? ids : null;
+  }
+
+  if (ev) {
+    const conditions = [{ 'metadata.registeredEvents': { $elemMatch: { slug: eventId } } }];
+    if (mongoose.Types.ObjectId.isValid(eventId)) {
+      const oid = new mongoose.Types.ObjectId(eventId);
+      conditions.unshift(
+        { 'metadata.registeredEvents': { $elemMatch: { id: oid } } },
+        { 'metadata.registeredEvents': { $elemMatch: { id: eventId } } },
+        { 'metadata.registeredEvents': { $elemMatch: { id: oid.toString() } } }
+      );
+    }
+    const users = await User.find({ role: 'JobSeeker', $or: conditions }).select('_id').lean();
+    const ids = users.map((u) => u._id);
+    return ids.length ? ids : null;
+  }
+
+  return null;
+}
 
 /**
  * GET /api/job-seeker-survey
@@ -31,16 +72,9 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             role: 'JobSeeker'
         };
 
-        // Filter by event or booth using MeetingRecord
-        if (eventId || boothId) {
-            const MeetingRecord = require('../models/MeetingRecord');
-            const meetingQuery = {};
-            if (eventId) meetingQuery.eventId = new mongoose.Types.ObjectId(eventId);
-            if (boothId) meetingQuery.boothId = new mongoose.Types.ObjectId(boothId);
-            
-            const meetings = await MeetingRecord.find(meetingQuery).distinct('jobseekerId');
-            query._id = { $in: meetings };
-        }
+        // Filter by event or booth: event = registered for event; booth = joined that booth's queue
+        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        if (ids) query._id = { $in: ids };
 
         // Search filter (by name or email)
         if (search && search.trim()) {
@@ -127,16 +161,11 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             role: 'JobSeeker'
         };
 
-        // Filter by event or booth using MeetingRecord
-        if (eventId || boothId) {
-            const MeetingRecord = require('../models/MeetingRecord');
-            const meetingQuery = {};
-            if (eventId) meetingQuery.eventId = new mongoose.Types.ObjectId(eventId);
-            if (boothId) meetingQuery.boothId = new mongoose.Types.ObjectId(boothId);
-            
-            const meetings = await MeetingRecord.find(meetingQuery).distinct('jobseekerId');
-            logger.info(`Found ${meetings.length} job seekers in meetings for eventId=${eventId}, boothId=${boothId}`);
-            query._id = { $in: meetings };
+        // Filter by event or booth: event = registered for event; booth = joined that booth's queue
+        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        if (ids) {
+            query._id = { $in: ids };
+            logger.info(`Found ${ids.length} job seekers for eventId=${eventId}, boothId=${boothId}`);
         }
 
         // Get all users (no pagination for export)
@@ -147,7 +176,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
         logger.info(`Export: Found ${users.length} users for eventId=${eventId}, boothId=${boothId}`);
 
-        // Helper function to calculate stats for a field
+        // Helper function to calculate stats for a field. Uses full country names for country/countryOfOrigin.
         const calculateStats = (field) => {
             const counts = {};
             let total = 0;
@@ -163,12 +192,16 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 if (field === 'race' && Array.isArray(value)) {
                     value.forEach(v => {
                         if (v && v.trim()) {
-                            counts[v] = (counts[v] || 0) + 1;
+                            const key = toRaceDisplayName(v);
+                            counts[key] = (counts[key] || 0) + 1;
                             total++;
                         }
                     });
                 } else if (value && typeof value === 'string' && value.trim()) {
-                    counts[value] = (counts[value] || 0) + 1;
+                    const key = (field === 'country' || field === 'countryOfOrigin')
+                        ? toCountryDisplayName(value)
+                        : (field === 'genderIdentity' ? toGenderDisplayName(value) : value.trim());
+                    counts[key] = (counts[key] || 0) + 1;
                     total++;
                 }
             });
@@ -257,13 +290,24 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
 
 /**
  * GET /api/job-seeker-survey/stats
- * Get statistics about survey data
+ * Get statistics about survey data with optional filtering
  */
 router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
-        // Total users with survey data
-        const totalWithSurvey = await User.countDocuments({
-            role: 'JobSeeker',
+        const { eventId, boothId } = req.query;
+
+        // Build base query - only get JobSeekers
+        let baseQuery = {
+            role: 'JobSeeker'
+        };
+
+        // Filter by event or booth: event = registered for event; booth = joined that booth's queue
+        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        if (ids) baseQuery._id = { $in: ids };
+
+        // Build query for users with survey data
+        const surveyQuery = {
+            ...baseQuery,
             $or: [
                 { 'survey.race': { $exists: true, $ne: [], $not: { $size: 0 } } },
                 { 'survey.genderIdentity': { $exists: true, $ne: '' } },
@@ -272,34 +316,39 @@ router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']),
                 { 'survey.disabilities': { $exists: true, $ne: [], $not: { $size: 0 } } },
                 { 'survey.updatedAt': { $exists: true, $ne: null } }
             ]
-        });
+        };
 
-        // Total JobSeekers
-        const totalJobSeekers = await User.countDocuments({ role: 'JobSeeker' });
+        // Total users with survey data
+        const totalWithSurvey = await User.countDocuments(surveyQuery);
 
-        // Distinct counts
-        const distinctRaces = await User.distinct('survey.race', { 
-            role: 'JobSeeker',
+        // Total JobSeekers (filtered by event/booth if provided)
+        const totalJobSeekers = await User.countDocuments(baseQuery);
+
+        // Distinct counts with filters
+        const distinctRacesQuery = {
+            ...baseQuery,
             'survey.race': { $exists: true, $ne: [], $not: { $size: 0 } }
-        });
-        const distinctGenders = await User.distinct('survey.genderIdentity', {
-            role: 'JobSeeker',
+        };
+        const distinctGendersQuery = {
+            ...baseQuery,
             'survey.genderIdentity': { $exists: true, $ne: '' }
-        });
-        const distinctAgeGroups = await User.distinct('survey.ageGroup', {
-            role: 'JobSeeker',
+        };
+        const distinctAgeGroupsQuery = {
+            ...baseQuery,
             'survey.ageGroup': { $exists: true, $ne: '' }
-        });
-        const distinctCountriesOfOrigin = await User.distinct('survey.countryOfOrigin', {
-            role: 'JobSeeker',
+        };
+        const distinctCountriesOfOriginQuery = {
+            ...baseQuery,
             'survey.countryOfOrigin': { $exists: true, $ne: '' }
-        });
+        };
 
-        // Flatten race arrays and count unique
-        const allRaces = await User.find({
-            role: 'JobSeeker',
-            'survey.race': { $exists: true, $ne: [], $not: { $size: 0 } }
-        }).select('survey.race').lean();
+        const distinctRaces = await User.distinct('survey.race', distinctRacesQuery);
+        const distinctGenders = await User.distinct('survey.genderIdentity', distinctGendersQuery);
+        const distinctAgeGroups = await User.distinct('survey.ageGroup', distinctAgeGroupsQuery);
+        const distinctCountriesOfOrigin = await User.distinct('survey.countryOfOrigin', distinctCountriesOfOriginQuery);
+
+        // Flatten race arrays and count unique (with filters)
+        const allRaces = await User.find(distinctRacesQuery).select('survey.race').lean();
         const uniqueRaces = new Set();
         allRaces.forEach(user => {
             if (user.survey && Array.isArray(user.survey.race)) {
@@ -323,6 +372,82 @@ router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']),
         res.status(500).json({
             error: 'Failed to retrieve statistics',
             message: 'An error occurred while retrieving statistics'
+        });
+    }
+});
+
+/**
+ * GET /api/job-seeker-survey/breakdown
+ * Get demographic breakdown statistics for all filtered records (not paginated)
+ */
+router.get('/breakdown', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { eventId, boothId } = req.query;
+
+        // Build query - only get JobSeekers
+        let query = {
+            role: 'JobSeeker'
+        };
+
+        // Filter by event or booth: event = registered for event; booth = joined that booth's queue
+        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        if (ids) query._id = { $in: ids };
+
+        // Get all users matching the filter (no pagination)
+        const users = await User.find(query)
+            .select('name email phoneNumber city state country survey createdAt updatedAt')
+            .lean();
+
+        // Helper function to calculate stats for a field. Uses full country names for country/countryOfOrigin.
+        const calculateStats = (field) => {
+            const counts = {};
+            let total = 0;
+
+            users.forEach(user => {
+                let value;
+                if (field === 'country') {
+                    value = user.country || user.survey?.country;
+                } else {
+                    value = user.survey?.[field];
+                }
+                
+                if (field === 'race' && Array.isArray(value)) {
+                    value.forEach(v => {
+                        if (v && v.trim()) {
+                            const key = toRaceDisplayName(v);
+                            counts[key] = (counts[key] || 0) + 1;
+                            total++;
+                        }
+                    });
+                } else if (value && typeof value === 'string' && value.trim()) {
+                    const key = (field === 'country' || field === 'countryOfOrigin')
+                        ? toCountryDisplayName(value)
+                        : (field === 'genderIdentity' ? toGenderDisplayName(value) : value.trim());
+                    counts[key] = (counts[key] || 0) + 1;
+                    total++;
+                }
+            });
+
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            return { counts: sorted, total };
+        };
+
+        // Calculate breakdowns for each field
+        const breakdowns = {
+            countryOfOrigin: calculateStats('countryOfOrigin'),
+            country: calculateStats('country'),
+            race: calculateStats('race'),
+            genderIdentity: calculateStats('genderIdentity'),
+            ageGroup: calculateStats('ageGroup')
+        };
+
+        res.json(breakdowns);
+
+    } catch (error) {
+        logger.error('Get survey breakdown error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve breakdown statistics',
+            message: 'An error occurred while retrieving breakdown statistics'
         });
     }
 });

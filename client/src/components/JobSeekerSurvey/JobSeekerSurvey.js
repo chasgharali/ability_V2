@@ -44,6 +44,13 @@ const JobSeekerSurvey = () => {
         distinctAgeGroups: 0,
         distinctCountriesOfOrigin: 0
     });
+    const [breakdowns, setBreakdowns] = useState({
+        countryOfOrigin: { counts: [], total: 0 },
+        country: { counts: [], total: 0 },
+        race: { counts: [], total: 0 },
+        genderIdentity: { counts: [], total: 0 },
+        ageGroup: { counts: [], total: 0 }
+    });
 
     // Syncfusion Toast
     const showToast = useCallback((message, type = 'Success', duration = 3000) => {
@@ -67,15 +74,24 @@ const JobSeekerSurvey = () => {
 
         try {
             setLoadingData(true);
-            const response = await jobSeekerSurveyAPI.getSurveys({ eventId: selectedEvent, boothId: selectedBooth });
+            const filters = { eventId: selectedEvent, boothId: selectedBooth };
+            const response = await jobSeekerSurveyAPI.getSurveys(filters);
             setSurveys(response.surveys || []);
             
-            // Load stats
+            // Load stats with filters
             try {
-                const statsResponse = await jobSeekerSurveyAPI.getStats();
+                const statsResponse = await jobSeekerSurveyAPI.getStats(filters);
                 setStats(statsResponse);
             } catch (error) {
                 console.error('Error loading stats:', error);
+            }
+
+            // Load breakdown stats with filters
+            try {
+                const breakdownResponse = await jobSeekerSurveyAPI.getBreakdown(filters);
+                setBreakdowns(breakdownResponse);
+            } catch (error) {
+                console.error('Error loading breakdown:', error);
             }
         } catch (error) {
             console.error('Error loading survey data:', error);
@@ -128,15 +144,24 @@ const JobSeekerSurvey = () => {
 
             try {
                 setLoadingData(true);
-                const response = await jobSeekerSurveyAPI.getSurveys({ eventId: newEvent, boothId: newBooth });
+                const filters = { eventId: newEvent, boothId: newBooth };
+                const response = await jobSeekerSurveyAPI.getSurveys(filters);
                 setSurveys(response.surveys || []);
                 
-                // Load stats
+                // Load stats with filters
                 try {
-                    const statsResponse = await jobSeekerSurveyAPI.getStats();
+                    const statsResponse = await jobSeekerSurveyAPI.getStats(filters);
                     setStats(statsResponse);
                 } catch (error) {
                     console.error('Error loading stats:', error);
+                }
+
+                // Load breakdown stats with filters
+                try {
+                    const breakdownResponse = await jobSeekerSurveyAPI.getBreakdown(filters);
+                    setBreakdowns(breakdownResponse);
+                } catch (error) {
+                    console.error('Error loading breakdown:', error);
                 }
             } catch (error) {
                 console.error('Error loading survey data:', error);
@@ -161,15 +186,24 @@ const JobSeekerSurvey = () => {
 
             try {
                 setLoadingData(true);
-                const response = await jobSeekerSurveyAPI.getSurveys({ eventId: '', boothId: '' });
+                const filters = { eventId: '', boothId: '' };
+                const response = await jobSeekerSurveyAPI.getSurveys(filters);
                 setSurveys(response.surveys || []);
                 
-                // Load stats
+                // Load stats with filters
                 try {
-                    const statsResponse = await jobSeekerSurveyAPI.getStats();
+                    const statsResponse = await jobSeekerSurveyAPI.getStats(filters);
                     setStats(statsResponse);
                 } catch (error) {
                     console.error('Error loading stats:', error);
+                }
+
+                // Load breakdown stats with filters
+                try {
+                    const breakdownResponse = await jobSeekerSurveyAPI.getBreakdown(filters);
+                    setBreakdowns(breakdownResponse);
+                } catch (error) {
+                    console.error('Error loading breakdown:', error);
                 }
             } catch (error) {
                 console.error('Error loading survey data:', error);
@@ -181,40 +215,10 @@ const JobSeekerSurvey = () => {
         }
     };
 
-    // Calculate statistics for each field
-    const calculateStats = (field) => {
-        const counts = {};
-        let total = 0;
-
-        surveys.forEach(survey => {
-            let value;
-            // For 'country', check both survey.country and top-level country
-            if (field === 'country') {
-                value = survey.country || survey.survey?.country;
-            } else {
-                value = survey.survey?.[field];
-            }
-            
-            if (field === 'race' && Array.isArray(value)) {
-                value.forEach(v => {
-                    if (v && v.trim()) {
-                        counts[v] = (counts[v] || 0) + 1;
-                        total++;
-                    }
-                });
-            } else if (value && typeof value === 'string' && value.trim()) {
-                counts[value] = (counts[value] || 0) + 1;
-                total++;
-            }
-        });
-
-        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-        return { counts: sorted, total };
-    };
-
-    // Render table for a field
+    // Render table for a field using backend breakdown data
     const renderFieldTab = (field, title) => {
-        const { counts, total } = calculateStats(field);
+        const breakdown = breakdowns[field] || { counts: [], total: 0 };
+        const { counts, total } = breakdown;
 
         return (
             <div style={{ padding: '20px' }}>
@@ -253,41 +257,20 @@ const JobSeekerSurvey = () => {
         try {
             setLoadingData(true);
             
-            // Use the same data that's displayed on screen
-            if (!surveys || surveys.length === 0) {
+            // Use breakdown data from backend (includes all filtered records, not just paginated)
+            const hasData = breakdowns && (
+                breakdowns.countryOfOrigin?.total > 0 ||
+                breakdowns.country?.total > 0 ||
+                breakdowns.race?.total > 0 ||
+                breakdowns.genderIdentity?.total > 0 ||
+                breakdowns.ageGroup?.total > 0
+            );
+
+            if (!hasData) {
                 showToast('No data to export', 'Warning', 3000);
+                setLoadingData(false);
                 return;
             }
-
-            // Helper function to calculate stats for a field (same as frontend)
-            const calculateStats = (field) => {
-                const counts = {};
-                let total = 0;
-
-                surveys.forEach(survey => {
-                    let value;
-                    if (field === 'country') {
-                        value = survey.country || survey.survey?.country;
-                    } else {
-                        value = survey.survey?.[field];
-                    }
-                    
-                    if (field === 'race' && Array.isArray(value)) {
-                        value.forEach(v => {
-                            if (v && v.trim()) {
-                                counts[v] = (counts[v] || 0) + 1;
-                                total++;
-                            }
-                        });
-                    } else if (value && typeof value === 'string' && value.trim()) {
-                        counts[value] = (counts[value] || 0) + 1;
-                        total++;
-                    }
-                });
-
-                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-                return { counts: sorted, total };
-            };
 
             // Helper function to escape CSV fields
             const escapeCSV = (value) => {
@@ -313,7 +296,9 @@ const JobSeekerSurvey = () => {
             const csvLines = [];
             
             sections.forEach((section, idx) => {
-                const { counts, total } = calculateStats(section.field);
+                // Use breakdown data from backend
+                const breakdown = breakdowns[section.field] || { counts: [], total: 0 };
+                const { counts, total } = breakdown;
                 
                 // Add section header
                 if (idx > 0) csvLines.push(''); // Empty line between sections

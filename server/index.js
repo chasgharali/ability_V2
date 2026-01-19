@@ -102,7 +102,7 @@ app.use(limiter);
 // CORS configuration
 // Using allowedOrigins already declared above for Socket.IO
 app.use(cors({
-    origin: allowedOrigins.length === 1 ? allowedOrigins[0] : (origin, callback) => {
+    origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         // Always allow localhost origins (for development and local testing)

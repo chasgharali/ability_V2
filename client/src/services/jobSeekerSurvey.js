@@ -65,8 +65,38 @@ export const jobSeekerSurveyAPI = {
     },
 
     // Get survey statistics
-    getStats: async () => {
-        const response = await axios.get('/api/job-seeker-survey/stats', { headers: authHeaders() });
+    getStats: async (filters = {}) => {
+        const params = new URLSearchParams();
+        
+        Object.keys(filters).forEach(key => {
+            if (filters[key] !== undefined && filters[key] !== '') {
+                params.append(key, filters[key]);
+            }
+        });
+
+        const url = Object.keys(filters).length > 0 
+            ? `/api/job-seeker-survey/stats?${params.toString()}`
+            : '/api/job-seeker-survey/stats';
+        
+        const response = await axios.get(url, { headers: authHeaders() });
+        return response.data;
+    },
+
+    // Get demographic breakdown statistics
+    getBreakdown: async (filters = {}) => {
+        const params = new URLSearchParams();
+        
+        Object.keys(filters).forEach(key => {
+            if (filters[key] !== undefined && filters[key] !== '') {
+                params.append(key, filters[key]);
+            }
+        });
+
+        const url = Object.keys(filters).length > 0 
+            ? `/api/job-seeker-survey/breakdown?${params.toString()}`
+            : '/api/job-seeker-survey/breakdown';
+        
+        const response = await axios.get(url, { headers: authHeaders() });
         return response.data;
     }
 };
