@@ -19,7 +19,10 @@ export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState([]); // Track selected user IDs for bulk delete
+  
+  // Keep selectedUsers state but minimize updates to prevent blinking
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const selectedUsersRef = useRef([]); // Store in ref for immediate access without re-render
 
   // Load filters from sessionStorage on mount (per-table persistence for role filter)
   const loadRoleFilterFromSession = () => {
@@ -67,6 +70,9 @@ export default function UserManagement() {
   const deleteDialogRef = useRef(null);
   const gridRef = useRef(null);
   const loadingUsersRef = useRef(false);
+  const selectionUpdateTimeoutRef = useRef(null);
+  const isUpdatingSelectionRef = useRef(false);
+  const previousUsersRef = useRef([]);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -157,14 +163,39 @@ export default function UserManagement() {
 
   const confirmDelete = async () => {
     if (!rowPendingDelete) return;
+    const deletedUserId = rowPendingDelete.id;
+    
     try {
-      await deleteUserPermanently(rowPendingDelete.id);
+      // Optimistically remove user from state immediately to prevent flashing
+      setUsers(prevUsers => prevUsers.filter(u => u.id !== deletedUserId));
+      
+      // Clear selection if deleted user was selected
+      setSelectedUsers(prevSelected => prevSelected.filter(id => id !== deletedUserId));
+      selectedUsersRef.current = selectedUsersRef.current.filter(id => id !== deletedUserId);
+      
+      // Clear grid selection if needed
+      if (gridRef.current && typeof gridRef.current.clearSelection === 'function') {
+        gridRef.current.clearSelection();
+      }
+      
+      // Perform the actual delete
+      await deleteUserPermanently(deletedUserId);
       showToast('User deleted', 'Success');
+      
+      // Reload users to ensure data is in sync with server
       await loadUsers();
+      
+      // Force grid refresh
+      if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+        gridRef.current.refresh();
+      }
     } catch (e) {
       console.error('Delete failed', e);
       const msg = e?.response?.data?.message || 'Permanent delete is not available on the server yet.';
       showToast(msg, 'Error');
+      
+      // Reload users to restore correct state if delete failed
+      await loadUsers();
     } finally {
       setConfirmOpen(false);
       setRowPendingDelete(null);
@@ -198,26 +229,81 @@ export default function UserManagement() {
     }
   }, []);
 
+  // Batched selection update to prevent blinking/flashing
+  // Updates ref immediately but delays state update to prevent re-renders
+  const updateSelectionBatched = useCallback(() => {
+    // Clear any pending update
+    if (selectionUpdateTimeoutRef.current) {
+      clearTimeout(selectionUpdateTimeoutRef.current);
+    }
+    
+    // Skip if already updating
+    if (isUpdatingSelectionRef.current) return;
+    
+    isUpdatingSelectionRef.current = true;
+    
+    // Get current selection from grid
+    const currentSelection = getSelectedUsersFromGrid();
+    
+    // Always update ref immediately (no re-render)
+    selectedUsersRef.current = currentSelection;
+    
+    // Debounce state update to prevent rapid re-renders
+    selectionUpdateTimeoutRef.current = setTimeout(() => {
+      setSelectedUsers(currentSelection);
+      isUpdatingSelectionRef.current = false;
+    }, 100); // Small delay to batch rapid selections
+  }, [getSelectedUsersFromGrid]);
+
   const handleBulkDelete = () => {
+    // Get fresh selection from grid
     const currentSelection = getSelectedUsersFromGrid();
     if (currentSelection.length === 0) {
       showToast('Please select users to delete', 'Warning');
       return;
     }
+    // Store in ref and update state for confirmation dialog
+    selectedUsersRef.current = currentSelection;
     setSelectedUsers(currentSelection);
     setConfirmBulkDeleteOpen(true);
   };
 
   const confirmBulkDelete = async () => {
+    const userIdsToDelete = [...selectedUsersRef.current];
+    if (!userIdsToDelete || userIdsToDelete.length === 0) return;
+    
     try {
       setIsDeleting(true);
-      const response = await bulkDeleteUsers(selectedUsers);
+      
+      // Optimistically remove users from state immediately to prevent flashing
+      setUsers(prevUsers => prevUsers.filter(u => !userIdsToDelete.includes(u.id)));
+      
+      // Clear grid selection
+      if (gridRef.current && typeof gridRef.current.clearSelection === 'function') {
+        gridRef.current.clearSelection();
+      }
+      
+      // Perform the actual bulk delete
+      const response = await bulkDeleteUsers(userIdsToDelete);
       showToast(response.message || 'Users deleted successfully', 'Success');
+      
+      // Clear selection
       setSelectedUsers([]);
+      selectedUsersRef.current = [];
+      
+      // Reload users to ensure data is in sync with server
       await loadUsers();
+      
+      // Force grid refresh
+      if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+        gridRef.current.refresh();
+      }
     } catch (error) {
       console.error('Error deleting users:', error);
       showToast(error.response?.data?.message || 'Failed to delete users', 'Error');
+      
+      // Reload users to restore correct state if delete failed
+      await loadUsers();
     } finally {
       setIsDeleting(false);
       setConfirmBulkDeleteOpen(false);
@@ -226,7 +312,7 @@ export default function UserManagement() {
 
   const cancelBulkDelete = () => {
     setConfirmBulkDeleteOpen(false);
-    setSelectedUsers([]);
+    // Don't clear selection when canceling - user might want to keep selection
   };
 
   const handleSearch = useCallback(() => {
@@ -302,6 +388,22 @@ export default function UserManagement() {
     }
   }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker]);
 
+  // Memoize paginated data source to ensure grid updates when users change
+  const paginatedDataSource = useMemo(() => {
+    return users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [users, currentPage, pageSize]);
+
+  // Track when user data actually changes for potential grid refresh
+  useEffect(() => {
+    const currentUserIds = users.map(u => u.id).sort().join(',');
+    const previousUserIds = previousUsersRef.current.map(u => u.id).sort().join(',');
+    
+    // Update ref when user data changes
+    if (currentUserIds !== previousUserIds || users.length !== previousUsersRef.current.length) {
+      previousUsersRef.current = [...users];
+    }
+  }, [users]);
+
   const loadBoothsAndEvents = async () => {
     try {
       const [boothRes, eventRes] = await Promise.all([
@@ -318,31 +420,14 @@ export default function UserManagement() {
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
 
-  // Track selection changes from grid
+  // Cleanup timeouts on unmount
   useEffect(() => {
-    if (!gridRef.current) return;
-    
-    const updateSelection = () => {
-      const currentSelection = getSelectedUsersFromGrid();
-      setSelectedUsers(currentSelection);
+    return () => {
+      if (selectionUpdateTimeoutRef.current) {
+        clearTimeout(selectionUpdateTimeoutRef.current);
+      }
     };
-
-    // Listen for selection events
-    const grid = gridRef.current;
-    if (grid.element) {
-      const handleSelectionChange = () => {
-        setTimeout(updateSelection, 100);
-      };
-      
-      grid.element.addEventListener('click', handleSelectionChange);
-      
-      return () => {
-        if (grid.element) {
-          grid.element.removeEventListener('click', handleSelectionChange);
-        }
-      };
-    }
-  }, [users, getSelectedUsersFromGrid]);
+  }, []);
 
   // Set CSS variable for filter icon and make it trigger column menu
   useEffect(() => {
@@ -730,24 +815,22 @@ export default function UserManagement() {
                           <input
                             type="checkbox"
                             id="select-all-users"
-                            checked={selectedUsers.length > 0 && selectedUsers.length === users.slice((currentPage - 1) * pageSize, currentPage * pageSize).length}
+                            checked={selectedUsers.length > 0 && selectedUsers.length === paginatedDataSource.length}
                             onChange={(e) => {
                               if (e.target.checked) {
                                 // Select all rows on current page
                                 if (gridRef.current) {
-                                  const pageData = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+                                  const pageData = paginatedDataSource;
                                   gridRef.current.selectRows(Array.from({ length: pageData.length }, (_, i) => i));
-                                  // Manually update state to ensure checkbox reflects selection immediately
-                                  setTimeout(() => {
-                                    const currentSelection = getSelectedUsersFromGrid();
-                                    setSelectedUsers(currentSelection);
-                                  }, 100);
+                                  // Use batched update to prevent flashing
+                                  updateSelectionBatched();
                                 }
                               } else {
                                 // Deselect all rows
                                 if (gridRef.current) {
                                   gridRef.current.clearSelection();
                                   setSelectedUsers([]);
+                                  selectedUsersRef.current = [];
                                 }
                               }
                             }}
@@ -856,7 +939,7 @@ export default function UserManagement() {
                 )}
                 <GridComponent
                   ref={gridRef}
-                  dataSource={users.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                  dataSource={paginatedDataSource}
                   allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
@@ -876,18 +959,8 @@ export default function UserManagement() {
                   enableHover={true}
                   allowRowDragAndDrop={false}
                   enableHeaderFocus={false}
-                  rowSelected={() => {
-                    setTimeout(() => {
-                      const currentSelection = getSelectedUsersFromGrid();
-                      setSelectedUsers(currentSelection);
-                    }, 50);
-                  }}
-                  rowDeselected={() => {
-                    setTimeout(() => {
-                      const currentSelection = getSelectedUsersFromGrid();
-                      setSelectedUsers(currentSelection);
-                    }, 50);
-                  }}
+                  rowSelected={updateSelectionBatched}
+                  rowDeselected={updateSelectionBatched}
                 >
                   <ColumnsDirective>
                     <ColumnDirective type='checkbox' width='50' />

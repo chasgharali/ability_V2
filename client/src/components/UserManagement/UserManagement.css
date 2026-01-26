@@ -1128,3 +1128,38 @@ body .um-delete-dialog.e-dialog {
   margin-top: 0.5rem;
 }
 
+/* ========================================
+   Selection Stability - Prevent Blinking
+   ======================================== */
+
+/* Prevent layout shifts during selection updates */
+.e-grid {
+  contain: layout style;
+}
+
+/* Prevent row height changes during selection */
+.e-grid .e-rowcell {
+  contain: layout style;
+}
+
+/* Prevent checkbox column from causing layout shifts */
+.e-grid .e-rowcell.e-gridchkbox {
+  contain: strict;
+}
+
+/* Smooth transitions for selection state */
+.e-grid .e-row {
+  transition: background-color 0.05s ease-out;
+}
+
+/* Prevent header actions from causing layout shifts */
+.bm-header-actions {
+  min-height: 44px;
+  contain: layout;
+}
+
+/* Ensure delete button container has stable layout */
+.bm-header-actions > div {
+  min-width: 0;
+}
+
