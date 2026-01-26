@@ -500,7 +500,11 @@ export default function JobSeekerManagement() {
 
   const loadJobSeekers = useCallback(async (page, limit, search, isActive, event) => {
     // Prevent multiple simultaneous fetches
-    if (loadingJobSeekersRef.current) return;
+    if (loadingJobSeekersRef.current) {
+      console.log('LoadJobSeekers already in progress, skipping duplicate call');
+      // Don't reset loading states here - let the running request handle it
+      return;
+    }
     
     try {
       loadingJobSeekersRef.current = true;
@@ -598,7 +602,19 @@ export default function JobSeekerManagement() {
       setLiveMsg(`Loaded ${items.length} of ${res?.pagination?.totalCount || 0} job seekers`);
     } catch (e) {
       console.error('Load failed', e);
-      showToast('Failed to load job seekers', 'Error');
+      
+      // Provide specific error messages
+      if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+        showToast('Request timed out. Please try again with a more specific search.', 'Error');
+      } else if (e.response) {
+        // Server responded with an error
+        showToast(`Failed to load job seekers: ${e.response.data?.message || e.response.statusText}`, 'Error');
+      } else if (e.request) {
+        // Request was made but no response received
+        showToast('No response from server. Please check your connection.', 'Error');
+      } else {
+        showToast('Failed to load job seekers', 'Error');
+      }
     } finally {
       loadingJobSeekersRef.current = false;
       setLoading(false);
@@ -714,7 +730,8 @@ export default function JobSeekerManagement() {
     if (prevSearchFilter.current !== activeSearchQuery) {
       prevSearchFilter.current = activeSearchQuery;
       setCurrentPage(1);
-      setSearchLoading(true);
+      
+      // Call loadJobSeekers - the searchLoading state is managed by triggerSearch and loadJobSeekers
       loadJobSeekersRef.current(1, pageSize, activeSearchQuery, statusFilterRef.current, eventFilterRef.current);
     }
   }, [activeSearchQuery, pageSize]);
@@ -785,13 +802,21 @@ export default function JobSeekerManagement() {
     
     // Get search value from input ref (uncontrolled input for performance)
     const searchValue = (searchInputRef.current?.value || '').trim();
-    setActiveSearchQuery(searchValue);
+    
+    // If search value hasn't changed, don't trigger a new search
+    if (searchValue === activeSearchQuery) {
+      console.log('Search value unchanged, skipping search');
+      return;
+    }
+    
+    // Set loading state before updating activeSearchQuery
+    // This will show "Searching..." immediately
     setSearchLoading(true);
-    prevSearchFilter.current = searchValue;
-    searchFilterRef.current = searchValue;
-    setCurrentPage(1);
-    loadJobSeekersRef.current(1, pageSize, searchValue, statusFilterRef.current, eventFilterRef.current);
-  }, [pageSize]);
+    
+    // Update activeSearchQuery - this will trigger the useEffect which calls loadJobSeekers
+    // Even if a request is in progress, updating this will queue the new search
+    setActiveSearchQuery(searchValue);
+  }, [activeSearchQuery]);
 
   // No automatic search on typing - search only on button click or Enter key
 

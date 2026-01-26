@@ -184,6 +184,33 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 
+// Additional indexes for optimized search and listing
+userSchema.index({ name: 1 }); // For name search
+userSchema.index({ createdAt: -1 }); // For sorting by registration date
+userSchema.index({ role: 1, isActive: 1 }); // Compound index for common filter combination
+userSchema.index({ role: 1, createdAt: -1 }); // Compound index for listing with role filter
+userSchema.index({ city: 1 }); // For location-based search
+userSchema.index({ state: 1 }); // For location-based search
+
+// Text index for full-text search capability (optional, for future use)
+// This enables MongoDB's built-in text search on these fields
+userSchema.index({ 
+    name: 'text', 
+    email: 'text', 
+    city: 'text',
+    'metadata.profile.headline': 'text',
+    'metadata.profile.keywords': 'text'
+}, {
+    weights: {
+        name: 10,  // Name has highest priority
+        email: 8,
+        'metadata.profile.headline': 5,
+        'metadata.profile.keywords': 3,
+        city: 2
+    },
+    name: 'user_text_search_index'
+});
+
 // Pre-save middleware to hash password
 userSchema.pre('save', async function (next) {
     // Only hash the password if it has been modified (or is new)

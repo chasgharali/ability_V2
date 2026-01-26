@@ -47,7 +47,11 @@ export async function listUsers({ page = 1, limit = 50, search, role, isActive, 
     }
   }
   
-  const res = await axios.get('/api/users', { params, headers: authHeaders() });
+  const res = await axios.get('/api/users', { 
+    params, 
+    headers: authHeaders(),
+    timeout: 30000 // 30 second timeout to prevent indefinite loading
+  });
   return res.data;
 }
 

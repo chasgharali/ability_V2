@@ -476,9 +476,80 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             query.isActive = isActive === 'true';
         }
 
-        // Note: Search will be applied after fetching records to support searching in nested fields
-        // (metadata.profile, survey fields, etc.) which are difficult to query directly in MongoDB
+        // Build search query at MongoDB level for better performance
         const searchTerm = search && search.trim() ? search.trim() : null;
+        
+        if (searchTerm) {
+            // Escape special regex characters in search term to prevent regex injection
+            const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            
+            // For name and email, use word-boundary matching to prevent partial matches
+            // e.g., "lori" won't match "Gloria" or "Valorie" but will match "Lori" or "lori bentz"
+            const wordBoundaryRegex = new RegExp(`\\b${escapedSearchTerm}\\b`, 'i');
+            
+            // For phone numbers, use contains (phone numbers can have "lori" as part of digits)
+            const containsRegex = new RegExp(escapedSearchTerm, 'i');
+            
+            // For location fields (city, state, country), use word-start matching
+            // This prevents "lori" from matching "Florida" but still matches "Lori" as a city name
+            const wordStartRegex = new RegExp(`(^|\\s)${escapedSearchTerm}`, 'i');
+            
+            // Build search conditions - prioritize name and email (most common searches)
+            // Use word-boundary matching to prevent false positives like "Gloria" matching "lori"
+            const searchConditions = [
+                // Primary fields - word-boundary match (MOST IMPORTANT)
+                // e.g., "lori" matches "Lori" or "lori bentz" but NOT "Gloria" or "Valorie"
+                { name: wordBoundaryRegex },
+                { email: wordBoundaryRegex },
+                
+                // Phone number - contains match (phone numbers are digits, so word boundary doesn't apply)
+                { phoneNumber: containsRegex },
+                
+                // Location fields - word-start match to avoid false positives
+                // e.g., "lori" won't match "Florida" but will match "Lori City"
+                { city: wordStartRegex },
+                { state: wordStartRegex },
+                { country: wordStartRegex },
+                
+                // Profile fields - word-boundary match for text fields to prevent partial matches
+                { 'metadata.profile.headline': wordBoundaryRegex },
+                { 'metadata.profile.keywords': wordBoundaryRegex },
+                { 'metadata.profile.workLevel': wordBoundaryRegex },
+                { 'metadata.profile.educationLevel': wordBoundaryRegex },
+                { 'metadata.profile.clearance': wordBoundaryRegex },
+                { 'metadata.profile.veteranStatus': wordBoundaryRegex },
+                { 'metadata.profile.workAuthorization': wordBoundaryRegex },
+                
+                // Array fields - use word-boundary regex (MongoDB will check any array element)
+                { 'metadata.profile.employmentTypes': wordBoundaryRegex },
+                { 'metadata.profile.languages': wordBoundaryRegex },
+                { 'metadata.profile.primaryExperience': wordBoundaryRegex },
+                
+                // Survey fields - word-boundary match for text fields
+                { 'survey.race': wordBoundaryRegex },
+                { 'survey.genderIdentity': wordBoundaryRegex },
+                { 'survey.ageGroup': wordBoundaryRegex },
+                { 'survey.countryOfOrigin': wordStartRegex },
+                { 'survey.disabilities': wordBoundaryRegex },
+                { 'survey.otherDisability': wordBoundaryRegex }
+            ];
+            
+            // Combine search conditions with existing query using $and
+            if (Object.keys(query).length > 0) {
+                query = {
+                    $and: [
+                        query,
+                        { $or: searchConditions }
+                    ]
+                };
+            } else {
+                query = { $or: searchConditions };
+            }
+            
+            logger.info(`Optimized search query built for term: "${searchTerm}"`);
+            logger.info(`Search query structure: ${JSON.stringify(query, null, 2)}`);
+            logger.info(`Number of search conditions: ${searchConditions.length}`);
+        }
 
         // Filter by event registration
         if (eventId) {
@@ -619,88 +690,28 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             }
         }
 
-        // Helper function to check if user matches search term across all fields
-        const matchesSearch = (user, searchTerm) => {
-            const term = searchTerm.toLowerCase();
-            
-            // Basic fields
-            if (user.name && user.name.toLowerCase().includes(term)) return true;
-            if (user.email && user.email.toLowerCase().includes(term)) return true;
-            if (user.phoneNumber && user.phoneNumber.toLowerCase().includes(term)) return true;
-            if (user.city && user.city.toLowerCase().includes(term)) return true;
-            if (user.state && user.state.toLowerCase().includes(term)) return true;
-            if (user.country && user.country.toLowerCase().includes(term)) return true;
-            
-            // Profile fields (metadata.profile)
-            if (user.metadata?.profile) {
-                const profile = user.metadata.profile;
-                if (profile.headline && profile.headline.toLowerCase().includes(term)) return true;
-                if (profile.keywords && profile.keywords.toLowerCase().includes(term)) return true;
-                if (profile.workLevel && profile.workLevel.toLowerCase().includes(term)) return true;
-                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(term)) return true;
-                if (profile.clearance && profile.clearance.toLowerCase().includes(term)) return true;
-                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(term)) return true;
-                if (profile.workAuthorization && profile.workAuthorization.toLowerCase().includes(term)) return true;
-                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et && et.toLowerCase().includes(term))) return true;
-                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang && lang.toLowerCase().includes(term))) return true;
-                if (Array.isArray(profile.primaryExperience) && profile.primaryExperience.some(exp => exp && exp.toLowerCase().includes(term))) return true;
-            }
-            
-            // Survey fields
-            if (user.survey) {
-                if (Array.isArray(user.survey.race) && user.survey.race.some(r => r && r.toLowerCase().includes(term))) return true;
-                if (user.survey.genderIdentity && user.survey.genderIdentity.toLowerCase().includes(term)) return true;
-                if (user.survey.ageGroup && user.survey.ageGroup.toLowerCase().includes(term)) return true;
-                if (user.survey.countryOfOrigin && user.survey.countryOfOrigin.toLowerCase().includes(term)) return true;
-                if (Array.isArray(user.survey.disabilities) && user.survey.disabilities.some(d => d && d.toLowerCase().includes(term))) return true;
-                if (user.survey.otherDisability && user.survey.otherDisability.toLowerCase().includes(term)) return true;
-            }
-            
-            // Role and status
-            if (user.role && user.role.toLowerCase().includes(term)) return true;
-            if (user.isActive !== undefined) {
-                if ((user.isActive && 'active'.includes(term)) || (!user.isActive && 'inactive'.includes(term))) return true;
-            }
-            if (user.emailVerified !== undefined) {
-                if ((user.emailVerified && 'verified'.includes(term)) || (!user.emailVerified && 'unverified'.includes(term))) return true;
-            }
-            
-            return false;
-        };
-
-        // Fetch ALL users matching the base query (without pagination) if search is provided
-        // Otherwise, fetch with pagination for better performance
-        let allUsers;
-        if (searchTerm) {
-            // Fetch all records for search filtering
-            allUsers = await User.find(query)
+        // Since search is now handled at MongoDB level, always use pagination
+        const skip = (page - 1) * limit;
+        const parsedLimit = parseInt(limit);
+        
+        // Run count and data fetch in parallel for better performance
+        const [totalCount, allUsers] = await Promise.all([
+            // Get total count for pagination info
+            User.countDocuments(query),
+            // Fetch paginated results
+            User.find(query)
                 .select('-hashedPassword -refreshTokens')
                 .populate('assignedBooth', 'name company')
                 .sort({ createdAt: -1 })
-                .lean();
-        } else {
-            // Fetch with pagination for better performance when no search
-            const skip = (page - 1) * limit;
-            allUsers = await User.find(query)
-                .select('-hashedPassword -refreshTokens')
-                .populate('assignedBooth', 'name company')
-                .sort({ createdAt: -1 })
-                .limit(limit * 1)
+                .limit(parsedLimit)
                 .skip(skip)
-                .lean();
-        }
-
-        // Apply search filter if provided
+                .lean()
+        ]);
+        
+        logger.info(`Found ${totalCount} total users matching query, returning ${allUsers.length} for page ${page}`);
+        
+        // No need for additional filtering - it's all done at MongoDB level now
         let filteredUsers = allUsers;
-        if (searchTerm) {
-            filteredUsers = allUsers.filter(user => matchesSearch(user, searchTerm));
-        }
-
-        // Apply pagination if search was used (since we fetched all records)
-        if (searchTerm) {
-            const skip = (page - 1) * limit;
-            filteredUsers = filteredUsers.slice(skip, skip + parseInt(limit));
-        }
 
         // Convert to public profile format
         const users = filteredUsers.map(user => {
@@ -722,36 +733,27 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
                 updatedAt: user.updatedAt,
                 metadata: user.metadata,
                 survey: user.survey,
-                assignedBooth: user.assignedBooth
+                assignedBooth: user.assignedBooth,
+                resumeUrl: user.resumeUrl,
+                usesScreenMagnifier: user.usesScreenMagnifier,
+                usesScreenReader: user.usesScreenReader,
+                needsASL: user.needsASL,
+                needsCaptions: user.needsCaptions,
+                needsOther: user.needsOther
             };
             return publicProfile;
         });
-
-        // Calculate total count for pagination
-        let totalCount;
-        if (searchTerm) {
-            // Count is based on filtered records
-            totalCount = allUsers.filter(user => matchesSearch(user, searchTerm)).length;
-        } else {
-            // No search - count from database
-            totalCount = await User.countDocuments(query);
-        }
         
+        // totalCount is already calculated above using countDocuments
         logger.info(`Query returned ${users.length} users out of ${totalCount} total matching query`);
 
-        // Calculate server-side stats for filtered results
-        // For search, we need to recalculate stats from filtered results
-        let activeCount, inactiveCount, verifiedCount;
-        if (searchTerm) {
-            const filteredForStats = allUsers.filter(user => matchesSearch(user, searchTerm));
-            activeCount = filteredForStats.filter(u => u.isActive === true).length;
-            inactiveCount = filteredForStats.filter(u => u.isActive === false).length;
-            verifiedCount = filteredForStats.filter(u => u.emailVerified === true).length;
-        } else {
-            activeCount = await User.countDocuments({ ...query, isActive: true });
-            inactiveCount = await User.countDocuments({ ...query, isActive: false });
-            verifiedCount = await User.countDocuments({ ...query, emailVerified: true });
-        }
+        // Calculate server-side stats for filtered results using MongoDB queries
+        // Run all count queries in parallel for better performance
+        const [activeCount, inactiveCount, verifiedCount] = await Promise.all([
+            User.countDocuments({ ...query, isActive: true }),
+            User.countDocuments({ ...query, isActive: false }),
+            User.countDocuments({ ...query, emailVerified: true })
+        ]);
 
         logger.info(`Stats - Active: ${activeCount}, Inactive: ${inactiveCount}, Verified: ${verifiedCount}`);
 
