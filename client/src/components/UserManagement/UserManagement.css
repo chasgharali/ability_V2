@@ -1133,23 +1133,34 @@ body .um-delete-dialog.e-dialog {
    ======================================== */
 
 /* Prevent layout shifts during selection updates */
-.e-grid {
+.bm-grid-wrap .e-grid,
+.bm-grid-wrap .data-grid-container .e-grid {
   contain: layout style;
 }
 
 /* Prevent row height changes during selection */
-.e-grid .e-rowcell {
+.bm-grid-wrap .e-grid .e-rowcell {
   contain: layout style;
 }
 
 /* Prevent checkbox column from causing layout shifts */
-.e-grid .e-rowcell.e-gridchkbox {
+.bm-grid-wrap .e-grid .e-rowcell.e-gridchkbox {
   contain: strict;
 }
 
-/* Smooth transitions for selection state */
-.e-grid .e-row {
-  transition: background-color 0.05s ease-out;
+/* No transition or animation on rows - prevents blink on selection */
+.bm-grid-wrap .e-grid .e-row,
+.bm-grid-wrap .e-grid .e-row.e-selectionbackground {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Disable any Syncfusion focus/selection blink or animation */
+.bm-grid-wrap .e-grid .e-rowcell.e-focus,
+.bm-grid-wrap .e-grid .e-rowcell.e-focused,
+.bm-grid-wrap .e-grid td.e-rowcell.e-focus.e-focused {
+  animation: none !important;
+  transition: none !important;
 }
 
 /* Prevent header actions from causing layout shifts */

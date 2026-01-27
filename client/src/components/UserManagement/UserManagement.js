@@ -230,29 +230,26 @@ export default function UserManagement() {
   }, []);
 
   // Batched selection update to prevent blinking/flashing
-  // Updates ref immediately but delays state update to prevent re-renders
+  // Uses requestAnimationFrame and only updates state when selection actually changed
   const updateSelectionBatched = useCallback(() => {
-    // Clear any pending update
     if (selectionUpdateTimeoutRef.current) {
-      clearTimeout(selectionUpdateTimeoutRef.current);
+      cancelAnimationFrame(selectionUpdateTimeoutRef.current);
     }
-    
-    // Skip if already updating
     if (isUpdatingSelectionRef.current) return;
-    
     isUpdatingSelectionRef.current = true;
-    
-    // Get current selection from grid
-    const currentSelection = getSelectedUsersFromGrid();
-    
-    // Always update ref immediately (no re-render)
-    selectedUsersRef.current = currentSelection;
-    
-    // Debounce state update to prevent rapid re-renders
-    selectionUpdateTimeoutRef.current = setTimeout(() => {
-      setSelectedUsers(currentSelection);
+
+    selectionUpdateTimeoutRef.current = requestAnimationFrame(() => {
+      const currentSelection = getSelectedUsersFromGrid();
+      selectedUsersRef.current = currentSelection;
+      setSelectedUsers((prev) => {
+        if (prev.length !== currentSelection.length || prev.some((id, i) => id !== currentSelection[i])) {
+          return currentSelection;
+        }
+        return prev;
+      });
       isUpdatingSelectionRef.current = false;
-    }, 100); // Small delay to batch rapid selections
+      selectionUpdateTimeoutRef.current = null;
+    });
   }, [getSelectedUsersFromGrid]);
 
   const handleBulkDelete = () => {
@@ -420,11 +417,11 @@ export default function UserManagement() {
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
 
-  // Cleanup timeouts on unmount
+  // Cleanup selection RAF on unmount
   useEffect(() => {
     return () => {
       if (selectionUpdateTimeoutRef.current) {
-        clearTimeout(selectionUpdateTimeoutRef.current);
+        cancelAnimationFrame(selectionUpdateTimeoutRef.current);
       }
     };
   }, []);
