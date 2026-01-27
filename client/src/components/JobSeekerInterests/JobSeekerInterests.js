@@ -874,11 +874,202 @@ const JobSeekerInterests = () => {
         type: 'None'
     }), []);
 
+    // Helper function for client-side CSV export
+    const exportToCSVClientSide = (recordsToExport) => {
+        // CSV Headers
+        const csvHeaders = [
+            'Event ID',
+            'Event Name',
+            'Booth ID',
+            'Booth Name',
+            'Recruiter ID',
+            'Recruiter Name',
+            'Recruiter Email',
+            'Company',
+            'Job Seeker First Name',
+            'Job Seeker Last Name',
+            'Job Seeker Email',
+            'Job Seeker Phone',
+            'Job Seeker Location',
+            'Job Seeker Headline',
+            'Job Seeker Keywords',
+            'Work Experience Level',
+            'Highest Education Level',
+            'Employment Types',
+            'Language(s)',
+            'Security Clearance',
+            'Veteran/Military Status',
+            'Interest Level',
+            'Notes',
+            'Date Expressed'
+        ];
+
+        // Helper function to escape CSV fields
+        const escapeCSV = (value) => {
+            if (value === null || value === undefined || value === '') {
+                return '';
+            }
+            const stringValue = String(value);
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        };
+
+        // Helper function to format date
+        const formatDate = (date) => {
+            if (!date) return '';
+            try {
+                const d = new Date(date);
+                if (isNaN(d.getTime())) return '';
+                return d.toLocaleString();
+            } catch (e) {
+                return '';
+            }
+        };
+
+        // Helper function to get profile field
+        const getProfileField = (interest, field) => {
+            return interest.jobSeeker?.metadata?.profile?.[field] || '';
+        };
+
+        // Helper function to format array field
+        const formatArray = (arr) => {
+            if (!Array.isArray(arr)) return '';
+            return arr.filter(Boolean).join('; ');
+        };
+
+        // Convert records to CSV rows
+        const csvRows = recordsToExport.map(interest => {
+            // Split name into first and last
+            const name = interest.jobSeeker?.name || '';
+            const nameParts = name ? name.trim().split(/\s+/) : [];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
+            // Build location string
+            const locationParts = [
+                interest.jobSeeker?.city || '',
+                interest.jobSeeker?.state || '',
+                interest.jobSeeker?.country || ''
+            ].filter(Boolean);
+            const location = locationParts.join(', ');
+
+            // Get event info
+            const eventId = interest.event?._id || interest.event || '';
+            const eventName = interest.event?.name || (interest.legacyEventId ? 'Legacy Event' : '');
+            
+            // Get booth info
+            const boothId = interest.booth?._id || interest.booth || '';
+            const boothName = interest.booth?.name || (interest.legacyBoothId ? 'Legacy Booth' : '');
+            const company = interest.booth?.company || interest.company || '';
+            
+            // Get recruiter info
+            const recruiterId = interest.recruiter?._id || interest.recruiter || '';
+            const recruiterName = interest.recruiter?.name || '';
+            const recruiterEmail = interest.recruiter?.email || '';
+
+            // Get profile fields
+            const getProfile = (js) => {
+                if (!js) return null;
+                if (js.metadata?.profile) return js.metadata.profile;
+                if (js.metadata && typeof js.metadata === 'string') {
+                    try {
+                        return JSON.parse(js.metadata)?.profile || null;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                return null;
+            };
+            
+            const profile = getProfile(interest.jobSeeker);
+            const headline = profile?.headline || '';
+            const keywords = profile?.keywords || '';
+            const workLevel = profile?.workLevel || '';
+            const educationLevel = profile?.educationLevel || '';
+            const employmentTypes = profile?.employmentTypes || [];
+            const languages = profile?.languages || [];
+            const clearance = profile?.clearance || '';
+            const veteranStatus = profile?.veteranStatus || '';
+
+            return [
+                escapeCSV(eventId),
+                escapeCSV(eventName),
+                escapeCSV(boothId),
+                escapeCSV(boothName),
+                escapeCSV(recruiterId),
+                escapeCSV(recruiterName),
+                escapeCSV(recruiterEmail),
+                escapeCSV(company),
+                escapeCSV(firstName),
+                escapeCSV(lastName),
+                escapeCSV(interest.jobSeeker?.email || ''),
+                escapeCSV(interest.jobSeeker?.phoneNumber || ''),
+                escapeCSV(location),
+                escapeCSV(headline),
+                escapeCSV(keywords),
+                escapeCSV(workLevel),
+                escapeCSV(educationLevel),
+                escapeCSV(formatArray(employmentTypes)),
+                escapeCSV(formatArray(languages)),
+                escapeCSV(clearance),
+                escapeCSV(veteranStatus),
+                escapeCSV(interest.interestLevel || ''),
+                escapeCSV(interest.notes || ''),
+                escapeCSV(formatDate(interest.createdAt))
+            ].join(',');
+        });
+
+        // Combine headers and rows
+        const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+
+        // Create blob and download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'job-seeker-interests.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    };
+
     const handleExport = async () => {
         try {
             console.log('📤 Starting export...');
             setLoadingData(true);
             
+            // Check if there are selected rows in the grid
+            const selectedRows = getSelectedInterestsFromGrid();
+            console.log('📋 Selected rows:', selectedRows);
+            
+            if (selectedRows.length > 0) {
+                // Export only selected rows (client-side)
+                console.log(`📊 Exporting ${selectedRows.length} selected row(s)`);
+                
+                // Filter from the original interests array to get full nested structure
+                // This ensures we have all the populated data (jobSeeker, event, booth, etc.)
+                const selectedRowData = interests.filter(r => {
+                    const recordId = r._id || r.id;
+                    return selectedRows.includes(recordId);
+                });
+                
+                console.log(`✅ Found ${selectedRowData.length} matching interest(s) from original data`);
+                
+                if (selectedRowData.length > 0) {
+                    exportToCSVClientSide(selectedRowData);
+                    showToast(`Exported ${selectedRowData.length} selected interest(s)`, 'Success');
+                } else {
+                    showToast('No selected rows found to export', 'Warning');
+                }
+                return;
+            }
+            
+            // No selected rows - check if there's a search filter
+            // If search filter exists, it will be handled by the server-side export
             // Build export filters (same as current filters but without pagination)
             // Handle legacy event IDs (format: "legacy_<id>")
             let eventIdForExport = filters.eventId || '';
@@ -953,7 +1144,10 @@ const JobSeekerInterests = () => {
                 }, 300);
             });
             
-            showToast('Job seeker interests exported successfully', 'Success');
+            const exportMessage = filters.search 
+                ? `Exported search results successfully` 
+                : 'Job seeker interests exported successfully';
+            showToast(exportMessage, 'Success');
         } catch (error) {
             console.error('Error exporting interests:', error);
             const errorMessage = error.response?.data?.message || error.message || 'Failed to export job seeker interests';

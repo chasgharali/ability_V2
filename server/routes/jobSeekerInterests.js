@@ -667,6 +667,9 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
         const recruiterId = req.query.recruiterId && req.query.recruiterId !== 'undefined' && req.query.recruiterId !== '' 
             ? req.query.recruiterId 
             : undefined;
+        const search = req.query.search && req.query.search !== 'undefined' && req.query.search !== '' 
+            ? req.query.search.trim() 
+            : undefined;
 
 
         // Build query based on user role and filters (same logic as GET endpoint)
@@ -870,6 +873,39 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             }
         }
 
+        // Helper function to check if interest matches search term (same as GET endpoint)
+        const matchesSearch = (interest, searchTerm) => {
+            // Search in event name
+            if (interest.event?.name && interest.event.name.toLowerCase().includes(searchTerm)) return true;
+            // Search in booth name
+            if (interest.booth?.name && interest.booth.name.toLowerCase().includes(searchTerm)) return true;
+            // Search in job seeker name, email, phone, city, state, country
+            if (interest.jobSeeker?.name && interest.jobSeeker.name.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.email && interest.jobSeeker.email.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.phoneNumber && interest.jobSeeker.phoneNumber.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.city && interest.jobSeeker.city.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.state && interest.jobSeeker.state.toLowerCase().includes(searchTerm)) return true;
+            if (interest.jobSeeker?.country && interest.jobSeeker.country.toLowerCase().includes(searchTerm)) return true;
+            // Search in job seeker profile fields (metadata.profile)
+            if (interest.jobSeeker?.metadata?.profile) {
+                const profile = interest.jobSeeker.metadata.profile;
+                if (profile.headline && profile.headline.toLowerCase().includes(searchTerm)) return true;
+                if (profile.keywords && profile.keywords.toLowerCase().includes(searchTerm)) return true;
+                if (profile.workLevel && profile.workLevel.toLowerCase().includes(searchTerm)) return true;
+                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(searchTerm)) return true;
+                if (profile.clearance && profile.clearance.toLowerCase().includes(searchTerm)) return true;
+                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(searchTerm)) return true;
+                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et && et.toLowerCase().includes(searchTerm))) return true;
+                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang && lang.toLowerCase().includes(searchTerm))) return true;
+            }
+            // Search in interest level and notes
+            if (interest.interestLevel && interest.interestLevel.toLowerCase().includes(searchTerm)) return true;
+            if (interest.notes && interest.notes.toLowerCase().includes(searchTerm)) return true;
+            // Search in company name (legacy field)
+            if (interest.company && interest.company.toLowerCase().includes(searchTerm)) return true;
+            return false;
+        };
+
         // Get ALL interests (no pagination for export) - use populated data and enhance with batch-fetched
         let interests;
         try {
@@ -898,6 +934,12 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 })
                 .sort({ createdAt: -1 })
                 .lean();
+            
+            // Apply search filter if provided
+            if (search && search.trim()) {
+                const searchTerm = search.trim().toLowerCase();
+                interests = interests.filter(interest => matchesSearch(interest, searchTerm));
+            }
             
             // If populate failed (jobSeeker is null), we need to fetch by legacy IDs
             // Collect all legacy job seeker IDs from interests where populate failed
