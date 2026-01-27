@@ -5,6 +5,7 @@
  * This replaces the problematic MongoDB TTL index that was deleting entire users.
  */
 
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const logger = require('./logger');
 
@@ -14,12 +15,18 @@ const TOKEN_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000;
 /**
  * Clean up expired refresh tokens from all users
  * This removes only the expired tokens, not the users themselves.
+ * Does not delete any user documents.
  */
 const cleanupExpiredTokens = async () => {
     try {
+        // Skip if MongoDB is not connected (avoids buffering timeout in dev when DB is down)
+        if (mongoose.connection.readyState !== 1) {
+            return 0;
+        }
+
         const expirationDate = new Date(Date.now() - TOKEN_EXPIRATION_MS);
         
-        // Remove expired tokens from all users
+        // $pull only removes array entries; user documents are never deleted
         const result = await User.updateMany(
             { 'refreshTokens.createdAt': { $lt: expirationDate } },
             {
