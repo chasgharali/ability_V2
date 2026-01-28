@@ -244,113 +244,107 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
 
         console.log('Final query:', JSON.stringify(query, null, 2));
 
-        // Helper function to check if interest matches search term
-        const matchesSearch = (interest, searchTerm) => {
-            // Search in event name
-            if (interest.event?.name && interest.event.name.toLowerCase().includes(searchTerm)) return true;
-            // Search in booth name
-            if (interest.booth?.name && interest.booth.name.toLowerCase().includes(searchTerm)) return true;
-            // Search in job seeker name, email, phone, city, state, country
-            if (interest.jobSeeker?.name && interest.jobSeeker.name.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.email && interest.jobSeeker.email.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.phoneNumber && interest.jobSeeker.phoneNumber.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.city && interest.jobSeeker.city.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.state && interest.jobSeeker.state.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.country && interest.jobSeeker.country.toLowerCase().includes(searchTerm)) return true;
-            // Search in job seeker profile fields (metadata.profile)
-            if (interest.jobSeeker?.metadata?.profile) {
-                const profile = interest.jobSeeker.metadata.profile;
-                if (profile.headline && profile.headline.toLowerCase().includes(searchTerm)) return true;
-                if (profile.keywords && profile.keywords.toLowerCase().includes(searchTerm)) return true;
-                if (profile.workLevel && profile.workLevel.toLowerCase().includes(searchTerm)) return true;
-                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(searchTerm)) return true;
-                if (profile.clearance && profile.clearance.toLowerCase().includes(searchTerm)) return true;
-                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(searchTerm)) return true;
-                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et && et.toLowerCase().includes(searchTerm))) return true;
-                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang && lang.toLowerCase().includes(searchTerm))) return true;
+        // Optimize search with database-level queries
+        let finalQuery = { ...query };
+        
+        if (search && search.trim()) {
+            const searchTerm = search.trim();
+            const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            
+            // Find matching user IDs from User collection
+            const User = require('../models/User');
+            const matchingUsers = await User.find({
+                $or: [
+                    { name: searchRegex },
+                    { email: searchRegex },
+                    { phoneNumber: searchRegex },
+                    { city: searchRegex },
+                    { state: searchRegex },
+                    { country: searchRegex },
+                    { 'metadata.profile.headline': searchRegex },
+                    { 'metadata.profile.keywords': searchRegex }
+                ]
+            }).select('_id legacyId').lean();
+            
+            const userIds = matchingUsers.map(u => u._id);
+            const legacyUserIds = matchingUsers.map(u => u.legacyId).filter(Boolean);
+            
+            // Find matching event and booth IDs
+            const Event = require('../models/Event');
+            const Booth = require('../models/Booth');
+            
+            const matchingEvents = await Event.find({ name: searchRegex }).select('_id').lean();
+            const eventIds = matchingEvents.map(e => e._id);
+            
+            const matchingBooths = await Booth.find({ name: searchRegex }).select('_id').lean();
+            const boothIds = matchingBooths.map(b => b._id);
+            
+            // Build optimized search query - combine with existing query
+            const searchConditions = [];
+            
+            if (userIds.length > 0) {
+                searchConditions.push({ jobSeeker: { $in: userIds } });
             }
-            // Search in interest level and notes
-            if (interest.interestLevel && interest.interestLevel.toLowerCase().includes(searchTerm)) return true;
-            if (interest.notes && interest.notes.toLowerCase().includes(searchTerm)) return true;
-            // Search in company name (legacy field)
-            if (interest.company && interest.company.toLowerCase().includes(searchTerm)) return true;
-            return false;
-        };
-
-        // Fetch ALL records matching the base query (without pagination) if search is provided
-        // Otherwise, fetch with pagination for better performance
-        let allInterests;
-        if (search && search.trim()) {
-            // Fetch all records for search filtering
-            allInterests = await JobSeekerInterest.find(query)
-                .populate({
-                    path: 'jobSeeker',
-                    select: 'name email phoneNumber city state country resumeUrl metadata',
-                    options: { strictPopulate: false }
-                })
-                .populate({
-                    path: 'event',
-                    select: 'name slug',
-                    options: { strictPopulate: false }
-                })
-                .populate({
-                    path: 'booth',
-                    select: 'name description',
-                    options: { strictPopulate: false }
-                })
-                .sort(sortOptions)
-                .lean();
-        } else {
-            // Fetch with pagination for better performance when no search
-            const skip = (page - 1) * limit;
-            allInterests = await JobSeekerInterest.find(query)
-                .populate({
-                    path: 'jobSeeker',
-                    select: 'name email phoneNumber city state country resumeUrl metadata',
-                    options: { strictPopulate: false }
-                })
-                .populate({
-                    path: 'event',
-                    select: 'name slug',
-                    options: { strictPopulate: false }
-                })
-                .populate({
-                    path: 'booth',
-                    select: 'name description',
-                    options: { strictPopulate: false }
-                })
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(parseInt(limit))
-                .lean();
+            if (legacyUserIds.length > 0) {
+                searchConditions.push({ legacyJobSeekerId: { $in: legacyUserIds } });
+            }
+            if (eventIds.length > 0) {
+                searchConditions.push({ event: { $in: eventIds } });
+            }
+            if (boothIds.length > 0) {
+                searchConditions.push({ booth: { $in: boothIds } });
+            }
+            
+            // Add direct field searches
+            searchConditions.push({ company: searchRegex });
+            searchConditions.push({ interestLevel: searchRegex });
+            searchConditions.push({ notes: searchRegex });
+            
+            // Combine with existing query using $and
+            if (searchConditions.length > 0) {
+                finalQuery = {
+                    $and: [
+                        query,
+                        { $or: searchConditions }
+                    ]
+                };
+            }
+            
+            console.log(`🔍 Search optimized: Found ${userIds.length} users, ${eventIds.length} events, ${boothIds.length} booths matching "${searchTerm}"`);
         }
 
-        // Apply search filter if provided
-        let interests = allInterests;
-        if (search && search.trim()) {
-            const searchTerm = search.trim().toLowerCase();
-            interests = allInterests.filter(interest => matchesSearch(interest, searchTerm));
-        }
+        // Fetch with pagination using optimized query
+        const skip = (page - 1) * limit;
+        const interests = await JobSeekerInterest.find(finalQuery)
+            .populate({
+                path: 'jobSeeker',
+                select: 'name email phoneNumber city state country resumeUrl metadata',
+                options: { strictPopulate: false }
+            })
+            .populate({
+                path: 'event',
+                select: 'name slug',
+                options: { strictPopulate: false }
+            })
+            .populate({
+                path: 'booth',
+                select: 'name description',
+                options: { strictPopulate: false }
+            })
+            .populate({
+                path: 'recruiter',
+                select: 'name email',
+                options: { strictPopulate: false }
+            })
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean();
 
-        // Apply pagination if search was used (since we fetched all records)
-        if (search && search.trim()) {
-            const skip = (page - 1) * limit;
-            interests = interests.slice(skip, skip + parseInt(limit));
-        }
+        // Get total count for pagination
+        const totalInterests = await JobSeekerInterest.countDocuments(finalQuery);
 
-        // Calculate total count for pagination
-        let totalInterests;
-        if (search && search.trim()) {
-            // Count is based on filtered records
-            const searchTerm = search.trim().toLowerCase();
-            const filteredCount = allInterests.filter(interest => matchesSearch(interest, searchTerm)).length;
-            totalInterests = filteredCount;
-        } else {
-            // No search - count from database
-            totalInterests = await JobSeekerInterest.countDocuments(query);
-        }
-
-        console.log('Found interests:', interests.length, 'Total in DB:', totalInterests);
+        console.log('Found interests:', interests.length, 'Total matching query:', totalInterests);
 
         // Handle missing or unpopulated data - fetch actual user/event/booth data when populate returns null or string ID
         const User = require('../models/User');
@@ -880,44 +874,78 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             }
         }
 
-        // Helper function to check if interest matches search term (same as GET endpoint)
-        const matchesSearch = (interest, searchTerm) => {
-            // Search in event name
-            if (interest.event?.name && interest.event.name.toLowerCase().includes(searchTerm)) return true;
-            // Search in booth name
-            if (interest.booth?.name && interest.booth.name.toLowerCase().includes(searchTerm)) return true;
-            // Search in job seeker name, email, phone, city, state, country
-            if (interest.jobSeeker?.name && interest.jobSeeker.name.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.email && interest.jobSeeker.email.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.phoneNumber && interest.jobSeeker.phoneNumber.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.city && interest.jobSeeker.city.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.state && interest.jobSeeker.state.toLowerCase().includes(searchTerm)) return true;
-            if (interest.jobSeeker?.country && interest.jobSeeker.country.toLowerCase().includes(searchTerm)) return true;
-            // Search in job seeker profile fields (metadata.profile)
-            if (interest.jobSeeker?.metadata?.profile) {
-                const profile = interest.jobSeeker.metadata.profile;
-                if (profile.headline && profile.headline.toLowerCase().includes(searchTerm)) return true;
-                if (profile.keywords && profile.keywords.toLowerCase().includes(searchTerm)) return true;
-                if (profile.workLevel && profile.workLevel.toLowerCase().includes(searchTerm)) return true;
-                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(searchTerm)) return true;
-                if (profile.clearance && profile.clearance.toLowerCase().includes(searchTerm)) return true;
-                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(searchTerm)) return true;
-                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et && et.toLowerCase().includes(searchTerm))) return true;
-                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang && lang.toLowerCase().includes(searchTerm))) return true;
+        // Optimize search with database-level queries (same as GET endpoint)
+        let exportQuery = { ...query };
+        
+        if (search && search.trim()) {
+            const searchTerm = search.trim();
+            const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            
+            // Find matching user IDs from User collection
+            const matchingUsers = await User.find({
+                $or: [
+                    { name: searchRegex },
+                    { email: searchRegex },
+                    { phoneNumber: searchRegex },
+                    { city: searchRegex },
+                    { state: searchRegex },
+                    { country: searchRegex },
+                    { 'metadata.profile.headline': searchRegex },
+                    { 'metadata.profile.keywords': searchRegex }
+                ]
+            }).select('_id legacyId').lean();
+            
+            const userIds = matchingUsers.map(u => u._id);
+            const legacyUserIds = matchingUsers.map(u => u.legacyId).filter(Boolean);
+            
+            // Find matching event and booth IDs
+            const Event = require('../models/Event');
+            const Booth = require('../models/Booth');
+            
+            const matchingEvents = await Event.find({ name: searchRegex }).select('_id').lean();
+            const eventIds = matchingEvents.map(e => e._id);
+            
+            const matchingBooths = await Booth.find({ name: searchRegex }).select('_id').lean();
+            const boothIds = matchingBooths.map(b => b._id);
+            
+            // Build optimized search query
+            const searchConditions = [];
+            
+            if (userIds.length > 0) {
+                searchConditions.push({ jobSeeker: { $in: userIds } });
             }
-            // Search in interest level and notes
-            if (interest.interestLevel && interest.interestLevel.toLowerCase().includes(searchTerm)) return true;
-            if (interest.notes && interest.notes.toLowerCase().includes(searchTerm)) return true;
-            // Search in company name (legacy field)
-            if (interest.company && interest.company.toLowerCase().includes(searchTerm)) return true;
-            return false;
-        };
+            if (legacyUserIds.length > 0) {
+                searchConditions.push({ legacyJobSeekerId: { $in: legacyUserIds } });
+            }
+            if (eventIds.length > 0) {
+                searchConditions.push({ event: { $in: eventIds } });
+            }
+            if (boothIds.length > 0) {
+                searchConditions.push({ booth: { $in: boothIds } });
+            }
+            
+            // Add direct field searches
+            searchConditions.push({ company: searchRegex });
+            searchConditions.push({ interestLevel: searchRegex });
+            searchConditions.push({ notes: searchRegex });
+            
+            // Combine with existing query
+            if (searchConditions.length > 0) {
+                exportQuery = {
+                    $and: [
+                        query,
+                        { $or: searchConditions }
+                    ]
+                };
+            }
+            
+            console.log(`🔍 CSV Export: Search optimized for "${searchTerm}"`);
+        }
 
-        // Get ALL interests (no pagination for export) - use populated data and enhance with batch-fetched
+        // Get ALL interests matching the query (no pagination for export)
         let interests;
         try {
-            // Use the populated interests we already fetched, but re-fetch with full populate for events/booths
-            interests = await JobSeekerInterest.find(query)
+            interests = await JobSeekerInterest.find(exportQuery)
                 .populate({
                     path: 'jobSeeker',
                     select: 'name email phoneNumber city state country resumeUrl metadata',
@@ -942,11 +970,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 .sort({ createdAt: -1 })
                 .lean();
             
-            // Apply search filter if provided
-            if (search && search.trim()) {
-                const searchTerm = search.trim().toLowerCase();
-                interests = interests.filter(interest => matchesSearch(interest, searchTerm));
-            }
+            console.log(`📊 CSV Export: Found ${interests.length} interests matching query`);
             
             // If populate failed (jobSeeker is null), we need to fetch by legacy IDs
             // Collect all legacy job seeker IDs from interests where populate failed

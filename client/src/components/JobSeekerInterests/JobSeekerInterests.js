@@ -715,6 +715,10 @@ const JobSeekerInterests = () => {
     
     const handleSearch = () => {
         const query = (searchInputRef.current?.value || '').trim();
+        if (query) {
+            console.log('🔍 Searching for:', query);
+            showToast(`Searching for "${query}"...`, 'Info', 1500);
+        }
         setFilters(prev => ({
             ...prev,
             search: query,
@@ -726,6 +730,7 @@ const JobSeekerInterests = () => {
         if (searchInputRef.current) {
             searchInputRef.current.value = '';
         }
+        showToast('Search cleared', 'Success', 1500);
         setFilters(prev => ({
             ...prev,
             search: '',
