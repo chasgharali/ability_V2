@@ -637,11 +637,68 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             if (endDate) query.startTime.$lte = new Date(endDate);
         }
 
-        // Note: Text search is handled by populating and filtering in memory if needed
-        // For now, we'll export all records matching the other filters
+        // Optimize search with database-level queries
+        let finalQuery = { ...query };
+        
+        if (search && search.trim()) {
+            const searchTerm = search.trim();
+            const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            
+            // Find matching user IDs (job seekers, recruiters)
+            const matchingUsers = await User.find({
+                $or: [
+                    { name: searchRegex },
+                    { email: searchRegex },
+                    { phoneNumber: searchRegex },
+                    { city: searchRegex },
+                    { state: searchRegex },
+                    { 'metadata.profile.headline': searchRegex },
+                    { 'metadata.profile.keywords': searchRegex }
+                ]
+            }).select('_id').lean();
+            
+            const userIds = matchingUsers.map(u => u._id);
+            
+            // Find matching event and booth IDs
+            const matchingEvents = await Event.find({ name: searchRegex }).select('_id').lean();
+            const eventIds = matchingEvents.map(e => e._id);
+            
+            const matchingBooths = await Booth.find({ name: searchRegex }).select('_id').lean();
+            const boothIds = matchingBooths.map(b => b._id);
+            
+            // Build optimized search query
+            const searchConditions = [];
+            
+            if (userIds.length > 0) {
+                searchConditions.push({ jobseekerId: { $in: userIds } });
+                searchConditions.push({ recruiterId: { $in: userIds } });
+            }
+            if (eventIds.length > 0) {
+                searchConditions.push({ eventId: { $in: eventIds } });
+            }
+            if (boothIds.length > 0) {
+                searchConditions.push({ boothId: { $in: boothIds } });
+            }
+            
+            // Add direct field searches
+            searchConditions.push({ status: searchRegex });
+            searchConditions.push({ recruiterFeedback: searchRegex });
+            
+            // Combine with existing query
+            if (searchConditions.length > 0) {
+                finalQuery = {
+                    $and: [
+                        query,
+                        { $or: searchConditions }
+                    ]
+                };
+            }
+            
+            console.log(`🔍 CSV Export: Search optimized for "${searchTerm}"`);
+        }
 
         // Get ALL records (no limit for export)
-        const meetingRecords = await MeetingRecord.find(query)
+        const meetingRecords = await MeetingRecord.find(finalQuery)
             .populate({
                 path: 'eventId',
                 select: 'name',
@@ -704,26 +761,26 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             }
         };
 
-        // Convert to CSV format
+        // Convert to CSV format (no "Job Seeker" prefix)
         const csvHeaders = [
             'Event Name',
             'Booth',
             'Recruiter Name',
             'Recruiter Email',
-            'Job Seeker First Name',
-            'Job Seeker Last Name',
-            'Job Seeker Email',
-            'Job Seeker Phone',
-            'Job Seeker Location',
-            'Job Seeker Headline',
-            'Job Seeker Keywords',
+            'First Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'Location',
+            'Headline',
+            'Keywords',
             'Work Experience Level',
             'Highest Education Level',
             'Employment Types',
             'Language(s)',
             'Security Clearance',
             'Veteran/Military Status',
-            'Job Seeker Resume Link',
+            'Resume Link',
             'Interpreter',
             'Start Time',
             'End Time',
@@ -776,20 +833,18 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 ? String(jobSeeker.resumeUrl).trim() 
                 : '';
             
-            // Extract profile data from metadata
+            // Extract profile data from metadata and convert to labels
             const profile = (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? jobSeeker.metadata.profile : null;
             const headline = profile && profile.headline ? String(profile.headline).trim() : '';
             const keywords = profile && profile.keywords ? String(profile.keywords).trim() : '';
-            const workLevel = profile && profile.workLevel ? String(profile.workLevel).trim() : '';
-            const educationLevel = profile && profile.educationLevel ? String(profile.educationLevel).trim() : '';
-            const employmentTypes = (profile && Array.isArray(profile.employmentTypes)) 
-                ? profile.employmentTypes.filter(Boolean).join(', ') 
-                : '';
+            const workLevelLabel = getWorkLevelLabel(profile && profile.workLevel);
+            const educationLevelLabel = getEducationLevelLabel(profile && profile.educationLevel);
+            const employmentTypesLabel = getEmploymentTypesLabel(profile && profile.employmentTypes);
             const languages = (profile && Array.isArray(profile.languages)) 
-                ? profile.languages.filter(Boolean).join(', ') 
+                ? profile.languages.filter(Boolean).join('; ') 
                 : '';
-            const clearance = profile && profile.clearance ? String(profile.clearance).trim() : '';
-            const veteranStatus = profile && profile.veteranStatus ? String(profile.veteranStatus).trim() : '';
+            const clearanceLabel = getClearanceLabel(profile && profile.clearance);
+            const veteranStatusLabel = getVeteranStatusLabel(profile && profile.veteranStatus);
             
             // Interpreter can be null, so handle it specially
             let interpreterName = '';
@@ -868,12 +923,12 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 escapeCSV(location),
                 escapeCSV(headline),
                 escapeCSV(keywords),
-                escapeCSV(workLevel),
-                escapeCSV(educationLevel),
-                escapeCSV(employmentTypes),
+                escapeCSV(workLevelLabel),
+                escapeCSV(educationLevelLabel),
+                escapeCSV(employmentTypesLabel),
                 escapeCSV(languages),
-                escapeCSV(clearance),
-                escapeCSV(veteranStatus),
+                escapeCSV(clearanceLabel),
+                escapeCSV(veteranStatusLabel),
                 escapeCSV(jobSeekerResumeUrl),
                 escapeCSV(interpreterName),
                 escapeCSV(formatDate(record.startTime)),

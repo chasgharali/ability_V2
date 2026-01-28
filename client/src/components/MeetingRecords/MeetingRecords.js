@@ -20,6 +20,13 @@ import { listBooths } from '../../services/booths';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 import JSZip from 'jszip';
+import {
+    EXPERIENCE_LEVEL_LIST,
+    EDUCATION_LEVEL_LIST,
+    JOB_TYPE_LIST,
+    SECURITY_CLEARANCE_LIST,
+    MILITARY_EXPERIENCE_LIST
+} from '../../constants/options';
 
 export default function MeetingRecords() {
     const { user, loading } = useAuth();
@@ -800,28 +807,40 @@ export default function MeetingRecords() {
         }
     };
     
+    // Helper: value -> label for dropdown fields in CSV
+    const getLabelFromValue = (value, optionsList) => {
+        if (value === null || value === undefined || value === '') return '';
+        const s = String(value).trim();
+        const opt = optionsList.find(o => (o.value || '').toString() === s || (o.name || '').toString() === s);
+        return opt ? (opt.name || opt.value || s) : s;
+    };
+    const getLabelFromValues = (values, optionsList) => {
+        if (!values || !Array.isArray(values)) return '';
+        return values.map(v => getLabelFromValue(v, optionsList)).filter(Boolean).join('; ');
+    };
+
     // Helper function for client-side CSV export
     const exportToCSVClientSide = (recordsToExport) => {
-        // CSV Headers
+        // CSV Headers (no "Job Seeker" prefix)
         const csvHeaders = [
             'Event Name',
             'Booth',
             'Recruiter Name',
             'Recruiter Email',
-            'Job Seeker First Name',
-            'Job Seeker Last Name',
-            'Job Seeker Email',
-            'Job Seeker Phone',
-            'Job Seeker Location',
-            'Job Seeker Headline',
-            'Job Seeker Keywords',
+            'First Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'Location',
+            'Headline',
+            'Keywords',
             'Work Experience Level',
             'Highest Education Level',
             'Employment Types',
             'Language(s)',
             'Security Clearance',
             'Veteran/Military Status',
-            'Job Seeker Resume Link',
+            'Resume Link',
             'Interpreter',
             'Start Time',
             'End Time',
@@ -917,21 +936,19 @@ export default function MeetingRecords() {
                     location = jobSeekerState;
                 }
                 
-                // Extract profile data from metadata
+                // Extract profile data from metadata and convert to labels
                 const jobSeeker = record.jobseekerId;
                 const profile = (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? jobSeeker.metadata.profile : null;
                 const headline = profile && profile.headline ? String(profile.headline).trim() : '';
                 const keywords = profile && profile.keywords ? String(profile.keywords).trim() : '';
-                const workLevel = profile && profile.workLevel ? String(profile.workLevel).trim() : '';
-                const educationLevel = profile && profile.educationLevel ? String(profile.educationLevel).trim() : '';
-                const employmentTypes = (profile && Array.isArray(profile.employmentTypes)) 
-                    ? profile.employmentTypes.filter(Boolean).join(', ') 
+                const workLevelLabel = getLabelFromValue(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST);
+                const educationLevelLabel = getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST);
+                const employmentTypesLabel = getLabelFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST);
+                const languagesDisplay = (profile && Array.isArray(profile.languages)) 
+                    ? profile.languages.filter(Boolean).join('; ') 
                     : '';
-                const languages = (profile && Array.isArray(profile.languages)) 
-                    ? profile.languages.filter(Boolean).join(', ') 
-                    : '';
-                const clearance = profile && profile.clearance ? String(profile.clearance).trim() : '';
-                const veteranStatus = profile && profile.veteranStatus ? String(profile.veteranStatus).trim() : '';
+                const clearanceLabel = getLabelFromValue(profile?.clearance || '', SECURITY_CLEARANCE_LIST);
+                const veteranStatusLabel = getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST);
                 
                 const interpreterName = (record.interpreterId && typeof record.interpreterId === 'object' && record.interpreterId.name) 
                     ? record.interpreterId.name 
@@ -961,12 +978,12 @@ export default function MeetingRecords() {
                     escapeCSV(location),
                     escapeCSV(headline),
                     escapeCSV(keywords),
-                    escapeCSV(workLevel),
-                    escapeCSV(educationLevel),
-                    escapeCSV(employmentTypes),
-                    escapeCSV(languages),
-                    escapeCSV(clearance),
-                    escapeCSV(veteranStatus),
+                    escapeCSV(workLevelLabel),
+                    escapeCSV(educationLevelLabel),
+                    escapeCSV(employmentTypesLabel),
+                    escapeCSV(languagesDisplay),
+                    escapeCSV(clearanceLabel),
+                    escapeCSV(veteranStatusLabel),
                     escapeCSV(jobSeekerResumeUrl),
                     escapeCSV(interpreterName),
                     escapeCSV(formatDateForCSV(record.startTime)),
@@ -1407,18 +1424,12 @@ export default function MeetingRecords() {
         if (!gridRef.current) return [];
         
         try {
-            // Try the most common method first for speed
+            // Use getSelectedRecords - most reliable method for Syncfusion Grid
             if (typeof gridRef.current.getSelectedRecords === 'function') {
-                const selectedRows = gridRef.current.getSelectedRecords();
-                return selectedRows.map(row => row._id || row.id).filter(Boolean);
+                const rows = gridRef.current.getSelectedRecords();
+                // Return string IDs for consistent comparison
+                return rows.map(row => String(row.id || row._id || '')).filter(Boolean);
             }
-            
-            // Fallback methods
-            if (typeof gridRef.current.getSelectedRowsData === 'function') {
-                const selectedRows = gridRef.current.getSelectedRowsData();
-                return selectedRows.map(row => row._id || row.id).filter(Boolean);
-            }
-            
             return [];
         } catch (error) {
             console.error('Error getting selected rows:', error);
