@@ -134,21 +134,6 @@ export default function EventManagement() {
         termsId: '',
         termsIds: [],
         status: 'draft',
-        headerColor: '#ffffff',
-        headerTextColor: '#000000',
-        bodyColor: '#ff9800',
-        bodyTextColor: '#000000',
-        sidebarColor: '#ffffff',
-        sidebarTextColor: '#000000',
-        btnPrimaryColor: '#000000',
-        btnPrimaryTextColor: '#ffffff',
-        btnSecondaryColor: '#000000',
-        btnSecondaryTextColor: '#ffffff',
-        entranceFormColor: '#ff9800',
-        entranceFormTextColor: '#000000',
-        chatHeaderColor: '#eeeeee',
-        chatSidebarColor: '#000000',
-        addFooter: false,
         isDemo: false,
     });
 
@@ -670,21 +655,6 @@ export default function EventManagement() {
             termsId: '',
             termsIds: [],
             status: 'draft',
-            headerColor: '#ffffff',
-            headerTextColor: '#000000',
-            bodyColor: '#ff9800',
-            bodyTextColor: '#000000',
-            sidebarColor: '#ffffff',
-            sidebarTextColor: '#000000',
-            btnPrimaryColor: '#000000',
-            btnPrimaryTextColor: '#ffffff',
-            btnSecondaryColor: '#000000',
-            btnSecondaryTextColor: '#ffffff',
-            entranceFormColor: '#ff9800',
-            entranceFormTextColor: '#000000',
-            chatHeaderColor: '#eeeeee',
-            chatSidebarColor: '#000000',
-            addFooter: false,
             isDemo: false,
         });
         setEditingId(null);
@@ -737,7 +707,6 @@ export default function EventManagement() {
             endTime: toLocalDateTimeString(row.endTime),
             information: row.description || '',
             status: row.status || 'draft',
-            addFooter: row.addFooter || false,
             isDemo: row.isDemo || false,
             termsIds: row.termsIds || [],
         }));
@@ -826,21 +795,21 @@ export default function EventManagement() {
                     maxRecruitersPerEvent: form.maxRecruitersPerEvent || 0,
                 },
                 theme: {
-                    headerColor: form.headerColor,
-                    headerTextColor: form.headerTextColor,
-                    bodyColor: form.bodyColor,
-                    bodyTextColor: form.bodyTextColor,
-                    sidebarColor: form.sidebarColor,
-                    sidebarTextColor: form.sidebarTextColor,
-                    btnPrimaryColor: form.btnPrimaryColor,
-                    btnPrimaryTextColor: form.btnPrimaryTextColor,
-                    btnSecondaryColor: form.btnSecondaryColor,
-                    btnSecondaryTextColor: form.btnSecondaryTextColor,
-                    entranceFormColor: form.entranceFormColor,
-                    entranceFormTextColor: form.entranceFormTextColor,
-                    chatHeaderColor: form.chatHeaderColor,
-                    chatSidebarColor: form.chatSidebarColor,
-                    addFooter: !!form.addFooter,
+                    headerColor: '#ffffff',
+                    headerTextColor: '#000000',
+                    bodyColor: '#ff9800',
+                    bodyTextColor: '#000000',
+                    sidebarColor: '#ffffff',
+                    sidebarTextColor: '#000000',
+                    btnPrimaryColor: '#000000',
+                    btnPrimaryTextColor: '#ffffff',
+                    btnSecondaryColor: '#000000',
+                    btnSecondaryTextColor: '#ffffff',
+                    entranceFormColor: '#ff9800',
+                    entranceFormTextColor: '#000000',
+                    chatHeaderColor: '#eeeeee',
+                    chatSidebarColor: '#000000',
+                    addFooter: false,
                 },
                 isDemo: !!form.isDemo,
             };
@@ -1413,38 +1382,6 @@ export default function EventManagement() {
                                     options={termsOptions}
                                     placeholder="Choose one or more Terms & Conditions"
                                 />
-
-                                {/* Simple color inputs (can be replaced with color pickers later) */}
-                                <div className="form-row">
-                                    <Input label="Header Color" type="color" value={form.headerColor} onChange={(e) => setField('headerColor', e.target.value)} />
-                                    <Input label="Header Text Color" type="color" value={form.headerTextColor} onChange={(e) => setField('headerTextColor', e.target.value)} />
-                                </div>
-                                <div className="form-row">
-                                    <Input label="Body Color" type="color" value={form.bodyColor} onChange={(e) => setField('bodyColor', e.target.value)} />
-                                    <Input label="Body Text Color" type="color" value={form.bodyTextColor} onChange={(e) => setField('bodyTextColor', e.target.value)} />
-                                </div>
-                                <div className="form-row">
-                                    <Input label="Sidebar Color" type="color" value={form.sidebarColor} onChange={(e) => setField('sidebarColor', e.target.value)} />
-                                    <Input label="Sidebar Text Color" type="color" value={form.sidebarTextColor} onChange={(e) => setField('sidebarTextColor', e.target.value)} />
-                                </div>
-                                <div className="form-row">
-                                    <Input label="Button Primary Color" type="color" value={form.btnPrimaryColor} onChange={(e) => setField('btnPrimaryColor', e.target.value)} />
-                                    <Input label="Button Primary Text Color" type="color" value={form.btnPrimaryTextColor} onChange={(e) => setField('btnPrimaryTextColor', e.target.value)} />
-                                </div>
-                                <div className="form-row">
-                                    <Input label="Button Secondary Color" type="color" value={form.btnSecondaryColor} onChange={(e) => setField('btnSecondaryColor', e.target.value)} />
-                                    <Input label="Button Secondary Text Color" type="color" value={form.btnSecondaryTextColor} onChange={(e) => setField('btnSecondaryTextColor', e.target.value)} />
-                                </div>
-                                <div className="form-row">
-                                    <Input label="Entrance Form Color" type="color" value={form.entranceFormColor} onChange={(e) => setField('entranceFormColor', e.target.value)} />
-                                    <Input label="Entrance Form Text Color" type="color" value={form.entranceFormTextColor} onChange={(e) => setField('entranceFormTextColor', e.target.value)} />
-                                </div>
-                                <div className="form-row">
-                                    <Input label="Chat header Color" type="color" value={form.chatHeaderColor} onChange={(e) => setField('chatHeaderColor', e.target.value)} />
-                                    <Input label="Chat Sidebar Color" type="color" value={form.chatSidebarColor} onChange={(e) => setField('chatSidebarColor', e.target.value)} />
-                                </div>
-
-                                <Checkbox label="Add Event Footer" checked={form.addFooter} onChange={(e) => setField('addFooter', e.target.checked)} />
 
                                 <ButtonComponent 
                                     cssClass="e-primary" 

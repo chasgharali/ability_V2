@@ -7,6 +7,161 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
+/* ========================================
+   Global Delete Dialog Styles
+   Applies to all delete confirmation dialogs
+   ======================================== */
+
+/* Delete dialog container - proper positioning and z-index */
+.e-dialog[class*="-delete-dialog"],
+.e-dialog.bulk-delete-dialog,
+body .e-dialog[class*="-delete-dialog"],
+body .e-dialog.bulk-delete-dialog {
+    z-index: 10000 !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    max-width: 550px !important;
+    min-width: 400px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Dialog header */
+.e-dialog[class*="-delete-dialog"] .e-dlg-header,
+.e-dialog.bulk-delete-dialog .e-dlg-header {
+    padding: 24px 24px 16px 24px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    background-color: #fff !important;
+}
+
+.e-dialog[class*="-delete-dialog"] .e-dlg-header .e-dlg-header-content,
+.e-dialog.bulk-delete-dialog .e-dlg-header .e-dlg-header-content {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    line-height: 1.4 !important;
+}
+
+/* Dialog content - proper spacing and readability */
+.e-dialog[class*="-delete-dialog"] .e-dlg-content,
+.e-dialog.bulk-delete-dialog .e-dlg-content {
+    padding: 24px !important;
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+    color: #374151 !important;
+}
+
+.e-dialog[class*="-delete-dialog"] .e-dlg-content p,
+.e-dialog.bulk-delete-dialog .e-dlg-content p {
+    margin: 0 !important;
+    line-height: 1.6 !important;
+}
+
+.e-dialog[class*="-delete-dialog"] .e-dlg-content strong,
+.e-dialog.bulk-delete-dialog .e-dlg-content strong {
+    font-weight: 600 !important;
+    color: #111827 !important;
+}
+
+/* Dialog footer - proper spacing */
+.e-dialog[class*="-delete-dialog"] .e-footer-content,
+.e-dialog.bulk-delete-dialog .e-footer-content {
+    padding: 16px 24px !important;
+    border-top: 1px solid #e5e7eb !important;
+    background-color: #f9fafb !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+}
+
+/* Dialog buttons */
+.e-dialog[class*="-delete-dialog"] .e-footer-content .e-btn,
+.e-dialog.bulk-delete-dialog .e-footer-content .e-btn {
+    min-width: 100px !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    transition: all 0.15s ease !important;
+}
+
+/* Cancel button */
+.e-dialog[class*="-delete-dialog"] .e-footer-content .e-btn.e-outline.e-primary,
+.e-dialog.bulk-delete-dialog .e-footer-content .e-btn.e-outline.e-primary {
+    background-color: transparent !important;
+    border: 1px solid #d1d5db !important;
+    color: #374151 !important;
+}
+
+.e-dialog[class*="-delete-dialog"] .e-footer-content .e-btn.e-outline.e-primary:hover,
+.e-dialog.bulk-delete-dialog .e-footer-content .e-btn.e-outline.e-primary:hover {
+    background-color: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+    color: #111827 !important;
+}
+
+/* Delete/Danger button */
+.e-dialog[class*="-delete-dialog"] .e-footer-content .e-btn.e-danger,
+.e-dialog.bulk-delete-dialog .e-footer-content .e-btn.e-danger {
+    background-color: #dc2626 !important;
+    border: 1px solid #dc2626 !important;
+    color: #ffffff !important;
+}
+
+.e-dialog[class*="-delete-dialog"] .e-footer-content .e-btn.e-danger:hover,
+.e-dialog.bulk-delete-dialog .e-footer-content .e-btn.e-danger:hover {
+    background-color: #b91c1c !important;
+    border-color: #b91c1c !important;
+    color: #ffffff !important;
+}
+
+/* Close icon styling */
+.e-dialog[class*="-delete-dialog"] .e-dlg-header .e-icon-dlg-close,
+.e-dialog.bulk-delete-dialog .e-dlg-header .e-icon-dlg-close {
+    font-size: 20px !important;
+    color: #6b7280 !important;
+    transition: color 0.15s ease !important;
+}
+
+.e-dialog[class*="-delete-dialog"] .e-dlg-header .e-icon-dlg-close:hover,
+.e-dialog.bulk-delete-dialog .e-dlg-header .e-icon-dlg-close:hover {
+    color: #111827 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .e-dialog[class*="-delete-dialog"],
+    .e-dialog.bulk-delete-dialog {
+        max-width: 90vw !important;
+        min-width: 300px !important;
+    }
+    
+    .e-dialog[class*="-delete-dialog"] .e-dlg-header,
+    .e-dialog.bulk-delete-dialog .e-dlg-header {
+        padding: 20px 20px 12px 20px !important;
+    }
+    
+    .e-dialog[class*="-delete-dialog"] .e-dlg-content,
+    .e-dialog.bulk-delete-dialog .e-dlg-content {
+        padding: 20px !important;
+        font-size: 14px !important;
+    }
+    
+    .e-dialog[class*="-delete-dialog"] .e-footer-content,
+    .e-dialog.bulk-delete-dialog .e-footer-content {
+        padding: 12px 20px !important;
+        flex-direction: column !important;
+    }
+    
+    .e-dialog[class*="-delete-dialog"] .e-footer-content .e-btn,
+    .e-dialog.bulk-delete-dialog .e-footer-content .e-btn {
+        width: 100% !important;
+    }
+}
+
 /* Skip Link for Accessibility */
 .skip-link {
     position: absolute;

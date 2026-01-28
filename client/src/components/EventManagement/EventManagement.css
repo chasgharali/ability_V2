@@ -1472,6 +1472,21 @@ body .em-delete-dialog.e-dialog {
     margin-bottom: 0 !important;
 }
 
+/* Ensure date/time fields in form-row are properly aligned */
+.form-row .form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row .form-field .form-label {
+    min-height: 24px;
+    margin-bottom: 0.5rem;
+}
+
+.form-row .form-datetimepicker-container {
+    flex: 1;
+}
+
 /* Status filter dropdown styling - match role filter */
 .status-filter-dropdown.e-dropdownlist {
     width: 100% !important;
