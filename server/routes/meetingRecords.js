@@ -4,7 +4,16 @@ const MeetingRecord = require('../models/MeetingRecord');
 const VideoCall = require('../models/VideoCall');
 const BoothQueue = require('../models/BoothQueue');
 const User = require('../models/User');
+const Event = require('../models/Event');
+const Booth = require('../models/Booth');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const {
+    getWorkLevelLabel,
+    getEducationLevelLabel,
+    getEmploymentTypesLabel,
+    getClearanceLabel,
+    getVeteranStatusLabel
+} = require('../utils/profileFieldLabels');
 
 // Get meeting records with filtering
 router.get('/', authenticateToken, async (req, res) => {
@@ -92,7 +101,10 @@ router.get('/', authenticateToken, async (req, res) => {
 
         // Apply additional filters (these apply to all conditions in $or)
         if (eventId) query.eventId = eventId;
-        if (boothId) query.boothId = boothId;
+        // Only allow client boothId for Admin/GlobalSupport; Recruiters are already scoped to their assigned booth
+        if (boothId && ['Admin', 'GlobalSupport'].includes(req.user.role)) {
+            query.boothId = boothId;
+        }
 
         console.log('Meeting records query:', JSON.stringify(query));
 
@@ -535,7 +547,8 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
         if (eventId) {
             matchQuery.eventId = new mongoose.Types.ObjectId(eventId);
         }
-        if (boothId) {
+        // Only allow client boothId for Admin/GlobalSupport; Recruiters are already scoped to their assigned booth
+        if (boothId && ['Admin', 'GlobalSupport'].includes(req.user.role)) {
             matchQuery.boothId = new mongoose.Types.ObjectId(boothId);
         }
 
@@ -627,7 +640,10 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         }
 
         if (eventId) query.eventId = eventId;
-        if (boothId) query.boothId = boothId;
+        // Only allow client boothId for Admin/GlobalSupport; Recruiters are already scoped to their assigned booth
+        if (boothId && ['Admin', 'GlobalSupport'].includes(req.user.role)) {
+            query.boothId = boothId;
+        }
         if (status) query.status = status;
 
         // Date range filtering
@@ -1074,7 +1090,8 @@ router.get('/export/resumes', authenticateToken, requireRole(['Admin', 'GlobalSu
                 query.eventId = new mongoose.Types.ObjectId(eventId);
                 console.log(`🎪 Event filter: ${eventId}`);
             }
-            if (boothId) {
+            // Only allow client boothId for Admin/GlobalSupport; Recruiters are already scoped to their assigned booth
+            if (boothId && ['Admin', 'GlobalSupport'].includes(req.user.role)) {
                 query.boothId = new mongoose.Types.ObjectId(boothId);
                 console.log(`🏢 Booth filter: ${boothId}`);
             }

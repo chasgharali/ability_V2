@@ -1430,16 +1430,14 @@ export default function BoothManagement() {
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <MultiSelect
-                    label="Select Event"
-                    value={boothForm.eventIds}
-                    onChange={(e) => setBoothField('eventIds', e.target.value)}
-                    options={eventOptions}
-                    placeholder={loadingEvents ? 'Loading events…' : 'Choose your Event'}
-                    name="eventIds"
-                  />
-                </div>
+                <MultiSelect
+                  label="Select Event"
+                  value={boothForm.eventIds}
+                  onChange={(e) => setBoothField('eventIds', e.target.value)}
+                  options={eventOptions}
+                  placeholder={loadingEvents ? 'Loading events…' : 'Choose your Event'}
+                  name="eventIds"
+                />
 
                 <Input
                   label="Recruiters Count"

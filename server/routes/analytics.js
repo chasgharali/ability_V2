@@ -19,8 +19,8 @@ const buildBoothFilter = async (user) => {
         return {};
     }
     
-    // Booth Support can only see their assigned booth
-    if (user.role === 'Support' && user.assignedBooth) {
+    // Booth Support and Recruiter can only see their assigned booth
+    if ((user.role === 'Support' || user.role === 'Recruiter') && user.assignedBooth) {
         return { boothId: user.assignedBooth };
     }
     
@@ -34,7 +34,7 @@ const buildBoothFilter = async (user) => {
  * Admin and GlobalSupport: all data
  * Booth Support: only their booth data
  */
-router.get('/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support']), async (req, res) => {
+router.get('/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support', 'Recruiter']), async (req, res) => {
     try {
         const boothFilter = await buildBoothFilter(req.user);
         
@@ -212,7 +212,7 @@ router.get('/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport'
  * Admin and GlobalSupport: all events
  * Booth Support: events containing their booth
  */
-router.get('/events', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support']), async (req, res) => {
+router.get('/events', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support', 'Recruiter']), async (req, res) => {
     try {
         const boothFilter = await buildBoothFilter(req.user);
         
@@ -313,7 +313,7 @@ router.get('/events', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
  * Admin and GlobalSupport: all booths
  * Booth Support: only their booth
  */
-router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support']), async (req, res) => {
+router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support', 'Recruiter']), async (req, res) => {
     try {
         const boothFilter = await buildBoothFilter(req.user);
         
@@ -485,7 +485,7 @@ router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
  * GET /api/analytics/live-stats
  * Live system stats (online users, calls, queue)
  */
-router.get('/live-stats', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support']), async (req, res) => {
+router.get('/live-stats', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support', 'Recruiter']), async (req, res) => {
     try {
         const boothFilter = await buildBoothFilter(req.user);
         if (boothFilter === null) {
@@ -673,7 +673,7 @@ router.get('/live-stats', authenticateToken, requireRole(['Admin', 'GlobalSuppor
  * Admin and GlobalSupport: all events
  * Booth Support: only their booth's event
  */
-router.get('/full-event-report', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support']), async (req, res) => {
+router.get('/full-event-report', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support', 'Recruiter']), async (req, res) => {
     try {
         const boothFilter = await buildBoothFilter(req.user);
         
@@ -866,7 +866,7 @@ router.get('/full-event-report', authenticateToken, requireRole(['Admin', 'Globa
  * GET /api/analytics/export/csv
  * Export analytics data as CSV
  */
-router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support']), async (req, res) => {
+router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Support', 'Recruiter']), async (req, res) => {
     try {
         const { type, eventId, boothId, startDate, endDate } = req.query;
 

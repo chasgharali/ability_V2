@@ -22,13 +22,13 @@ export default function Analytics() {
         if (!loading) {
             if (!user) {
                 navigate('/login', { replace: true });
-            } else if (!['Admin', 'GlobalSupport', 'Support'].includes(user.role)) {
-                navigate('/dashboard', { replace: true });
+            } else if (!['Admin', 'GlobalSupport', 'Support', 'Recruiter'].includes(user.role)) {
+                navigate('/dashboard', { replace: true});
             }
         }
     }, [user, loading, navigate]);
 
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState(user?.role === 'Recruiter' ? 'report' : 'overview');
     const [loadingData, setLoadingData] = useState(true);
     const [events, setEvents] = useState([]);
     const [boothOptions, setBoothOptions] = useState([]);
@@ -53,6 +53,7 @@ export default function Analytics() {
     });
 
     const isSupportRole = user?.role === 'Support';
+    const isRecruiterRole = user?.role === 'Recruiter';
     const canFilterBooth = ['Admin', 'GlobalSupport'].includes(user?.role);
 
     const showToast = useCallback((message, type = 'info') => {
@@ -93,9 +94,9 @@ export default function Analytics() {
         loadBoothsOptions();
     }, [canFilterBooth, filters.eventId]);
 
-    // Support role: lock filters to assigned booth/event
+    // Support and Recruiter roles: lock filters to assigned booth/event
     useEffect(() => {
-        if (!isSupportRole || assignedBoothLoading || !assignedBooth || !assignedBooth._id) {
+        if ((!isSupportRole && !isRecruiterRole) || assignedBoothLoading || !assignedBooth || !assignedBooth._id) {
             return;
         }
 
@@ -118,7 +119,7 @@ export default function Analytics() {
             return updated ? next : prev;
         });
 
-    }, [isSupportRole, assignedBoothLoading, assignedBooth, assignedEvent]);
+    }, [isSupportRole, isRecruiterRole, assignedBoothLoading, assignedBooth, assignedEvent]);
 
     // Load overview data
     const loadOverview = useCallback(async () => {
@@ -267,7 +268,7 @@ export default function Analytics() {
                             {/* Page Header 
                             <div className="page-header">
                                 <h1>Analytics & Reports</h1>
-                                {user?.role === 'Support' && (
+                                {(user?.role === 'Support' || user?.role === 'Recruiter') && (
                                     <p className="page-subtitle">Viewing data for your assigned booth</p>
                                 )}
                             </div>
@@ -275,24 +276,28 @@ export default function Analytics() {
 
                             {/* Tabs */}
                             <div className="analytics-tabs">
-                                <button
-                                    className={`analytics-tab ${activeTab === 'overview' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('overview')}
-                                >
-                                    Overview
-                                </button>
+                                {!isRecruiterRole && (
+                                    <button
+                                        className={`analytics-tab ${activeTab === 'overview' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('overview')}
+                                    >
+                                        Overview
+                                    </button>
+                                )}
                                 <button
                                     className={`analytics-tab ${activeTab === 'report' ? 'active' : ''}`}
                                     onClick={() => setActiveTab('report')}
                                 >
                                     Report
                                 </button>
-                                <button
-                                    className={`analytics-tab ${activeTab === 'live-stats' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('live-stats')}
-                                >
-                                    Live Stats
-                                </button>
+                                {!isRecruiterRole && (
+                                    <button
+                                        className={`analytics-tab ${activeTab === 'live-stats' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('live-stats')}
+                                    >
+                                        Live Stats
+                                    </button>
+                                )}
                             </div>
 
                             {/* Filters */}

@@ -667,7 +667,30 @@ export default function MeetingRecords() {
 
     const handleExport = async () => {
         try {
+            console.log('📤 Starting export...');
             setLoadingData(true);
+            
+            // Check for selected records first
+            const currentSelection = getSelectedRecordsFromGrid();
+            
+            if (currentSelection.length > 0) {
+                // Export selected records only (client-side)
+                console.log(`📊 Exporting ${currentSelection.length} selected record(s)`);
+                const selectedIds = currentSelection.map(id => String(id));
+                const selectedData = meetingRecords.filter(r => {
+                    const recordId = String(r._id || r.id || '');
+                    return selectedIds.includes(recordId);
+                });
+                
+                if (selectedData.length > 0) {
+                    exportToCSVClientSide(selectedData);
+                    showToast(`✅ Exported ${selectedData.length} selected record(s)`, 'Success');
+                } else {
+                    showToast('No matching data found for selected records', 'Warning');
+                }
+                setLoadingData(false);
+                return;
+            }
             
             // Check if there are column filters applied in the grid
             let hasColumnFilters = false;
@@ -797,7 +820,10 @@ export default function MeetingRecords() {
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 
-                showToast('Meeting records exported successfully', 'Success');
+                const message = filters.search 
+                    ? `Exported search results successfully` 
+                    : 'Meeting records exported successfully';
+                showToast(message, 'Success');
             }
         } catch (error) {
             console.error('Error exporting meeting records:', error);
@@ -1821,21 +1847,25 @@ export default function MeetingRecords() {
                                 </div>
                             )}
                             <div className="header-actions">
-                                <ButtonComponent 
-                                    cssClass="e-outline e-primary e-small" 
-                                    onClick={handleSelectAll}
-                                    aria-label="Select all items on current page"
-                                >
-                                    Select All
-                                </ButtonComponent>
-                                <ButtonComponent 
-                                    cssClass="e-outline e-primary e-small" 
-                                    onClick={handleDeselectAll}
-                                    disabled={selectedRecords.length === 0}
-                                    aria-label="Deselect all items"
-                                >
-                                    Deselect All
-                                </ButtonComponent>
+                                {['Admin', 'GlobalSupport', 'AdminEvent', 'Recruiter'].includes(user?.role) && (
+                                    <>
+                                        <ButtonComponent 
+                                            cssClass="e-outline e-primary e-small" 
+                                            onClick={handleSelectAll}
+                                            aria-label="Select all items on current page"
+                                        >
+                                            Select All
+                                        </ButtonComponent>
+                                        <ButtonComponent 
+                                            cssClass="e-outline e-primary e-small" 
+                                            onClick={handleDeselectAll}
+                                            disabled={selectedRecords.length === 0}
+                                            aria-label="Deselect all items"
+                                        >
+                                            Deselect All
+                                        </ButtonComponent>
+                                    </>
+                                )}
                                 {['Admin', 'GlobalSupport', 'AdminEvent'].includes(user?.role) && (
                                     <ButtonComponent 
                                         cssClass="e-danger e-small"
@@ -1892,7 +1922,7 @@ export default function MeetingRecords() {
 
                         {/* Search and Filter Row */}
                         <div className="mr-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            {/* Event Filter */}
+                            {/* Event Filter - show for all roles */}
                             <div style={{ width: '200px', flexShrink: 0 }}>
                                 <DropDownListComponent
                                     id="event-filter-dropdown"
@@ -1906,20 +1936,22 @@ export default function MeetingRecords() {
                                     width="100%"
                                 />
                             </div>
-                            {/* Booth Filter */}
-                            <div style={{ width: '200px', flexShrink: 0 }}>
-                                <DropDownListComponent
-                                    id="booth-filter-dropdown"
-                                    dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
-                                    fields={{ value: 'value', text: 'text' }}
-                                    value={filters.boothId}
-                                    change={(e) => handleFilterChange('boothId', e.value || '')}
-                                    placeholder="All Booths"
-                                    cssClass="filter-dropdown"
-                                    popupHeight="300px"
-                                    width="100%"
-                                />
-                            </div>
+                            {/* Booth Filter - only for Admin/GlobalSupport; Recruiters see only their assigned booth automatically */}
+                            {['Admin', 'GlobalSupport'].includes(user?.role) && (
+                                <div style={{ width: '200px', flexShrink: 0 }}>
+                                    <DropDownListComponent
+                                        id="booth-filter-dropdown"
+                                        dataSource={[{ value: '', text: 'All Booths' }, ...booths.map(b => ({ value: b._id, text: b.name }))]}
+                                        fields={{ value: 'value', text: 'text' }}
+                                        value={filters.boothId}
+                                        change={(e) => handleFilterChange('boothId', e.value || '')}
+                                        placeholder="All Booths"
+                                        cssClass="filter-dropdown"
+                                        popupHeight="300px"
+                                        width="100%"
+                                    />
+                                </div>
+                            )}
                             {/* Search Section */}
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                                 <div style={{ marginBottom: 0 }}>
@@ -2030,7 +2062,7 @@ export default function MeetingRecords() {
                                 rowDeselected={handleRowSelected}
                             >
                                     <ColumnsDirective>
-                                    {['Admin', 'GlobalSupport', 'AdminEvent'].includes(user?.role) && (
+                                    {['Admin', 'GlobalSupport', 'AdminEvent', 'Recruiter'].includes(user?.role) && (
                                         <ColumnDirective 
                                             type='checkbox' 
                                             width='50' 
