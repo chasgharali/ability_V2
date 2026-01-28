@@ -2225,6 +2225,7 @@ export default function MeetingRecords() {
                 header="Delete Meeting Records"
                 closeOnEscape={true}
                 close={cancelBulkDelete}
+                cssClass="meeting-records-delete-dialog"
                 buttons={[
                     {
                         buttonModel: {

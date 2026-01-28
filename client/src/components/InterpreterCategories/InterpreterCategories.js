@@ -458,6 +458,7 @@ export default function InterpreterCategories() {
         header='Confirm Delete'
         content={categoryPendingDelete ? `Are you sure you want to delete "${categoryPendingDelete.name}"? This action cannot be undone.` : ''}
         showCloseIcon={true}
+        cssClass="interpreter-delete-dialog"
         buttons={[
           { buttonModel: { content: 'Cancel', cssClass: 'e-outline e-primary' }, click: cancelDelete },
           { buttonModel: { content: 'Delete', cssClass: 'e-danger', isPrimary: true }, click: confirmDelete }
