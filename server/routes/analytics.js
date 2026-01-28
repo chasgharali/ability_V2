@@ -909,10 +909,12 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 boothMatchQuery.eventId = new mongoose.Types.ObjectId(eventId);
             }
 
-            // Fetch booths
+            // Fetch all booths (no limit/skip) with deterministic sort so export matches report
             const booths = await Booth.find(boothMatchQuery)
                 .populate('eventId', 'name')
-                .select('name eventId');
+                .select('name eventId')
+                .sort({ eventId: 1, name: 1 })
+                .lean();
             
             const boothIds = booths.map(b => b._id);
 
@@ -922,19 +924,19 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 matchQuery.eventId = new mongoose.Types.ObjectId(eventId);
             }
 
-            // Get meeting statistics
+            // Get meeting statistics (MeetingRecord uses jobseekerId, not userId)
             const boothStats = await MeetingRecord.aggregate([
                 { $match: matchQuery },
                 {
                     $group: {
                         _id: '$boothId',
-                        uniqueMeetings: { $addToSet: '$userId' },
+                        uniqueMeetings: { $addToSet: '$jobseekerId' },
                         totalMeetings: { $sum: 1 },
                         totalJobSeekerMeetings: {
                             $sum: { $cond: [{ $ne: ['$interpreterId', null] }, 0, 1] }
                         },
                         droppedMeetings: {
-                            $sum: { $cond: [{ $eq: ['$endReason', 'dropped'] }, 1, 0] }
+                            $sum: { $cond: [{ $eq: ['$status', 'left_with_message'] }, 1, 0] }
                         },
                         meetingsOver3Min: {
                             $sum: { $cond: [{ $gte: ['$duration', 3] }, 1, 0] }
@@ -977,10 +979,15 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 }
             ]);
 
-            // Get queue statistics
+            // Get queue statistics (BoothQueue uses 'jobSeeker' field, not 'user')
             let queueMatchQuery = { booth: { $in: boothIds } };
             if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
                 queueMatchQuery.event = new mongoose.Types.ObjectId(eventId);
+            }
+            if (startDate || endDate) {
+                queueMatchQuery.joinedAt = {};
+                if (startDate) queueMatchQuery.joinedAt.$gte = new Date(startDate);
+                if (endDate) queueMatchQuery.joinedAt.$lte = new Date(endDate);
             }
 
             const queueStats = await BoothQueue.aggregate([
@@ -988,7 +995,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 {
                     $group: {
                         _id: '$booth',
-                        uniqueQueueVisits: { $addToSet: '$user' },
+                        uniqueQueueVisits: { $addToSet: '$jobSeeker' },
                         totalQueueVisits: { $sum: 1 }
                     }
                 },
@@ -1018,31 +1025,32 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 }
             ]);
 
-            // Build CSV data
+            // Build CSV data: one row per booth, no missing booths; safe values for every cell
             data = booths.map(booth => {
-                const stats = boothStats.find(s => s._id.toString() === booth._id.toString()) || {};
-                const queue = queueStats.find(q => q._id.toString() === booth._id.toString()) || {};
-                const interest = interestStats.find(i => i._id.toString() === booth._id.toString()) || {};
+                const stats = boothStats.find(s => s._id && booth._id && s._id.toString() === booth._id.toString()) || {};
+                const queue = queueStats.find(q => q._id && booth._id && q._id.toString() === booth._id.toString()) || {};
+                const interest = interestStats.find(i => i._id && booth._id && i._id.toString() === booth._id.toString()) || {};
                 
                 const uniqueRecruiters = stats.uniqueRecruiters ? stats.uniqueRecruiters.length : 0;
+                const totalMeetingsForBooth = stats.totalMeetings ?? 0;
                 const avgMeetingsPerRecruiter = uniqueRecruiters > 0 
-                    ? (stats.totalJobSeekerMeetings / uniqueRecruiters).toFixed(2) 
+                    ? (totalMeetingsForBooth / uniqueRecruiters).toFixed(2) 
                     : '0.00';
 
                 return [
-                    booth.name,
-                    booth.eventId?.name || 'N/A',
-                    interest.jobSeekerInterest || 0,
-                    queue.uniqueQueueVisits || 0,
-                    queue.totalQueueVisits || 0,
-                    stats.uniqueMeetings || 0,
-                    stats.totalJobSeekerMeetings || 0,
-                    stats.droppedMeetings || 0,
-                    stats.meetingsOver3Min || 0,
-                    formatDuration(stats.averageDuration || 0),
+                    booth.name ?? '',
+                    (booth.eventId && booth.eventId.name) ? booth.eventId.name : 'N/A',
+                    interest.jobSeekerInterest ?? 0,
+                    queue.uniqueQueueVisits ?? 0,
+                    queue.totalQueueVisits ?? 0,
+                    stats.uniqueMeetings ?? 0,
+                    stats.totalMeetings ?? 0,
+                    stats.droppedMeetings ?? 0,
+                    stats.meetingsOver3Min ?? 0,
+                    formatDuration(stats.averageDuration ?? 0),
                     avgMeetingsPerRecruiter,
-                    stats.totalWithInterpreter || 0,
-                    formatDuration(stats.interpreterTime || 0)
+                    stats.totalWithInterpreter ?? 0,
+                    formatDuration(stats.interpreterTime ?? 0)
                 ];
             });
 
@@ -1157,13 +1165,21 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             'Interpreter Time in Meetings'
         ];
 
-        const csvContent = [csvHeaders, ...data]
-            .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-            .join('\n');
+        // Safe CSV cell: no null/undefined (use empty string), escape quotes and normalize newlines
+        const safeCsvCell = (cell) => {
+            if (cell === null || cell === undefined) return '';
+            const s = String(cell);
+            return s.replace(/"/g, '""').replace(/\r/g, '').replace(/\n/g, ' ');
+        };
 
-        res.setHeader('Content-Type', 'text/csv');
+        const csvContent = [csvHeaders, ...data]
+            .map(row => row.map(cell => `"${safeCsvCell(cell)}"`).join(','))
+            .join('\r\n');
+
+        const BOM = '\uFEFF';
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(csvContent);
+        res.send(BOM + csvContent);
 
     } catch (error) {
         logger.error('Error exporting analytics:', error);
