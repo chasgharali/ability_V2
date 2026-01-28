@@ -32,7 +32,6 @@ export default function BoothQueueManagement() {
   const [booth, setBooth] = useState(null);
   const [event, setEvent] = useState(null);
   const [queue, setQueue] = useState([]);
-  const [currentServing, setCurrentServing] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   const [showMessages, setShowMessages] = useState(false);
@@ -219,7 +218,6 @@ export default function BoothQueueManagement() {
 
       if (queueRes.success) {
         setQueue(queueRes.queue);
-        setCurrentServing(queueRes.currentServing || 1);
       } else {
         console.error('Failed to load queue:', queueRes.message);
       }
@@ -283,7 +281,6 @@ export default function BoothQueueManagement() {
       const queueRes = await boothQueueAPI.getBoothQueue(targetBoothId);
       if (queueRes.success) {
         setQueue(queueRes.queue);
-        setCurrentServing(queueRes.currentServing || 1);
         setToast('Queue data refreshed successfully');
         setTimeout(() => setToast(''), 2000);
       } else {
@@ -526,7 +523,6 @@ export default function BoothQueueManagement() {
           }
         });
         setIsInCall(true);
-        await handleUpdateServing(queueEntry.position);
       }
     } catch (error) {
       console.error('Error creating video call:', error);
@@ -603,23 +599,6 @@ export default function BoothQueueManagement() {
     if (!submittingRating) {
       setShowRatingModal(false);
       setRatingModalData(null);
-    }
-  };
-
-  const handleUpdateServing = async (newServingNumber) => {
-    try {
-      await boothQueueAPI.updateServingNumber(boothId, newServingNumber);
-      setCurrentServing(newServingNumber);
-
-      // Emit socket event for real-time updates
-      if (socket) {
-        socket.emit('serving-number-updated', {
-          boothId,
-          currentServing: newServingNumber
-        });
-      }
-    } catch (error) {
-      console.error('Error updating serving number:', error);
     }
   };
 
@@ -731,12 +710,12 @@ export default function BoothQueueManagement() {
                       <span className="stat-value">{queue.length}</span>
                     </div>
                     <div className="header-stat">
-                      <span className="stat-label">Serving</span>
-                      <span className="stat-value">{currentServing}</span>
+                      <span className="stat-label">In Call</span>
+                      <span className="stat-value">{queue.filter(q => q.status === 'in_meeting' || q.isInCall).length}</span>
                     </div>
                     <div className="header-stat">
                       <span className="stat-label">Waiting</span>
-                      <span className="stat-value">{queue.filter(q => q.position > currentServing).length}</span>
+                      <span className="stat-value">{queue.filter(q => q.status !== 'in_meeting' && !q.isInCall).length}</span>
                     </div>
                   </div>
                 </div>
@@ -765,32 +744,7 @@ export default function BoothQueueManagement() {
                 >
                   <FaPlug size={16} />
                 </button>
-                </div>
-                <div className="serving-controls-row">
-                <label>Now Serving:</label>
-                <input
-                  type="number"
-                  value={currentServing}
-                  onChange={(e) => setCurrentServing(parseInt(e.target.value) || 1)}
-                  min="1"
-                  className="serving-input"
-                    aria-label="Current serving number"
-                />
-                </div>
-                <div className="serving-controls-row">
                 <button
-                  onClick={async () => {
-                    await handleUpdateServing(currentServing);
-                    setToast('Now Serving updated');
-                    setTimeout(() => setToast(''), 2000);
-                  }}
-                  className="update-serving-btn"
-                  style={{ background: '#111827', borderColor: '#111827', color: '#fff' }}
-                    aria-label="Update serving number"
-                >
-                  Update
-                </button>
-                  <button
                     onClick={handleDeviceSelection}
                     className="test-device-btn"
                     title="Test Camera & Microphone"
@@ -823,7 +777,7 @@ export default function BoothQueueManagement() {
                     return (
                     <div
                       key={queueEntry._id}
-                      className={`queue-card ${queueEntry.status === 'left_with_message' ? 'left-message' : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? 'in-call' : queueEntry.position <= currentServing ? 'ready' : 'waiting'}`}
+                      className={`queue-card ${queueEntry.status === 'left_with_message' ? 'left-message' : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? 'in-call' : 'waiting'}`}
                     >
                       <div className="queue-card-header">
                         <div className="job-seeker-info">
@@ -848,8 +802,6 @@ export default function BoothQueueManagement() {
                             <span className="status-badge left-message-badge">Left Message</span>
                           ) : queueEntry.status === 'in_meeting' || queueEntry.isInCall ? (
                             <span className="status-badge in-call">In Call</span>
-                          ) : queueEntry.position <= currentServing ? (
-                            <span className="status-badge ready">Ready</span>
                           ) : (
                             <span className="status-badge waiting">Waiting</span>
                           )}
