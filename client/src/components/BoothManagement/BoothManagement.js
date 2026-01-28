@@ -374,6 +374,19 @@ export default function BoothManagement() {
         showToast(`Max number of recruiters reached for selected event(s):\n\n${lines}`, 'Error', 7000);
         return; // block submit
       }
+      // Process expireLinkTime: convert datetime-local to ISO string, or null if disabled
+      let expireLinkTimeValue = null;
+      if (boothForm.enableExpiry && boothForm.expireLinkTime) {
+        try {
+          const date = new Date(boothForm.expireLinkTime);
+          if (!isNaN(date.getTime())) {
+            expireLinkTimeValue = date.toISOString();
+          }
+        } catch (e) {
+          expireLinkTimeValue = null;
+        }
+      }
+
       const payload = {
         name: boothForm.boothName,
         description: boothForm.firstHtml || '',
@@ -381,7 +394,7 @@ export default function BoothManagement() {
         eventIds: boothForm.eventIds,
         companyPage: boothForm.companyPage || undefined,
         recruitersCount: boothForm.recruitersCount || 1,
-        expireLinkTime: boothForm.expireLinkTime || undefined,
+        expireLinkTime: expireLinkTimeValue,
         customInviteSlug: sanitizeInvite(boothForm.customInviteText || ''),
         joinBoothButtonLink: boothForm.joinBoothButtonLink || '',
         richSections: [
@@ -398,7 +411,7 @@ export default function BoothManagement() {
           logoUrl: payload.logoUrl,
           companyPage: payload.companyPage,
           recruitersCount: payload.recruitersCount,
-          expireLinkTime: payload.expireLinkTime,
+          expireLinkTime: expireLinkTimeValue,
           customInviteSlug: payload.customInviteSlug,
           joinBoothButtonLink: payload.joinBoothButtonLink,
           eventId: boothForm.eventIds && boothForm.eventIds.length > 0 ? boothForm.eventIds[0] : undefined,
@@ -842,8 +855,27 @@ export default function BoothManagement() {
     };
   }, [booths]);
 
+  // Helper to format ISO date to datetime-local input format (YYYY-MM-DDTHH:mm)
+  const formatDateTimeLocal = (isoDateStr) => {
+    if (!isoDateStr) return '';
+    try {
+      const date = new Date(isoDateStr);
+      if (isNaN(date.getTime())) return '';
+      // Format to local time for datetime-local input
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (e) {
+      return '';
+    }
+  };
+
   // Edit handler (basic prefill)
   const startEdit = (row) => {
+    const expireTime = formatDateTimeLocal(row.expireLinkTime);
     setBoothForm(prev => ({
       ...prev,
       boothName: row.name || '',
@@ -855,6 +887,9 @@ export default function BoothManagement() {
       companyPage: row.companyPage || '',
       customInviteText: row.customInviteSlug || '',
       joinBoothButtonLink: row.joinBoothButtonLink || '',
+      recruitersCount: row.recruitersCount || 1,
+      expireLinkTime: expireTime,
+      enableExpiry: !!row.expireLinkTime,
     }));
     setBoothMode('create');
     setEditingBoothId(row.id);

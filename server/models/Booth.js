@@ -237,6 +237,7 @@ boothSchema.methods.getPublicInfo = function () {
         companyPage: this.companyPage,
         joinBoothButtonLink: this.joinBoothButtonLink || '',
         isAvailableForQueue: this.isAvailableForQueue,
+        expireLinkTime: this.expireLinkTime,
         estimatedWaitTime: this.settings.queueSettings.estimatedWaitTime,
         richSections: sections
             .filter(section => section.isActive)

@@ -40,16 +40,35 @@ export default function QueueInviteResolver() {
         const isRegistered = data?.isRegistered || false;
         const isEventUpcoming = data?.isEventUpcoming || false;
         const canJoinQueue = data?.canJoinQueue || false;
+        const isBoothExpired = data?.isBoothExpired || false;
+        const boothExpiredAt = data?.boothExpiredAt;
         
         console.log('Extracted boothId:', boothId);
         console.log('Extracted eventSlug:', eventSlug);
         console.log('Is registered:', isRegistered);
         console.log('Is event upcoming:', isEventUpcoming);
         console.log('Can join queue:', canJoinQueue);
+        console.log('Is booth expired:', isBoothExpired, 'Expired at:', boothExpiredAt);
         
         // Step 3: Check if event is assigned to booth
         if (!event || !eventSlug) {
           setError('This booth is not assigned to any event. You are unable to join this booth.');
+          setLoading(false);
+          return;
+        }
+
+        // Step 3b: Check if booth link has expired
+        if (isBoothExpired && boothExpiredAt) {
+          const expireDate = new Date(boothExpiredAt);
+          const formattedDate = expireDate.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+          setError(`This booth link expired on ${formattedDate}. You are unable to join this booth.`);
           setLoading(false);
           return;
         }
@@ -77,7 +96,19 @@ export default function QueueInviteResolver() {
           const now = new Date();
           const hasEnded = eventEnd && eventEnd < now;
           
-          if (hasEnded) {
+          if (isBoothExpired) {
+            // This shouldn't happen since we check above, but just in case
+            const expireDate = boothExpiredAt ? new Date(boothExpiredAt) : null;
+            const formattedDate = expireDate ? expireDate.toLocaleString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            }) : 'an earlier date';
+            setError(`This booth link expired on ${formattedDate}. You are unable to join this booth.`);
+          } else if (hasEnded) {
             setError('This event has ended. You are unable to join this booth.');
           } else if (eventStatus !== 'published' && eventStatus !== 'active') {
             setError('This event is not currently available. You are unable to join this booth.');

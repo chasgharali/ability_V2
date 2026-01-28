@@ -80,6 +80,38 @@ router.post('/join', authenticateToken, async (req, res) => {
             });
         }
 
+        // Check if booth link has expired
+        const Booth = require('../models/Booth');
+        const booth = await Booth.findById(boothId);
+        if (!booth) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booth not found'
+            });
+        }
+
+        if (booth.expireLinkTime) {
+            const now = new Date();
+            const expireDate = new Date(booth.expireLinkTime);
+            if (now > expireDate) {
+                // Format the expiry date for display
+                const formattedDate = expireDate.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                return res.status(403).json({
+                    success: false,
+                    error: 'BOOTH_EXPIRED',
+                    message: `This booth link expired on ${formattedDate}. You cannot join this queue.`,
+                    expiredAt: booth.expireLinkTime
+                });
+            }
+        }
+
         // First, clean up any stale queue entries for this user across all events
         // Use 5 minutes instead of 1 minute to prevent cleanup of users who are actively waiting
         // (they might refresh the page, which is normal behavior)

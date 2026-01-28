@@ -147,6 +147,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   // Track caption history for each speaker to create new lines after pauses (using ref for synchronous access)
   // Map of participantId -> array of {text, timestamp, isFinal}
   const captionHistoryBySpeakerRef = useRef(new Map());
+  // Caption size: 'small', 'medium', 'large'
+  const [captionSize, setCaptionSize] = useState('medium');
+  // Number of caption lines to display (1-5)
+  const [captionLines, setCaptionLines] = useState(2);
+  // Caption settings panel visibility
+  const [showCaptionSettings, setShowCaptionSettings] = useState(false);
 
   // Refs
   // Cleanup / lifecycle guards
@@ -2783,38 +2789,84 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       {/* Caption Display */}
       {isCaptionEnabled && (
-        <div className="caption-container" role="region" aria-live="polite" aria-label="Live captions">
+        <div className={`caption-container caption-size-${captionSize} caption-lines-${captionLines}`} role="region" aria-live="polite" aria-label="Live captions">
+          {/* Caption Settings Button */}
+          <button
+            type="button"
+            className="caption-settings-btn"
+            onClick={() => setShowCaptionSettings(!showCaptionSettings)}
+            aria-label="Caption settings"
+            title="Caption settings"
+          >
+            ⚙️
+          </button>
+          
+          {/* Caption Settings Panel */}
+          {showCaptionSettings && (
+            <div className="caption-settings-panel">
+              <div className="caption-settings-header">
+                <span>Caption Settings</span>
+                <button
+                  type="button"
+                  className="caption-settings-close"
+                  onClick={() => setShowCaptionSettings(false)}
+                  aria-label="Close settings"
+                >
+                  ×
+                </button>
+              </div>
+              
+              {/* Size Options */}
+              <div className="caption-settings-section">
+                <label className="caption-settings-label">Size</label>
+                <div className="caption-size-options">
+                  <button
+                    type="button"
+                    className={`caption-size-option ${captionSize === 'small' ? 'active' : ''}`}
+                    onClick={() => setCaptionSize('small')}
+                  >
+                    Small
+                  </button>
+                  <button
+                    type="button"
+                    className={`caption-size-option ${captionSize === 'medium' ? 'active' : ''}`}
+                    onClick={() => setCaptionSize('medium')}
+                  >
+                    Medium
+                  </button>
+                  <button
+                    type="button"
+                    className={`caption-size-option ${captionSize === 'large' ? 'active' : ''}`}
+                    onClick={() => setCaptionSize('large')}
+                  >
+                    Large
+                  </button>
+                </div>
+              </div>
+              
+              {/* Lines Options */}
+              <div className="caption-settings-section">
+                <label className="caption-settings-label">Lines</label>
+                <div className="caption-lines-options">
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <button
+                      key={num}
+                      type="button"
+                      className={`caption-lines-option ${captionLines === num ? 'active' : ''}`}
+                      onClick={() => setCaptionLines(num)}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div 
             className="caption-content"
             ref={captionContentRef}
           >
-            {/* Scroll Buttons */}
-            {(showScrollUp || showScrollDown) && (
-              <div className="caption-scroll-buttons">
-                {showScrollUp && (
-                  <button
-                    type="button"
-                    className="caption-scroll-button"
-                    onClick={scrollToTop}
-                    aria-label="Scroll to top"
-                    title="Scroll to top"
-                  >
-                    ↑
-                  </button>
-                )}
-                {showScrollDown && (
-                  <button
-                    type="button"
-                    className="caption-scroll-button"
-                    onClick={scrollToBottom}
-                    aria-label="Scroll to bottom"
-                    title="Scroll to bottom"
-                  >
-                    ↓
-                  </button>
-                )}
-              </div>
-            )}
             {(() => {
               // Collect all captions to display - each participant separately (like Google Meet)
               const allCaptions = [];
@@ -2891,23 +2943,30 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
                 return timeA - timeB; // Oldest first
               });
               
-              const allCaptionsToDisplay = deduplicatedCaptions;
+              // Limit to maximum N most recent captions based on user setting
+              const allCaptionsToDisplay = deduplicatedCaptions.slice(-captionLines);
 
               if (allCaptionsToDisplay.length > 0) {
-                // Display each participant's caption separately (like Google Meet)
-                // Each participant gets their own caption line that updates dynamically
+                // Display each participant's caption separately
+                // Each participant gets their own caption line with alternating colors
                 return allCaptionsToDisplay.map((caption, index) => {
                   const roleDisplay = caption.role || 'Participant';
-                  // Check if this is a new line (different from previous caption by same speaker)
-                  const isNewLine = index === 0 || 
-                    allCaptionsToDisplay[index - 1].participantId !== caption.participantId ||
-                    (allCaptionsToDisplay[index - 1].participantId === caption.participantId && 
-                     new Date(caption.timestamp).getTime() - new Date(allCaptionsToDisplay[index - 1].timestamp).getTime() > 2000);
+                  
+                  // Determine speaker color class based on role
+                  let speakerColorClass = 'caption-speaker-default';
+                  const roleLower = (caption.role || '').toLowerCase();
+                  if (roleLower.includes('recruiter')) {
+                    speakerColorClass = 'caption-speaker-recruiter';
+                  } else if (roleLower.includes('jobseeker') || roleLower.includes('job seeker') || roleLower === 'jobseeker') {
+                    speakerColorClass = 'caption-speaker-jobseeker';
+                  } else if (roleLower.includes('interpreter')) {
+                    speakerColorClass = 'caption-speaker-interpreter';
+                  }
                   
                   return (
                     <div 
                       key={`${caption.id}-${caption.timestamp}`} 
-                      className={`caption-item ${isNewLine ? 'caption-new-line' : ''}`}
+                      className={`caption-item ${speakerColorClass}`}
                     >
                       <span className="caption-speaker">{roleDisplay}:</span>
                       <span className="caption-text">{caption.text}</span>

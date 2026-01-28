@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,8 +16,33 @@ import { meetingRecordsAPI } from '../../services/meetingRecords';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
+import {
+  MILITARY_EXPERIENCE_LIST,
+  SECURITY_CLEARANCE_LIST,
+  JOB_CATEGORY_LIST,
+  LANGUAGE_LIST,
+  JOB_TYPE_LIST,
+  EXPERIENCE_LEVEL_LIST,
+  EDUCATION_LEVEL_LIST
+} from '../../constants/options';
 import './BoothQueueManagement.css';
 import '../Dashboard/Dashboard.css';
+
+// Helper function to get label from value using options list
+const getLabel = (list, value) => {
+  if (!value) return 'Not specified';
+  const item = list.find(opt => opt.value === value);
+  return item ? item.name : value;
+};
+
+// Helper function to get labels for array values
+const getLabels = (list, values) => {
+  if (!values || !Array.isArray(values) || values.length === 0) return [];
+  return values.map(val => {
+    const item = list.find(opt => opt.value === val);
+    return item ? item.name : val;
+  });
+};
 
 export default function BoothQueueManagement() {
   const { boothId } = useParams();
@@ -1066,11 +1091,11 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">PROFESSIONAL HEADLINE</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.professionalHeadline || 'this is test headline'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.profile?.headline || 'Not specified'}</p>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">KEYWORDS & SKILLS</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.skills || 'mern dev'}</p>
+                        <p>{selectedJobSeeker.jobSeeker?.metadata?.profile?.keywords || 'Not specified'}</p>
                       </div>
                     </div>
                   </div>
@@ -1081,19 +1106,29 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">PRIMARY JOB EXPERIENCE</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.primaryJobExperience || 'Accounting / Finance'}</p>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.secondaryJobExperience || 'Administrative Services / Human Resources'}</p>
+                        {selectedJobSeeker.jobSeeker?.metadata?.profile?.primaryExperience?.length > 0 ? (
+                          getLabels(JOB_CATEGORY_LIST, selectedJobSeeker.jobSeeker.metadata.profile.primaryExperience).map((exp, idx) => (
+                            <p key={idx}>{exp}</p>
+                          ))
+                        ) : (
+                          <p>Not specified</p>
+                        )}
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">EMPLOYMENT TYPES</span>
                         <div className="tags">
-                          <span className="tag">Part-Time</span>
-                          <span className="tag">Contract</span>
+                          {selectedJobSeeker.jobSeeker?.metadata?.profile?.employmentTypes?.length > 0 ? (
+                            getLabels(JOB_TYPE_LIST, selectedJobSeeker.jobSeeker.metadata.profile.employmentTypes).map((type, idx) => (
+                              <span key={idx} className="tag">{type}</span>
+                            ))
+                          ) : (
+                            <span className="tag">Not specified</span>
+                          )}
                         </div>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">EXPERIENCE LEVEL</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.experienceLevel || 'Experienced (non-Manager)'}</p>
+                        <p>{getLabel(EXPERIENCE_LEVEL_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.workLevel)}</p>
                       </div>
                     </div>
                   </div>
@@ -1104,11 +1139,11 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">HIGHEST EDUCATION LEVEL</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.education || 'General Educational Development (GED)'}</p>
+                        <p>{getLabel(EDUCATION_LEVEL_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.educationLevel)}</p>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">SECURITY CLEARANCE</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.securityClearance || 'None'}</p>
+                        <p>{getLabel(SECURITY_CLEARANCE_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.clearance)}</p>
                       </div>
                     </div>
                   </div>
@@ -1120,14 +1155,18 @@ export default function BoothQueueManagement() {
                       <div className="detail-item">
                         <span className="detail-label">LANGUAGES</span>
                         <div className="tags">
-                          <span className="tag">ASL/Sign Language</span>
-                          <span className="tag">English</span>
-                          <span className="tag">Urdu</span>
+                          {selectedJobSeeker.jobSeeker?.metadata?.profile?.languages?.length > 0 ? (
+                            getLabels(LANGUAGE_LIST, selectedJobSeeker.jobSeeker.metadata.profile.languages).map((lang, idx) => (
+                              <span key={idx} className="tag">{lang}</span>
+                            ))
+                          ) : (
+                            <span className="tag">Not specified</span>
+                          )}
                         </div>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">VETERAN/MILITARY STATUS</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.veteranStatus || 'None'}</p>
+                        <p>{getLabel(MILITARY_EXPERIENCE_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.veteranStatus)}</p>
                       </div>
                     </div>
                   </div>

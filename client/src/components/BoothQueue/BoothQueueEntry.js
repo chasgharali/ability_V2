@@ -19,6 +19,7 @@ export default function BoothQueueEntry() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
+  const [isBoothExpired, setIsBoothExpired] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -67,6 +68,28 @@ export default function BoothQueueEntry() {
 
       console.log('Extracted event:', extractedEvent);
       console.log('Extracted booth:', extractedBooth);
+
+      // Check if booth link has expired
+      if (extractedBooth?.expireLinkTime) {
+        const now = new Date();
+        const expireDate = new Date(extractedBooth.expireLinkTime);
+        if (now > expireDate) {
+          const formattedDate = expireDate.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+          setError(`This booth link expired on ${formattedDate}. You are unable to join this queue.`);
+          setIsBoothExpired(true);
+          setBooth(extractedBooth); // Still set booth for display purposes
+          setEvent(extractedEvent);
+          setLoading(false);
+          return; // Stop loading, show error
+        }
+      }
 
       setEvent(extractedEvent);
       setBooth(extractedBooth);
@@ -163,6 +186,50 @@ export default function BoothQueueEntry() {
           <button onClick={handleExit} className="btn-exit">
             Return to Event
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error screen when booth is expired
+  if (isBoothExpired) {
+    return (
+      <div className="booth-queue-entry">
+        <AdminHeader brandingLogo={event?.logoUrl || ''} />
+        <div className="entry-modal">
+          <div className="modal-header">
+            <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
+            <div className="company-branding">
+              <div className="company-logo">
+                {booth?.logoUrl ? (
+                  <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} />
+                ) : (
+                  <div className="logo-placeholder">
+                    <span className="logo-text">{booth?.name?.[0] || 'C'}</span>
+                  </div>
+                )}
+              </div>
+              <div className="company-name">{booth?.name || 'Company'}</div>
+            </div>
+          </div>
+          <div className="divider" />
+          <div className="error-container" style={{ 
+            background: '#ffe8e8', 
+            borderColor: '#f5c2c7', 
+            color: '#842029',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            margin: '1rem 0',
+            textAlign: 'center'
+          }}>
+            <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.25rem' }}>Booth Link Expired</h2>
+            <p style={{ margin: 0 }}>{error}</p>
+          </div>
+          <div className="modal-actions">
+            <button onClick={handleExit} className="btn-exit">
+              Return to Event
+            </button>
+          </div>
         </div>
       </div>
     );
