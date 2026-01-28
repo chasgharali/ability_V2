@@ -18,6 +18,13 @@ import { Input } from '../UI/FormComponents';
 import filterIcon from '../../assets/filter.png';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 import JSZip from 'jszip';
+import {
+    EXPERIENCE_LEVEL_LIST,
+    EDUCATION_LEVEL_LIST,
+    JOB_TYPE_LIST,
+    SECURITY_CLEARANCE_LIST,
+    MILITARY_EXPERIENCE_LIST
+} from '../../constants/options';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
 
@@ -279,21 +286,18 @@ const JobSeekerInterests = () => {
         }
     }, []);
 
-    // Get selected interests from grid
+    // Get selected interests from grid (return string IDs for reliable comparison)
     const getSelectedInterestsFromGrid = useCallback(() => {
         if (!gridRef.current) return [];
         
         try {
+            // Use getSelectedRecords - most reliable method for Syncfusion Grid
             if (typeof gridRef.current.getSelectedRecords === 'function') {
-                const selectedRows = gridRef.current.getSelectedRecords();
-                return selectedRows.map(row => row.id || row._id).filter(Boolean);
+                const rows = gridRef.current.getSelectedRecords();
+                // Each row has 'id' field that we set to r._id when creating gridDataSource
+                const ids = rows.map(row => String(row.id || '')).filter(Boolean);
+                return ids;
             }
-            
-            if (typeof gridRef.current.getSelectedRowsData === 'function') {
-                const selectedRows = gridRef.current.getSelectedRowsData();
-                return selectedRows.map(row => row.id || row._id).filter(Boolean);
-            }
-            
             return [];
         } catch (error) {
             console.error('Error getting selected rows:', error);
@@ -874,25 +878,34 @@ const JobSeekerInterests = () => {
         type: 'None'
     }), []);
 
+    // Helper: value -> label for dropdown fields in CSV
+    const getLabelFromValue = (value, optionsList) => {
+        if (value === null || value === undefined || value === '') return '';
+        const s = String(value).trim();
+        const opt = optionsList.find(o => (o.value || '').toString() === s || (o.name || '').toString() === s);
+        return opt ? (opt.name || opt.value || s) : s;
+    };
+    const getLabelFromValues = (values, optionsList) => {
+        if (!values || !Array.isArray(values)) return '';
+        return values.map(v => getLabelFromValue(v, optionsList)).filter(Boolean).join('; ');
+    };
+
     // Helper function for client-side CSV export
     const exportToCSVClientSide = (recordsToExport) => {
-        // CSV Headers
+        // CSV Headers (no "Job Seeker" prefix, no Recruiter columns)
         const csvHeaders = [
             'Event ID',
             'Event Name',
             'Booth ID',
             'Booth Name',
-            'Recruiter ID',
-            'Recruiter Name',
-            'Recruiter Email',
             'Company',
-            'Job Seeker First Name',
-            'Job Seeker Last Name',
-            'Job Seeker Email',
-            'Job Seeker Phone',
-            'Job Seeker Location',
-            'Job Seeker Headline',
-            'Job Seeker Keywords',
+            'First Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'Location',
+            'Headline',
+            'Keywords',
             'Work Experience Level',
             'Highest Education Level',
             'Employment Types',
@@ -986,21 +999,18 @@ const JobSeekerInterests = () => {
             const profile = getProfile(interest.jobSeeker);
             const headline = profile?.headline || '';
             const keywords = profile?.keywords || '';
-            const workLevel = profile?.workLevel || '';
-            const educationLevel = profile?.educationLevel || '';
-            const employmentTypes = profile?.employmentTypes || [];
-            const languages = profile?.languages || [];
-            const clearance = profile?.clearance || '';
-            const veteranStatus = profile?.veteranStatus || '';
+            const workLevelLabel = getLabelFromValue(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST);
+            const educationLevelLabel = getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST);
+            const employmentTypesLabel = getLabelFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST);
+            const clearanceLabel = getLabelFromValue(profile?.clearance || '', SECURITY_CLEARANCE_LIST);
+            const veteranStatusLabel = getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST);
+            const languagesDisplay = Array.isArray(profile?.languages) ? profile.languages.join('; ') : '';
 
             return [
                 escapeCSV(eventId),
                 escapeCSV(eventName),
                 escapeCSV(boothId),
                 escapeCSV(boothName),
-                escapeCSV(recruiterId),
-                escapeCSV(recruiterName),
-                escapeCSV(recruiterEmail),
                 escapeCSV(company),
                 escapeCSV(firstName),
                 escapeCSV(lastName),
@@ -1009,12 +1019,12 @@ const JobSeekerInterests = () => {
                 escapeCSV(location),
                 escapeCSV(headline),
                 escapeCSV(keywords),
-                escapeCSV(workLevel),
-                escapeCSV(educationLevel),
-                escapeCSV(formatArray(employmentTypes)),
-                escapeCSV(formatArray(languages)),
-                escapeCSV(clearance),
-                escapeCSV(veteranStatus),
+                escapeCSV(workLevelLabel),
+                escapeCSV(educationLevelLabel),
+                escapeCSV(employmentTypesLabel),
+                escapeCSV(languagesDisplay),
+                escapeCSV(clearanceLabel),
+                escapeCSV(veteranStatusLabel),
                 escapeCSV(interest.interestLevel || ''),
                 escapeCSV(interest.notes || ''),
                 escapeCSV(formatDate(interest.createdAt))
@@ -1040,41 +1050,52 @@ const JobSeekerInterests = () => {
     const handleExport = async () => {
         try {
             console.log('📤 Starting export...');
+            console.log('📤 Selected interests from state:', selectedInterests);
+            console.log('📤 Total interests:', interests.length);
             setLoadingData(true);
             
-            // Check if there are selected rows in the grid
-            const selectedRows = getSelectedInterestsFromGrid();
-            console.log('📋 Selected rows:', selectedRows);
-            
-            if (selectedRows.length > 0) {
-                // Export only selected rows (client-side)
-                console.log(`📊 Exporting ${selectedRows.length} selected row(s)`);
+            // Use the selectedInterests state that's maintained by rowSelected/rowDeselected events
+            if (selectedInterests && selectedInterests.length > 0) {
+                console.log(`📊 Exporting ${selectedInterests.length} selected record(s)`);
+                console.log('📊 Selected IDs:', selectedInterests);
                 
-                // Filter from the original interests array to get full nested structure
-                // This ensures we have all the populated data (jobSeeker, event, booth, etc.)
+                // Match against original interests data
                 const selectedRowData = interests.filter(r => {
-                    const recordId = r._id || r.id;
-                    return selectedRows.includes(recordId);
+                    const recordId = String(r._id);
+                    const isMatch = selectedInterests.includes(recordId);
+                    if (isMatch) {
+                        console.log('✅ Matched record:', recordId);
+                    }
+                    return isMatch;
                 });
                 
-                console.log(`✅ Found ${selectedRowData.length} matching interest(s) from original data`);
+                console.log(`✅ Matched ${selectedRowData.length} interest(s) from original data`);
                 
                 if (selectedRowData.length > 0) {
                     exportToCSVClientSide(selectedRowData);
-                    showToast(`Exported ${selectedRowData.length} selected interest(s)`, 'Success');
+                    showToast(`✅ Exported ${selectedRowData.length} selected record(s)`, 'Success');
+                    setLoadingData(false);
+                    return;
                 } else {
-                    showToast('No selected rows found to export', 'Warning');
+                    console.error('❌ No matching data!');
+                    console.error('❌ Selected IDs from state:', selectedInterests);
+                    console.error('❌ Sample interest IDs:', interests.slice(0, 3).map(r => String(r._id)));
+                    const msg = `Selection detected (${selectedInterests.length} rows) but could not match IDs. Check console for details.`;
+                    alert(msg);
+                    showToast(msg, 'Error', 5000);
+                    setLoadingData(false);
+                    return;
                 }
-                return;
             }
             
-            // No selected rows - check if there's a search filter
-            // If search filter exists, it will be handled by the server-side export
+            console.log('📋 No records selected, exporting all/filtered data');
+            showToast('No selection detected. Exporting all/filtered records...', 'Info', 2000);
+            
+            // No selected rows - use current search input value so export matches what user sees
             // Build export filters (same as current filters but without pagination)
-            // Handle legacy event IDs (format: "legacy_<id>")
+            const searchForExport = (searchInputRef.current?.value ?? filters.search ?? '').trim();
             let eventIdForExport = filters.eventId || '';
             if (eventIdForExport.startsWith('legacy_')) {
-                // Extract the legacy event ID
                 eventIdForExport = eventIdForExport.replace('legacy_', '');
             }
             
@@ -1082,7 +1103,7 @@ const JobSeekerInterests = () => {
                 eventId: eventIdForExport,
                 boothId: filters.boothId || '',
                 recruiterId: filters.recruiterId || '',
-                search: filters.search || ''
+                search: searchForExport
             };
             
             // Remove empty filters
@@ -1144,7 +1165,7 @@ const JobSeekerInterests = () => {
                 }, 300);
             });
             
-            const exportMessage = filters.search 
+            const exportMessage = exportFilters.search 
                 ? `Exported search results successfully` 
                 : 'Job seeker interests exported successfully';
             showToast(exportMessage, 'Success');
@@ -2010,12 +2031,14 @@ const JobSeekerInterests = () => {
                                     rowSelected={() => {
                                         setTimeout(() => {
                                             const currentSelection = getSelectedInterestsFromGrid();
+                                            console.log('✅ Row selected, current selection:', currentSelection);
                                             setSelectedInterests(currentSelection);
                                         }, 50);
                                     }}
                                     rowDeselected={() => {
                                         setTimeout(() => {
                                             const currentSelection = getSelectedInterestsFromGrid();
+                                            console.log('❌ Row deselected, current selection:', currentSelection);
                                             setSelectedInterests(currentSelection);
                                         }, 50);
                                     }}

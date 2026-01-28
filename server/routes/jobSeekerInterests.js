@@ -3,6 +3,13 @@ const mongoose = require('mongoose');
 const JobSeekerInterest = require('../models/JobSeekerInterest');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const {
+    getWorkLevelLabel,
+    getEducationLevelLabel,
+    getEmploymentTypesLabel,
+    getClearanceLabel,
+    getVeteranStatusLabel
+} = require('../utils/profileFieldLabels');
 
 const router = express.Router();
 
@@ -1040,23 +1047,20 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             return stringValue;
         };
 
-        // CSV Headers
+        // CSV Headers (no "Job Seeker" prefix, no Recruiter columns)
         const csvHeaders = [
             'Event ID',
             'Event Name',
             'Booth ID',
             'Booth Name',
-            'Recruiter ID',
-            'Recruiter Name',
-            'Recruiter Email',
             'Company',
-            'Job Seeker First Name',
-            'Job Seeker Last Name',
-            'Job Seeker Email',
-            'Job Seeker Phone',
-            'Job Seeker Location',
-            'Job Seeker Headline',
-            'Job Seeker Keywords',
+            'First Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'Location',
+            'Headline',
+            'Keywords',
             'Work Experience Level',
             'Highest Education Level',
             'Employment Types',
@@ -1233,19 +1237,17 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             if (country) locationParts.push(country);
             location = locationParts.join(', ');
             
-            // Extract profile fields
+            // Extract profile fields and map db values to labels for dropdowns
             const headline = (profile && profile.headline) ? String(profile.headline).trim() : '';
             const keywords = (profile && profile.keywords) ? String(profile.keywords).trim() : '';
-            const workLevel = (profile && profile.workLevel) ? String(profile.workLevel).trim() : '';
-            const educationLevel = (profile && profile.educationLevel) ? String(profile.educationLevel).trim() : '';
-            const employmentTypes = (profile && Array.isArray(profile.employmentTypes)) 
-                ? profile.employmentTypes.filter(Boolean).join(', ') 
-                : '';
+            const workLevelLabel = getWorkLevelLabel(profile && profile.workLevel);
+            const educationLevelLabel = getEducationLevelLabel(profile && profile.educationLevel);
+            const employmentTypesLabel = getEmploymentTypesLabel(profile && profile.employmentTypes);
             const languages = (profile && Array.isArray(profile.languages)) 
-                ? profile.languages.filter(Boolean).join(', ') 
+                ? profile.languages.filter(Boolean).join('; ') 
                 : '';
-            const clearance = (profile && profile.clearance) ? String(profile.clearance).trim() : '';
-            const veteranStatus = (profile && profile.veteranStatus) ? String(profile.veteranStatus).trim() : '';
+            const clearanceLabel = getClearanceLabel(profile && profile.clearance);
+            const veteranStatusLabel = getVeteranStatusLabel(profile && profile.veteranStatus);
             
             // Extract interest info - IDs and names
             // Event ID and Name - handle both populated objects and raw ObjectIds
@@ -1339,7 +1341,9 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 }
             }
             
-            const company = interest.company ? String(interest.company).trim() : '';
+            const company = (interest.booth && typeof interest.booth === 'object' && interest.booth.company)
+                ? String(interest.booth.company).trim()
+                : (interest.company ? String(interest.company).trim() : '');
             const interestLevel = interest.interestLevel ? String(interest.interestLevel).trim() : '';
             const notes = interest.notes ? String(interest.notes).trim() : '';
             
@@ -1364,9 +1368,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 escapeCSV(eventName),
                 escapeCSV(boothId),
                 escapeCSV(boothName),
-                escapeCSV(recruiterId),
-                escapeCSV(recruiterName),
-                escapeCSV(recruiterEmail),
                 escapeCSV(company),
                 escapeCSV(firstName),
                 escapeCSV(lastName),
@@ -1375,12 +1376,12 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 escapeCSV(location),
                 escapeCSV(headline),
                 escapeCSV(keywords),
-                escapeCSV(workLevel),
-                escapeCSV(educationLevel),
-                escapeCSV(employmentTypes),
+                escapeCSV(workLevelLabel),
+                escapeCSV(educationLevelLabel),
+                escapeCSV(employmentTypesLabel),
                 escapeCSV(languages),
-                escapeCSV(clearance),
-                escapeCSV(veteranStatus),
+                escapeCSV(clearanceLabel),
+                escapeCSV(veteranStatusLabel),
                 escapeCSV(interestLevel),
                 escapeCSV(notes),
                 escapeCSV(dateExpressed)
