@@ -320,3 +320,15 @@
 2025-12-15 14:13:35:1335 [32minfo[39m: [32mEvent filter query returned 196 users out of 196 total[39m
 2025-12-15 14:13:36:1336 [32minfo[39m: [32mQuery returned 196 users out of 196 total matching query[39m
 2025-12-15 14:13:36:1336 [32minfo[39m: [32mStats - Active: 196, Inactive: 0, Verified: 1[39m
+2026-01-30 02:35:36:3536 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-01-30 02:35:36:3536 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mConnected to Redis[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mRedis Client Connected[39m
+2026-01-30 02:35:39:3539 [32minfo[39m: [32mRedis Client Ready[39m
