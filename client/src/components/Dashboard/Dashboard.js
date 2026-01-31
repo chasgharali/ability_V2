@@ -5,7 +5,24 @@ import { useSocket } from '../../contexts/SocketContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import { MdLogout, MdRefresh, MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
-import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
+import { 
+    RichTextEditorComponent as RTE, 
+    Toolbar as RTEToolbar, 
+    Link as RteLink, 
+    Image as RteImage, 
+    HtmlEditor, 
+    QuickToolbar,
+    Table,
+    Video,
+    Audio,
+    EmojiPicker,
+    PasteCleanup,
+    Count,
+    Resize as RTEResize,
+    FormatPainter,
+    Inject as RTEInject 
+} from '@syncfusion/ej2-react-richtexteditor';
+import { getRteToolbarSettings, RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
 import { TabComponent, TabItemsDirective, TabItemDirective } from '@syncfusion/ej2-react-navigations';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
@@ -749,18 +766,36 @@ const Dashboard = () => {
                                         <TabComponent heightAdjustMode="Auto">
                                             <TabItemsDirective>
                                                 <TabItemDirective header={{ text: 'First Placeholder' }} content={() => (
-                                                    <RTE value={boothForm.firstHtml} change={(e) => setBoothField('firstHtml', e?.value)}>
-                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                                                    <RTE 
+                                                        value={boothForm.firstHtml} 
+                                                        change={(e) => setBoothField('firstHtml', e?.value)}
+                                                        toolbarSettings={getRteToolbarSettings()}
+                                                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        enableXhtml={true}
+                                                    >
+                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                                     </RTE>
                                                 )} />
                                                 <TabItemDirective header={{ text: 'Second Placeholder' }} content={() => (
-                                                    <RTE value={boothForm.secondHtml} change={(e) => setBoothField('secondHtml', e?.value)}>
-                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                                                    <RTE 
+                                                        value={boothForm.secondHtml} 
+                                                        change={(e) => setBoothField('secondHtml', e?.value)}
+                                                        toolbarSettings={getRteToolbarSettings()}
+                                                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        enableXhtml={true}
+                                                    >
+                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                                     </RTE>
                                                 )} />
                                                 <TabItemDirective header={{ text: 'Third Placeholder' }} content={() => (
-                                                    <RTE value={boothForm.thirdHtml} change={(e) => setBoothField('thirdHtml', e?.value)}>
-                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                                                    <RTE 
+                                                        value={boothForm.thirdHtml} 
+                                                        change={(e) => setBoothField('thirdHtml', e?.value)}
+                                                        toolbarSettings={getRteToolbarSettings()}
+                                                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        enableXhtml={true}
+                                                    >
+                                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                                     </RTE>
                                                 )} />
                                             </TabItemsDirective>

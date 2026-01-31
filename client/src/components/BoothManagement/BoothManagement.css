@@ -874,54 +874,7 @@
   margin-bottom: 0.75rem;
 }
 
-/* Syncfusion Rich Text Editor Styling */
-.e-richtexteditor {
-  border: 1px solid #d1d5db !important;
-  border-radius: 8px !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
-  overflow: hidden !important;
-}
-
-.e-richtexteditor .e-toolbar {
-  background: #f8f9fa !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  padding: 12px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-}
-
-.e-richtexteditor .e-toolbar .e-toolbar-items .e-toolbar-item .e-btn {
-  background: #ffffff !important;
-  border: 1px solid #d1d5db !important;
-  color: #374151 !important;
-  padding: 8px 12px !important;
-  border-radius: 6px !important;
-  margin: 0 !important;
-  transition: all 0.15s ease !important;
-  font-size: 14px !important;
-}
-
-.e-richtexteditor .e-toolbar .e-toolbar-items .e-toolbar-item .e-btn:hover {
-  background: #f9fafb !important;
-  border-color: #9ca3af !important;
-  transform: translateY(-1px) !important;
-}
-
-.e-richtexteditor .e-toolbar .e-toolbar-items .e-toolbar-item .e-btn.e-active {
-  background: #000000 !important;
-  color: #ffffff !important;
-  border-color: #000000 !important;
-}
-
-.e-richtexteditor .e-content {
-  background: #ffffff !important;
-  color: #374151 !important;
-  padding: 16px !important;
-  min-height: 150px !important;
-  line-height: 1.6 !important;
-  font-size: 0.875rem !important;
-}
+/* RTE styling is now handled globally in components/UI/RichTextEditor.css */
 
 /* Action buttons - Modern professional styling */
 .ajf-grid-actions {

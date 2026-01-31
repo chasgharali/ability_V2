@@ -15,7 +15,24 @@ import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections, bulkDeleteBooths } from '../../services/booths';
 import { uploadBoothLogoToS3, uploadImageToS3 } from '../../services/uploads';
-import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
+import { 
+  RichTextEditorComponent as RTE, 
+  Toolbar as RTEToolbar, 
+  Link as RteLink, 
+  Image as RteImage, 
+  HtmlEditor, 
+  QuickToolbar,
+  Table,
+  Video,
+  Audio,
+  EmojiPicker,
+  PasteCleanup,
+  Count,
+  Resize as RTEResize,
+  FormatPainter,
+  Inject as RTEInject 
+} from '@syncfusion/ej2-react-richtexteditor';
+import { RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
 export default function BoothManagement() {
@@ -100,16 +117,25 @@ export default function BoothManagement() {
 
   // Build toolbar per instance to wire custom S3 image upload action
   const buildRteToolbar = (onInsertImage) => ({
-    type: 'MultiRow',
+    type: 'Expand',
     enableFloating: true,
     items: [
-      'Bold', 'Italic', 'Underline', 'StrikeThrough',
-      'FontName', 'FontSize', 'FontColor', 'BackgroundColor',
-      'LowerCase', 'UpperCase', 'Formats',
-      'Alignments', 'OrderedList', 'UnorderedList', 'Outdent', 'Indent',
+      'Undo', 'Redo', '|',
+      'Bold', 'Italic', 'Underline', 'StrikeThrough', 'InlineCode', '|',
+      'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
+      'LowerCase', 'UpperCase', '|',
+      'SuperScript', 'SubScript', '|',
+      'Formats', 'Alignments', '|',
+      'OrderedList', 'UnorderedList', '|',
+      'Outdent', 'Indent', '|',
       'CreateLink',
-      { tooltipText: 'Insert Image from S3', text: 'Image', prefixIcon: 'e-icons e-image', id: 'ajf-s3-image', click: onInsertImage },
-      'ClearFormat', 'Print', 'SourceCode', 'FullScreen', 'Undo', 'Redo'
+      { id: 'custom-image-booth', tooltipText: 'Insert Image', template: '<button class="e-tbar-btn e-btn" tabindex="-1"><span class="e-icons e-image e-btn-icon"></span></button>', click: onInsertImage },
+      'Video', 'Audio', '|',
+      'CreateTable', '|',
+      'EmojiPicker', '|',
+      'ClearFormat', '|',
+      'Print', 'FullScreen', '|',
+      'SourceCode'
     ]
   });
 
@@ -1433,9 +1459,11 @@ export default function BoothManagement() {
                         value={boothForm.firstHtml}
                         change={(e) => setBoothField('firstHtml', e?.value || '')}
                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteFirstRef))}
+                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
                         placeholder="Enter content for first placeholder..."
+                        enableXhtml={true}
                       >
-                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
                     </div>
                     <div className="bm-rte-block">
@@ -1445,9 +1473,11 @@ export default function BoothManagement() {
                         value={boothForm.secondHtml}
                         change={(e) => setBoothField('secondHtml', e?.value || '')}
                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteSecondRef))}
+                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
                         placeholder="Enter content for second placeholder..."
+                        enableXhtml={true}
                       >
-                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
                     </div>
                     <div className="bm-rte-block">
@@ -1457,9 +1487,11 @@ export default function BoothManagement() {
                         value={boothForm.thirdHtml}
                         change={(e) => setBoothField('thirdHtml', e?.value || '')}
                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteThirdRef))}
+                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
                         placeholder="Enter content for third placeholder..."
+                        enableXhtml={true}
                       >
-                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
                     </div>
                   </div>

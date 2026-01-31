@@ -14,6 +14,8 @@ import '@syncfusion/ej2-react-interactive-chat/styles/material.css';
 import '@syncfusion/ej2-react-buttons/styles/material.css';
 import '@syncfusion/ej2-react-popups/styles/material.css';
 import '@syncfusion/ej2-react-notifications/styles/material.css';
+// Custom RichTextEditor styling overrides
+import './components/UI/RichTextEditor.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 

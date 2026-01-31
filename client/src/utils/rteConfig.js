@@ -4,18 +4,19 @@
  * used throughout the application with full toolbar options.
  */
 
-// Full toolbar items list (matching Syncfusion demo exactly)
+// Full toolbar items list with all supported Syncfusion toolbar items
 export const RTE_TOOLBAR_ITEMS = [
   'Undo', 'Redo', '|',
   'Bold', 'Italic', 'Underline', 'StrikeThrough', 'InlineCode', '|',
-  'CreateLink', 'Image', 'CreateTable', 'HorizontalLine', 'Blockquote', '|',
-  'LineHeight', 'Formats', 'Alignments', '|',
-  'BulletFormatList', 'NumberFormatList', '|',
-  'Outdent', 'Indent', '|',
-  'FontColor', 'BackgroundColor', 'FontName', 'FontSize', '|',
+  'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
   'LowerCase', 'UpperCase', '|',
   'SuperScript', 'SubScript', '|',
-  'EmojiPicker', 'Video', 'Audio', '|',
+  'Formats', 'Alignments', '|',
+  'OrderedList', 'UnorderedList', '|',
+  'Outdent', 'Indent', '|',
+  'CreateLink', 'Image', 'Video', 'Audio', '|',
+  'CreateTable', '|',
+  'EmojiPicker', '|',
   'ClearFormat', '|',
   'Print', 'FullScreen', '|',
   'SourceCode'
@@ -27,7 +28,7 @@ export const RTE_TOOLBAR_ITEMS_SIMPLE = [
   'Bold', 'Italic', 'Underline', '|',
   'FontName', 'FontSize', '|',
   'Formats', 'Alignments', '|',
-  'NumberFormatList', 'BulletFormatList', '|',
+  'OrderedList', 'UnorderedList', '|',
   'CreateLink', 'Image', '|',
   'SourceCode'
 ];
@@ -45,6 +46,7 @@ export const getRteToolbarSettings = (customImageHandler = null) => {
     const imageIndex = items.indexOf('Image');
     if (imageIndex !== -1) {
       items[imageIndex] = {
+        id: 'custom-image',
         tooltipText: 'Insert Image',
         template: '<button class="e-tbar-btn e-btn" tabindex="-1" id="custom-image-btn"><span class="e-icons e-image e-btn-icon"></span></button>',
         click: customImageHandler
@@ -71,6 +73,7 @@ export const getRteToolbarSettingsSimple = (customImageHandler = null) => {
     const imageIndex = items.indexOf('Image');
     if (imageIndex !== -1) {
       items[imageIndex] = {
+        id: 'custom-image-simple',
         tooltipText: 'Insert Image',
         template: '<button class="e-tbar-btn e-btn" tabindex="-1" id="custom-image-btn"><span class="e-icons e-image e-btn-icon"></span></button>',
         click: customImageHandler

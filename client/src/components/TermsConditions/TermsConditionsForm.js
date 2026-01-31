@@ -3,13 +3,30 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
+import { 
+    RichTextEditorComponent as RTE, 
+    Toolbar as RTEToolbar, 
+    Link as RteLink, 
+    Image as RteImage, 
+    HtmlEditor, 
+    QuickToolbar, 
+    Table,
+    Video,
+    Audio,
+    EmojiPicker,
+    PasteCleanup,
+    Count,
+    Resize,
+    FormatPainter,
+    Inject as RTEInject 
+} from '@syncfusion/ej2-react-richtexteditor';
 import { Input, Select, Checkbox } from '../UI/FormComponents';
 import { termsConditionsAPI } from '../../services/termsConditions';
 import { MdSave, MdCancel, MdPreview } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './TermsConditions.css';
-import { uploadImageToS3 } from '../../services/uploads';
+import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
+import { RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
 
 const TermsConditionsForm = () => {
     const [formData, setFormData] = useState({
@@ -122,11 +139,12 @@ const TermsConditionsForm = () => {
         navigate('/terms-conditions');
     };
 
-    // Shared Syncfusion RTE toolbar settings (MultiRow + floating)
-    // RTE image upload helpers
+    // RTE refs and upload helpers
     const rteRef = useRef(null);
     const hiddenImageInputRef = useRef(null);
-    const openImagePicker = () => hiddenImageInputRef.current?.click();
+    
+    const openImagePicker = useCallback(() => hiddenImageInputRef.current?.click(), []);
+    
     const onHiddenImagePicked = async (e) => {
         const file = e.target.files?.[0];
         e.target.value = '';
@@ -143,19 +161,65 @@ const TermsConditionsForm = () => {
         }
     };
 
+    // Handle image/video/audio upload before inserting
+    const handleImageUploading = async (args) => {
+        args.cancel = true;
+        const file = args.filesData?.[0]?.rawFile;
+        if (!file || !rteRef.current) return;
+        try {
+            const { downloadUrl } = await uploadImageToS3(file);
+            rteRef.current.executeCommand('insertImage', { url: downloadUrl, altText: file.name, cssClass: 'e-rte-image' });
+        } catch (err) {
+            console.error('Image upload failed:', err);
+        }
+    };
+
+    const handleVideoUploading = async (args) => {
+        args.cancel = true;
+        const file = args.filesData?.[0]?.rawFile;
+        if (!file || !rteRef.current) return;
+        try {
+            const { downloadUrl } = await uploadVideoToS3(file);
+            rteRef.current.executeCommand('insertHTML', `<video controls src="${downloadUrl}" style="max-width:100%"></video>`);
+        } catch (err) {
+            console.error('Video upload failed:', err);
+        }
+    };
+
+    const handleAudioUploading = async (args) => {
+        args.cancel = true;
+        const file = args.filesData?.[0]?.rawFile;
+        if (!file || !rteRef.current) return;
+        try {
+            const { downloadUrl } = await uploadAudioToS3(file);
+            rteRef.current.executeCommand('insertHTML', `<audio controls src="${downloadUrl}"></audio>`);
+        } catch (err) {
+            console.error('Audio upload failed:', err);
+        }
+    };
+
     const rteToolbar = useMemo(() => ({
-        type: 'MultiRow',
+        type: 'Expand',
         enableFloating: true,
         items: [
-            'Bold', 'Italic', 'Underline', 'StrikeThrough',
-            'FontName', 'FontSize', 'FontColor', 'BackgroundColor',
-            'LowerCase', 'UpperCase', 'Formats',
-            'Alignments', 'OrderedList', 'UnorderedList', 'Outdent', 'Indent',
-            'CreateLink',
-            { tooltipText: 'Insert Image from S3', text: 'Image', prefixIcon: 'e-icons e-image', id: 'ajf-s3-image', click: openImagePicker },
-            'ClearFormat', 'Print', 'SourceCode', 'FullScreen', 'Undo', 'Redo'
+            'Undo', 'Redo', '|',
+            'Bold', 'Italic', 'Underline', 'StrikeThrough', 'InlineCode', '|',
+            'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
+            'LowerCase', 'UpperCase', '|',
+            'SuperScript', 'SubScript', '|',
+            'Formats', 'Alignments', '|',
+            'OrderedList', 'UnorderedList', '|',
+            'Outdent', 'Indent', '|',
+            'CreateLink', 
+            { id: 'custom-image-terms', tooltipText: 'Insert Image', template: '<button class="e-tbar-btn e-btn" tabindex="-1"><span class="e-icons e-image e-btn-icon"></span></button>', click: openImagePicker },
+            'Video', 'Audio', '|',
+            'CreateTable', '|',
+            'EmojiPicker', '|',
+            'ClearFormat', '|',
+            'Print', 'FullScreen', '|',
+            'SourceCode'
         ]
-    }), []);
+    }), [openImagePicker]);
 
     if (loading && isEdit) {
         return (
@@ -265,11 +329,17 @@ const TermsConditionsForm = () => {
                                                 value={formData.content}
                                                 change={handleContentChange}
                                                 toolbarSettings={rteToolbar}
+                                                quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
                                                 height={400}
                                                 placeholder="Enter terms and conditions content..."
                                                 aria-label="Terms and conditions content editor"
+                                                enableXhtml={true}
+                                                showCharCount={true}
+                                                imageUploading={handleImageUploading}
+                                                videoUploading={handleVideoUploading}
+                                                audioUploading={handleAudioUploading}
                                             >
-                                                <RTEInject services={[RTEToolbar, RteLink, RteImage, HtmlEditor, QuickToolbar]} />
+                                                <RTEInject services={[RTEToolbar, RteLink, RteImage, HtmlEditor, QuickToolbar, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, Resize, FormatPainter]} />
                                             </RTE>
                                         </div>
                                         <small className="form-help">

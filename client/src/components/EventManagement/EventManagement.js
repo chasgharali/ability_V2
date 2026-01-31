@@ -10,7 +10,24 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input, DateTimePicker, Checkbox, Select, MultiSelect } from '../UI/FormComponents';
-import { RichTextEditorComponent as RTE, Toolbar as RTEToolbar, Link as RteLink, Image as RteImage, HtmlEditor, QuickToolbar, Inject as RTEInject } from '@syncfusion/ej2-react-richtexteditor';
+import { 
+    RichTextEditorComponent as RTE, 
+    Toolbar as RTEToolbar, 
+    Link as RteLink, 
+    Image as RteImage, 
+    HtmlEditor, 
+    QuickToolbar,
+    Table,
+    Video,
+    Audio,
+    EmojiPicker,
+    PasteCleanup,
+    Count,
+    Resize as RTEResize,
+    FormatPainter,
+    Inject as RTEInject 
+} from '@syncfusion/ej2-react-richtexteditor';
+import { RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
 import { uploadImageToS3 } from '../../services/uploads';
 import { listEvents, createEvent, updateEvent, deleteEvent, bulkDeleteEvents } from '../../services/events';
 import { termsConditionsAPI } from '../../services/termsConditions';
@@ -137,18 +154,27 @@ export default function EventManagement() {
         isDemo: false,
     });
 
-    // RichTextEditor toolbar settings: MultiRow with floating toolbar and comprehensive items
+    // RichTextEditor toolbar settings: Expand with floating toolbar and comprehensive items
     const buildRteToolbar = (onInsertImage) => ({
-        type: 'MultiRow',
+        type: 'Expand',
         enableFloating: true,
         items: [
-            'Bold', 'Italic', 'Underline', 'StrikeThrough',
-            'FontName', 'FontSize', 'FontColor', 'BackgroundColor',
-            'LowerCase', 'UpperCase', 'Formats',
-            'Alignments', 'OrderedList', 'UnorderedList', 'Outdent', 'Indent',
+            'Undo', 'Redo', '|',
+            'Bold', 'Italic', 'Underline', 'StrikeThrough', 'InlineCode', '|',
+            'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
+            'LowerCase', 'UpperCase', '|',
+            'SuperScript', 'SubScript', '|',
+            'Formats', 'Alignments', '|',
+            'OrderedList', 'UnorderedList', '|',
+            'Outdent', 'Indent', '|',
             'CreateLink',
-            { tooltipText: 'Insert Image from S3', text: 'Image', prefixIcon: 'e-icons e-image', id: 'ajf-s3-image', click: onInsertImage },
-            'ClearFormat', 'Print', 'SourceCode', 'FullScreen', 'Undo', 'Redo'
+            { id: 'custom-image-event', tooltipText: 'Insert Image', template: '<button class="e-tbar-btn e-btn" tabindex="-1"><span class="e-icons e-image e-btn-icon"></span></button>', click: onInsertImage },
+            'Video', 'Audio', '|',
+            'CreateTable', '|',
+            'EmojiPicker', '|',
+            'ClearFormat', '|',
+            'Print', 'FullScreen', '|',
+            'SourceCode'
         ]
     });
 
@@ -1370,8 +1396,10 @@ export default function EventManagement() {
                                         change={(e) => setField('information', e?.value || '')}
                                         placeholder="Type event details..."
                                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteInfoRef))}
+                                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                        enableXhtml={true}
                                     >
-                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage]} />
+                                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                     </RTE>
                                 </div>
 

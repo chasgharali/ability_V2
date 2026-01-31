@@ -614,25 +614,7 @@
     overflow: hidden;
 }
 
-/* Syncfusion Rich Text Editor Customizations */
-.e-richtexteditor {
-    border: 1px solid #ddd !important;
-    border-radius: 4px !important;
-}
-
-.e-richtexteditor .e-rte-toolbar {
-    background: #f5f5f5 !important;
-    border-bottom: 1px solid #ddd !important;
-}
-
-.e-richtexteditor .e-rte-content {
-    background: white !important;
-    min-height: 300px !important;
-}
-
-.e-richtexteditor .e-rte-content p {
-    margin: 0.5rem 0 !important;
-}
+/* RTE styling is now handled globally in components/UI/RichTextEditor.css */
 
 /* Button customizations for dashboard theme */
 .dashboard-button.primary {
