@@ -27,8 +27,7 @@ import '../Dashboard/Dashboard.css';
 import './TermsConditions.css';
 import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
 import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
-import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
-import VideoUploadProgress from '../UI/VideoUploadProgress';
+import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 
 const TermsConditionsForm = () => {
     const [formData, setFormData] = useState({
@@ -42,12 +41,6 @@ const TermsConditionsForm = () => {
     const [error, setError] = useState(null);
     const [isEdit, setIsEdit] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
-    
-    // Upload progress state
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const [uploadingFile, setUploadingFile] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    
     const navigate = useNavigate();
     const { id } = useParams();
     const { user } = useAuth();
@@ -190,13 +183,14 @@ const TermsConditionsForm = () => {
         console.log('📁 File detected:', file, 'Type:', file?.type);
         
         if (!file || !rteRef.current) {
-            console.error('❌ No file or RTE ref');
+            console.error('❌ No file or RTE ref', 'file:', file, 'rteRef:', rteRef.current);
             args.cancel = true;
             return;
         }
         
         const isVideo = isVideoFile(file);
         const isAudio = isAudioFile(file);
+        console.log('🔍 File classification - Video:', isVideo, 'Audio:', isAudio);
         
         if (!isVideo && !isAudio) {
             console.error('❌ File is neither video nor audio:', file.type);
@@ -207,24 +201,15 @@ const TermsConditionsForm = () => {
         // Cancel default upload
         args.cancel = true;
         
-        // Close the Syncfusion dialog immediately
+        // Close the Syncfusion dialog immediately (helper has internal retries)
         closeRteMediaDialog(rteRef.current);
-        
-        // Show progress modal
-        setUploadingFile(file.name);
-        setUploadProgress(0);
-        setIsUploading(true);
         
         try {
             let downloadUrl;
             
-            const onProgress = (percent) => {
-                setUploadProgress(percent);
-            };
-            
             if (isVideo) {
                 console.log('⬆️ Uploading video to S3...');
-                const result = await uploadVideoToS3(file, onProgress);
+                const result = await uploadVideoToS3(file);
                 downloadUrl = result.downloadUrl;
                 console.log('✅ Video uploaded, URL:', downloadUrl);
                 
@@ -233,7 +218,7 @@ const TermsConditionsForm = () => {
                 rteRef.current.executeCommand('insertHTML', videoHTML);
             } else if (isAudio) {
                 console.log('⬆️ Uploading audio to S3...');
-                const result = await uploadAudioToS3(file, onProgress);
+                const result = await uploadAudioToS3(file);
                 downloadUrl = result.downloadUrl;
                 console.log('✅ Audio uploaded, URL:', downloadUrl);
                 
@@ -244,14 +229,6 @@ const TermsConditionsForm = () => {
             
         } catch (err) {
             console.error('❌ Media upload failed:', err);
-            setError(getUploadErrorMessage(err, isVideo));
-        } finally {
-            // Hide progress modal
-            setTimeout(() => {
-                setIsUploading(false);
-                setUploadingFile(null);
-                setUploadProgress(0);
-            }, 500);
         }
     };
 
@@ -297,13 +274,6 @@ const TermsConditionsForm = () => {
 
     return (
         <div className="dashboard">
-            {/* Video Upload Progress Modal */}
-            <VideoUploadProgress 
-                progress={uploadProgress}
-                fileName={uploadingFile}
-                isUploading={isUploading}
-            />
-            
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="terms-conditions" />

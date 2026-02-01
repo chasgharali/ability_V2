@@ -59,7 +59,7 @@ const eventSchema = new mongoose.Schema({
     description: {
         type: String,
         trim: true,
-        maxlength: [1000, 'Description cannot exceed 1000 characters']
+        maxlength: [50000, 'Description cannot exceed 50000 characters']
     },
     // Store video content separately to avoid character limit issues
     videoContent: [{

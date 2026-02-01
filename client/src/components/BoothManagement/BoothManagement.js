@@ -34,7 +34,7 @@ import {
   Inject as RTEInject 
 } from '@syncfusion/ej2-react-richtexteditor';
 import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
-import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
+import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
 export default function BoothManagement() {
@@ -241,7 +241,7 @@ export default function BoothManagement() {
       
     } catch (err) {
       console.error('❌ Media upload failed:', err);
-      showToast(getUploadErrorMessage(err, isVideo), 'Error', 4000);
+      showToast(isVideo ? 'Failed to upload video' : 'Failed to upload audio', 'Error', 4000);
     } finally {
       // Hide progress modal after a brief delay
       setTimeout(() => {

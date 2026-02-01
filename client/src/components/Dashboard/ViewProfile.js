@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaLinkedin } from 'react-icons/fa';
 import './Dashboard.css';
 import {
   JOB_CATEGORY_LIST,
@@ -73,6 +74,7 @@ export default function ViewProfile() {
   const location = [user?.city, user?.state].filter(Boolean).join(', ');
   const country = user?.country || '';
   const resumeUrl = user?.resumeUrl || '';
+  const linkedInUrl = user?.linkedInUrl || '';
 
   const headline = profile?.headline || '';
   const keywords = profile?.keywords || '';
@@ -148,6 +150,18 @@ export default function ViewProfile() {
             </div>
 
             <div className="profile-actions">
+              {linkedInUrl && (
+                <a
+                  href={linkedInUrl.startsWith('http') ? linkedInUrl : `https://${linkedInUrl}`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="profile-btn profile-btn-outline"
+                  aria-label="View LinkedIn profile"
+                >
+                  <FaLinkedin size={20} aria-hidden="true" style={{ marginRight: '8px' }} />
+                  LinkedIn
+                </a>
+              )}
               {resumeUrl ? (
                 <a 
                   href={resumeUrl} 

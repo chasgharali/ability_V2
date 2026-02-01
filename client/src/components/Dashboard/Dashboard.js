@@ -24,8 +24,8 @@ import {
 } from '@syncfusion/ej2-react-richtexteditor';
 import { getRteToolbarSettings, RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
 import { uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
-import { isVideoFile, isAudioFile, closeRteMediaDialog, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
 import VideoUploadProgress from '../UI/VideoUploadProgress';
+import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 import { TabComponent, TabItemsDirective, TabItemDirective } from '@syncfusion/ej2-react-navigations';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
@@ -332,7 +332,7 @@ const Dashboard = () => {
             
         } catch (err) {
             console.error('❌ Media upload failed:', err);
-            showToast(getUploadErrorMessage(err, isVideo), 'error');
+            showToast(isVideo ? 'Failed to upload video' : 'Failed to upload audio', 'error');
         } finally {
             // Hide progress modal after a brief delay
             setTimeout(() => {

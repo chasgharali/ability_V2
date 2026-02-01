@@ -262,8 +262,8 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
     body('description')
         .optional()
         .trim()
-        .isLength({ max: 1000 })
-        .withMessage('Description cannot exceed 1000 characters'),
+        .isLength({ max: 100000 })
+        .withMessage('Description cannot exceed 100000 characters (video content is compressed before storage)'),
     body('start')
         .isISO8601()
         .withMessage('Start time must be a valid ISO 8601 date'),
@@ -309,11 +309,12 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
         // Compress video content in description
         const { compressedHtml, videos } = compressVideoContent(description);
 
-        // Validate compressed description length
-        if (compressedHtml && compressedHtml.length > 1000) {
+        // Validate compressed description length (generous limit for rich content + video refs)
+        const MAX_DESCRIPTION_LENGTH = 50000;
+        if (compressedHtml && compressedHtml.length > MAX_DESCRIPTION_LENGTH) {
             return res.status(400).json({
                 error: 'Description too long',
-                message: 'Description cannot exceed 1000 characters even after video compression'
+                message: `Description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters even after video compression`
             });
         }
 
@@ -388,8 +389,8 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
     body('description')
         .optional()
         .trim()
-        .isLength({ max: 1000 })
-        .withMessage('Description cannot exceed 1000 characters'),
+        .isLength({ max: 100000 })
+        .withMessage('Description cannot exceed 100000 characters (video content is compressed before storage)'),
     body('start')
         .optional()
         .isISO8601()
@@ -446,11 +447,12 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         if (description !== undefined) {
             const { compressedHtml, videos } = compressVideoContent(description);
             
-            // Validate compressed description length
-            if (compressedHtml && compressedHtml.length > 1000) {
+            // Validate compressed description length (generous limit for rich content + video refs)
+            const MAX_DESCRIPTION_LENGTH = 50000;
+            if (compressedHtml && compressedHtml.length > MAX_DESCRIPTION_LENGTH) {
                 return res.status(400).json({
                     error: 'Description too long',
-                    message: 'Description cannot exceed 1000 characters even after video compression'
+                    message: `Description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters even after video compression`
                 });
             }
             
@@ -672,8 +674,8 @@ router.post('/:id/booths', authenticateToken, requireResourceAccess('event', 'id
     body('description')
         .optional()
         .trim()
-        .isLength({ max: 1000 })
-        .withMessage('Description cannot exceed 1000 characters'),
+        .isLength({ max: 100000 })
+        .withMessage('Description cannot exceed 100000 characters'),
     body('logoUrl')
         .optional()
         .isURL()

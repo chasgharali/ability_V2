@@ -141,6 +141,7 @@ router.put('/me', authenticateToken, [
     body('city').optional().trim().isLength({ max: 100 }).withMessage('City too long'),
     body('country').optional().trim().isLength({ max: 2 }).withMessage('Country must be 2-letter code'),
     body('avatarUrl').optional().custom((value) => value === null || value === '' || typeof value === 'string').withMessage('avatarUrl must be null, empty string, or a string'),
+    body('linkedInUrl').optional().custom((value) => value === null || value === '' || typeof value === 'string').withMessage('linkedInUrl must be null, empty string, or a string'),
     // Job seeker profile fields
     body('profile').optional().isObject().withMessage('Profile must be an object'),
     body('profile.headline').optional().isString().isLength({ max: 200 }).withMessage('Headline max 200 chars'),
@@ -172,7 +173,7 @@ router.put('/me', authenticateToken, [
             });
         }
 
-        const { name, phoneNumber, state, city, country, avatarUrl, profile } = req.body;
+        const { name, phoneNumber, state, city, country, avatarUrl, linkedInUrl, profile } = req.body;
 
         // Update basic fields if provided
         if (name !== undefined) targetUser.name = name;
@@ -183,6 +184,10 @@ router.put('/me', authenticateToken, [
         // Allow removing avatar by setting to null or empty string
         if (avatarUrl !== undefined) {
             targetUser.avatarUrl = (avatarUrl === null || avatarUrl === '') ? null : avatarUrl;
+        }
+        // Allow removing LinkedIn URL by setting to null or empty string
+        if (linkedInUrl !== undefined) {
+            targetUser.linkedInUrl = (linkedInUrl === null || linkedInUrl === '') ? null : String(linkedInUrl).trim() || null;
         }
 
         // Merge job seeker profile into metadata.profile
@@ -950,6 +955,10 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         .optional()
         .custom((value) => value === null || value === '' || typeof value === 'string')
         .withMessage('avatarUrl must be null, empty string, or a string'),
+    body('linkedInUrl')
+        .optional()
+        .custom((value) => value === null || value === '' || typeof value === 'string')
+        .withMessage('linkedInUrl must be null, empty string, or a string'),
     // Accessibility fields
     body('usesScreenMagnifier').optional().isBoolean().withMessage('usesScreenMagnifier must be boolean'),
     body('usesScreenReader').optional().isBoolean().withMessage('usesScreenReader must be boolean'),
@@ -981,7 +990,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, resumeUrl,
+        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, resumeUrl, linkedInUrl,
             usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, profile } = req.body;
         const { user } = req;
 
@@ -1037,6 +1046,10 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         // Allow removing resume by setting to null or empty string
         if (resumeUrl !== undefined) {
             targetUser.resumeUrl = (resumeUrl === null || resumeUrl === '') ? null : resumeUrl;
+        }
+        // Allow removing LinkedIn URL by setting to null or empty string
+        if (linkedInUrl !== undefined) {
+            targetUser.linkedInUrl = (linkedInUrl === null || linkedInUrl === '') ? null : String(linkedInUrl).trim() || null;
         }
 
         // Update accessibility fields for JobSeekers

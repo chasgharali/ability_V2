@@ -107,6 +107,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    linkedInUrl: {
+        type: String,
+        default: null,
+        trim: true
+    },
     phoneNumber: {
         type: String,
         default: null
@@ -347,6 +352,7 @@ userSchema.methods.getPublicProfile = function () {
         avatarUrl: this.avatarUrl,
         emailVerified: this.emailVerified,
         resumeUrl: this.resumeUrl,
+        linkedInUrl: this.linkedInUrl,
         isActive: this.isActive,
         lastLogin: this.lastLogin,
         phoneNumber: this.phoneNumber,

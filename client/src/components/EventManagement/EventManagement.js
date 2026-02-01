@@ -29,8 +29,8 @@ import {
 } from '@syncfusion/ej2-react-richtexteditor';
 import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
 import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
-import { isVideoFile, isAudioFile, closeRteMediaDialog, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
 import VideoUploadProgress from '../UI/VideoUploadProgress';
+import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 import { listEvents, createEvent, updateEvent, deleteEvent, bulkDeleteEvents } from '../../services/events';
 import { termsConditionsAPI } from '../../services/termsConditions';
 import { useAuth } from '../../contexts/AuthContext';
@@ -130,7 +130,7 @@ export default function EventManagement() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadingFile, setUploadingFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-
+    
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [rowPendingDelete, setRowPendingDelete] = useState(null);
     const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
@@ -290,7 +290,7 @@ export default function EventManagement() {
             
         } catch (err) {
             console.error('❌ Media upload failed:', err);
-            showToast(getUploadErrorMessage(err, isVideo), 'error');
+            showToast(isVideo ? 'Failed to upload video' : 'Failed to upload audio', 'error');
         } finally {
             // Hide progress modal after a brief delay
             setTimeout(() => {

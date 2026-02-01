@@ -20,6 +20,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const [form, setForm] = useState({
     headline: '',
     keywords: '',
+    linkedInUrl: '',
     primaryExperience: [], // multi-select (max 2)
     workLevel: '',
     educationLevel: '',
@@ -228,6 +229,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           ...prev,
           headline: prof.headline || '',
           keywords: prof.keywords || '',
+          linkedInUrl: data?.user?.linkedInUrl || prof.linkedInUrl || '',
           primaryExperience: Array.isArray(prof.primaryExperience) ? prof.primaryExperience : [],
           workLevel: prof.workLevel || '',
           educationLevel: prof.educationLevel || '',
@@ -439,6 +441,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     setSuccessMessage(''); // Clear any previous success message
     try {
       const payload = {
+        linkedInUrl: (form.linkedInUrl || '').trim() || null,
         profile: {
           headline: form.headline,
           keywords: form.keywords,
@@ -715,6 +718,18 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         <div className="form-group">
           <label htmlFor="keywords">* Keywords</label>
           <input id="keywords" name="keywords" value={form.keywords} onChange={onChange} placeholder="Your skills, job titles, certifications, etc." />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="linkedInUrl">LinkedIn Profile URL (Optional)</label>
+          <input
+            id="linkedInUrl"
+            name="linkedInUrl"
+            type="url"
+            value={form.linkedInUrl}
+            onChange={onChange}
+            placeholder="https://www.linkedin.com/in/your-profile"
+          />
         </div>
 
         <div className="form-row">
