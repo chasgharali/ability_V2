@@ -374,12 +374,18 @@
    Syncfusion RichTextEditor Styling - Clean Flat Design
    ======================================== */
 
-/* Main RTE Container */
+/* Ensure parent containers don't clip video/image/audio dialogs */
+.form-group:has(.e-richtexteditor),
+.form-group:has([class*="e-richtexteditor"]) {
+  overflow: visible !important;
+}
+
+/* Main RTE Container - overflow: visible allows video/image/audio dialogs to display above content */
 .e-richtexteditor {
   border: 1px solid #e0e0e0 !important;
   border-radius: 4px !important;
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   box-shadow: none !important;
 }
 
@@ -652,7 +658,7 @@
   box-shadow: none !important;
 }
 
-/* RTE Content Area */
+/* RTE Content Area - keep overflow for scrolling, outer container has overflow: visible for dialogs */
 .e-richtexteditor .e-content,
 .e-richtexteditor .e-rte-content {
   background: #ffffff !important;
@@ -661,6 +667,8 @@
   min-height: 200px !important;
   line-height: 1.6 !important;
   font-size: 14px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 /* Fix any floating toolbar issues */

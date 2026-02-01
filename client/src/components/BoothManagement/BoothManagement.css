@@ -860,11 +860,16 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Rich Text Editor Tabs */
+/* Rich Text Editor Tabs - overflow: visible allows video/image/audio dialogs to display fully */
 .bm-rte-tabs {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow: visible !important;
+}
+
+.bm-rte-block {
+  overflow: visible !important;
 }
 
 .bm-rte-block h4 {

@@ -332,3 +332,592 @@
 2026-01-30 02:35:39:3539 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
 2026-01-30 02:35:39:3539 [32minfo[39m: [32mRedis Client Connected[39m
 2026-01-30 02:35:39:3539 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 00:25:31:2531 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 00:25:31:2531 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 00:25:33:2533 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 00:25:34:2534 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 00:25:34:2534 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 00:25:37:2537 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:26:09:269 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 00:26:09:269 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 00:26:11:2611 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 00:26:12:2612 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 00:26:12:2612 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 00:26:17:2617 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:30:20:3020 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 00:30:22:3022 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:33:02:332 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 00:33:03:333 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:33:34:3334 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 00:33:34:3334 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:37:41:3741 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 00:37:44:3744 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:40:29:4029 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 00:40:30:4030 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 00:43:22:4322 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 00:43:24:4324 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:52:04:524 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 00:52:05:525 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:52:48:5248 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 00:52:49:5249 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 00:55:48:5548 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 00:55:48:5548 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 00:55:53:5553 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 00:55:55:5555 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 00:55:55:5555 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 00:55:58:5558 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:56:05:565 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 00:56:05:565 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 00:56:09:569 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 00:56:10:5610 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 00:56:12:5612 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 00:58:07:587 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 00:58:09:589 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:02:10:210 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:02:12:212 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:02:30:230 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 01:02:39:239 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 01:03:17:317 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 01:03:44:344 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 01:03:48:348 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 01:03:49:349 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 01:06:52:652 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:06:54:654 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:12:22:1222 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:12:24:1224 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:12:47:1247 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:12:48:1248 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:13:03:133 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 01:13:10:1310 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 01:22:29:2229 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:22:31:2231 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:23:10:2310 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 01:23:16:2316 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 01:30:47:3047 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:31:41:3141 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:33:11:3311 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:33:13:3313 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:34:39:3439 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 01:34:40:3440 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 01:34:56:3456 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 01:35:04:354 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 01:42:44:4244 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:42:45:4245 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 01:42:57:4257 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 01:43:03:433 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 01:45:57:4557 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 01:45:59:4559 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 02:20:46:2046 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 02:20:47:2047 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 02:20:47:2047 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 02:35:59:3559 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 02:36:00:360 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 02:36:00:360 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 02:51:48:5148 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 03:21:22:2122 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 03:21:22:2122 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 03:39:04:394 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 03:39:05:395 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 03:39:05:395 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 03:46:58:4658 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 03:47:08:478 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 03:47:08:478 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 04:05:30:530 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 04:21:06:216 [31merror[39m: [31mQueue cleanup error: connection 19 to 89.194.51.70:27017 timed out[39m
+2026-02-01 04:48:09:489 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 04:48:09:489 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 05:21:42:2142 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 05:21:42:2142 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 05:37:51:3751 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 05:37:52:3752 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 05:37:52:3752 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 05:49:00:490 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 06:38:51:3851 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 06:38:51:3851 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 06:55:53:5553 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 06:55:55:5555 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 06:55:56:5556 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 07:13:07:137 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 07:13:07:137 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 07:13:07:137 [31merror[39m: [31mQueue cleanup error: Connection to cluster-ability-shard-00-01.okhfe.mongodb.net:27017 interrupted due to server monitor timeout[39m
+2026-02-01 08:20:45:2045 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 08:20:47:2047 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 08:20:47:2047 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 08:37:34:3734 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 09:27:51:2751 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 09:27:51:2751 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 09:38:55:3855 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 09:55:47:5547 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 11:05:25:525 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 11:05:25:525 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 11:09:35:935 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 11:26:03:263 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 11:28:42:2842 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-02-01 11:28:43:2843 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 11:28:44:2844 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 11:42:08:428 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30159ms (connectTimeoutMS: 30000)[39m
+2026-02-01 12:32:51:3251 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-02-01 12:41:18:4118 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1969445ms (connectTimeoutMS: 30000)[39m
+2026-02-01 13:06:19:619 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-02-01 13:13:36:1336 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 397014ms (connectTimeoutMS: 30000)[39m
+2026-02-01 13:14:49:1449 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 13:14:52:1452 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 13:24:29:2429 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 13:24:31:2431 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 13:33:20:3320 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-02-01 13:48:55:4855 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 13:48:55:4855 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 13:48:58:4858 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 13:48:59:4859 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 13:58:34:5834 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-02-01 13:58:35:5835 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 13:58:35:5835 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 14:09:58:958 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-02-01 14:09:59:959 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:10:26:1026 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:10:27:1027 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:10:46:1046 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 14:10:50:1050 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 14:11:52:1152 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:11:53:1153 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:26:18:2618 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 14:26:19:2619 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:26:40:2640 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:26:41:2641 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:26:53:2653 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:26:54:2654 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:27:17:2717 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test_video.mov[39m
+2026-02-01 14:27:21:2721 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 14:29:13:2913 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-01 14:29:52:2952 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:30:10:3010 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test_video.mov[39m
+2026-02-01 14:30:44:3044 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 14:34:42:3442 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 14:34:44:3444 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:34:59:3459 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 14:35:03:353 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 14:35:16:3516 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:35:17:3517 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 14:38:41:3841 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 14:38:41:3841 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 14:38:44:3844 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 14:38:46:3846 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:39:30:3930 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 14:39:30:3930 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 14:39:32:3932 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 14:39:33:3933 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 14:39:33:3933 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 14:39:36:3936 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:47:12:4712 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 14:47:14:4714 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:47:40:4740 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 14:47:45:4745 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 14:50:47:5047 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 14:50:47:5047 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 14:50:49:5049 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 14:50:50:5050 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 14:50:50:5050 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 14:50:52:5052 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:51:09:519 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 14:51:09:519 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 14:51:11:5111 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 14:51:12:5112 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 14:51:16:5116 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:51:56:5156 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-02-01 14:51:57:5157 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 14:51:57:5157 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 14:52:00:520 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 14:52:02:522 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 14:53:58:5358 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 14:53:59:5359 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:08:27:827 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:08:29:829 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:11:45:1145 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:11:47:1147 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:13:51:1351 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 15:15:29:1529 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:15:33:1533 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:17:57:1757 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 15:17:57:1757 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 15:26:23:2623 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:26:25:2625 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:28:56:2856 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:28:58:2858 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:36:21:3621 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 15:36:21:3621 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 15:37:31:3731 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 15:39:49:3949 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 15:39:49:3949 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 15:43:47:4347 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:43:59:4359 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-02-01 15:44:01:441 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 15:44:01:441 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 15:44:03:443 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 15:44:04:444 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 15:44:04:444 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 15:44:25:4425 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:47:16:4716 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 15:47:16:4716 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 15:47:18:4718 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 15:47:19:4719 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 15:47:19:4719 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 15:47:21:4721 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:47:45:4745 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 15:47:45:4745 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 15:47:48:4748 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 15:47:50:4750 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:49:13:4913 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:49:14:4914 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:49:15:4915 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-01 15:49:15:4915 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:49:34:4934 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test_video.mov[39m
+2026-02-01 15:49:38:4938 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 15:50:49:5049 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 15:50:50:5050 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 15:56:30:5630 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:56:32:5632 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:59:06:596 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:59:08:598 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 15:59:18:5918 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 15:59:20:5920 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:00:57:057 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 16:00:58:058 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 16:01:19:119 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 16:01:20:120 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 16:01:38:138 [32minfo[39m: [32mBooth updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 16:01:39:139 [32minfo[39m: [32mBooth rich sections updated: amazon by tadmin.ability@yopmail.com[39m
+2026-02-01 16:01:41:141 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Gemini_Generated_Image_159wsp159wsp159w.png[39m
+2026-02-01 16:01:44:144 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Gemini_Generated_Image_159wsp159wsp159w.png[39m
+2026-02-01 16:02:05:25 [32minfo[39m: [32mEvent updated: abilityTALENT Job Fair by tadmin.ability@yopmail.com[39m
+2026-02-01 16:02:21:221 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test_video.mov[39m
+2026-02-01 16:02:25:225 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 16:04:40:440 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 16:04:42:442 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:04:51:451 [32minfo[39m: [32mEvent updated: 2026test by tadmin.ability@yopmail.com[39m
+2026-02-01 16:05:03:53 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test_video.mov[39m
+2026-02-01 16:05:08:58 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 16:16:14:1614 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 16:16:16:1616 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:19:30:1930 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-01 16:19:30:1930 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-01 16:19:52:1952 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 16:21:59:2159 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:22:19:2219 [32minfo[39m: [32mEvent updated: 2026test by tadmin.ability@yopmail.com[39m
+2026-02-01 16:22:33:2233 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test_video.mov[39m
+2026-02-01 16:22:40:2240 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m
+2026-02-01 16:24:40:2440 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:24:40:2440 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:24:43:2443 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 16:24:44:2444 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 16:24:48:2448 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:24:53:2453 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:24:53:2453 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:24:55:2455 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 16:24:56:2456 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 16:24:57:2457 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:25:00:250 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:25:00:250 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:25:02:252 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:25:03:253 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 16:25:03:253 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 16:25:07:257 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:25:07:257 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:25:09:259 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 16:25:10:2510 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 16:25:12:2512 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:25:13:2513 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:25:13:2513 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 16:25:15:2515 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 16:25:17:2517 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:25:19:2519 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:25:19:2519 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:25:22:2522 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:25:22:2522 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:22:2522 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:22:2522 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:22:2522 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:22:2522 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:23:2523 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:23:2523 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:23:2523 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:24:2524 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:24:2524 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:25:2525 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:25:2525 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:26:2526 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:26:2526 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:27:2527 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:25:27:2527 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:28:2528 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:29:2529 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:29:2529 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:30:2530 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:31:2531 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:32:2532 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:25:32:2532 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:25:34:2534 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:25:34:2534 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:34:2534 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:35:2535 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:35:2535 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:35:2535 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:35:2535 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:35:2535 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:36:2536 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:36:2536 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:37:2537 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:25:37:2537 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:37:2537 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:38:2538 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:38:2538 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:39:2539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:40:2540 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:40:2540 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:41:2541 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:42:2542 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:43:2543 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:44:2544 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:45:2545 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:46:2546 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:47:2547 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:48:2548 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:49:2549 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:51:2551 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:52:2552 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:53:2553 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:55:2555 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:56:2556 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:58:2558 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:25:59:2559 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:01:261 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:02:262 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:26:02:262 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:26:04:264 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:26:04:264 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:04:264 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:05:265 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:05:265 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:05:265 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:05:265 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:05:265 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:06:266 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:06:266 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:06:266 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:26:07:267 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:07:267 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:08:268 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:08:268 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:09:269 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:10:2610 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:10:2610 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:11:2611 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:12:2612 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:13:2613 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:14:2614 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:15:2615 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-01 16:26:15:2615 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-01 16:26:18:2618 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-01 16:26:18:2618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:18:2618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:18:2618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:18:2618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:18:2618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:18:2618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:19:2619 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:19:2619 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:19:2619 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:20:2620 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:20:2620 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:26:20:2620 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:21:2621 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:22:2622 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:22:2622 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:23:2623 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:24:2624 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:24:2624 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:25:2625 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:26:2626 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:27:2627 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:28:2628 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:29:2629 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:30:2630 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:32:2632 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:33:2633 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:34:2634 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:35:2635 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:37:2637 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:38:2638 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-02-01 16:26:40:2640 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-01 16:26:40:2640 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-01 16:29:11:2911 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-02-01 16:29:14:2914 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-01 16:29:26:2926 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: video/test video.mov[39m
+2026-02-01 16:29:30:2930 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: video/697c6b4937938cf1ff0299d7/test_video.mov[39m

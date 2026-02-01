@@ -155,11 +155,11 @@
     margin: 0;
 }
 
-/* Rich text editor enhancements */
+/* Rich text editor enhancements - overflow: visible allows video/image/audio dialogs to display fully */
 .terms-rte-container {
     border: 2px solid #e9ecef;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible !important;
     transition: all 0.3s ease;
     background: white;
 }

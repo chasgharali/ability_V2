@@ -14,7 +14,8 @@ import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections, bulkDeleteBooths } from '../../services/booths';
-import { uploadBoothLogoToS3, uploadImageToS3 } from '../../services/uploads';
+import { uploadBoothLogoToS3, uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
+import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { 
   RichTextEditorComponent as RTE, 
   Toolbar as RTEToolbar, 
@@ -32,7 +33,8 @@ import {
   FormatPainter,
   Inject as RTEInject 
 } from '@syncfusion/ej2-react-richtexteditor';
-import { RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
+import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
+import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
 export default function BoothManagement() {
@@ -106,6 +108,11 @@ export default function BoothManagement() {
   const hiddenImageInputRef = React.useRef(null);
   const [activeRteRef, setActiveRteRef] = useState(null);
 
+  // Upload progress state for video/audio
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingFile, setUploadingFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   // Create a short, unique numeric token for the queue URL (6 digits)
   const genToken = () => String(Math.floor(100000 + Math.random() * 900000));
   const [queueToken] = useState(() => genToken());
@@ -165,6 +172,85 @@ export default function BoothManagement() {
       setActiveRteRef(null);
     }
   };
+
+  /** Handle file upload for video/audio with progress tracking */
+  const handleFileUploading = useCallback(async (args, rteRef) => {
+    console.log('🎥 File uploading triggered:', args);
+    
+    const file = args.fileData?.rawFile;
+    console.log('📁 File detected:', file, 'Type:', file?.type);
+    
+    if (!file || !rteRef?.current) {
+      console.error('❌ No file or RTE ref', 'file:', file, 'rteRef:', rteRef?.current);
+      args.cancel = true;
+      return;
+    }
+    
+    const isVideo = isVideoFile(file);
+    const isAudio = isAudioFile(file);
+    console.log('🔍 File classification - Video:', isVideo, 'Audio:', isAudio);
+    
+    if (!isVideo && !isAudio) {
+      console.error('❌ File is neither video nor audio:', file.type);
+      showToast('Please select a video or audio file', 'Error', 4000);
+      args.cancel = true;
+      return;
+    }
+    
+    // Cancel default upload
+    args.cancel = true;
+    
+    // Close the Syncfusion dialog immediately (before showing progress)
+    // Pass the RTE instance so we can close via module dialogObj when available.
+    closeRteMediaDialog(rteRef.current);
+    
+    // Show our custom progress modal
+    setUploadingFile(file.name);
+    setUploadProgress(0);
+    setIsUploading(true);
+    
+    try {
+      let downloadUrl;
+      
+      const onProgress = (percent) => {
+        setUploadProgress(percent);
+      };
+      
+      if (isVideo) {
+        console.log('⬆️ Uploading video to S3...');
+        const result = await uploadVideoToS3(file, onProgress);
+        downloadUrl = result.downloadUrl;
+        console.log('✅ Video uploaded, URL:', downloadUrl);
+        
+        // Insert video with proper attributes
+        const videoHTML = generateVideoHTML(downloadUrl, file.type);
+        rteRef.current.executeCommand('insertHTML', videoHTML);
+        const isMov = (file.name || '').toLowerCase().endsWith('.mov');
+        showToast(isMov ? 'Video uploaded. If it doesn\'t play, try converting to MP4.' : 'Video uploaded successfully', 'Success', 3000);
+      } else if (isAudio) {
+        console.log('⬆️ Uploading audio to S3...');
+        const result = await uploadAudioToS3(file, onProgress);
+        downloadUrl = result.downloadUrl;
+        console.log('✅ Audio uploaded, URL:', downloadUrl);
+        
+        // Insert audio with proper attributes
+        const audioHTML = generateAudioHTML(downloadUrl, file.type);
+        rteRef.current.executeCommand('insertHTML', audioHTML);
+        showToast('Audio uploaded successfully', 'Success', 2000);
+      }
+      
+    } catch (err) {
+      console.error('❌ Media upload failed:', err);
+      showToast(getUploadErrorMessage(err, isVideo), 'Error', 4000);
+    } finally {
+      // Hide progress modal after a brief delay
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadingFile(null);
+        setUploadProgress(0);
+      }, 500);
+    }
+  }, []);
 
   const slugify = (s = '') => {
     const slug = s
@@ -1006,6 +1092,13 @@ export default function BoothManagement() {
 
   return (
     <div className="dashboard">
+      {/* Video Upload Progress Modal */}
+      <VideoUploadProgress 
+        progress={uploadProgress}
+        fileName={uploadingFile}
+        isUploading={isUploading}
+      />
+      
       <AdminHeader />
 
       <div className="dashboard-layout">
@@ -1460,8 +1553,13 @@ export default function BoothManagement() {
                         change={(e) => setBoothField('firstHtml', e?.value || '')}
                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteFirstRef))}
                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertVideoSettings={getInsertVideoSettings()}
+                        insertAudioSettings={getInsertAudioSettings()}
+                        height={550}
                         placeholder="Enter content for first placeholder..."
                         enableXhtml={true}
+                        keyDown={handleRteKeyDown}
+                        fileUploading={(args) => handleFileUploading(args, rteFirstRef)}
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
@@ -1474,8 +1572,13 @@ export default function BoothManagement() {
                         change={(e) => setBoothField('secondHtml', e?.value || '')}
                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteSecondRef))}
                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertVideoSettings={getInsertVideoSettings()}
+                        insertAudioSettings={getInsertAudioSettings()}
+                        height={550}
                         placeholder="Enter content for second placeholder..."
                         enableXhtml={true}
+                        keyDown={handleRteKeyDown}
+                        fileUploading={(args) => handleFileUploading(args, rteSecondRef)}
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
@@ -1488,8 +1591,13 @@ export default function BoothManagement() {
                         change={(e) => setBoothField('thirdHtml', e?.value || '')}
                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteThirdRef))}
                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertVideoSettings={getInsertVideoSettings()}
+                        insertAudioSettings={getInsertAudioSettings()}
+                        height={550}
                         placeholder="Enter content for third placeholder..."
                         enableXhtml={true}
+                        keyDown={handleRteKeyDown}
+                        fileUploading={(args) => handleFileUploading(args, rteThirdRef)}
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>

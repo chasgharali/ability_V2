@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getCompressedCharacterCount, hasVideoContent } from '../utils/videoContentProcessor';
 import './RichTextEditor.css';
 
 const RichTextEditor = ({
@@ -171,7 +172,17 @@ const RichTextEditor = ({
             <div className="rich-text-footer">
                 <div className="rich-text-stats">
                     <span className="rich-text-char-count">
-                        {editorRef.current?.textContent?.length || 0} characters
+                        {(() => {
+                            const content = editorRef.current?.innerHTML || '';
+                            const rawCount = content.length;
+                            const compressedCount = getCompressedCharacterCount(content);
+                            const hasVideo = hasVideoContent(content);
+                            
+                            if (hasVideo && rawCount !== compressedCount) {
+                                return `${rawCount} characters (${compressedCount} compressed)`;
+                            }
+                            return `${rawCount} characters`;
+                        })()}
                     </span>
                 </div>
             </div>

@@ -88,10 +88,11 @@
     box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
 }
 
+/* overflow: visible allows video/image/audio dialogs to display fully above content */
 .note-rte-container {
     border: 2px solid #e9ecef;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible !important;
 }
 
 .note-checkbox-group {

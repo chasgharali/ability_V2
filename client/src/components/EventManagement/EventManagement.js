@@ -27,8 +27,10 @@ import {
     FormatPainter,
     Inject as RTEInject 
 } from '@syncfusion/ej2-react-richtexteditor';
-import { RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
-import { uploadImageToS3 } from '../../services/uploads';
+import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
+import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
+import { isVideoFile, isAudioFile, closeRteMediaDialog, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
+import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { listEvents, createEvent, updateEvent, deleteEvent, bulkDeleteEvents } from '../../services/events';
 import { termsConditionsAPI } from '../../services/termsConditions';
 import { useAuth } from '../../contexts/AuthContext';
@@ -123,6 +125,12 @@ export default function EventManagement() {
     const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
     const [editingId, setEditingId] = useState(null);
     const [saving, setSaving] = useState(false);
+    
+    // Upload progress state
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadingFile, setUploadingFile] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [rowPendingDelete, setRowPendingDelete] = useState(null);
     const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
@@ -153,6 +161,19 @@ export default function EventManagement() {
         status: 'draft',
         isDemo: false,
     });
+
+    // Toast notification helper - defined early so it can be used in RTE handlers
+    const showToast = (message, type = 'Success') => {
+        if (toastRef.current) {
+            toastRef.current.show({
+                title: type,
+                content: message,
+                cssClass: `e-toast-${type.toLowerCase()}`,
+                showProgressBar: true,
+                timeOut: 3000
+            });
+        }
+    };
 
     // RichTextEditor toolbar settings: Expand with floating toolbar and comprehensive items
     const buildRteToolbar = (onInsertImage) => ({
@@ -202,6 +223,83 @@ export default function EventManagement() {
             setActiveRteRef(null);
         }
     };
+
+    /** Handle file upload for video/audio with progress tracking */
+    const handleFileUploading = useCallback(async (args) => {
+        console.log('🎥 File uploading triggered:', args);
+        
+        const file = args.fileData?.rawFile;
+        console.log('📁 File detected:', file, 'Type:', file?.type);
+        
+        if (!file || !rteInfoRef?.current) {
+            console.error('❌ No file or RTE ref');
+            args.cancel = true;
+            return;
+        }
+        
+        const isVideo = isVideoFile(file);
+        const isAudio = isAudioFile(file);
+        
+        if (!isVideo && !isAudio) {
+            console.error('❌ File is neither video nor audio:', file.type);
+            showToast('Please select a video or audio file', 'error');
+            args.cancel = true;
+            return;
+        }
+        
+        // Cancel Syncfusion's default upload
+        args.cancel = true;
+        
+        // Close the Syncfusion dialog immediately (helper has internal retries)
+        closeRteMediaDialog(rteInfoRef.current);
+        
+        // Show our custom progress modal
+        setUploadingFile(file.name);
+        setUploadProgress(0);
+        setIsUploading(true);
+        
+        try {
+            let downloadUrl;
+            
+            const onProgress = (percent) => {
+                setUploadProgress(percent);
+            };
+            
+            if (isVideo) {
+                console.log('⬆️ Uploading video to S3...');
+                const result = await uploadVideoToS3(file, onProgress);
+                downloadUrl = result.downloadUrl;
+                console.log('✅ Video uploaded, URL:', downloadUrl);
+                
+                // Insert video with proper attributes
+                const videoHTML = generateVideoHTML(downloadUrl, file.type);
+                rteInfoRef.current.executeCommand('insertHTML', videoHTML);
+                const isMov = (file.name || '').toLowerCase().endsWith('.mov');
+                showToast(isMov ? 'Video uploaded. If it doesn\'t play, try converting to MP4.' : 'Video uploaded successfully', 'success');
+            } else if (isAudio) {
+                console.log('⬆️ Uploading audio to S3...');
+                const result = await uploadAudioToS3(file, onProgress);
+                downloadUrl = result.downloadUrl;
+                console.log('✅ Audio uploaded, URL:', downloadUrl);
+                
+                // Insert audio with proper attributes
+                const audioHTML = generateAudioHTML(downloadUrl, file.type);
+                rteInfoRef.current.executeCommand('insertHTML', audioHTML);
+                showToast('Audio uploaded successfully', 'success');
+            }
+            
+        } catch (err) {
+            console.error('❌ Media upload failed:', err);
+            showToast(getUploadErrorMessage(err, isVideo), 'error');
+        } finally {
+            // Hide progress modal after a brief delay
+            setTimeout(() => {
+                setIsUploading(false);
+                setUploadingFile(null);
+                setUploadProgress(0);
+            }, 500);
+        }
+    }, [showToast]);
 
     const [events, setEvents] = useState([]);
     const [loadingList, setLoadingList] = useState(false);
@@ -576,18 +674,6 @@ export default function EventManagement() {
         }
     }, [confirmOpen]);
 
-    const showToast = (message, type = 'Success') => {
-        if (toastRef.current) {
-            toastRef.current.show({
-                title: type,
-                content: message,
-                cssClass: `e-toast-${type.toLowerCase()}`,
-                showProgressBar: true,
-                timeOut: 3000
-            });
-        }
-    };
-
     const copyText = async (text) => {
         try {
             await navigator.clipboard.writeText(text);
@@ -855,6 +941,13 @@ export default function EventManagement() {
 
     return (
         <div className="dashboard">
+            {/* Video Upload Progress Modal */}
+            <VideoUploadProgress 
+                progress={uploadProgress}
+                fileName={uploadingFile}
+                isUploading={isUploading}
+            />
+            
             <AdminHeader />
 
             <div className="dashboard-layout">
@@ -1397,7 +1490,12 @@ export default function EventManagement() {
                                         placeholder="Type event details..."
                                         toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteInfoRef))}
                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                        insertVideoSettings={getInsertVideoSettings()}
+                                        insertAudioSettings={getInsertAudioSettings()}
+                                        height={550}
                                         enableXhtml={true}
+                                        fileUploading={handleFileUploading}
+                                        keyDown={handleRteKeyDown}
                                     >
                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                     </RTE>

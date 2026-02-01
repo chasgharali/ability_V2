@@ -7,6 +7,22 @@ const logger = require('../utils/logger');
 
 const router = express.Router();
 
+// Allow auth via `?token=` for media tags (video/audio) that can't set headers
+const authenticateTokenFromHeaderOrQuery = async (req, res, next) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader && req.query && req.query.token) {
+            req.headers['authorization'] = `Bearer ${req.query.token}`;
+        }
+        return authenticateToken(req, res, next);
+    } catch (e) {
+        return res.status(401).json({
+            error: 'Access token required',
+            message: 'Please provide a valid access token'
+        });
+    }
+};
+
 // Configure AWS S3
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -57,7 +73,7 @@ router.post('/presign', authenticateToken, [
             document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
             image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
             audio: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/webm'],
-            video: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
+            video: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv'],
             avatar: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
             'booth-logo': ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         };
@@ -204,11 +220,13 @@ router.post('/complete', authenticateToken, [
             });
         }
 
-        // Generate permanent download URL
+        // NOTE:
+        // S3 presigned URLs (SigV4) support a MAX of 7 days (604800 seconds).
+        // Using longer expirations can create URLs that fail to load in browsers (video won't play).
         const downloadUrl = s3.getSignedUrl('getObject', {
             Bucket: BUCKET_NAME,
             Key: fileKey,
-            Expires: 31536000 // 1 year
+            Expires: 604800 // 7 days (max for SigV4)
         });
 
         // Update user profile if it's an avatar
@@ -234,6 +252,9 @@ router.post('/complete', authenticateToken, [
                 mimeType,
                 size,
                 downloadUrl,
+                // Stable URL that redirects to a fresh presigned URL.
+                // Use this for <video>/<audio> tags so playback doesn't break when URLs expire.
+                streamUrl: `/api/uploads/stream?key=${encodeURIComponent(fileKey)}`,
                 uploadedAt: new Date()
             }
         });
@@ -242,6 +263,64 @@ router.post('/complete', authenticateToken, [
         res.status(500).json({
             error: 'Failed to confirm file upload',
             message: 'An error occurred while confirming the file upload'
+        });
+    }
+});
+
+/**
+ * GET /api/uploads/stream?key=...&token=...
+ * Redirect to a short-lived presigned URL for media playback (video/audio).
+ *
+ * Why:
+ * - <video>/<audio> tags can't send Authorization headers
+ * - long-lived presigned URLs expire / can be invalid
+ * - redirecting generates a fresh short-lived URL each time
+ */
+router.get('/stream', authenticateTokenFromHeaderOrQuery, async (req, res) => {
+    try {
+        const { key } = req.query;
+        const { user } = req;
+
+        if (!key || typeof key !== 'string') {
+            return res.status(400).json({
+                error: 'Missing key',
+                message: 'Query param `key` is required'
+            });
+        }
+
+        // Basic ownership check: <type>/<userId>/...
+        const parts = key.split('/');
+        if (parts.length < 3) {
+            return res.status(400).json({
+                error: 'Invalid key',
+                message: 'Invalid S3 key format'
+            });
+        }
+        const userIdInKey = parts[1];
+        if (userIdInKey !== user._id.toString() && !['Admin', 'GlobalSupport'].includes(user.role)) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'You do not have permission to access this file'
+            });
+        }
+
+        // Ensure it exists
+        await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
+
+        // Generate a short-lived URL for streaming (10 minutes)
+        const url = s3.getSignedUrl('getObject', {
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Expires: 600
+        });
+
+        // Redirect to S3
+        return res.redirect(302, url);
+    } catch (error) {
+        logger.error('Stream redirect error:', error);
+        return res.status(500).json({
+            error: 'Failed to stream file',
+            message: 'An error occurred while preparing the stream'
         });
     }
 });
@@ -528,6 +607,36 @@ router.get('/proxy/download', authenticateToken, async (req, res) => {
             });
         }
     }
+});
+
+/**
+ * POST /api/uploads/rte-video
+ * Dummy endpoint for Syncfusion RTE video upload (intercepted by fileUploading event)
+ * This endpoint is required for the RTE dialog to work, but it's never actually called
+ * because we intercept the upload in the fileUploading event handler
+ */
+router.post('/rte-video', authenticateToken, (req, res) => {
+    // This should never be reached as uploads are intercepted on the client side
+    logger.warn('RTE video upload endpoint called - this should be intercepted on client side');
+    res.status(400).json({
+        error: 'Direct upload not supported',
+        message: 'Please use the client-side upload handler'
+    });
+});
+
+/**
+ * POST /api/uploads/rte-audio
+ * Dummy endpoint for Syncfusion RTE audio upload (intercepted by fileUploading event)
+ * This endpoint is required for the RTE dialog to work, but it's never actually called
+ * because we intercept the upload in the fileUploading event handler
+ */
+router.post('/rte-audio', authenticateToken, (req, res) => {
+    // This should never be reached as uploads are intercepted on the client side
+    logger.warn('RTE audio upload endpoint called - this should be intercepted on client side');
+    res.status(400).json({
+        error: 'Direct upload not supported',
+        message: 'Please use the client-side upload handler'
+    });
 });
 
 module.exports = router;

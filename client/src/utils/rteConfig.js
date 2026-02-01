@@ -128,13 +128,12 @@ export const getInsertImageSettings = (apiBaseUrl = '') => ({
 
 /**
  * Get insert video settings for S3 upload
- * @param {string} apiBaseUrl - Base URL for API endpoints
+ * Note: saveUrl is required for upload dialog to work, but we intercept via fileUploading event
  * @returns {Object} Insert video settings
  */
-export const getInsertVideoSettings = (apiBaseUrl = '') => ({
-  saveUrl: `${apiBaseUrl}/api/uploads/rte-video`,
-  removeUrl: `${apiBaseUrl}/api/uploads/rte-remove`,
-  allowedTypes: ['.mp4', '.mov', '.wmv', '.avi', '.webm'],
+export const getInsertVideoSettings = () => ({
+  saveUrl: '/api/uploads/rte-video', // Required for dialog to work, but intercepted by fileUploading
+  allowedTypes: ['.mp4', '.mov', '.webm', '.ogg', '.wmv', '.avi'],
   layoutOption: 'Inline',
   width: '560px',
   height: '315px',
@@ -144,15 +143,113 @@ export const getInsertVideoSettings = (apiBaseUrl = '') => ({
 
 /**
  * Get insert audio settings for S3 upload
- * @param {string} apiBaseUrl - Base URL for API endpoints
+ * Note: saveUrl is required for upload dialog to work, but we intercept via fileUploading event
  * @returns {Object} Insert audio settings
  */
-export const getInsertAudioSettings = (apiBaseUrl = '') => ({
-  saveUrl: `${apiBaseUrl}/api/uploads/rte-audio`,
-  removeUrl: `${apiBaseUrl}/api/uploads/rte-remove`,
+export const getInsertAudioSettings = () => ({
+  saveUrl: '/api/uploads/rte-audio', // Required for dialog to work, but intercepted by fileUploading
   allowedTypes: ['.mp3', '.wav', '.ogg', '.webm', '.m4a'],
   layoutOption: 'Inline'
 });
+
+/**
+ * Find the .e-video-wrap or .e-audio-wrap that contains the given node or is the given node.
+ */
+function findMediaWrapper(node) {
+  if (!node) return null;
+  let current = node.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+  while (current && current !== document.body) {
+    if (current.classList && (current.classList.contains('e-video-wrap') || current.classList.contains('e-audio-wrap'))) {
+      return current;
+    }
+    current = current.parentNode;
+  }
+  return null;
+}
+
+/**
+ * Enhanced key event handler so Backspace/Delete remove video/audio elements.
+ * Handles: (1) selection inside the media, (2) cursor immediately after (Backspace), (3) cursor immediately before (Delete).
+ */
+export const handleRteKeyDown = (args) => {
+  const event = args?.event;
+  if (!event || typeof event.key !== 'string') {
+    return true;
+  }
+
+  if (event.key !== 'Backspace' && event.key !== 'Delete') {
+    return true;
+  }
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return true;
+
+  const range = selection.getRangeAt(0);
+  let wrapper = null;
+
+  // Case 1: Selection is inside or on the media element
+  const container = range.commonAncestorContainer;
+  wrapper = findMediaWrapper(container);
+  if (wrapper) {
+    event.preventDefault();
+    try {
+      wrapper.remove();
+    } catch (err) {
+      console.error('Error removing media element:', err);
+    }
+    return false;
+  }
+
+  // Case 2 (Backspace): Cursor is immediately after a media wrap – remove that wrap
+  if (event.key === 'Backspace' && range.collapsed) {
+    const startContainer = range.startContainer;
+    const startOffset = range.startOffset;
+    if (startContainer.nodeType === Node.ELEMENT_NODE && startOffset > 0) {
+      const prev = startContainer.childNodes[startOffset - 1];
+      wrapper = prev && (findMediaWrapper(prev) || (prev.classList && (prev.classList.contains('e-video-wrap') || prev.classList.contains('e-audio-wrap')) ? prev : null));
+      if (wrapper === null && prev) wrapper = findMediaWrapper(prev);
+    } else if (startContainer.nodeType === Node.TEXT_NODE && startOffset === 0) {
+      const prev = startContainer.previousSibling;
+      wrapper = prev && (findMediaWrapper(prev) || (prev.classList && (prev.classList.contains('e-video-wrap') || prev.classList.contains('e-audio-wrap')) ? prev : null));
+      if (wrapper === null && prev) wrapper = findMediaWrapper(prev);
+    }
+    if (wrapper) {
+      event.preventDefault();
+      try {
+        wrapper.remove();
+      } catch (err) {
+        console.error('Error removing media element:', err);
+      }
+      return false;
+    }
+  }
+
+  // Case 3 (Delete): Cursor is immediately before a media wrap – remove that wrap
+  if (event.key === 'Delete' && range.collapsed) {
+    const startContainer = range.startContainer;
+    const startOffset = range.startOffset;
+    if (startContainer.nodeType === Node.ELEMENT_NODE && startOffset < startContainer.childNodes.length) {
+      const next = startContainer.childNodes[startOffset];
+      wrapper = next && (findMediaWrapper(next) || (next.classList && (next.classList.contains('e-video-wrap') || next.classList.contains('e-audio-wrap')) ? next : null));
+      if (wrapper === null && next) wrapper = findMediaWrapper(next);
+    } else if (startContainer.nodeType === Node.TEXT_NODE && startOffset === startContainer.length) {
+      const next = startContainer.nextSibling;
+      wrapper = next && (findMediaWrapper(next) || (next.classList && (next.classList.contains('e-video-wrap') || next.classList.contains('e-audio-wrap')) ? next : null));
+      if (wrapper === null && next) wrapper = findMediaWrapper(next);
+    }
+    if (wrapper) {
+      event.preventDefault();
+      try {
+        wrapper.remove();
+      } catch (err) {
+        console.error('Error removing media element:', err);
+      }
+      return false;
+    }
+  }
+
+  return true;
+};
 
 /**
  * Default RTE configuration object combining all settings
@@ -167,7 +264,9 @@ export const getDefaultRteConfig = (customImageHandler = null) => ({
   showCharCount: true,
   enableTabKey: true,
   enableResize: true,
-  height: 400
+  height: 550,
+  // Add key event handler to prevent deletion errors
+  keyDown: handleRteKeyDown
 });
 
 /**

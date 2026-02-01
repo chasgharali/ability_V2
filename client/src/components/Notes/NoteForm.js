@@ -26,7 +26,9 @@ import { MdSave, MdCancel } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './Notes.css';
 import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
-import { RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
+import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
+import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
+import VideoUploadProgress from '../UI/VideoUploadProgress';
 
 const ROLE_OPTIONS = [
     'Admin',
@@ -51,6 +53,12 @@ const NoteForm = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isEdit, setIsEdit] = useState(false);
+    
+    // Upload progress state
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadingFile, setUploadingFile] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    
     const navigate = useNavigate();
     const { id } = useParams();
     const { user } = useAuth();
@@ -175,7 +183,7 @@ const NoteForm = () => {
     // Handle image/video/audio upload before inserting
     const handleImageUploading = async (args) => {
         args.cancel = true; // Cancel default upload
-        const file = args.filesData?.[0]?.rawFile;
+        const file = args.fileData?.rawFile;
         if (!file || !rteRef.current) return;
         try {
             const { downloadUrl } = await uploadImageToS3(file);
@@ -185,27 +193,76 @@ const NoteForm = () => {
         }
     };
 
-    const handleVideoUploading = async (args) => {
-        args.cancel = true;
-        const file = args.filesData?.[0]?.rawFile;
-        if (!file || !rteRef.current) return;
-        try {
-            const { downloadUrl } = await uploadVideoToS3(file);
-            rteRef.current.executeCommand('insertHTML', `<video controls src="${downloadUrl}" style="max-width:100%"></video>`);
-        } catch (err) {
-            console.error('Video upload failed:', err);
+    /** Handle file upload for video/audio */
+    const handleFileUploading = async (args) => {
+        console.log('🎥 File uploading triggered:', args);
+        
+        const file = args.fileData?.rawFile;
+        console.log('📁 File detected:', file, 'Type:', file?.type);
+        
+        if (!file || !rteRef.current) {
+            console.error('❌ No file or RTE ref');
+            args.cancel = true;
+            return;
         }
-    };
-
-    const handleAudioUploading = async (args) => {
+        
+        const isVideo = isVideoFile(file);
+        const isAudio = isAudioFile(file);
+        
+        if (!isVideo && !isAudio) {
+            console.error('❌ File is neither video nor audio:', file.type);
+            args.cancel = true;
+            return;
+        }
+        
+        // Cancel default upload
         args.cancel = true;
-        const file = args.filesData?.[0]?.rawFile;
-        if (!file || !rteRef.current) return;
+        
+        // Close the Syncfusion dialog immediately
+        closeRteMediaDialog(rteRef.current);
+        
+        // Show progress modal
+        setUploadingFile(file.name);
+        setUploadProgress(0);
+        setIsUploading(true);
+        
         try {
-            const { downloadUrl } = await uploadAudioToS3(file);
-            rteRef.current.executeCommand('insertHTML', `<audio controls src="${downloadUrl}"></audio>`);
+            let downloadUrl;
+            
+            const onProgress = (percent) => {
+                setUploadProgress(percent);
+            };
+            
+            if (isVideo) {
+                console.log('⬆️ Uploading video to S3...');
+                const result = await uploadVideoToS3(file, onProgress);
+                downloadUrl = result.downloadUrl;
+                console.log('✅ Video uploaded, URL:', downloadUrl);
+                
+                // Insert video with proper attributes
+                const videoHTML = generateVideoHTML(downloadUrl, file.type);
+                rteRef.current.executeCommand('insertHTML', videoHTML);
+            } else if (isAudio) {
+                console.log('⬆️ Uploading audio to S3...');
+                const result = await uploadAudioToS3(file, onProgress);
+                downloadUrl = result.downloadUrl;
+                console.log('✅ Audio uploaded, URL:', downloadUrl);
+                
+                // Insert audio with proper attributes
+                const audioHTML = generateAudioHTML(downloadUrl, file.type);
+                rteRef.current.executeCommand('insertHTML', audioHTML);
+            }
+            
         } catch (err) {
-            console.error('Audio upload failed:', err);
+            console.error('❌ Media upload failed:', err);
+            setError(getUploadErrorMessage(err, isVideo));
+        } finally {
+            // Hide progress modal
+            setTimeout(() => {
+                setIsUploading(false);
+                setUploadingFile(null);
+                setUploadProgress(0);
+            }, 500);
         }
     };
 
@@ -250,6 +307,13 @@ const NoteForm = () => {
 
     return (
         <div className="dashboard">
+            {/* Video Upload Progress Modal */}
+            <VideoUploadProgress 
+                progress={uploadProgress}
+                fileName={uploadingFile}
+                isUploading={isUploading}
+            />
+            
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="notes" />
@@ -329,14 +393,16 @@ const NoteForm = () => {
                                                 change={handleContentChange}
                                                 toolbarSettings={rteToolbar}
                                                 quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
-                                                height={400}
+                                                insertVideoSettings={getInsertVideoSettings()}
+                                                insertAudioSettings={getInsertAudioSettings()}
+                                                height={550}
                                                 placeholder="Enter note content here..."
                                                 aria-label="Note content editor"
                                                 enableXhtml={true}
                                                 showCharCount={true}
                                                 imageUploading={handleImageUploading}
-                                                videoUploading={handleVideoUploading}
-                                                audioUploading={handleAudioUploading}
+                                                fileUploading={handleFileUploading}
+                                                keyDown={handleRteKeyDown}
                                             >
                                                 <RTEInject services={[RTEToolbar, RteLink, RteImage, HtmlEditor, QuickToolbar, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, Resize, FormatPainter]} />
                                             </RTE>

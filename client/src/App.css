@@ -29,6 +29,557 @@ body .e-dialog.bulk-delete-dialog {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
 }
 
+/* ========================================
+   Syncfusion RichTextEditor Video/Audio/Image Dialog - Modern Theme
+   Ensures dialogs appear above all content with modern styling
+   ======================================== */
+
+/* Video dialog overlay and container */
+.e-dlg-overlay.e-rte-dialog-overlay,
+.e-dialog.e-rte-videodialog,
+.e-dialog.e-rte-audiodialog,
+.e-dialog.e-rte-imagedialog,
+body .e-dialog.e-rte-videodialog,
+body .e-dialog.e-rte-audiodialog,
+body .e-dialog.e-rte-imagedialog {
+    z-index: 9999 !important;
+}
+
+/* Overlay backdrop for RTE dialogs - Modern blur effect */
+.e-dlg-overlay.e-rte-dialog-overlay {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 9998 !important;
+    animation: fadeIn 0.2s ease-out !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Ensure video dialog wrapper is also properly positioned */
+.e-rte-videodialog-wrapper,
+.e-rte-audiodialog-wrapper,
+.e-rte-imagedialog-wrapper {
+    z-index: 9999 !important;
+    position: fixed !important;
+}
+
+/* All elements inside the dialog should respect stacking */
+.e-dialog.e-rte-videodialog *,
+.e-dialog.e-rte-audiodialog *,
+.e-dialog.e-rte-imagedialog * {
+    position: relative !important;
+}
+
+/* RTE dialog containers - Modern styling */
+.e-dialog.e-rte-videodialog,
+.e-dialog.e-rte-audiodialog,
+.e-dialog.e-rte-imagedialog {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+    max-width: 600px !important;
+    width: 90% !important;
+    max-height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    animation: slideUp 0.3s ease-out !important;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, -45%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+    }
+}
+
+/* Video/Audio dialog header - Modern gradient */
+.e-dialog.e-rte-videodialog .e-dlg-header,
+.e-dialog.e-rte-audiodialog .e-dlg-header,
+.e-dialog.e-rte-imagedialog .e-dlg-header {
+    padding: 24px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
+    flex-shrink: 0 !important;
+}
+
+.e-dialog.e-rte-videodialog .e-dlg-header .e-dlg-header-content,
+.e-dialog.e-rte-audiodialog .e-dlg-header .e-dlg-header-content,
+.e-dialog.e-rte-imagedialog .e-dlg-header .e-dlg-header-content {
+    color: #ffffff !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* Close button styling */
+.e-dialog.e-rte-videodialog .e-dlg-closeicon-btn,
+.e-dialog.e-rte-audiodialog .e-dlg-closeicon-btn,
+.e-dialog.e-rte-imagedialog .e-dlg-closeicon-btn {
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.2s ease !important;
+}
+
+.e-dialog.e-rte-videodialog .e-dlg-closeicon-btn:hover,
+.e-dialog.e-rte-audiodialog .e-dlg-closeicon-btn:hover,
+.e-dialog.e-rte-imagedialog .e-dlg-closeicon-btn:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Video/Audio dialog content area */
+.e-dialog.e-rte-videodialog .e-dlg-content,
+.e-dialog.e-rte-audiodialog .e-dlg-content,
+.e-dialog.e-rte-imagedialog .e-dlg-content {
+    padding: 24px !important;
+    max-height: calc(85vh - 180px) !important;
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    background: #ffffff !important;
+}
+
+/* Video/Audio dialog footer - Modern styling */
+.e-dialog.e-rte-videodialog .e-footer-content,
+.e-dialog.e-rte-audiodialog .e-footer-content,
+.e-dialog.e-rte-imagedialog .e-footer-content,
+.e-dialog.e-rte-videodialog .e-dlg-footer,
+.e-dialog.e-rte-audiodialog .e-dlg-footer,
+.e-dialog.e-rte-imagedialog .e-dlg-footer {
+    position: relative !important;
+    z-index: 10001 !important;
+    padding: 20px 24px !important;
+    border-top: 1px solid #e9ecef !important;
+    background: #f8f9fa !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Insert and Cancel buttons - Modern styling */
+.e-dialog.e-rte-videodialog .e-footer-content .e-btn,
+.e-dialog.e-rte-audiodialog .e-footer-content .e-btn,
+.e-dialog.e-rte-imagedialog .e-footer-content .e-btn,
+.e-dialog.e-rte-videodialog .e-dlg-footer .e-btn,
+.e-dialog.e-rte-audiodialog .e-dlg-footer .e-btn,
+.e-dialog.e-rte-imagedialog .e-dlg-footer .e-btn {
+    position: relative !important;
+    z-index: 10002 !important;
+    min-width: 100px !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* Insert button (primary) - Modern black theme */
+.e-dialog.e-rte-videodialog .e-footer-content .e-btn.e-primary,
+.e-dialog.e-rte-audiodialog .e-footer-content .e-btn.e-primary,
+.e-dialog.e-rte-imagedialog .e-footer-content .e-btn.e-primary,
+.e-dialog.e-rte-videodialog .e-dlg-footer .e-btn.e-primary,
+.e-dialog.e-rte-audiodialog .e-dlg-footer .e-btn.e-primary,
+.e-dialog.e-rte-imagedialog .e-dlg-footer .e-btn.e-primary {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.e-dialog.e-rte-videodialog .e-footer-content .e-btn.e-primary:hover,
+.e-dialog.e-rte-audiodialog .e-footer-content .e-btn.e-primary:hover,
+.e-dialog.e-rte-imagedialog .e-footer-content .e-btn.e-primary:hover {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.e-dialog.e-rte-videodialog .e-footer-content .e-btn.e-primary:active,
+.e-dialog.e-rte-audiodialog .e-footer-content .e-btn.e-primary:active,
+.e-dialog.e-rte-imagedialog .e-footer-content .e-btn.e-primary:active {
+    transform: translateY(0) !important;
+}
+
+/* Cancel button - Modern styling */
+.e-dialog.e-rte-videodialog .e-footer-content .e-btn.e-flat,
+.e-dialog.e-rte-audiodialog .e-footer-content .e-btn.e-flat,
+.e-dialog.e-rte-imagedialog .e-footer-content .e-btn.e-flat,
+.e-dialog.e-rte-videodialog .e-dlg-footer .e-btn:not(.e-primary),
+.e-dialog.e-rte-audiodialog .e-dlg-footer .e-btn:not(.e-primary),
+.e-dialog.e-rte-imagedialog .e-dlg-footer .e-btn:not(.e-primary) {
+    background: #ffffff !important;
+    border: 2px solid #e9ecef !important;
+    color: #495057 !important;
+}
+
+.e-dialog.e-rte-videodialog .e-footer-content .e-btn.e-flat:hover,
+.e-dialog.e-rte-audiodialog .e-footer-content .e-btn.e-flat:hover,
+.e-dialog.e-rte-imagedialog .e-footer-content .e-btn.e-flat:hover {
+    background: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
+/* BROWSE button styling - Modern */
+.e-dialog.e-rte-videodialog .e-file-select-wrap .e-btn,
+.e-dialog.e-rte-audiodialog .e-file-select-wrap .e-btn,
+.e-dialog.e-rte-imagedialog .e-file-select-wrap .e-btn,
+.e-rte-videodialog .e-rte-uploadbutton,
+.e-rte-audiodialog .e-rte-uploadbutton,
+.e-rte-imagedialog .e-rte-uploadbutton {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.e-dialog.e-rte-videodialog .e-file-select-wrap .e-btn:hover,
+.e-dialog.e-rte-audiodialog .e-file-select-wrap .e-btn:hover,
+.e-dialog.e-rte-imagedialog .e-file-select-wrap .e-btn:hover,
+.e-rte-videodialog .e-rte-uploadbutton:hover,
+.e-rte-audiodialog .e-rte-uploadbutton:hover,
+.e-rte-imagedialog .e-rte-uploadbutton:hover {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* File upload area - Modern styling */
+.e-rte-videodialog .e-rte-droparea,
+.e-rte-audiodialog .e-rte-droparea,
+.e-rte-imagedialog .e-rte-droparea {
+    border: 2px dashed #dee2e6 !important;
+    border-radius: 12px !important;
+    padding: 32px !important;
+    background: #f8f9fa !important;
+    transition: all 0.2s ease !important;
+}
+
+.e-rte-videodialog .e-rte-droparea:hover,
+.e-rte-audiodialog .e-rte-droparea:hover,
+.e-rte-imagedialog .e-rte-droparea:hover {
+    border-color: #000000 !important;
+    background: #ffffff !important;
+}
+
+/* Radio buttons - Modern styling */
+.e-dialog.e-rte-videodialog .e-radio-wrapper,
+.e-dialog.e-rte-audiodialog .e-radio-wrapper,
+.e-dialog.e-rte-imagedialog .e-radio-wrapper {
+    margin: 12px 0 !important;
+    font-size: 14px !important;
+}
+
+/* Input fields - Modern styling */
+.e-dialog.e-rte-videodialog textarea,
+.e-dialog.e-rte-audiodialog textarea,
+.e-dialog.e-rte-imagedialog textarea,
+.e-dialog.e-rte-videodialog .e-input,
+.e-dialog.e-rte-audiodialog .e-input,
+.e-dialog.e-rte-imagedialog .e-input {
+    border: 2px solid #e9ecef !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.e-dialog.e-rte-videodialog textarea:focus,
+.e-dialog.e-rte-audiodialog textarea:focus,
+.e-dialog.e-rte-imagedialog textarea:focus,
+.e-dialog.e-rte-videodialog .e-input:focus,
+.e-dialog.e-rte-audiodialog .e-input:focus,
+.e-dialog.e-rte-imagedialog .e-input:focus {
+    border-color: #000000 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* File name display - Modern styling */
+.e-dialog.e-rte-videodialog .e-file-name,
+.e-dialog.e-rte-audiodialog .e-file-name,
+.e-dialog.e-rte-imagedialog .e-file-name {
+    font-size: 14px !important;
+    color: #495057 !important;
+    font-weight: 500 !important;
+    padding: 8px 12px !important;
+    background: #f8f9fa !important;
+    border-radius: 6px !important;
+    margin-top: 8px !important;
+}
+
+/* ========================================
+   Video/Audio Element Styling in RTE Content
+   Prevents backspace errors and ensures proper display
+   ======================================== */
+
+/* Video wrapper styling */
+.e-content .e-video-wrap,
+.e-rte-content .e-video-wrap {
+    display: inline-block !important;
+    position: relative !important;
+    margin: 8px 0 !important;
+    border: 2px solid transparent !important;
+    border-radius: 8px !important;
+    transition: border-color 0.2s ease !important;
+    max-width: 100% !important;
+}
+
+.e-content .e-video-wrap:hover,
+.e-rte-content .e-video-wrap:hover {
+    border-color: #000000 !important;
+}
+
+.e-content .e-video-wrap.e-video-focus,
+.e-rte-content .e-video-wrap.e-video-focus {
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Video element styling */
+.e-content .e-rte-video,
+.e-rte-content .e-rte-video {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    border-radius: 8px !important;
+    outline: none !important;
+}
+
+/* Audio wrapper styling */
+.e-content .e-audio-wrap,
+.e-rte-content .e-audio-wrap {
+    display: inline-block !important;
+    position: relative !important;
+    margin: 8px 0 !important;
+    border: 2px solid transparent !important;
+    border-radius: 8px !important;
+    transition: border-color 0.2s ease !important;
+    max-width: 100% !important;
+}
+
+.e-content .e-audio-wrap:hover,
+.e-rte-content .e-audio-wrap:hover {
+    border-color: #000000 !important;
+}
+
+.e-content .e-audio-wrap.e-audio-focus,
+.e-rte-content .e-audio-wrap.e-audio-focus {
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Audio element styling */
+.e-content .e-rte-audio,
+.e-rte-content .e-rte-audio {
+    max-width: 100% !important;
+    display: block !important;
+    border-radius: 8px !important;
+    outline: none !important;
+}
+
+/* Prevent text selection on media wrappers */
+.e-content .e-video-wrap,
+.e-content .e-audio-wrap,
+.e-rte-content .e-video-wrap,
+.e-rte-content .e-audio-wrap {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+/* Ensure proper cursor on media elements */
+.e-content .e-video-wrap,
+.e-content .e-audio-wrap,
+.e-rte-content .e-video-wrap,
+.e-rte-content .e-audio-wrap {
+    cursor: pointer !important;
+}
+
+.e-content .e-rte-video,
+.e-content .e-rte-audio,
+.e-rte-content .e-rte-video,
+.e-rte-content .e-rte-audio {
+    cursor: default !important;
+}
+
+/* Responsive fixes for mobile */
+@media (max-width: 768px) {
+    .e-dialog.e-rte-videodialog,
+    .e-dialog.e-rte-audiodialog,
+    .e-dialog.e-rte-imagedialog {
+        width: 95% !important;
+        max-width: 95% !important;
+        max-height: 90vh !important;
+    }
+
+    .e-dialog.e-rte-videodialog .e-dlg-content,
+    .e-dialog.e-rte-audiodialog .e-dlg-content,
+    .e-dialog.e-rte-imagedialog .e-dlg-content {
+        max-height: calc(90vh - 180px) !important;
+        padding: 15px !important;
+    }
+
+    .e-dialog.e-rte-videodialog .e-footer-content,
+    .e-dialog.e-rte-audiodialog .e-footer-content,
+    .e-dialog.e-rte-imagedialog .e-footer-content {
+        flex-direction: row !important;
+        padding: 12px 15px !important;
+    }
+
+    .e-dialog.e-rte-videodialog .e-footer-content .e-btn,
+    .e-dialog.e-rte-audiodialog .e-footer-content .e-btn,
+    .e-dialog.e-rte-imagedialog .e-footer-content .e-btn {
+        flex: 1 !important;
+        min-width: auto !important;
+    }
+}
+
+/* Ensure dialog is always on top of everything */
+body .e-dialog.e-rte-videodialog,
+body .e-dialog.e-rte-audiodialog,
+body .e-dialog.e-rte-imagedialog {
+    z-index: 9999 !important;
+}
+
+body .e-dlg-overlay.e-rte-dialog-overlay {
+    z-index: 9998 !important;
+}
+
+/* BROWSE button styling - make it visible and clickable */
+.e-dialog.e-rte-videodialog .e-file-select-wrap .e-btn,
+.e-dialog.e-rte-audiodialog .e-file-select-wrap .e-btn,
+.e-dialog.e-rte-imagedialog .e-file-select-wrap .e-btn,
+.e-rte-videodialog .e-rte-uploadbutton,
+.e-rte-audiodialog .e-rte-uploadbutton,
+.e-rte-imagedialog .e-rte-uploadbutton {
+    background-color: #f3f4f6 !important;
+    border: 2px solid #d1d5db !important;
+    color: #374151 !important;
+    padding: 10px 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.15s ease !important;
+    min-width: 120px !important;
+    height: auto !important;
+    line-height: 1.5 !important;
+}
+
+.e-dialog.e-rte-videodialog .e-file-select-wrap .e-btn:hover,
+.e-dialog.e-rte-audiodialog .e-file-select-wrap .e-btn:hover,
+.e-dialog.e-rte-imagedialog .e-file-select-wrap .e-btn:hover,
+.e-rte-videodialog .e-rte-uploadbutton:hover,
+.e-rte-audiodialog .e-rte-uploadbutton:hover,
+.e-rte-imagedialog .e-rte-uploadbutton:hover {
+    background-color: #e5e7eb !important;
+    border-color: #9ca3af !important;
+    color: #111827 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* File upload area */
+.e-rte-videodialog .e-rte-droparea,
+.e-rte-audiodialog .e-rte-droparea,
+.e-rte-imagedialog .e-rte-droparea {
+    border: 2px dashed #d1d5db !important;
+    border-radius: 8px !important;
+    background-color: #f9fafb !important;
+    padding: 30px !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.e-rte-videodialog .e-rte-droparea:hover,
+.e-rte-audiodialog .e-rte-droparea:hover,
+.e-rte-imagedialog .e-rte-droparea:hover {
+    border-color: #9ca3af !important;
+    background-color: #f3f4f6 !important;
+}
+
+/* Radio buttons for Embedded code / Web URL */
+.e-dialog.e-rte-videodialog .e-radio-wrapper,
+.e-dialog.e-rte-audiodialog .e-radio-wrapper,
+.e-dialog.e-rte-imagedialog .e-radio-wrapper {
+    margin: 10px 0 !important;
+    position: relative !important;
+    z-index: 10000 !important;
+}
+
+/* Embedded code textarea */
+.e-dialog.e-rte-videodialog textarea,
+.e-dialog.e-rte-audiodialog textarea,
+.e-dialog.e-rte-imagedialog textarea,
+.e-dialog.e-rte-videodialog .e-input,
+.e-dialog.e-rte-audiodialog .e-input,
+.e-dialog.e-rte-imagedialog .e-input {
+    position: relative !important;
+    z-index: 10000 !important;
+    width: 100% !important;
+    min-height: 100px !important;
+    padding: 12px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    font-family: monospace !important;
+    background-color: #ffffff !important;
+}
+
+/* Ensure all form elements are visible */
+.e-dialog.e-rte-videodialog .e-rte-video-dialog,
+.e-dialog.e-rte-audiodialog .e-rte-audio-dialog,
+.e-dialog.e-rte-imagedialog .e-rte-image-dialog {
+    position: relative !important;
+    z-index: 10000 !important;
+}
+
+/* File name display after selection */
+.e-dialog.e-rte-videodialog .e-file-name,
+.e-dialog.e-rte-audiodialog .e-file-name,
+.e-dialog.e-rte-imagedialog .e-file-name {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    background-color: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    margin-top: 10px !important;
+    position: relative !important;
+    z-index: 10000 !important;
+}
+
 /* Dialog header */
 .e-dialog[class*="-delete-dialog"] .e-dlg-header,
 .e-dialog.bulk-delete-dialog .e-dlg-header {

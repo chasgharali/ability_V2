@@ -61,6 +61,13 @@ const eventSchema = new mongoose.Schema({
         trim: true,
         maxlength: [1000, 'Description cannot exceed 1000 characters']
     },
+    // Store video content separately to avoid character limit issues
+    videoContent: [{
+        id: String,
+        key: String,
+        token: String,
+        src: String
+    }],
     // Optional Sendy/Mailing list integration id
     sendyId: {
         type: String,
@@ -276,11 +283,14 @@ eventSchema.methods.canUserAccess = function (user) {
 
 // Instance method to get event summary
 eventSchema.methods.getSummary = function () {
+    // Decompress video content for display
+    const fullDescription = decompressVideoContent(this.description, this.videoContent);
+    
     return {
         _id: this._id,
         name: this.name,
         slug: this.slug,
-        description: this.description,
+        description: fullDescription,
         link: this.link,
         sendyId: this.sendyId,
         logoUrl: this.logoUrl,
@@ -299,6 +309,54 @@ eventSchema.methods.getSummary = function () {
         termsIds: this.termsIds || []
     };
 };
+
+/**
+ * Helper function to decompress video content (defined here for model use)
+ */
+function decompressVideoContent(compressedHtml, videos = []) {
+    if (!compressedHtml || typeof compressedHtml !== 'string' || !videos.length) {
+        return compressedHtml;
+    }
+
+    let restoredHtml = compressedHtml;
+
+    // Replace video references with full HTML
+    videos.forEach(video => {
+        const videoRef = `[VIDEO:${video.id}]`;
+        
+        if (restoredHtml.includes(videoRef)) {
+            // Reconstruct the video HTML
+            const videoHtml = createVideoHtml(video);
+            restoredHtml = restoredHtml.replace(videoRef, videoHtml);
+        }
+    });
+
+    return restoredHtml;
+}
+
+/**
+ * Create video HTML element from video data (for model use)
+ */
+function createVideoHtml(video) {
+    const { src, key, token } = video;
+    
+    // If we have key and token, reconstruct the streaming URL
+    const videoSrc = src || `/api/uploads/stream?key=${encodeURIComponent(key)}&token=${encodeURIComponent(token)}`;
+    
+    // Determine video type from the key or src
+    let videoType = 'video/mp4'; // default
+    if (key) {
+        if (key.includes('.mov')) videoType = 'video/quicktime';
+        else if (key.includes('.webm')) videoType = 'video/webm';
+        else if (key.includes('.ogg')) videoType = 'video/ogg';
+    }
+    
+    return `<span class="e-video-wrap" contenteditable="false" data-videosrc="${videoSrc}">
+        <video class="e-rte-video e-video-inline" controls="" style="max-width: 100%;" data-videosrc="${videoSrc}">
+            <source src="${videoSrc}" type="${videoType}" />
+        </video>
+    </span>`;
+}
 
 // Static method to find active events
 eventSchema.statics.findActive = function () {

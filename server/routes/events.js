@@ -8,6 +8,101 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
+ * Compress video content in description to avoid character limit issues
+ */
+function compressVideoContent(htmlContent) {
+    if (!htmlContent || typeof htmlContent !== 'string') {
+        return { compressedHtml: htmlContent, videos: [] };
+    }
+
+    const videos = [];
+    let compressedHtml = htmlContent;
+    let videoIndex = 0;
+
+    // Match video wrapper spans with data-videosrc attribute
+    const videoWrapperRegex = /<span[^>]*class="e-video-wrap"[^>]*data-videosrc="([^"]*)"[^>]*>.*?<\/span>/gs;
+    
+    compressedHtml = compressedHtml.replace(videoWrapperRegex, (match, videoSrc) => {
+        // Extract video information
+        const videoId = `video_${videoIndex++}`;
+        
+        // Parse the video source URL to extract key and token
+        const urlMatch = videoSrc.match(/key=([^&]+).*?token=([^&]+)/);
+        if (urlMatch) {
+            const [, key, token] = urlMatch;
+            
+            videos.push({
+                id: videoId,
+                key: decodeURIComponent(key),
+                token: decodeURIComponent(token),
+                src: videoSrc
+            });
+            
+            // Replace with compact reference
+            return `[VIDEO:${videoId}]`;
+        }
+        
+        // Fallback: store the full src if we can't parse it
+        videos.push({
+            id: videoId,
+            src: videoSrc
+        });
+        
+        return `[VIDEO:${videoId}]`;
+    });
+
+    return { compressedHtml, videos };
+}
+
+/**
+ * Restore video content from compressed HTML and video references
+ */
+function decompressVideoContent(compressedHtml, videos = []) {
+    if (!compressedHtml || typeof compressedHtml !== 'string' || !videos.length) {
+        return compressedHtml;
+    }
+
+    let restoredHtml = compressedHtml;
+
+    // Replace video references with full HTML
+    videos.forEach(video => {
+        const videoRef = `[VIDEO:${video.id}]`;
+        
+        if (restoredHtml.includes(videoRef)) {
+            // Reconstruct the video HTML
+            const videoHtml = createVideoHtml(video);
+            restoredHtml = restoredHtml.replace(videoRef, videoHtml);
+        }
+    });
+
+    return restoredHtml;
+}
+
+/**
+ * Create video HTML element from video data
+ */
+function createVideoHtml(video) {
+    const { src, key, token } = video;
+    
+    // If we have key and token, reconstruct the streaming URL
+    const videoSrc = src || `/api/uploads/stream?key=${encodeURIComponent(key)}&token=${encodeURIComponent(token)}`;
+    
+    // Determine video type from the key or src
+    let videoType = 'video/mp4'; // default
+    if (key) {
+        if (key.includes('.mov')) videoType = 'video/quicktime';
+        else if (key.includes('.webm')) videoType = 'video/webm';
+        else if (key.includes('.ogg')) videoType = 'video/ogg';
+    }
+    
+    return `<span class="e-video-wrap" contenteditable="false" data-videosrc="${videoSrc}">
+        <video class="e-rte-video e-video-inline" controls="" style="max-width: 100%;" data-videosrc="${videoSrc}">
+            <source src="${videoSrc}" type="${videoType}" />
+        </video>
+    </span>`;
+}
+
+/**
  * GET /api/events
  * Get list of events
  */
@@ -211,6 +306,17 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
         const { name, description, start, end, timezone = 'UTC', logoUrl, sendyId, link, limits, theme, termsId, termsIds, isDemo } = req.body;
         const { user } = req;
 
+        // Compress video content in description
+        const { compressedHtml, videos } = compressVideoContent(description);
+
+        // Validate compressed description length
+        if (compressedHtml && compressedHtml.length > 1000) {
+            return res.status(400).json({
+                error: 'Description too long',
+                message: 'Description cannot exceed 1000 characters even after video compression'
+            });
+        }
+
         // Validate date range (demo events still get a long-running default window)
         const startDate = new Date(start);
         const endDate = new Date(end);
@@ -225,7 +331,8 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
         // Create new event
         const event = new Event({
             name,
-            description,
+            description: compressedHtml,
+            videoContent: videos,
             start: startDate,
             end: endDate,
             timezone,
@@ -335,9 +442,25 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         const { name, description, start, end, timezone, logoUrl, status, sendyId, limits, theme, termsIds, isDemo } = req.body;
         const { event, user } = req;
 
+        // Handle description with video compression
+        if (description !== undefined) {
+            const { compressedHtml, videos } = compressVideoContent(description);
+            
+            // Validate compressed description length
+            if (compressedHtml && compressedHtml.length > 1000) {
+                return res.status(400).json({
+                    error: 'Description too long',
+                    message: 'Description cannot exceed 1000 characters even after video compression'
+                });
+            }
+            
+            event.description = compressedHtml;
+            event.videoContent = videos;
+        }
+
         // Update allowed fields
         if (name !== undefined) event.name = name;
-        if (description !== undefined) event.description = description;
+        // description is handled above with video compression
         if (start !== undefined) event.start = new Date(start);
         if (end !== undefined) event.end = new Date(end);
         if (timezone !== undefined) event.timezone = timezone;

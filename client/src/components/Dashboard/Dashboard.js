@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../../contexts/SocketContext';
@@ -22,7 +22,10 @@ import {
     FormatPainter,
     Inject as RTEInject 
 } from '@syncfusion/ej2-react-richtexteditor';
-import { getRteToolbarSettings, RTE_QUICK_TOOLBAR_SETTINGS } from '../../utils/rteConfig';
+import { getRteToolbarSettings, RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
+import { uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
+import { isVideoFile, isAudioFile, closeRteMediaDialog, generateVideoHTML, generateAudioHTML, getUploadErrorMessage } from '../../utils/rteDialogHelper';
+import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { TabComponent, TabItemsDirective, TabItemDirective } from '@syncfusion/ej2-react-navigations';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
@@ -252,6 +255,93 @@ const Dashboard = () => {
         reader.onerror = () => showToast('Failed to read file', 'error');
         reader.readAsDataURL(file);
     };
+
+    // Booth: RTE refs and video/audio upload handlers
+    const rteFirstRef = useRef(null);
+    const rteSecondRef = useRef(null);
+    const rteThirdRef = useRef(null);
+    
+    // Upload progress state
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadingFile, setUploadingFile] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+
+    /** Handle file upload for video/audio with progress tracking */
+    const handleFileUploading = useCallback(async (args, rteRef) => {
+        console.log('🎥 File uploading triggered:', args);
+        
+        const file = args.fileData?.rawFile;
+        console.log('📁 File detected:', file, 'Type:', file?.type);
+        
+        if (!file || !rteRef?.current) {
+            console.error('❌ No file or RTE ref');
+            args.cancel = true;
+            return;
+        }
+        
+        const isVideo = isVideoFile(file);
+        const isAudio = isAudioFile(file);
+        
+        if (!isVideo && !isAudio) {
+            console.error('❌ File is neither video nor audio:', file.type);
+            showToast('Please select a video or audio file', 'error');
+            args.cancel = true;
+            return;
+        }
+        
+        // Cancel Syncfusion's default upload
+        args.cancel = true;
+        
+        // Close the Syncfusion dialog immediately (helper has internal retries)
+        closeRteMediaDialog(rteRef.current);
+        
+        // Show our custom progress modal
+        setUploadingFile(file.name);
+        setUploadProgress(0);
+        setIsUploading(true);
+        
+        try {
+            let downloadUrl;
+            
+            const onProgress = (percent) => {
+                setUploadProgress(percent);
+            };
+            
+            if (isVideo) {
+                console.log('⬆️ Uploading video to S3...');
+                const result = await uploadVideoToS3(file, onProgress);
+                downloadUrl = result.downloadUrl;
+                console.log('✅ Video uploaded, URL:', downloadUrl);
+                
+                // Insert video with proper attributes
+                const videoHTML = generateVideoHTML(downloadUrl, file.type);
+                rteRef.current.executeCommand('insertHTML', videoHTML);
+                const isMov = (file.name || '').toLowerCase().endsWith('.mov');
+                showToast(isMov ? 'Video uploaded. If it doesn\'t play, try converting to MP4.' : 'Video uploaded successfully', 'success');
+            } else if (isAudio) {
+                console.log('⬆️ Uploading audio to S3...');
+                const result = await uploadAudioToS3(file, onProgress);
+                downloadUrl = result.downloadUrl;
+                console.log('✅ Audio uploaded, URL:', downloadUrl);
+                
+                // Insert audio with proper attributes
+                const audioHTML = generateAudioHTML(downloadUrl, file.type);
+                rteRef.current.executeCommand('insertHTML', audioHTML);
+                showToast('Audio uploaded successfully', 'success');
+            }
+            
+        } catch (err) {
+            console.error('❌ Media upload failed:', err);
+            showToast(getUploadErrorMessage(err, isVideo), 'error');
+        } finally {
+            // Hide progress modal after a brief delay
+            setTimeout(() => {
+                setIsUploading(false);
+                setUploadingFile(null);
+                setUploadProgress(0);
+            }, 500);
+        }
+    }, [showToast]);
 
     // Booth: helpers
     const setBoothField = (k, v) => setBoothForm(prev => ({ ...prev, [k]: v }));
@@ -573,6 +663,13 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard">
+            {/* Video Upload Progress Modal */}
+            <VideoUploadProgress 
+                progress={uploadProgress}
+                fileName={uploadingFile}
+                isUploading={isUploading}
+            />
+            
             {/* Accessible Skip Link */}
             <a
                 href="#dashboard-main"
@@ -767,33 +864,51 @@ const Dashboard = () => {
                                             <TabItemsDirective>
                                                 <TabItemDirective header={{ text: 'First Placeholder' }} content={() => (
                                                     <RTE 
+                                                        ref={rteFirstRef}
                                                         value={boothForm.firstHtml} 
                                                         change={(e) => setBoothField('firstHtml', e?.value)}
                                                         toolbarSettings={getRteToolbarSettings()}
                                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        insertVideoSettings={getInsertVideoSettings()}
+                                                        insertAudioSettings={getInsertAudioSettings()}
+                                                        height={550}
                                                         enableXhtml={true}
+                                                        fileUploading={(args) => handleFileUploading(args, rteFirstRef)}
+                                                        keyDown={handleRteKeyDown}
                                                     >
                                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                                     </RTE>
                                                 )} />
                                                 <TabItemDirective header={{ text: 'Second Placeholder' }} content={() => (
                                                     <RTE 
+                                                        ref={rteSecondRef}
                                                         value={boothForm.secondHtml} 
                                                         change={(e) => setBoothField('secondHtml', e?.value)}
                                                         toolbarSettings={getRteToolbarSettings()}
                                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        insertVideoSettings={getInsertVideoSettings()}
+                                                        insertAudioSettings={getInsertAudioSettings()}
+                                                        height={550}
                                                         enableXhtml={true}
+                                                        fileUploading={(args) => handleFileUploading(args, rteSecondRef)}
+                                                        keyDown={handleRteKeyDown}
                                                     >
                                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                                     </RTE>
                                                 )} />
                                                 <TabItemDirective header={{ text: 'Third Placeholder' }} content={() => (
                                                     <RTE 
+                                                        ref={rteThirdRef}
                                                         value={boothForm.thirdHtml} 
                                                         change={(e) => setBoothField('thirdHtml', e?.value)}
                                                         toolbarSettings={getRteToolbarSettings()}
                                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        insertVideoSettings={getInsertVideoSettings()}
+                                                        insertAudioSettings={getInsertAudioSettings()}
+                                                        height={550}
                                                         enableXhtml={true}
+                                                        fileUploading={(args) => handleFileUploading(args, rteThirdRef)}
+                                                        keyDown={handleRteKeyDown}
                                                     >
                                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                                                     </RTE>
