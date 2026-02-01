@@ -243,6 +243,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
     state: user?.state || '',
     city: user?.city || '',
     country: user?.country || 'US',
+    linkedInUrl: user?.linkedInUrl || '',
   });
   const [a11y, setA11y] = useState({
     usesScreenMagnifier: !!user?.usesScreenMagnifier,
@@ -402,6 +403,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
         city: form.city || '',
         country: form.country || 'US',
         phoneNumber: phoneNumber || undefined,
+        linkedInUrl: (form.linkedInUrl || '').trim() || undefined,
         ...a11y,
       };
       await updateProfile(payload);
@@ -524,6 +526,18 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
             ))}
           </select>
           <div id="country-help" className="field-help">Country is required for event registration</div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="linkedInUrl">LinkedIn Profile URL (Optional)</label>
+          <input
+            id="linkedInUrl"
+            name="linkedInUrl"
+            type="url"
+            value={form.linkedInUrl}
+            onChange={onChange}
+            placeholder="https://www.linkedin.com/in/your-profile"
+          />
         </div>
 
         <fieldset className="accessibility-fieldset">

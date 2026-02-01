@@ -8,7 +8,8 @@ import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import videoCallService from '../../services/videoCall';
 import VideoCall from '../VideoCall/VideoCall';
-import { FaRedoAlt, FaPlug, FaVideo } from 'react-icons/fa';
+import { FaRedoAlt, FaPlug, FaVideo, FaLinkedin } from 'react-icons/fa';
+import { getUser } from '../../services/users';
 import CallInviteModal from '../VideoCall/CallInviteModal';
 import DeviceTestModal from './DeviceTestModal';
 import RatingModal from '../MeetingRecords/RatingModal';
@@ -59,6 +60,7 @@ export default function BoothQueueManagement() {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
+  const [profileModalJobSeeker, setProfileModalJobSeeker] = useState(null); // Full fetched profile (includes linkedInUrl)
   const [showMessages, setShowMessages] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -840,7 +842,21 @@ export default function BoothQueueManagement() {
                             <span className="waiting-timer">{formatDuration(nowTs - new Date(queueEntry.joinedAt).getTime())}</span>
                           </div>
                           <button
-                            onClick={() => { setSelectedJobSeeker(queueEntry); setShowDetails(true); }}
+                            onClick={async () => {
+                              setSelectedJobSeeker(queueEntry);
+                              setProfileModalJobSeeker(queueEntry.jobSeeker); // Show queue data immediately
+                              setShowDetails(true);
+                              // Fetch full job seeker profile to ensure we have linkedInUrl and latest data
+                              const jsId = queueEntry.jobSeeker?._id || queueEntry.jobSeeker;
+                              if (jsId) {
+                                try {
+                                  const res = await getUser(typeof jsId === 'string' ? jsId : jsId.toString());
+                                  setProfileModalJobSeeker(res?.user || res || queueEntry.jobSeeker);
+                                } catch {
+                                  // Keep existing profileModalJobSeeker on fetch error
+                                }
+                              }
+                            }}
                             className="btn-details-inline"
                           >
                             View Details
@@ -1026,14 +1042,16 @@ export default function BoothQueueManagement() {
       )}
 
       {/* Job Seeker Profile Modal */}
-      {showDetails && selectedJobSeeker && selectedJobSeeker.jobSeeker && (
+      {showDetails && selectedJobSeeker && selectedJobSeeker.jobSeeker && (() => {
+        const js = profileModalJobSeeker || selectedJobSeeker.jobSeeker;
+        return (
         <div className="modal-overlay">
           <div className="modal-content profile-modal">
             <div className="modal-header">
               <h3>Job Seeker Profile</h3>
               <button
                 className="modal-close"
-                onClick={() => setShowDetails(false)}
+                onClick={() => { setShowDetails(false); setProfileModalJobSeeker(null); }}
               >
                 ×
               </button>
@@ -1043,30 +1061,41 @@ export default function BoothQueueManagement() {
               {/* Profile Header */}
               <div className="profile-header">
                 <div className="profile-avatar">
-                  {selectedJobSeeker.jobSeeker?.avatarUrl ? (
-                    <img src={selectedJobSeeker.jobSeeker.avatarUrl} alt="Profile" />
+                  {js?.avatarUrl ? (
+                    <img src={js.avatarUrl} alt="Profile" />
                   ) : (
                     <div className="avatar-placeholder">
-                      {selectedJobSeeker.jobSeeker?.name?.charAt(0) || '?'}
+                      {js?.name?.charAt(0) || '?'}
                     </div>
                   )}
                   <div className="online-indicator"></div>
                 </div>
                 <div className="profile-info">
-                  <h2 className="profile-name">{selectedJobSeeker.jobSeeker?.name || 'Unknown'}</h2>
-                  <p className="profile-email">{selectedJobSeeker.jobSeeker?.email || 'N/A'}</p>
-                  {selectedJobSeeker.jobSeeker?.phoneNumber && (
-                    <p className="profile-phone">{selectedJobSeeker.jobSeeker.phoneNumber}</p>
+                  <h2 className="profile-name">{js?.name || 'Unknown'}</h2>
+                  <p className="profile-email">{js?.email || 'N/A'}</p>
+                  {js?.phoneNumber && (
+                    <p className="profile-phone">{js.phoneNumber}</p>
                   )}
-                  {(selectedJobSeeker.jobSeeker?.city || selectedJobSeeker.jobSeeker?.state) && (
+                  {(js?.city || js?.state) && (
                     <p className="profile-location">
-                      {[selectedJobSeeker.jobSeeker?.city, selectedJobSeeker.jobSeeker?.state, 'US'].filter(Boolean).join(', ')}
+                      {[js?.city, js?.state, js?.country || 'US'].filter(Boolean).join(', ')}
                     </p>
                   )}
                   <div className="profile-actions">
-                    {selectedJobSeeker.jobSeeker?.resumeUrl ? (
+                    {js?.linkedInUrl && (
                       <a
-                        href={selectedJobSeeker.jobSeeker.resumeUrl}
+                        href={js.linkedInUrl.startsWith('http') ? js.linkedInUrl : `https://${js.linkedInUrl}`}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="btn-linkedin"
+                        aria-label="View LinkedIn profile"
+                      >
+                        <FaLinkedin size={18} aria-hidden="true" /> LinkedIn
+                      </a>
+                    )}
+                    {js?.resumeUrl ? (
+                      <a
+                        href={js.resumeUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="btn-resume"
@@ -1091,11 +1120,11 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">PROFESSIONAL HEADLINE</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.profile?.headline || 'Not specified'}</p>
+                        <p>{js?.metadata?.profile?.headline || 'Not specified'}</p>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">KEYWORDS & SKILLS</span>
-                        <p>{selectedJobSeeker.jobSeeker?.metadata?.profile?.keywords || 'Not specified'}</p>
+                        <p>{js?.metadata?.profile?.keywords || 'Not specified'}</p>
                       </div>
                     </div>
                   </div>
@@ -1106,8 +1135,8 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">PRIMARY JOB EXPERIENCE</span>
-                        {selectedJobSeeker.jobSeeker?.metadata?.profile?.primaryExperience?.length > 0 ? (
-                          getLabels(JOB_CATEGORY_LIST, selectedJobSeeker.jobSeeker.metadata.profile.primaryExperience).map((exp, idx) => (
+                        {js?.metadata?.profile?.primaryExperience?.length > 0 ? (
+                          getLabels(JOB_CATEGORY_LIST, js.metadata.profile.primaryExperience).map((exp, idx) => (
                             <p key={idx}>{exp}</p>
                           ))
                         ) : (
@@ -1117,8 +1146,8 @@ export default function BoothQueueManagement() {
                       <div className="detail-item">
                         <span className="detail-label">EMPLOYMENT TYPES</span>
                         <div className="tags">
-                          {selectedJobSeeker.jobSeeker?.metadata?.profile?.employmentTypes?.length > 0 ? (
-                            getLabels(JOB_TYPE_LIST, selectedJobSeeker.jobSeeker.metadata.profile.employmentTypes).map((type, idx) => (
+                          {js?.metadata?.profile?.employmentTypes?.length > 0 ? (
+                            getLabels(JOB_TYPE_LIST, js.metadata.profile.employmentTypes).map((type, idx) => (
                               <span key={idx} className="tag">{type}</span>
                             ))
                           ) : (
@@ -1128,7 +1157,7 @@ export default function BoothQueueManagement() {
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">EXPERIENCE LEVEL</span>
-                        <p>{getLabel(EXPERIENCE_LEVEL_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.workLevel)}</p>
+                        <p>{getLabel(EXPERIENCE_LEVEL_LIST, js?.metadata?.profile?.workLevel)}</p>
                       </div>
                     </div>
                   </div>
@@ -1139,11 +1168,11 @@ export default function BoothQueueManagement() {
                     <div className="detail-content">
                       <div className="detail-item">
                         <span className="detail-label">HIGHEST EDUCATION LEVEL</span>
-                        <p>{getLabel(EDUCATION_LEVEL_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.educationLevel)}</p>
+                        <p>{getLabel(EDUCATION_LEVEL_LIST, js?.metadata?.profile?.educationLevel)}</p>
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">SECURITY CLEARANCE</span>
-                        <p>{getLabel(SECURITY_CLEARANCE_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.clearance)}</p>
+                        <p>{getLabel(SECURITY_CLEARANCE_LIST, js?.metadata?.profile?.clearance)}</p>
                       </div>
                     </div>
                   </div>
@@ -1155,8 +1184,8 @@ export default function BoothQueueManagement() {
                       <div className="detail-item">
                         <span className="detail-label">LANGUAGES</span>
                         <div className="tags">
-                          {selectedJobSeeker.jobSeeker?.metadata?.profile?.languages?.length > 0 ? (
-                            getLabels(LANGUAGE_LIST, selectedJobSeeker.jobSeeker.metadata.profile.languages).map((lang, idx) => (
+                          {js?.metadata?.profile?.languages?.length > 0 ? (
+                            getLabels(LANGUAGE_LIST, js.metadata.profile.languages).map((lang, idx) => (
                               <span key={idx} className="tag">{lang}</span>
                             ))
                           ) : (
@@ -1166,7 +1195,7 @@ export default function BoothQueueManagement() {
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">VETERAN/MILITARY STATUS</span>
-                        <p>{getLabel(MILITARY_EXPERIENCE_LIST, selectedJobSeeker.jobSeeker?.metadata?.profile?.veteranStatus)}</p>
+                        <p>{getLabel(MILITARY_EXPERIENCE_LIST, js?.metadata?.profile?.veteranStatus)}</p>
                       </div>
                     </div>
                   </div>
@@ -1175,7 +1204,8 @@ export default function BoothQueueManagement() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />

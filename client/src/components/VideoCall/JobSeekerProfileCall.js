@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiUser, FiMail, FiPhone, FiMapPin, FiFileText, FiAward, FiBriefcase, FiGlobe, FiCalendar, FiDollarSign, FiCheckCircle, FiLoader } from 'react-icons/fi';
+import { FaLinkedin } from 'react-icons/fa';
 import { getUser } from '../../services/users';
 import './JobSeekerProfileCall.css';
 
@@ -409,27 +410,41 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
           </div>
         )}
 
-        {/* Resume Link */}
-        {currentJobSeeker.resumeUrl && (
+        {/* LinkedIn & Resume Links */}
+        {(currentJobSeeker.linkedInUrl || currentJobSeeker.resumeUrl) && (
           <div className="profile-section">
-            <div className="resume-section">
-              <a 
-                href={currentJobSeeker.resumeUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="resume-link"
-                aria-label="View job seeker's resume (opens in new tab)"
-              >
-                <FiFileText size={18} aria-hidden="true" />
-                View Resume
-              </a>
+            <div className="resume-section" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+              {currentJobSeeker.linkedInUrl && (
+                <a 
+                  href={currentJobSeeker.linkedInUrl.startsWith('http') ? currentJobSeeker.linkedInUrl : `https://${currentJobSeeker.linkedInUrl}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="resume-link"
+                  aria-label="View LinkedIn profile (opens in new tab)"
+                >
+                  <FaLinkedin size={18} aria-hidden="true" />
+                  LinkedIn
+                </a>
+              )}
+              {currentJobSeeker.resumeUrl && (
+                <a 
+                  href={currentJobSeeker.resumeUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="resume-link"
+                  aria-label="View job seeker's resume (opens in new tab)"
+                >
+                  <FiFileText size={18} aria-hidden="true" />
+                  View Resume
+                </a>
+              )}
             </div>
           </div>
         )}
         
 
         {/* No Information Available */}
-        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !metadata.skills && !metadata.keywords && !metadata.experience && !metadata.yearsOfExperience && !currentJobSeeker.resumeUrl && (
+        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !metadata.skills && !metadata.keywords && !metadata.experience && !metadata.yearsOfExperience && !currentJobSeeker.resumeUrl && !currentJobSeeker.linkedInUrl && (
           <div className="profile-section">
             <div className="no-additional-info">
               <FiFileText size={48} aria-hidden="true" />

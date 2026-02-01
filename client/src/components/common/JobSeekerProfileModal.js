@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaLinkedin } from 'react-icons/fa';
 import { getUser } from '../../services/users';
 import {
   JOB_CATEGORY_LIST,
@@ -164,6 +165,18 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
                 </p>
               )}
               <div className="profile-actions">
+                {js.linkedInUrl && (
+                  <a
+                    href={js.linkedInUrl.startsWith('http') ? js.linkedInUrl : `https://${js.linkedInUrl}`}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="btn-linkedin"
+                    aria-label="View LinkedIn profile"
+                  >
+                    <FaLinkedin size={18} aria-hidden="true" />
+                    LinkedIn
+                  </a>
+                )}
                 {js.resumeUrl ? (
                   <a
                     href={js.resumeUrl}

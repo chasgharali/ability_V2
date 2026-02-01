@@ -845,6 +845,31 @@
 
 .profile-actions {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.btn-linkedin {
+  background: transparent;
+  color: #0a66c2;
+  border: 2px solid #0a66c2;
+  padding: 0.7rem 1.1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  justify-content: center;
+}
+
+.btn-linkedin:hover {
+  background: #0a66c2;
+  color: #ffffff;
 }
 
 .btn-resume {
@@ -856,7 +881,9 @@
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.2s ease;
 }
 

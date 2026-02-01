@@ -625,6 +625,10 @@ router.put('/profile', authenticateToken, [
         .isString()
         .isLength({ min: 2, max: 2 })
         .withMessage('Country must be a 2-letter code'),
+    body('linkedInUrl')
+        .optional()
+        .custom((value) => value === null || value === '' || typeof value === 'string')
+        .withMessage('linkedInUrl must be null, empty string, or a string'),
     body('languages')
         .optional()
         .isArray()
@@ -652,7 +656,7 @@ router.put('/profile', authenticateToken, [
             });
         }
 
-        const { name, phoneNumber, state, city, country, languages, isAvailable,
+        const { name, phoneNumber, state, city, country, linkedInUrl, languages, isAvailable,
             usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, subscribeAnnouncements } = req.body;
         const { user } = req;
 
@@ -662,6 +666,9 @@ router.put('/profile', authenticateToken, [
         if (state !== undefined) user.state = state;
         if (city !== undefined) user.city = city;
         if (country !== undefined) user.country = country;
+        if (linkedInUrl !== undefined) {
+            user.linkedInUrl = (linkedInUrl === null || linkedInUrl === '') ? null : String(linkedInUrl).trim() || null;
+        }
         if (languages !== undefined && ['Interpreter', 'GlobalInterpreter'].includes(user.role)) {
             user.languages = languages;
         }

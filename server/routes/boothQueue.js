@@ -538,7 +538,7 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
             })
             .populate('booth', 'company companyLogo')
             .populate('event', 'name logo')
-            .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+            .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
             .populate('interpreterCategory', 'name code');
 
             if (leftEntry) {
@@ -597,7 +597,7 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
                 })
                 .populate('booth', 'company companyLogo')
                 .populate('event', 'name logo')
-                .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+                .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
                 .populate('interpreterCategory', 'name code');
 
                 if (anyEntry) {
@@ -694,7 +694,7 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
             booth: boothId,
             status: { $in: ['waiting', 'invited', 'in_meeting'] }
         })
-            .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+            .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
             .populate('interpreterCategory', 'name code')
             .sort({ position: 1 });
 
@@ -1007,7 +1007,7 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
             // Notify all recruiters in the booth that the queue entry status has changed
             // Reload the queue entry with populated fields to send complete data
             const updatedQueueEntry = await BoothQueue.findById(queueEntry._id)
-                .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+                .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
                 .populate('interpreterCategory', 'name code');
             
             const boothIdStr = boothId.toString();

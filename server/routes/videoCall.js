@@ -196,7 +196,7 @@ router.post('/create', auth, async (req, res) => {
     // Notify all recruiters in the booth that the queue entry status has changed
     // Reload the queue entry with populated fields to send complete data
     const updatedQueueEntry = await BoothQueue.findById(queueEntry._id)
-      .populate('jobSeeker', 'name email avatarUrl resumeUrl phoneNumber city state metadata')
+      .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
       .populate('interpreterCategory', 'name code');
     
     const boothId = queueEntry.booth._id.toString();
