@@ -307,9 +307,8 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
     setEmailError('');
     setEmailMessage('');
 
-    // Validate email
-    if (!emailForm.newEmail) {
-      setEmailError('New email address is required');
+    // Optional: skip if no new email provided
+    if (!emailForm.newEmail || !emailForm.newEmail.trim()) {
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailForm.newEmail)) {
@@ -667,23 +666,22 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
 
           <form onSubmit={handleEmailUpdate} className="account-form email-form">
             <div className="form-group">
-              <label htmlFor="newEmail">New Email Address *</label>
+              <label htmlFor="newEmail">New Email Address (optional)</label>
+              <div className="field-help" style={{ fontSize: '14px', marginTop: '0.25rem', marginBottom: '0.5rem' }}>
+                {pendingEmail 
+                  ? 'Please verify your pending email change before requesting a new one.'
+                  : 'Optional: If you would like to update your email, a verification link will be sent to your new address. Verify it to complete the change.'}
+              </div>
               <input
                 id="newEmail"
                 name="newEmail"
                 type="email"
                 value={emailForm.newEmail}
                 onChange={onEmailChange}
-                placeholder="Enter new email address"
-                required
+                placeholder="Enter new email address if you want to update"
                 autoComplete="email"
                 disabled={savingEmail || !!pendingEmail}
               />
-              <div className="field-help">
-                {pendingEmail 
-                  ? 'Please verify your pending email change before requesting a new one.'
-                  : 'A verification email will be sent to your new email address. You must verify it to complete the change.'}
-              </div>
             </div>
 
             <div className="form-actions">
@@ -691,9 +689,9 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                 type="submit"
                 className="ajf-btn ajf-btn-dark"
                 disabled={savingEmail || !!pendingEmail}
-                aria-label="Request email change"
+                aria-label="Change email"
               >
-                {savingEmail ? 'Sending...' : 'Request Email Change'}
+                {savingEmail ? 'Sending...' : 'Change email'}
               </button>
             </div>
           </form>
