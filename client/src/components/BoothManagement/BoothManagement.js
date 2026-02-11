@@ -516,7 +516,7 @@ export default function BoothManagement() {
         ],
       };
       if (editingBoothId) {
-        // Update base fields
+        // Update base fields including events array
         await updateBooth(editingBoothId, {
           name: payload.name,
           description: payload.description,
@@ -526,7 +526,8 @@ export default function BoothManagement() {
           expireLinkTime: expireLinkTimeValue,
           customInviteSlug: payload.customInviteSlug,
           joinBoothButtonLink: payload.joinBoothButtonLink,
-          eventId: boothForm.eventIds && boothForm.eventIds.length > 0 ? boothForm.eventIds[0] : undefined,
+          events: boothForm.eventIds || [], // Send full events array
+          eventId: boothForm.eventIds && boothForm.eventIds.length > 0 ? boothForm.eventIds[0] : undefined, // Backward compat
         });
         // Update rich sections via dedicated endpoint
         await updateBoothRichSections(editingBoothId, payload.richSections);
@@ -695,21 +696,33 @@ export default function BoothManagement() {
       }
       
       // Map to grid rows expected by Syncfusion GridComponent
-      setBooths(items.map(b => ({
-        id: b._id,
-        name: b.name,
-        logo: b.logoUrl,
-        events: [b.eventId?.name || ''],
-        eventName: b.eventId?.name || '', // Flattened for filtering
-        eventIdRaw: b.eventId?._id || null,
-        richSections: b.richSections || [],
-        customInviteSlug: b.customInviteSlug || '',
-        companyPage: b.companyPage || '',
-        joinBoothButtonLink: b.joinBoothButtonLink || '',
-        customUrl: b.customInviteSlug ? `${baseUrl}/queue/${b.customInviteSlug}` : '',
-        recruitersCount: b.recruitersCount ?? 0,
-        expireLinkTime: b.expireLinkTime || null,
-      })));
+      setBooths(items.map(b => {
+        // Get events from the events array or fallback to single eventId
+        const eventsArray = b.events || [];
+        const eventNames = eventsArray.length > 0 
+          ? eventsArray.map(e => e?.name || '').filter(Boolean)
+          : (b.eventId?.name ? [b.eventId.name] : []);
+        const eventIds = eventsArray.length > 0
+          ? eventsArray.map(e => e?._id || e).filter(Boolean)
+          : (b.eventId?._id ? [b.eventId._id] : []);
+        
+        return {
+          id: b._id,
+          name: b.name,
+          logo: b.logoUrl,
+          events: eventNames,
+          eventName: eventNames.join(', ') || '', // Flattened for filtering
+          eventIdRaw: b.eventId?._id || null, // Keep for backward compat
+          eventIds: eventIds, // Full events array
+          richSections: b.richSections || [],
+          customInviteSlug: b.customInviteSlug || '',
+          companyPage: b.companyPage || '',
+          joinBoothButtonLink: b.joinBoothButtonLink || '',
+          customUrl: b.customInviteSlug ? `${baseUrl}/queue/${b.customInviteSlug}` : '',
+          recruitersCount: b.recruitersCount ?? 0,
+          expireLinkTime: b.expireLinkTime || null,
+        };
+      }));
     } catch (e) {
       console.error('Failed to load booths', e);
       setBooths([]);
@@ -988,6 +1001,11 @@ export default function BoothManagement() {
   // Edit handler (basic prefill)
   const startEdit = (row) => {
     const expireTime = formatDateTimeLocal(row.expireLinkTime);
+    // Use the full eventIds array if available, otherwise fallback to eventIdRaw
+    const eventIdsToUse = row.eventIds && row.eventIds.length > 0 
+      ? row.eventIds 
+      : (row.eventIdRaw ? [row.eventIdRaw] : boothForm.eventIds);
+    
     setBoothForm(prev => ({
       ...prev,
       boothName: row.name || '',
@@ -995,7 +1013,7 @@ export default function BoothManagement() {
       firstHtml: row.richSections?.[0]?.contentHtml || '',
       secondHtml: row.richSections?.[1]?.contentHtml || '',
       thirdHtml: row.richSections?.[2]?.contentHtml || '',
-      eventIds: row.eventIdRaw ? [row.eventIdRaw] : boothForm.eventIds,
+      eventIds: eventIdsToUse,
       companyPage: row.companyPage || '',
       customInviteText: row.customInviteSlug || '',
       joinBoothButtonLink: row.joinBoothButtonLink || '',

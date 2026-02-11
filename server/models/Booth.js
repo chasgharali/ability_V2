@@ -27,8 +27,13 @@ const boothSchema = new mongoose.Schema({
     eventId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event',
-        required: [true, 'Event ID is required']
+        required: false // Made optional - use 'events' array instead
     },
+    // Array of events this booth is assigned to (supports multi-event booths)
+    events: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event'
+    }],
     name: {
         type: String,
         required: [true, 'Booth name is required'],
@@ -249,15 +254,24 @@ boothSchema.methods.getPublicInfo = function () {
     };
 };
 
-// Static method to find booths by event
+// Static method to find booths by event (checks both eventId and events array for multi-event support)
 boothSchema.statics.findByEvent = function (eventId) {
-    return this.find({ eventId, status: 'active' });
+    return this.find({
+        $or: [
+            { eventId: eventId },
+            { events: eventId }
+        ],
+        status: 'active'
+    });
 };
 
-// Static method to find booths available for queue joining
+// Static method to find booths available for queue joining (checks both eventId and events array for multi-event support)
 boothSchema.statics.findAvailableForQueue = function (eventId) {
     return this.find({
-        eventId,
+        $or: [
+            { eventId: eventId },
+            { events: eventId }
+        ],
         status: 'active',
         'settings.queueSettings.allowQueueJoining': true
     });

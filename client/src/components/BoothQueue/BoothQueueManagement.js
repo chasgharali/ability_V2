@@ -290,8 +290,35 @@ export default function BoothQueueManagement() {
     }
   };
 
+  // Helper to check if a queue entry's event is in user's assigned events
+  // Returns true if user should see this queue entry (Admin/GlobalSupport see all, Recruiters see only their assigned events)
+  const shouldProcessQueueEntry = (queueEntry) => {
+    // Admin and GlobalSupport can see all queue entries
+    if (['Admin', 'GlobalSupport'].includes(user?.role)) {
+      return true;
+    }
+    
+    // For Recruiters with assigned events, check if queue entry's event is in their assigned events
+    if (user?.role === 'Recruiter' && user?.assignedEvents && user.assignedEvents.length > 0) {
+      const queueEventId = queueEntry?.event?._id || queueEntry?.event;
+      if (!queueEventId) return true; // If no event info, allow it (will be filtered by API anyway)
+      
+      const eventIdStr = queueEventId.toString();
+      const assignedEventIds = user.assignedEvents.map(e => (e?._id || e).toString());
+      return assignedEventIds.includes(eventIdStr);
+    }
+    
+    // Default: allow (Recruiters without assigned events see all)
+    return true;
+  };
+
   const handleQueueUpdate = (data) => {
     if (data.boothId === boothId || data.booth === boothId) {
+      // Filter socket events by assigned events for recruiters
+      if (data.queueEntry && !shouldProcessQueueEntry(data.queueEntry)) {
+        console.log('Ignoring queue update for event not in assigned events');
+        return;
+      }
       loadQueueData();
     }
   };
@@ -341,6 +368,12 @@ export default function BoothQueueManagement() {
   const handleNewMessage = (data) => {
     const targetBoothId = boothId || recruiterBooth?._id;
     if (data.boothId === targetBoothId || data.boothId?.toString() === targetBoothId?.toString()) {
+      // Filter socket events by assigned events for recruiters
+      if (data.queueEntry && !shouldProcessQueueEntry(data.queueEntry)) {
+        console.log('Ignoring new message for event not in assigned events');
+        return;
+      }
+      
       playNotificationSound();
       const jobSeekerName = data.queueEntry?.jobSeeker?.name || 'job seeker';
       showInfo(`New message from ${jobSeekerName}`, 200);
@@ -393,7 +426,16 @@ export default function BoothQueueManagement() {
   };
 
   const handleJobSeekerLeftWithMessage = (data) => {
-    showInfo(`${data.jobSeekerName} left a ${data.messageType} message and exited the queue`);
+    // Only show notification if the queue entry was in our filtered queue
+    // (this ensures recruiters only see notifications for their assigned events)
+    const queueEntryInCurrentList = queue.some(entry => 
+      (entry._id || entry.id)?.toString() === data.queueEntryId?.toString()
+    );
+    
+    if (queueEntryInCurrentList) {
+      showInfo(`${data.jobSeekerName} left a ${data.messageType} message and exited the queue`);
+    }
+    
     loadQueueData(); // Refresh queue to show left_with_message status
   };
 

@@ -405,21 +405,26 @@ export default function BoothQueueWaiting() {
     }
   };
 
-  // Handle queue updates from server indicating the user has left
+  // Handle queue updates from server indicating the user has left or been removed
   const handleQueueUpdated = (data) => {
     try {
       // We get this on booth rooms; ensure it's this booth and it's our queue entry
       if (!data) return;
       const sameBooth = String(data.boothId) === String(boothId);
-      const isLeft = data.action === 'left' || data.type === 'left';
+      // Check for both 'left' (user action) and 'removed' (recruiter action)
+      const isLeftOrRemoved = data.action === 'left' || data.action === 'removed' || data.type === 'left';
       const je = data.queueEntry?.jobSeeker;
       const jobSeekerId = typeof je === 'string' ? je : je?._id;
       const isCurrentUser = String(jobSeekerId) === String(user._id);
 
-      if (sameBooth && isLeft && isCurrentUser) {
-        // User has been removed from the queue (e.g., call ended)
+      if (sameBooth && isLeftOrRemoved && isCurrentUser) {
+        // User has been removed from the queue (by recruiter or call ended)
         setIsInCall(false);
         setCallInvitation(null);
+        // Show a message if removed by recruiter
+        if (data.action === 'removed') {
+          showInfo('You have been removed from the queue by the recruiter');
+        }
         // Redirect out of the waiting page
         navigate(`/events/registered/${eventSlug}`);
       } else if (sameBooth) {

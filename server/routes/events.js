@@ -588,8 +588,14 @@ router.delete('/:id', authenticateToken, requireResourceAccess('event', 'id'), a
     try {
         const { event, user } = req;
 
-        // Check if event has active booths or meetings
-        const activeBooths = await Booth.countDocuments({ eventId: event._id, status: 'active' });
+        // Check if event has active booths or meetings (check both eventId and events array)
+        const activeBooths = await Booth.countDocuments({
+            $or: [
+                { eventId: event._id },
+                { events: event._id }
+            ],
+            status: 'active'
+        });
         if (activeBooths > 0) {
             return res.status(400).json({
                 error: 'Cannot delete event',
@@ -597,8 +603,35 @@ router.delete('/:id', authenticateToken, requireResourceAccess('event', 'id'), a
             });
         }
 
-        // Delete associated booths
-        await Booth.deleteMany({ eventId: event._id });
+        // Delete booths that are only assigned to this event (single-event booths)
+        await Booth.deleteMany({
+            eventId: event._id,
+            $or: [
+                { events: { $exists: false } },
+                { events: { $size: 0 } },
+                { events: { $size: 1 } } // Only has this one event
+            ]
+        });
+        
+        // For multi-event booths, remove this event from the events array
+        await Booth.updateMany(
+            { events: event._id },
+            { 
+                $pull: { events: event._id },
+                $unset: { eventId: "" } // Clear eventId if it matches this event
+            }
+        );
+        
+        // Update eventId for multi-event booths that had this as their primary event
+        const boothsNeedingNewPrimary = await Booth.find({
+            eventId: { $exists: false },
+            events: { $exists: true, $ne: [] }
+        });
+        for (const booth of boothsNeedingNewPrimary) {
+            if (booth.events && booth.events.length > 0) {
+                await Booth.findByIdAndUpdate(booth._id, { eventId: booth.events[0] });
+            }
+        }
 
         // Delete the event
         await Event.findByIdAndDelete(event._id);

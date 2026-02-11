@@ -14,16 +14,30 @@ router.get('/', authenticateToken, async (req, res) => {
     try {
         const { eventId, page = 1, limit = 50 } = req.query;
         const filter = {};
-        if (eventId) filter.eventId = eventId;
+        if (eventId) {
+            // Filter by eventId or events array containing the event
+            filter.$or = [
+                { eventId: eventId },
+                { events: eventId }
+            ];
+        }
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         const [items, total] = await Promise.all([
-            Booth.find(filter).populate('eventId', 'name').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+            Booth.find(filter)
+                .populate('eventId', 'name')
+                .populate('events', 'name slug')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
             Booth.countDocuments(filter)
         ]);
 
         res.json({
-            booths: items.map(b => b.getSummary()),
+            booths: items.map(b => ({
+                ...b.getSummary(),
+                events: b.events || []
+            })),
             total,
             page: parseInt(page),
             limit: parseInt(limit)
@@ -217,7 +231,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         const { name, description, logoUrl, companyPage, recruitersCount, expireLinkTime, customInviteSlug, joinBoothButtonLink, richSections = [], eventIds } = req.body;
         const Event = require('../models/Event');
 
-        const created = [];
+        const validEvents = [];
         const skipped = [];
 
         // Check customInviteSlug uniqueness ahead of time (if provided)
@@ -228,47 +242,67 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             }
         }
 
+        // Validate all events first
         for (const eid of eventIds) {
             const ev = await Event.findById(eid);
-            if (!ev) { skipped.push({ eventId: eid, reason: 'Event not found' }); continue; }
+            if (!ev) { 
+                skipped.push({ eventId: eid, reason: 'Event not found' }); 
+                continue; 
+            }
 
             // Enforce booth limit if configured
             const maxBooths = ev?.limits?.maxBooths || 0; // 0 = unlimited
             if (maxBooths > 0) {
-                const current = await Booth.countDocuments({ eventId: eid });
+                const current = await Booth.countDocuments({ 
+                    $or: [
+                        { eventId: eid },
+                        { events: eid }
+                    ]
+                });
                 if (current >= maxBooths) {
                     skipped.push({ eventId: eid, reason: 'Limit reached' });
                     continue;
                 }
             }
-
-            const booth = await Booth.create({
-                eventId: eid,
-                name,
-                description: description || '',
-                logoUrl: logoUrl || null,
-                companyPage: companyPage || '',
-                recruitersCount: recruitersCount || 1,
-                expireLinkTime: expireLinkTime || null,
-                customInviteSlug: customInviteSlug || undefined,
-                joinBoothButtonLink: joinBoothButtonLink || '',
-                richSections: (richSections || []).slice(0, 3).map((s, index) => ({
-                    title: s.title || `Section ${index + 1}`,
-                    contentHtml: s.contentHtml || '',
-                    isActive: s.isActive !== false,
-                    order: s.order ?? index
-                }))
-            });
-
-            // Add booth to event's booths array
-            await Event.findByIdAndUpdate(eid, { $addToSet: { booths: booth._id } });
-
-            created.push(booth.getSummary());
+            validEvents.push(eid);
         }
 
-        res.status(created.length ? 201 : 200).json({
-            message: created.length ? 'Booth(s) created' : 'No booths created',
-            created,
+        if (validEvents.length === 0) {
+            return res.status(400).json({
+                error: 'No valid events',
+                message: 'None of the provided events are valid or available',
+                skipped
+            });
+        }
+
+        // Create single booth with multiple events
+        const booth = await Booth.create({
+            eventId: validEvents[0], // First event for backward compatibility
+            events: validEvents, // All events in array
+            name,
+            description: description || '',
+            logoUrl: logoUrl || null,
+            companyPage: companyPage || '',
+            recruitersCount: recruitersCount || 1,
+            expireLinkTime: expireLinkTime || null,
+            customInviteSlug: customInviteSlug || undefined,
+            joinBoothButtonLink: joinBoothButtonLink || '',
+            richSections: (richSections || []).slice(0, 3).map((s, index) => ({
+                title: s.title || `Section ${index + 1}`,
+                contentHtml: s.contentHtml || '',
+                isActive: s.isActive !== false,
+                order: s.order ?? index
+            }))
+        });
+
+        // Add booth to all events' booths arrays
+        for (const eid of validEvents) {
+            await Event.findByIdAndUpdate(eid, { $addToSet: { booths: booth._id } });
+        }
+
+        res.status(201).json({
+            message: 'Booth created',
+            booth: booth.getSummary(),
             skipped
         });
     } catch (error) {
@@ -381,7 +415,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const { user } = req;
 
-        const booth = await Booth.findById(id).populate('eventId', 'name slug description link sendyId logoUrl start end timezone status administrators createdBy booths limits theme termsIds createdAt');
+        const booth = await Booth.findById(id)
+            .populate('eventId', 'name slug description link sendyId logoUrl start end timezone status administrators createdBy booths limits theme termsIds createdAt')
+            .populate('events', 'name slug _id');
         if (!booth) {
             return res.status(404).json({
                 error: 'Booth not found',
@@ -407,7 +443,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
             : (typeof booth.getSummary === 'function' ? booth.getSummary() : booth);
 
         res.json({
-            booth: boothData,
+            booth: {
+                ...boothData,
+                events: booth.events || []
+            },
             event: booth.eventId && typeof booth.eventId.getSummary === 'function'
                 ? booth.eventId.getSummary()
                 : (booth.eventId || null)
@@ -417,6 +456,56 @@ router.get('/:id', authenticateToken, async (req, res) => {
         res.status(500).json({
             error: 'Failed to retrieve booth',
             message: 'An error occurred while retrieving the booth'
+        });
+    }
+});
+
+/**
+ * GET /api/booths/:id/events
+ * Get events assigned to a booth
+ */
+router.get('/:id/events', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const booth = await Booth.findById(id)
+            .populate('events', 'name slug _id')
+            .populate('eventId', 'name slug _id')
+            .select('events eventId');
+        
+        if (!booth) {
+            return res.status(404).json({
+                error: 'Booth not found',
+                message: 'The specified booth does not exist'
+            });
+        }
+
+        // Combine events from both the events array and legacy eventId
+        let events = booth.events || [];
+        
+        // Add legacy eventId if it exists and isn't already in events
+        if (booth.eventId) {
+            const eventIdStr = booth.eventId._id ? booth.eventId._id.toString() : booth.eventId.toString();
+            const existsInEvents = events.some(e => 
+                (e._id ? e._id.toString() : e.toString()) === eventIdStr
+            );
+            if (!existsInEvents) {
+                events = [booth.eventId, ...events];
+            }
+        }
+
+        res.json({ 
+            events: events.map(e => ({
+                _id: e._id || e,
+                name: e.name || '',
+                slug: e.slug || ''
+            }))
+        });
+    } catch (error) {
+        logger.error('Get booth events error:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve booth events',
+            message: 'An error occurred while retrieving booth events'
         });
     }
 });
@@ -474,6 +563,14 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .optional()
         .isMongoId()
         .withMessage('Event ID must be a valid MongoDB ObjectId'),
+    body('events')
+        .optional()
+        .isArray()
+        .withMessage('Events must be an array'),
+    body('events.*')
+        .optional()
+        .isMongoId()
+        .withMessage('Each event ID must be a valid MongoDB ObjectId'),
     body('status')
         .optional()
         .isIn(['active', 'inactive', 'maintenance'])
@@ -490,7 +587,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             });
         }
 
-        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug, joinBoothButtonLink, eventId } = req.body;
+        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug, joinBoothButtonLink, eventId, events } = req.body;
         const { booth, user } = req;
         const Event = require('../models/Event');
 
@@ -566,6 +663,49 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             }
             updateData.eventId = eventId;
         }
+        
+        // Handle events array update
+        if (events !== undefined && Array.isArray(events)) {
+            // Validate all provided event IDs
+            const validEvents = [];
+            for (const eid of events) {
+                const ev = await Event.findById(eid);
+                if (ev) {
+                    validEvents.push(eid);
+                }
+            }
+            
+            if (validEvents.length === 0 && events.length > 0) {
+                return res.status(400).json({ error: 'No valid events provided' });
+            }
+            
+            // Get current events for this booth
+            const currentEvents = booth.events || [];
+            const currentEventIds = currentEvents.map(e => e.toString());
+            const newEventIds = validEvents.map(e => e.toString());
+            
+            // Find events to add and remove
+            const eventsToAdd = newEventIds.filter(e => !currentEventIds.includes(e));
+            const eventsToRemove = currentEventIds.filter(e => !newEventIds.includes(e));
+            
+            // Remove booth from old events' booths arrays
+            for (const eid of eventsToRemove) {
+                await Event.findByIdAndUpdate(eid, { $pull: { booths: booth._id } });
+            }
+            
+            // Add booth to new events' booths arrays
+            for (const eid of eventsToAdd) {
+                await Event.findByIdAndUpdate(eid, { $addToSet: { booths: booth._id } });
+            }
+            
+            updateData.events = validEvents;
+            
+            // Update eventId for backward compatibility (use first event)
+            if (validEvents.length > 0 && !updateData.eventId) {
+                updateData.eventId = validEvents[0];
+            }
+        }
+        
         if (status !== undefined) updateData.status = status;
 
         // Use findByIdAndUpdate - this bypasses the corrupted value issue

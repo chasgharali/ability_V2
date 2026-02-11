@@ -9,9 +9,9 @@ import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
-import { Input, Select } from '../UI/FormComponents';
+import { Input, Select, MultiSelect } from '../UI/FormComponents';
 import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, deleteUserPermanently, bulkDeleteUsers } from '../../services/users';
-import { listBooths } from '../../services/booths';
+import { listBooths, getBoothEvents } from '../../services/booths';
 import { listEvents } from '../../services/events';
 import { JOB_CATEGORY_LIST } from '../../constants/options';
 
@@ -130,7 +130,11 @@ export default function UserManagement() {
     boothId: '', // maps to assignedBooth on API
     field: '',
     eventId: '',
+    selectedEvents: [], // Events assigned to recruiter (multi-select)
   });
+  
+  // State for booth-specific events (loaded when booth is selected)
+  const [boothEvents, setBoothEvents] = useState([]);
 
   // Build Field options from centralized constants
   const fieldOptions = useMemo(
@@ -365,7 +369,8 @@ export default function UserManagement() {
           email: u.email,
           role: u.role,
           booth: u.boothName || '-',
-          assignedBoothId: u.assignedBooth || '',
+          assignedBoothId: u.assignedBooth?._id || u.assignedBooth || '',
+          assignedEvents: (u.assignedEvents || []).map(e => e?._id || e),
           isActive: u.isActive,
           createdAt: u.createdAt,
         };
@@ -416,6 +421,24 @@ export default function UserManagement() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
+
+  // Fetch booth events when booth is selected for Recruiter/BoothAdmin
+  useEffect(() => {
+    const fetchBoothEventsForRole = async () => {
+      if (form.boothId && ['Recruiter', 'BoothAdmin'].includes(form.role)) {
+        try {
+          const events = await getBoothEvents(form.boothId);
+          setBoothEvents(events.map(e => ({ value: e._id, label: e.name })));
+        } catch (error) {
+          console.error('Failed to fetch booth events:', error);
+          setBoothEvents([]);
+        }
+      } else {
+        setBoothEvents([]);
+      }
+    };
+    fetchBoothEventsForRole();
+  }, [form.boothId, form.role]);
 
   // Cleanup selection RAF on unmount
   useEffect(() => {
@@ -696,6 +719,7 @@ export default function UserManagement() {
       eventId: '',
       password: '',
       confirmPassword: '',
+      selectedEvents: row.assignedEvents || [],
     }));
     setEditingId(row.id);
     setMode('create'); // reuse the same form UI
@@ -759,6 +783,10 @@ export default function UserManagement() {
         if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
           payload.assignedBooth = form.boothId || undefined;
         }
+        // Assign events for Recruiter and BoothAdmin roles
+        if (['Recruiter', 'BoothAdmin'].includes(form.role)) {
+          payload.assignedEvents = form.selectedEvents || [];
+        }
         await updateUser(editingId, payload);
         showToast('User updated', 'Success');
       } else {
@@ -780,12 +808,16 @@ export default function UserManagement() {
           }
           payload.assignedBooth = form.boothId;
         }
+        // Assign events for Recruiter and BoothAdmin roles
+        if (['Recruiter', 'BoothAdmin'].includes(form.role)) {
+          payload.assignedEvents = form.selectedEvents || [];
+        }
         await createUser(payload);
         showToast('User created', 'Success');
       }
       setMode('list');
       setEditingId(null);
-      setForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', role: '', boothId: '', field: '', eventId: '' });
+      setForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', role: '', boothId: '', field: '', eventId: '', selectedEvents: [] });
       await loadUsers();
     } catch (e) {
       console.error('Save user failed', e);
@@ -1237,6 +1269,22 @@ export default function UserManagement() {
                   </ButtonComponent>
                 </div>
                 <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} />
+                
+                {/* Multi-select events for Recruiter/BoothAdmin when booth is selected */}
+                {['Recruiter', 'BoothAdmin'].includes(form.role) && form.boothId && (
+                  <>
+                    <MultiSelect
+                      label="Select Events"
+                      value={form.selectedEvents}
+                      onChange={(e) => setField('selectedEvents', e.target.value)}
+                      options={boothEvents}
+                      placeholder={boothEvents.length === 0 ? 'No events assigned to this booth' : 'Select events for this recruiter'}
+                      name="selectedEvents"
+                      required
+                    />
+                  </>
+                )}
+                
                 {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
                 <Select label="Select Event (Enable only for Event Admin)" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={form.role !== 'AdminEvent'} />
                 <ButtonComponent 

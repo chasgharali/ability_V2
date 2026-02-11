@@ -149,8 +149,8 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             const Booth = require('../models/Booth');
             const User = require('../models/User');
             
-            // Get the recruiter's assigned booth directly from User model
-            const recruiter = await User.findById(req.user._id).select('assignedBooth');
+            // Get the recruiter's assigned booth and events directly from User model
+            const recruiter = await User.findById(req.user._id).select('assignedBooth assignedEvents');
             const boothIds = new Set();
             
             // Add assigned booth if it exists
@@ -190,6 +190,20 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             }
 
             query.booth = { $in: boothIdsArray };
+            
+            // Also filter by recruiter's assigned events if they have any
+            const assignedEvents = recruiter?.assignedEvents || [];
+            if (assignedEvents.length > 0) {
+                // Filter to only show interests for events the recruiter is assigned to
+                const eventIdsArray = assignedEvents
+                    .filter(id => id && mongoose.Types.ObjectId.isValid(id.toString()))
+                    .map(id => new mongoose.Types.ObjectId(id.toString()));
+                
+                if (eventIdsArray.length > 0) {
+                    query.event = { $in: eventIdsArray };
+                    console.log('Recruiter filtering by assigned events:', eventIdsArray.length);
+                }
+            }
         } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
             // Admins can filter by recruiter or see all
             if (recruiterId) {

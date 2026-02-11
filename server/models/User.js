@@ -156,6 +156,11 @@ const userSchema = new mongoose.Schema({
         ref: 'Booth',
         default: null
     },
+    // Recruiter/BoothAdmin specific: assigned events (for filtering job seekers)
+    assignedEvents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event'
+    }],
     // Metadata for additional user information
     metadata: {
         type: mongoose.Schema.Types.Mixed,
@@ -370,6 +375,7 @@ userSchema.methods.getPublicProfile = function () {
         languages: this.languages,
         isAvailable: this.isAvailable,
         assignedBooth: this.assignedBooth,
+        assignedEvents: this.assignedEvents || [],
         createdAt: this.createdAt,
         pendingEmail: this.pendingEmail
     };
@@ -378,6 +384,13 @@ userSchema.methods.getPublicProfile = function () {
     if (this.assignedBooth && typeof this.assignedBooth === 'object' && this.assignedBooth.name) {
         profile.boothName = this.assignedBooth.name || this.assignedBooth.company || 'Unknown Booth';
         profile.assignedBooth = this.assignedBooth._id; // Keep just the ID
+    }
+
+    // If assignedEvents are populated, extract IDs
+    if (this.assignedEvents && Array.isArray(this.assignedEvents) && this.assignedEvents.length > 0) {
+        profile.assignedEvents = this.assignedEvents.map(e => 
+            typeof e === 'object' && e._id ? e._id : e
+        );
     }
 
     return profile;

@@ -458,23 +458,65 @@ router.get('/verify-email-change', async (req, res) => {
 
 /**
  * GET /api/users
- * Get list of users (Admin/GlobalSupport only)
+ * Get list of users (Admin/GlobalSupport/Recruiter/BoothAdmin)
+ * Recruiters and BoothAdmins can only view JobSeekers from their assigned events
  */
-router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recruiter', 'BoothAdmin']), async (req, res) => {
     try {
         const { role, isActive, page = 1, limit = 50, search, eventId } = req.query;
+        const currentUser = req.user;
 
-        logger.info(`Get users request - role: ${role}, isActive: ${isActive}, search: ${search}, eventId: ${eventId}`);
+        logger.info(`Get users request - role: ${role}, isActive: ${isActive}, search: ${search}, eventId: ${eventId}, requestedBy: ${currentUser.email} (${currentUser.role})`);
 
         // Build query
         let query = {};
 
-        if (role) {
-            query.role = role;
+        // For Recruiter/BoothAdmin, restrict to JobSeekers only and filter by their assigned events
+        if (['Recruiter', 'BoothAdmin'].includes(currentUser.role)) {
+            // Recruiters can only view JobSeekers
+            if (role && role !== 'JobSeeker') {
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'You can only view job seekers'
+                });
+            }
+            query.role = 'JobSeeker';
+            
+            // Get recruiter's assigned events
+            const recruiterData = await User.findById(currentUser._id).select('assignedEvents');
+            const assignedEvents = recruiterData?.assignedEvents || [];
+            
+            if (assignedEvents.length > 0) {
+                // Filter job seekers by their registered events matching recruiter's assigned events
+                const eventFilterConditions = assignedEvents.flatMap(eventId => [
+                    { 'metadata.registeredEvents': { $elemMatch: { id: eventId } } },
+                    { 'metadata.registeredEvents': { $elemMatch: { id: eventId.toString() } } }
+                ]);
+                
+                if (eventFilterConditions.length > 0) {
+                    query.$or = eventFilterConditions;
+                }
+                logger.info(`Recruiter ${currentUser.email} filtering job seekers by ${assignedEvents.length} assigned events`);
+            } else {
+                // If no assigned events, recruiter can't see any job seekers
+                logger.info(`Recruiter ${currentUser.email} has no assigned events, returning empty result`);
+                return res.json({
+                    users: [],
+                    total: 0,
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    stats: { active: 0, inactive: 0, verified: 0 }
+                });
+            }
         } else {
-            // When no role filter is provided, exclude JobSeekers by default
-            // JobSeekers have their own management page
-            query.role = { $ne: 'JobSeeker' };
+            // Admin/GlobalSupport - normal behavior
+            if (role) {
+                query.role = role;
+            } else {
+                // When no role filter is provided, exclude JobSeekers by default
+                // JobSeekers have their own management page
+                query.role = { $ne: 'JobSeeker' };
+            }
         }
 
         if (isActive !== undefined) {
@@ -707,6 +749,7 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
             User.find(query)
                 .select('-hashedPassword -refreshTokens')
                 .populate('assignedBooth', 'name company')
+                .populate('assignedEvents', 'name slug _id')
                 .sort({ createdAt: -1 })
                 .limit(parsedLimit)
                 .skip(skip)
@@ -739,6 +782,7 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
                 metadata: user.metadata,
                 survey: user.survey,
                 assignedBooth: user.assignedBooth,
+                assignedEvents: user.assignedEvents || [],
                 resumeUrl: user.resumeUrl,
                 usesScreenMagnifier: user.usesScreenMagnifier,
                 usesScreenReader: user.usesScreenReader,
@@ -930,6 +974,14 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         .optional()
         .isMongoId()
         .withMessage('assignedBooth must be a valid ID'),
+    body('assignedEvents')
+        .optional()
+        .isArray()
+        .withMessage('assignedEvents must be an array'),
+    body('assignedEvents.*')
+        .optional()
+        .isMongoId()
+        .withMessage('Each assignedEvent must be a valid ID'),
     // JobSeeker specific fields (but NOT survey)
     body('phoneNumber')
         .optional()
@@ -990,7 +1042,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         }
 
         const { id } = req.params;
-        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, avatarUrl, resumeUrl, linkedInUrl,
+        const { name, email, password, phoneNumber, city, state, country, role, isActive, languages, isAvailable, assignedBooth, assignedEvents, avatarUrl, resumeUrl, linkedInUrl,
             usesScreenMagnifier, usesScreenReader, needsASL, needsCaptions, needsOther, profile } = req.body;
         const { user } = req;
 
@@ -1122,6 +1174,43 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         } else if (assignedBooth !== undefined) {
             // Other roles should not have assignedBooth
             targetUser.assignedBooth = null;
+        }
+
+        // Handle assignedEvents for Recruiter/BoothAdmin roles
+        if (['Recruiter', 'BoothAdmin'].includes(effectiveRole)) {
+            if (assignedEvents !== undefined && Array.isArray(assignedEvents)) {
+                const Event = require('../models/Event');
+                const validEvents = [];
+                
+                // Validate each event exists
+                for (const eventId of assignedEvents) {
+                    const eventExists = await Event.findById(eventId).select('_id');
+                    if (eventExists) {
+                        validEvents.push(eventId);
+                    }
+                }
+                
+                // If booth is assigned, validate events belong to that booth
+                if (targetUser.assignedBooth) {
+                    const booth = await Booth.findById(targetUser.assignedBooth).select('events eventId');
+                    const boothEventIds = (booth?.events || []).map(e => e.toString());
+                    // Also include the legacy eventId if present
+                    if (booth?.eventId) {
+                        boothEventIds.push(booth.eventId.toString());
+                    }
+                    
+                    // Filter to only events that are in the booth's events
+                    const filteredEvents = validEvents.filter(e => boothEventIds.includes(e.toString()));
+                    targetUser.assignedEvents = filteredEvents;
+                } else {
+                    targetUser.assignedEvents = validEvents;
+                }
+            }
+        } else {
+            // Non-recruiter roles should not have assignedEvents
+            if (assignedEvents !== undefined) {
+                targetUser.assignedEvents = [];
+            }
         }
 
         await targetUser.save();

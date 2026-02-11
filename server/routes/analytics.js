@@ -345,13 +345,19 @@ router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
             if (!mongoose.Types.ObjectId.isValid(eventId)) {
                 return res.status(400).json({ error: 'Invalid eventId format' });
             }
-            boothMatchQuery.eventId = new mongoose.Types.ObjectId(eventId);
+            const eventObjectId = new mongoose.Types.ObjectId(eventId);
+            // Check both eventId and events array for multi-event booth support
+            boothMatchQuery.$or = [
+                { eventId: eventObjectId },
+                { events: eventObjectId }
+            ];
         }
 
         // First, get all booths matching the filter criteria
         const booths = await Booth.find(boothMatchQuery)
             .populate('eventId', 'name slug')
-            .select('name eventId');
+            .populate('events', 'name slug')
+            .select('name eventId events');
 
         if (booths.length === 0) {
             return res.json({ booths: [] });
@@ -701,8 +707,13 @@ router.get('/full-event-report', authenticateToken, requireRole(['Admin', 'Globa
             if (endDate) dateFilter.startTime.$lte = new Date(endDate);
         }
 
-        // Build booth filter query
-        let boothMatchQuery = { eventId: eventObjectId };
+        // Build booth filter query (check both eventId and events array for multi-event support)
+        let boothMatchQuery = {
+            $or: [
+                { eventId: eventObjectId },
+                { events: eventObjectId }
+            ]
+        };
         if (boothFilter.boothId) {
             boothMatchQuery._id = boothFilter.boothId;
         }
@@ -906,13 +917,19 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 if (!mongoose.Types.ObjectId.isValid(eventId)) {
                     return res.status(400).json({ error: 'Invalid eventId format' });
                 }
-                boothMatchQuery.eventId = new mongoose.Types.ObjectId(eventId);
+                const eventObjectId = new mongoose.Types.ObjectId(eventId);
+                // Check both eventId and events array for multi-event booth support
+                boothMatchQuery.$or = [
+                    { eventId: eventObjectId },
+                    { events: eventObjectId }
+                ];
             }
 
             // Fetch all booths (no limit/skip) with deterministic sort so export matches report
             const booths = await Booth.find(boothMatchQuery)
                 .populate('eventId', 'name')
-                .select('name eventId')
+                .populate('events', 'name')
+                .select('name eventId events')
                 .sort({ eventId: 1, name: 1 })
                 .lean();
             
@@ -1080,8 +1097,13 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 if (endDate) dateFilter.startTime.$lte = new Date(endDate);
             }
 
-            // Build booth filter query
-            let boothMatchQuery = { eventId: eventObjectId };
+            // Build booth filter query (check both eventId and events array for multi-event support)
+            let boothMatchQuery = {
+                $or: [
+                    { eventId: eventObjectId },
+                    { events: eventObjectId }
+                ]
+            };
             if (boothFilter.boothId) {
                 boothMatchQuery._id = boothFilter.boothId;
             }

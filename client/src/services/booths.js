@@ -56,3 +56,11 @@ export async function resolveBoothInvite(slug) {
   const res = await axios.get(`/api/booths/invite/${encodeURIComponent(slug)}`, { headers });
   return res.data;
 }
+
+// Get events assigned to a booth
+export async function getBoothEvents(boothId) {
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+  const res = await axios.get(`/api/booths/${boothId}/events`, { headers });
+  return res.data.events || [];
+}

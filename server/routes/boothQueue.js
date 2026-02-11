@@ -689,20 +689,41 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
             });
         }
 
-        // Include 'in_meeting' status to show job seekers currently in calls
-        const queue = await BoothQueue.find({
+        // Build the query - filter by booth and status
+        let query = {
             booth: boothId,
             status: { $in: ['waiting', 'invited', 'in_meeting'] }
-        })
+        };
+
+        // For Recruiters with assigned events, filter to only show job seekers from those events
+        // Admin and GlobalSupport can see all queue entries
+        if (req.user.role === 'Recruiter' && req.user.assignedEvents && req.user.assignedEvents.length > 0) {
+            const eventIds = req.user.assignedEvents
+                .filter(id => id && mongoose.Types.ObjectId.isValid(id.toString()))
+                .map(id => new mongoose.Types.ObjectId(id.toString()));
+            
+            if (eventIds.length > 0) {
+                query.event = { $in: eventIds };
+                console.log(`Recruiter ${req.user.email} filtering queue by assigned events:`, eventIds.map(id => id.toString()));
+            }
+        }
+
+        // Include 'in_meeting' status to show job seekers currently in calls
+        const queue = await BoothQueue.find(query)
             .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
             .populate('interpreterCategory', 'name code')
+            .populate('event', 'name slug')
             .sort({ position: 1 });
 
-        // Get current serving number
-        const currentServing = await BoothQueue.countDocuments({
+        // Get current serving number (use same event filter for consistency)
+        let servingQuery = {
             booth: boothId,
             status: { $in: ['invited', 'in_meeting', 'completed'] }
-        }) + 1;
+        };
+        if (query.event) {
+            servingQuery.event = query.event;
+        }
+        const currentServing = await BoothQueue.countDocuments(servingQuery) + 1;
 
         // Check for active calls in this booth to detect job seekers currently in calls
         // We'll check both: if job seeker has any active call, AND if there's an active call for this specific queue entry
