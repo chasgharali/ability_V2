@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Booth = require('../models/Booth');
+const Event = require('../models/Event');
 const { authenticateToken, validateRefreshToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
@@ -118,7 +119,7 @@ router.post('/register', [
         .toBoolean()
 ], async (req, res) => {
     try {
-        const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth, subscribeAnnouncements, redirectPath } = req.body;
+        const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth, assignedEvents, subscribeAnnouncements, redirectPath } = req.body;
 
         // Check for validation errors, but separate email format validation
         const errors = validationResult(req);
@@ -187,6 +188,23 @@ router.post('/register', [
             }
         }
 
+        // Validate assignedEvents for GlobalSupport (requires exactly one event)
+        if (role === 'GlobalSupport') {
+            if (!assignedEvents || !Array.isArray(assignedEvents) || assignedEvents.length !== 1) {
+                return res.status(400).json({
+                    error: 'Validation failed',
+                    message: 'Global Support must be assigned to exactly one event'
+                });
+            }
+            const eventExists = await Event.findById(assignedEvents[0]).select('_id');
+            if (!eventExists) {
+                return res.status(400).json({
+                    error: 'Invalid event',
+                    message: 'Assigned event does not exist'
+                });
+            }
+        }
+
         // Create new user
         // Store email exactly as user typed it (trimmed only, no normalization)
         const trimmedEmail = typeof email === 'string' ? email.trim() : email;
@@ -198,6 +216,7 @@ router.post('/register', [
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
             assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined,
+            assignedEvents: role === 'GlobalSupport' && assignedEvents ? assignedEvents : undefined,
             subscribeAnnouncements: subscribeAnnouncements !== undefined ? subscribeAnnouncements : false,
             // Store redirect path in metadata if provided (for event registration redirect after email verification)
             metadata: redirectPath ? { pendingRedirectPath: redirectPath } : {}

@@ -716,7 +716,9 @@ export default function UserManagement() {
       role: row.role || '',
       boothId: row.assignedBoothId || '',
       field: '',
-      eventId: '',
+      eventId: row.role === 'GlobalSupport' && row.assignedEvents?.length > 0
+        ? row.assignedEvents[0]
+        : '',
       password: '',
       confirmPassword: '',
       selectedEvents: row.assignedEvents || [],
@@ -787,6 +789,10 @@ export default function UserManagement() {
         if (['Recruiter', 'BoothAdmin'].includes(form.role)) {
           payload.assignedEvents = form.selectedEvents || [];
         }
+        // Assign single event for GlobalSupport role
+        if (form.role === 'GlobalSupport' && form.eventId) {
+          payload.assignedEvents = [form.eventId];
+        }
         await updateUser(editingId, payload);
         showToast('User updated', 'Success');
       } else {
@@ -811,6 +817,14 @@ export default function UserManagement() {
         // Assign events for Recruiter and BoothAdmin roles
         if (['Recruiter', 'BoothAdmin'].includes(form.role)) {
           payload.assignedEvents = form.selectedEvents || [];
+        }
+        // Assign single event for GlobalSupport role
+        if (form.role === 'GlobalSupport') {
+          if (!form.eventId) {
+            showToast('Please select an event for Global Support', 'Error');
+            return;
+          }
+          payload.assignedEvents = [form.eventId];
         }
         await createUser(payload);
         showToast('User created', 'Success');
@@ -1268,7 +1282,7 @@ export default function UserManagement() {
                     {showConfirmPwd ? 'Hide' : 'Show'}
                   </ButtonComponent>
                 </div>
-                <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} />
+                <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} disabled={form.role === 'GlobalSupport'} />
                 
                 {/* Multi-select events for Recruiter/BoothAdmin when booth is selected */}
                 {['Recruiter', 'BoothAdmin'].includes(form.role) && form.boothId && (
@@ -1286,7 +1300,7 @@ export default function UserManagement() {
                 )}
                 
                 {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
-                <Select label="Select Event (Enable only for Event Admin)" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={form.role !== 'AdminEvent'} />
+                <Select label="Select Event" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={!['AdminEvent', 'GlobalSupport'].includes(form.role)} required={form.role === 'GlobalSupport'} />
                 <ButtonComponent 
                   cssClass="e-primary" 
                   disabled={loading}

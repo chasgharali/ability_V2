@@ -747,9 +747,28 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         return null;
     };
 
-    const filteredChats = chats.filter(chat =>
-        getChatTitle(chat).toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Build a set of valid participant IDs from the backend (already event-filtered)
+    const validParticipantIds = new Set(participants.map(p => p._id));
+
+    const filteredChats = chats.filter(chat => {
+        // Search filter
+        if (!getChatTitle(chat).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        
+        // For direct chats, hide chats with GlobalSupport users not in the valid participants list
+        // This ensures existing chats with GlobalSupport from different events are hidden
+        if (chat.type === 'direct') {
+            const otherParticipant = chat.participants.find(p => p.user._id !== user?._id);
+            if (otherParticipant?.user?.role === 'GlobalSupport' || 
+                (user?.role === 'GlobalSupport' && otherParticipant?.user?.role)) {
+                // If current user is GlobalSupport or other user is GlobalSupport,
+                // only show if the other user is in the valid participants list
+                if (otherParticipant?.user?._id && !validParticipantIds.has(otherParticipant.user._id)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    });
 
     // Filter participants: exclude current user and users already in chat list
     const existingChatUserIds = new Set(
@@ -802,6 +821,12 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
             if (user?.role === 'GlobalInterpreter') {
                 // Explicitly check for GlobalSupport and GlobalInterpreter only, exclude Support
                 return p.role === 'GlobalSupport' || p.role === 'GlobalInterpreter';
+            }
+            
+            // For GlobalSupport: show all participants returned by backend (already event-filtered)
+            if (user?.role === 'GlobalSupport') {
+                // Backend already filters by event - allow all returned participants
+                return true;
             }
             
             // For support users: only show Support, Recruiter, and Interpreter from same booth, plus GlobalSupport and GlobalInterpreter

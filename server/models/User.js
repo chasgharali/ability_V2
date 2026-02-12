@@ -156,7 +156,9 @@ const userSchema = new mongoose.Schema({
         ref: 'Booth',
         default: null
     },
-    // Recruiter/BoothAdmin specific: assigned events (for filtering job seekers)
+    // Recruiter/BoothAdmin/GlobalSupport specific: assigned events
+    // Recruiter/BoothAdmin: multiple events for filtering job seekers
+    // GlobalSupport: single event for scoping team chat visibility
     assignedEvents: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event'

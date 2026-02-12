@@ -4,6 +4,7 @@ const { authenticateToken } = require('../middleware/auth');
 const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const User = require('../models/User');
+const Booth = require('../models/Booth');
 
 // Get all chats for current user
 router.get('/', authenticateToken, async (req, res) => {
@@ -78,19 +79,48 @@ router.get('/participants', authenticateToken, async (req, res) => {
             return res.status(403).json({ message: 'Your role does not have chat access' });
         }
 
-        // Global Support can reach all key operational roles
+        // Global Support can reach users in the same event only
         if (currentUser.role === 'GlobalSupport') {
-            const targetRoles = ['GlobalSupport', 'GlobalInterpreter', 'Interpreter', 'Support', 'Recruiter'];
+            // Get the GlobalSupport user's assigned event
+            const gsUser = await User.findById(req.user._id);
+            const gsEventId = gsUser.assignedEvents?.[0]?.toString();
 
-            const globalReachUsers = await User.find({
-                role: { $in: targetRoles },
+            if (!gsEventId) {
+                return res.json([]); // No event assigned = no chat participants
+            }
+
+            // Find all booths assigned to this event
+            const eventBooths = await Booth.find({
+                $or: [{ eventId: gsEventId }, { events: gsEventId }]
+            }).select('_id');
+            const boothIds = eventBooths.map(b => b._id);
+
+            // Get booth-based users from those booths
+            // For Recruiters, additionally filter by their assignedEvents matching the GS event
+            // Support/Interpreter don't have individual event assignments, so booth membership is enough
+            const boothUsers = await User.find({
+                assignedBooth: { $in: boothIds },
+                isActive: true,
+                _id: { $ne: currentUser._id },
+                $or: [
+                    { role: { $in: ['Support', 'Interpreter'] } },
+                    { role: 'Recruiter', assignedEvents: gsEventId }
+                ]
+            })
+            .select('name email avatarUrl role assignedBooth')
+            .populate('assignedBooth', 'name company');
+
+            // Get other GlobalSupport and GlobalInterpreter users in the same event
+            const globalUsers = await User.find({
+                role: { $in: ['GlobalSupport', 'GlobalInterpreter'] },
+                assignedEvents: gsEventId,
                 isActive: true,
                 _id: { $ne: currentUser._id }
             })
             .select('name email avatarUrl role assignedBooth')
             .populate('assignedBooth', 'name company');
 
-            return res.json(globalReachUsers);
+            return res.json([...boothUsers, ...globalUsers]);
         }
 
         // Global Interpreter can only reach GlobalSupport and GlobalInterpreter (NOT Support)
@@ -128,14 +158,47 @@ router.get('/participants', authenticateToken, async (req, res) => {
             participants.push(...boothUsers);
         }
 
-        // Add all global interpreters and global support (available to everyone)
-        const globalUsers = await User.find({
-            role: { $in: ['GlobalInterpreter', 'GlobalSupport'] },
-            isActive: true,
-            _id: { $ne: currentUser._id }
-        }).select('name email avatarUrl role');
+        // Add global interpreters (available to everyone) and event-matched global support
+        if (['Recruiter', 'BoothAdmin'].includes(currentUser.role)) {
+            // Recruiter/BoothAdmin have individual assignedEvents - use those for matching
+            const userData = await User.findById(currentUser._id).select('assignedEvents');
+            const userEventIds = (userData?.assignedEvents || []).map(e => e.toString());
 
-        participants.push(...globalUsers);
+            const globalUsers = await User.find({
+                role: { $in: ['GlobalInterpreter', 'GlobalSupport'] },
+                isActive: true,
+                _id: { $ne: currentUser._id },
+                $or: [
+                    { role: 'GlobalInterpreter' },
+                    { role: 'GlobalSupport', assignedEvents: { $in: userEventIds } }
+                ]
+            }).select('name email avatarUrl role');
+            participants.push(...globalUsers);
+        } else if (currentUser.assignedBooth) {
+            // Support/Interpreter: use booth events for matching
+            const currentBooth = await Booth.findById(currentUser.assignedBooth._id).select('events eventId');
+            const boothEventIds = [...(currentBooth?.events || []).map(e => e.toString())];
+            if (currentBooth?.eventId) boothEventIds.push(currentBooth.eventId.toString());
+
+            const globalUsers = await User.find({
+                role: { $in: ['GlobalInterpreter', 'GlobalSupport'] },
+                isActive: true,
+                _id: { $ne: currentUser._id },
+                $or: [
+                    { role: 'GlobalInterpreter' },
+                    { role: 'GlobalSupport', assignedEvents: { $in: boothEventIds } }
+                ]
+            }).select('name email avatarUrl role');
+            participants.push(...globalUsers);
+        } else {
+            // No booth and not Recruiter/BoothAdmin - only add GlobalInterpreter
+            const globalUsers = await User.find({
+                role: 'GlobalInterpreter',
+                isActive: true,
+                _id: { $ne: currentUser._id }
+            }).select('name email avatarUrl role');
+            participants.push(...globalUsers);
+        }
 
         // Remove duplicates based on _id
         const uniqueParticipants = participants.filter((user, index, self) =>

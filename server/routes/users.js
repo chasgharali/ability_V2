@@ -1176,7 +1176,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             targetUser.assignedBooth = null;
         }
 
-        // Handle assignedEvents for Recruiter/BoothAdmin roles
+        // Handle assignedEvents for Recruiter/BoothAdmin/GlobalSupport roles
         if (['Recruiter', 'BoothAdmin'].includes(effectiveRole)) {
             if (assignedEvents !== undefined && Array.isArray(assignedEvents)) {
                 const Event = require('../models/Event');
@@ -1206,8 +1206,22 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
                     targetUser.assignedEvents = validEvents;
                 }
             }
+        } else if (effectiveRole === 'GlobalSupport') {
+            // GlobalSupport gets exactly one event (no booth validation needed)
+            if (assignedEvents !== undefined && Array.isArray(assignedEvents)) {
+                const Event = require('../models/Event');
+                const validEvents = [];
+                for (const eventId of assignedEvents) {
+                    const eventExists = await Event.findById(eventId).select('_id');
+                    if (eventExists) {
+                        validEvents.push(eventId);
+                    }
+                }
+                // Only allow a single event for GlobalSupport
+                targetUser.assignedEvents = validEvents.slice(0, 1);
+            }
         } else {
-            // Non-recruiter roles should not have assignedEvents
+            // Other roles should not have assignedEvents
             if (assignedEvents !== undefined) {
                 targetUser.assignedEvents = [];
             }
