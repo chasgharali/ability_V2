@@ -205,6 +205,23 @@ router.post('/register', [
             }
         }
 
+        // Validate assignedEvents for GlobalInterpreter
+        if (role === 'GlobalInterpreter') {
+            if (!assignedEvents || !Array.isArray(assignedEvents) || assignedEvents.length === 0) {
+                return res.status(400).json({
+                    error: 'Validation failed',
+                    message: 'Global Interpreter must be assigned to at least one event'
+                });
+            }
+            // Validate each event exists
+            for (const eventId of assignedEvents) {
+                const eventExists = await Event.findById(eventId).select('_id');
+                if (!eventExists) {
+                    return res.status(400).json({ error: 'Invalid event', message: 'One or more assigned events do not exist' });
+                }
+            }
+        }
+
         // Create new user
         // Store email exactly as user typed it (trimmed only, no normalization)
         const trimmedEmail = typeof email === 'string' ? email.trim() : email;
@@ -216,7 +233,7 @@ router.post('/register', [
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
             assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined,
-            assignedEvents: role === 'GlobalSupport' && assignedEvents ? assignedEvents : undefined,
+            assignedEvents: ['GlobalSupport', 'GlobalInterpreter'].includes(role) && assignedEvents ? assignedEvents : undefined,
             subscribeAnnouncements: subscribeAnnouncements !== undefined ? subscribeAnnouncements : false,
             // Store redirect path in metadata if provided (for event registration redirect after email verification)
             metadata: redirectPath ? { pendingRedirectPath: redirectPath } : {}

@@ -754,13 +754,14 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         // Search filter
         if (!getChatTitle(chat).toLowerCase().includes(searchQuery.toLowerCase())) return false;
         
-        // For direct chats, hide chats with GlobalSupport users not in the valid participants list
-        // This ensures existing chats with GlobalSupport from different events are hidden
+        // For direct chats, hide chats with GlobalSupport/GlobalInterpreter users not in the valid participants list
+        // This ensures existing chats with global roles from different events are hidden
         if (chat.type === 'direct') {
             const otherParticipant = chat.participants.find(p => p.user._id !== user?._id);
-            if (otherParticipant?.user?.role === 'GlobalSupport' || 
-                (user?.role === 'GlobalSupport' && otherParticipant?.user?.role)) {
-                // If current user is GlobalSupport or other user is GlobalSupport,
+            const globalRoles = ['GlobalSupport', 'GlobalInterpreter'];
+            if (globalRoles.includes(otherParticipant?.user?.role) || 
+                (globalRoles.includes(user?.role) && otherParticipant?.user?.role)) {
+                // If current user is a global role or other user is a global role,
                 // only show if the other user is in the valid participants list
                 if (otherParticipant?.user?._id && !validParticipantIds.has(otherParticipant.user._id)) {
                     return false;

@@ -1206,8 +1206,8 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
                     targetUser.assignedEvents = validEvents;
                 }
             }
-        } else if (effectiveRole === 'GlobalSupport') {
-            // GlobalSupport gets exactly one event (no booth validation needed)
+        } else if (['GlobalSupport', 'GlobalInterpreter'].includes(effectiveRole)) {
+            // GlobalSupport gets exactly one event, GlobalInterpreter can have multiple (no booth validation needed)
             if (assignedEvents !== undefined && Array.isArray(assignedEvents)) {
                 const Event = require('../models/Event');
                 const validEvents = [];
@@ -1217,8 +1217,8 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
                         validEvents.push(eventId);
                     }
                 }
-                // Only allow a single event for GlobalSupport
-                targetUser.assignedEvents = validEvents.slice(0, 1);
+                // GlobalSupport: single event, GlobalInterpreter: multiple events
+                targetUser.assignedEvents = effectiveRole === 'GlobalSupport' ? validEvents.slice(0, 1) : validEvents;
             }
         } else {
             // Other roles should not have assignedEvents
