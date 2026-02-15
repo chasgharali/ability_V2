@@ -222,6 +222,32 @@ router.post('/register', [
             }
         }
 
+        // Validate assignedEvents for Support (optional, but validate if provided)
+        if (role === 'Support' && assignedEvents && Array.isArray(assignedEvents) && assignedEvents.length > 0) {
+            // Validate each event exists
+            for (const eventId of assignedEvents) {
+                const eventExists = await Event.findById(eventId).select('_id');
+                if (!eventExists) {
+                    return res.status(400).json({ error: 'Invalid event', message: 'One or more assigned events do not exist' });
+                }
+            }
+            // Validate events belong to the assigned booth
+            if (assignedBooth) {
+                const booth = await Booth.findById(assignedBooth).select('events eventId');
+                const boothEventIds = (booth?.events || []).map(e => e.toString());
+                if (booth?.eventId) {
+                    boothEventIds.push(booth.eventId.toString());
+                }
+                const invalidEvents = assignedEvents.filter(e => !boothEventIds.includes(e.toString()));
+                if (invalidEvents.length > 0) {
+                    return res.status(400).json({
+                        error: 'Invalid event assignment',
+                        message: 'One or more assigned events do not belong to the selected booth'
+                    });
+                }
+            }
+        }
+
         // Create new user
         // Store email exactly as user typed it (trimmed only, no normalization)
         const trimmedEmail = typeof email === 'string' ? email.trim() : email;
@@ -233,7 +259,7 @@ router.post('/register', [
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
             assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined,
-            assignedEvents: ['GlobalSupport', 'GlobalInterpreter'].includes(role) && assignedEvents ? assignedEvents : undefined,
+            assignedEvents: ['GlobalSupport', 'GlobalInterpreter', 'Support'].includes(role) && assignedEvents ? assignedEvents : undefined,
             subscribeAnnouncements: subscribeAnnouncements !== undefined ? subscribeAnnouncements : false,
             // Store redirect path in metadata if provided (for event registration redirect after email verification)
             metadata: redirectPath ? { pendingRedirectPath: redirectPath } : {}

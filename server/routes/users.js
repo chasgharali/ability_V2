@@ -1176,8 +1176,8 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             targetUser.assignedBooth = null;
         }
 
-        // Handle assignedEvents for Recruiter/BoothAdmin/GlobalSupport roles
-        if (['Recruiter', 'BoothAdmin'].includes(effectiveRole)) {
+        // Handle assignedEvents for Recruiter/BoothAdmin/Support/GlobalSupport roles
+        if (['Recruiter', 'BoothAdmin', 'Support'].includes(effectiveRole)) {
             if (assignedEvents !== undefined && Array.isArray(assignedEvents)) {
                 const Event = require('../models/Event');
                 const validEvents = [];

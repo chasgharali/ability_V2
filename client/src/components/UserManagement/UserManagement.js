@@ -425,7 +425,7 @@ export default function UserManagement() {
   // Fetch booth events when booth is selected for Recruiter/BoothAdmin
   useEffect(() => {
     const fetchBoothEventsForRole = async () => {
-      if (form.boothId && ['Recruiter', 'BoothAdmin'].includes(form.role)) {
+      if (form.boothId && ['Recruiter', 'BoothAdmin', 'Support'].includes(form.role)) {
         try {
           const events = await getBoothEvents(form.boothId);
           setBoothEvents(events.map(e => ({ value: e._id, label: e.name })));
@@ -785,8 +785,8 @@ export default function UserManagement() {
         if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
           payload.assignedBooth = form.boothId || undefined;
         }
-        // Assign events for Recruiter, BoothAdmin, and GlobalInterpreter roles
-        if (['Recruiter', 'BoothAdmin', 'GlobalInterpreter'].includes(form.role)) {
+        // Assign events for Recruiter, BoothAdmin, Support, and GlobalInterpreter roles
+        if (['Recruiter', 'BoothAdmin', 'Support', 'GlobalInterpreter'].includes(form.role)) {
           payload.assignedEvents = form.selectedEvents || [];
         }
         // Assign single event for GlobalSupport role
@@ -814,8 +814,8 @@ export default function UserManagement() {
           }
           payload.assignedBooth = form.boothId;
         }
-        // Assign events for Recruiter, BoothAdmin, and GlobalInterpreter roles
-        if (['Recruiter', 'BoothAdmin', 'GlobalInterpreter'].includes(form.role)) {
+        // Assign events for Recruiter, BoothAdmin, Support, and GlobalInterpreter roles
+        if (['Recruiter', 'BoothAdmin', 'Support', 'GlobalInterpreter'].includes(form.role)) {
           payload.assignedEvents = form.selectedEvents || [];
         }
         // Assign single event for GlobalSupport role
@@ -1289,15 +1289,15 @@ export default function UserManagement() {
                 </div>
                 <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} disabled={['GlobalSupport', 'GlobalInterpreter'].includes(form.role)} />
                 
-                {/* Multi-select events for Recruiter/BoothAdmin when booth is selected */}
-                {['Recruiter', 'BoothAdmin'].includes(form.role) && form.boothId && (
+                {/* Multi-select events for Recruiter/BoothAdmin/Support when booth is selected */}
+                {['Recruiter', 'BoothAdmin', 'Support'].includes(form.role) && form.boothId && (
                   <>
                     <MultiSelect
                       label="Select Events"
                       value={form.selectedEvents}
                       onChange={(e) => setField('selectedEvents', e.target.value)}
                       options={boothEvents}
-                      placeholder={boothEvents.length === 0 ? 'No events assigned to this booth' : 'Select events for this recruiter'}
+                      placeholder={boothEvents.length === 0 ? 'No events assigned to this booth' : 'Select events for this user'}
                       name="selectedEvents"
                       required
                     />
@@ -1318,7 +1318,9 @@ export default function UserManagement() {
                 )}
                 
                 {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
-                <Select label="Select Event" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={!['AdminEvent', 'GlobalSupport'].includes(form.role)} required={form.role === 'GlobalSupport'} />
+                {!['Recruiter', 'BoothAdmin', 'Support', 'GlobalInterpreter'].includes(form.role) && (
+                  <Select label="Select Event" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={!['AdminEvent', 'GlobalSupport'].includes(form.role)} required={form.role === 'GlobalSupport'} />
+                )}
                 <ButtonComponent 
                   cssClass="e-primary" 
                   disabled={loading}
