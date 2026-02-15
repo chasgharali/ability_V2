@@ -2747,6 +2747,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             userRole={callInfo?.userRole || user?.role}
             interpreterRequested={callInfo?.metadata?.interpreterRequested}
             boothId={boothId}
+            eventId={callInfo?.event?._id}
           />
         );
       })()}

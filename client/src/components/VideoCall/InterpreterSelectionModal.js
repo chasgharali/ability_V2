@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useSocket } from '../../contexts/SocketContext';
 import './InterpreterSelectionModal.css';
 
-const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCategory }) => {
+const InterpreterSelectionModal = ({ onClose, onInvite, boothId, eventId, interpreterCategory }) => {
   const [interpreters, setInterpreters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,7 +66,7 @@ const InterpreterSelectionModal = ({ onClose, onInvite, boothId, interpreterCate
       }
 
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/video-call/available-interpreters/${boothId}`, {
+      const response = await axios.get(`/api/video-call/available-interpreters/${boothId}?eventId=${eventId || ''}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

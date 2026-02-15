@@ -10,7 +10,8 @@ const ParticipantsList = ({
   onInviteInterpreter,
   userRole,
   interpreterRequested,
-  boothId
+  boothId,
+  eventId
 }) => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -516,6 +517,7 @@ const ParticipantsList = ({
       {showInviteModal && (
         <InterpreterSelectionModal
           boothId={boothId}
+          eventId={eventId}
           interpreterCategory={selectedCategory}
           onClose={() => setShowInviteModal(false)}
           onInvite={handleInviteInterpreter}

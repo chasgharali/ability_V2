@@ -353,10 +353,22 @@ router.get('/available-interpreters/:boothId', auth, async (req, res) => {
       isActive: true
     }).select('_id name email role languages isAvailable');
 
-    // Find global interpreters (show all active, regardless of availability)
+    // Find global interpreters in the same event as the current call
+    const { eventId } = req.query;
+    let filterEventIds;
+    if (eventId) {
+      // Use the specific call event for filtering
+      filterEventIds = [eventId];
+    } else {
+      // Fallback: use the recruiter's assigned events
+      const requestingUser = await User.findById(req.user._id).select('assignedEvents');
+      filterEventIds = (requestingUser?.assignedEvents || []).map(e => e.toString());
+    }
+
     const globalInterpreters = await User.find({
       role: 'GlobalInterpreter',
-      isActive: true
+      isActive: true,
+      ...(filterEventIds.length > 0 ? { assignedEvents: { $in: filterEventIds } } : { _id: null }) // no events = no global interpreters
     }).select('_id name email role languages isAvailable');
 
     // Get all interpreters currently in active meetings
