@@ -14,7 +14,7 @@ import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { Input, Select, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections, bulkDeleteBooths } from '../../services/booths';
-import { uploadBoothLogoToS3, uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
+import { uploadBoothLogoToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
 import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { 
   RichTextEditorComponent as RTE, 
@@ -33,7 +33,7 @@ import {
   FormatPainter,
   Inject as RTEInject 
 } from '@syncfusion/ej2-react-richtexteditor';
-import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
+import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertImageSettings, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
 import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 
@@ -105,8 +105,6 @@ export default function BoothManagement() {
   const rteFirstRef = React.useRef(null);
   const rteSecondRef = React.useRef(null);
   const rteThirdRef = React.useRef(null);
-  const hiddenImageInputRef = React.useRef(null);
-  const [activeRteRef, setActiveRteRef] = useState(null);
 
   // Upload progress state for video/audio
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -122,8 +120,8 @@ export default function BoothManagement() {
     ? window.location.origin
     : 'https://abilityjobfair.com';
 
-  // Build toolbar per instance to wire custom S3 image upload action
-  const buildRteToolbar = (onInsertImage) => ({
+  // Memoize toolbar settings so Syncfusion RTE doesn't reinitialize on every render
+  const rteToolbarSettings = useMemo(() => ({
     type: 'Expand',
     enableFloating: true,
     items: [
@@ -135,43 +133,54 @@ export default function BoothManagement() {
       'Formats', 'Alignments', '|',
       'OrderedList', 'UnorderedList', '|',
       'Outdent', 'Indent', '|',
-      'CreateLink',
-      { id: 'custom-image-booth', tooltipText: 'Insert Image', template: '<button class="e-tbar-btn e-btn" tabindex="-1"><span class="e-icons e-image e-btn-icon"></span></button>', click: onInsertImage },
-      'Video', 'Audio', '|',
+      'CreateLink', 'Image', 'Video', 'Audio', '|',
       'CreateTable', '|',
       'EmojiPicker', '|',
       'ClearFormat', '|',
       'Print', 'FullScreen', '|',
       'SourceCode'
     ]
-  });
+  }), []);
 
-  const openImagePickerFor = (rteRef) => {
-    setActiveRteRef(rteRef);
-    hiddenImageInputRef.current?.click();
-  };
-  const onHiddenImagePicked = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file || !activeRteRef?.current) return;
-    try {
-      setBoothSaving(true);
-      const { downloadUrl } = await uploadImageToS3(file);
-      // Insert image at cursor
-      try {
-        activeRteRef.current.executeCommand('insertImage', { url: downloadUrl, altText: file.name });
-      } catch {
-        activeRteRef.current.executeCommand('insertHTML', `<img src="${downloadUrl}" alt="${file.name}" />`);
-      }
-      showToast('Image inserted', 'Success', 2000);
-    } catch (err) {
-      console.error('RTE image upload failed', err);
-      showToast('Failed to upload image', 'Error', 4000);
-    } finally {
-      setBoothSaving(false);
-      setActiveRteRef(null);
+  /** Add auth header so Syncfusion's built-in uploader can reach POST /api/uploads/rte-image */
+  const handleImageUploading = useCallback((args) => {
+    const token = localStorage.getItem('token');
+    if (args.currentRequest && token) {
+      args.currentRequest.setRequestHeader('Authorization', `Bearer ${token}`);
     }
-  };
+  }, []);
+
+  /** After Syncfusion upload succeeds, replace the blob src with the stable proxy URL from server */
+  const handleImageUploadSuccess = useCallback((args) => {
+    try {
+      const response = JSON.parse(args.e?.currentTarget?.response || '{}');
+      if (response.url) {
+        // Update file name so Syncfusion constructs the correct URL (path + file.name)
+        // Server returns url like '/api/uploads/rte-content/image/<userId>/<uuid>_<file>'
+        // With path='/api/uploads/rte-content/', file.name should be the key portion
+        if (args.file) {
+          const key = response.url.replace(/^\/api\/uploads\/rte-content\//, '');
+          args.file.name = key;
+        }
+        // Also directly set the element src as a safety measure
+        if (args.element) {
+          args.element.src = response.url;
+        }
+        // Sync RTE content back to form state after DOM update
+        setTimeout(() => {
+          setBoothForm(prev => {
+            const updates = {};
+            try { if (rteFirstRef.current?.inputElement) updates.firstHtml = rteFirstRef.current.inputElement.innerHTML; } catch (e) { /* ignore */ }
+            try { if (rteSecondRef.current?.inputElement) updates.secondHtml = rteSecondRef.current.inputElement.innerHTML; } catch (e) { /* ignore */ }
+            try { if (rteThirdRef.current?.inputElement) updates.thirdHtml = rteThirdRef.current.inputElement.innerHTML; } catch (e) { /* ignore */ }
+            return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+          });
+        }, 500);
+      }
+    } catch (err) {
+      console.error('Failed to set image URL from server response:', err);
+    }
+  }, []);
 
   /** Handle file upload for video/audio with progress tracking */
   const handleFileUploading = useCallback(async (args, rteRef) => {
@@ -499,9 +508,24 @@ export default function BoothManagement() {
         }
       }
 
+      // Read the latest HTML directly from RTE content areas.
+      // Image upload success handlers update the DOM img src attribute directly,
+      // which may not trigger a React state update via the RTE change event.
+      // This ensures we save the correct server URLs instead of blob: URLs.
+      const getLatestRteHtml = (ref, fallback) => {
+        try {
+          if (ref?.current?.inputElement) return ref.current.inputElement.innerHTML;
+          if (ref?.current?.value != null) return ref.current.value;
+        } catch (e) { /* fall through */ }
+        return fallback;
+      };
+      const latestFirstHtml = getLatestRteHtml(rteFirstRef, boothForm.firstHtml);
+      const latestSecondHtml = getLatestRteHtml(rteSecondRef, boothForm.secondHtml);
+      const latestThirdHtml = getLatestRteHtml(rteThirdRef, boothForm.thirdHtml);
+
       const payload = {
         name: boothForm.boothName,
-        description: boothForm.firstHtml || '',
+        description: latestFirstHtml || '',
         logoUrl: boothForm.boothLogo || undefined,
         eventIds: boothForm.eventIds,
         companyPage: boothForm.companyPage || undefined,
@@ -510,9 +534,9 @@ export default function BoothManagement() {
         customInviteSlug: sanitizeInvite(boothForm.customInviteText || ''),
         joinBoothButtonLink: boothForm.joinBoothButtonLink || '',
         richSections: [
-          { title: 'First Placeholder', contentHtml: boothForm.firstHtml || '' },
-          { title: 'Second Placeholder', contentHtml: boothForm.secondHtml || '' },
-          { title: 'Third Placeholder', contentHtml: boothForm.thirdHtml || '' },
+          { title: 'First Placeholder', contentHtml: latestFirstHtml || '' },
+          { title: 'Second Placeholder', contentHtml: latestSecondHtml || '' },
+          { title: 'Third Placeholder', contentHtml: latestThirdHtml || '' },
         ],
       };
       if (editingBoothId) {
@@ -1569,8 +1593,9 @@ export default function BoothManagement() {
                         ref={rteFirstRef}
                         value={boothForm.firstHtml}
                         change={(e) => setBoothField('firstHtml', e?.value || '')}
-                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteFirstRef))}
+                        toolbarSettings={rteToolbarSettings}
                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertImageSettings={getInsertImageSettings()}
                         insertVideoSettings={getInsertVideoSettings()}
                         insertAudioSettings={getInsertAudioSettings()}
                         height={550}
@@ -1578,6 +1603,8 @@ export default function BoothManagement() {
                         enableXhtml={true}
                         keyDown={handleRteKeyDown}
                         fileUploading={(args) => handleFileUploading(args, rteFirstRef)}
+                        imageUploading={handleImageUploading}
+                        imageUploadSuccess={handleImageUploadSuccess}
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
@@ -1588,8 +1615,9 @@ export default function BoothManagement() {
                         ref={rteSecondRef}
                         value={boothForm.secondHtml}
                         change={(e) => setBoothField('secondHtml', e?.value || '')}
-                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteSecondRef))}
+                        toolbarSettings={rteToolbarSettings}
                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertImageSettings={getInsertImageSettings()}
                         insertVideoSettings={getInsertVideoSettings()}
                         insertAudioSettings={getInsertAudioSettings()}
                         height={550}
@@ -1597,6 +1625,8 @@ export default function BoothManagement() {
                         enableXhtml={true}
                         keyDown={handleRteKeyDown}
                         fileUploading={(args) => handleFileUploading(args, rteSecondRef)}
+                        imageUploading={handleImageUploading}
+                        imageUploadSuccess={handleImageUploadSuccess}
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
@@ -1607,8 +1637,9 @@ export default function BoothManagement() {
                         ref={rteThirdRef}
                         value={boothForm.thirdHtml}
                         change={(e) => setBoothField('thirdHtml', e?.value || '')}
-                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteThirdRef))}
+                        toolbarSettings={rteToolbarSettings}
                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertImageSettings={getInsertImageSettings()}
                         insertVideoSettings={getInsertVideoSettings()}
                         insertAudioSettings={getInsertAudioSettings()}
                         height={550}
@@ -1616,6 +1647,8 @@ export default function BoothManagement() {
                         enableXhtml={true}
                         keyDown={handleRteKeyDown}
                         fileUploading={(args) => handleFileUploading(args, rteThirdRef)}
+                        imageUploading={handleImageUploading}
+                        imageUploadSuccess={handleImageUploadSuccess}
                       >
                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
                       </RTE>
@@ -1869,8 +1902,6 @@ export default function BoothManagement() {
         newestOnTop={true}
       />
 
-      {/* hidden input for S3 image insert */}
-      <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
     </div>
   );
 }

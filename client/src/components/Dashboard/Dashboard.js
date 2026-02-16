@@ -22,7 +22,7 @@ import {
     FormatPainter,
     Inject as RTEInject 
 } from '@syncfusion/ej2-react-richtexteditor';
-import { getRteToolbarSettings, RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
+import { getRteToolbarSettings, RTE_QUICK_TOOLBAR_SETTINGS, getInsertImageSettings, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
 import { uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
 import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
@@ -265,6 +265,44 @@ const Dashboard = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadingFile, setUploadingFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+
+    /** Add auth header so Syncfusion's built-in uploader can reach POST /api/uploads/rte-image */
+    const handleImageUploading = useCallback((args) => {
+        const token = localStorage.getItem('token');
+        if (args.currentRequest && token) {
+            args.currentRequest.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
+    }, []);
+
+    /** After Syncfusion upload succeeds, replace the blob src with the stable proxy URL from server */
+    const handleImageUploadSuccess = useCallback((args) => {
+        try {
+            const response = JSON.parse(args.e?.currentTarget?.response || '{}');
+            if (response.url) {
+                // Update file name so Syncfusion constructs the correct URL (path + file.name)
+                if (args.file) {
+                    const key = response.url.replace(/^\/api\/uploads\/rte-content\//, '');
+                    args.file.name = key;
+                }
+                // Also directly set the element src as a safety measure
+                if (args.element) {
+                    args.element.src = response.url;
+                }
+                // Sync RTE content back to form state after DOM update
+                setTimeout(() => {
+                    setBoothForm(prev => {
+                        const updates = {};
+                        try { if (rteFirstRef.current?.inputElement) updates.firstHtml = rteFirstRef.current.inputElement.innerHTML; } catch (e) { /* ignore */ }
+                        try { if (rteSecondRef.current?.inputElement) updates.secondHtml = rteSecondRef.current.inputElement.innerHTML; } catch (e) { /* ignore */ }
+                        try { if (rteThirdRef.current?.inputElement) updates.thirdHtml = rteThirdRef.current.inputElement.innerHTML; } catch (e) { /* ignore */ }
+                        return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+                    });
+                }, 500);
+            }
+        } catch (err) {
+            console.error('Failed to set image URL from server response:', err);
+        }
+    }, []);
 
     /** Handle file upload for video/audio with progress tracking */
     const handleFileUploading = useCallback(async (args, rteRef) => {
@@ -869,11 +907,14 @@ const Dashboard = () => {
                                                         change={(e) => setBoothField('firstHtml', e?.value)}
                                                         toolbarSettings={getRteToolbarSettings()}
                                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        insertImageSettings={getInsertImageSettings()}
                                                         insertVideoSettings={getInsertVideoSettings()}
                                                         insertAudioSettings={getInsertAudioSettings()}
                                                         height={550}
                                                         enableXhtml={true}
                                                         fileUploading={(args) => handleFileUploading(args, rteFirstRef)}
+                                                        imageUploading={handleImageUploading}
+                                                        imageUploadSuccess={handleImageUploadSuccess}
                                                         keyDown={handleRteKeyDown}
                                                     >
                                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
@@ -886,11 +927,14 @@ const Dashboard = () => {
                                                         change={(e) => setBoothField('secondHtml', e?.value)}
                                                         toolbarSettings={getRteToolbarSettings()}
                                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        insertImageSettings={getInsertImageSettings()}
                                                         insertVideoSettings={getInsertVideoSettings()}
                                                         insertAudioSettings={getInsertAudioSettings()}
                                                         height={550}
                                                         enableXhtml={true}
                                                         fileUploading={(args) => handleFileUploading(args, rteSecondRef)}
+                                                        imageUploading={handleImageUploading}
+                                                        imageUploadSuccess={handleImageUploadSuccess}
                                                         keyDown={handleRteKeyDown}
                                                     >
                                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
@@ -903,11 +947,14 @@ const Dashboard = () => {
                                                         change={(e) => setBoothField('thirdHtml', e?.value)}
                                                         toolbarSettings={getRteToolbarSettings()}
                                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                                        insertImageSettings={getInsertImageSettings()}
                                                         insertVideoSettings={getInsertVideoSettings()}
                                                         insertAudioSettings={getInsertAudioSettings()}
                                                         height={550}
                                                         enableXhtml={true}
                                                         fileUploading={(args) => handleFileUploading(args, rteThirdRef)}
+                                                        imageUploading={handleImageUploading}
+                                                        imageUploadSuccess={handleImageUploadSuccess}
                                                         keyDown={handleRteKeyDown}
                                                     >
                                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />

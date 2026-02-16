@@ -2,8 +2,22 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
 const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
+
+// Multer configured for memory storage (files buffered in RAM then streamed to S3)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    fileFilter: (_req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'), false);
+        }
+    }
+});
 
 const router = express.Router();
 
@@ -322,6 +336,72 @@ router.get('/stream', authenticateTokenFromHeaderOrQuery, async (req, res) => {
             error: 'Failed to stream file',
             message: 'An error occurred while preparing the stream'
         });
+    }
+});
+
+/**
+ * GET /api/uploads/rte-content/*
+ * Public image proxy for RTE-embedded images.
+ * No authentication required so images render for all viewers (e.g. job seekers on booth pages).
+ * Only serves keys that start with 'image/' for security.
+ * Generates a fresh short-lived presigned URL and redirects to it.
+ */
+router.get('/rte-content/*', async (req, res) => {
+    try {
+        const key = req.params[0];
+        if (!key || !key.startsWith('image/')) {
+            return res.status(400).json({ error: 'Invalid key', message: 'Only image keys are allowed' });
+        }
+
+        // Verify the object exists
+        await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
+
+        // Generate a short-lived presigned URL and redirect
+        const url = s3.getSignedUrl('getObject', {
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Expires: 3600 // 1 hour
+        });
+
+        return res.redirect(302, url);
+    } catch (error) {
+        if (error.code === 'NotFound' || error.code === 'NoSuchKey') {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+        logger.error('RTE content image proxy error:', error);
+        return res.status(500).json({ error: 'Failed to serve image' });
+    }
+});
+
+/**
+ * POST /api/uploads/rte-image
+ * Receive an image from Syncfusion RTE's built-in uploader, store it in S3,
+ * and return a stable proxy URL that never expires.
+ * Syncfusion sends the file in a field named "UploadFiles".
+ */
+router.post('/rte-image', authenticateTokenFromHeaderOrQuery, upload.single('UploadFiles'), async (req, res) => {
+    try {
+        const file = req.file;
+        if (!file) {
+            return res.status(400).json({ error: 'No image file provided' });
+        }
+
+        const userId = req.user?.id || req.user?._id || 'anonymous';
+        const safeName = (file.originalname || 'image.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+        const key = `image/${userId}/${uuidv4()}_${safeName}`;
+
+        await s3.putObject({
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Body: file.buffer,
+            ContentType: file.mimetype || 'image/jpeg',
+        }).promise();
+
+        // Return the stable proxy URL (served by GET /rte-content/*)
+        return res.status(200).json({ url: `/api/uploads/rte-content/${key}` });
+    } catch (error) {
+        logger.error('RTE image upload error:', error);
+        return res.status(500).json({ error: 'Image upload failed' });
     }
 });
 

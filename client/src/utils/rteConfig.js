@@ -114,11 +114,10 @@ export const RTE_QUICK_TOOLBAR_SETTINGS = {
  */
 export const getInsertImageSettings = (apiBaseUrl = '') => ({
   saveUrl: `${apiBaseUrl}/api/uploads/rte-image`,
-  removeUrl: `${apiBaseUrl}/api/uploads/rte-remove`,
+  path: '/api/uploads/rte-content/',
   display: 'inline',
   width: 'auto',
   height: 'auto',
-  saveFormat: 'Base64', // Will be overridden by custom upload handler
   allowedTypes: ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.svg'],
   resize: true,
   resizeByPercent: true,

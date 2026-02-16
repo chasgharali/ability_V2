@@ -346,15 +346,28 @@ router.get('/available-interpreters/:boothId', auth, async (req, res) => {
     const { boothId } = req.params;
     const io = req.app.get('io');
 
-    // Find booth-assigned interpreters (show all active, regardless of availability)
-    const boothInterpreters = await User.find({
+    // Find booth-assigned interpreters filtered by event
+    const { eventId } = req.query;
+    const boothInterpretersQuery = {
       role: 'Interpreter',
       assignedBooth: boothId,
       isActive: true
-    }).select('_id name email role languages isAvailable');
+    };
+
+    // If eventId provided, filter booth interpreters by event assignment
+    // Include interpreters with no assignedEvents (legacy) OR those assigned to this event
+    if (eventId) {
+      boothInterpretersQuery.$or = [
+        { assignedEvents: { $in: [eventId] } },
+        { assignedEvents: { $exists: true, $size: 0 } },
+        { assignedEvents: { $exists: false } }
+      ];
+    }
+
+    const boothInterpreters = await User.find(boothInterpretersQuery)
+      .select('_id name email role languages isAvailable');
 
     // Find global interpreters in the same event as the current call
-    const { eventId } = req.query;
     let filterEventIds;
     if (eventId) {
       // Use the specific call event for filtering

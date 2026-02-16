@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import '../Dashboard/Dashboard.css';
 import './EventManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -27,7 +27,7 @@ import {
     FormatPainter,
     Inject as RTEInject 
 } from '@syncfusion/ej2-react-richtexteditor';
-import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
+import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertImageSettings, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
 import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
 import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
@@ -143,8 +143,6 @@ export default function EventManagement() {
 
     // RTE image upload helpers (Event Information editor)
     const rteInfoRef = useRef(null);
-    const hiddenImageInputRef = useRef(null);
-    const [activeRteRef, setActiveRteRef] = useState(null);
 
     const [form, setForm] = useState({
         sendyId: '',
@@ -175,8 +173,8 @@ export default function EventManagement() {
         }
     };
 
-    // RichTextEditor toolbar settings: Expand with floating toolbar and comprehensive items
-    const buildRteToolbar = (onInsertImage) => ({
+    // Memoize toolbar settings so Syncfusion RTE doesn't reinitialize on every render
+    const rteToolbarSettings = useMemo(() => ({
         type: 'Expand',
         enableFloating: true,
         items: [
@@ -188,41 +186,49 @@ export default function EventManagement() {
             'Formats', 'Alignments', '|',
             'OrderedList', 'UnorderedList', '|',
             'Outdent', 'Indent', '|',
-            'CreateLink',
-            { id: 'custom-image-event', tooltipText: 'Insert Image', template: '<button class="e-tbar-btn e-btn" tabindex="-1"><span class="e-icons e-image e-btn-icon"></span></button>', click: onInsertImage },
-            'Video', 'Audio', '|',
+            'CreateLink', 'Image', 'Video', 'Audio', '|',
             'CreateTable', '|',
             'EmojiPicker', '|',
             'ClearFormat', '|',
             'Print', 'FullScreen', '|',
             'SourceCode'
         ]
-    });
+    }), []);
 
-    const openImagePickerFor = (rteRef) => {
-        setActiveRteRef(rteRef);
-        hiddenImageInputRef.current?.click();
-    };
-
-    const onHiddenImagePicked = async (e) => {
-        const file = e.target.files?.[0];
-        e.target.value = '';
-        if (!file || !activeRteRef?.current) return;
-        try {
-            const { downloadUrl } = await uploadImageToS3(file);
-            try {
-                activeRteRef.current.executeCommand('insertImage', { url: downloadUrl, altText: file.name });
-            } catch {
-                activeRteRef.current.executeCommand('insertHTML', `<img src="${downloadUrl}" alt="${file.name}" />`);
-            }
-            showToast('Image inserted');
-        } catch (err) {
-            console.error('Event RTE image upload failed', err);
-            showToast('Failed to upload image');
-        } finally {
-            setActiveRteRef(null);
+    /** Add auth header so Syncfusion's built-in uploader can reach POST /api/uploads/rte-image */
+    const handleImageUploading = useCallback((args) => {
+        const token = localStorage.getItem('token');
+        if (args.currentRequest && token) {
+            args.currentRequest.setRequestHeader('Authorization', `Bearer ${token}`);
         }
-    };
+    }, []);
+
+    /** After Syncfusion upload succeeds, replace the blob src with the stable proxy URL from server */
+    const handleImageUploadSuccess = useCallback((args) => {
+        try {
+            const response = JSON.parse(args.e?.currentTarget?.response || '{}');
+            if (response.url) {
+                // Update file name so Syncfusion constructs the correct URL (path + file.name)
+                if (args.file) {
+                    const key = response.url.replace(/^\/api\/uploads\/rte-content\//, '');
+                    args.file.name = key;
+                }
+                // Also directly set the element src as a safety measure
+                if (args.element) {
+                    args.element.src = response.url;
+                }
+                // Sync RTE content back to form state after DOM update
+                setTimeout(() => {
+                    try {
+                        const html = rteInfoRef.current?.inputElement?.innerHTML;
+                        if (html != null) setField('information', html);
+                    } catch (e) { /* ignore */ }
+                }, 500);
+            }
+        } catch (err) {
+            console.error('Failed to set image URL from server response:', err);
+        }
+    }, []);
 
     /** Handle file upload for video/audio with progress tracking */
     const handleFileUploading = useCallback(async (args) => {
@@ -890,10 +896,19 @@ export default function EventManagement() {
             // We need to convert it to ISO string for the server
             const startISO = form.startTime ? new Date(form.startTime).toISOString() : undefined;
             const endISO = form.endTime ? new Date(form.endTime).toISOString() : undefined;
+
+            // Read the latest HTML directly from RTE content area.
+            // Image upload success handlers update the DOM img src attribute directly,
+            // which may not trigger a React state update via the RTE change event.
+            let latestInfo = form.information;
+            try {
+                if (rteInfoRef.current?.inputElement) latestInfo = rteInfoRef.current.inputElement.innerHTML;
+                else if (rteInfoRef.current?.value != null) latestInfo = rteInfoRef.current.value;
+            } catch (e) { /* fall through */ }
             
             const payload = {
                 name: form.name,
-                description: form.information,
+                description: latestInfo,
                 start: startISO,
                 end: endISO,
                 logoUrl: form.logoUrl || undefined,
@@ -1488,13 +1503,16 @@ export default function EventManagement() {
                                         value={form.information}
                                         change={(e) => setField('information', e?.value || '')}
                                         placeholder="Type event details..."
-                                        toolbarSettings={buildRteToolbar(() => openImagePickerFor(rteInfoRef))}
+                                        toolbarSettings={rteToolbarSettings}
                                         quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                                        insertImageSettings={getInsertImageSettings()}
                                         insertVideoSettings={getInsertVideoSettings()}
                                         insertAudioSettings={getInsertAudioSettings()}
                                         height={550}
                                         enableXhtml={true}
                                         fileUploading={handleFileUploading}
+                                        imageUploading={handleImageUploading}
+                                        imageUploadSuccess={handleImageUploadSuccess}
                                         keyDown={handleRteKeyDown}
                                     >
                                         <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
@@ -1605,8 +1623,6 @@ export default function EventManagement() {
                 timeOut={3000}
                 newestOnTop={true}
             />
-            {/* hidden input for S3 image insert */}
-            <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
         </div>
     );
 }

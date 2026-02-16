@@ -19,6 +19,7 @@ export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   
   // Keep selectedUsers state but minimize updates to prevent blinking
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -425,7 +426,7 @@ export default function UserManagement() {
   // Fetch booth events when booth is selected for Recruiter/BoothAdmin
   useEffect(() => {
     const fetchBoothEventsForRole = async () => {
-      if (form.boothId && ['Recruiter', 'BoothAdmin', 'Support'].includes(form.role)) {
+      if (form.boothId && ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
         try {
           const events = await getBoothEvents(form.boothId);
           setBoothEvents(events.map(e => ({ value: e._id, label: e.name })));
@@ -770,6 +771,27 @@ export default function UserManagement() {
       return;
     }
 
+    // Validate role-specific fields before submitting
+    if (!editingId) {
+      if (!form.role) {
+        showToast('Please select a role', 'Error');
+        return;
+      }
+      if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role) && !form.boothId) {
+        showToast('Please select a booth for this role', 'Error');
+        return;
+      }
+      if (form.role === 'GlobalSupport' && !form.eventId) {
+        showToast('Please select an event for Global Support', 'Error');
+        return;
+      }
+      if (form.role === 'GlobalInterpreter' && (!form.selectedEvents || form.selectedEvents.length === 0)) {
+        showToast('Please select at least one event for Global Interpreter', 'Error');
+        return;
+      }
+    }
+
+    setSubmitting(true);
     try {
       if (editingId) {
         const payload = {
@@ -785,8 +807,8 @@ export default function UserManagement() {
         if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
           payload.assignedBooth = form.boothId || undefined;
         }
-        // Assign events for Recruiter, BoothAdmin, Support, and GlobalInterpreter roles
-        if (['Recruiter', 'BoothAdmin', 'Support', 'GlobalInterpreter'].includes(form.role)) {
+        // Assign events for Recruiter, BoothAdmin, Support, Interpreter, and GlobalInterpreter roles
+        if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalInterpreter'].includes(form.role)) {
           payload.assignedEvents = form.selectedEvents || [];
         }
         // Assign single event for GlobalSupport role
@@ -796,10 +818,6 @@ export default function UserManagement() {
         await updateUser(editingId, payload);
         showToast('User updated', 'Success');
       } else {
-        if (!form.role) {
-          showToast('Please select a role', 'Error');
-          return;
-        }
         const payload = {
           name: fullName,
           email: form.email,
@@ -808,28 +826,15 @@ export default function UserManagement() {
         };
         // Assign booth for Recruiter, BoothAdmin, Support, and Interpreter roles
         if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)) {
-          if (!form.boothId) {
-            showToast('Please select a booth for this role', 'Error');
-            return;
-          }
           payload.assignedBooth = form.boothId;
         }
-        // Assign events for Recruiter, BoothAdmin, Support, and GlobalInterpreter roles
-        if (['Recruiter', 'BoothAdmin', 'Support', 'GlobalInterpreter'].includes(form.role)) {
+        // Assign events for Recruiter, BoothAdmin, Support, Interpreter, and GlobalInterpreter roles
+        if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalInterpreter'].includes(form.role)) {
           payload.assignedEvents = form.selectedEvents || [];
         }
         // Assign single event for GlobalSupport role
         if (form.role === 'GlobalSupport') {
-          if (!form.eventId) {
-            showToast('Please select an event for Global Support', 'Error');
-            return;
-          }
           payload.assignedEvents = [form.eventId];
-        }
-        // Validate GlobalInterpreter has at least one event
-        if (form.role === 'GlobalInterpreter' && (!form.selectedEvents || form.selectedEvents.length === 0)) {
-          showToast('Please select at least one event for Global Interpreter', 'Error');
-          return;
         }
         await createUser(payload);
         showToast('User created', 'Success');
@@ -842,6 +847,8 @@ export default function UserManagement() {
       console.error('Save user failed', e);
       const msg = e?.response?.data?.message || 'Failed to save user';
       showToast(msg, 'Error', 5000);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -1289,8 +1296,8 @@ export default function UserManagement() {
                 </div>
                 <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} disabled={['GlobalSupport', 'GlobalInterpreter'].includes(form.role)} />
                 
-                {/* Multi-select events for Recruiter/BoothAdmin/Support when booth is selected */}
-                {['Recruiter', 'BoothAdmin', 'Support'].includes(form.role) && form.boothId && (
+                {/* Multi-select events for Recruiter/BoothAdmin/Support/Interpreter when booth is selected */}
+                {['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role) && form.boothId && (
                   <>
                     <MultiSelect
                       label="Select Events"
@@ -1318,16 +1325,23 @@ export default function UserManagement() {
                 )}
                 
                 {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
-                {!['Recruiter', 'BoothAdmin', 'Support', 'GlobalInterpreter'].includes(form.role) && (
+                {!['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalInterpreter'].includes(form.role) && (
                   <Select label="Select Event" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={!['AdminEvent', 'GlobalSupport'].includes(form.role)} required={form.role === 'GlobalSupport'} />
                 )}
                 <ButtonComponent 
                   cssClass="e-primary" 
-                  disabled={loading}
+                  disabled={submitting}
                   isPrimary={true}
                   onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
                 >
-                  {editingId ? 'Update User' : 'Create User'}
+                  {submitting ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="um-loading-spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+                      {editingId ? 'Updating...' : 'Creating...'}
+                    </span>
+                  ) : (
+                    editingId ? 'Update User' : 'Create User'
+                  )}
                 </ButtonComponent>
               </form>
             )}

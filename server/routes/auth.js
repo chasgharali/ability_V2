@@ -222,8 +222,8 @@ router.post('/register', [
             }
         }
 
-        // Validate assignedEvents for Support (optional, but validate if provided)
-        if (role === 'Support' && assignedEvents && Array.isArray(assignedEvents) && assignedEvents.length > 0) {
+        // Validate assignedEvents for Support/Interpreter (optional, but validate if provided)
+        if (['Support', 'Interpreter'].includes(role) && assignedEvents && Array.isArray(assignedEvents) && assignedEvents.length > 0) {
             // Validate each event exists
             for (const eventId of assignedEvents) {
                 const eventExists = await Event.findById(eventId).select('_id');
@@ -259,7 +259,7 @@ router.post('/register', [
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
             assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined,
-            assignedEvents: ['GlobalSupport', 'GlobalInterpreter', 'Support'].includes(role) && assignedEvents ? assignedEvents : undefined,
+            assignedEvents: ['GlobalSupport', 'GlobalInterpreter', 'Support', 'Interpreter'].includes(role) && assignedEvents ? assignedEvents : undefined,
             subscribeAnnouncements: subscribeAnnouncements !== undefined ? subscribeAnnouncements : false,
             // Store redirect path in metadata if provided (for event registration redirect after email verification)
             metadata: redirectPath ? { pendingRedirectPath: redirectPath } : {}

@@ -351,6 +351,8 @@
   flex-direction: column;
   justify-content: flex-start;
   transition: all 0.2s ease;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .content-card-expanded:hover {
@@ -363,10 +365,23 @@
   color: #374151;
   font-size: 0.875rem;
   line-height: 1.5;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .content-body p {
   margin: 0;
+}
+
+.content-body img,
+.content-body video,
+.content-body iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+.content-body .e-video-wrap {
+  max-width: 100%;
 }
 
 .content-placeholder {

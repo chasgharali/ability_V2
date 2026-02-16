@@ -88,9 +88,10 @@ export async function uploadImageToS3(file) {
     { headers }
   );
 
+  // Use stable proxy URL so images never expire in RTE HTML content
   return {
     key,
-    downloadUrl: completeRes?.data?.file?.downloadUrl || download?.url,
+    downloadUrl: `/api/uploads/rte-content/${key}`,
   };
 }
 
