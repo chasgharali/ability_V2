@@ -899,9 +899,7 @@ const JobSeekerInterests = () => {
     const exportToCSVClientSide = (recordsToExport) => {
         // CSV Headers (no "Job Seeker" prefix, no Recruiter columns)
         const csvHeaders = [
-            'Event ID',
             'Event Name',
-            'Booth ID',
             'Booth Name',
             'Company',
             'First Name',
@@ -1012,9 +1010,7 @@ const JobSeekerInterests = () => {
             const languagesDisplay = Array.isArray(profile?.languages) ? profile.languages.join('; ') : '';
 
             return [
-                escapeCSV(eventId),
                 escapeCSV(eventName),
-                escapeCSV(boothId),
                 escapeCSV(boothName),
                 escapeCSV(company),
                 escapeCSV(firstName),

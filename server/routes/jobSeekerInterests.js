@@ -1087,9 +1087,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
 
         // CSV Headers (no "Job Seeker" prefix, no Recruiter columns)
         const csvHeaders = [
-            'Event ID',
             'Event Name',
-            'Booth ID',
             'Booth Name',
             'Company',
             'First Name',
@@ -1402,9 +1400,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             }
 
             const row = [
-                escapeCSV(eventId),
                 escapeCSV(eventName),
-                escapeCSV(boothId),
                 escapeCSV(boothName),
                 escapeCSV(company),
                 escapeCSV(firstName),
