@@ -1187,8 +1187,11 @@ const JobSeekerInterests = () => {
     const getSelectedRecordsFromGrid = useCallback(() => {
         if (!gridRef.current) return [];
         try {
-            const selectedRows = gridRef.current.getSelectedRowsData();
-            return selectedRows.map(row => row._id || row.id).filter(Boolean);
+            if (typeof gridRef.current.getSelectedRecords === 'function') {
+                const rows = gridRef.current.getSelectedRecords();
+                return rows.map(row => String(row.id || row._id || '')).filter(Boolean);
+            }
+            return [];
         } catch (error) {
             console.error('Error getting selected rows:', error);
             return [];
@@ -1272,12 +1275,13 @@ const JobSeekerInterests = () => {
             // Get selected records from grid directly
             const selectedFromGrid = getSelectedRecordsFromGrid();
             console.log('📋 Selected records from grid:', selectedFromGrid);
+            console.log('📋 Selected interests from state:', selectedInterests);
 
             // Determine which records to process
             if (selectedFromGrid.length > 0) {
-                // Use selected records from grid - filter by IDs
+                // Use grid selection (primary source)
                 interestsToProcess = interests.filter(r => {
-                    const recordId = r._id || r.id;
+                    const recordId = String(r._id || r.id);
                     return selectedFromGrid.includes(recordId);
                 });
                 console.log(`✅ Exporting resumes for ${selectedFromGrid.length} selected record(s)`, {
@@ -1286,9 +1290,21 @@ const JobSeekerInterests = () => {
                     totalInterests: interests.length
                 });
                 showToast(`Exporting resumes for ${selectedFromGrid.length} selected job seeker(s)...`, 'Info', 2000);
+            } else if (selectedInterests.length > 0) {
+                // Fallback to state-tracked selection
+                const selectedIdsAsStrings = selectedInterests.map(id => String(id));
+                interestsToProcess = interests.filter(r => {
+                    const recordId = String(r._id || r.id);
+                    return selectedIdsAsStrings.includes(recordId);
+                });
+                console.log(`✅ Exporting resumes for ${selectedInterests.length} selected record(s) (from state)`, {
+                    selectedIds: selectedInterests,
+                    filteredRecords: interestsToProcess.length,
+                    totalInterests: interests.length
+                });
+                showToast(`Exporting resumes for ${selectedInterests.length} selected job seeker(s)...`, 'Info', 2000);
             } else {
                 // No selection - fetch all interests matching current filters (not paginated)
-                // This allows exporting all resumes for the selected event/filter without requiring row selection
                 const exportFilters = { ...filters };
                 
                 // Handle legacy event IDs (format: "legacy_<id>") - strip prefix before sending to API
@@ -1474,7 +1490,7 @@ const JobSeekerInterests = () => {
             
             // Generate filename based on filters
             let filename = 'job-seeker-resumes';
-            const selectedCount = selectedFromGrid.length;
+            const selectedCount = selectedFromGrid.length > 0 ? selectedFromGrid.length : selectedInterests.length;
             
             if (selectedCount > 0) {
                 filename = `selected-${selectedCount}-resumes`;
