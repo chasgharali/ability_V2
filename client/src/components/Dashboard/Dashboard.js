@@ -138,6 +138,8 @@ const Dashboard = () => {
     const [saveError, setSaveError] = useState('');
     const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
     const [errors, setErrors] = useState({});
+    const logoutButtonRef = useRef(null);
+    const lastTabDirectionRef = useRef('forward');
     const [accessibility, setAccessibility] = useState({
         usesScreenMagnifier: user?.usesScreenMagnifier || false,
         usesScreenReader: user?.usesScreenReader || false,
@@ -202,6 +204,17 @@ const Dashboard = () => {
             });
         }
     }, [user]);
+
+    useEffect(() => {
+        const handleGlobalTabDirection = (event) => {
+            if (event.key === 'Tab') {
+                lastTabDirectionRef.current = event.shiftKey ? 'backward' : 'forward';
+            }
+        };
+
+        document.addEventListener('keydown', handleGlobalTabDirection);
+        return () => document.removeEventListener('keydown', handleGlobalTabDirection);
+    }, []);
 
     // Fetch branding logo on mount
     useEffect(() => {
@@ -703,6 +716,12 @@ const Dashboard = () => {
         }
     };
 
+    const handleLogoutSentinelFocus = () => {
+        if (lastTabDirectionRef.current === 'forward' && logoutButtonRef.current) {
+            logoutButtonRef.current.focus();
+        }
+    };
+
     return (
         <>
             <Helmet>
@@ -1009,10 +1028,11 @@ const Dashboard = () => {
                         getDashboardContent()
                     )}
                 </main>
+                <span className="logout-focus-sentinel" tabIndex={0} onFocus={handleLogoutSentinelFocus} />
             </div>
 
             {/* Logout button placed after sidebar+main for correct tab order */}
-            <button onClick={handleLogout} className="logout-button dashboard-logout-end" aria-label="Logout">
+            <button ref={logoutButtonRef} onClick={handleLogout} className="logout-button dashboard-logout-end" aria-label="Logout">
                 <MdLogout />
             </button>
 

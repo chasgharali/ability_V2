@@ -516,27 +516,42 @@
 
 .password-toggle-btn {
   position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
+  right: 0.5rem;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  transform: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
   cursor: pointer;
-  padding: 0.25rem;
-  font-size: 1rem;
-  opacity: 0.6;
-  transition: opacity 0.15s ease;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  color: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   line-height: 1;
 }
 
 .password-toggle-btn:hover {
-  opacity: 1;
+  background: #f3f4f6;
+  color: #000000;
+}
+
+.password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .password-toggle-btn:focus {
   outline: 2px solid #000000;
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 
 .password-requirements {

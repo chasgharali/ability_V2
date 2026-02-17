@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
+import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import './MyAccountInline.css';
 import { countryCodes } from '../Auth/countryCodes';
 
@@ -733,8 +734,9 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                   className="password-toggle-btn"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                  aria-pressed={showCurrentPassword}
                 >
-                  {showCurrentPassword ? '👁️' : '👁️‍🗨️'}
+                  {showCurrentPassword ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -758,8 +760,9 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                     className="password-toggle-btn"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                    aria-pressed={showNewPassword}
                   >
-                    {showNewPassword ? '👁️' : '👁️‍🗨️'}
+                    {showNewPassword ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                   </button>
                 </div>
               </div>
@@ -780,8 +783,9 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                     className="password-toggle-btn"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    aria-pressed={showConfirmPassword}
                   >
-                    {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                    {showConfirmPassword ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                   </button>
                 </div>
               </div>

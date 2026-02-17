@@ -723,7 +723,7 @@ body .e-dlg-overlay.e-rte-dialog-overlay {
     padding: 8px;
     text-decoration: none;
     border-radius: 4px;
-    z-index: 1000;
+    z-index: 3000;
     font-weight: 600;
 }
 

@@ -1099,3 +1099,274 @@
 2026-02-01 17:24:04:244 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
 2026-02-01 17:26:16:2616 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
 2026-02-01 17:26:17:2617 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-17 14:15:48:1548 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:15:48:1548 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:15:51:1551 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 14:15:52:1552 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 14:15:52:1552 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:15:52:1552 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 14:15:55:1555 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 14:16:00:160 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-17 14:16:09:169 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:16:09:169 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:16:11:1611 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:16:12:1612 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 14:16:12:1612 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 14:16:13:1613 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-17 14:16:15:1615 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:16:15:1615 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 14:16:17:1617 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 14:16:21:1621 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:16:21:1621 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:16:23:1623 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:16:24:1624 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 14:16:24:1624 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 14:16:26:1626 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:16:26:1626 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:16:26:1626 [31merror[39m: [31mMongoDB connection failed: queryTxt ESERVFAIL cluster-ability.okhfe.mongodb.net[39m
+2026-02-17 14:16:26:1626 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 14:16:26:1626 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 14:16:36:1636 [31merror[39m: [31mSocket authentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:01:191 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:01:191 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:01:191 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:01:191 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:11:1911 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:11:1911 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:14:1914 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:21:1921 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-02-17 14:19:22:1922 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:22:1922 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:25:1925 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:19:25:1925 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:19:26:1926 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:26:1926 [31merror[39m: [31mAuthentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-02-17 14:19:55:1955 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-02-17 14:19:55:1955 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-02-17 14:19:55:1955 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:19:55:1955 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:19:55:1955 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:19:55:1955 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:19:55:1955 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:19:55:1955 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:19:55:1955 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:20:06:206 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:20:16:2016 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:20:26:2026 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:20:36:2036 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:20:47:2047 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:20:57:2057 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:21:07:217 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:21:18:2118 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:21:30:2130 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
+2026-02-17 14:21:32:2132 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-02-17 14:30:23:3023 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 14:30:23:3023 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 14:30:25:3025 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 14:30:26:3026 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 14:30:26:3026 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 14:30:40:3040 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-02-17 14:30:40:3040 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-02-17 14:30:47:3047 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-02-17 14:30:48:3048 [32minfo[39m: [32mFound 189 total users matching query, returning 189 for page 1[39m
+2026-02-17 14:30:48:3048 [32minfo[39m: [32mQuery returned 189 users out of 189 total matching query[39m
+2026-02-17 14:30:49:3049 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 0[39m
+2026-02-17 14:30:49:3049 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-02-17 14:30:50:3050 [32minfo[39m: [32mFound 189 total users matching query, returning 189 for page 1[39m
+2026-02-17 14:30:50:3050 [32minfo[39m: [32mQuery returned 189 users out of 189 total matching query[39m
+2026-02-17 14:30:50:3050 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 0[39m
+2026-02-17 14:32:04:324 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 14:32:47:3247 [32minfo[39m: [32mUser logged in: test.devjs@yopmail.com[39m
+2026-02-17 14:32:48:3248 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:32:59:3259 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 14:32:59:3259 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:32:59:3259 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 14:32:59:3259 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:38:49:3849 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 14:38:50:3850 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:45:55:4555 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 14:45:56:4556 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:45:58:4558 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 14:45:59:4559 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:46:01:461 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 14:46:02:462 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:46:02:462 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 14:46:02:462 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:46:29:4629 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 14:46:30:4630 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 14:55:54:5554 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 15:03:20:320 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 15:03:21:321 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 15:03:21:321 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 15:03:58:358 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 15:04:00:40 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 15:19:39:1939 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 15:35:51:3551 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-17 15:35:51:3551 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 15:50:11:5011 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 15:57:07:577 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 15:57:18:5718 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-17 15:57:18:5718 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 16:06:33:633 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 16:06:33:633 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 16:06:56:656 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-02-17 16:08:32:832 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-02-17 16:08:32:832 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mConnected to Redis[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-02-17 16:08:34:834 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-02-17 16:08:35:835 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 16:08:35:835 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 16:11:11:1111 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:11:12:1112 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 16:13:10:1310 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:13:10:1310 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 16:13:11:1311 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:14:03:143 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:14:04:144 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:14:05:145 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 16:14:05:145 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:14:38:1438 [32minfo[39m: [32mSurvey updated for user: test.devjs@yopmail.com[39m
+2026-02-17 16:19:46:1946 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:19:47:1947 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:19:47:1947 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 16:19:47:1947 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:19:50:1950 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:19:51:1951 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:19:55:1955 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:19:56:1956 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:20:09:209 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:20:10:2010 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:20:11:2011 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:20:12:2012 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:20:14:2014 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:20:15:2015 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:29:04:294 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:29:05:295 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 16:42:05:425 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 16:42:07:427 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-17 16:42:07:427 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 16:43:30:4330 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 16:43:32:4332 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:01:52:152 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:01:54:154 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:02:08:28 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:02:09:29 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:08:21:821 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:08:22:822 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:13:59:1359 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:14:01:141 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:21:48:2148 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:21:50:2150 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:23:33:2333 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:23:34:2334 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:25:21:2521 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:25:23:2523 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:25:43:2543 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:25:45:2545 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:25:48:2548 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:25:49:2549 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:25:49:2549 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 17:25:49:2549 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:35:02:352 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:35:04:354 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:35:17:3517 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:35:19:3519 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:35:39:3539 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:35:46:3546 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:35:46:3546 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:35:46:3546 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 17:35:47:3547 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:36:11:3611 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:36:12:3612 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:36:14:3614 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:38:37:3837 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 17:38:38:3838 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 17:45:11:4511 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 17:45:12:4512 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-17 17:45:12:4512 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 18:13:47:1347 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 18:13:49:1349 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:16:01:161 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 18:16:01:161 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 18:16:03:163 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-02-17 18:16:03:163 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-02-17 18:20:41:2041 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 18:25:39:2539 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:26:01:261 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:26:01:261 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 18:26:01:261 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:26:17:2617 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 18:26:18:2618 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:48:26:4826 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-02-17 18:48:27:4827 [32minfo[39m: [32mRedis Client Connected[39m
+2026-02-17 18:48:27:4827 [32minfo[39m: [32mRedis Client Ready[39m
+2026-02-17 18:49:01:491 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 18:49:02:492 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:52:08:528 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 18:52:09:529 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:52:16:5216 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-02-17 18:52:17:5217 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-02-17 18:52:31:5231 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-02-17 18:52:52:5252 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-02-17 18:52:52:5252 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m

@@ -37,7 +37,9 @@ code {
     color: #ffffff;
     padding: 8px;
     text-decoration: none;
-    z-index: 1000;
+    border-radius: 4px;
+    z-index: 3000;
+    font-weight: 600;
 }
 
 .skip-link:focus {
