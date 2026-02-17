@@ -23,7 +23,8 @@ import {
     EDUCATION_LEVEL_LIST,
     JOB_TYPE_LIST,
     SECURITY_CLEARANCE_LIST,
-    MILITARY_EXPERIENCE_LIST
+    MILITARY_EXPERIENCE_LIST,
+    LANGUAGE_LIST
 } from '../../constants/options';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
@@ -928,6 +929,7 @@ const JobSeekerInterests = () => {
             'Language(s)',
             'Security Clearance',
             'Veteran/Military Status',
+            'Resume Link',
             'Interest Level',
             'Notes',
             'Date Expressed'
@@ -1020,7 +1022,8 @@ const JobSeekerInterests = () => {
             const employmentTypesLabel = getLabelFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST);
             const clearanceLabel = getLabelFromValue(profile?.clearance || '', SECURITY_CLEARANCE_LIST);
             const veteranStatusLabel = getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST);
-            const languagesDisplay = Array.isArray(profile?.languages) ? profile.languages.join('; ') : '';
+            const languagesDisplay = getLabelFromValues(profile?.languages || [], LANGUAGE_LIST);
+            const resumeUrl = interest.jobSeeker?.resumeUrl || '';
 
             return [
                 escapeCSV(eventName),
@@ -1039,6 +1042,7 @@ const JobSeekerInterests = () => {
                 escapeCSV(languagesDisplay),
                 escapeCSV(clearanceLabel),
                 escapeCSV(veteranStatusLabel),
+                escapeCSV(resumeUrl),
                 escapeCSV(interest.interestLevel || ''),
                 escapeCSV(interest.notes || ''),
                 escapeCSV(formatDate(interest.createdAt))

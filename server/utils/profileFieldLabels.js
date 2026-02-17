@@ -61,6 +61,72 @@ const VETERAN_STATUS_MAP = {
   'us_veteran': 'US Veteran'
 };
 
+const LANGUAGE_MAP = {
+  'english': 'English',
+  'asl_sign_language': 'ASL/Sign Language',
+  'albanian': 'Albanian',
+  'akrikaans': 'Afrikaans',
+  'arabic': 'Arabic',
+  'armenian': 'Armenian',
+  'assamese': 'Assamese',
+  'bengali': 'Bengali',
+  'bulgarian': 'Bulgarian',
+  'cambodian': 'Cambodian',
+  'catalan': 'Catalan',
+  'chinese-cantonese': 'Chinese-Cantonese',
+  'chinese-chinots': 'Chinese-Chinots',
+  'chinese-mandarin': 'Chinese-Mandarin',
+  'chinese-taiwanese': 'Chinese-Taiwanese',
+  'croatian': 'Croatian',
+  'czech': 'Czech',
+  'danish': 'Danish',
+  'dutch': 'Dutch',
+  'estonian': 'Estonian',
+  'euskera': 'Euskera',
+  'farsi': 'Farsi',
+  'finnish': 'Finnish',
+  'french': 'French',
+  'german': 'German',
+  'greek': 'Greek',
+  'gujarati': 'Gujarati',
+  'hebrew': 'Hebrew',
+  'hindi': 'Hindi',
+  'hungarian': 'Hungarian',
+  'icelandic': 'Icelandic',
+  'indonesian': 'Indonesian',
+  'italian': 'Italian',
+  'japanese': 'Japanese',
+  'kannada': 'Kannada',
+  'kashmiri': 'Kashmiri',
+  'korean': 'Korean',
+  'latvian': 'Latvian',
+  'lithuanian': 'Lithuanian',
+  'macedonian': 'Macedonian',
+  'malayalam': 'Malayalam',
+  'norwegian': 'Norwegian',
+  'oriya': 'Oriya',
+  'pashto': 'Pashto',
+  'polish': 'Polish',
+  'portuguese': 'Portuguese',
+  'punjabi': 'Punjabi',
+  'romanian': 'Romanian',
+  'russian': 'Russian',
+  'sanskrit': 'Sanskrit',
+  'serbian': 'Serbian',
+  'sindhi': 'Sindhi',
+  'spanish': 'Spanish',
+  'swedish': 'Swedish',
+  'tagalog': 'Tagalog',
+  'tamil': 'Tamil',
+  'telugu': 'Telugu',
+  'turkish': 'Turkish',
+  'ukrainian': 'Ukrainian',
+  'urdu': 'Urdu',
+  'uzbek': 'Uzbek',
+  'vasco': 'Vasco',
+  'vietnamese': 'Vietnamese'
+};
+
 function getLabel(map, value) {
   if (value === null || value === undefined || value === '') return '';
   const s = String(value).trim();
@@ -92,10 +158,16 @@ function getVeteranStatusLabel(value) {
   return getLabel(VETERAN_STATUS_MAP, value);
 }
 
+function getLanguagesLabel(values) {
+  if (!values || !Array.isArray(values)) return '';
+  return values.map(v => getLabel(LANGUAGE_MAP, v)).filter(Boolean).join('; ');
+}
+
 module.exports = {
   getWorkLevelLabel,
   getEducationLevelLabel,
   getEmploymentTypesLabel,
   getClearanceLabel,
-  getVeteranStatusLabel
+  getVeteranStatusLabel,
+  getLanguagesLabel
 };

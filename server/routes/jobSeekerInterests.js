@@ -8,7 +8,8 @@ const {
     getEducationLevelLabel,
     getEmploymentTypesLabel,
     getClearanceLabel,
-    getVeteranStatusLabel
+    getVeteranStatusLabel,
+    getLanguagesLabel
 } = require('../utils/profileFieldLabels');
 
 const router = express.Router();
@@ -1103,6 +1104,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             'Language(s)',
             'Security Clearance',
             'Veteran/Military Status',
+            'Resume Link',
             'Interest Level',
             'Notes',
             'Date Expressed'
@@ -1279,11 +1281,12 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             const workLevelLabel = getWorkLevelLabel(profile && profile.workLevel);
             const educationLevelLabel = getEducationLevelLabel(profile && profile.educationLevel);
             const employmentTypesLabel = getEmploymentTypesLabel(profile && profile.employmentTypes);
-            const languages = (profile && Array.isArray(profile.languages)) 
-                ? profile.languages.filter(Boolean).join('; ') 
-                : '';
+            const languages = getLanguagesLabel(profile && profile.languages);
             const clearanceLabel = getClearanceLabel(profile && profile.clearance);
             const veteranStatusLabel = getVeteranStatusLabel(profile && profile.veteranStatus);
+            const resumeUrl = (jobSeekerData && typeof jobSeekerData === 'object' && jobSeekerData.resumeUrl)
+                ? String(jobSeekerData.resumeUrl).trim()
+                : '';
             
             // Extract interest info - IDs and names
             // Event ID and Name - handle both populated objects and raw ObjectIds
@@ -1416,6 +1419,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 escapeCSV(languages),
                 escapeCSV(clearanceLabel),
                 escapeCSV(veteranStatusLabel),
+                escapeCSV(resumeUrl),
                 escapeCSV(interestLevel),
                 escapeCSV(notes),
                 escapeCSV(dateExpressed)
