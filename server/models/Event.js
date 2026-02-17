@@ -247,14 +247,14 @@ eventSchema.virtual('isActive').get(function () {
     return this.status === 'active' && now >= this.start && now <= this.end;
 });
 
-// Virtual for checking if event is upcoming
+// Virtual for checking if event is upcoming (available for registration – hasn't ended yet)
 eventSchema.virtual('isUpcoming').get(function () {
     const now = new Date();
     if (this.isDemo) {
         // Demo events are not time-bound; treat them as not-upcoming (they are simply available)
         return false;
     }
-    return this.status === 'published' && now < this.start;
+    return ['published', 'active'].includes(this.status) && now < this.end;
 });
 
 // Pre-save middleware to generate slug if not provided
@@ -300,6 +300,7 @@ eventSchema.methods.getSummary = function () {
         link: this.link,
         sendyId: this.sendyId,
         logoUrl: this.logoUrl,
+        logoAltText: this.logoAltText || '',
         start: this.start,
         end: this.end,
         timezone: this.timezone,
@@ -374,12 +375,12 @@ eventSchema.statics.findActive = function () {
     });
 };
 
-// Static method to find upcoming events
+// Static method to find upcoming events (events that haven't ended yet)
 eventSchema.statics.findUpcoming = function () {
     const now = new Date();
     return this.find({
         status: { $in: ['published', 'active'] },
-        start: { $gt: now }
+        end: { $gt: now }
     });
 };
 

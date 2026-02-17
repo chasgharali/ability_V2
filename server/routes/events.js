@@ -126,7 +126,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
         // Apply time-based filters
         if (upcoming === 'true') {
-            query.start = { $gt: new Date() };
+            query.end = { $gt: new Date() };
         } else if (active === 'true') {
             const now = new Date();
             query.start = { $lte: now };
@@ -280,8 +280,12 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
         .withMessage('Timezone cannot exceed 50 characters'),
     body('logoUrl')
         .optional()
-        .isURL()
-        .withMessage('Logo URL must be a valid URL'),
+        .custom((value) => {
+            if (value.startsWith('/api/')) return true;
+            const urlRegex = /^https?:\/\/.+/i;
+            if (urlRegex.test(value)) return true;
+            throw new Error('Logo URL must be a valid URL or internal path');
+        }),
     body('sendyId').optional().isLength({ max: 200 }),
     body('link').optional().isURL(),
     body('termsId').optional().isLength({ max: 200 }),
@@ -303,7 +307,7 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             });
         }
 
-        const { name, description, start, end, timezone = 'UTC', logoUrl, sendyId, link, limits, theme, termsId, termsIds, isDemo } = req.body;
+        const { name, description, start, end, timezone = 'UTC', logoUrl, logoAltText, sendyId, link, limits, theme, termsId, termsIds, isDemo } = req.body;
         const { user } = req;
 
         // Compress video content in description
@@ -338,6 +342,7 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             end: endDate,
             timezone,
             logoUrl,
+            logoAltText: logoAltText || '',
             sendyId: sendyId || null,
             link: link || null,
             limits: {
@@ -405,8 +410,12 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         .withMessage('Timezone cannot exceed 50 characters'),
     body('logoUrl')
         .optional()
-        .isURL()
-        .withMessage('Logo URL must be a valid URL'),
+        .custom((value) => {
+            if (value.startsWith('/api/')) return true;
+            const urlRegex = /^https?:\/\/.+/i;
+            if (urlRegex.test(value)) return true;
+            throw new Error('Logo URL must be a valid URL or internal path');
+        }),
     body('sendyId').optional().isLength({ max: 200 }),
     body('status')
         .optional()
@@ -440,7 +449,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             });
         }
 
-        const { name, description, start, end, timezone, logoUrl, status, sendyId, limits, theme, termsIds, isDemo } = req.body;
+        const { name, description, start, end, timezone, logoUrl, logoAltText, status, sendyId, limits, theme, termsIds, isDemo } = req.body;
         const { event, user } = req;
 
         // Handle description with video compression
@@ -467,6 +476,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         if (end !== undefined) event.end = new Date(end);
         if (timezone !== undefined) event.timezone = timezone;
         if (logoUrl !== undefined) event.logoUrl = logoUrl;
+        if (logoAltText !== undefined) event.logoAltText = logoAltText;
         if (sendyId !== undefined) event.sendyId = sendyId || null;
         if (status !== undefined) event.status = status;
         if (isDemo !== undefined) event.isDemo = isDemo;
@@ -711,8 +721,12 @@ router.post('/:id/booths', authenticateToken, requireResourceAccess('event', 'id
         .withMessage('Description cannot exceed 100000 characters'),
     body('logoUrl')
         .optional()
-        .isURL()
-        .withMessage('Logo URL must be a valid URL')
+        .custom((value) => {
+            if (value.startsWith('/api/')) return true;
+            const urlRegex = /^https?:\/\/.+/i;
+            if (urlRegex.test(value)) return true;
+            throw new Error('Logo URL must be a valid URL or internal path');
+        })
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -767,12 +781,12 @@ router.get('/upcoming', authenticateToken, async (req, res) => {
         const { user } = req;
         const { page = 1, limit = 20 } = req.query;
 
-        // Only show published/active events that are in the future OR demo events
+        // Only show published/active events that haven't ended yet OR demo events
         const now = new Date();
         const query = {
             status: { $in: ['published', 'active'] },
             $or: [
-                { start: { $gt: now } },
+                { end: { $gt: now } },
                 { isDemo: true }
             ]
         };
