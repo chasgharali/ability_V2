@@ -6,7 +6,7 @@ import '../Dashboard/Dashboard.css';
 import './AdminHeader.css';
 import settingsAPI from '../../services/settings';
 
-export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo, hideMenuToggle = false }) {
+export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo, hideMenuToggle = false, hideLogout = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
@@ -165,9 +165,11 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
             <span className="connection-text-mobile">Active</span>
             <div className="connection-dot"></div>
           </div>
-          <button onClick={handleLogout} className="logout-button" aria-label="Logout">
-            <MdLogout />
-          </button>
+          {!hideLogout && (
+            <button onClick={handleLogout} className="logout-button" aria-label="Logout">
+              <MdLogout />
+            </button>
+          )}
         </div>
       </div>
     </header>

@@ -15,22 +15,22 @@ const FocusManager: React.FC = () => {
 
         // Only manage focus if the path has actually changed
         if (previousPathRef.current !== location.pathname) {
-            // Small delay to ensure the new page has rendered
             const timer = setTimeout(() => {
-                // Find the main content area
-                const mainContent = document.getElementById('main-content');
-                if (mainContent) {
-                    mainContent.focus();
+                // Search for headings within the main content area first
+                const mainArea = document.getElementById('dashboard-main');
+                const searchRoot = mainArea || document;
+                const firstHeading = searchRoot.querySelector('h1, h2');
+                if (firstHeading) {
+                    (firstHeading as HTMLElement).setAttribute('tabindex', '-1');
+                    (firstHeading as HTMLElement).focus();
                 } else {
-                    // Fallback: focus the first heading or the body
-                    const firstHeading = document.querySelector('h1, h2, h3, h4, h5, h6');
-                    if (firstHeading) {
-                        (firstHeading as HTMLElement).focus();
-                    } else {
-                        document.body.focus();
+                    const fallback = mainArea || document.getElementById('main-content');
+                    if (fallback) {
+                        fallback.setAttribute('tabindex', '-1');
+                        fallback.focus();
                     }
                 }
-            }, 100);
+            }, 350);
 
             previousPathRef.current = location.pathname;
 

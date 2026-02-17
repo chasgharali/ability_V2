@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 import './Dashboard.css';
 import { registerLicense } from '@syncfusion/ej2-base';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
@@ -8,6 +9,7 @@ import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 // Syncfusion styles
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
+import '@syncfusion/ej2-inputs/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 
 // Register Syncfusion license from env if provided
@@ -225,11 +227,15 @@ export default function SurveyForm({ onValidationChange }) {
   }
 
   return (
-    <div className="dashboard-content">
-      {toast.visible && (
-        <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
-      )}
-      <h2>Survey – Tell us about yourself</h2>
+    <>
+      <Helmet>
+        <title>Survey - abilityconnect</title>
+      </Helmet>
+      <div className="dashboard-content">
+        {toast.visible && (
+          <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
+        )}
+        <h2 tabIndex={-1}>Survey – Tell us about yourself</h2>
       
       {infoBannerMessage && (
         <div className="info-banner">
@@ -237,11 +243,13 @@ export default function SurveyForm({ onValidationChange }) {
         </div>
       )}
 
-      <form className="account-form survey-form" onSubmit={handleSubmit}>
+      <form aria-label="Survey form" className="account-form survey-form" onSubmit={handleSubmit}>
         <div className="form-row form-row-3">
           <div className="form-group">
-            <label>Race (check all that apply) </label>
+            <label id="race-label" htmlFor="race">Race (check all that apply)</label>
             <MultiSelectComponent
+              id="race"
+              aria-labelledby="race-label"
               dataSource={RACE_OPTIONS}
               value={form.race}
               mode="Box"
@@ -328,24 +336,18 @@ export default function SurveyForm({ onValidationChange }) {
           }}>Clear All</button>
         </div>
 
-        {(() => {
-          const cols = 4;
-          const columns = Array.from({ length: cols }, (_, c) => DISABILITY_OPTIONS.filter((_, i) => i % cols === c));
-          return (
-            <div className="checkbox-columns">
-              {columns.map((list, ci) => (
-                <div className="checkbox-col" key={ci}>
-                  {list.map(opt => (
-                    <label key={opt} className="checkbox-label">
-                      <input type="checkbox" checked={form.disabilities.includes(opt)} onChange={() => onToggleArray('disabilities', opt)} />
-                      <span>{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              ))}
-            </div>
-          );
-        })()}
+        <div className="checkbox-grid">
+          {DISABILITY_OPTIONS.map(opt => (
+            <label key={opt} className="checkbox-label">
+              <input 
+                type="checkbox" 
+                checked={form.disabilities.includes(opt)} 
+                onChange={() => onToggleArray('disabilities', opt)} 
+              />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </div>
 
         <div className="form-group">
           <label htmlFor="otherDisability">Other disability</label>
@@ -356,6 +358,7 @@ export default function SurveyForm({ onValidationChange }) {
           {saving ? 'Saving…' : 'Save Survey'}
         </button>
       </form>
-    </div>
+      </div>
+    </>
   );
 }

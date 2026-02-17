@@ -388,7 +388,17 @@
     gap: 0.75rem;
 }
 
-.survey-form .checkbox-columns .checkbox-label {
+/* New grid layout for proper tab order (row-first instead of column-first) */
+.survey-form .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem 1rem;
+    margin: 1rem 0;
+    grid-auto-flow: row;
+}
+
+.survey-form .checkbox-columns .checkbox-label,
+.survey-form .checkbox-grid .checkbox-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -399,7 +409,8 @@
     padding: 0.25rem 0;
 }
 
-.survey-form .checkbox-columns .checkbox-label input[type="checkbox"] {
+.survey-form .checkbox-columns .checkbox-label input[type="checkbox"],
+.survey-form .checkbox-grid .checkbox-label input[type="checkbox"] {
     margin: 0;
     /* Baseline alignment with text */
     flex-shrink: 0;
@@ -408,32 +419,37 @@
     cursor: pointer;
 }
 
-.survey-form .checkbox-columns .checkbox-label span {
+.survey-form .checkbox-columns .checkbox-label span,
+.survey-form .checkbox-grid .checkbox-label span {
     flex: 1;
     font-size: 0.9rem;
     color: #374151;
     font-weight: 500;
 }
 
-.survey-form .checkbox-columns .checkbox-label:hover {
+.survey-form .checkbox-columns .checkbox-label:hover,
+.survey-form .checkbox-grid .checkbox-label:hover {
     background-color: #f9fafb;
     border-radius: 4px;
 }
 
-.survey-form .checkbox-columns .checkbox-label input[type="checkbox"]:checked+span {
+.survey-form .checkbox-columns .checkbox-label input[type="checkbox"]:checked+span,
+.survey-form .checkbox-grid .checkbox-label input[type="checkbox"]:checked+span {
     color: #111827;
     font-weight: 600;
 }
 
 /* Responsive layout for survey checkboxes */
 @media (max-width: 1024px) {
-    .survey-form .checkbox-columns {
+    .survey-form .checkbox-columns,
+    .survey-form .checkbox-grid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .survey-form .checkbox-columns {
+    .survey-form .checkbox-columns,
+    .survey-form .checkbox-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
     }
@@ -444,7 +460,8 @@
 }
 
 @media (max-width: 480px) {
-    .survey-form .checkbox-columns {
+    .survey-form .checkbox-columns,
+    .survey-form .checkbox-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -574,8 +591,8 @@
 .dashboard-header-content {
     max-width: 100%;
     margin: 0;
-    padding: 0 1rem;
-    /* bring logo closer to the left edge */
+    padding: 0 3.5rem 0 1rem;
+    /* extra right padding to prevent overlap with fixed logout button */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -817,6 +834,26 @@ body.sidebar-open .mobile-menu-toggle:hover {
     color: #b91c1c;
     outline: 2px solid #000000;
     outline-offset: 2px;
+}
+
+/* Logout button rendered after main content for correct tab order,
+   visually positioned in the header area */
+.dashboard-logout-end {
+    position: fixed;
+    top: 15px;
+    right: 5px;
+    z-index: 1002;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    line-height: 1;
+}
+
+.dashboard-logout-end:hover,
+.dashboard-logout-end:focus {
+    outline-offset: 1px;
+    border-radius: 4px;
 }
 
 /* Dashboard Layout */
@@ -1745,7 +1782,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     }
 
     .dashboard-header-content {
-        padding: 0 0.75rem;
+        padding: 0 3.5rem 0 0.75rem;
         height: 72px;
         flex-wrap: nowrap;
     }
@@ -1956,7 +1993,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
 /* Extra small screens - further optimize header */
 @media (max-width: 480px) {
     .dashboard-header-content {
-        padding: 0 0.5rem;
+        padding: 0 3.5rem 0 0.5rem;
     }
 
     .header-left {

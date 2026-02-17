@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 import './MyAccountInline.css';
 import { countryCodes } from '../Auth/countryCodes';
 
@@ -423,13 +424,17 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
   };
 
   return (
-    <div className="dashboard-content">
-      <p className="section-note">An asterisk (*) indicates a required field.</p>
+    <>
+      <Helmet>
+        <title>My Account - abilityconnect</title>
+      </Helmet>
+      <div className="dashboard-content">
+        <p className="section-note">An asterisk (*) indicates a required field.</p>
 
-      {message && <div className="alert-box" role="status" aria-live="polite">{message}</div>}
-      {error && <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{error}</div>}
+        {message && <div className="alert-box" role="status" aria-live="polite">{message}</div>}
+        {error && <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{error}</div>}
 
-      <form onSubmit={handleNext} className="account-form" aria-describedby="acc-help">
+      <form aria-label="Account information form" onSubmit={handleNext} className="account-form" aria-describedby="acc-help">
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">First Name *</label>
@@ -670,7 +675,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
               <div className="field-help" style={{ fontSize: '14px', marginTop: '0.25rem', marginBottom: '0.5rem' }}>
                 {pendingEmail 
                   ? 'Please verify your pending email change before requesting a new one.'
-                  : 'Optional: If you would like to update your email, a verification link will be sent to your new address. Verify it to complete the change.'}
+                  : 'If you would like to update your email, a verification link will be sent to your new address. Verify it to complete the change.'}
               </div>
               <input
                 id="newEmail"
@@ -799,6 +804,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
           </form>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

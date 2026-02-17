@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { useAuth } from './contexts/AuthContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
@@ -63,9 +64,17 @@ const AppLayout = ({ children }) => {
 
     return (
         <div className="App">
-            <main id="main-content" role="main">
+            <a href="#dashboard-main" className="skip-link"
+               onClick={(e) => {
+                   e.preventDefault();
+                   const target = document.getElementById('dashboard-main')
+                                || document.getElementById('main-content');
+                   if (target) { target.focus(); }
+               }}
+            >Skip to main content</a>
+            <div id="main-content">
                 {children}
-            </main>
+            </div>
 
             {/* Show ChatPanel for authenticated users with chat-enabled roles */}
             {showChat && <ChatPanel />}
@@ -113,6 +122,7 @@ function App() {
         return children;
     };
     return (
+        <HelmetProvider>
         <ThemeProvider>
             <AuthProvider>
                 <RoleMessagesProvider>
@@ -179,6 +189,7 @@ function App() {
                 </RoleMessagesProvider>
             </AuthProvider>
         </ThemeProvider>
+        </HelmetProvider>
     );
 }
 

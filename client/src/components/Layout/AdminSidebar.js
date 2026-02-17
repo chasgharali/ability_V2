@@ -86,6 +86,16 @@ export default function AdminSidebar({ active = 'booths' }) {
     if (window.innerWidth <= 1024) {
       document.body.classList.remove('sidebar-open');
     }
+    // Focus the page heading after navigation renders
+    setTimeout(() => {
+      const mainArea = document.getElementById('dashboard-main');
+      const searchRoot = mainArea || document;
+      const heading = searchRoot.querySelector('h1, h2');
+      if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus();
+      }
+    }, 350);
   };
 
   // Special handler for the permanent demo event: fetch its first booth and

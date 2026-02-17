@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../../contexts/SocketContext';
@@ -30,6 +31,9 @@ import { TabComponent, TabItemsDirective, TabItemDirective } from '@syncfusion/e
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import '@syncfusion/ej2-base/styles/material.css';
+import '@syncfusion/ej2-inputs/styles/material.css';
+import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import './Dashboard.css';
 import SurveyForm from './SurveyForm';
 import EditProfileResume from './EditProfileResume';
@@ -700,40 +704,20 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="dashboard">
-            {/* Video Upload Progress Modal */}
-            <VideoUploadProgress 
-                progress={uploadProgress}
-                fileName={uploadingFile}
-                isUploading={isUploading}
-            />
-            
-            {/* Accessible Skip Link */}
-            <a
-                href="#dashboard-main"
-                className="skip-link"
-                onClick={(e) => {
-                    e.preventDefault();
-                    const el = document.getElementById('dashboard-main');
-                    if (el) {
-                        el.focus();
-                        el.scrollIntoView({ behavior: 'smooth' });
-                    }
-                }}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        const el = document.getElementById('dashboard-main');
-                        if (el) {
-                            el.focus();
-                            el.scrollIntoView({ behavior: 'smooth' });
-                        }
-                    }
-                }}
-            >
-                Skip to main content
-            </a>
-            <AdminHeader
+        <>
+            <Helmet>
+                <title>Dashboard - abilityconnect</title>
+            </Helmet>
+            <div className="dashboard">
+                {/* Video Upload Progress Modal */}
+                <VideoUploadProgress 
+                    progress={uploadProgress}
+                    fileName={uploadingFile}
+                    isUploading={isUploading}
+                />
+                
+                <AdminHeader
+                hideLogout={true}
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
             />
@@ -757,7 +741,7 @@ const Dashboard = () => {
                     )
                 )} />
 
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} role="main" aria-label="Dashboard main content">
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="Dashboard main content">
                     {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
                         <div className="dashboard-content">
                             <h2>Branding – Header Logo</h2>
@@ -976,8 +960,18 @@ const Dashboard = () => {
                                             <DateTimePickerComponent value={boothForm.eventDate ? new Date(boothForm.eventDate) : null} change={(e) => setBoothField('eventDate', e?.value ? new Date(e.value).toISOString() : '')} placeholder="Select date & time" />
                                         </div>
                                         <div className="form-group">
-                                            <label>Select Event</label>
-                                            <MultiSelectComponent className="ajf-input" placeholder="Choose your Event" value={boothForm.eventIds} change={(e) => setBoothField('eventIds', e?.value || [])} dataSource={[{ id: 'evt_demo_1', text: 'Event Demo test' }, { id: 'evt_demo_2', text: 'Demonstration' }]} fields={{ value: 'id', text: 'text' }} mode="Box" />
+                                            <label id="selectEvent-label" htmlFor="selectEvent">Select Event</label>
+                                            <MultiSelectComponent 
+                                              id="selectEvent"
+                                              aria-labelledby="selectEvent-label"
+                                              className="ajf-input" 
+                                              placeholder="Choose your Event" 
+                                              value={boothForm.eventIds} 
+                                              change={(e) => setBoothField('eventIds', e?.value || [])} 
+                                              dataSource={[{ id: 'evt_demo_1', text: 'Event Demo test' }, { id: 'evt_demo_2', text: 'Demonstration' }]} 
+                                              fields={{ value: 'id', text: 'text' }} 
+                                              mode="Box" 
+                                            />
                                         </div>
                                     </div>
 
@@ -1017,9 +1011,15 @@ const Dashboard = () => {
                 </main>
             </div>
 
+            {/* Logout button placed after sidebar+main for correct tab order */}
+            <button onClick={handleLogout} className="logout-button dashboard-logout-end" aria-label="Logout">
+                <MdLogout />
+            </button>
+
             {/* Mobile overlay */}
             <div className="mobile-overlay" aria-hidden="true" />
         </div>
+        </>
     );
 };
 

@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import './Dashboard.css';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
+import '@syncfusion/ej2-inputs/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { LANGUAGE_LIST, SECURITY_CLEARANCE_LIST, MILITARY_EXPERIENCE_LIST, EDUCATION_LEVEL_LIST, EXPERIENCE_LEVEL_LIST, JOB_CATEGORY_LIST, JOB_TYPE_LIST } from '../../constants/options';
 import { useAuth } from '../../contexts/AuthContext';
@@ -496,11 +498,15 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   };
 
   return (
-    <div className="dashboard-content">
-      <div ref={topRef} style={{ position: 'absolute', top: 0 }} aria-hidden="true" />
-      {toast.visible && (
-        <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
-      )}
+    <>
+      <Helmet>
+        <title>Edit Profile & Resume - abilityconnect</title>
+      </Helmet>
+      <div className="dashboard-content">
+        <div ref={topRef} style={{ position: 'absolute', top: 0 }} aria-hidden="true" />
+        {toast.visible && (
+          <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
+        )}
       {successMessage && (
         <div 
           ref={successMessageRef}
@@ -525,7 +531,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           <span>{successMessage}</span>
         </div>
       )}
-      <h2>My Profile</h2>
+      <h2 tabIndex={-1}>My Profile</h2>
       <p className="section-note">Edit the form below to update your profile information.</p>
 
         {infoBannerMessage && (
@@ -682,7 +688,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         </div>
       </div>
 
-      <form className="account-form" onSubmit={handleSubmit}>
+      <form aria-label="Profile and resume form" className="account-form" onSubmit={handleSubmit}>
         <p className="section-note">An asterisk (*) indicates a required field.</p>
 
         <div className="form-group">
@@ -734,9 +740,10 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="primaryExperience">* Primary Job Experience (maximum 2)</label>
+            <label id="primaryExperience-label" htmlFor="primaryExperience">* Primary Job Experience (maximum 2)</label>
             <MultiSelectComponent
               id="primaryExperience"
+              aria-labelledby="primaryExperience-label"
               dataSource={JOB_CATEGORY_LIST}
               fields={{ text: 'name', value: 'value' }}
               value={form.primaryExperience}
@@ -778,9 +785,10 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
             </select>
           </div>
           <div className="form-group">
-            <label htmlFor="employmentTypes">* Employment Types</label>
+            <label id="employmentTypes-label" htmlFor="employmentTypes">* Employment Types</label>
             <MultiSelectComponent
               id="employmentTypes"
+              aria-labelledby="employmentTypes-label"
               dataSource={JOB_TYPE_LIST}
               fields={{ text: 'name', value: 'value' }}
               value={form.employmentTypes}
@@ -802,9 +810,10 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         </div>
 
         <div className="form-group">
-          <label htmlFor="languages">* Language(s)</label>
+          <label id="languages-label" htmlFor="languages">* Language(s)</label>
           <MultiSelectComponent
             id="languages"
+            aria-labelledby="languages-label"
             dataSource={LANGUAGE_LIST}
             fields={{ text: 'name', value: 'value' }}
             value={form.languages}
@@ -873,6 +882,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

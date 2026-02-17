@@ -13,6 +13,7 @@ import { DropDownListComponent, MultiSelectComponent } from '@syncfusion/ej2-rea
 import { Input } from '../UI/FormComponents';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
+import '@syncfusion/ej2-inputs/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser, bulkDeleteJobSeekers } from '../../services/users';
 import { listEvents } from '../../services/events';
@@ -2194,13 +2195,15 @@ export default function JobSeekerManagement() {
                   {activeEditTab === 2 && (
                     <div className="jsm-tab-panel">
                       <div className="jsm-form-field-wrapper">
-                        <label className="jsm-field-label">Primary Job Experience (max 2)</label>
+                        <label id="jsm-primaryExperience-label" htmlFor="primaryExperience" className="jsm-field-label">Primary Job Experience (max 2)</label>
                         <MultiSelectComponent
+                          id="primaryExperience"
+                          aria-labelledby="jsm-primaryExperience-label"
                           dataSource={JOB_CATEGORY_LIST}
                           fields={{ text: 'name', value: 'value' }}
                           value={editForm.primaryExperience}
                           mode="Box"
-                          placeholder="Select primary job experience"
+                          placeholder="Select up to 2"
                           enableSelectionOrder={false}
                           maximumSelectionLength={2}
                           cssClass="jsm-multiselect"
@@ -2214,8 +2217,10 @@ export default function JobSeekerManagement() {
                         />
                       </div>
                       <div className="jsm-form-field-wrapper">
-                        <label className="jsm-field-label">Employment Types</label>
+                        <label id="jsm-employmentTypes-label" htmlFor="employmentTypes" className="jsm-field-label">Employment Types</label>
                         <MultiSelectComponent
+                          id="employmentTypes"
+                          aria-labelledby="jsm-employmentTypes-label"
                           dataSource={JOB_TYPE_LIST}
                           fields={{ text: 'name', value: 'value' }}
                           value={editForm.employmentTypes}
@@ -2290,8 +2295,10 @@ export default function JobSeekerManagement() {
                   {activeEditTab === 4 && (
                     <div className="jsm-tab-panel">
                       <div className="jsm-form-field-wrapper">
-                        <label className="jsm-field-label">Languages</label>
+                        <label id="jsm-languages-label" htmlFor="languages" className="jsm-field-label">Languages</label>
                         <MultiSelectComponent
+                          id="languages"
+                          aria-labelledby="jsm-languages-label"
                           dataSource={LANGUAGE_LIST}
                           fields={{ text: 'name', value: 'value' }}
                           value={editForm.languages}

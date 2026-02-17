@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
@@ -59,15 +60,19 @@ export default function RegisteredEvents() {
   };
 
   return (
-    <div className="dashboard">
-      <AdminHeader />
-      <div className="dashboard-layout">
-        <AdminSidebar active="events" />
+    <>
+      <Helmet>
+        <title>Current Registrations - abilityconnect</title>
+      </Helmet>
+      <div className="dashboard">
+        <AdminHeader />
+        <div className="dashboard-layout">
+          <AdminSidebar active="events" />
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
           <div className="dashboard-content">
             <div className="registered-events-container">
               <header className="registered-events-header">
-                <h1>My Current Registrations</h1>
+                <h1 tabIndex={-1}>My Current Registrations</h1>
                 <p className="subtitle">
                   {events.length > 0 
                     ? `You are registered for ${events.length} ${events.length === 1 ? 'event' : 'events'}`
@@ -190,5 +195,6 @@ export default function RegisteredEvents() {
         </main>
       </div>
     </div>
+    </>
   );
 }

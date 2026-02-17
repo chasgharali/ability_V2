@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
@@ -73,15 +74,19 @@ export default function UpcomingEvents() {
   };
 
   return (
-    <div className="dashboard">
-      <AdminHeader />
-      <div className="dashboard-layout">
-        <AdminSidebar active="events" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
-          <div className="dashboard-content">
+    <>
+      <Helmet>
+        <title>Upcoming Events - abilityconnect</title>
+      </Helmet>
+      <div className="dashboard">
+        <AdminHeader />
+        <div className="dashboard-layout">
+          <AdminSidebar active="events" />
+          <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+            <div className="dashboard-content">
             <div className="upcoming-events-container">
               <header className="upcoming-events-header">
-                <h1>Upcoming Events</h1>
+                <h1 tabIndex={-1}>Upcoming Events</h1>
                 <p className="subtitle">
                   {events.length > 0 
                     ? `${events.length} upcoming ${events.length === 1 ? 'event' : 'events'} available`
@@ -198,9 +203,10 @@ export default function UpcomingEvents() {
                 </ul>
               )}
             </div>
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
