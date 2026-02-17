@@ -8,6 +8,7 @@ const DEFAULT_ICON = 'https://upload.wikimedia.org/wikipedia/commons/7/70/Exampl
 
 export default function BrandingHeaderLogo() {
   const [brandingLogo, setBrandingLogo] = useState('');
+  const [brandingLogoAlt, setBrandingLogoAlt] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -19,9 +20,14 @@ export default function BrandingHeaderLogo() {
   const fetchLogo = async () => {
     try {
       setLoading(true);
-      const response = await settingsAPI.getSetting('branding_logo');
-      if (response.success && response.value) {
-        setBrandingLogo(response.value);
+      const logoResponse = await settingsAPI.getSetting('branding_logo');
+      if (logoResponse.success && logoResponse.value) {
+        setBrandingLogo(logoResponse.value);
+      }
+      
+      const altResponse = await settingsAPI.getSetting('branding_logo_alt');
+      if (altResponse.success && altResponse.value) {
+        setBrandingLogoAlt(altResponse.value);
       }
     } catch (error) {
       // Setting doesn't exist yet, that's okay
@@ -44,6 +50,22 @@ export default function BrandingHeaderLogo() {
     } catch (e) {
       console.error('Failed to save header logo:', e);
       setMessage('Failed to save header logo');
+      setTimeout(() => setMessage(''), 2000);
+    }
+  };
+
+  const saveBrandingLogoAlt = async () => {
+    try {
+      if (brandingLogoAlt.trim()) {
+        await settingsAPI.setSetting('branding_logo_alt', brandingLogoAlt.trim(), 'Alt text for header logo');
+      } else {
+        await settingsAPI.deleteSetting('branding_logo_alt');
+      }
+      setMessage('Alt text updated');
+      setTimeout(() => setMessage(''), 2000);
+    } catch (e) {
+      console.error('Failed to save alt text:', e);
+      setMessage('Failed to save alt text');
       setTimeout(() => setMessage(''), 2000);
     }
   };
@@ -83,6 +105,25 @@ export default function BrandingHeaderLogo() {
                   Choose Image
                   <input type="file" accept="image/*" onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
                 </label>
+              </div>
+              
+              <div style={{ marginTop: '1.5rem' }}>
+                <label htmlFor="brandingLogoAlt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Logo Alt Text (for screen readers)
+                </label>
+                <input
+                  id="brandingLogoAlt"
+                  type="text"
+                  className="dashboard-input"
+                  value={brandingLogoAlt}
+                  onChange={(e) => setBrandingLogoAlt(e.target.value)}
+                  placeholder="e.g., Company Logo, Site Logo"
+                  maxLength={200}
+                  style={{ width: '100%', marginBottom: '0.5rem' }}
+                />
+                <button className="dashboard-button" style={{ width: 'auto' }} onClick={saveBrandingLogoAlt}>
+                  Save Alt Text
+                </button>
               </div>
             </div>
           </div>

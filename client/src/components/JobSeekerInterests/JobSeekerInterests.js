@@ -1840,7 +1840,9 @@ const JobSeekerInterests = () => {
             <div className="dashboard">
                 <AdminHeader
                     brandingLogo={event?.logoUrl || event?.logo || ''}
+                    brandingLogoAlt={event?.logoAltText || ''}
                     secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                    secondaryLogoAlt={booth?.logoAltText || ''}
                 />
                 <div className="dashboard-layout">
                     <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />
@@ -1859,7 +1861,9 @@ const JobSeekerInterests = () => {
         <div className="dashboard">
             <AdminHeader
                 brandingLogo={event?.logoUrl || event?.logo || ''}
+                brandingLogoAlt={event?.logoAltText || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                secondaryLogoAlt={booth?.logoAltText || ''}
             />
             <div className="dashboard-layout">
                 <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />

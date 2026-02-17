@@ -127,7 +127,7 @@ export default function EventDetail() {
                       </div>
                     </dl>
                     {event.logoUrl && (
-                      <img src={event.logoUrl} alt={`${event.name} logo`} style={{ height: 64, maxWidth: 260, objectFit: 'contain' }} />
+                      <img src={event.logoUrl} alt={event.logoAltText || `${event.name} logo`} style={{ height: 64, maxWidth: 260, objectFit: 'contain' }} />
                     )}
                   </div>
 
@@ -165,7 +165,7 @@ export default function EventDetail() {
                           <>
                             <div style={{ height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
                               {b.logoUrl ? (
-                                <img src={b.logoUrl} alt={`${b.name} logo`} style={{ maxHeight: 60, maxWidth: '100%', objectFit: 'contain' }} />
+                                <img src={b.logoUrl} alt={b.logoAltText || `${b.name} logo`} style={{ maxHeight: 60, maxWidth: '100%', objectFit: 'contain' }} />
                               ) : (
                                 <div className="muted" aria-hidden="true">No logo</div>
                               )}

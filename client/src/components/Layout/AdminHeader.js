@@ -6,18 +6,24 @@ import '../Dashboard/Dashboard.css';
 import './AdminHeader.css';
 import settingsAPI from '../../services/settings';
 
-export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, secondaryLogo, hideMenuToggle = false, hideLogout = false }) {
+export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, brandingLogoAlt, secondaryLogo, secondaryLogoAlt, hideMenuToggle = false, hideLogout = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
+  const [brandingLogoAltFromAPI, setBrandingLogoAltFromAPI] = useState('');
   
   // Fetch branding logo from API if not provided as prop
   useEffect(() => {
     const fetchBrandingLogo = async () => {
       try {
-        const response = await settingsAPI.getSetting('branding_logo');
-        if (response.success && response.value) {
-          setBrandingLogoFromAPI(response.value);
+        const logoResponse = await settingsAPI.getSetting('branding_logo');
+        if (logoResponse.success && logoResponse.value) {
+          setBrandingLogoFromAPI(logoResponse.value);
+        }
+        
+        const altResponse = await settingsAPI.getSetting('branding_logo_alt');
+        if (altResponse.success && altResponse.value) {
+          setBrandingLogoAltFromAPI(altResponse.value);
         }
       } catch (error) {
         // Setting doesn't exist yet, that's okay
@@ -31,6 +37,8 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
   }, [brandingLogoProp]);
 
   const brandingLogo = brandingLogoProp || brandingLogoFromAPI;
+  const finalBrandingLogoAlt = brandingLogoAlt || brandingLogoAltFromAPI || 'Site logo';
+  const finalSecondaryLogoAlt = secondaryLogoAlt || 'Event logo';
 
 
   const handleLogout = async () => {
@@ -121,10 +129,10 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
         <div className="mobile-logo-bar">
           <div className="mobile-logo-container">
             {brandingLogo && brandingLogo.trim() !== '' && (
-              <img src={brandingLogo} alt="Event logo" className="mobile-event-logo" />
+              <img src={brandingLogo} alt={finalBrandingLogoAlt} className="mobile-event-logo" />
             )}
             {secondaryLogo && secondaryLogo.trim() !== '' && (
-              <img src={secondaryLogo} alt="Booth logo" className="mobile-booth-logo" />
+              <img src={secondaryLogo} alt={finalSecondaryLogoAlt} className="mobile-booth-logo" />
             )}
           </div>
         </div>
@@ -139,11 +147,11 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
           )}
           {/* Primary (event) logo - hide on mobile for booth users and jobseekers */}
           {brandingLogo && brandingLogo.trim() !== '' && (
-            <img src={brandingLogo} alt="Site logo" className={`header-logo ${(isBoothUser || isJobSeeker) ? 'hide-on-mobile-booth' : ''}`} />
+            <img src={brandingLogo} alt={finalBrandingLogoAlt} className={`header-logo ${(isBoothUser || isJobSeeker) ? 'hide-on-mobile-booth' : ''}`} />
           )}
           {/* Secondary (booth) logo if provided - not on left for Recruiters/Interpreters/Support/JobSeekers */}
           {!isBoothUser && !isJobSeeker && secondaryLogo && secondaryLogo.trim() !== '' && (
-            <img src={secondaryLogo} alt="Booth logo" className="header-logo" style={{ marginLeft: 8 }} />
+            <img src={secondaryLogo} alt={finalSecondaryLogoAlt} className="header-logo" style={{ marginLeft: 8 }} />
           )}
           {/* Fallback text if no logos */}
           {(!brandingLogo || brandingLogo.trim() === '') && (!secondaryLogo || secondaryLogo.trim() === '') && (

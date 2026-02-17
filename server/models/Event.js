@@ -85,6 +85,12 @@ const eventSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    logoAltText: {
+        type: String,
+        default: '',
+        trim: true,
+        maxlength: [200, 'Logo alt text cannot exceed 200 characters']
+    },
     // Demo events are always available and not tied to a fixed schedule for admins
     isDemo: {
         type: Boolean,

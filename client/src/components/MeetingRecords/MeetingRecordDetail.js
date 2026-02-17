@@ -101,7 +101,9 @@ export default function MeetingRecordDetail() {
             <div className="dashboard">
                 <AdminHeader 
                     brandingLogo={event?.logoUrl || event?.logo || ''}
+                    brandingLogoAlt={event?.logoAltText || ''}
                     secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                    secondaryLogoAlt={booth?.logoAltText || ''}
                 />
                 <div className="dashboard-layout">
                     <AdminSidebar active="meeting-records" />
@@ -123,7 +125,9 @@ export default function MeetingRecordDetail() {
             <div className="dashboard">
                 <AdminHeader 
                     brandingLogo={event?.logoUrl || event?.logo || ''}
+                    brandingLogoAlt={event?.logoAltText || ''}
                     secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                    secondaryLogoAlt={booth?.logoAltText || ''}
                 />
                 <div className="dashboard-layout">
                     <AdminSidebar active="meeting-records" />
@@ -151,7 +155,9 @@ export default function MeetingRecordDetail() {
         <div className="dashboard">
             <AdminHeader 
                 brandingLogo={event?.logoUrl || event?.logo || ''}
+                brandingLogoAlt={event?.logoAltText || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                secondaryLogoAlt={booth?.logoAltText || ''}
             />
             <div className="dashboard-layout">
                 <AdminSidebar active="meeting-records" />

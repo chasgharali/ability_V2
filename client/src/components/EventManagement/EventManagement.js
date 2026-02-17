@@ -150,6 +150,7 @@ export default function EventManagement() {
         name: '',
         link: '',
         logoUrl: '',
+        logoAltText: '',
         maxBooths: 0,
         maxRecruitersPerEvent: 0,
         startTime: '',
@@ -453,6 +454,7 @@ export default function EventManagement() {
                 sendyId: e.sendyId,
                 description: e.description || '',
                 logoUrl: e.logoUrl || '',
+                logoAltText: e.logoAltText || '',
                 startTime: e.start,
                 endTime: e.end,
                 date: new Date(e.start).toDateString(),
@@ -774,6 +776,7 @@ export default function EventManagement() {
             name: '',
             link: '',
             logoUrl: '',
+            logoAltText: '',
             maxBooths: 0,
             maxRecruitersPerEvent: 0,
             startTime: '',
@@ -828,6 +831,7 @@ export default function EventManagement() {
             name: row.name || '',
             link: row.link || '',
             logoUrl: row.logoUrl || '',
+            logoAltText: row.logoAltText || '',
             maxBooths: row.maxBooths || 0,
             maxRecruitersPerEvent: row.maxRecruitersPerEvent || 0,
             startTime: toLocalDateTimeString(row.startTime),
@@ -921,6 +925,7 @@ export default function EventManagement() {
                 start: startISO,
                 end: endISO,
                 logoUrl: form.logoUrl || undefined,
+                logoAltText: form.logoAltText || undefined,
                 link: form.link || undefined,
                 sendyId: form.sendyId || undefined,
                 termsId: form.termsId || undefined,
@@ -1479,6 +1484,15 @@ export default function EventManagement() {
                                         {form.logoUrl && <img src={form.logoUrl} alt="Event logo" style={{ height: 40, border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 4 }} />}
                                     </div>
                                 </div>
+
+                                <Input 
+                                    label="Event Logo Alt Text (for screen readers)" 
+                                    type="text" 
+                                    value={form.logoAltText} 
+                                    onChange={(e) => setField('logoAltText', e.target.value)} 
+                                    placeholder="e.g., Company Name Event Logo"
+                                    maxLength="200"
+                                />
 
                                 <Input label="Maximum Number of Booths" type="number" min="0" value={form.maxBooths} onChange={(e) => setField('maxBooths', Number(e.target.value))} />
                                 <Input label="Maximum Recruiters Per Event" type="number" min="0" value={form.maxRecruitersPerEvent} onChange={(e) => setField('maxRecruitersPerEvent', Number(e.target.value))} />

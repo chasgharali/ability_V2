@@ -77,6 +77,7 @@ const Dashboard = () => {
         'upcoming-events': true
     });
     const [brandingLogo, setBrandingLogo] = useState('');
+    const [brandingLogoAlt, setBrandingLogoAlt] = useState('');
     // Simple monochrome default icon (SVG data URL)
     const DEFAULT_ICON = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="36" viewBox="0 0 180 36" fill="none"><path d="M18 2 L6 22 h8 l-4 12 16-24 h-8 l4-8 z" fill="%23000000"/><text x="34" y="24" fill="%23000000" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">ABILITYJOBFAIR</text></svg>';
     // Booth Management form state (admin)
@@ -220,9 +221,14 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchBrandingLogo = async () => {
             try {
-                const response = await settingsAPI.getSetting('branding_logo');
-                if (response.success && response.value) {
-                    setBrandingLogo(response.value);
+                const logoResponse = await settingsAPI.getSetting('branding_logo');
+                if (logoResponse.success && logoResponse.value) {
+                    setBrandingLogo(logoResponse.value);
+                }
+                
+                const altResponse = await settingsAPI.getSetting('branding_logo_alt');
+                if (altResponse.success && altResponse.value) {
+                    setBrandingLogoAlt(altResponse.value);
                 }
             } catch (error) {
                 // Setting doesn't exist yet
@@ -245,6 +251,19 @@ const Dashboard = () => {
             showToast(dataUrl ? 'Header logo updated' : 'Header logo removed', 'success');
         } catch (e) {
             showToast('Failed to save header logo', 'error');
+        }
+    };
+
+    const saveBrandingLogoAlt = async () => {
+        try {
+            if (brandingLogoAlt.trim()) {
+                await settingsAPI.setSetting('branding_logo_alt', brandingLogoAlt.trim(), 'Alt text for header logo');
+            } else {
+                await settingsAPI.deleteSetting('branding_logo_alt');
+            }
+            showToast('Alt text updated', 'success');
+        } catch (e) {
+            showToast('Failed to save alt text', 'error');
         }
     };
 
@@ -738,7 +757,9 @@ const Dashboard = () => {
                 <AdminHeader
                 hideLogout={true}
                 brandingLogo={event?.logoUrl || event?.logo || ''}
+                brandingLogoAlt={event?.logoAltText || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+                secondaryLogoAlt={booth?.logoAltText || ''}
             />
 
             <div className="dashboard-layout">
@@ -778,6 +799,25 @@ const Dashboard = () => {
                                         Choose Image
                                         <input type="file" accept="image/*" onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
                                     </label>
+                                </div>
+                                
+                                <div style={{ marginTop: '1.5rem' }}>
+                                    <label htmlFor="brandingLogoAlt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                        Logo Alt Text (for screen readers)
+                                    </label>
+                                    <input
+                                        id="brandingLogoAlt"
+                                        type="text"
+                                        className="dashboard-input"
+                                        value={brandingLogoAlt}
+                                        onChange={(e) => setBrandingLogoAlt(e.target.value)}
+                                        placeholder="e.g., Company Logo, Site Logo"
+                                        maxLength={200}
+                                        style={{ width: '100%', marginBottom: '0.5rem' }}
+                                    />
+                                    <button className="dashboard-button" style={{ width: 'auto' }} onClick={saveBrandingLogoAlt}>
+                                        Save Alt Text
+                                    </button>
                                 </div>
                             </div>
                         </div>

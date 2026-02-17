@@ -153,7 +153,7 @@ export default function RegisteredEventDetail() {
                     {event.logoUrl && (
                       <img 
                         src={event.logoUrl} 
-                        alt={`${event.name} logo`} 
+                        alt={event.logoAltText || `${event.name} logo`} 
                         className="event-logo" 
                       />
                     )}
@@ -209,7 +209,7 @@ export default function RegisteredEventDetail() {
                                     {booth.logoUrl ? (
                                       <img 
                                         src={booth.logoUrl} 
-                                        alt={`${booth.name} logo`} 
+                                        alt={booth.logoAltText || `${booth.name} logo`} 
                                         className="employer-logo"
                                       />
                                     ) : (
@@ -223,7 +223,7 @@ export default function RegisteredEventDetail() {
                                     {booth.logoUrl ? (
                                       <img 
                                         src={booth.logoUrl} 
-                                        alt={`${booth.name} logo`} 
+                                        alt={booth.logoAltText || `${booth.name} logo`} 
                                         className="employer-logo"
                                       />
                                     ) : (

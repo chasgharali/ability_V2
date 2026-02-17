@@ -729,7 +729,9 @@ export default function BoothQueueManagement() {
       <div className="dashboard">
         <AdminHeader
           brandingLogo={event?.logoUrl || event?.logo || ''}
+          brandingLogoAlt={event?.logoAltText || ''}
           secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
+          secondaryLogoAlt={booth?.logoAltText || ''}
         />
         <div className="dashboard-layout">
           <AdminSidebar active="booths" />
@@ -750,7 +752,9 @@ export default function BoothQueueManagement() {
     <div className="dashboard">
       <AdminHeader
         brandingLogo={displayEvent?.logoUrl || displayEvent?.logo || ''}
+        brandingLogoAlt={displayEvent?.logoAltText || ''}
         secondaryLogo={displayBooth?.logoUrl || displayBooth?.companyLogo || ''}
+        secondaryLogoAlt={displayBooth?.logoAltText || ''}
       />
       <div className="dashboard-layout">
         <AdminSidebar active="booths" />

@@ -58,6 +58,7 @@ export default function BoothManagement() {
   const [boothForm, setBoothForm] = useState({
     boothName: '',
     boothLogo: '',
+    boothLogoAlt: '',
     firstHtml: '',
     secondHtml: '',
     thirdHtml: '',
@@ -530,6 +531,7 @@ export default function BoothManagement() {
         name: boothForm.boothName,
         description: latestFirstHtml || '',
         logoUrl: boothForm.boothLogo || undefined,
+        logoAltText: boothForm.boothLogoAlt || undefined,
         eventIds: boothForm.eventIds,
         companyPage: boothForm.companyPage || undefined,
         recruitersCount: boothForm.recruitersCount || 1,
@@ -548,6 +550,7 @@ export default function BoothManagement() {
           name: payload.name,
           description: payload.description,
           logoUrl: payload.logoUrl,
+          logoAltText: payload.logoAltText,
           companyPage: payload.companyPage,
           recruitersCount: payload.recruitersCount,
           expireLinkTime: expireLinkTimeValue,
@@ -743,6 +746,7 @@ export default function BoothManagement() {
           id: b._id,
           name: b.name,
           logo: b.logoUrl,
+          logoAltText: b.logoAltText || '',
           events: eventNames,
           eventName: eventNames.join(', ') || '', // Flattened for filtering
           eventIdRaw: b.eventId?._id || null, // Keep for backward compat
@@ -1043,6 +1047,7 @@ export default function BoothManagement() {
       ...prev,
       boothName: row.name || '',
       boothLogo: row.logo || '',
+      boothLogoAlt: row.logoAltText || '',
       firstHtml: row.richSections?.[0]?.contentHtml || '',
       secondHtml: row.richSections?.[1]?.contentHtml || '',
       thirdHtml: row.richSections?.[2]?.contentHtml || '',
@@ -1593,6 +1598,15 @@ export default function BoothManagement() {
                     {boothForm.boothLogo && <img src={boothForm.boothLogo} alt="Booth logo" style={{ height: 40, border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 4 }} />}
                   </div>
                 </div>
+
+                <Input
+                  label="Booth Logo Alt Text (for screen readers)"
+                  type="text"
+                  value={boothForm.boothLogoAlt}
+                  onChange={(e) => setBoothField('boothLogoAlt', e.target.value)}
+                  placeholder="e.g., Company Name Logo"
+                  maxLength="200"
+                />
 
                 <div className="form-group">
                   <label className="form-label">Waiting Area Content</label>

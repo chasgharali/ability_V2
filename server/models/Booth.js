@@ -76,6 +76,12 @@ const boothSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    logoAltText: {
+        type: String,
+        default: '',
+        trim: true,
+        maxlength: [200, 'Logo alt text cannot exceed 200 characters']
+    },
     // Rich content sections for the waiting area
     richSections: [richSectionSchema],
     // Queue reference

@@ -195,7 +195,7 @@ export default function BoothQueueEntry() {
   if (isBoothExpired) {
     return (
       <div className="booth-queue-entry">
-        <AdminHeader brandingLogo={event?.logoUrl || ''} />
+        <AdminHeader brandingLogo={event?.logoUrl || ''} brandingLogoAlt={event?.logoAltText || ''} />
         <div className="entry-modal">
           <div className="modal-header">
             <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
@@ -238,7 +238,7 @@ export default function BoothQueueEntry() {
   return (
     <div className="booth-queue-entry">
       {/* Standard header with user status; override branding with event logo */}
-      <AdminHeader brandingLogo={event?.logoUrl || ''} />
+      <AdminHeader brandingLogo={event?.logoUrl || ''} brandingLogoAlt={event?.logoAltText || ''} />
 
       <div className="entry-modal">
         <div className="modal-header">

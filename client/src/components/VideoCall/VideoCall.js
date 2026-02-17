@@ -2590,7 +2590,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             {callInfo?.event?.logoUrl ? (
               <img
                 src={callInfo.event.logoUrl}
-                alt={`${callInfo.event.name || 'Event'} logo`}
+                alt={callInfo.event.logoAltText || `${callInfo.event.name || 'Event'} logo`}
                 className="header-logo event-logo"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -2617,7 +2617,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             {callInfo?.booth?.logoUrl ? (
               <img
                 src={callInfo.booth.logoUrl}
-                alt={`${callInfo.booth.name || 'Booth'} logo`}
+                alt={callInfo.booth.logoAltText || `${callInfo.booth.name || 'Booth'} logo`}
                 className="header-logo booth-logo"
                 onError={(e) => {
                   e.target.style.display = 'none';
