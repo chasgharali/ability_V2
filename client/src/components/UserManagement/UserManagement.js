@@ -14,6 +14,7 @@ import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, dele
 import { listBooths, getBoothEvents } from '../../services/booths';
 import { listEvents } from '../../services/events';
 import { JOB_CATEGORY_LIST } from '../../constants/options';
+import { useDebounce } from '../../hooks/useDebounce';
 
 export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
@@ -55,6 +56,7 @@ export default function UserManagement() {
   const savedSearchQuery = loadSearchQueryFromSession();
   const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -106,6 +108,11 @@ export default function UserManagement() {
       console.error('Error saving User Management search query to sessionStorage:', error);
     }
   }, [activeSearchQuery]);
+
+  // Auto-trigger search when debounced search query changes (real-time search with debounce)
+  useEffect(() => {
+    setActiveSearchQuery(debouncedSearchQuery.trim());
+  }, [debouncedSearchQuery]);
 
   const roleOptionsAll = useMemo(() => [
     { value: 'Admin', label: 'Admin' },

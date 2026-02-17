@@ -28,6 +28,7 @@ import {
   MILITARY_EXPERIENCE_LIST,
   COUNTRY_OF_ORIGIN_LIST
 } from '../../constants/options';
+import { useDebounce } from '../../hooks/useDebounce';
 
 // Helper function to convert country name to 2-letter code - moved outside component for stability
 const getCountryCode = (countryValue) => {
@@ -118,7 +119,9 @@ export default function JobSeekerManagement() {
   };
 
   const savedSearchQuery = loadSearchQueryFromSession();
+  const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
 
   // Load filters from sessionStorage on mount (per-table persistence)
   const loadFiltersFromSession = () => {
@@ -683,6 +686,11 @@ export default function JobSeekerManagement() {
       console.error('Error saving Job Seeker Management search query to sessionStorage:', error);
     }
   }, [activeSearchQuery]);
+
+  // Auto-trigger search when debounced search query changes (real-time search with debounce)
+  useEffect(() => {
+    setActiveSearchQuery(debouncedSearchQuery.trim());
+  }, [debouncedSearchQuery]);
 
   // Load events on mount - memoized to prevent unnecessary re-renders
   const loadEventsData = useCallback(async () => {
@@ -2489,14 +2497,15 @@ export default function JobSeekerManagement() {
                   Clear
                 </ButtonComponent>
               )}
-              {/* Search Section - Right - Using uncontrolled input for performance */}
+              {/* Search Section - Right - Using controlled input with debounced search */}
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                 <div style={{ marginBottom: 0 }}>
                   <input
                     ref={searchInputRef}
                     id="jobseeker-search-input"
                     type="text"
-                    defaultValue=""
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -2528,9 +2537,7 @@ export default function JobSeekerManagement() {
                   <ButtonComponent
                     cssClass="e-outline e-primary e-small"
                     onClick={() => {
-                      if (searchInputRef.current) {
-                        searchInputRef.current.value = '';
-                      }
+                      setSearchQuery('');
                       setActiveSearchQuery('');
                       // Clear from sessionStorage
                       try {

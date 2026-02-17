@@ -27,6 +27,7 @@ import {
 } from '../../constants/options';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const JobSeekerInterests = () => {
     const { user, loading } = useAuth();
@@ -190,6 +191,11 @@ const JobSeekerInterests = () => {
     // Filters
     const [filters, setFilters] = useState(loadFiltersFromSession);
     
+    // Search state for controlled input with debounce
+    const savedSearchQuery = loadSearchQueryFromSession();
+    const [searchQuery, setSearchQuery] = useState(savedSearchQuery);
+    const debouncedSearchQuery = useDebounce(searchQuery, 500);
+    
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
 
@@ -221,6 +227,15 @@ const JobSeekerInterests = () => {
             console.error('Error saving Job Seeker Interests search query to sessionStorage:', error);
         }
     }, [filters.search]);
+
+    // Auto-trigger search when debounced search query changes (real-time search with debounce)
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            search: debouncedSearchQuery.trim(),
+            page: 1 // Reset to first page when searching
+        }));
+    }, [debouncedSearchQuery]);
 
     // Statistics
     const [stats, setStats] = useState({
@@ -727,9 +742,7 @@ const JobSeekerInterests = () => {
     };
     
     const handleClearSearch = () => {
-        if (searchInputRef.current) {
-            searchInputRef.current.value = '';
-        }
+        setSearchQuery('');
         showToast('Search cleared', 'Success', 1500);
         setFilters(prev => ({
             ...prev,
@@ -1975,7 +1988,8 @@ const JobSeekerInterests = () => {
                                             ref={searchInputRef}
                                             id="jsi-search-input"
                                             type="text"
-                                            defaultValue=""
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
@@ -1996,7 +2010,7 @@ const JobSeekerInterests = () => {
                                     >
                                         Search
                                     </ButtonComponent>
-                                    {((searchInputRef.current && searchInputRef.current.value) || filters.search) && (
+                                    {filters.search && (
                                         <ButtonComponent
                                             cssClass="e-outline e-primary e-small"
                                             onClick={handleClearSearch}

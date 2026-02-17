@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -87,7 +88,9 @@ export default function BoothManagement() {
   };
 
   const savedSearchQuery = loadSearchQueryFromSession();
+  const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -670,6 +673,14 @@ export default function BoothManagement() {
     }
   }, [activeSearchQuery]);
 
+  // Auto-trigger search when debounced search query changes (real-time search with debounce)
+  useEffect(() => {
+    setActiveSearchQuery(debouncedSearchQuery.trim());
+    if (debouncedSearchQuery.trim()) {
+      setCurrentPage(1); // Reset to first page when searching
+    }
+  }, [debouncedSearchQuery]);
+
   const handleSearch = () => {
     const query = (searchInputRef.current?.value || '').trim();
     setActiveSearchQuery(query);
@@ -677,9 +688,7 @@ export default function BoothManagement() {
   };
 
   const handleClearSearch = () => {
-    if (searchInputRef.current) {
-      searchInputRef.current.value = '';
-    }
+    setSearchQuery('');
     setActiveSearchQuery('');
     setCurrentPage(1); // Reset to first page when clearing
     // Clear from sessionStorage
@@ -1222,7 +1231,8 @@ export default function BoothManagement() {
                       ref={searchInputRef}
                       id="booth-search-input"
                       type="text"
-                      defaultValue=""
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();

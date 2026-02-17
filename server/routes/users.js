@@ -530,55 +530,43 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recru
             // Escape special regex characters in search term to prevent regex injection
             const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             
-            // For name and email, use word-boundary matching to prevent partial matches
-            // e.g., "lori" won't match "Gloria" or "Valorie" but will match "Lori" or "lori bentz"
-            const wordBoundaryRegex = new RegExp(`\\b${escapedSearchTerm}\\b`, 'i');
-            
-            // For phone numbers, use contains (phone numbers can have "lori" as part of digits)
+            // Use simple contains matching for all fields (case-insensitive)
+            // This allows partial matches (e.g., "lori" will match "Gloria", "Lori", "Valorie")
             const containsRegex = new RegExp(escapedSearchTerm, 'i');
             
-            // For location fields (city, state, country), use word-start matching
-            // This prevents "lori" from matching "Florida" but still matches "Lori" as a city name
-            const wordStartRegex = new RegExp(`(^|\\s)${escapedSearchTerm}`, 'i');
-            
-            // Build search conditions - prioritize name and email (most common searches)
-            // Use word-boundary matching to prevent false positives like "Gloria" matching "lori"
+            // Build search conditions - search across all relevant fields with contains matching
             const searchConditions = [
-                // Primary fields - word-boundary match (MOST IMPORTANT)
-                // e.g., "lori" matches "Lori" or "lori bentz" but NOT "Gloria" or "Valorie"
-                { name: wordBoundaryRegex },
-                { email: wordBoundaryRegex },
-                
-                // Phone number - contains match (phone numbers are digits, so word boundary doesn't apply)
+                // Primary fields
+                { name: containsRegex },
+                { email: containsRegex },
                 { phoneNumber: containsRegex },
                 
-                // Location fields - word-start match to avoid false positives
-                // e.g., "lori" won't match "Florida" but will match "Lori City"
-                { city: wordStartRegex },
-                { state: wordStartRegex },
-                { country: wordStartRegex },
+                // Location fields
+                { city: containsRegex },
+                { state: containsRegex },
+                { country: containsRegex },
                 
-                // Profile fields - word-boundary match for text fields to prevent partial matches
-                { 'metadata.profile.headline': wordBoundaryRegex },
-                { 'metadata.profile.keywords': wordBoundaryRegex },
-                { 'metadata.profile.workLevel': wordBoundaryRegex },
-                { 'metadata.profile.educationLevel': wordBoundaryRegex },
-                { 'metadata.profile.clearance': wordBoundaryRegex },
-                { 'metadata.profile.veteranStatus': wordBoundaryRegex },
-                { 'metadata.profile.workAuthorization': wordBoundaryRegex },
+                // Profile fields
+                { 'metadata.profile.headline': containsRegex },
+                { 'metadata.profile.keywords': containsRegex },
+                { 'metadata.profile.workLevel': containsRegex },
+                { 'metadata.profile.educationLevel': containsRegex },
+                { 'metadata.profile.clearance': containsRegex },
+                { 'metadata.profile.veteranStatus': containsRegex },
+                { 'metadata.profile.workAuthorization': containsRegex },
                 
-                // Array fields - use word-boundary regex (MongoDB will check any array element)
-                { 'metadata.profile.employmentTypes': wordBoundaryRegex },
-                { 'metadata.profile.languages': wordBoundaryRegex },
-                { 'metadata.profile.primaryExperience': wordBoundaryRegex },
+                // Array fields (MongoDB will check any array element)
+                { 'metadata.profile.employmentTypes': containsRegex },
+                { 'metadata.profile.languages': containsRegex },
+                { 'metadata.profile.primaryExperience': containsRegex },
                 
-                // Survey fields - word-boundary match for text fields
-                { 'survey.race': wordBoundaryRegex },
-                { 'survey.genderIdentity': wordBoundaryRegex },
-                { 'survey.ageGroup': wordBoundaryRegex },
-                { 'survey.countryOfOrigin': wordStartRegex },
-                { 'survey.disabilities': wordBoundaryRegex },
-                { 'survey.otherDisability': wordBoundaryRegex }
+                // Survey fields
+                { 'survey.race': containsRegex },
+                { 'survey.genderIdentity': containsRegex },
+                { 'survey.ageGroup': containsRegex },
+                { 'survey.countryOfOrigin': containsRegex },
+                { 'survey.disabilities': containsRegex },
+                { 'survey.otherDisability': containsRegex }
             ];
             
             // Combine search conditions with existing query using $and

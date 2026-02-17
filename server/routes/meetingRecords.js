@@ -119,67 +119,91 @@ router.get('/', authenticateToken, async (req, res) => {
         const sortOptions = {};
         sortOptions[finalSortBy] = finalSortOrder === 'desc' ? -1 : 1;
 
-        // Helper function to check if record matches search term
-        const matchesSearch = (record, searchTerm) => {
-            if (record.eventId?.name && record.eventId.name.toLowerCase().includes(searchTerm)) return true;
-            if (record.boothId?.name && record.boothId.name.toLowerCase().includes(searchTerm)) return true;
-            if (record.recruiterId?.name && record.recruiterId.name.toLowerCase().includes(searchTerm)) return true;
-            if (record.recruiterId?.email && record.recruiterId.email.toLowerCase().includes(searchTerm)) return true;
-            if (record.jobseekerId?.name && record.jobseekerId.name.toLowerCase().includes(searchTerm)) return true;
-            if (record.jobseekerId?.email && record.jobseekerId.email.toLowerCase().includes(searchTerm)) return true;
-            if (record.jobseekerId?.phoneNumber && record.jobseekerId.phoneNumber.toLowerCase().includes(searchTerm)) return true;
-            if (record.jobseekerId?.city && record.jobseekerId.city.toLowerCase().includes(searchTerm)) return true;
-            if (record.jobseekerId?.state && record.jobseekerId.state.toLowerCase().includes(searchTerm)) return true;
-            if (record.jobseekerId?.country && record.jobseekerId.country.toLowerCase().includes(searchTerm)) return true;
-            if (record.jobseekerId?.metadata?.profile) {
-                const profile = record.jobseekerId.metadata.profile;
-                if (profile.headline && profile.headline.toLowerCase().includes(searchTerm)) return true;
-                if (profile.keywords && profile.keywords.toLowerCase().includes(searchTerm)) return true;
-                if (profile.workLevel && profile.workLevel.toLowerCase().includes(searchTerm)) return true;
-                if (profile.educationLevel && profile.educationLevel.toLowerCase().includes(searchTerm)) return true;
-                if (profile.clearance && profile.clearance.toLowerCase().includes(searchTerm)) return true;
-                if (profile.veteranStatus && profile.veteranStatus.toLowerCase().includes(searchTerm)) return true;
-                if (Array.isArray(profile.employmentTypes) && profile.employmentTypes.some(et => et.toLowerCase().includes(searchTerm))) return true;
-                if (Array.isArray(profile.languages) && profile.languages.some(lang => lang.toLowerCase().includes(searchTerm))) return true;
-            }
-            if (record.interpreterId?.name && record.interpreterId.name.toLowerCase().includes(searchTerm)) return true;
-            if (record.interpreterId?.email && record.interpreterId.email.toLowerCase().includes(searchTerm)) return true;
-            if (record.status && record.status.toLowerCase().includes(searchTerm)) return true;
-            if (record.recruiterFeedback && record.recruiterFeedback.toLowerCase().includes(searchTerm)) return true;
-            return false;
-        };
-
-        // Fetch ALL records matching the base query (without pagination) if search is provided
-        // Otherwise, fetch with pagination for better performance
-        let allRecords;
+        // Optimize search by pre-querying related collections to find matching IDs
+        // This avoids fetching all records and filtering in memory
+        let searchQuery = { ...query };
+        
         if (search && search.trim()) {
-            // Fetch all records for search filtering
-            allRecords = await MeetingRecord.find(query)
-                .populate('eventId', 'name slug')
-                .populate('boothId', 'name logoUrl')
-                .populate('recruiterId', 'name email')
-                .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
-                .populate('interpreterId', 'name email')
-                .populate('queueId')
-                .populate('videoCallId')
-                .sort(sortOptions)
-                .lean();
-        } else {
-            // Fetch with pagination for better performance when no search
-            const skip = (parsedPage - 1) * parsedLimit;
-            allRecords = await MeetingRecord.find(query)
-                .populate('eventId', 'name slug')
-                .populate('boothId', 'name logoUrl')
-                .populate('recruiterId', 'name email')
-                .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
-                .populate('interpreterId', 'name email')
-                .populate('queueId')
-                .populate('videoCallId')
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(parsedLimit)
-                .lean();
+            const searchTerm = search.trim();
+            const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            
+            // Find matching IDs from related collections
+            const User = require('../models/User');
+            const Event = require('../models/Event');
+            const Booth = require('../models/Booth');
+            
+            const [matchingUsers, matchingEvents, matchingBooths] = await Promise.all([
+                User.find({
+                    $or: [
+                        { name: searchRegex },
+                        { email: searchRegex },
+                        { phoneNumber: searchRegex },
+                        { city: searchRegex },
+                        { state: searchRegex },
+                        { country: searchRegex },
+                        { 'metadata.profile.headline': searchRegex },
+                        { 'metadata.profile.keywords': searchRegex },
+                        { 'metadata.profile.workLevel': searchRegex },
+                        { 'metadata.profile.educationLevel': searchRegex },
+                        { 'metadata.profile.clearance': searchRegex },
+                        { 'metadata.profile.veteranStatus': searchRegex },
+                        { 'metadata.profile.employmentTypes': searchRegex },
+                        { 'metadata.profile.languages': searchRegex }
+                    ]
+                }).select('_id').lean(),
+                Event.find({ name: searchRegex }).select('_id').lean(),
+                Booth.find({ name: searchRegex }).select('_id').lean()
+            ]);
+            
+            const userIds = matchingUsers.map(u => u._id);
+            const eventIds = matchingEvents.map(e => e._id);
+            const boothIds = matchingBooths.map(b => b._id);
+            
+            // Build search conditions that can be used at database level
+            const searchConditions = [];
+            
+            if (userIds.length > 0) {
+                searchConditions.push({ jobseekerId: { $in: userIds } });
+                searchConditions.push({ recruiterId: { $in: userIds } });
+                searchConditions.push({ interpreterId: { $in: userIds } });
+            }
+            if (eventIds.length > 0) {
+                searchConditions.push({ eventId: { $in: eventIds } });
+            }
+            if (boothIds.length > 0) {
+                searchConditions.push({ boothId: { $in: boothIds } });
+            }
+            
+            // Add direct field searches
+            searchConditions.push({ status: searchRegex });
+            searchConditions.push({ recruiterFeedback: searchRegex });
+            
+            if (searchConditions.length > 0) {
+                searchQuery = {
+                    $and: [
+                        query,
+                        { $or: searchConditions }
+                    ]
+                };
+            }
+            
+            console.log(`🔍 MeetingRecords search optimized: Found ${userIds.length} users, ${eventIds.length} events, ${boothIds.length} booths matching "${searchTerm}"`);
         }
+
+        // Fetch records with pagination using optimized query
+        const skip = (parsedPage - 1) * parsedLimit;
+        let allRecords = await MeetingRecord.find(searchQuery)
+            .populate('eventId', 'name slug')
+            .populate('boothId', 'name logoUrl')
+            .populate('recruiterId', 'name email')
+            .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
+            .populate('interpreterId', 'name email')
+            .populate('queueId')
+            .populate('videoCallId')
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(parsedLimit)
+            .lean();
 
         // Calculate duration for records that don't have it
         let processedRecords = allRecords.map(record => {
@@ -189,12 +213,6 @@ router.get('/', authenticateToken, async (req, res) => {
             }
             return record;
         });
-
-        // Apply search filter if provided (search across all populated fields)
-        if (search && search.trim()) {
-            const searchTerm = search.trim().toLowerCase();
-            processedRecords = processedRecords.filter(record => matchesSearch(record, searchTerm));
-        }
 
         // Deduplicate left_with_message records by queueId
         // If multiple left_with_message records exist for the same queueId, keep only one
@@ -213,75 +231,32 @@ router.get('/', authenticateToken, async (req, res) => {
             });
         }
 
-        // Apply pagination if search was used (since we fetched all records)
-        if (search && search.trim()) {
-            const skip = (parsedPage - 1) * parsedLimit;
-            processedRecords = processedRecords.slice(skip, skip + parsedLimit);
-        }
-
-        // Calculate total count for pagination
-        // If search was used, we already have the filtered count from processedRecords
-        // Otherwise, we need to count from database
+        // Calculate total count for pagination using optimized query
+        let totalRecords = await MeetingRecord.countDocuments(searchQuery);
+        
+        // Adjust count for recruiters to account for deduplication of left_with_message records
         let finalCount;
-        if (search && search.trim()) {
-            // Count is based on filtered and deduplicated records
-            // We need to recalculate the full filtered list to get accurate count
-            // (since we already filtered above, we can use that count)
-            const allRecordsForCount = await MeetingRecord.find(query)
-                .populate('eventId', 'name slug')
-                .populate('boothId', 'name logoUrl')
-                .populate('recruiterId', 'name email')
-                .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
-                .populate('interpreterId', 'name email')
-                .populate('queueId')
-                .lean();
-            
-            const searchTerm = search.trim().toLowerCase();
-            let filteredForCount = allRecordsForCount.filter(record => matchesSearch(record, searchTerm));
-            
-            // Apply deduplication for recruiters
-            if (req.user.role === 'Recruiter') {
-                const seenQueueIds = new Set();
-                filteredForCount = filteredForCount.filter(record => {
-                    if (record.status === 'left_with_message' && record.queueId) {
-                        const queueIdStr = record.queueId._id?.toString() || record.queueId.toString();
-                        if (seenQueueIds.has(queueIdStr)) {
-                            return false;
-                        }
-                        seenQueueIds.add(queueIdStr);
+        if (req.user.role === 'Recruiter') {
+            const duplicateQuery = {
+                ...searchQuery,
+                status: 'left_with_message'
+            };
+            const leftMessageRecords = await MeetingRecord.find(duplicateQuery).select('queueId');
+            const uniqueQueueIds = new Set();
+            let duplicateCount = 0;
+            leftMessageRecords.forEach(record => {
+                const queueIdStr = record.queueId?.toString();
+                if (queueIdStr) {
+                    if (uniqueQueueIds.has(queueIdStr)) {
+                        duplicateCount++;
+                    } else {
+                        uniqueQueueIds.add(queueIdStr);
                     }
-                    return true;
-                });
-            }
-            
-            finalCount = filteredForCount.length;
+                }
+            });
+            finalCount = totalRecords - duplicateCount;
         } else {
-            // No search - count from database
-            let totalRecords = await MeetingRecord.countDocuments(query);
-            
-            // Adjust count for recruiters to account for deduplication of left_with_message records
-            if (req.user.role === 'Recruiter') {
-                const duplicateQuery = {
-                    ...query,
-                    status: 'left_with_message'
-                };
-                const leftMessageRecords = await MeetingRecord.find(duplicateQuery).select('queueId');
-                const uniqueQueueIds = new Set();
-                let duplicateCount = 0;
-                leftMessageRecords.forEach(record => {
-                    const queueIdStr = record.queueId?.toString();
-                    if (queueIdStr) {
-                        if (uniqueQueueIds.has(queueIdStr)) {
-                            duplicateCount++;
-                        } else {
-                            uniqueQueueIds.add(queueIdStr);
-                        }
-                    }
-                });
-                finalCount = totalRecords - duplicateCount;
-            } else {
-                finalCount = totalRecords;
-            }
+            finalCount = totalRecords;
         }
         
         res.json({

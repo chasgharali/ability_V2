@@ -27,6 +27,7 @@ import {
     SECURITY_CLEARANCE_LIST,
     MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
+import { useDebounce } from '../../hooks/useDebounce';
 
 export default function MeetingRecords() {
     const { user, loading } = useAuth();
@@ -204,6 +205,11 @@ export default function MeetingRecords() {
     // Filters
     const [filters, setFilters] = useState(loadFiltersFromSession);
     
+    // Search state for controlled input with debounce
+    const savedSearchQuery = loadSearchQueryFromSession();
+    const [searchQuery, setSearchQuery] = useState(savedSearchQuery);
+    const debouncedSearchQuery = useDebounce(searchQuery, 500);
+    
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
 
@@ -235,6 +241,15 @@ export default function MeetingRecords() {
             console.error('Error saving Meeting Records search query to sessionStorage:', error);
         }
     }, [filters.search]);
+
+    // Auto-trigger search when debounced search query changes (real-time search with debounce)
+    useEffect(() => {
+        setFilters(prev => ({
+            ...prev,
+            search: debouncedSearchQuery.trim(),
+            page: 1 // Reset to first page when searching
+        }));
+    }, [debouncedSearchQuery]);
 
     // Pagination
     const [pagination, setPagination] = useState({
@@ -1234,9 +1249,7 @@ export default function MeetingRecords() {
     };
     
     const handleClearSearch = () => {
-        if (searchInputRef.current) {
-            searchInputRef.current.value = '';
-        }
+        setSearchQuery('');
         setFilters(prev => ({
             ...prev,
             search: '',
@@ -1959,7 +1972,8 @@ export default function MeetingRecords() {
                                         ref={searchInputRef}
                                         id="meeting-records-search-input"
                                         type="text"
-                                        defaultValue=""
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
@@ -1980,7 +1994,7 @@ export default function MeetingRecords() {
                                 >
                                     Search
                                 </ButtonComponent>
-                                {((searchInputRef.current && searchInputRef.current.value) || filters.search) && (
+                                {filters.search && (
                                     <ButtonComponent
                                         cssClass="e-outline e-primary e-small"
                                         onClick={handleClearSearch}

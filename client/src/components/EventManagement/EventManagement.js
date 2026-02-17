@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import '../Dashboard/Dashboard.css';
 import './EventManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -328,7 +329,9 @@ export default function EventManagement() {
 
     const [statusFilter, setStatusFilter] = useState(loadStatusFilterFromSession);
     const searchInputRef = useRef(null); // Uncontrolled input to avoid live filtering on typing
+    const [searchQuery, setSearchQuery] = useState(''); // Input field value
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
+    const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
 
     const handleSearch = useCallback(() => {
         const query = (searchInputRef.current?.value || '').trim();
@@ -337,13 +340,19 @@ export default function EventManagement() {
     }, []);
 
     const handleClearSearch = useCallback(() => {
-        if (searchInputRef.current) {
-            searchInputRef.current.value = '';
-        }
+        setSearchQuery('');
         setActiveSearchQuery('');
         // loadEvents will be called automatically via useEffect when activeSearchQuery changes
         setCurrentPage(1); // Reset to first page when clearing
     }, []);
+
+    // Auto-trigger search when debounced search query changes (real-time search with debounce)
+    useEffect(() => {
+        setActiveSearchQuery(debouncedSearchQuery.trim());
+        if (debouncedSearchQuery.trim()) {
+            setCurrentPage(1); // Reset to first page when searching
+        }
+    }, [debouncedSearchQuery]);
 
     const statusOptions = [
         { value: '', label: 'All Statuses' },
@@ -1063,7 +1072,8 @@ export default function EventManagement() {
                                                 ref={searchInputRef}
                                                 id="event-search-input"
                                                 type="text"
-                                                defaultValue=""
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
@@ -1084,7 +1094,7 @@ export default function EventManagement() {
                                         >
                                             Search
                                         </ButtonComponent>
-                                        {((searchInputRef.current && searchInputRef.current.value) || activeSearchQuery) && (
+                                        {activeSearchQuery && (
                                             <ButtonComponent
                                                 cssClass="e-outline e-primary e-small"
                                                 onClick={handleClearSearch}
