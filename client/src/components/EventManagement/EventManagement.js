@@ -333,6 +333,7 @@ export default function EventManagement() {
     const [searchQuery, setSearchQuery] = useState(''); // Input field value
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
     const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
+    const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
 
     const handleSearch = useCallback(() => {
         const query = (searchInputRef.current?.value || '').trim();
@@ -378,11 +379,10 @@ export default function EventManagement() {
     }, [statusFilter]);
 
     const loadEvents = useCallback(async () => {
-        // Prevent multiple simultaneous fetches
-        if (loadingListRef.current) return;
-        
+        // Track this specific request so stale responses can be discarded
+        const gen = ++loadRequestGenRef.current;
+
         try {
-            loadingListRef.current = true;
             setLoadingList(true);
             // Fetch a very large number (10000) to ensure ALL records are loaded for client-side pagination and filtering
             // This allows all events to be displayed whether searching or not
@@ -446,6 +446,9 @@ export default function EventManagement() {
                 });
             }
             
+            // Discard results if a newer request has already started
+            if (gen !== loadRequestGenRef.current) return;
+
             setEvents(items.map((e) => ({
                 id: e._id,
                 name: e.name,
@@ -468,11 +471,14 @@ export default function EventManagement() {
                 termsIds: e.termsIds || [],
             })));
         } catch (err) {
-            console.error('Failed to load events', err);
-            setEvents([]);
+            if (gen === loadRequestGenRef.current) {
+                console.error('Failed to load events', err);
+                setEvents([]);
+            }
         } finally {
-            loadingListRef.current = false;
-            setLoadingList(false);
+            if (gen === loadRequestGenRef.current) {
+                setLoadingList(false);
+            }
         }
     }, [statusFilter, activeSearchQuery]);
 
@@ -655,7 +661,12 @@ export default function EventManagement() {
         const observer = new MutationObserver(() => {
             setTimeout(syncScroll, 100);
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        // Scope to just the Syncfusion grid element to avoid firing on every
+        // search-input keystroke (which would force expensive layout reflows).
+        const gridEl = gridRef.current?.element || document.querySelector('.bm-grid-wrap .e-grid');
+        if (gridEl) {
+            observer.observe(gridEl, { childList: true, subtree: true });
+        }
 
         // Also watch for window resize
         const handleResize = () => setTimeout(syncScroll, 100);

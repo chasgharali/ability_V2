@@ -104,6 +104,7 @@ export default function BoothManagement() {
   const searchInputRef = useRef(null);
   const [editingBoothId, setEditingBoothId] = useState(null);
   const loadingBoothsRef = useRef(false);
+  const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
   const loadingEventsRef = useRef(false);
   // RTE image upload helpers
   const rteFirstRef = React.useRef(null);
@@ -703,11 +704,10 @@ export default function BoothManagement() {
   };
 
   const loadBooths = useCallback(async () => {
-    // Prevent multiple simultaneous fetches
-    if (loadingBoothsRef.current) return;
-    
+    // Track this specific request so stale responses can be discarded
+    const gen = ++loadRequestGenRef.current;
+
     try {
-      loadingBoothsRef.current = true;
       setLoadingBooths(true);
       // When searching, fetch a very large number (10000) to ensure ALL matching records are loaded
       // When not searching, fetch 50 for initial load (grid handles client-side pagination)
@@ -731,6 +731,9 @@ export default function BoothManagement() {
         });
       }
       
+      // Discard results if a newer request has already started
+      if (gen !== loadRequestGenRef.current) return;
+
       // Map to grid rows expected by Syncfusion GridComponent
       setBooths(items.map(b => {
         // Get events from the events array or fallback to single eventId
@@ -761,11 +764,14 @@ export default function BoothManagement() {
         };
       }));
     } catch (e) {
-      console.error('Failed to load booths', e);
-      setBooths([]);
+      if (gen === loadRequestGenRef.current) {
+        console.error('Failed to load booths', e);
+        setBooths([]);
+      }
     } finally { 
-      loadingBoothsRef.current = false;
-      setLoadingBooths(false); 
+      if (gen === loadRequestGenRef.current) {
+        setLoadingBooths(false);
+      }
     }
   }, [activeSearchQuery, baseUrl]);
 
@@ -1001,7 +1007,12 @@ export default function BoothManagement() {
     const observer = new MutationObserver(() => {
       setTimeout(syncScroll, 100);
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Scope to just the Syncfusion grid element to avoid firing on every
+    // search-input keystroke (which would force expensive layout reflows).
+    const gridEl = gridRef.current?.element || document.querySelector('.bm-grid-wrap .e-grid');
+    if (gridEl) {
+      observer.observe(gridEl, { childList: true, subtree: true });
+    }
 
     // Also watch for window resize
     const handleResize = () => setTimeout(syncScroll, 100);

@@ -73,6 +73,7 @@ export default function UserManagement() {
   const deleteDialogRef = useRef(null);
   const gridRef = useRef(null);
   const loadingUsersRef = useRef(false);
+  const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
   const selectionUpdateTimeoutRef = useRef(null);
   const isUpdatingSelectionRef = useRef(false);
   const previousUsersRef = useRef([]);
@@ -342,11 +343,10 @@ export default function UserManagement() {
   }, []);
 
   const loadUsers = useCallback(async () => {
-    // Prevent multiple simultaneous fetches
-    if (loadingUsersRef.current) return;
-    
+    // Track this specific request so stale responses can be discarded
+    const gen = ++loadRequestGenRef.current;
+
     try {
-      loadingUsersRef.current = true;
       setLoading(true);
       // Only pass role parameter if roleFilter has a value
       // When "All Roles" is selected, don't pass role parameter at all
@@ -363,6 +363,8 @@ export default function UserManagement() {
       }
       
       const res = await listUsers(params);
+      // Discard results if a newer request has already started
+      if (gen !== loadRequestGenRef.current) return;
       // Server already excludes JobSeekers when no role filter is provided
       // But keep this filter as a safety measure
       const items = (res?.users || []).filter(u => u.role !== 'JobSeeker');
@@ -390,11 +392,14 @@ export default function UserManagement() {
       const searchText = activeSearchQuery ? ` matching "${activeSearchQuery}"` : '';
       setLiveMsg(`${count} user${count === 1 ? '' : 's'} loaded${roleText}${searchText}`);
     } catch (e) {
-      console.error('Failed to load users', e);
-      showToast('Failed to load users', 'Error');
+      if (gen === loadRequestGenRef.current) {
+        console.error('Failed to load users', e);
+        showToast('Failed to load users', 'Error');
+      }
     } finally { 
-      loadingUsersRef.current = false;
-      setLoading(false); 
+      if (gen === loadRequestGenRef.current) {
+        setLoading(false);
+      }
     }
   }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker]);
 
@@ -637,7 +642,12 @@ export default function UserManagement() {
     const observer = new MutationObserver(() => {
       setTimeout(syncScroll, 100);
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Scope to just the Syncfusion grid element to avoid firing on every
+    // search-input keystroke (which would force expensive layout reflows).
+    const gridEl = gridRef.current?.element || document.querySelector('.bm-grid-wrap .e-grid');
+    if (gridEl) {
+      observer.observe(gridEl, { childList: true, subtree: true });
+    }
 
     // Also watch for window resize
     const handleResize = () => setTimeout(syncScroll, 100);

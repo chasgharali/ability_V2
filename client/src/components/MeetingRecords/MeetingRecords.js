@@ -130,6 +130,7 @@ export default function MeetingRecords() {
     const toastRef = useRef(null);
     const gridRef = useRef(null);
     const loadingMeetingRecordsRef = useRef(false);
+    const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
     const loadingStatsRef = useRef(false);
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
@@ -367,7 +368,12 @@ export default function MeetingRecords() {
         const observer = new MutationObserver(() => {
             setTimeout(syncScroll, 100);
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        // Scope to just the Syncfusion grid element to avoid firing on every
+        // search-input keystroke (which would force expensive layout reflows).
+        const gridEl = gridRef.current?.element || document.querySelector('.bm-grid-wrap .e-grid');
+        if (gridEl) {
+            observer.observe(gridEl, { childList: true, subtree: true });
+        }
 
         // Also watch for window resize
         const handleResize = () => setTimeout(syncScroll, 100);
@@ -413,17 +419,19 @@ export default function MeetingRecords() {
     }, [filters]);
 
     const loadMeetingRecords = useCallback(async () => {
-        // Prevent multiple simultaneous fetches
-        if (loadingMeetingRecordsRef.current) return;
-        
+        // Track this specific request so stale responses can be discarded
+        const gen = ++loadRequestGenRef.current;
+
         try {
-            loadingMeetingRecordsRef.current = true;
             setLoadingData(true);
             const currentFilters = filtersRef.current;
             console.log('📡 Loading meeting records with filters:', currentFilters);
             const response = await meetingRecordsAPI.getMeetingRecords(currentFilters);
             console.log('✅ Meeting records response:', response);
             
+            // Discard results if a newer request has already started
+            if (gen !== loadRequestGenRef.current) return;
+
             // Ensure we have valid data structure
             if (response && response.meetingRecords) {
                 console.log(`📊 Loaded ${response.meetingRecords.length} meeting records`);
@@ -479,8 +487,9 @@ export default function MeetingRecords() {
                 hasPrev: false
             });
         } finally {
-            loadingMeetingRecordsRef.current = false;
-            setLoadingData(false);
+            if (gen === loadRequestGenRef.current) {
+                setLoadingData(false);
+            }
         }
     }, []); // No dependencies - uses ref for filters
 

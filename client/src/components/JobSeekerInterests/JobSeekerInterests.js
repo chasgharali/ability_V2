@@ -137,6 +137,7 @@ const JobSeekerInterests = () => {
     const selectionUpdateRef = useRef(false); // Prevent multiple simultaneous selection updates
     const initialLoadDone = useRef(false);
     const loadingInterestsRef = useRef(false);
+    const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
     const loadingRecruitersRef = useRef(false);
     const loadingEventsRef = useRef(false);
     const loadingBoothsRef = useRef(false);
@@ -425,7 +426,12 @@ const JobSeekerInterests = () => {
         const observer = new MutationObserver(() => {
             setTimeout(syncScroll, 50);
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        // Scope to just the Syncfusion grid element to avoid firing on every
+        // search-input keystroke (which would force expensive layout reflows).
+        const gridEl = gridRef.current?.element || document.querySelector('.bm-grid-wrap .e-grid');
+        if (gridEl) {
+            observer.observe(gridEl, { childList: true, subtree: true });
+        }
 
         return () => {
             clearTimeout(timer1);
@@ -599,17 +605,19 @@ const JobSeekerInterests = () => {
 
     // Load interests with current filters
     const loadInterests = useCallback(async () => {
-        // Prevent multiple simultaneous fetches
-        if (loadingInterestsRef.current) return;
-        
+        // Track this specific request so stale responses can be discarded
+        const gen = ++loadRequestGenRef.current;
+
         try {
-            loadingInterestsRef.current = true;
             setLoadingData(true);
             
             console.log('Loading interests with filters:', filters);
             const response = await jobSeekerInterestsAPI.getInterests(filters);
 
             console.log('API Response:', response);
+
+            // Discard results if a newer request has already started
+            if (gen !== loadRequestGenRef.current) return;
 
             const interests = response.interests || [];
             setInterests(interests);
@@ -654,11 +662,14 @@ const JobSeekerInterests = () => {
                 console.log('3. Current filters are too restrictive');
             }
         } catch (error) {
-            console.error('Error loading data:', error);
-            showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
+            if (gen === loadRequestGenRef.current) {
+                console.error('Error loading data:', error);
+                showToast(`Failed to load job seeker interests: ${error.message}`, 'Error', 5000);
+            }
         } finally {
-            loadingInterestsRef.current = false;
-            setLoadingData(false);
+            if (gen === loadRequestGenRef.current) {
+                setLoadingData(false);
+            }
         }
     }, [filters, showToast]);
 
