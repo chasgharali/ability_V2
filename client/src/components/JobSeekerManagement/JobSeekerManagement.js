@@ -29,8 +29,6 @@ import {
   MILITARY_EXPERIENCE_LIST,
   COUNTRY_OF_ORIGIN_LIST
 } from '../../constants/options';
-import { useDebounce } from '../../hooks/useDebounce';
-
 // Helper function to convert country name to 2-letter code - moved outside component for stability
 const getCountryCode = (countryValue) => {
   if (!countryValue) return '';
@@ -120,10 +118,7 @@ export default function JobSeekerManagement() {
   };
 
   const savedSearchQuery = loadSearchQueryFromSession();
-  const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
-  const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
-
   // Load filters from sessionStorage on mount (per-table persistence)
   const loadFiltersFromSession = () => {
     try {
@@ -688,10 +683,6 @@ export default function JobSeekerManagement() {
     }
   }, [activeSearchQuery]);
 
-  // Auto-trigger search when debounced search query changes (real-time search with debounce)
-  useEffect(() => {
-    setActiveSearchQuery(debouncedSearchQuery.trim());
-  }, [debouncedSearchQuery]);
 
   // Load events on mount - memoized to prevent unnecessary re-renders
   const loadEventsData = useCallback(async () => {
@@ -1917,6 +1908,14 @@ export default function JobSeekerManagement() {
     return jobSeekers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   }, [jobSeekers, currentPage, pageSize]);
 
+  // Syncfusion Grid does not automatically pick up dataSource prop changes —
+  // an explicit refresh() is required after every data update.
+  useEffect(() => {
+    if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+      gridRef.current.refresh();
+    }
+  }, [paginatedDataSource]);
+
   // Memoize grid settings to prevent unnecessary re-renders
   const gridFilterSettings = useMemo(() => ({
     type: 'Menu',
@@ -2504,15 +2503,14 @@ export default function JobSeekerManagement() {
                   Clear
                 </ButtonComponent>
               )}
-              {/* Search Section - Right - Using controlled input with debounced search */}
+              {/* Search Section - Right */}
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                 <div style={{ marginBottom: 0 }}>
                   <input
                     ref={searchInputRef}
                     id="jobseeker-search-input"
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    defaultValue={savedSearchQuery}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -2544,7 +2542,9 @@ export default function JobSeekerManagement() {
                   <ButtonComponent
                     cssClass="e-outline e-primary e-small"
                     onClick={() => {
-                      setSearchQuery('');
+                      if (searchInputRef.current) {
+                        searchInputRef.current.value = '';
+                      }
                       setActiveSearchQuery('');
                       // Clear from sessionStorage
                       try {

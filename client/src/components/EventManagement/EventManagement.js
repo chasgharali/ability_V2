@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useDebounce } from '../../hooks/useDebounce';
 import '../Dashboard/Dashboard.css';
 import './EventManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -329,10 +328,8 @@ export default function EventManagement() {
     };
 
     const [statusFilter, setStatusFilter] = useState(loadStatusFilterFromSession);
-    const searchInputRef = useRef(null); // Uncontrolled input to avoid live filtering on typing
-    const [searchQuery, setSearchQuery] = useState(''); // Input field value
+    const searchInputRef = useRef(null);
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
-    const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
     const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
 
     const handleSearch = useCallback(() => {
@@ -342,19 +339,13 @@ export default function EventManagement() {
     }, []);
 
     const handleClearSearch = useCallback(() => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setActiveSearchQuery('');
-        // loadEvents will be called automatically via useEffect when activeSearchQuery changes
         setCurrentPage(1); // Reset to first page when clearing
     }, []);
 
-    // Auto-trigger search when debounced search query changes (real-time search with debounce)
-    useEffect(() => {
-        setActiveSearchQuery(debouncedSearchQuery.trim());
-        if (debouncedSearchQuery.trim()) {
-            setCurrentPage(1); // Reset to first page when searching
-        }
-    }, [debouncedSearchQuery]);
 
     const statusOptions = [
         { value: '', label: 'All Statuses' },
@@ -520,6 +511,14 @@ export default function EventManagement() {
             loadEvents(); 
         } 
     }, [loading, loadEvents]);
+
+    // Syncfusion Grid does not automatically pick up dataSource prop changes —
+    // an explicit refresh() is required after every data update.
+    useEffect(() => {
+        if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+            gridRef.current.refresh();
+        }
+    }, [events, currentPage, pageSize]);
 
     // Track selection changes from grid
     useEffect(() => {
@@ -1088,8 +1087,6 @@ export default function EventManagement() {
                                                 ref={searchInputRef}
                                                 id="event-search-input"
                                                 type="text"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();

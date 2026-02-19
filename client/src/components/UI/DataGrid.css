@@ -23,11 +23,36 @@
 
 .data-grid-search {
     flex: 1;
-    max-width: 300px;
+    max-width: 380px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-grid-search-button {
+    padding: 10px 18px;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+
+.data-grid-search-button:hover {
+    background: #333333;
+}
+
+.data-grid-search-button:focus {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
 }
 
 .data-grid-search-input {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     padding: 12px 16px;
     border: 1px solid #d1d5db;
     border-radius: 8px;

@@ -28,8 +28,6 @@ import {
 } from '../../constants/options';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerInterests.css';
-import { useDebounce } from '../../hooks/useDebounce';
-
 const JobSeekerInterests = () => {
     const { user, loading } = useAuth();
     const { getMessage } = useRoleMessages();
@@ -193,10 +191,7 @@ const JobSeekerInterests = () => {
     // Filters
     const [filters, setFilters] = useState(loadFiltersFromSession);
     
-    // Search state for controlled input with debounce
     const savedSearchQuery = loadSearchQueryFromSession();
-    const [searchQuery, setSearchQuery] = useState(savedSearchQuery);
-    const debouncedSearchQuery = useDebounce(searchQuery, 500);
     
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
@@ -230,14 +225,6 @@ const JobSeekerInterests = () => {
         }
     }, [filters.search]);
 
-    // Auto-trigger search when debounced search query changes (real-time search with debounce)
-    useEffect(() => {
-        setFilters(prev => ({
-            ...prev,
-            search: debouncedSearchQuery.trim(),
-            page: 1 // Reset to first page when searching
-        }));
-    }, [debouncedSearchQuery]);
 
     // Statistics
     const [stats, setStats] = useState({
@@ -754,7 +741,9 @@ const JobSeekerInterests = () => {
     };
     
     const handleClearSearch = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         showToast('Search cleared', 'Success', 1500);
         setFilters(prev => ({
             ...prev,
@@ -887,6 +876,14 @@ const JobSeekerInterests = () => {
             };
         });
     }, [interests]);
+
+    // Syncfusion Grid does not automatically pick up dataSource prop changes —
+    // an explicit refresh() is required after every data update.
+    useEffect(() => {
+        if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+            gridRef.current.refresh();
+        }
+    }, [gridDataSource]);
 
     // Memoize grid settings to prevent unnecessary re-renders
     const gridFilterSettings = useMemo(() => ({
@@ -2007,8 +2004,7 @@ const JobSeekerInterests = () => {
                                             ref={searchInputRef}
                                             id="jsi-search-input"
                                             type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            defaultValue={savedSearchQuery}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();

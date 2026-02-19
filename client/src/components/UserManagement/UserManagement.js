@@ -14,8 +14,6 @@ import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, dele
 import { listBooths, getBoothEvents } from '../../services/booths';
 import { listEvents } from '../../services/events';
 import { JOB_CATEGORY_LIST } from '../../constants/options';
-import { useDebounce } from '../../hooks/useDebounce';
-
 export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [users, setUsers] = useState([]);
@@ -54,9 +52,7 @@ export default function UserManagement() {
 
   const [roleFilter, setRoleFilter] = useState(loadRoleFilterFromSession);
   const savedSearchQuery = loadSearchQueryFromSession();
-  const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
-  const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -70,6 +66,7 @@ export default function UserManagement() {
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   // Syncfusion Toast ref
   const toastRef = useRef(null);
+  const searchInputRef = useRef(null);
   const deleteDialogRef = useRef(null);
   const gridRef = useRef(null);
   const loadingUsersRef = useRef(false);
@@ -110,10 +107,6 @@ export default function UserManagement() {
     }
   }, [activeSearchQuery]);
 
-  // Auto-trigger search when debounced search query changes (real-time search with debounce)
-  useEffect(() => {
-    setActiveSearchQuery(debouncedSearchQuery.trim());
-  }, [debouncedSearchQuery]);
 
   const roleOptionsAll = useMemo(() => [
     { value: 'Admin', label: 'Admin' },
@@ -326,20 +319,20 @@ export default function UserManagement() {
   };
 
   const handleSearch = useCallback(() => {
-    // Set the active search query to trigger API call
-    setActiveSearchQuery(searchQuery.trim());
-  }, [searchQuery]);
+    setActiveSearchQuery((searchInputRef.current?.value || '').trim());
+    setCurrentPage(1);
+  }, []);
 
   const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
     setActiveSearchQuery('');
-    // Clear from sessionStorage
     try {
       sessionStorage.removeItem('userManagement_searchQuery');
     } catch (error) {
       console.error('Error clearing User Management search query from sessionStorage:', error);
     }
-    // loadUsers will be called automatically via useEffect when activeSearchQuery changes
   }, []);
 
   const loadUsers = useCallback(async () => {
@@ -413,11 +406,18 @@ export default function UserManagement() {
     const currentUserIds = users.map(u => u.id).sort().join(',');
     const previousUserIds = previousUsersRef.current.map(u => u.id).sort().join(',');
     
-    // Update ref when user data changes
     if (currentUserIds !== previousUserIds || users.length !== previousUsersRef.current.length) {
       previousUsersRef.current = [...users];
     }
   }, [users]);
+
+  // Syncfusion Grid does not automatically pick up dataSource prop changes —
+  // an explicit refresh() is required after every data update.
+  useEffect(() => {
+    if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+      gridRef.current.refresh();
+    }
+  }, [paginatedDataSource]);
 
   const loadBoothsAndEvents = async () => {
     try {
@@ -962,11 +962,11 @@ export default function UserManagement() {
                   {/* Search Section - Right */}
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                     <div style={{ marginBottom: 0 }}>
-                      <Input
+                      <input
                         id="user-search-input"
                         type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        ref={searchInputRef}
+                        defaultValue={savedSearchQuery}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -974,8 +974,8 @@ export default function UserManagement() {
                           }
                         }}
                         placeholder="Search by name, email, or any field..."
-                        style={{ width: '300px', marginBottom: 0 }}
-                        className="um-search-input-no-label"
+                        style={{ width: '300px', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', outline: 'none' }}
+                        className="um-search-input-native"
                       />
                     </div>
                     <ButtonComponent
@@ -987,7 +987,7 @@ export default function UserManagement() {
                     >
                       Search
                     </ButtonComponent>
-                    {(searchQuery || activeSearchQuery) && (
+                    {activeSearchQuery && (
                       <ButtonComponent
                         cssClass="e-outline e-primary e-small"
                         onClick={handleClearSearch}

@@ -27,8 +27,6 @@ import {
     SECURITY_CLEARANCE_LIST,
     MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
-import { useDebounce } from '../../hooks/useDebounce';
-
 export default function MeetingRecords() {
     const { user, loading } = useAuth();
     const { getMessage } = useRoleMessages();
@@ -206,10 +204,7 @@ export default function MeetingRecords() {
     // Filters
     const [filters, setFilters] = useState(loadFiltersFromSession);
     
-    // Search state for controlled input with debounce
     const savedSearchQuery = loadSearchQueryFromSession();
-    const [searchQuery, setSearchQuery] = useState(savedSearchQuery);
-    const debouncedSearchQuery = useDebounce(searchQuery, 500);
     
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
@@ -243,14 +238,6 @@ export default function MeetingRecords() {
         }
     }, [filters.search]);
 
-    // Auto-trigger search when debounced search query changes (real-time search with debounce)
-    useEffect(() => {
-        setFilters(prev => ({
-            ...prev,
-            search: debouncedSearchQuery.trim(),
-            page: 1 // Reset to first page when searching
-        }));
-    }, [debouncedSearchQuery]);
 
     // Pagination
     const [pagination, setPagination] = useState({
@@ -1258,7 +1245,9 @@ export default function MeetingRecords() {
     };
     
     const handleClearSearch = () => {
-        setSearchQuery('');
+        if (searchInputRef.current) {
+            searchInputRef.current.value = '';
+        }
         setFilters(prev => ({
             ...prev,
             search: '',
@@ -1450,6 +1439,14 @@ export default function MeetingRecords() {
             };
         });
     }, [meetingRecords]);
+
+    // Syncfusion Grid does not automatically pick up dataSource prop changes —
+    // an explicit refresh() is required after every data update.
+    useEffect(() => {
+        if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+            gridRef.current.refresh();
+        }
+    }, [gridDataSource]);
 
     // Memoize grid settings to prevent unnecessary re-renders
     const gridFilterSettings = useMemo(() => ({
@@ -1983,8 +1980,7 @@ export default function MeetingRecords() {
                                         ref={searchInputRef}
                                         id="meeting-records-search-input"
                                         type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        defaultValue={savedSearchQuery}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();

@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, forwardRef } from 'react';
 import './FormComponents.css';
 
 // Custom Input Component
-export const Input = ({
+export const Input = forwardRef(({
     label,
     type = 'text',
     value,
@@ -16,7 +16,7 @@ export const Input = ({
     'aria-describedby': ariaDescribedby,
     className = '',
     ...props
-}) => {
+}, ref) => {
     const inputId = id || `input-${name || Math.random().toString(36).substr(2, 9)}`;
     const errorId = error ? `${inputId}-error` : undefined;
 
@@ -29,6 +29,7 @@ export const Input = ({
                 </label>
             )}
             <input
+                ref={ref}
                 id={inputId}
                 type={type}
                 value={value}
@@ -49,7 +50,7 @@ export const Input = ({
             )}
         </div>
     );
-};
+});
 
 // Custom Select Component
 export const Select = ({

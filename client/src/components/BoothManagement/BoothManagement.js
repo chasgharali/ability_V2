@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useDebounce } from '../../hooks/useDebounce';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -89,9 +88,7 @@ export default function BoothManagement() {
   };
 
   const savedSearchQuery = loadSearchQueryFromSession();
-  const [searchQuery, setSearchQuery] = useState(savedSearchQuery); // Input field value
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
-  const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search input for auto-search
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -677,13 +674,6 @@ export default function BoothManagement() {
     }
   }, [activeSearchQuery]);
 
-  // Auto-trigger search when debounced search query changes (real-time search with debounce)
-  useEffect(() => {
-    setActiveSearchQuery(debouncedSearchQuery.trim());
-    if (debouncedSearchQuery.trim()) {
-      setCurrentPage(1); // Reset to first page when searching
-    }
-  }, [debouncedSearchQuery]);
 
   const handleSearch = () => {
     const query = (searchInputRef.current?.value || '').trim();
@@ -692,7 +682,9 @@ export default function BoothManagement() {
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
     setActiveSearchQuery('');
     setCurrentPage(1); // Reset to first page when clearing
     // Clear from sessionStorage
@@ -800,6 +792,14 @@ export default function BoothManagement() {
   useEffect(() => { 
     loadBooths(); 
   }, [loadBooths]);
+
+  // Syncfusion Grid does not automatically pick up dataSource prop changes —
+  // an explicit refresh() is required after every data update.
+  useEffect(() => {
+    if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+      gridRef.current.refresh();
+    }
+  }, [booths, currentPage, pageSize]);
 
   // Track selection changes from grid
   useEffect(() => {
@@ -1247,8 +1247,7 @@ export default function BoothManagement() {
                       ref={searchInputRef}
                       id="booth-search-input"
                       type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      defaultValue={savedSearchQuery}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();

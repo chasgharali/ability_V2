@@ -13,6 +13,7 @@ const DataGrid = ({
     'aria-label': ariaLabel = 'Data table'
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [appliedSearchTerm, setAppliedSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [selectedRows, setSelectedRows] = useState(new Set());
     const [visibleColumns, setVisibleColumns] = useState(
@@ -25,12 +26,12 @@ const DataGrid = ({
     const processedData = useMemo(() => {
         let filtered = data;
 
-        // Apply search filter
-        if (searchTerm && searchable) {
+        // Apply search filter (only when user explicitly triggers search)
+        if (appliedSearchTerm && searchable) {
             filtered = data.filter(row =>
                 columns.some(col => {
                     const value = row[col.key];
-                    return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+                    return value && value.toString().toLowerCase().includes(appliedSearchTerm.toLowerCase());
                 })
             );
         }
@@ -48,7 +49,7 @@ const DataGrid = ({
         }
 
         return filtered;
-    }, [data, searchTerm, sortConfig, columns, searchable, sortable]);
+    }, [data, appliedSearchTerm, sortConfig, columns, searchable, sortable]);
 
     // Handle sorting
     const handleSort = (key) => {
@@ -139,11 +140,25 @@ const DataGrid = ({
                             placeholder="Search..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    setAppliedSearchTerm(searchTerm);
+                                }
+                            }}
                             className="data-grid-search-input"
                             aria-describedby="search-help"
                         />
+                        <button
+                            type="button"
+                            className="data-grid-search-button"
+                            onClick={() => setAppliedSearchTerm(searchTerm)}
+                            aria-label="Search"
+                        >
+                            Search
+                        </button>
                         <span id="search-help" className="sr-only">
-                            Search through all columns in the table
+                            Type and press Search or Enter to filter the table
                         </span>
                     </div>
                 )}
