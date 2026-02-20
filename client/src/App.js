@@ -8,7 +8,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { RoleMessagesProvider } from './contexts/RoleMessagesContext';
 import { AccessibilityAnnouncer } from './components/Accessibility/AccessibilityAnnouncer';
-import { FocusManager } from './components/Accessibility/FocusManager';
+import { GlobalRouteObserver } from './components/Accessibility/FocusManager';
 import ChatPanel from './components/Chat/ChatPanel';
 import LoginPage from './components/Auth/LoginPage';
 import RegisterPage from './components/Auth/RegisterPage';
@@ -64,14 +64,8 @@ const AppLayout = ({ children }) => {
 
     return (
         <div className="App">
-            <a href="#dashboard-main" className="skip-link"
-               onClick={(e) => {
-                   e.preventDefault();
-                   const target = document.getElementById('dashboard-main')
-                                || document.getElementById('main-content');
-                   if (target) { target.focus(); }
-               }}
-            >Skip to main content</a>
+            <div id="route-focus-reset" tabIndex={-1} className="sr-only" />
+            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
             <div id="main-content">
                 {children}
             </div>
@@ -80,7 +74,7 @@ const AppLayout = ({ children }) => {
             {showChat && <ChatPanel />}
 
             <AccessibilityAnnouncer />
-            <FocusManager />
+            <GlobalRouteObserver />
         </div>
     );
 };

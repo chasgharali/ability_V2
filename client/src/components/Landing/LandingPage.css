@@ -31,6 +31,10 @@
     gap: 1.5rem;
 }
 
+.login-options:focus {
+    outline: none;
+}
+
 .login-option-card {
     border: 1px solid #e5e7eb;
     border-radius: 1rem;
@@ -80,10 +84,23 @@
     display: inline-block;
 }
 
-.login-option-button:hover,
+.login-option-button:hover {
+    background-color: #1f2937;
+}
+
 .login-option-button:focus {
     background-color: #1f2937;
-    outline: 2px solid #ffffff;
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+}
+
+.login-option-button:focus:not(:focus-visible) {
+    outline: none;
+}
+
+.login-option-button:focus-visible {
+    background-color: #1f2937;
+    outline: 3px solid #000000;
     outline-offset: 2px;
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import './LoginPage.css';
@@ -173,7 +174,11 @@ const LoginPage = () => {
     }
 
     return (
-        <div className="login-container">
+        <>
+        <Helmet>
+            <title>{userType === 'jobseeker' ? 'Job Seeker Login' : 'Company & Staff Login'} - abilityconnect</title>
+        </Helmet>
+        <div className="login-container" id="main-content">
             <a href="#login-form" className="skip-link" onClick={handleSkipToForm}>
                 Skip to login form
             </a>
@@ -341,6 +346,7 @@ const LoginPage = () => {
                 <p>powered by abilityCONNECT.online</p>
             </div>
         </div>
+        </>
     );
 };
 

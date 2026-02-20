@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
@@ -97,10 +98,13 @@ export default function RegisteredEventDetail() {
 
   return (
     <div className="dashboard">
+      <Helmet>
+        <title>{event?.name ? `You are registered for ${event.name}` : 'Registered Event'} - abilityconnect</title>
+      </Helmet>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="my-current-registrations" />
-        <main id="dashboard-main" className="dashboard-main">
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
           <div className="dashboard-content">
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}

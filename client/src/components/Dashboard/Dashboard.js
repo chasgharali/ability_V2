@@ -744,7 +744,16 @@ const Dashboard = () => {
     return (
         <>
             <Helmet>
-                <title>Dashboard - abilityconnect</title>
+                <title>{(() => {
+                    const pageTitleMap = {
+                        'my-account': 'My Account',
+                        'survey': 'Survey',
+                        'edit-profile': 'Edit Profile & Resume',
+                        'view-profile': 'View My Profile',
+                        'delete-account': 'Delete My Account',
+                    };
+                    return `${pageTitleMap[activeSection] || 'Dashboard'} - abilityconnect`;
+                })()}</title>
             </Helmet>
             <div className="dashboard">
                 {/* Video Upload Progress Modal */}

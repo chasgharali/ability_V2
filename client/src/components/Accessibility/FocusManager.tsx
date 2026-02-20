@@ -16,18 +16,19 @@ const FocusManager: React.FC = () => {
         // Only manage focus if the path has actually changed
         if (previousPathRef.current !== location.pathname) {
             const timer = setTimeout(() => {
-                // Search for headings within the main content area first
-                const mainArea = document.getElementById('dashboard-main');
-                const searchRoot = mainArea || document;
-                const firstHeading = searchRoot.querySelector('h1, h2');
-                if (firstHeading) {
-                    (firstHeading as HTMLElement).setAttribute('tabindex', '-1');
-                    (firstHeading as HTMLElement).focus();
+                // Focus the skip link so it becomes visible. The user can then
+                // press Enter to jump to the page heading, or press Tab to
+                // continue through the normal tab order (logo, logout, sidebar).
+                const skipLink = document.querySelector('.skip-link') as HTMLElement;
+                if (skipLink) {
+                    skipLink.focus();
                 } else {
-                    const fallback = mainArea || document.getElementById('main-content');
-                    if (fallback) {
-                        fallback.setAttribute('tabindex', '-1');
-                        fallback.focus();
+                    const mainArea = document.getElementById('dashboard-main');
+                    const searchRoot = mainArea || document;
+                    const firstHeading = searchRoot.querySelector('h1, h2');
+                    if (firstHeading) {
+                        (firstHeading as HTMLElement).setAttribute('tabindex', '-1');
+                        (firstHeading as HTMLElement).focus();
                     }
                 }
             }, 350);

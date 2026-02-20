@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
@@ -34,6 +35,16 @@ export default function RegistrationWizard() {
   const navigate = useNavigate();
   const location = useLocation();
   const liveRef = useRef(null);
+  const stepHeadingRef = useRef(null);
+
+  // Focus the active step heading whenever the step changes so screen reader
+  // users are immediately placed at the top of the new step content.
+  useEffect(() => {
+    if (stepHeadingRef.current) {
+      stepHeadingRef.current.setAttribute('tabindex', '-1');
+      stepHeadingRef.current.focus();
+    }
+  }, [step]);
 
   // Check if user is already registered for this event
   const checkRegistrationStatus = (event, user) => {
@@ -411,12 +422,20 @@ export default function RegistrationWizard() {
   }
   if (!user) return null;
 
+  const stepNames = ['My Account', 'Profile & Resume', 'Survey & Terms'];
+  const pageTitle = event?.name
+    ? `${event.name} Registration - Step ${step} of 3 (${stepNames[step - 1]}) - abilityconnect`
+    : `Event Registration - Step ${step} of 3 - abilityconnect`;
+
   return (
     <div className="dashboard">
+      <Helmet>
+        <title>{pageTitle}</title>
+      </Helmet>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="events" />
-        <main id="dashboard-main" className="dashboard-main">
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="Event registration content">
           <div className="dashboard-content">
             <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{event?.name || 'Event Registration'}</h2>
             {isAlreadyRegistered ? (
@@ -498,7 +517,7 @@ export default function RegistrationWizard() {
 
             {step === 1 && (
               <section aria-labelledby="account-h">
-                <h3 id="account-h">My Account Information</h3>
+                <h3 id="account-h" ref={stepHeadingRef}>Step 1 of 3: My Account Information</h3>
                 {validationErrors.step1 && Object.keys(validationErrors.step1).length > 0 && (
                   <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
                     <h4>Please complete all required fields:</h4>
@@ -526,7 +545,7 @@ export default function RegistrationWizard() {
 
             {step === 2 && (
               <section aria-labelledby="profile-h">
-                <h3 id="profile-h">Edit Profile & Resume</h3>
+                <h3 id="profile-h" ref={stepHeadingRef}>Step 2 of 3: Edit Profile &amp; Resume</h3>
                 {validationErrors.step2 && Object.keys(validationErrors.step2).length > 0 && (
                   <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
                     <h4>Please complete all required fields:</h4>
@@ -548,7 +567,7 @@ export default function RegistrationWizard() {
 
             {step === 3 && (
               <section aria-labelledby="survey-h">
-                <h3 id="survey-h">Survey & Final Requirements</h3>
+                <h3 id="survey-h" ref={stepHeadingRef}>Step 3 of 3: Survey &amp; Final Requirements</h3>
                 {validationErrors.step3 && Object.keys(validationErrors.step3).length > 0 && (
                   <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
                     <h4>Please complete all required fields:</h4>

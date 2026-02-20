@@ -140,14 +140,11 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
 
       <div className="dashboard-header-content admin-header-content">
         <div className="header-left">
-          {!hideMenuToggle && (
-            <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
-              {mobileOpen ? <MdClose /> : <MdMenu />}
-            </button>
-          )}
-          {/* Primary (event) logo - hide on mobile for booth users and jobseekers */}
+          {/* Logo link is first in DOM so it gets focus after the skip link (tab order: skip link → logo → logout) */}
           {brandingLogo && brandingLogo.trim() !== '' && (
-            <img src={brandingLogo} alt={finalBrandingLogoAlt} className={`header-logo ${(isBoothUser || isJobSeeker) ? 'hide-on-mobile-booth' : ''}`} />
+            <a href="/dashboard" className={`header-logo-link ${(isBoothUser || isJobSeeker) ? 'hide-on-mobile-booth' : ''}`} aria-label="Go to dashboard home">
+              <img src={brandingLogo} alt={finalBrandingLogoAlt} className="header-logo" />
+            </a>
           )}
           {/* Secondary (booth) logo if provided - not on left for Recruiters/Interpreters/Support/JobSeekers */}
           {!isBoothUser && !isJobSeeker && secondaryLogo && secondaryLogo.trim() !== '' && (
@@ -155,7 +152,15 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
           )}
           {/* Fallback text if no logos */}
           {(!brandingLogo || brandingLogo.trim() === '') && (!secondaryLogo || secondaryLogo.trim() === '') && (
-            <span className="header-text">ABILITY Job Fair</span>
+            <a href="/dashboard" className="header-logo-link" aria-label="Go to dashboard home">
+              <span className="header-text">ABILITY Job Fair</span>
+            </a>
+          )}
+          {/* Menu toggle comes after logo in DOM so logo is 2nd in tab order; CSS positions it visually first on mobile */}
+          {!hideMenuToggle && (
+            <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
+              {mobileOpen ? <MdClose /> : <MdMenu />}
+            </button>
           )}
         </div>
 

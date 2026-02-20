@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const FocusManagerContext = createContext();
 
@@ -146,3 +147,66 @@ export const FocusManager = ({ children }) => {
         </FocusManagerContext.Provider>
     );
 };
+
+const getPageHeadingText = () => {
+    const mainArea = document.getElementById('dashboard-main');
+    const heading = (mainArea || document).querySelector('h1, h2, h3');
+    return heading ? heading.textContent.trim() : '';
+};
+
+const announcePageLoaded = (headingText) => {
+    const politeRegion = document.getElementById('announcements-polite');
+    if (!politeRegion || !headingText) return;
+
+    const messageNode = document.createElement('div');
+    messageNode.textContent = `Page loaded: ${headingText}`;
+    politeRegion.appendChild(messageNode);
+
+    // Keep this aligned with existing announcer timing.
+    setTimeout(() => {
+        if (politeRegion.contains(messageNode)) {
+            politeRegion.removeChild(messageNode);
+        }
+    }, 1000);
+};
+
+// Global route observer:
+// on SPA route change, announce the new page title and reset focus to a hidden
+// top anchor so the first Tab lands on the skip link.
+export const GlobalRouteObserver = () => {
+    const location = useLocation();
+    const previousPathRef = useRef('');
+
+    useEffect(() => {
+        if (previousPathRef.current === '') {
+            previousPathRef.current = location.pathname;
+            return;
+        }
+
+        if (previousPathRef.current !== location.pathname) {
+            const timer = setTimeout(() => {
+                const headingText = getPageHeadingText();
+                announcePageLoaded(headingText);
+
+                const resetAnchor = document.getElementById('route-focus-reset');
+                if (resetAnchor) {
+                    resetAnchor.focus();
+                    return;
+                }
+
+                const skipLink = document.querySelector('.skip-link');
+                if (skipLink) {
+                    skipLink.focus();
+                }
+            }, 350);
+
+            previousPathRef.current = location.pathname;
+            return () => clearTimeout(timer);
+        }
+    }, [location.pathname]);
+
+    return null;
+};
+
+// Backward-compatible export name.
+export const RouteFocusManager = GlobalRouteObserver;

@@ -4,6 +4,39 @@
   z-index: 10;
 }
 
+/* Logo link wrapper — inherits no underline/color from the <a> tag */
+.header-logo-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+.header-logo-link:focus-visible {
+  outline: 3px solid #005fcc;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* header-left uses flex; on mobile the menu toggle must appear visually before
+   the logo even though the logo comes first in DOM (for correct tab order).
+   Use CSS order to swap visual position on narrow screens. */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+  /* Visually move the menu toggle to the far left */
+  .header-left .mobile-menu-toggle {
+    order: -1;
+  }
+  /* Logo link stays at its natural DOM position but renders after toggle visually */
+  .header-left .header-logo-link {
+    order: 0;
+  }
+}
+
 .admin-header-content {
   display: flex;
   align-items: center;
