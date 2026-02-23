@@ -269,25 +269,26 @@ const NoteForm = () => {
     if (loading && isEdit) {
         return (
             <div className="dashboard">
+                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="notes" />
-                    <main id="dashboard-main" className="dashboard-main">
+                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading note...</div>
                     </main>
                     <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
                 </div>
-                <div className="mobile-overlay" aria-hidden="true" />
             </div>
         );
     }
 
     return (
         <div className="dashboard">
+            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="notes" />
-                <main id="dashboard-main" className="dashboard-main">
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="note-form-container">
                         <div className="note-form-header">
                             <h2>{isEdit ? 'Edit Note' : 'Create New Note'}</h2>
@@ -420,7 +421,6 @@ const NoteForm = () => {
                     </div>
                 </main>
             </div>
-            <div className="mobile-overlay" aria-hidden="true" />
             <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
         </div>
     );

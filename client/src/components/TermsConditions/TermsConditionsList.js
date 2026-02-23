@@ -292,14 +292,14 @@ const TermsConditionsList = () => {
     if (loading) {
         return (
             <div className="dashboard">
+                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="terms-conditions" />
-                    <main id="dashboard-main" className="dashboard-main">
+                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading terms and conditions...</div>
                     </main>
                 </div>
-                <div className="mobile-overlay" aria-hidden="true" />
             </div>
         );
     }
@@ -307,10 +307,11 @@ const TermsConditionsList = () => {
 
     return (
         <div className="dashboard">
+            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="terms-conditions" />
-                <main id="dashboard-main" className="dashboard-main">
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h2>Terms & Conditions Management</h2>
                         <div className="bm-header-actions">
@@ -384,7 +385,6 @@ const TermsConditionsList = () => {
                     )}
                 </main>
             </div>
-            <div className="mobile-overlay" aria-hidden="true" />
         </div>
     );
 };

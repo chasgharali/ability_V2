@@ -65,10 +65,7 @@ const AppLayout = ({ children }) => {
     return (
         <div className="App">
             <div id="route-focus-reset" tabIndex={-1} className="sr-only" />
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
-            <div id="main-content">
-                {children}
-            </div>
+            {children}
 
             {/* Show ChatPanel for authenticated users with chat-enabled roles */}
             {showChat && <ChatPanel />}

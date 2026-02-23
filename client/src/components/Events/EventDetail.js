@@ -73,6 +73,7 @@ export default function EventDetail() {
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <Helmet>
         <title>{event?.name || 'Event'} - abilityconnect</title>
       </Helmet>

@@ -79,6 +79,7 @@ export default function UpcomingEvents() {
         <title>Upcoming Events - abilityconnect</title>
       </Helmet>
       <div className="dashboard">
+        <a href="#dashboard-main" className="skip-link">Skip to main content</a>
         <AdminHeader />
         <div className="dashboard-layout">
           <AdminSidebar active="events" />

@@ -39,19 +39,20 @@ export default function EventRegistration() {
   }, [user, loading, location, navigate]);
 
   if (loading || fetching) {
-    return <div className="dashboard"><div className="dashboard-layout"><main className="dashboard-main"><div>Loading…</div></main></div></div>;
+    return <div className="dashboard"><a href="#dashboard-main" className="skip-link">Skip to main content</a><div className="dashboard-layout"><main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content"><div>Loading…</div></main></div></div>;
   }
 
   if (!event) {
-    return <div className="dashboard"><div className="dashboard-layout"><main className="dashboard-main"><div>Event not found.</div></main></div></div>;
+    return <div className="dashboard"><a href="#dashboard-main" className="skip-link">Skip to main content</a><div className="dashboard-layout"><main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content"><div>Event not found.</div></main></div></div>;
   }
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="events" />
-        <main id="dashboard-main" className="dashboard-main">
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
               <h2>Register for: {event.name}</h2>

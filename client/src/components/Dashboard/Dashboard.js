@@ -756,6 +756,7 @@ const Dashboard = () => {
                 })()}</title>
             </Helmet>
             <div className="dashboard">
+                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
                 {/* Video Upload Progress Modal */}
                 <VideoUploadProgress 
                     progress={uploadProgress}

@@ -234,6 +234,7 @@ const JobSeekerQualifications = () => {
 
     return (
         <div className="dashboard-container">
+            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="jobseeker-qualifications" />

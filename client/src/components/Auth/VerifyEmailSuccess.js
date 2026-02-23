@@ -93,7 +93,6 @@ export default function VerifyEmailSuccess() {
       </a>
 
       <main 
-        id="main-content"
         className="auth-card register-card" 
         style={{ 
           maxWidth: 720, 

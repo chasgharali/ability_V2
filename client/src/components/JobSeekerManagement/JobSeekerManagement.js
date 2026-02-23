@@ -1948,6 +1948,7 @@ export default function JobSeekerManagement() {
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="jobseekers" />

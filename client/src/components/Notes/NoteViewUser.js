@@ -41,14 +41,14 @@ const NoteViewUser = ({ type }) => {
     if (loading) {
         return (
             <div className="dashboard">
+                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active={type === 'troubleshooting' ? 'troubleshooting' : 'instructions'} />
-                    <main id="dashboard-main" className="dashboard-main">
+                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading {type === 'troubleshooting' ? 'troubleshooting notes' : 'instructions'}...</div>
                     </main>
                 </div>
-                <div className="mobile-overlay" aria-hidden="true" />
             </div>
         );
     }
@@ -56,10 +56,11 @@ const NoteViewUser = ({ type }) => {
     if (error) {
         return (
             <div className="dashboard">
+                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active={type === 'troubleshooting' ? 'troubleshooting' : 'instructions'} />
-                    <main id="dashboard-main" className="dashboard-main">
+                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="error">
                             <h3>Error</h3>
                             <p>{error}</p>
@@ -67,7 +68,6 @@ const NoteViewUser = ({ type }) => {
                         </div>
                     </main>
                 </div>
-                <div className="mobile-overlay" aria-hidden="true" />
             </div>
         );
     }
@@ -76,10 +76,11 @@ const NoteViewUser = ({ type }) => {
 
     return (
         <div className="dashboard">
+            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active={type === 'troubleshooting' ? 'troubleshooting' : 'instructions'} />
-                <main id="dashboard-main" className="dashboard-main">
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h2>{title}</h2>
                         <div className="bm-header-actions">
@@ -127,7 +128,6 @@ const NoteViewUser = ({ type }) => {
                     </div>
                 </main>
             </div>
-            <div className="mobile-overlay" aria-hidden="true" />
         </div>
     );
 };

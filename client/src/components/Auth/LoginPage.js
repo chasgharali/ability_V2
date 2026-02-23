@@ -178,7 +178,7 @@ const LoginPage = () => {
         <Helmet>
             <title>{userType === 'jobseeker' ? 'Job Seeker Login' : 'Company & Staff Login'} - abilityconnect</title>
         </Helmet>
-        <div className="login-container" id="main-content">
+        <div className="login-container">
             <a href="#login-form" className="skip-link" onClick={handleSkipToForm}>
                 Skip to login form
             </a>

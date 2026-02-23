@@ -26,7 +26,7 @@ const LandingPage = () => {
                    }
                }}
             >Skip to login options</a>
-            <main className="landing-page-container" role="main">
+            <main className="landing-page-container" aria-label="main content">
                 <div className="landing-card">
                     <h1 className="landing-title">Choose Your Login Type</h1>
                     <div className="login-options" id="landing-options">

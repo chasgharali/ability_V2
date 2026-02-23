@@ -1849,6 +1849,7 @@ export default function MeetingRecords() {
 
     return (
         <div className="dashboard">
+            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
             <AdminHeader 
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 brandingLogoAlt={event?.logoAltText || ''}
@@ -1857,7 +1858,7 @@ export default function MeetingRecords() {
             />
             <div className="dashboard-layout">
                 <AdminSidebar active="meeting-records" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="meeting-records-container">
                         <div className="page-header">

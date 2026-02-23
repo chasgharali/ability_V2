@@ -98,6 +98,7 @@ export default function RegisteredEventDetail() {
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <Helmet>
         <title>{event?.name ? `You are registered for ${event.name}` : 'Registered Event'} - abilityconnect</title>
       </Helmet>

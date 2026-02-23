@@ -197,24 +197,25 @@ export default function RoleMessageManagement() {
   if (loading) {
     return (
       <div className="dashboard">
+        <a href="#dashboard-main" className="skip-link">Skip to main content</a>
         <AdminHeader />
         <div className="dashboard-layout">
           <AdminSidebar active="role-messages" />
-          <main id="dashboard-main" className="dashboard-main">
+          <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
             <div className="loading">Loading role messages...</div>
           </main>
         </div>
-        <div className="mobile-overlay" aria-hidden="true" />
       </div>
     );
   }
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="role-messages" />
-        <main id="dashboard-main" className="dashboard-main">
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="bm-header">
             <h2>Page Instructions</h2>
             <div className="bm-header-actions">
@@ -495,7 +496,6 @@ export default function RoleMessageManagement() {
           </div>
         </main>
       </div>
-      <div className="mobile-overlay" aria-hidden="true" />
     </div>
   );
 }

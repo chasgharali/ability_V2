@@ -1159,6 +1159,7 @@ export default function BoothManagement() {
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       {/* Video Upload Progress Modal */}
       <VideoUploadProgress 
         progress={uploadProgress}
@@ -1171,7 +1172,7 @@ export default function BoothManagement() {
       <div className="dashboard-layout">
         <AdminSidebar active="booths" />
 
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
               <h2>Booth Management</h2>
@@ -1779,9 +1780,6 @@ export default function BoothManagement() {
           </div>
         </main>
       </div>
-
-      {/* Mobile overlay */}
-      <div className="mobile-overlay" aria-hidden="true" />
 
       {/* Placeholder preview modal - rendered via portal to avoid DOM conflicts */}
       {previewBooth && typeof document !== 'undefined' && createPortal(

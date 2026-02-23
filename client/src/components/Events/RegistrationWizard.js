@@ -418,7 +418,7 @@ export default function RegistrationWizard() {
   }, [termsDocuments, termsAccepted]);
 
   if (loading || fetching) {
-    return <div className="dashboard"><div className="dashboard-layout"><main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content"><div>Loading…</div></main></div></div>;
+    return <div className="dashboard"><a href="#dashboard-main" className="skip-link">Skip to main content</a><div className="dashboard-layout"><main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content"><div>Loading…</div></main></div></div>;
   }
   if (!user) return null;
 
@@ -429,6 +429,7 @@ export default function RegistrationWizard() {
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <Helmet>
         <title>{pageTitle}</title>
       </Helmet>

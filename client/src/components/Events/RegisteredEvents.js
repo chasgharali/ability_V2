@@ -65,6 +65,7 @@ export default function RegisteredEvents() {
         <title>Current Registrations - abilityconnect</title>
       </Helmet>
       <div className="dashboard">
+        <a href="#dashboard-main" className="skip-link">Skip to main content</a>
         <AdminHeader />
         <div className="dashboard-layout">
           <AdminSidebar active="events" />

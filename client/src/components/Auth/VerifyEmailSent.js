@@ -92,7 +92,6 @@ export default function VerifyEmailSent() {
       </a>
 
       <main 
-        id="main-content"
         className="auth-card register-card"
         style={{
           width: '60vw',

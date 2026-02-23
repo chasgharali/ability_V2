@@ -871,10 +871,11 @@ export default function UserManagement() {
 
   return (
     <div className="dashboard">
+      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="users" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
               <h2>User Management</h2>
@@ -1365,8 +1366,6 @@ export default function UserManagement() {
           </div>
         </main>
       </div>
-
-      <div className="mobile-overlay" aria-hidden="true" />
 
       {/* Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent

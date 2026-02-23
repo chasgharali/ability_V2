@@ -1846,6 +1846,7 @@ const JobSeekerInterests = () => {
     if (loading) {
         return (
             <div className="dashboard">
+                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
                 <AdminHeader
                     brandingLogo={event?.logoUrl || event?.logo || ''}
                     brandingLogoAlt={event?.logoAltText || ''}
@@ -1867,6 +1868,7 @@ const JobSeekerInterests = () => {
 
     return (
         <div className="dashboard">
+            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
             <AdminHeader
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 brandingLogoAlt={event?.logoAltText || ''}

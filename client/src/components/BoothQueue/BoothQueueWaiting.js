@@ -1225,7 +1225,7 @@ export default function BoothQueueWaiting() {
         </div>
 
         {/* Main content */}
-        <div className="waiting-main" id="main-content">
+        <div className="waiting-main">
           {/* Mobile toggle for queue panel - only shows action buttons */}
           <button
             className="mobile-toggle-btn"
