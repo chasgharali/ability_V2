@@ -188,15 +188,16 @@ export const GlobalRouteObserver = () => {
                 const headingText = getPageHeadingText();
                 announcePageLoaded(headingText);
 
-                const resetAnchor = document.getElementById('route-focus-reset');
-                if (resetAnchor) {
-                    resetAnchor.focus();
+                const mainArea = document.getElementById('dashboard-main');
+                const heading = (mainArea || document).querySelector('h1, h2');
+                if (heading) {
+                    heading.setAttribute('tabindex', '-1');
+                    heading.focus();
                     return;
                 }
-
-                const skipLink = document.querySelector('.skip-link');
-                if (skipLink) {
-                    skipLink.focus();
+                const mainEl = mainArea || document.querySelector('main');
+                if (mainEl) {
+                    mainEl.focus();
                 }
             }, 350);
 

@@ -145,26 +145,16 @@ const LoginPage = () => {
         setError(''); // Clear any existing errors when switching types
     };
 
-    const handleSkipToForm = (e) => {
-        e.preventDefault();
-        if (formRef.current) {
-            const firstInput = formRef.current.querySelector('input');
-            if (firstInput) {
-                firstInput.focus();
-            }
-        }
-    };
-
     // Show loading while checking authentication
     if (loading) {
         return (
-            <div className="login-container">
+            <main className="login-container" aria-label="main content">
                 <div className="login-card">
                     <div style={{ textAlign: 'center', padding: '2rem' }}>
                         Loading...
                     </div>
                 </div>
-            </div>
+            </main>
         );
     }
 
@@ -178,10 +168,8 @@ const LoginPage = () => {
         <Helmet>
             <title>{userType === 'jobseeker' ? 'Job Seeker Login' : 'Company & Staff Login'} - abilityconnect</title>
         </Helmet>
-        <div className="login-container">
-            <a href="#login-form" className="skip-link" onClick={handleSkipToForm}>
-                Skip to login form
-            </a>
+        <a href="#login-form" className="skip-link">Skip to login form</a>
+        <main className="login-container" aria-label="main content">
             <div className="login-card">
                 {/* Back to Landing Link */}
                 <Link to="/" className="login-back-link" aria-label="Back to landing page">
@@ -345,7 +333,7 @@ const LoginPage = () => {
             <div className="login-branding">
                 <p>powered by abilityCONNECT.online</p>
             </div>
-        </div>
+        </main>
         </>
     );
 };

@@ -16,20 +16,11 @@ const LandingPage = () => {
             <Helmet>
                 <title>Choose Your Login Type - abilityconnect</title>
             </Helmet>
-            <a href="#landing-options" className="skip-link"
-               onClick={(e) => {
-                   e.preventDefault();
-                   const target = document.getElementById('landing-options');
-                   if (target) {
-                       target.setAttribute('tabindex', '-1');
-                       target.focus();
-                   }
-               }}
-            >Skip to login options</a>
-            <main className="landing-page-container" aria-label="main content">
+            <a href="#landing-options" className="skip-link">Skip to login options</a>
+            <main className="landing-page-container" id="landing-options" tabIndex={-1} aria-label="main content">
                 <div className="landing-card">
                     <h1 className="landing-title">Choose Your Login Type</h1>
-                    <div className="login-options" id="landing-options">
+                    <div className="login-options">
                         <div className="login-option-card">
                             <MdPerson className="login-option-icon" aria-hidden="true" />
                             <h2 className="login-option-title">Job Seeker</h2>

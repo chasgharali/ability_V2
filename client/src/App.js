@@ -64,7 +64,6 @@ const AppLayout = ({ children }) => {
 
     return (
         <div className="App">
-            <div id="route-focus-reset" tabIndex={-1} className="sr-only" />
             {children}
 
             {/* Show ChatPanel for authenticated users with chat-enabled roles */}
