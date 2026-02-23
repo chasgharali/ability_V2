@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useState } from 'react';
 import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
 import './Dashboard.css';
@@ -47,7 +47,7 @@ const COUNTRIES_RAW = [
 // Remove duplicates and sort alphabetically
 const COUNTRIES = Array.from(new Set(COUNTRIES_RAW)).sort((a, b) => a.localeCompare(b));
 
-export default function SurveyForm({ onValidationChange }) {
+const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, embedded }, ref) {
   const { user } = useAuth();
   const { getMessage } = useRoleMessages();
   const [loading, setLoading] = useState(true);
@@ -189,14 +189,13 @@ export default function SurveyForm({ onValidationChange }) {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const saveSurvey = async () => {
     setSaving(true);
     try {
       await axios.put('/api/auth/survey', form, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      showToast('Survey saved', 'success');
+      if (!embedded) showToast('Survey saved', 'success');
     } catch (e) {
       if (e?.response?.status === 401) {
         const refreshed = await tryRefreshToken();
@@ -205,17 +204,24 @@ export default function SurveyForm({ onValidationChange }) {
             await axios.put('/api/auth/survey', form, {
               headers: { Authorization: `Bearer ${getToken()}` }
             });
-            showToast('Survey saved', 'success');
+            if (!embedded) showToast('Survey saved', 'success');
             setSaving(false);
             return;
           } catch (_) { }
         }
       }
-      showToast('Failed to save survey', 'error');
+      if (!embedded) showToast('Failed to save survey', 'error');
     } finally {
       setSaving(false);
     }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await saveSurvey();
+  };
+
+  useImperativeHandle(ref, () => ({ save: saveSurvey }));
 
   if (loading) {
     return (
@@ -228,14 +234,16 @@ export default function SurveyForm({ onValidationChange }) {
 
   return (
     <>
-      <Helmet>
-        <title>Survey - abilityconnect</title>
-      </Helmet>
+      {!embedded && (
+        <Helmet>
+          <title>Survey - abilityconnect</title>
+        </Helmet>
+      )}
       <div className="dashboard-content">
         {toast.visible && (
           <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
         )}
-        <h2 tabIndex={-1}>Survey – Tell us about yourself</h2>
+        {!embedded && <h2 tabIndex={-1}>Survey – Tell us about yourself</h2>}
       
       {infoBannerMessage && (
         <div className="info-banner">
@@ -354,11 +362,15 @@ export default function SurveyForm({ onValidationChange }) {
           <input id="otherDisability" name="otherDisability" type="text" value={form.otherDisability} onChange={onChange} />
         </div>
 
-        <button type="submit" className="update-button" disabled={saving}>
-          {saving ? 'Saving…' : 'Save Survey'}
-        </button>
+        {!embedded && (
+          <button type="submit" className="update-button" disabled={saving}>
+            {saving ? 'Saving…' : 'Save Survey'}
+          </button>
+        )}
       </form>
       </div>
     </>
   );
-}
+});
+
+export default SurveyForm;

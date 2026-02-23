@@ -36,6 +36,7 @@ export default function RegistrationWizard() {
   const location = useLocation();
   const liveRef = useRef(null);
   const stepHeadingRef = useRef(null);
+  const surveyFormRef = useRef(null);
 
   // Focus the active step heading whenever the step changes so screen reader
   // users are immediately placed at the top of the new step content.
@@ -135,7 +136,13 @@ export default function RegistrationWizard() {
 
   useEffect(() => {
     if (liveRef.current) {
-      liveRef.current.textContent = `Step ${step} of 3`;
+      const eventName = event?.name || 'Event';
+      const stepAnnouncements = [
+        `${eventName} Registration - Page 1 of 3`,
+        `${eventName} Registration Page 2 of 3 - Please complete all required fields`,
+        `${eventName} Registration Page 3 of 3 – Survey and Agreements`
+      ];
+      liveRef.current.textContent = stepAnnouncements[step - 1];
     }
     // Scroll to top whenever step changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -315,7 +322,8 @@ export default function RegistrationWizard() {
     if (!allTermsAccepted) return;
     setSaving(true);
     try {
-      // Save terms acceptance data to user profile
+      await surveyFormRef.current?.save();
+
       const termsAcceptanceData = {
         acceptedTerms: termsAccepted,
         acceptedAt: new Date().toISOString(),
@@ -518,7 +526,7 @@ export default function RegistrationWizard() {
 
             {step === 1 && (
               <section aria-labelledby="account-h">
-                <h3 id="account-h" ref={stepHeadingRef}>Step 1 of 3: My Account Information</h3>
+                <h3 id="account-h" ref={stepHeadingRef}>{event?.name || 'Event'} Registration - Page 1 of 3</h3>
                 {validationErrors.step1 && Object.keys(validationErrors.step1).length > 0 && (
                   <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
                     <h4>Please complete all required fields:</h4>
@@ -546,7 +554,7 @@ export default function RegistrationWizard() {
 
             {step === 2 && (
               <section aria-labelledby="profile-h">
-                <h3 id="profile-h" ref={stepHeadingRef}>Step 2 of 3: Edit Profile &amp; Resume</h3>
+                <h3 id="profile-h" ref={stepHeadingRef}>{event?.name || 'Event'} Registration Page 2 of 3 - Please complete all required fields</h3>
                 {validationErrors.step2 && Object.keys(validationErrors.step2).length > 0 && (
                   <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
                     <h4>Please complete all required fields:</h4>
@@ -558,6 +566,7 @@ export default function RegistrationWizard() {
                   </div>
                 )}
                 <EditProfileResume
+                  embedded
                   onValidationChange={() => validateStep2()}
                   onFormDataChange={setCurrentFormData}
                   onDone={next}
@@ -568,7 +577,7 @@ export default function RegistrationWizard() {
 
             {step === 3 && (
               <section aria-labelledby="survey-h">
-                <h3 id="survey-h" ref={stepHeadingRef}>Step 3 of 3: Survey &amp; Final Requirements</h3>
+                <h3 id="survey-h" ref={stepHeadingRef}>{event?.name || 'Event'} Registration Page 3 of 3 – Survey and Agreements</h3>
                 {validationErrors.step3 && Object.keys(validationErrors.step3).length > 0 && (
                   <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7', color: '#721c24' }} role="alert" aria-live="polite">
                     <h4>Please complete all required fields:</h4>
@@ -579,7 +588,7 @@ export default function RegistrationWizard() {
                     </ul>
                   </div>
                 )}
-                <SurveyForm onValidationChange={() => validateStep3()} />
+                <SurveyForm ref={surveyFormRef} embedded onValidationChange={() => validateStep3()} />
                 <hr />
                 <div className="terms-section">
                   <h3 className="terms-section-title">Agreements to Terms and Privacy Policy (Required)</h3>

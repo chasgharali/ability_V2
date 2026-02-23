@@ -16,7 +16,7 @@ import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 // Use centralized JOB_TYPE_LIST for employment types
 const VETERAN_STATUS = ['None', 'Veteran', 'Active Duty', 'Reservist', 'Military Spouse'];
 
-export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev }) {
+export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev, embedded }) {
   const { user } = useAuth();
   const { getMessage } = useRoleMessages();
   const [form, setForm] = useState({
@@ -499,9 +499,11 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
   return (
     <>
-      <Helmet>
-        <title>Edit Profile & Resume - abilityconnect</title>
-      </Helmet>
+      {!embedded && (
+        <Helmet>
+          <title>Edit Profile & Resume - abilityconnect</title>
+        </Helmet>
+      )}
       <div className="dashboard-content">
         <div ref={topRef} style={{ position: 'absolute', top: 0 }} aria-hidden="true" />
         {toast.visible && (
@@ -531,8 +533,8 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           <span>{successMessage}</span>
         </div>
       )}
-      <h2 tabIndex={-1}>My Profile</h2>
-      <p className="section-note">Edit the form below to update your profile information.</p>
+      {!embedded && <h2 tabIndex={-1}>My Profile</h2>}
+      {!embedded && <p className="section-note">Edit the form below to update your profile information.</p>}
 
         {infoBannerMessage && (
           <div className="info-banner">
