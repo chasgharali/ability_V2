@@ -79,7 +79,7 @@ export default function EventDetail() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="events" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}

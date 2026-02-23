@@ -1951,7 +1951,7 @@ export default function JobSeekerManagement() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="jobseekers" />
-        <main className="dashboard-main">
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           {mode === 'view' ? (
             renderJobSeekerProfile()
           ) : mode === 'edit' ? (

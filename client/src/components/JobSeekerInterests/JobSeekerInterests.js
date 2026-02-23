@@ -1854,7 +1854,7 @@ const JobSeekerInterests = () => {
                 />
                 <div className="dashboard-layout">
                     <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />
-                    <main className="dashboard-main">
+                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading-container">
                             <div className="loading-spinner"></div>
                             <p>Loading...</p>
@@ -1875,7 +1875,7 @@ const JobSeekerInterests = () => {
             />
             <div className="dashboard-layout">
                 <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="jobseeker-interests-container">
                             {/* Page Header */}

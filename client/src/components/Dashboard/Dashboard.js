@@ -790,7 +790,7 @@ const Dashboard = () => {
                     )
                 )} />
 
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="Dashboard main content">
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
                         <div className="dashboard-content">
                             <h2>Branding – Header Logo</h2>
@@ -1085,8 +1085,6 @@ const Dashboard = () => {
                 <MdLogout />
             </button>
 
-            {/* Mobile overlay */}
-            <div className="mobile-overlay" aria-hidden="true" />
         </div>
         </>
     );

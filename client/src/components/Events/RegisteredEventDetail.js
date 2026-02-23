@@ -104,7 +104,7 @@ export default function RegisteredEventDetail() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="my-current-registrations" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}

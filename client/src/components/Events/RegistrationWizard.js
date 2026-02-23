@@ -418,7 +418,7 @@ export default function RegistrationWizard() {
   }, [termsDocuments, termsAccepted]);
 
   if (loading || fetching) {
-    return <div className="dashboard"><div className="dashboard-layout"><main className="dashboard-main"><div>Loading…</div></main></div></div>;
+    return <div className="dashboard"><div className="dashboard-layout"><main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content"><div>Loading…</div></main></div></div>;
   }
   if (!user) return null;
 
@@ -435,7 +435,7 @@ export default function RegistrationWizard() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="events" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="Event registration content">
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{event?.name || 'Event Registration'}</h2>
             {isAlreadyRegistered ? (

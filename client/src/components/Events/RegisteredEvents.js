@@ -68,7 +68,7 @@ export default function RegisteredEvents() {
         <AdminHeader />
         <div className="dashboard-layout">
           <AdminSidebar active="events" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="registered-events-container">
               <header className="registered-events-header">

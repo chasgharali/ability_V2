@@ -354,7 +354,7 @@ const JobSeekerSurvey = () => {
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="jobseeker-survey" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="jobseeker-survey-container">
                             {/* Page Header */}
