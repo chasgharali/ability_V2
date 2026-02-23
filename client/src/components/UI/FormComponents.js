@@ -123,11 +123,13 @@ export const MultiSelect = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [dropUp, setDropUp] = useState(false);
     const selectId = id || `multiselect-${name || Math.random().toString(36).substr(2, 9)}`;
     const errorId = error ? `${selectId}-error` : undefined;
     const dropdownId = `${selectId}-dropdown`;
     const searchId = `${selectId}-search`;
     const containerRef = useRef(null);
+    const triggerRef = useRef(null);
 
     // Filter options based on search term
     const filteredOptions = options.filter(option =>
@@ -174,6 +176,19 @@ export const MultiSelect = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Determine if dropdown should flip upward when there isn't enough space below
+    React.useEffect(() => {
+        if (isOpen && triggerRef.current) {
+            const DROPDOWN_HEIGHT = 300;
+            const rect = triggerRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            setDropUp(spaceBelow < DROPDOWN_HEIGHT && spaceAbove > spaceBelow);
+        } else {
+            setDropUp(false);
+        }
+    }, [isOpen]);
+
     return (
         <div className={`form-field form-multiselect ${className}`} ref={containerRef}>
             {label && (
@@ -186,6 +201,7 @@ export const MultiSelect = ({
             <div className="form-multiselect-container">
                 <button
                     type="button"
+                    ref={triggerRef}
                     id={selectId}
                     className={`form-multiselect-trigger ${error ? 'form-multiselect-error' : ''}`}
                     onClick={() => setIsOpen(!isOpen)}
@@ -238,7 +254,7 @@ export const MultiSelect = ({
                 {isOpen && (
                     <div
                         id={dropdownId}
-                        className="form-multiselect-dropdown"
+                        className={`form-multiselect-dropdown${dropUp ? ' form-multiselect-dropdown-up' : ''}`}
                         role="listbox"
                         aria-multiselectable="true"
                     >

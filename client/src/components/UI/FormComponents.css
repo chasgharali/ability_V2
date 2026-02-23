@@ -234,6 +234,13 @@
     overflow: hidden;
 }
 
+.form-multiselect-dropdown-up {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 4px;
+}
+
 .form-multiselect-search {
     padding: 12px;
     border-bottom: 1px solid #e5e7eb;

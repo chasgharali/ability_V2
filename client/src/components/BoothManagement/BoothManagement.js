@@ -1577,7 +1577,7 @@ export default function BoothManagement() {
                 )}
               </div>
             ) : (
-              <form className="account-form" onSubmit={handleCreateBooth} style={{ maxWidth: 720 }}>
+              <form className="account-form" onSubmit={handleCreateBooth} style={{ maxWidth: 720, paddingBottom: 350 }}>
                 <Input
                   label="Booth Name"
                   value={boothForm.boothName}

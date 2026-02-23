@@ -1452,7 +1452,7 @@ export default function EventManagement() {
                                 )}
                             </div>
                         ) : (
-                            <form className="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} style={{ maxWidth: 720 }}>
+                            <form className="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} style={{ maxWidth: 720, paddingBottom: 350 }}>
                                 <Input label="Event Sendy Id" value={form.sendyId} onChange={(e) => setField('sendyId', e.target.value)} placeholder="" />
                                 <Input label="Event Name" value={form.name} onChange={(e) => setField('name', e.target.value)} required placeholder="" />
                                 <Input label="Event Link" value={form.link} onChange={(e) => setField('link', e.target.value)} placeholder="https://..." />
