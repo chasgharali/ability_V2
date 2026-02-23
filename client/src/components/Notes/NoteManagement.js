@@ -191,7 +191,7 @@ const NoteManagement = () => {
                 <AdminSidebar active="notes" />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
-                        <h2>Notes Management</h2>
+                        <h1>Notes Management</h1>
                         <div className="bm-header-actions">
                             {user?.role === 'Admin' && (
                                 <>

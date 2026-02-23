@@ -313,7 +313,7 @@ const TermsConditionsList = () => {
                 <AdminSidebar active="terms-conditions" />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
-                        <h2>Terms & Conditions Management</h2>
+                        <h1>Terms & Conditions Management</h1>
                         <div className="bm-header-actions">
                             {['Admin', 'AdminEvent'].includes(user?.role) && (
                                 <button

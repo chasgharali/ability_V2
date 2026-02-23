@@ -55,7 +55,7 @@ export default function EventRegistration() {
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
-              <h2>Register for: {event.name}</h2>
+              <h1>Register for: {event.name}</h1>
             </div>
             <div className="account-form" style={{ maxWidth: 720 }}>
               <p>You're signed in as a Job Seeker. Continue to complete event registration for <strong>{event.name}</strong>.</p>

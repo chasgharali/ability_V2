@@ -878,7 +878,7 @@ export default function UserManagement() {
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
-              <h2>User Management</h2>
+              <h1>User Management</h1>
               <div className="bm-header-actions">
                 {mode === 'list' ? (
                   <>

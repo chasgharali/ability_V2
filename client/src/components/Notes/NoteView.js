@@ -97,7 +97,7 @@ const NoteView = () => {
                 <AdminSidebar active="notes" />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
-                        <h2>{note.title}</h2>
+                        <h1>{note.title}</h1>
                         <div className="bm-header-actions">
                             <button
                                 onClick={() => navigate('/notes')}

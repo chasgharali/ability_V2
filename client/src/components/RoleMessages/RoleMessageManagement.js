@@ -217,7 +217,7 @@ export default function RoleMessageManagement() {
         <AdminSidebar active="role-messages" />
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="bm-header">
-            <h2>Page Instructions</h2>
+            <h1>Page Instructions</h1>
             <div className="bm-header-actions">
               <button
                 onClick={() => navigate('/instructions')}

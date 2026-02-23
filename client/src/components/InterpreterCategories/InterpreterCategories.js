@@ -199,7 +199,7 @@ export default function InterpreterCategories() {
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
-              <h2>Interpreter Categories</h2>
+              <h1>Interpreter Categories</h1>
               <ButtonComponent 
                 cssClass="e-primary"
                 onClick={() => {

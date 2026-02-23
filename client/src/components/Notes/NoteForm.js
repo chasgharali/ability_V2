@@ -291,7 +291,7 @@ const NoteForm = () => {
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="note-form-container">
                         <div className="note-form-header">
-                            <h2>{isEdit ? 'Edit Note' : 'Create New Note'}</h2>
+                            <h1>{isEdit ? 'Edit Note' : 'Create New Note'}</h1>
                         </div>
                         
                         <div className="note-form-body">

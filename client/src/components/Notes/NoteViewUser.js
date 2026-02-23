@@ -82,7 +82,7 @@ const NoteViewUser = ({ type }) => {
                 <AdminSidebar active={type === 'troubleshooting' ? 'troubleshooting' : 'instructions'} />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
-                        <h2>{title}</h2>
+                        <h1>{title}</h1>
                         <div className="bm-header-actions">
                             <button
                                 onClick={() => navigate('/dashboard')}

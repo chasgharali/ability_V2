@@ -147,7 +147,7 @@ const TermsConditionsView = () => {
                 <AdminSidebar active="terms-conditions" />
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
-                        <h2>Terms & Conditions</h2>
+                        <h1>Terms & Conditions</h1>
                         <div className="bm-header-actions">
                             <button
                                 onClick={() => navigate('/terms-conditions')}

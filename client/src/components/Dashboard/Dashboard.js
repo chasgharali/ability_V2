@@ -139,8 +139,6 @@ const Dashboard = () => {
     const [saveError, setSaveError] = useState('');
     const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
     const [errors, setErrors] = useState({});
-    const logoutButtonRef = useRef(null);
-    const lastTabDirectionRef = useRef('forward');
     const [accessibility, setAccessibility] = useState({
         usesScreenMagnifier: user?.usesScreenMagnifier || false,
         usesScreenReader: user?.usesScreenReader || false,
@@ -584,7 +582,7 @@ const Dashboard = () => {
             case 'GlobalSupport':
                 return (
                     <div className="dashboard-content support-dashboard">
-                        <h2>Support Dashboard</h2>
+                        <h1>Support Dashboard</h1>
                         <p className="support-subtitle">Welcome to your support workspace. Use team chat to collaborate with recruiters and interpreters.</p>
                         <div className="support-info-cards">
                             <div className="dashboard-card">
@@ -621,7 +619,7 @@ const Dashboard = () => {
                     const deleteWarning = getMessage('delete-account', 'warning') || '';
                     return (
                         <div className="dashboard-content">
-                            <h2>Delete My Account</h2>
+                            <h1>Delete My Account</h1>
                             {deleteWarning && (
                                 <div className="alert-box" style={{ background: '#fff3cd', borderColor: '#ffeeba' }}>
                                     <p><strong>Warning:</strong> {deleteWarning}</p>
@@ -634,7 +632,7 @@ const Dashboard = () => {
                 const welcomeMessage = getMessage('my-account', 'welcome') || '';
                 return (
                     <div className="dashboard-content">
-                        <h2>My Account</h2>
+                        <h1>My Account</h1>
 
                         {welcomeMessage && (
                             <div className="alert-box">
@@ -651,7 +649,7 @@ const Dashboard = () => {
                 const welcomeMessage = getMessage('dashboard', 'welcome') || '';
                 return (
                     <div className="dashboard-content">
-                        <h2>Recruiter Dashboard</h2>
+                        <h1>Recruiter Dashboard</h1>
                         {welcomeMessage && (
                             <div className="info-banner" style={{ marginBottom: '1.5rem' }}>
                                 <span>{welcomeMessage}</span>
@@ -700,7 +698,7 @@ const Dashboard = () => {
             case 'AdminEvent':
                 return (
                     <div className="dashboard-content">
-                        <h2>Administrator Dashboard</h2>
+                        <h1>Administrator Dashboard</h1>
                         <div className="dashboard-cards">
                             <div className="dashboard-card">
                                 <h3>Event Management</h3>
@@ -728,16 +726,10 @@ const Dashboard = () => {
             default:
                 return (
                     <div className="dashboard-content">
-                        <h2>Welcome to Your Dashboard</h2>
+                        <h1>Welcome to Your Dashboard</h1>
                         <p>Your role-specific dashboard content will be available soon.</p>
                     </div>
                 );
-        }
-    };
-
-    const handleLogoutSentinelFocus = () => {
-        if (lastTabDirectionRef.current === 'forward' && logoutButtonRef.current) {
-            logoutButtonRef.current.focus();
         }
     };
 
@@ -765,7 +757,6 @@ const Dashboard = () => {
                 />
                 
                 <AdminHeader
-                hideLogout={true}
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 brandingLogoAlt={event?.logoAltText || ''}
                 secondaryLogo={booth?.logoUrl || booth?.companyLogo || ''}
@@ -794,7 +785,7 @@ const Dashboard = () => {
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
                         <div className="dashboard-content">
-                            <h2>Branding – Header Logo</h2>
+                            <h1>Branding – Header Logo</h1>
                             <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>
                                 <p>Upload a PNG, SVG, or JPG. The logo displays in the top-left. Recommended height ~28-36px.</p>
                             </div>
@@ -833,7 +824,7 @@ const Dashboard = () => {
                         </div>
                     ) : (user?.role !== 'JobSeeker' && activeSection === 'manage-booths') ? (
                         <div className="dashboard-content">
-                            <h2>Booth Management</h2>
+                            <h1>Booth Management</h1>
                             {boothMode === 'list' ? (
                                 <>
                                     <div className="upload-actions" style={{ margin: '0 0 1rem 0', display: 'flex', gap: '0.5rem' }}>
@@ -1078,13 +1069,7 @@ const Dashboard = () => {
                         getDashboardContent()
                     )}
                 </main>
-                <span className="logout-focus-sentinel" tabIndex={0} onFocus={handleLogoutSentinelFocus} />
             </div>
-
-            {/* Logout button placed after sidebar+main for correct tab order */}
-            <button ref={logoutButtonRef} onClick={handleLogout} className="logout-button dashboard-logout-end" aria-label="Logout">
-                <MdLogout />
-            </button>
 
         </div>
         </>

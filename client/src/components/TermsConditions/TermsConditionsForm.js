@@ -281,7 +281,7 @@ const TermsConditionsForm = () => {
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="terms-form-container">
                         <div className="terms-form-header">
-                            <h2>{isEdit ? 'Edit Terms & Conditions' : 'Create Terms & Conditions'}</h2>
+                            <h1>{isEdit ? 'Edit Terms & Conditions' : 'Create Terms & Conditions'}</h1>
                         </div>
                         
                         <div className="terms-form-body">

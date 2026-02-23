@@ -533,7 +533,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           <span>{successMessage}</span>
         </div>
       )}
-      {!embedded && <h2 tabIndex={-1}>My Profile</h2>}
+      {!embedded && <h1 tabIndex={-1}>My Profile</h1>}
       {!embedded && <p className="section-note">Edit the form below to update your profile information.</p>}
 
         {infoBannerMessage && (

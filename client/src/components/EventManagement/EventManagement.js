@@ -996,7 +996,7 @@ export default function EventManagement() {
                 <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="bm-header">
-                            <h2>Event Management</h2>
+                            <h1>Event Management</h1>
                             <div className="bm-header-actions">
                                 {mode === 'list' ? (
                                     <>

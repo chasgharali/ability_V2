@@ -2405,7 +2405,7 @@ export default function JobSeekerManagement() {
           <div className="dashboard-content">
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h2>Job Seeker Management</h2>
+                <h1>Job Seeker Management</h1>
                 <p>Manage job seeker accounts and profiles</p>
               </div>
               <div className="header-actions">

@@ -1175,7 +1175,7 @@ export default function BoothManagement() {
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
-              <h2>Booth Management</h2>
+              <h1>Booth Management</h1>
               <div className="bm-header-actions">
                 {boothMode === 'list' ? (
                   <>
