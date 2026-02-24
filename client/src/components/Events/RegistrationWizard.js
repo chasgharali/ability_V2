@@ -37,15 +37,18 @@ export default function RegistrationWizard() {
   const liveRef = useRef(null);
   const stepHeadingRef = useRef(null);
   const surveyFormRef = useRef(null);
+  const pageHeadingRef = useRef(null);
 
-  // Focus the active step heading whenever the step changes so screen reader
-  // users are immediately placed at the top of the new step content.
+  // Keep keyboard focus aligned with the currently visible registration content.
+  // This also handles initial async page load before step content mounts.
   useEffect(() => {
-    if (stepHeadingRef.current) {
-      stepHeadingRef.current.setAttribute('tabindex', '-1');
-      stepHeadingRef.current.focus();
+    if (fetching) return;
+    const focusTarget = (isAlreadyRegistered ? pageHeadingRef.current : stepHeadingRef.current) || pageHeadingRef.current;
+    if (focusTarget) {
+      focusTarget.setAttribute('tabindex', '-1');
+      focusTarget.focus();
     }
-  }, [step]);
+  }, [step, fetching, isAlreadyRegistered]);
 
   // Check if user is already registered for this event
   const checkRegistrationStatus = (event, user) => {
@@ -455,7 +458,7 @@ export default function RegistrationWizard() {
         <AdminSidebar active="events" />
         <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
-            <h1 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{event?.name || 'Event Registration'}</h1>
+            <h1 ref={pageHeadingRef} style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{event?.name || 'Event Registration'}</h1>
             {isAlreadyRegistered ? (
               <div className="alert-box" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>
                 <p><strong>You are already registered for this event.</strong> You can view your registration details in "My Current Registrations".</p>

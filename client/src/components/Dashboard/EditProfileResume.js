@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import './Dashboard.css';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
@@ -51,6 +51,11 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const avatarInputRef = useRef(null);
   const topRef = useRef(null);
   const successMessageRef = useRef(null);
+  const cameraDialogRef = useRef(null);
+  const cameraCaptureButtonRef = useRef(null);
+  const cameraCancelButtonRef = useRef(null);
+  const cameraTriggerRef = useRef(null);
+  const returnFocusRef = useRef(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
@@ -396,6 +401,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         audio: false
       });
       mediaStreamRef.current = stream;
+      returnFocusRef.current = document.activeElement || cameraTriggerRef.current;
       // Open modal first; video element will mount, then we bind stream in an effect
       setCameraOpen(true);
     } catch (e) {
@@ -403,14 +409,73 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     }
   };
 
-  const closeCamera = () => {
+  const closeCamera = useCallback(() => {
     try {
       const s = mediaStreamRef.current;
       if (s) s.getTracks().forEach(t => t.stop());
     } catch { }
     mediaStreamRef.current = null;
     setCameraOpen(false);
+    const returnTarget = returnFocusRef.current || cameraTriggerRef.current;
+    returnFocusRef.current = null;
+    if (returnTarget && typeof returnTarget.focus === 'function') {
+      setTimeout(() => {
+        if (document.contains(returnTarget)) {
+          returnTarget.focus();
+        }
+      }, 0);
+    }
+  }, []);
+
+  const getCameraFocusableElements = () => {
+    if (!cameraDialogRef.current) return [];
+    return Array.from(
+      cameraDialogRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    );
   };
+
+  const handleCameraDialogKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeCamera();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+
+    const focusableElements = getCameraFocusableElements();
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (e.shiftKey) {
+      if (activeElement === firstElement || !cameraDialogRef.current?.contains(activeElement)) {
+        e.preventDefault();
+        lastElement.focus();
+      }
+      return;
+    }
+
+    if (activeElement === lastElement || !cameraDialogRef.current?.contains(activeElement)) {
+      e.preventDefault();
+      firstElement.focus();
+    }
+  };
+
+  useEffect(() => {
+    if (!cameraOpen) return;
+    const focusTimer = setTimeout(() => {
+      const preferredFocusTarget = !cameraCaptureButtonRef.current?.disabled
+        ? cameraCaptureButtonRef.current
+        : cameraCancelButtonRef.current;
+      const firstFocusable = getCameraFocusableElements()[0];
+      (preferredFocusTarget || firstFocusable)?.focus();
+    }, 0);
+    return () => clearTimeout(focusTimer);
+  }, [cameraOpen]);
 
   const capturePhoto = async () => {
     try {
@@ -547,19 +612,24 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           <h4>Upload your resume (required)</h4>
           <p className="muted">Accepted file types: PDF and DOC (PDF preferred)</p>
           <div className="upload-actions">
-            <label className="update-button" style={{ display: 'inline-block' }}>
-              <input
-                ref={resumeInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                hidden
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) uploadToS3(f, 'resume');
-                }}
-              />
+            <input
+              ref={resumeInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadToS3(f, 'resume');
+              }}
+            />
+            <button
+              type="button"
+              className="update-button"
+              onClick={() => resumeInputRef.current?.click()}
+              disabled={uploading}
+            >
               {uploading ? 'Uploading…' : 'Choose file to upload'}
-            </label>
+            </button>
             <button type="button" className="update-button" onClick={deleteResume} disabled={!resumeKey}>Delete</button>
           </div>
           {resumeFileName && (
@@ -658,19 +728,25 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           {!pendingAvatarPreview && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem' }}>
-                <label className="update-button" style={{ display: 'inline-block', textAlign: 'center', whiteSpace: 'nowrap', boxSizing: 'border-box', margin: 0 }}>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) handleAvatarFileSelect(f);
-                    }}
-                  />
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleAvatarFileSelect(f);
+                  }}
+                />
+                <button
+                  type="button"
+                  className="update-button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploading}
+                  style={{ textAlign: 'center', whiteSpace: 'nowrap', boxSizing: 'border-box', margin: 0 }}
+                >
                   Choose Picture
-                </label>
+                </button>
                 {avatarPreviewUrl && (
                   <button 
                     type="button" 
@@ -682,7 +758,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
                   </button>
                 )}
               </div>
-              <button type="button" className="dashboard-button" onClick={openCamera} disabled={uploading}>
+              <button type="button" className="dashboard-button" onClick={openCamera} disabled={uploading} ref={cameraTriggerRef}>
                 Take your Picture
               </button>
             </div>
@@ -871,15 +947,22 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
       {cameraOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ background: '#fff', borderRadius: 8, padding: 16, width: 520, maxWidth: '95vw', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-            <h4 style={{ marginTop: 0 }}>Take your picture</h4>
+          <div
+            ref={cameraDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="take-picture-dialog-title"
+            onKeyDown={handleCameraDialogKeyDown}
+            style={{ background: '#fff', borderRadius: 8, padding: 16, width: 520, maxWidth: '95vw', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
+          >
+            <h4 id="take-picture-dialog-title" style={{ marginTop: 0 }}>Take your picture</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, placeItems: 'center' }}>
               <video ref={videoRef} playsInline muted style={{ width: 480, height: 360, background: '#000', maxWidth: '100%' }} />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
-              <button type="button" className="update-button" onClick={capturePhoto} disabled={uploading}>{uploading ? 'Uploading…' : 'Capture & Use Photo'}</button>
-              <button type="button" className="dashboard-button" onClick={closeCamera}>Cancel</button>
+              <button ref={cameraCaptureButtonRef} type="button" className="update-button" onClick={capturePhoto} disabled={uploading}>{uploading ? 'Uploading…' : 'Capture & Use Photo'}</button>
+              <button ref={cameraCancelButtonRef} type="button" className="dashboard-button" onClick={closeCamera}>Cancel</button>
             </div>
           </div>
         </div>

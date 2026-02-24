@@ -17,6 +17,19 @@
   border-radius: 4px;
 }
 
+.mobile-logo-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 4px;
+}
+
+.mobile-logo-link:focus-visible {
+  outline: 3px solid #005fcc;
+  outline-offset: 2px;
+}
+
 /* header-left uses flex; on mobile the menu toggle must appear visually before
    the logo even though the logo comes first in DOM (for correct tab order).
    Use CSS order to swap visual position on narrow screens. */

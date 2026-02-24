@@ -213,10 +213,7 @@ export default function AdminSidebar({ active = 'booths' }) {
               <span
                 className="icon-button"
                 onClick={(e) => { e.stopPropagation(); toggleSection('my-account'); }}
-                aria-label={expanded['my-account'] ? 'Collapse My Account menu' : 'Expand My Account menu'}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleSection('my-account'); } }}
+                aria-hidden="true"
               >
                 {expanded['my-account'] ? <MdExpandLess /> : <MdExpandMore />}
               </span>
@@ -251,24 +248,13 @@ export default function AdminSidebar({ active = 'booths' }) {
               <span>Current Registrations</span>
               <span
                 className="icon-button"
-                role="button"
-                tabIndex={myRegistrations.length === 0 ? -1 : 0}
                 onClick={(e) => { 
                   e.stopPropagation(); 
                   if (myRegistrations.length > 0) {
                     toggleSection('registrations'); 
                   }
                 }}
-                onKeyDown={(e) => { 
-                  if (e.key === 'Enter' || e.key === ' ') { 
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    if (myRegistrations.length > 0) {
-                      toggleSection('registrations'); 
-                    }
-                  } 
-                }}
-                aria-label="Toggle registrations list"
+                aria-hidden="true"
               >
                 {expanded['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
               </span>
@@ -307,18 +293,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                     toggleSection('upcoming-events'); 
                   }
                 }}
-                aria-label={expanded['upcoming-events'] ? 'Collapse Upcoming Events menu' : 'Expand Upcoming Events menu'}
-                role="button"
-                tabIndex={upcomingEvents.length === 0 ? -1 : 0}
-                onKeyDown={(e) => { 
-                  if (e.key === 'Enter' || e.key === ' ') { 
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    if (upcomingEvents.length > 0) {
-                      toggleSection('upcoming-events'); 
-                    }
-                  } 
-                }}
+                aria-hidden="true"
               >
                 {expanded['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
               </span>

@@ -1021,10 +1021,14 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 .sidebar-header:hover,
-.sidebar-header:focus {
+.sidebar-header:focus-visible {
     background: #404040;
     outline: 2px solid #ffffff;
     outline-offset: -2px;
+}
+
+.sidebar-header:focus {
+    outline: none;
 }
 
 .sidebar-header:disabled {
@@ -1068,11 +1072,15 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 .sidebar-item:hover,
-.sidebar-item:focus {
+.sidebar-item:focus-visible {
     background: #404040;
     color: #ffffff;
     outline: 2px solid #ffffff;
     outline-offset: -2px;
+}
+
+.sidebar-item:focus {
+    outline: none;
 }
 
 .sidebar-item.active {

@@ -2578,6 +2578,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     );
   }
 
+  const eventDestination = callInfo?.event?.slug
+    ? `/event/${encodeURIComponent(callInfo.event.slug)}`
+    : '/dashboard';
+
   return (
     <div className="video-call-container-new" role="main" aria-label="Video call interface">
       {/* Skip to main content link for accessibility */}
@@ -2586,7 +2590,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       <header className="video-call-header" role="banner">
         <div className="header-info">
           {/* Event Logo and Name */}
-          <div className="header-section" role="img" aria-label={`Event: ${callInfo?.event?.name || 'Unknown Event'}`}>
+          <a
+            href={eventDestination}
+            className="header-section header-section-link"
+            aria-label={`Go to ${callInfo?.event?.name || 'event'} page`}
+          >
             {callInfo?.event?.logoUrl ? (
               <img
                 src={callInfo.event.logoUrl}
@@ -2608,7 +2616,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             <div className="header-names">
               <h1 className="header-event-name">{callInfo?.event?.name || 'Event'}</h1>
             </div>
-          </div>
+          </a>
 
           <span className="header-divider" aria-hidden="true">|</span>
 

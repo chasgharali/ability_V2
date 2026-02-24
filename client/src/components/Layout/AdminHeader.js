@@ -129,10 +129,14 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
         <div className="mobile-logo-bar">
           <div className="mobile-logo-container">
             {brandingLogo && brandingLogo.trim() !== '' && (
-              <img src={brandingLogo} alt={finalBrandingLogoAlt} className="mobile-event-logo" />
+              <a href="/dashboard" className="mobile-logo-link" aria-label="Go to dashboard home">
+                <img src={brandingLogo} alt={finalBrandingLogoAlt} className="mobile-event-logo" />
+              </a>
             )}
             {secondaryLogo && secondaryLogo.trim() !== '' && (
-              <img src={secondaryLogo} alt={finalSecondaryLogoAlt} className="mobile-booth-logo" />
+              <a href="/dashboard" className="mobile-logo-link" aria-label="Go to dashboard home">
+                <img src={secondaryLogo} alt={finalSecondaryLogoAlt} className="mobile-booth-logo" />
+              </a>
             )}
           </div>
         </div>

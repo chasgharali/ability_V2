@@ -170,6 +170,25 @@ const announcePageLoaded = (headingText) => {
     }, 1000);
 };
 
+const focusPageHeadingOrMain = () => {
+    const mainArea = document.getElementById('dashboard-main');
+    const heading = (mainArea || document).querySelector('h1, h2, h3');
+    if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus();
+        return true;
+    }
+
+    const mainEl = mainArea || document.querySelector('main');
+    if (mainEl) {
+        mainEl.setAttribute('tabindex', '-1');
+        mainEl.focus();
+        return true;
+    }
+
+    return false;
+};
+
 // Global route observer:
 // on SPA route change, announce the new page title and reset focus to a hidden
 // top anchor so the first Tab lands on the skip link.
@@ -184,25 +203,20 @@ export const GlobalRouteObserver = () => {
         }
 
         if (previousPathRef.current !== location.pathname) {
-            const timer = setTimeout(() => {
+            let hasAnnounced = false;
+            const attemptFocus = () => {
                 const headingText = getPageHeadingText();
-                announcePageLoaded(headingText);
+                if (!hasAnnounced && headingText) {
+                    announcePageLoaded(headingText);
+                    hasAnnounced = true;
+                }
+                focusPageHeadingOrMain();
+            };
 
-                const mainArea = document.getElementById('dashboard-main');
-                const heading = (mainArea || document).querySelector('h1, h2');
-                if (heading) {
-                    heading.setAttribute('tabindex', '-1');
-                    heading.focus();
-                    return;
-                }
-                const mainEl = mainArea || document.querySelector('main');
-                if (mainEl) {
-                    mainEl.focus();
-                }
-            }, 350);
+            const timers = [120, 420, 900].map((delay) => setTimeout(attemptFocus, delay));
 
             previousPathRef.current = location.pathname;
-            return () => clearTimeout(timer);
+            return () => timers.forEach((timer) => clearTimeout(timer));
         }
     }, [location.pathname]);
 

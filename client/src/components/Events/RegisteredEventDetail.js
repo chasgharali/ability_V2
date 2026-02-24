@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
@@ -18,6 +18,7 @@ export default function RegisteredEventDetail() {
   const [fetching, setFetching] = useState(true);
   const [savingInterest, setSavingInterest] = useState({});
   const navigate = useNavigate();
+  const pageHeadingRef = useRef(null);
 
   useEffect(() => {
     if (loading) return;
@@ -55,6 +56,13 @@ export default function RegisteredEventDetail() {
       }
     })();
   }, [slug, loading, user]);
+
+  useEffect(() => {
+    if (!fetching && event && pageHeadingRef.current) {
+      pageHeadingRef.current.setAttribute('tabindex', '-1');
+      pageHeadingRef.current.focus();
+    }
+  }, [fetching, event]);
 
   const handleInterestToggle = async (booth) => {
     if (!event || !user || user.role !== 'JobSeeker') return;
@@ -112,7 +120,7 @@ export default function RegisteredEventDetail() {
             {!fetching && event && (
               <>
                 {/* Title */}
-                <h1 className="registered-event-title">
+                <h1 ref={pageHeadingRef} className="registered-event-title">
                   You are registered for {event.name}
                 </h1>
 
