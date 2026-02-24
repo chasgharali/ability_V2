@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
@@ -7,7 +7,10 @@ import { listUpcomingEvents, listRegisteredEvents } from '../../services/events'
 
 export default function AdminSidebar({ active = 'booths' }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const MENU_NAV_STATE_KEY = 'ability:menu-navigation-state';
+  const menuNavHandledRef = useRef('');
   const [expanded, setExpanded] = useState({
     admin: true,
     tools: true,
@@ -80,7 +83,36 @@ export default function AdminSidebar({ active = 'booths' }) {
 
   const itemClass = (key) => `sidebar-item ${active === key ? 'active' : ''}`;
 
-  const handleItemClick = (path) => {
+  const getSidebarFocusableElements = () => {
+    const sidebar = document.querySelector('.dashboard-sidebar');
+    if (!sidebar) return [];
+    return Array.from(
+      sidebar.querySelectorAll('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')
+    ).filter((el) => el.offsetParent !== null);
+  };
+
+  const markMenuNavigation = (path, triggerElement) => {
+    const focusableElements = getSidebarFocusableElements();
+    const focusedIndex = focusableElements.indexOf(triggerElement);
+    const nextIndex = focusedIndex >= 0
+      ? Math.min(focusedIndex + 1, Math.max(focusableElements.length - 1, 0))
+      : 0;
+
+    const state = {
+      source: 'sidebar-menu',
+      path,
+      timestamp: Date.now(),
+      focusedIndex,
+      nextIndex
+    };
+    sessionStorage.setItem(MENU_NAV_STATE_KEY, JSON.stringify(state));
+  };
+
+  const handleItemClick = (path, event) => {
+    const triggerElement = event?.currentTarget || document.activeElement;
+    if (triggerElement && triggerElement instanceof HTMLElement) {
+      markMenuNavigation(path, triggerElement);
+    }
     navigate(path);
     // Close mobile menu when item is clicked
     if (window.innerWidth <= 1024) {
@@ -109,9 +141,17 @@ export default function AdminSidebar({ active = 'booths' }) {
       const boothId = typeof firstBooth === 'string' ? firstBooth : firstBooth?._id || null;
 
       if (slug && boothId) {
+        const triggerElement = document.activeElement;
+        if (triggerElement && triggerElement instanceof HTMLElement) {
+          markMenuNavigation(`/booth-queue/${encodeURIComponent(slug)}/${encodeURIComponent(boothId)}/entry`, triggerElement);
+        }
         navigate(`/booth-queue/${encodeURIComponent(slug)}/${encodeURIComponent(boothId)}/entry`);
       } else {
         // Fallback: just open the event detail page if queue info isn't available
+        const triggerElement = document.activeElement;
+        if (triggerElement && triggerElement instanceof HTMLElement) {
+          markMenuNavigation(`/event/${encodeURIComponent(slug)}`, triggerElement);
+        }
         navigate(`/event/${encodeURIComponent(slug)}`);
       }
 
@@ -120,6 +160,10 @@ export default function AdminSidebar({ active = 'booths' }) {
       }
     } catch (e) {
       // On any error, fall back to the standard event page so the user isn't stuck
+      const triggerElement = document.activeElement;
+      if (triggerElement && triggerElement instanceof HTMLElement) {
+        markMenuNavigation('/event/demonstration', triggerElement);
+      }
       navigate('/event/demonstration');
       if (window.innerWidth <= 1024) {
         document.body.classList.remove('sidebar-open');
@@ -139,6 +183,91 @@ export default function AdminSidebar({ active = 'booths' }) {
       document.body.classList.remove('sidebar-open');
     }
   };
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(MENU_NAV_STATE_KEY);
+    if (!raw) return;
+
+    let state;
+    try {
+      state = JSON.parse(raw);
+    } catch {
+      sessionStorage.removeItem(MENU_NAV_STATE_KEY);
+      return;
+    }
+
+    const isMatchingPath = state?.path === location.pathname;
+    const isFresh = Date.now() - Number(state?.timestamp || 0) < 15000;
+    if (!isMatchingPath || !isFresh) return;
+
+    const handleKey = `${state.path}|${state.timestamp}`;
+    if (menuNavHandledRef.current === handleKey) return;
+    menuNavHandledRef.current = handleKey;
+
+    let focusedElement = null;
+    let onFirstTabFromMenu = null;
+    let onSkipLinkTab = null;
+    let cleanupSkipLinkListeners = null;
+
+    const setup = () => {
+      const focusableElements = getSidebarFocusableElements();
+      if (!focusableElements.length) return;
+
+      const focusedIndex = Number.isInteger(state.focusedIndex) ? state.focusedIndex : 0;
+      const nextIndex = Number.isInteger(state.nextIndex) ? state.nextIndex : Math.min(focusedIndex + 1, focusableElements.length - 1);
+      const safeFocusedIndex = Math.max(0, Math.min(focusedIndex, focusableElements.length - 1));
+      const safeNextIndex = Math.max(0, Math.min(nextIndex, focusableElements.length - 1));
+      focusedElement = focusableElements[safeFocusedIndex];
+      const resumeIndex = safeNextIndex;
+
+      if (!focusedElement) return;
+      focusedElement.focus();
+
+      onFirstTabFromMenu = (e) => {
+        if (e.key !== 'Tab' || e.shiftKey) return;
+        const skipLink = document.querySelector('.skip-link');
+        if (!skipLink) return;
+
+        e.preventDefault();
+        focusedElement.removeEventListener('keydown', onFirstTabFromMenu);
+
+        onSkipLinkTab = (evt) => {
+          if (evt.key !== 'Tab' || evt.shiftKey) return;
+          evt.preventDefault();
+          const latestFocusable = getSidebarFocusableElements();
+          const resumeTarget = latestFocusable[resumeIndex] || latestFocusable[0] || focusedElement;
+          if (resumeTarget && typeof resumeTarget.focus === 'function') {
+            resumeTarget.focus();
+          }
+          cleanupSkipLinkListeners?.();
+        };
+
+        const onSkipLinkActivate = () => cleanupSkipLinkListeners?.();
+
+        cleanupSkipLinkListeners = () => {
+          skipLink.removeEventListener('keydown', onSkipLinkTab);
+          skipLink.removeEventListener('click', onSkipLinkActivate);
+          cleanupSkipLinkListeners = null;
+        };
+
+        skipLink.addEventListener('keydown', onSkipLinkTab);
+        skipLink.addEventListener('click', onSkipLinkActivate, { once: true });
+        skipLink.focus();
+      };
+
+      focusedElement.addEventListener('keydown', onFirstTabFromMenu);
+      sessionStorage.removeItem(MENU_NAV_STATE_KEY);
+    };
+
+    const timer = setTimeout(setup, 0);
+    return () => {
+      clearTimeout(timer);
+      if (focusedElement && onFirstTabFromMenu) {
+        focusedElement.removeEventListener('keydown', onFirstTabFromMenu);
+      }
+      cleanupSkipLinkListeners?.();
+    };
+  }, [location.pathname, user?.role, upcomingEvents.length, myRegistrations.length]);
 
   // Render role-specific sidebar content
   const renderSidebarContent = () => {
@@ -206,7 +335,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button
               className="sidebar-header"
-              onClick={() => { handleItemClick('/dashboard/my-account'); closeMobileMenu(); }}
+              onClick={(e) => { handleItemClick('/dashboard/my-account', e); closeMobileMenu(); }}
               aria-label="Go to My Account"
             >
               <span>My Account</span>
@@ -221,13 +350,13 @@ export default function AdminSidebar({ active = 'booths' }) {
             {expanded['my-account'] && (
               <div className="sidebar-items">
                 <button className={`sidebar-item ${active === 'survey' ? 'active' : ''}`}
-                  onClick={() => { handleItemClick('/dashboard/survey'); closeMobileMenu(); }}>Survey</button>
+                  onClick={(e) => { handleItemClick('/dashboard/survey', e); closeMobileMenu(); }}>Survey</button>
                 <button className={`sidebar-item ${active === 'delete-account' ? 'active' : ''}`}
-                  onClick={() => { handleItemClick('/dashboard/delete-account'); closeMobileMenu(); }}>Delete My Account</button>
+                  onClick={(e) => { handleItemClick('/dashboard/delete-account', e); closeMobileMenu(); }}>Delete My Account</button>
                 <button className={`sidebar-item ${active === 'edit-profile' ? 'active' : ''}`}
-                  onClick={() => { handleItemClick('/dashboard/edit-profile'); closeMobileMenu(); }}>Edit Profile & Resume</button>
+                  onClick={(e) => { handleItemClick('/dashboard/edit-profile', e); closeMobileMenu(); }}>Edit Profile & Resume</button>
                 <button className={`sidebar-item ${active === 'view-profile' ? 'active' : ''}`}
-                  onClick={() => { handleItemClick('/dashboard/view-profile'); closeMobileMenu(); }}>View My Profile</button>
+                  onClick={(e) => { handleItemClick('/dashboard/view-profile', e); closeMobileMenu(); }}>View My Profile</button>
               </div>
             )}
           </div>
@@ -235,9 +364,9 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button
               className="sidebar-header"
-              onClick={() => { 
+              onClick={(e) => { 
                 if (myRegistrations.length > 0) {
-                  handleItemClick('/events/registered'); 
+                  handleItemClick('/events/registered', e); 
                   closeMobileMenu(); 
                 }
               }}
@@ -265,7 +394,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   <div className="sidebar-empty">No registrations yet.</div>
                 )}
                 {myRegistrations.map((e) => (
-                  <button key={e.slug} className="sidebar-item" onClick={() => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`); closeMobileMenu(); }}>{e.name}</button>
+                  <button key={e.slug} className="sidebar-item" onClick={(evt) => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`, evt); closeMobileMenu(); }}>{e.name}</button>
                 ))}
               </div>
             )}
@@ -274,9 +403,9 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button
               className="sidebar-header"
-              onClick={() => { 
+              onClick={(e) => { 
                 if (upcomingEvents.length > 0) {
-                  handleItemClick('/events/upcoming'); 
+                  handleItemClick('/events/upcoming', e); 
                   closeMobileMenu(); 
                 }
               }}
@@ -307,7 +436,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   <button
                     key={evt.slug || evt._id}
                     className="sidebar-item"
-                    onClick={() => { handleItemClick(`/event/${encodeURIComponent(evt.slug || evt._id)}`); closeMobileMenu(); }}
+                    onClick={(e) => { handleItemClick(`/event/${encodeURIComponent(evt.slug || evt._id)}`, e); closeMobileMenu(); }}
                   >
                     {evt.name}
                   </button>
@@ -326,8 +455,8 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button className="sidebar-item" onClick={() => handleItemClick('/troubleshooting')}>Trouble Shooting</button>
-            <button className="sidebar-item" onClick={() => handleItemClick('/instructions')}>Instructions</button>
+            <button className="sidebar-item" onClick={(e) => handleItemClick('/troubleshooting', e)}>Trouble Shooting</button>
+            <button className="sidebar-item" onClick={(e) => handleItemClick('/instructions', e)}>Instructions</button>
           </div>
         </>
       );

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { useLocation } from 'react-router-dom';
 
 const FocusManagerContext = createContext();
+const MENU_NAV_STATE_KEY = 'ability:menu-navigation-state';
 
 export const useFocusManager = () => {
     const context = useContext(FocusManagerContext);
@@ -196,6 +197,20 @@ export const GlobalRouteObserver = () => {
     const location = useLocation();
     const previousPathRef = useRef('');
 
+    const isMenuInitiatedNavigation = () => {
+        try {
+            const raw = sessionStorage.getItem(MENU_NAV_STATE_KEY);
+            if (!raw) return false;
+            const state = JSON.parse(raw);
+            if (!state || state.source !== 'sidebar-menu') return false;
+            const isMatchingPath = state.path === location.pathname;
+            const isFresh = Date.now() - Number(state.timestamp || 0) < 15000;
+            return isMatchingPath && isFresh;
+        } catch {
+            return false;
+        }
+    };
+
     useEffect(() => {
         if (previousPathRef.current === '') {
             previousPathRef.current = location.pathname;
@@ -204,13 +219,16 @@ export const GlobalRouteObserver = () => {
 
         if (previousPathRef.current !== location.pathname) {
             let hasAnnounced = false;
+            const menuInitiatedNav = isMenuInitiatedNavigation();
             const attemptFocus = () => {
                 const headingText = getPageHeadingText();
                 if (!hasAnnounced && headingText) {
                     announcePageLoaded(headingText);
                     hasAnnounced = true;
                 }
-                focusPageHeadingOrMain();
+                if (!menuInitiatedNav) {
+                    focusPageHeadingOrMain();
+                }
             };
 
             const timers = [120, 420, 900].map((delay) => setTimeout(attemptFocus, delay));
