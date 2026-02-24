@@ -230,7 +230,7 @@ const extractPhoneNumber = (phoneNumber, countryCode) => {
   return phoneNumber.replace(/^\+/, '').trim();
 };
 
-export default function MyAccountInline({ user, onDone, updateProfile, changePassword }) {
+export default function MyAccountInline({ user, onDone, updateProfile, changePassword, embedded }) {
   // Extract country code and phone number from existing phoneNumber
   const initialPhoneNumber = user?.phoneNumber || '';
   const initialCountryCode = extractCountryCode(initialPhoneNumber);
@@ -426,9 +426,11 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
 
   return (
     <>
-      <Helmet>
-        <title>My Account - abilityconnect</title>
-      </Helmet>
+      {!embedded && (
+        <Helmet>
+          <title>My Account - abilityconnect</title>
+        </Helmet>
+      )}
       <div className="dashboard-content">
         <p className="section-note">An asterisk (*) indicates a required field.</p>
 

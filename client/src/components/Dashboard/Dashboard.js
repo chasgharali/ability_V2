@@ -204,17 +204,6 @@ const Dashboard = () => {
         }
     }, [user]);
 
-    useEffect(() => {
-        const handleGlobalTabDirection = (event) => {
-            if (event.key === 'Tab') {
-                lastTabDirectionRef.current = event.shiftKey ? 'backward' : 'forward';
-            }
-        };
-
-        document.addEventListener('keydown', handleGlobalTabDirection);
-        return () => document.removeEventListener('keydown', handleGlobalTabDirection);
-    }, []);
-
     // Fetch branding logo on mount
     useEffect(() => {
         const fetchBrandingLogo = async () => {

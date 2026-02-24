@@ -431,9 +431,18 @@ export default function RegistrationWizard() {
   if (!user) return null;
 
   const stepNames = ['My Account', 'Profile & Resume', 'Survey & Terms'];
-  const pageTitle = event?.name
-    ? `${event.name} Registration - Step ${step} of 3 (${stepNames[step - 1]}) - abilityconnect`
-    : `Event Registration - Step ${step} of 3 - abilityconnect`;
+  const pageTitles = event?.name
+    ? [
+        `${event.name} Registration - Page 1 of 3 - abilityconnect`,
+        `${event.name} Registration Page 2 of 3 - Please complete all required fields - abilityconnect`,
+        `${event.name} Registration Page 3 of 3 – Survey and Agreements - abilityconnect`
+      ]
+    : [
+        `Event Registration - Page 1 of 3 - abilityconnect`,
+        `Event Registration - Page 2 of 3 - abilityconnect`,
+        `Event Registration - Page 3 of 3 - abilityconnect`
+      ];
+  const pageTitle = pageTitles[step - 1];
 
   return (
     <div className="dashboard">
@@ -538,6 +547,7 @@ export default function RegistrationWizard() {
                   </div>
                 )}
                 <MyAccountInline
+                  embedded
                   user={user}
                   updateProfile={updateProfile}
                   onDone={(formData) => {
