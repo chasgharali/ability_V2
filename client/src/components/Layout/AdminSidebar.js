@@ -514,6 +514,57 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
         </>
       );
+    } else if (user?.role === 'SuperAdmin') {
+      // SuperAdmin: global platform management
+      return (
+        <>
+          <div className="sidebar-section">
+            <button
+              className="sidebar-header"
+              onClick={() => setExpanded(s => ({ ...s, superadmin: !s.superadmin }))}
+              aria-expanded={expanded.superadmin !== false}
+            >
+              <span>Platform</span>
+              {expanded.superadmin !== false ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.superadmin !== false && (
+              <div className="sidebar-items">
+                <button className={itemClass('organizations')} onClick={() => handleItemClick('/organizations')}>
+                  Organizations
+                </button>
+                <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/jobseekermanagement')}>
+                  All Job Seekers
+                </button>
+                <button className={itemClass('users')} onClick={() => handleItemClick('/usermanagement')}>
+                  All Users
+                </button>
+                <button className={itemClass('org-users')} onClick={() => handleItemClick('/org-users')}>
+                  User Assignment
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="sidebar-section">
+            <button
+              className="sidebar-header"
+              onClick={() => setExpanded(s => ({ ...s, superadminAdmin: !s.superadminAdmin }))}
+              aria-expanded={expanded.superadminAdmin !== false}
+            >
+              <span>Administration</span>
+              {expanded.superadminAdmin !== false ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.superadminAdmin !== false && (
+              <div className="sidebar-items">
+                <button className={itemClass('events')} onClick={() => handleItemClick('/eventmanagement')}>Event Management</button>
+                <button className={itemClass('booths')} onClick={() => handleItemClick('/boothmanagement')}>Booth Management</button>
+                <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>Meeting Records</button>
+                <button className={itemClass('analytics')} onClick={() => handleItemClick('/analytics')}>Analytics</button>
+              </div>
+            )}
+          </div>
+        </>
+      );
     } else {
       // Admin and other elevated roles
       return (
@@ -528,7 +579,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('events')} onClick={() => handleItemClick('/eventmanagement')}>Event Management</button>
                 <button className={itemClass('booths')} onClick={() => handleItemClick('/boothmanagement')}>Booth Management</button>
                 <button className={itemClass('users')} onClick={() => handleItemClick('/usermanagement')}>User Management</button>
-                <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/jobseekermanagement')}>Job Seeker Management</button>
+                <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/jobseekermanagement')}>Registered Job Seekers</button>
                 <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>Meeting Records</button>
                 <button className={itemClass('jobseeker-interests')} onClick={() => handleItemClick('/jobseeker-interests')}>JobSeeker Interests</button>
                 <button className={itemClass('jobseeker-survey')} onClick={() => handleItemClick('/jobseeker-survey')}>JobSeeker Survey Data</button>

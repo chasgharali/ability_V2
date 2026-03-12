@@ -27,6 +27,12 @@ const termsConditionsSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    // Organization scope — null means platform-wide
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
+    },
     // Terms creator/admin
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -61,6 +67,7 @@ termsConditionsSchema.index({ isActive: 1 });
 termsConditionsSchema.index({ version: 1 });
 termsConditionsSchema.index({ createdBy: 1 });
 termsConditionsSchema.index({ createdAt: -1 });
+termsConditionsSchema.index({ organizationId: 1 });
 
 // Virtual for content preview (first 200 characters)
 termsConditionsSchema.virtual('contentPreview').get(function () {
@@ -74,8 +81,8 @@ termsConditionsSchema.virtual('contentPreview').get(function () {
 termsConditionsSchema.methods.canUserAccess = function (user) {
     if (!user) return false;
 
-    // Admin and GlobalSupport can access all terms
-    if (['Admin', 'GlobalSupport'].includes(user.role)) return true;
+    // SuperAdmin, Admin and GlobalSupport can access all terms
+    if (['SuperAdmin', 'Admin', 'GlobalSupport'].includes(user.role)) return true;
 
     // AdminEvent can access terms they created
     if (user.role === 'AdminEvent' && this.createdBy.equals(user._id)) return true;

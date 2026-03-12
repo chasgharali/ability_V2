@@ -4,7 +4,7 @@ import './UserManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import filterIcon from '../../assets/filter.png';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
@@ -13,9 +13,26 @@ import { Input, Select, MultiSelect } from '../UI/FormComponents';
 import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, deleteUserPermanently, bulkDeleteUsers } from '../../services/users';
 import { listBooths, getBoothEvents } from '../../services/booths';
 import { listEvents } from '../../services/events';
+import { listOrganizations } from '../../services/organizations';
 import { JOB_CATEGORY_LIST } from '../../constants/options';
+import MassUploadModal from './MassUploadModal';
+import { useAuth } from '../../contexts/AuthContext';
+import axios from 'axios';
+
+function authHeaders() {
+  const token = localStorage.getItem('token');
+  return { Authorization: `Bearer ${token}` };
+}
 export default function UserManagement() {
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
+  const [showMassUpload, setShowMassUpload] = useState(false);
+  const [showBulkUpdate, setShowBulkUpdate] = useState(false);
+  const [bulkUpdateFields, setBulkUpdateFields] = useState({ isActive: '' });
+  const [orgFilter, setOrgFilter] = useState('');
+  const [orgsList, setOrgsList] = useState([]);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -271,6 +288,37 @@ export default function UserManagement() {
     setConfirmBulkDeleteOpen(true);
   };
 
+  const handleBulkUpdate = async () => {
+    const ids = [...selectedUsersRef.current];
+    if (!ids.length) return;
+    const updates = {};
+    if (bulkUpdateFields.isActive !== '') updates.isActive = bulkUpdateFields.isActive === 'true';
+    if (Object.keys(updates).length === 0) {
+      showToast('Select at least one field to update', 'Warning');
+      return;
+    }
+    try {
+      setBulkUpdating(true);
+      await axios.put('/api/users/bulk-update', { userIds: ids, updates }, { headers: authHeaders() });
+      showToast(`Updated ${ids.length} user(s) successfully`, 'Success');
+      setShowBulkUpdate(false);
+      setBulkUpdateFields({ isActive: '' });
+      setSelectedUsers([]);
+      selectedUsersRef.current = [];
+      if (gridRef.current && typeof gridRef.current.clearSelection === 'function') {
+        gridRef.current.clearSelection();
+      }
+      await loadUsers();
+      if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+        gridRef.current.refresh();
+      }
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Bulk update failed', 'Error');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   const confirmBulkDelete = async () => {
     const userIdsToDelete = [...selectedUsersRef.current];
     if (!userIdsToDelete || userIdsToDelete.length === 0) return;
@@ -350,11 +398,13 @@ export default function UserManagement() {
       if (roleFilter && roleFilter.trim()) {
         params.role = roleFilter.trim();
       }
-      // Add search parameter if active search query exists
       if (activeSearchQuery && activeSearchQuery.trim()) {
         params.search = activeSearchQuery.trim();
       }
-      
+      if (orgFilter && orgFilter.trim()) {
+        params.organizationId = orgFilter.trim();
+      }
+
       const res = await listUsers(params);
       // Discard results if a newer request has already started
       if (gen !== loadRequestGenRef.current) return;
@@ -365,6 +415,8 @@ export default function UserManagement() {
         const parts = (u.name || '').trim().split(/\s+/);
         const firstName = parts[0] || '';
         const lastName = parts.slice(1).join(' ') || '';
+        const orgData = u.organizationId;
+        const orgName = orgData && typeof orgData === 'object' ? orgData.name : null;
         return {
           id: u._id,
           firstName,
@@ -376,6 +428,7 @@ export default function UserManagement() {
           assignedEvents: (u.assignedEvents || []).map(e => e?._id || e),
           isActive: u.isActive,
           createdAt: u.createdAt,
+          organizationName: orgName || '-',
         };
       }));
       // announce results for screen readers
@@ -394,7 +447,7 @@ export default function UserManagement() {
         setLoading(false);
       }
     }
-  }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker]);
+  }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker, orgFilter]);
 
   // Memoize paginated data source to ensure grid updates when users change
   const paginatedDataSource = useMemo(() => {
@@ -434,6 +487,13 @@ export default function UserManagement() {
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
   useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
+  useEffect(() => {
+    if (isSuperAdmin) {
+      listOrganizations({ limit: 200 })
+        .then(res => setOrgsList(res.organizations || []))
+        .catch(() => setOrgsList([]));
+    }
+  }, [isSuperAdmin]);
 
   // Fetch booth events when booth is selected for Recruiter/BoothAdmin
   useEffect(() => {
@@ -928,6 +988,18 @@ export default function UserManagement() {
                         </ButtonComponent>
                       </>
                     )}
+                    {selectedUsers.length > 0 && (
+                      <ButtonComponent
+                        cssClass="e-warning"
+                        onClick={() => setShowBulkUpdate(true)}
+                        aria-label={`Bulk update ${selectedUsers.length} users`}
+                      >
+                        Update Selected ({selectedUsers.length})
+                      </ButtonComponent>
+                    )}
+                    <ButtonComponent cssClass="e-outline e-primary" onClick={() => setShowMassUpload(true)} aria-label="Mass upload users from spreadsheet">
+                      Mass Upload
+                    </ButtonComponent>
                     <ButtonComponent cssClass="e-primary" onClick={() => setMode('create')} aria-label="Create new user">
                       Create User
                     </ButtonComponent>
@@ -952,7 +1024,6 @@ export default function UserManagement() {
                       value={roleFilter}
                       change={(e) => {
                         setRoleFilter(e.value || '');
-                        // loadUsers will be called automatically via useEffect when roleFilter changes
                       }}
                       placeholder="Select Role"
                       cssClass="role-filter-dropdown"
@@ -960,6 +1031,24 @@ export default function UserManagement() {
                       width="100%"
                     />
                   </div>
+                  {/* Organization Filter - SuperAdmin only */}
+                  {isSuperAdmin && (
+                  <div style={{ width: '220px', flexShrink: 0 }}>
+                    <DropDownListComponent
+                      id="org-filter-dropdown"
+                      dataSource={[{ value: '', text: 'All Organizations' }, { value: 'unassigned', text: 'Unassigned' }, ...orgsList.map(o => ({ value: o._id, text: o.name }))]}
+                      fields={{ value: 'value', text: 'text' }}
+                      value={orgFilter}
+                      change={(e) => {
+                        setOrgFilter(e.value || '');
+                      }}
+                      placeholder="Select Organization"
+                      cssClass="role-filter-dropdown"
+                      popupHeight="300px"
+                      width="100%"
+                    />
+                  </div>
+                  )}
                   {/* Search Section - Right */}
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                     <div style={{ marginBottom: 0 }}>
@@ -1079,6 +1168,24 @@ export default function UserManagement() {
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.role || ''}
+                        </div>
+                      )}
+                    />
+                    <ColumnDirective 
+                      field='organizationName' 
+                      headerText='Organization' 
+                      width='180' 
+                      visible={isSuperAdmin}
+                      allowFiltering={true}
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.organizationName && props.organizationName !== '-' ? (
+                            <span style={{ background: '#e8f4fd', color: '#0066cc', padding: '2px 8px', borderRadius: 10, fontSize: '0.85rem' }}>
+                              {props.organizationName}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#aaa' }}>-</span>
+                          )}
                         </div>
                       )}
                     />
@@ -1452,6 +1559,60 @@ export default function UserManagement() {
         timeOut={3000}
         newestOnTop={true}
       />
+
+      {/* Mass Upload Modal */}
+      {showMassUpload && (
+        <MassUploadModal
+          onClose={() => setShowMassUpload(false)}
+          onSuccess={() => { setShowMassUpload(false); loadUsers(); showToast('Users uploaded successfully', 'Success'); }}
+        />
+      )}
+
+      {/* Bulk Update Modal */}
+      {showBulkUpdate && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Bulk Update Users"
+        >
+          <div style={{ background: '#fff', borderRadius: 12, padding: 28, width: '100%', maxWidth: 460, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 700 }}>Bulk Update Users</h2>
+            <p style={{ margin: '0 0 20px', color: '#555', fontSize: 14 }}>
+              Applying changes to <strong>{selectedUsers.length}</strong> selected user{selectedUsers.length !== 1 ? 's' : ''}.
+            </p>
+
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 6 }}>Account Status</span>
+              <select
+                value={bulkUpdateFields.isActive}
+                onChange={e => setBulkUpdateFields(f => ({ ...f, isActive: e.target.value }))}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
+              >
+                <option value="">— No Change —</option>
+                <option value="true">Active</option>
+                <option value="false">Deactivated</option>
+              </select>
+            </label>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
+              <button
+                onClick={() => { setShowBulkUpdate(false); setBulkUpdateFields({ isActive: '' }); }}
+                style={{ padding: '9px 20px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontWeight: 500 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkUpdate}
+                disabled={bulkUpdating}
+                style={{ padding: '9px 20px', borderRadius: 6, border: 'none', background: '#007bff', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+              >
+                {bulkUpdating ? 'Updating...' : 'Apply Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

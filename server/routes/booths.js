@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Booth = require('../models/Booth');
 const { authenticateToken, requireRole, requireResourceAccess } = require('../middleware/auth');
+const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -20,6 +21,10 @@ router.get('/', authenticateToken, async (req, res) => {
                 { eventId: eventId },
                 { events: eventId }
             ];
+        }
+        // Org-scope: Admin sees only their org's booths
+        if (req.user?.role === 'Admin' && req.orgId) {
+            filter.organizationId = req.orgId;
         }
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -207,7 +212,7 @@ router.get('/invite/:slug', authenticateToken, async (req, res) => {
  * POST /api/booths
  * Create booths for one or more events
  */
-router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
+router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), [
     body('name').isString().trim().isLength({ min: 2, max: 200 }),
     body('description').optional().isString(),
     body('logoUrl').optional().isURL(),
@@ -233,6 +238,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
 
         const validEvents = [];
         const skipped = [];
+        let resolvedOrgId = req.orgId || null;
 
         // Check customInviteSlug uniqueness ahead of time (if provided)
         if (customInviteSlug) {
@@ -248,6 +254,9 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             if (!ev) { 
                 skipped.push({ eventId: eid, reason: 'Event not found' }); 
                 continue; 
+            }
+            if (!resolvedOrgId && ev.organizationId) {
+                resolvedOrgId = ev.organizationId;
             }
 
             // Enforce booth limit if configured
@@ -275,6 +284,34 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             });
         }
 
+        // Enforce org-level limits when applicable
+        if (resolvedOrgId) {
+            const org = await Organization.findById(resolvedOrgId).select('limits');
+            if (org?.limits?.maxBooths > 0) {
+                const currentBooths = await Booth.countDocuments({ organizationId: resolvedOrgId });
+                if (currentBooths >= org.limits.maxBooths) {
+                    return res.status(403).json({
+                        error: 'Booth limit reached',
+                        message: `Your organization has reached its maximum booth limit of ${org.limits.maxBooths}`
+                    });
+                }
+            }
+            if (org?.limits?.maxRecruiters > 0) {
+                const User = require('../models/User');
+                const currentRecruiters = await User.countDocuments({
+                    organizationId: resolvedOrgId,
+                    role: { $in: ['Recruiter', 'BoothAdmin'] },
+                    isActive: true
+                });
+                if (currentRecruiters >= org.limits.maxRecruiters) {
+                    return res.status(403).json({
+                        error: 'Recruiter limit reached',
+                        message: `Your organization has reached its maximum recruiter limit of ${org.limits.maxRecruiters}`
+                    });
+                }
+            }
+        }
+
         // Create single booth with multiple events
         const booth = await Booth.create({
             eventId: validEvents[0], // First event for backward compatibility
@@ -287,6 +324,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
             expireLinkTime: expireLinkTime || null,
             customInviteSlug: customInviteSlug || undefined,
             joinBoothButtonLink: joinBoothButtonLink || '',
+            organizationId: resolvedOrgId || null,
             richSections: (richSections || []).slice(0, 3).map((s, index) => ({
                 title: s.title || `Section ${index + 1}`,
                 contentHtml: s.contentHtml || '',

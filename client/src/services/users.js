@@ -5,7 +5,7 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function listUsers({ page = 1, limit = 50, search, role, isActive, eventId } = {}) {
+export async function listUsers({ page = 1, limit = 50, search, role, isActive, eventId, organizationId } = {}) {
   const params = { page, limit };
   
   // Only add parameters if they have valid values (following pattern from analytics service)
@@ -45,6 +45,10 @@ export async function listUsers({ page = 1, limit = 50, search, role, isActive, 
     if (eventIdStr) {
       params.eventId = eventIdStr;
     }
+  }
+
+  if (organizationId !== undefined && organizationId !== null && organizationId !== '') {
+    params.organizationId = String(organizationId).trim();
   }
   
   const res = await axios.get('/api/users', { 

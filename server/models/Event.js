@@ -195,6 +195,12 @@ const eventSchema = new mongoose.Schema({
         enum: ['draft', 'published', 'active', 'completed', 'cancelled'],
         default: 'draft'
     },
+    // Organization this event belongs to
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
+    },
     // Event creator/admin
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -231,6 +237,8 @@ const eventSchema = new mongoose.Schema({
 eventSchema.index({ status: 1 });
 eventSchema.index({ start: 1, end: 1 });
 eventSchema.index({ createdBy: 1 });
+eventSchema.index({ organizationId: 1 });
+eventSchema.index({ organizationId: 1, status: 1 });
 
 // Virtual for event duration
 eventSchema.virtual('duration').get(function () {
@@ -274,8 +282,8 @@ eventSchema.pre('validate', function (next) {
 eventSchema.methods.canUserAccess = function (user) {
     if (!user) return false;
 
-    // Admin and GlobalSupport can access all events
-    if (['Admin', 'GlobalSupport'].includes(user.role)) return true;
+    // SuperAdmin and Admin and GlobalSupport can access all events
+    if (['SuperAdmin', 'Admin', 'GlobalSupport'].includes(user.role)) return true;
 
     // Event administrators can access their events
     if (this.administrators && this.administrators.includes(user._id)) return true;

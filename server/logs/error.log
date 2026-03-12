@@ -20094,3 +20094,145 @@
 2026-02-17 14:21:18:2118 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
 2026-02-17 14:21:30:2130 [31merror[39m: [31mRedis Client Error: connect ETIMEDOUT[39m
 2026-02-17 18:48:26:4826 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:08:378 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:08:378 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:08:378 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:09:379 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:09:379 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:10:3710 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:10:3710 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:11:3711 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:12:3712 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:12:3712 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:13:3713 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:14:3714 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:15:3715 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:16:3716 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:16:3716 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:17:3717 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:19:3719 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:20:3720 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:21:3721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:22:3722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:23:3723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:25:3725 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:26:3726 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:40:46:4046 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:41:24:4124 [31merror[39m: [31mMongoDB connection failed: queryTxt ESERVFAIL cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-03-09 23:42:38:4238 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:42:40:4240 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:22:4722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:22:4722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:22:4722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:23:4723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:23:4723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:23:4723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:24:4724 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mMongoDB connection failed: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:58:4758 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:58:4758 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:58:4758 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:59:4759 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:00:480 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:00:480 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:01:481 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:01:481 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:02:482 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:03:483 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:04:484 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:05:485 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:06:486 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:07:487 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:07:487 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:48:08:488 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:08:488 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:48:09:489 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:10:4810 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:11:4811 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:13:4813 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:14:4814 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:15:4815 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:17:4817 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:18:4818 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:20:4820 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:21:4821 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:23:4823 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:24:4824 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:26:4826 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:28:4828 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:30:4830 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:31:4831 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:33:4833 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:35:4835 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:37:4837 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:50:4850 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-10 05:34:14:3414 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 05:46:21:4621 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 06:35:56:3556 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 06:47:31:4731 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 11:39:13:3913 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30774ms (connectTimeoutMS: 30000)[39m
+2026-03-10 11:58:53:5853 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 14:00:39:039 [31merror[39m: [31mRedis Client Error: read ETIMEDOUT[39m
+2026-03-10 17:20:42:2042 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 17:49:02:492 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 988026ms (connectTimeoutMS: 30000)[39m
+2026-03-11 01:18:34:1834 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 01:53:55:5355 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 02:24:50:2450 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 02:41:49:4149 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 05:11:14:1114 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 05:38:23:3823 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 06:11:00:110 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 06:15:56:1556 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 06:29:17:2917 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 302610ms (connectTimeoutMS: 30000)[39m
+2026-03-11 07:18:22:1822 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 957505ms (connectTimeoutMS: 30000)[39m
+2026-03-11 07:33:49:3349 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 07:34:19:3419 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 07:51:20:5120 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30001ms (connectTimeoutMS: 30000)[39m
+2026-03-11 08:07:42:742 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 201231ms (connectTimeoutMS: 30000)[39m
+2026-03-11 08:41:25:4125 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1462396ms (connectTimeoutMS: 30000)[39m
+2026-03-11 09:38:13:3813 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-11 09:41:54:4154 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 2270623ms (connectTimeoutMS: 30000)[39m
+2026-03-11 09:55:26:5526 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 264322ms (connectTimeoutMS: 30000)[39m
+2026-03-11 10:22:45:2245 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 910583ms (connectTimeoutMS: 30000)[39m
+2026-03-11 10:39:56:3956 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30001ms (connectTimeoutMS: 30000)[39m
+2026-03-11 10:57:42:5742 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 219062ms (connectTimeoutMS: 30000)[39m
+2026-03-11 11:11:30:1130 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 217056ms (connectTimeoutMS: 30000)[39m
+2026-03-11 11:27:39:2739 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 12:15:01:151 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mMongoDB connection failed: querySrv ECONNREFUSED _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:40:1540 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 02:29:14:2914 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-12 02:29:22:2922 [31merror[39m: [31mSocket authentication error: Socket 'secureConnect' timed out after 30000ms (connectTimeoutMS: 30000)[39m
+2026-03-13 01:18:31:1831 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-13 01:18:33:1833 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 01:18:37:1837 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 01:19:28:1928 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-13 01:20:30:2030 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 01:20:33:2033 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m

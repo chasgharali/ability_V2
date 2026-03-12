@@ -1370,3 +1370,2240 @@
 2026-02-17 18:52:31:5231 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
 2026-02-17 18:52:52:5252 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
 2026-02-17 18:52:52:5252 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-09 23:37:06:376 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-09 23:37:06:376 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:37:07:377 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-09 23:37:07:377 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-09 23:37:07:377 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-09 23:37:07:377 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-09 23:37:07:377 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-09 23:37:07:377 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-09 23:37:07:377 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-09 23:37:07:377 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:07:377 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:08:378 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:08:378 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:08:378 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:09:379 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:09:379 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:10:3710 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:10:3710 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:11:3711 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:12:3712 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:12:3712 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:13:3713 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:14:3714 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:15:3715 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:16:3716 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:16:3716 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:17:3717 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:19:3719 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:20:3720 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:21:3721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:22:3722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:23:3723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:25:3725 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:26:3726 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:37:27:3727 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-09 23:40:46:4046 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-09 23:40:46:4046 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-09 23:40:46:4046 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:40:46:4046 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-09 23:40:46:4046 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-09 23:40:46:4046 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-09 23:40:46:4046 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-09 23:40:46:4046 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-09 23:40:46:4046 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-09 23:40:46:4046 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-09 23:40:46:4046 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-09 23:40:47:4047 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-09 23:40:47:4047 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-09 23:40:56:4056 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-09 23:40:58:4058 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-09 23:40:58:4058 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-09 23:41:19:4119 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-09 23:41:24:4124 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-09 23:41:24:4124 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-09 23:41:24:4124 [31merror[39m: [31mMongoDB connection failed: queryTxt ESERVFAIL cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:41:24:4124 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-09 23:41:24:4124 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-03-09 23:41:54:4154 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-03-09 23:42:38:4238 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:42:40:4240 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:47:19:4719 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-09 23:47:21:4721 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-09 23:47:21:4721 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-09 23:47:21:4721 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-09 23:47:21:4721 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-09 23:47:21:4721 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-09 23:47:21:4721 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-09 23:47:21:4721 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-09 23:47:21:4721 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-09 23:47:21:4721 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-09 23:47:21:4721 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:21:4721 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:22:4722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:22:4722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:22:4722 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:23:4723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:23:4723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:23:4723 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:24:4724 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:24:4724 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-09 23:47:26:4726 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-09 23:47:26:4726 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mMongoDB connection failed: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-09 23:47:56:4756 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-09 23:47:56:4756 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-09 23:47:56:4756 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-09 23:47:56:4756 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-09 23:47:56:4756 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-09 23:47:56:4756 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-09 23:47:56:4756 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-09 23:47:56:4756 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:56:4756 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:57:4757 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:58:4758 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:58:4758 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:58:4758 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:47:59:4759 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:00:480 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:00:480 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:01:481 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:01:481 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:02:482 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:03:483 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:04:484 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:05:485 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:06:486 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:07:487 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:07:487 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:48:08:488 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:08:488 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:48:09:489 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:10:4810 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:11:4811 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:13:4813 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:14:4814 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:15:4815 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:17:4817 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:18:4818 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:20:4820 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:21:4821 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:23:4823 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:24:4824 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:26:4826 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:28:4828 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:30:4830 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:31:4831 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:33:4833 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:35:4835 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:37:4837 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-09 23:48:40:4840 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-09 23:48:40:4840 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-09 23:48:50:4850 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-09 23:48:55:4855 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-09 23:48:57:4857 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-09 23:48:57:4857 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-09 23:48:59:4859 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-09 23:49:00:490 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-09 23:49:00:490 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-09 23:49:05:495 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-09 23:49:06:496 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:13:23:1323 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:23:1323 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:13:25:1325 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:13:26:1326 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:13:27:1327 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:13:28:1328 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:13:30:1330 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:30:1330 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:13:33:1333 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:13:35:1335 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:13:37:1337 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:37:1337 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:13:39:1339 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:13:40:1340 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:13:41:1341 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:41:1341 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:13:43:1343 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:13:44:1344 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:13:44:1344 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:13:45:1345 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:45:1345 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:13:48:1348 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:13:50:1350 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:50:1350 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:13:52:1352 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:13:53:1353 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:13:54:1354 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:54:1354 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:13:56:1356 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:13:57:1357 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:13:57:1357 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:13:58:1358 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:13:58:1358 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:01:141 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:02:142 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:02:142 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:05:145 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:07:147 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:07:147 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:09:149 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:10:1410 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:10:1410 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:11:1411 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:11:1411 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:13:1413 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:15:1415 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:15:1415 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:18:1418 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:19:1419 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:19:1419 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:21:1421 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:22:1422 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:22:1422 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:24:1424 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:25:1425 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:27:1427 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:27:1427 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:29:1429 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:30:1430 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:34:1434 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:14:35:1435 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:35:1435 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:37:1437 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:38:1438 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:38:1438 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:39:1439 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:39:1439 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:41:1441 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:42:1442 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:42:1442 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:45:1445 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:14:48:1448 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:14:48:1448 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:14:50:1450 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:14:52:1452 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:15:00:150 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:15:00:150 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:15:02:152 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:15:03:153 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:15:03:153 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:15:05:155 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:15:06:156 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:15:06:156 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:15:09:159 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:15:10:1510 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:15:10:1510 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:15:15:1515 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:15:16:1516 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:15:16:1516 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:15:19:1519 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:15:20:1520 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:15:20:1520 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:15:20:1520 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:15:23:1523 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:15:23:1523 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:15:26:1526 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:15:27:1527 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:15:27:1527 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 00:15:27:1527 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 00:15:29:1529 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 00:15:29:1529 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 00:15:29:1529 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 00:15:30:1530 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 00:15:30:1530 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 00:15:30:1530 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 00:15:30:1530 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 00:15:30:1530 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 00:15:30:1530 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 00:15:30:1530 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 00:15:33:1533 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-10 00:15:34:1534 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-10 00:15:35:1535 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 01:14:32:1432 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 01:14:32:1432 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 01:14:34:1434 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 01:14:35:1435 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 01:14:35:1435 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 01:17:11:1711 [32minfo[39m: [32mUser logged in: superadmin@abilityconnect.online[39m
+2026-03-10 01:17:12:1712 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 01:17:25:1725 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:17:26:1726 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:17:26:1726 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-10 01:17:26:1726 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-10 01:17:32:1732 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:17:35:1735 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:17:35:1735 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:17:36:1736 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:17:36:1736 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:17:38:1738 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:17:38:1738 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:17:38:1738 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:18:04:184 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:18:05:185 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:18:05:185 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-10 01:18:05:185 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:18:06:186 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:18:07:187 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:18:07:187 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-10 01:18:07:187 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:18:17:1817 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:18:19:1819 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:18:19:1819 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:18:19:1819 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:18:20:1820 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:18:21:1821 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:18:21:1821 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:18:22:1822 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:18:29:1829 [32minfo[39m: [32mStats query: {}[39m
+2026-03-10 01:18:29:1829 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":73,"completedMeetings":62,"averageDuration":3.3225806451612905,"averageRating":3.71875,"totalWithRating":32,"totalWithInterpreter":0}[39m
+2026-03-10 01:19:58:1958 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:19:59:1959 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:19:59:1959 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-10 01:20:00:200 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:20:00:200 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:20:01:201 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:20:01:201 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-10 01:20:01:201 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:20:20:2020 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:20:23:2023 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:20:23:2023 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:20:23:2023 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:20:24:2024 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:20:25:2025 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:20:25:2025 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:20:26:2026 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:30:41:3041 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:30:43:3043 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:30:43:3043 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:30:44:3044 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:30:44:3044 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:30:46:3046 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:30:46:3046 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:30:46:3046 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:31:10:3110 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 01:31:10:3110 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 01:31:14:3114 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 01:31:15:3115 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 01:31:15:3115 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 01:31:17:3117 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 01:31:17:3117 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 01:31:19:3119 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 01:31:20:3120 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 01:31:20:3120 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 01:31:24:3124 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 01:31:27:3127 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-10 01:31:27:3127 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-10 01:31:29:3129 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 01:31:30:3130 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 01:31:32:3132 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 01:31:34:3134 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:31:36:3136 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:31:36:3136 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:31:36:3136 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:31:43:3143 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:31:45:3145 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:31:45:3145 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:31:45:3145 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:35:59:3559 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:36:01:361 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:36:01:361 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:36:01:361 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:36:02:362 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:36:03:363 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:36:03:363 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:36:04:364 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:36:04:364 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:36:06:366 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:36:06:366 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:36:06:366 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:36:06:366 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:36:08:368 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:36:08:368 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:36:08:368 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:36:08:368 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:36:10:3610 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:36:10:3610 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:36:10:3610 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:36:38:3638 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:36:39:3639 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:36:39:3639 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-10 01:36:39:3639 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-10 01:37:05:375 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:37:07:377 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:37:07:377 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:37:07:377 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:37:08:378 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:37:10:3710 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:37:10:3710 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:37:10:3710 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:37:37:3737 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:37:38:3738 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:37:38:3738 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-10 01:37:38:3738 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:37:38:3738 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:37:39:3739 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-10 01:37:39:3739 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-10 01:37:40:3740 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:40:35:4035 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:40:37:4037 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:40:37:4037 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:40:38:4038 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:40:38:4038 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:40:40:4040 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:40:40:4040 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:40:40:4040 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:40:46:4046 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: 69af21caa5c811ee9f3b3117, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-10 01:40:49:4049 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-10 01:40:49:4049 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-10 01:40:49:4049 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-10 01:43:14:4314 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-10 01:43:16:4316 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 01:58:47:5847 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 01:58:47:5847 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 02:16:12:1612 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 02:16:13:1613 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 02:16:13:1613 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 02:32:43:3243 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 02:32:44:3244 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 02:32:44:3244 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 02:49:48:4948 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 04:19:33:1933 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 04:19:33:1933 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 04:35:18:3518 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 04:41:43:4143 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 04:41:43:4143 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 04:45:14:4514 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 04:45:25:4525 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 04:45:25:4525 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 04:58:14:5814 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 05:33:52:3352 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 05:33:52:3352 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 05:34:14:3414 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 05:34:15:3415 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 05:34:15:3415 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 05:46:14:4614 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 05:46:14:4614 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 05:46:21:4621 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 05:46:21:4621 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 05:46:22:4622 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 05:46:25:4625 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 05:46:25:4625 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 06:05:11:511 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 06:05:11:511 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 06:05:12:512 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 06:05:12:512 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 06:20:21:2021 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 06:35:56:3556 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 06:35:56:3556 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 06:35:56:3556 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 06:47:31:4731 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 06:47:31:4731 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 06:47:32:4732 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 07:03:57:357 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 07:20:01:201 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 07:20:01:201 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 07:39:13:3913 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 07:39:14:3914 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 07:39:14:3914 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 07:48:14:4814 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 08:41:48:4148 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 08:41:48:4148 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 08:49:14:4914 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 09:06:23:623 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 09:22:42:2242 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 09:22:42:2242 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 09:38:07:387 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 09:38:08:388 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 09:38:08:388 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 09:50:14:5014 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 09:50:14:5014 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 09:50:25:5025 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 09:50:25:5025 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 10:08:53:853 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 10:08:53:853 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:23:16:2316 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 11:23:16:2316 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:38:36:3836 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:38:40:3840 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 11:38:43:3843 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:39:13:3913 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30774ms (connectTimeoutMS: 30000)[39m
+2026-03-10 11:39:32:3932 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:39:32:3932 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:39:43:3943 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 11:39:45:3945 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:52:14:5214 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:52:14:5214 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:52:25:5225 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 11:52:25:5225 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:58:22:5822 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:58:22:5822 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 11:58:53:5853 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-10 12:05:09:59 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 12:05:09:59 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 13:37:27:3727 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-10 13:37:29:3729 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 13:51:03:513 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-10 13:51:05:515 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 14:00:39:039 [31merror[39m: [31mRedis Client Error: read ETIMEDOUT[39m
+2026-03-10 14:00:40:040 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 14:00:40:040 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 17:10:46:1046 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-10 17:10:48:1048 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 17:20:30:2030 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 17:20:42:2042 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-10 17:20:42:2042 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-10 17:20:42:2042 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-10 17:24:07:247 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-10 17:24:09:249 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-10 17:25:12:2512 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 17:49:02:492 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 988026ms (connectTimeoutMS: 30000)[39m
+2026-03-10 18:06:24:624 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 18:06:24:624 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 18:23:01:231 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 18:23:01:231 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 18:39:49:3949 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 18:39:49:3949 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 18:39:52:3952 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-10 18:39:52:3952 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 18:53:23:5323 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-10 19:14:54:1454 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-11 00:32:21:3221 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 00:32:21:3221 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 00:32:24:3224 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 00:32:25:3225 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 00:32:26:3226 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 00:33:25:3325 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-11 00:33:27:3327 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 00:54:54:5454 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-11 00:54:57:5457 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:01:09:19 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-11 01:01:11:111 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 01:01:11:111 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 01:01:13:113 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:15:24:1524 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 01:15:24:1524 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 01:15:25:1525 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 01:15:25:1525 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 01:15:45:1545 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:15:47:1547 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-11 01:15:47:1547 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-11 01:15:47:1547 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-11 01:15:55:1555 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:15:59:1559 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-11 01:15:59:1559 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-11 01:15:59:1559 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:15:59:1559 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:16:03:163 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-11 01:16:03:163 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-11 01:16:03:163 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:16:21:1621 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:16:22:1622 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-11 01:16:22:1622 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-11 01:16:22:1622 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:16:22:1622 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:16:23:1623 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-11 01:16:23:1623 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-11 01:16:24:1624 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:16:38:1638 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:16:39:1639 [32minfo[39m: [32mFound 189 total users matching query, returning 50 for page 1[39m
+2026-03-11 01:16:39:1639 [32minfo[39m: [32mQuery returned 50 users out of 189 total matching query[39m
+2026-03-11 01:16:39:1639 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 0[39m
+2026-03-11 01:17:27:1727 [32minfo[39m: [32mStats query: {}[39m
+2026-03-11 01:17:27:1727 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":73,"completedMeetings":62,"averageDuration":3.3225806451612905,"averageRating":3.71875,"totalWithRating":32,"totalWithInterpreter":0}[39m
+2026-03-11 01:17:30:1730 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:17:31:1731 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-11 01:17:31:1731 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-11 01:17:31:1731 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:17:32:1732 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:17:33:1733 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-11 01:17:33:1733 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-11 01:17:33:1733 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:18:34:1834 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 01:18:35:1835 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:18:35:1835 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:22:48:2248 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:22:50:2250 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-11 01:22:50:2250 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-11 01:22:50:2250 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:22:51:2251 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-11 01:22:52:2252 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-11 01:22:52:2252 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-11 01:22:53:2253 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-11 01:28:55:2855 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 01:28:55:2855 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 01:28:58:2858 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:28:59:2859 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:29:02:292 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:29:04:294 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 01:29:04:294 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:29:07:297 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:29:09:299 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 01:29:09:299 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 01:29:11:2911 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:29:12:2912 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:29:16:2916 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:30:13:3013 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 01:30:13:3013 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 01:30:16:3016 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 01:30:17:3017 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:30:17:3017 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:30:19:3019 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:30:26:3026 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 01:30:26:3026 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:30:29:3029 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:30:33:3033 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:32:12:3212 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 01:32:12:3212 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:32:15:3215 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:32:17:3217 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:32:18:3218 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-11 01:32:18:3218 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:32:21:3221 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 01:32:25:3225 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-11 01:34:59:3459 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-11 01:53:45:5345 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 01:53:55:5355 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 01:53:56:5356 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 01:53:56:5356 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 02:24:50:2450 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 02:24:51:2451 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 02:24:51:2451 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 02:41:49:4149 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 02:41:49:4149 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 02:41:49:4149 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 02:41:49:4149 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 02:41:50:4150 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 02:57:07:577 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 02:57:07:577 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 02:57:08:578 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 02:57:08:578 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 03:14:25:1425 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 03:14:25:1425 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 03:14:26:1426 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 03:14:26:1426 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 03:31:52:3152 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 04:07:30:730 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 04:07:30:730 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 04:23:24:2324 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 04:54:49:5449 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 05:11:14:1114 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 05:38:02:382 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 05:38:02:382 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 05:38:23:3823 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 05:38:24:3824 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 05:38:24:3824 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 05:54:04:544 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 05:54:04:544 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 06:11:00:110 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 06:15:56:1556 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 06:29:17:2917 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 302610ms (connectTimeoutMS: 30000)[39m
+2026-03-11 07:18:22:1822 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 957505ms (connectTimeoutMS: 30000)[39m
+2026-03-11 07:33:49:3349 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 07:34:19:3419 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-11 07:51:20:5120 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30001ms (connectTimeoutMS: 30000)[39m
+2026-03-11 08:07:42:742 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 201231ms (connectTimeoutMS: 30000)[39m
+2026-03-11 08:41:25:4125 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1462396ms (connectTimeoutMS: 30000)[39m
+2026-03-11 09:38:13:3813 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-11 09:41:54:4154 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 2270623ms (connectTimeoutMS: 30000)[39m
+2026-03-11 09:55:26:5526 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 264322ms (connectTimeoutMS: 30000)[39m
+2026-03-11 10:22:45:2245 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 910583ms (connectTimeoutMS: 30000)[39m
+2026-03-11 10:39:56:3956 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30001ms (connectTimeoutMS: 30000)[39m
+2026-03-11 10:57:42:5742 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 219062ms (connectTimeoutMS: 30000)[39m
+2026-03-11 11:11:30:1130 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 217056ms (connectTimeoutMS: 30000)[39m
+2026-03-11 11:27:37:2737 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 11:27:37:2737 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 11:27:39:2739 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 11:27:40:2740 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 11:27:40:2740 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 11:43:42:4342 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 12:15:01:151 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-11 12:15:02:152 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-11 12:15:02:152 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-11 12:27:07:277 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 14:00:33:033 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-11 14:00:33:033 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-11 14:32:52:3252 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-12 01:15:39:1539 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 01:15:39:1539 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mMongoDB connection failed: querySrv ECONNREFUSED _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-12 01:15:39:1539 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-12 01:15:39:1539 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 01:15:39:1539 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 01:15:39:1539 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 01:15:39:1539 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 01:15:39:1539 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 01:15:39:1539 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 01:15:39:1539 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:39:1539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:40:1540 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-12 01:15:40:1540 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 01:15:41:1541 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 01:15:42:1542 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-12 01:15:44:1544 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 01:15:44:1544 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 01:15:46:1546 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 01:15:47:1547 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 01:15:47:1547 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 01:16:10:1610 [32minfo[39m: [32mUser logged in: superadmin@abilityconnect.online[39m
+2026-03-12 01:16:11:1611 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-12 01:18:50:1850 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:18:53:1853 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:18:53:1853 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:18:53:1853 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:18:53:1853 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:18:56:1856 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:18:56:1856 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:18:56:1856 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:18:58:1858 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:18:59:1859 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:18:59:1859 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-12 01:18:59:1859 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-12 01:19:14:1914 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:17:1917 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:19:17:1917 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:19:17:1917 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:19:17:1917 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:19:1919 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:19:19:1919 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:19:19:1919 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:19:26:1926 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:27:1927 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:19:27:1927 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-12 01:19:27:1927 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-12 01:19:29:1929 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:33:1933 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:19:33:1933 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:19:33:1933 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:19:33:1933 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:36:1936 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:19:36:1936 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:19:36:1936 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:19:42:1942 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:43:1943 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:19:43:1943 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-12 01:19:43:1943 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:19:43:1943 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:44:1944 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:19:44:1944 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-12 01:19:45:1945 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:19:45:1945 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:48:1948 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:19:48:1948 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:19:48:1948 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:19:48:1948 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:19:51:1951 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 01:19:51:1951 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 01:19:51:1951 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:20:38:2038 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:20:40:2040 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:20:40:2040 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-12 01:20:40:2040 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:20:41:2041 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:20:42:2042 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:20:42:2042 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-12 01:20:42:2042 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: a, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mOptimized search query built for term: "a"[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: ad, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mOptimized search query built for term: "ad"[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:20:59:2059 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:00:210 [32minfo[39m: [32mFound 26 total users matching query, returning 26 for page 1[39m
+2026-03-12 01:21:00:210 [32minfo[39m: [32mQuery returned 26 users out of 26 total matching query[39m
+2026-03-12 01:21:00:210 [32minfo[39m: [32mFound 223 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:21:00:210 [32minfo[39m: [32mQuery returned 50 users out of 223 total matching query[39m
+2026-03-12 01:21:00:210 [32minfo[39m: [32mStats - Active: 26, Inactive: 0, Verified: 17[39m
+2026-03-12 01:21:00:210 [32minfo[39m: [32mStats - Active: 223, Inactive: 0, Verified: 18[39m
+2026-03-12 01:21:01:211 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: a, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:01:211 [32minfo[39m: [32mOptimized search query built for term: "a"[39m
+2026-03-12 01:21:01:211 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:01:211 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: m, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mOptimized search query built for term: "m"[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: ma, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mOptimized search query built for term: "ma"[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mFound 223 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mQuery returned 50 users out of 223 total matching query[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: mar, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mOptimized search query built for term: "mar"[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:21:02:212 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mStats - Active: 223, Inactive: 0, Verified: 18[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: marg, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mOptimized search query built for term: "marg"[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mFound 189 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mQuery returned 50 users out of 189 total matching query[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: marga, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mOptimized search query built for term: "marga"[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mFound 39 total users matching query, returning 39 for page 1[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mQuery returned 39 users out of 39 total matching query[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 18[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mFound 0 total users matching query, returning 0 for page 1[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mQuery returned 0 users out of 0 total matching query[39m
+2026-03-12 01:21:03:213 [32minfo[39m: [32mStats - Active: 39, Inactive: 0, Verified: 2[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mStats - Active: 0, Inactive: 0, Verified: 0[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: marge, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mOptimized search query built for term: "marge"[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mFound 3 total users matching query, returning 3 for page 1[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mFound 3 total users matching query, returning 3 for page 1[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mFound 11 total users matching query, returning 11 for page 1[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mQuery returned 11 users out of 11 total matching query[39m
+2026-03-12 01:21:04:214 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 1[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 1[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mStats - Active: 11, Inactive: 0, Verified: 1[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: marg, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mOptimized search query built for term: "marg"[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mSearch query structure: {[39m
+[32m  "$and": [[39m
+[32m    {[39m
+[32m      "role": {[39m
+[32m        "$nin": [[39m
+[32m          "JobSeeker",[39m
+[32m          "SuperAdmin"[39m
+[32m        ][39m
+[32m      }[39m
+[32m    },[39m
+[32m    {[39m
+[32m      "$or": [[39m
+[32m        {[39m
+[32m          "name": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "email": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "phoneNumber": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "city": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "state": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "country": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.headline": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.keywords": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.educationLevel": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.clearance": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.veteranStatus": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.workAuthorization": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.employmentTypes": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.languages": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "metadata.profile.primaryExperience": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.race": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.genderIdentity": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.ageGroup": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.countryOfOrigin": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.disabilities": {}[39m
+[32m        },[39m
+[32m        {[39m
+[32m          "survey.otherDisability": {}[39m
+[32m        }[39m
+[32m      ][39m
+[32m    }[39m
+[32m  ][39m
+[32m}[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mNumber of search conditions: 22[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mFound 3 total users matching query, returning 3 for page 1[39m
+2026-03-12 01:21:05:215 [32minfo[39m: [32mQuery returned 3 users out of 3 total matching query[39m
+2026-03-12 01:21:06:216 [32minfo[39m: [32mStats - Active: 3, Inactive: 0, Verified: 1[39m
+2026-03-12 01:21:09:219 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:21:12:2112 [32minfo[39m: [32mFound 233 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:21:12:2112 [32minfo[39m: [32mQuery returned 50 users out of 233 total matching query[39m
+2026-03-12 01:21:13:2113 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 01:21:40:2140 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: client namespace disconnect[39m
+2026-03-12 01:24:39:2439 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-12 01:24:40:2440 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 01:24:55:2455 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 01:25:14:2514 [32minfo[39m: [32mUser logged in: superadmin@abilityconnect.online[39m
+2026-03-12 01:25:14:2514 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-12 01:34:51:3451 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-12 01:34:52:3452 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-12 01:37:37:3737 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-12 01:37:48:3748 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-12 01:37:48:3748 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-12 01:39:59:3959 [32minfo[39m: [32mOrganization updated: Ability Job Fair by superadmin@abilityconnect.online[39m
+2026-03-12 01:40:01:401 [32minfo[39m: [32mOrganization logo uploaded for Ability Job Fair by superadmin@abilityconnect.online[39m
+2026-03-12 01:42:30:4230 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:42:31:4231 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:42:31:4231 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-12 01:42:31:4231 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-12 01:42:52:4252 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:42:53:4253 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:42:53:4253 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-12 01:42:53:4253 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-12 01:43:36:4336 [32minfo[39m: [32mOrganization created: Canada Organization by superadmin@abilityconnect.online[39m
+2026-03-12 01:43:38:4338 [32minfo[39m: [32mOrganization logo uploaded for Canada Organization by superadmin@abilityconnect.online[39m
+2026-03-12 01:44:07:447 [32minfo[39m: [32mOrganization updated: Canada Organization by superadmin@abilityconnect.online[39m
+2026-03-12 01:44:40:4440 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:44:42:4442 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:44:42:4442 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-12 01:44:42:4442 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-12 01:45:08:458 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-03-12 01:45:09:459 [32minfo[39m: [32mFound 21426 total users matching query, returning 50 for page 1[39m
+2026-03-12 01:45:09:459 [32minfo[39m: [32mQuery returned 50 users out of 21426 total matching query[39m
+2026-03-12 01:45:10:4510 [32minfo[39m: [32mStats - Active: 21425, Inactive: 1, Verified: 20758[39m
+2026-03-12 01:45:17:4517 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: client namespace disconnect[39m
+2026-03-12 01:47:08:478 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-12 01:47:08:478 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 01:54:14:5414 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 01:54:15:5415 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 01:57:21:5721 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 01:57:23:5723 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 01:58:29:5829 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 01:58:56:5856 [32minfo[39m: [32mUser logged in: superadmin@abilityconnect.online[39m
+2026-03-12 01:58:56:5856 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-12 01:59:32:5932 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: client namespace disconnect[39m
+2026-03-12 01:59:40:5940 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-12 01:59:40:5940 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:05:05:55 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 02:05:05:55 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 02:05:07:57 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 02:05:08:58 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 02:05:08:58 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 02:05:10:510 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:16:07:167 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 02:16:07:167 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 02:16:10:1610 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 02:16:11:1611 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 02:16:13:1613 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:16:34:1634 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 02:16:35:1635 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:16:36:1636 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 02:16:36:1636 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:18:34:1834 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 02:18:35:1835 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:18:36:1836 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 02:18:36:1836 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:21:15:2115 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-12 02:21:15:2115 [32minfo[39m: [32mStats query: {}[39m
+2026-03-12 02:21:16:2116 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":73,"completedMeetings":62,"averageDuration":3.3225806451612905,"averageRating":3.71875,"totalWithRating":32,"totalWithInterpreter":0}[39m
+2026-03-12 02:21:17:2117 [32minfo[39m: [32mFound 189 total users matching query, returning 189 for page 1[39m
+2026-03-12 02:21:17:2117 [32minfo[39m: [32mQuery returned 189 users out of 189 total matching query[39m
+2026-03-12 02:21:17:2117 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 0[39m
+2026-03-12 02:21:32:2132 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 02:21:32:2132 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 02:21:34:2134 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 02:21:35:2135 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 02:21:35:2135 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 02:21:37:2137 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 02:25:04:254 [32minfo[39m: [32mStats query: {}[39m
+2026-03-12 02:25:04:254 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-12 02:25:04:254 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":73,"completedMeetings":62,"averageDuration":3.3225806451612905,"averageRating":3.71875,"totalWithRating":32,"totalWithInterpreter":0}[39m
+2026-03-12 02:25:06:256 [32minfo[39m: [32mFound 189 total users matching query, returning 189 for page 1[39m
+2026-03-12 02:25:06:256 [32minfo[39m: [32mQuery returned 189 users out of 189 total matching query[39m
+2026-03-12 02:25:07:257 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 0[39m
+2026-03-12 02:28:50:2850 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 02:29:14:2914 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-12 02:29:22:2922 [31merror[39m: [31mSocket authentication error: Socket 'secureConnect' timed out after 30000ms (connectTimeoutMS: 30000)[39m
+2026-03-12 05:21:52:2152 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 05:21:52:2152 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 05:21:55:2155 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 05:21:56:2156 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 05:21:56:2156 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 05:22:01:221 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:22:08:228 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:22:10:2210 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:22:10:2210 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:22:10:2210 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:22:24:2224 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-12 05:22:26:2226 [32minfo[39m: [32mFound 189 total users matching query, returning 189 for page 1[39m
+2026-03-12 05:22:26:2226 [32minfo[39m: [32mQuery returned 189 users out of 189 total matching query[39m
+2026-03-12 05:22:26:2226 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 0[39m
+2026-03-12 05:22:27:2227 [32minfo[39m: [32mGet users request - role: Recruiter, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-12 05:22:28:2228 [32minfo[39m: [32mFound 189 total users matching query, returning 189 for page 1[39m
+2026-03-12 05:22:28:2228 [32minfo[39m: [32mQuery returned 189 users out of 189 total matching query[39m
+2026-03-12 05:22:29:2229 [32minfo[39m: [32mStats - Active: 189, Inactive: 0, Verified: 0[39m
+2026-03-12 05:27:03:273 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:27:05:275 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:30:13:3013 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 05:30:13:3013 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 05:30:16:3016 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 05:30:18:3018 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:31:16:3116 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:31:17:3117 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:31:18:3118 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:31:18:3118 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:31:40:3140 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:31:42:3142 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:31:48:3148 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-12 05:31:50:3150 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 05:31:50:3150 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 05:31:53:3153 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 05:31:58:3158 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:31:58:3158 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:31:58:3158 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:33:19:3319 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 05:33:19:3319 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 05:33:24:3324 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 05:33:25:3325 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 05:33:29:3329 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:36:06:366 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:36:08:368 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:36:08:368 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:36:08:368 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:36:14:3614 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:36:16:3616 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:36:16:3616 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:36:16:3616 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:36:26:3626 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-12 05:36:29:3629 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 05:36:29:3629 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 05:36:29:3629 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 05:36:30:3630 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-12 05:36:32:3632 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-12 05:36:32:3632 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-12 05:36:33:3633 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-12 05:39:27:3927 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-12 05:39:27:3927 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-12 05:39:30:3930 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-12 05:39:31:3931 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-12 05:39:32:3932 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:39:51:3951 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:39:52:3952 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:39:52:3952 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:39:52:3952 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:42:19:4219 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:42:20:4220 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:42:21:4221 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:42:21:4221 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:42:33:4233 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:42:35:4235 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:42:35:4235 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:42:35:4235 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:49:04:494 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:49:06:496 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:49:24:4924 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-12 05:49:25:4925 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:49:25:4925 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-12 05:49:25:4925 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-12 05:50:07:507 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-13 01:18:01:181 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-13 01:18:01:181 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-13 01:18:31:1831 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-13 01:18:31:1831 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-13 01:18:31:1831 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-13 01:18:31:1831 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-13 01:18:31:1831 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-13 01:18:31:1831 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-13 01:18:31:1831 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-13 01:18:31:1831 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-13 01:18:31:1831 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-13 01:18:32:1832 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-13 01:18:32:1832 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-13 01:18:33:1833 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 01:18:37:1837 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 01:18:56:1856 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-13 01:18:58:1858 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-13 01:18:58:1858 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-13 01:19:28:1928 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-13 01:19:28:1928 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-13 01:19:28:1928 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-13 01:19:29:1929 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-13 01:20:30:2030 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 01:20:33:2033 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 01:22:37:2237 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-13 01:22:39:2239 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-13 01:22:39:2239 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-13 01:22:42:2242 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-13 01:22:44:2244 [32minfo[39m: [32mToken cleanup: Removed expired refresh tokens from 2 users[39m
+2026-03-13 01:24:35:2435 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-13 01:24:36:2436 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-13 01:27:14:2714 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-13 01:27:14:2714 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-13 01:27:17:2717 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-13 01:27:18:2718 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-13 01:27:18:2718 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-13 01:27:21:2721 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-13 01:27:38:2738 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-13 01:27:39:2739 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-13 01:27:39:2739 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-13 01:27:39:2739 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-13 01:29:48:2948 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-13 01:29:54:2954 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-13 01:29:54:2954 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-13 01:29:54:2954 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-13 01:29:55:2955 [32minfo[39m: [32mGet users request - role: undefined, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: tadmin.ability@yopmail.com (Admin)[39m
+2026-03-13 01:30:01:301 [32minfo[39m: [32mFound 233 total users matching query, returning 233 for page 1[39m
+2026-03-13 01:30:01:301 [32minfo[39m: [32mQuery returned 233 users out of 233 total matching query[39m
+2026-03-13 01:30:01:301 [32minfo[39m: [32mStats - Active: 233, Inactive: 0, Verified: 18[39m
+2026-03-13 01:44:44:4444 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m

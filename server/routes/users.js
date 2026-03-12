@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const Booth = require('../models/Booth');
 const logger = require('../utils/logger');
 
@@ -461,12 +462,12 @@ router.get('/verify-email-change', async (req, res) => {
  * Get list of users (Admin/GlobalSupport/Recruiter/BoothAdmin)
  * Recruiters and BoothAdmins can only view JobSeekers from their assigned events
  */
-router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recruiter', 'BoothAdmin']), async (req, res) => {
+router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport', 'Recruiter', 'BoothAdmin']), async (req, res) => {
     try {
-        const { role, isActive, page = 1, limit = 50, search, eventId } = req.query;
+        const { role, isActive, page = 1, limit = 50, search, eventId, organizationId: orgFilterId, sortBy = 'createdAt', sortDir = 'desc' } = req.query;
         const currentUser = req.user;
 
-        logger.info(`Get users request - role: ${role}, isActive: ${isActive}, search: ${search}, eventId: ${eventId}, requestedBy: ${currentUser.email} (${currentUser.role})`);
+        logger.info(`Get users request - role: ${role}, isActive: ${isActive}, search: ${search}, eventId: ${eventId}, orgFilter: ${orgFilterId}, requestedBy: ${currentUser.email} (${currentUser.role})`);
 
         // Build query
         let query = {};
@@ -509,13 +510,25 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recru
                 });
             }
         } else {
-            // Admin/GlobalSupport - normal behavior
+            // SuperAdmin/Admin/GlobalSupport - normal behavior
             if (role) {
                 query.role = role;
             } else {
                 // When no role filter is provided, exclude JobSeekers by default
                 // JobSeekers have their own management page
-                query.role = { $ne: 'JobSeeker' };
+                query.role = { $nin: ['JobSeeker', 'SuperAdmin'] };
+            }
+
+            // Org scoping: Admin sees only users in their own organization
+            // SuperAdmin and GlobalSupport see all users (optionally filtered by orgFilterId)
+            if (currentUser.role === 'Admin' && req.orgId) {
+                query.organizationId = req.orgId;
+            } else if (['SuperAdmin', 'GlobalSupport'].includes(currentUser.role) && orgFilterId) {
+                if (orgFilterId === 'unassigned') {
+                    query.organizationId = null;
+                } else {
+                    query.organizationId = orgFilterId;
+                }
             }
         }
 
@@ -738,7 +751,8 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recru
                 .select('-hashedPassword -refreshTokens')
                 .populate('assignedBooth', 'name company')
                 .populate('assignedEvents', 'name slug _id')
-                .sort({ createdAt: -1 })
+                .populate('organizationId', 'name slug')
+                .sort({ [sortBy]: sortDir === 'asc' ? 1 : -1 })
                 .limit(parsedLimit)
                 .skip(skip)
                 .lean()
@@ -776,7 +790,8 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Recru
                 usesScreenReader: user.usesScreenReader,
                 needsASL: user.needsASL,
                 needsCaptions: user.needsCaptions,
-                needsOther: user.needsOther
+                needsOther: user.needsOther,
+                organizationId: user.organizationId || null
             };
             return publicProfile;
         });
@@ -878,7 +893,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         // Recruiters and booth admins can view job seeker profiles
         const canViewProfile =
             id === user._id.toString() ||
-            ['Admin', 'GlobalSupport'].includes(user.role) ||
+            ['SuperAdmin', 'Admin', 'GlobalSupport'].includes(user.role) ||
             (['Recruiter', 'BoothAdmin'].includes(user.role));
 
         if (!canViewProfile) {
@@ -912,7 +927,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
  * PUT /api/users/:id
  * Update user details (Admin/GlobalSupport only)
  */
-router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
+router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), [
     body('name')
         .optional()
         .trim()
@@ -944,7 +959,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
         .withMessage('State too long'),
     body('role')
         .optional()
-        .isIn(['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
+        .isIn(['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
         .withMessage('Invalid role specified'),
     body('isActive')
         .optional()
@@ -1274,7 +1289,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), [
  * Bulk permanently delete users (Admin/GlobalSupport only)
  * Automatically deactivates active users before deleting them
  */
-router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.delete('/bulk-delete', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { userIds } = req.body;
         const { user: currentUser } = req;
@@ -1348,7 +1363,7 @@ router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSu
  * DELETE /api/users/:id
  * Deactivate or permanently delete user account (Admin/GlobalSupport only)
  */
-router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.delete('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { id } = req.params;
         const { permanent } = req.query;
@@ -1405,7 +1420,7 @@ router.delete('/:id', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
  * POST /api/users/:id/reactivate
  * Reactivate user account (Admin/GlobalSupport only)
  */
-router.post('/:id/reactivate', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.post('/:id/reactivate', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { id } = req.params;
         const { user } = req;
@@ -1438,10 +1453,183 @@ router.post('/:id/reactivate', authenticateToken, requireRole(['Admin', 'GlobalS
 });
 
 /**
+ * POST /api/users/mass-upload
+ * Parse an XLS/XLSX file and bulk-create users (Admin/SuperAdmin only).
+ * Expects multipart form-data with a field "file" containing the spreadsheet.
+ *
+ * Required columns (case-insensitive): name, email, password, role
+ * Optional: phone, city, state, country
+ *
+ * Returns a summary: { created, skipped, errors }
+ */
+router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const XLSX = require('xlsx');
+        const multer = require('multer');
+        const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+        // Handle file upload middleware inline
+        const runMiddleware = (middleware) => new Promise((resolve, reject) => {
+            middleware(req, res, (err) => err ? reject(err) : resolve());
+        });
+
+        await runMiddleware(upload.single('file'));
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file provided. Upload an XLS or XLSX file with field name "file".' });
+        }
+
+        // Parse workbook
+        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        if (rows.length === 0) {
+            return res.status(400).json({ error: 'The spreadsheet is empty or has no data rows.' });
+        }
+
+        // Normalize column names to lowercase
+        const normalizeRow = (row) => {
+            const out = {};
+            for (const [k, v] of Object.entries(row)) {
+                out[k.toLowerCase().trim().replace(/\s+/g, '')] = typeof v === 'string' ? v.trim() : v;
+            }
+            return out;
+        };
+
+        const VALID_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'];
+        const created = [];
+        const skipped = [];
+        const errors = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = normalizeRow(rows[i]);
+            const rowNum = i + 2; // 1-indexed + header row
+
+            const name = row.name || row.fullname || '';
+            const email = row.email || row.emailaddress || '';
+            const password = row.password || row.pass || '';
+            const role = row.role || 'JobSeeker';
+
+            if (!name) { errors.push({ row: rowNum, error: 'Missing name' }); continue; }
+            if (!email || !/\S+@\S+\.\S+/.test(email)) { errors.push({ row: rowNum, error: 'Invalid or missing email', email }); continue; }
+            if (!password || password.length < 8) { errors.push({ row: rowNum, error: 'Password must be at least 8 characters', email }); continue; }
+            if (!VALID_ROLES.includes(role)) { errors.push({ row: rowNum, error: `Invalid role: ${role}`, email }); continue; }
+
+            // Check for existing user
+            const existingUser = await User.findOne({ email: email.toLowerCase() });
+            if (existingUser) { skipped.push({ row: rowNum, email, reason: 'Email already exists' }); continue; }
+
+            // Org scoping
+            const orgScopedRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
+            const organizationId = orgScopedRoles.includes(role) ? (req.orgId || null) : null;
+
+            try {
+                const user = new User({
+                    name,
+                    email: email.toLowerCase(),
+                    hashedPassword: password,
+                    role,
+                    phoneNumber: row.phone || row.phonenumber || null,
+                    city: row.city || '',
+                    state: row.state || '',
+                    country: row.country || 'US',
+                    organizationId,
+                    isActive: true,
+                    emailVerified: true
+                });
+                await user.save();
+                created.push({ row: rowNum, email, name, role });
+            } catch (err) {
+                errors.push({ row: rowNum, email, error: err.message });
+            }
+        }
+
+        logger.info(`Mass upload by ${req.user.email}: ${created.length} created, ${skipped.length} skipped, ${errors.length} errors`);
+
+        res.status(201).json({
+            message: `Mass upload complete: ${created.length} created, ${skipped.length} skipped, ${errors.length} errors`,
+            created,
+            skipped,
+            errors,
+            summary: {
+                total: rows.length,
+                created: created.length,
+                skipped: skipped.length,
+                errors: errors.length
+            }
+        });
+    } catch (error) {
+        logger.error('Mass upload error:', error);
+        res.status(500).json({ error: 'Mass upload failed', message: error.message });
+    }
+});
+
+/**
+ * PUT /api/users/bulk-update
+ * Bulk update multiple users at once (Admin/GlobalSupport only).
+ * Body: { userIds: string[], updates: { assignedEvents?, isActive?, role?, ... } }
+ */
+router.put('/bulk-update', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { userIds, updates } = req.body;
+        const { user: currentUser } = req;
+
+        if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({ error: 'No user IDs provided' });
+        }
+        if (!updates || typeof updates !== 'object' || Object.keys(updates).length === 0) {
+            return res.status(400).json({ error: 'No update fields provided' });
+        }
+
+        // Prevent self-modification of critical fields
+        const allowedFields = ['isActive', 'assignedEvents', 'assignedBooth', 'role', 'organizationId'];
+        const updateFields = {};
+        for (const field of allowedFields) {
+            if (updates[field] !== undefined) {
+                updateFields[field] = updates[field];
+            }
+        }
+
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({ error: 'No valid update fields provided' });
+        }
+
+        // For role changes: validate enum
+        if (updateFields.role) {
+            const validRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'];
+            if (!validRoles.includes(updateFields.role)) {
+                return res.status(400).json({ error: 'Invalid role specified' });
+            }
+        }
+
+        // Admin can only update users in their org
+        let query = { _id: { $in: userIds } };
+        if (currentUser.role === 'Admin' && req.orgId) {
+            query.organizationId = req.orgId;
+        }
+
+        const result = await User.updateMany(query, { $set: updateFields });
+
+        // If assignedEvents was updated, emit socket event to refresh affected sessions
+        logger.info(`Bulk updated ${result.modifiedCount} users by ${currentUser.email}`);
+
+        res.json({
+            message: `Successfully updated ${result.modifiedCount} user(s)`,
+            modifiedCount: result.modifiedCount
+        });
+    } catch (error) {
+        logger.error('Bulk update users error:', error);
+        res.status(500).json({ error: 'Failed to bulk update users', message: error.message });
+    }
+});
+
+/**
  * GET /api/users/stats/overview
  * Get user statistics overview (Admin/GlobalSupport only)
  */
-router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.get('/stats/overview', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
 
@@ -1499,7 +1687,7 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
  * POST /api/users/:id/verify-email
  * Admin manually verify user's email (Admin/GlobalSupport only)
  */
-router.post('/:id/verify-email', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.post('/:id/verify-email', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
     try {
         const { id } = req.params;
         const { user: currentUser } = req;

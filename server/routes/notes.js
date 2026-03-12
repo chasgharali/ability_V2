@@ -19,9 +19,16 @@ router.get('/', authenticateToken, async (req, res) => {
         let query = {};
 
         // Non-admin users can only see notes assigned to their role
-        if (user.role !== 'Admin') {
+        if (!['SuperAdmin', 'Admin'].includes(user.role)) {
             query.assignedRoles = user.role;
             query.isActive = true;
+            // Non-admin sees org-specific notes OR global notes
+            if (req.orgId) {
+                query.$or = [{ organizationId: req.orgId }, { organizationId: null }];
+            }
+        } else if (user.role === 'Admin' && req.orgId) {
+            // OrgAdmin sees only their org's notes
+            query.organizationId = req.orgId;
         }
 
         // Apply type filter
@@ -30,7 +37,7 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         // Apply role filter (for admin)
-        if (role && user.role === 'Admin') {
+        if (role && ['SuperAdmin', 'Admin'].includes(user.role)) {
             query.assignedRoles = role;
         }
 
@@ -215,6 +222,7 @@ router.post('/', authenticateToken, requireRole(['Admin']), [
             type,
             assignedRoles,
             isActive,
+            organizationId: req.orgId || null,
             createdBy: user._id,
             updatedBy: user._id
         });

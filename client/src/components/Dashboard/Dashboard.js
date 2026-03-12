@@ -683,30 +683,63 @@ const Dashboard = () => {
                     </div>
                 );
             }
+            case 'SuperAdmin':
+                return (
+                    <div className="dashboard-content">
+                        <h1>Super Admin Dashboard</h1>
+                        <div className="dashboard-cards">
+                            <div className="dashboard-card">
+                                <h3>Organizations</h3>
+                                <p>Create and manage host organizations</p>
+                                <button className="dashboard-button" onClick={() => navigate('/organizations')}>Manage Organizations</button>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>All Job Seekers</h3>
+                                <p>View all job seekers across all organizations</p>
+                                <button className="dashboard-button" onClick={() => navigate('/jobseekermanagement')}>Manage Job Seekers</button>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>User Assignment</h3>
+                                <p>Assign and move users between organizations</p>
+                                <button className="dashboard-button" onClick={() => navigate('/org-users')}>Assign Users</button>
+                            </div>
+                            <div className="dashboard-card">
+                                <h3>Event Management</h3>
+                                <p>View and manage events across all organizations</p>
+                                <button className="dashboard-button" onClick={() => navigate('/eventmanagement')}>Manage Events</button>
+                            </div>
+                        </div>
+                    </div>
+                );
             case 'Admin':
             case 'AdminEvent':
                 return (
                     <div className="dashboard-content">
-                        <h1>Administrator Dashboard</h1>
+                        <h1>Organization Admin Dashboard</h1>
+                        {user?.organizationId && (
+                            <p style={{ color: '#555', marginBottom: 20 }}>
+                                Managing: <strong>{user.organizationId?.name || 'Your Organization'}</strong>
+                            </p>
+                        )}
                         <div className="dashboard-cards">
                             <div className="dashboard-card">
                                 <h3>Event Management</h3>
-                                <p>Create and manage job fair events</p>
+                                <p>Create and manage your organization's events</p>
                                 <button className="dashboard-button" onClick={() => navigate('/eventmanagement')}>Manage Events</button>
                             </div>
                             <div className="dashboard-card">
                                 <h3>User Management</h3>
-                                <p>Manage users and permissions</p>
+                                <p>Manage your organization's recruiters, interpreters and support staff</p>
                                 <button className="dashboard-button" onClick={() => navigate('/usermanagement')}>Manage Users</button>
                             </div>
                             <div className="dashboard-card">
-                                <h3>Job Seeker Management</h3>
-                                <p>Manage job seekers and their profiles</p>
-                                <button className="dashboard-button" onClick={() => navigate('/jobseekermanagement')}>Manage Job Seekers</button>
+                                <h3>Registered Job Seekers</h3>
+                                <p>View job seekers registered for your organization's events</p>
+                                <button className="dashboard-button" onClick={() => navigate('/jobseekermanagement')}>View Job Seekers</button>
                             </div>
                             <div className="dashboard-card">
                                 <h3>Analytics</h3>
-                                <p>View platform analytics and reports</p>
+                                <p>View your organization's analytics and reports</p>
                                 <button className="dashboard-button" onClick={() => navigate('/analytics')}>View Analytics</button>
                             </div>
                         </div>

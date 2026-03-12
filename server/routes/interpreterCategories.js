@@ -21,6 +21,13 @@ router.get('/', authenticateToken, async (req, res) => {
                 { code: { $regex: search, $options: 'i' } }
             ];
         }
+        // Org-scope: show org-specific or global categories
+        if (req.user?.role === 'Admin' && req.orgId) {
+            query.organizationId = req.orgId;
+        } else if (req.orgId) {
+            // For other roles, show their org's categories + global ones
+            query.$or = [{ organizationId: req.orgId }, { organizationId: null }];
+        }
 
         const categories = await InterpreterCategory.find(query)
             .populate('createdBy', 'name email')
@@ -108,7 +115,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
         const categoryData = {
             ...req.body,
-            createdBy: req.user._id
+            createdBy: req.user._id,
+            organizationId: req.orgId || null
         };
 
         const category = new InterpreterCategory(categoryData);

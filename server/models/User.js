@@ -68,10 +68,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Role is required'],
         enum: {
-            values: ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'],
+            values: ['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'],
             message: 'Invalid role specified'
         },
         default: 'JobSeeker'
+    },
+    // Organization scope — null for SuperAdmin and JobSeeker (global)
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
     },
     // Legacy ID from V1 database for migration tracking
     legacyId: {
@@ -196,6 +202,8 @@ const userSchema = new mongoose.Schema({
 // Index for performance (email index is created by unique: true)
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
+userSchema.index({ organizationId: 1 });
+userSchema.index({ organizationId: 1, role: 1 });
 
 // Additional indexes for optimized search and listing
 userSchema.index({ name: 1 }); // For name search
@@ -380,7 +388,8 @@ userSchema.methods.getPublicProfile = function () {
         assignedBooth: this.assignedBooth,
         assignedEvents: this.assignedEvents || [],
         createdAt: this.createdAt,
-        pendingEmail: this.pendingEmail
+        pendingEmail: this.pendingEmail,
+        organizationId: this.organizationId
     };
 
     // If assignedBooth is populated, include booth name

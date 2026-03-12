@@ -35,6 +35,7 @@ const analyticsRoutes = require('./routes/analytics');
 const notesRoutes = require('./routes/notes');
 const roleMessagesRoutes = require('./routes/roleMessages');
 const jobSeekerQualificationsRoutes = require('./routes/jobSeekerQualifications');
+const organizationRoutes = require('./routes/organizations');
 
 // Import socket handlers
 const socketHandler = require('./socket/socketHandler');
@@ -168,6 +169,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/role-messages', roleMessagesRoutes);
 app.use('/api/jobseeker-qualifications', jobSeekerQualificationsRoutes);
+app.use('/api/organizations', organizationRoutes);
 
 // Socket.IO connection handling
 socketHandler(io);

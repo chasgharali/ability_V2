@@ -4,7 +4,7 @@ const roleMessageSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['JobSeeker', 'Recruiter', 'BoothAdmin', 'Admin', 'AdminEvent', 'Support', 'GlobalSupport', 'Interpreter', 'GlobalInterpreter'],
+    enum: ['SuperAdmin', 'JobSeeker', 'Recruiter', 'BoothAdmin', 'Admin', 'AdminEvent', 'Support', 'GlobalSupport', 'Interpreter', 'GlobalInterpreter'],
     index: true
   },
   screen: {
@@ -28,6 +28,12 @@ const roleMessageSchema = new mongoose.Schema({
     default: '',
     trim: true
   },
+  // Organization scope — null means platform-wide default
+  organizationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    default: null
+  },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -36,40 +42,46 @@ const roleMessageSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index for efficient queries
-roleMessageSchema.index({ role: 1, screen: 1, messageKey: 1 }, { unique: true });
+// Compound index — uniqueness scoped per organization
+roleMessageSchema.index({ organizationId: 1, role: 1, screen: 1, messageKey: 1 }, { unique: true });
 
-// Static method to get messages by role and screen
-roleMessageSchema.statics.getMessages = async function(role, screen = null) {
-  const query = { role };
-  if (screen) {
-    query.screen = screen;
-  }
+// Static method to get messages by role and screen (org-aware: org messages override global)
+roleMessageSchema.statics.getMessages = async function(role, screen = null, organizationId = null) {
+  const query = { role, $or: [{ organizationId: null }, { organizationId: organizationId || null }] };
+  if (screen) query.screen = screen;
   const messages = await this.find(query);
   const result = {};
-  messages.forEach(msg => {
-    if (!result[msg.screen]) {
-      result[msg.screen] = {};
-    }
+  // Global (null org) messages first, then org-specific messages override them
+  const sorted = messages.sort((a, b) => {
+    if (!a.organizationId && b.organizationId) return -1;
+    if (a.organizationId && !b.organizationId) return 1;
+    return 0;
+  });
+  sorted.forEach(msg => {
+    if (!result[msg.screen]) result[msg.screen] = {};
     result[msg.screen][msg.messageKey] = msg.content;
   });
   return result;
 };
 
 // Static method to get a specific message
-roleMessageSchema.statics.getMessage = async function(role, screen, messageKey) {
-  const message = await this.findOne({ role, screen, messageKey });
-  return message ? message.content : null;
+roleMessageSchema.statics.getMessage = async function(role, screen, messageKey, organizationId = null) {
+  // Try org-specific first, fall back to global
+  const orgMsg = organizationId ? await this.findOne({ role, screen, messageKey, organizationId }) : null;
+  if (orgMsg) return orgMsg.content;
+  const globalMsg = await this.findOne({ role, screen, messageKey, organizationId: null });
+  return globalMsg ? globalMsg.content : null;
 };
 
 // Static method to set/update a message
-roleMessageSchema.statics.setMessage = async function(role, screen, messageKey, content, userId = null, description = '') {
+roleMessageSchema.statics.setMessage = async function(role, screen, messageKey, content, userId = null, description = '', organizationId = null) {
   return await this.findOneAndUpdate(
-    { role, screen, messageKey },
+    { role, screen, messageKey, organizationId: organizationId || null },
     {
       content: content.trim(),
       updatedBy: userId,
-      description: description.trim() || description
+      description: description.trim() || description,
+      organizationId: organizationId || null
     },
     {
       upsert: true,

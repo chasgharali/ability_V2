@@ -4,7 +4,6 @@ const settingsSchema = new mongoose.Schema({
   key: {
     type: String,
     required: true,
-    unique: true,
     trim: true
   },
   value: {
@@ -15,6 +14,12 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Organization scope — null means platform-wide global setting
+  organizationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    default: null
+  },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -23,20 +28,28 @@ const settingsSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Static method to get a setting
-settingsSchema.statics.getSetting = async function(key) {
-  const setting = await this.findOne({ key });
-  return setting ? setting.value : null;
+// Unique per (key, organizationId) — org-specific settings override global
+settingsSchema.index({ key: 1, organizationId: 1 }, { unique: true });
+
+// Static method to get a setting (org-specific overrides global)
+settingsSchema.statics.getSetting = async function(key, organizationId = null) {
+  if (organizationId) {
+    const orgSetting = await this.findOne({ key, organizationId });
+    if (orgSetting) return orgSetting.value;
+  }
+  const globalSetting = await this.findOne({ key, organizationId: null });
+  return globalSetting ? globalSetting.value : null;
 };
 
 // Static method to set a setting
-settingsSchema.statics.setSetting = async function(key, value, userId = null, description = '') {
+settingsSchema.statics.setSetting = async function(key, value, userId = null, description = '', organizationId = null) {
   return await this.findOneAndUpdate(
-    { key },
+    { key, organizationId: organizationId || null },
     { 
       value, 
       updatedBy: userId,
-      description
+      description,
+      organizationId: organizationId || null
     },
     { 
       upsert: true, 
@@ -46,20 +59,21 @@ settingsSchema.statics.setSetting = async function(key, value, userId = null, de
   );
 };
 
-// Static method to get multiple settings
-settingsSchema.statics.getSettings = async function(keys = []) {
-  if (keys.length === 0) {
-    const allSettings = await this.find({});
-    const result = {};
-    allSettings.forEach(setting => {
-      result[setting.key] = setting.value;
-    });
-    return result;
-  }
-  
-  const settings = await this.find({ key: { $in: keys } });
+// Static method to get multiple settings (org-specific overrides global)
+settingsSchema.statics.getSettings = async function(keys = [], organizationId = null) {
+  const query = keys.length > 0 ? { key: { $in: keys } } : {};
+  const allSettings = await this.find({
+    ...query,
+    $or: [{ organizationId: null }, { organizationId: organizationId || null }]
+  });
   const result = {};
-  settings.forEach(setting => {
+  // Global first, then org-specific overrides
+  const sorted = allSettings.sort((a, b) => {
+    if (!a.organizationId && b.organizationId) return -1;
+    if (a.organizationId && !b.organizationId) return 1;
+    return 0;
+  });
+  sorted.forEach(setting => {
     result[setting.key] = setting.value;
   });
   return result;

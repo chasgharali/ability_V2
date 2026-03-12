@@ -90,6 +90,12 @@ const boothSchema = new mongoose.Schema({
         ref: 'Queue',
         default: null
     },
+    // Organization this booth belongs to (cannot be changed after creation)
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
+    },
     // Booth administrators
     administrators: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -184,6 +190,7 @@ const boothSchema = new mongoose.Schema({
 boothSchema.index({ eventId: 1 });
 boothSchema.index({ status: 1 });
 boothSchema.index({ administrators: 1 });
+boothSchema.index({ organizationId: 1 });
 
 // Virtual for checking if booth is available for queue joining
 boothSchema.virtual('isAvailableForQueue').get(function () {
@@ -195,8 +202,8 @@ boothSchema.virtual('isAvailableForQueue').get(function () {
 boothSchema.methods.canUserManage = function (user) {
     if (!user) return false;
 
-    // Admin and GlobalSupport can manage all booths
-    if (['Admin', 'GlobalSupport'].includes(user.role)) return true;
+    // SuperAdmin, Admin and GlobalSupport can manage all booths
+    if (['SuperAdmin', 'Admin', 'GlobalSupport'].includes(user.role)) return true;
 
     // Booth administrators can manage their booths
     if (this.administrators && this.administrators.includes(user._id)) return true;

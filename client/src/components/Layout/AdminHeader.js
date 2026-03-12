@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
@@ -11,8 +12,44 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
   const [brandingLogoAltFromAPI, setBrandingLogoAltFromAPI] = useState('');
-  
-  // Fetch branding logo from API if not provided as prop
+  const [orgLogoFromAPI, setOrgLogoFromAPI] = useState('');
+  const [orgLogoAltFromAPI, setOrgLogoAltFromAPI] = useState('');
+
+  // For Admin users: fetch org logo from API (handles both post-login and page-load cases)
+  useEffect(() => {
+    if (user?.role !== 'Admin') return;
+
+    // If organizationId is already populated with logoUrl, use it directly
+    if (user?.organizationId?.logoUrl) {
+      setOrgLogoFromAPI(user.organizationId.logoUrl);
+      setOrgLogoAltFromAPI(user.organizationId.name || 'Organization logo');
+      return;
+    }
+
+    // Otherwise fetch the org from the API (e.g. right after login when org isn't populated)
+    const orgId = user?.organizationId?._id || user?.organizationId;
+    if (!orgId) return;
+
+    const fetchOrgLogo = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`/api/organizations/${orgId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const org = res.data?.organization || res.data;
+        if (org?.logoUrl) {
+          setOrgLogoFromAPI(org.logoUrl);
+          setOrgLogoAltFromAPI(org.name || 'Organization logo');
+        }
+      } catch {
+        // Org logo not available; fall through to global branding
+      }
+    };
+
+    fetchOrgLogo();
+  }, [user?.role, user?.organizationId]);
+
+  // Fetch global branding logo from API if not provided as prop (for non-Admin roles)
   useEffect(() => {
     const fetchBrandingLogo = async () => {
       try {
@@ -36,8 +73,8 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
     }
   }, [brandingLogoProp]);
 
-  const brandingLogo = brandingLogoProp || brandingLogoFromAPI;
-  const finalBrandingLogoAlt = brandingLogoAlt || brandingLogoAltFromAPI || 'Site logo';
+  const brandingLogo = brandingLogoProp || orgLogoFromAPI || brandingLogoFromAPI;
+  const finalBrandingLogoAlt = brandingLogoAlt || orgLogoAltFromAPI || brandingLogoAltFromAPI || 'Site logo';
   const finalSecondaryLogoAlt = secondaryLogoAlt || 'Event logo';
 
 

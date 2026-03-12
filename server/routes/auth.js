@@ -421,12 +421,12 @@ router.post('/login', [
         
         // Find user by normalized email (for Gmail, this handles both dotted and non-dotted versions)
         // First try exact match (fast path)
-        let user = await User.findOne({ email: trimmedEmail }).select('+legacyPassword').populate('assignedBooth', 'name company');
+        let user = await User.findOne({ email: trimmedEmail }).select('+legacyPassword').populate('assignedBooth', 'name company').populate('organizationId', 'name slug logoUrl isActive limits');
         
         // If not found, try finding by normalized email (for Gmail addresses with/without dots)
         if (!user) {
             // Fetch all users and find by normalized email comparison
-            const allUsers = await User.find({}).select('+legacyPassword').populate('assignedBooth', 'name company');
+            const allUsers = await User.find({}).select('+legacyPassword').populate('assignedBooth', 'name company').populate('organizationId', 'name slug logoUrl isActive limits');
             user = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedEmailForLookup);
         }
         

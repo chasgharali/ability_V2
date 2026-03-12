@@ -3,6 +3,8 @@ const { body, validationResult } = require('express-validator');
 const Event = require('../models/Event');
 const Booth = require('../models/Booth');
 const { authenticateToken, requireRole, requireResourceAccess } = require('../middleware/auth');
+const Organization = require('../models/Organization');
+const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -115,8 +117,13 @@ router.get('/', authenticateToken, async (req, res) => {
         let query = {};
 
         // Non-admin users can only see published/active events
-        if (!['Admin', 'GlobalSupport', 'AdminEvent'].includes(user.role)) {
+        if (!['SuperAdmin', 'Admin', 'GlobalSupport', 'AdminEvent'].includes(user.role)) {
             query.status = { $in: ['published', 'active'] };
+        }
+
+        // Org-scope: Admin sees only their org's events; SuperAdmin/GlobalSupport see all
+        if (user.role === 'Admin' && req.orgId) {
+            query.organizationId = req.orgId;
         }
 
         // Apply status filter
@@ -333,6 +340,20 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             });
         }
 
+        // Enforce org event limit
+        if (req.orgId) {
+            const org = await Organization.findById(req.orgId).select('limits');
+            if (org?.limits?.maxEvents > 0) {
+                const currentEventCount = await Event.countDocuments({ organizationId: req.orgId });
+                if (currentEventCount >= org.limits.maxEvents) {
+                    return res.status(403).json({
+                        error: 'Event limit reached',
+                        message: `Your organization has reached its maximum event limit of ${org.limits.maxEvents}`
+                    });
+                }
+            }
+        }
+
         // Create new event
         const event = new Event({
             name,
@@ -352,6 +373,7 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             theme: theme || undefined,
             termsId: termsId || null,
             termsIds: Array.isArray(termsIds) ? termsIds : [],
+            organizationId: req.orgId || null,
             createdBy: user._id,
             administrators: [user._id]
         });
@@ -965,6 +987,15 @@ router.post('/:id/register', authenticateToken, async (req, res) => {
                 event.stats.totalRegistrations = (event.stats?.totalRegistrations || 0) + 1;
                 await event.save();
             } catch (e) { logger.warn('Failed to increment event registration stat:', e); }
+
+            // Auto-register as org member if event belongs to an org
+            if (event.organizationId) {
+                try {
+                    await RegisteredJobSeeker.registerWithOrg(event.organizationId, user._id, event._id);
+                } catch (e) {
+                    logger.warn('Failed to create RegisteredJobSeeker record:', e.message);
+                }
+            }
         }
 
         res.json({ message: 'Registered successfully', event: event.getSummary() });

@@ -30,9 +30,15 @@ const noteSchema = new mongoose.Schema({
             message: 'At least one role must be assigned'
         },
         enum: {
-            values: ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'],
+            values: ['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'],
             message: 'Invalid role specified'
         }
+    },
+    // Organization scope — null means global (visible to all orgs)
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
     },
     // Note creator/admin
     createdBy: {
@@ -62,6 +68,7 @@ noteSchema.index({ assignedRoles: 1 });
 noteSchema.index({ isActive: 1 });
 noteSchema.index({ createdAt: -1 });
 noteSchema.index({ type: 1, assignedRoles: 1 });
+noteSchema.index({ organizationId: 1 });
 
 // Virtual for content preview (first 200 characters)
 noteSchema.virtual('contentPreview').get(function () {
@@ -75,8 +82,8 @@ noteSchema.virtual('contentPreview').get(function () {
 noteSchema.methods.canUserAccess = function (user) {
     if (!user) return false;
 
-    // Admin can access all notes
-    if (user.role === 'Admin') return true;
+    // SuperAdmin and Admin can access all notes
+    if (['SuperAdmin', 'Admin'].includes(user.role)) return true;
 
     // Check if user's role is in assignedRoles
     return this.assignedRoles.includes(user.role);

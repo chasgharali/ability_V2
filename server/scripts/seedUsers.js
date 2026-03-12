@@ -1,22 +1,29 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
-// Import User model
 const User = require('../models/User');
+const Organization = require('../models/Organization');
 
+// ─── Default Organization ────────────────────────────────────────────────────
+const DEFAULT_ORG = {
+    name: 'Ability Job Fair',
+    slug: 'abilityjobfair',
+    description: 'Default organization.',
+    isActive: true,
+    limits: { maxEvents: 0, maxRecruiters: 0, maxJobSeekers: 0, maxBooths: 0 }
+};
+
+// ─── Seed Users ──────────────────────────────────────────────────────────────
 const testUsers = [
     {
-        name: 'Admin User',
-        email: 'admin@ability2.com',
-        password: 'Admin123!',
-        role: 'Admin',
+        name: 'Super Admin',
+        email: 'superadmin@abilityconnect.online',
+        password: 'SuperAdmin123!',
+        role: 'SuperAdmin',
+        organizationId: null, // global — no org scope
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'Platform' }
     },
     {
         name: 'Admin User',
@@ -24,10 +31,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -35,10 +39,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -46,10 +47,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -57,10 +55,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -68,21 +63,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
-    },
-    {
-        name: 'Admin User',
-        email: 'admin@ability2.com',
-        password: 'Admin123!',
-        role: 'Admin',
-        avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -90,10 +71,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -101,10 +79,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -112,10 +87,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -123,10 +95,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -134,10 +103,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -145,10 +111,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -156,10 +119,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -167,10 +127,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -178,10 +135,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -189,10 +143,7 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
+        metadata: { department: 'IT', phone: '+1-555-0101' }
     },
     {
         name: 'Admin User',
@@ -200,55 +151,63 @@ const testUsers = [
         password: 'Admin123!',
         role: 'Admin',
         avatarUrl: null,
-        metadata: {
-            department: 'IT',
-            phone: '+1-555-0101'
-        }
-    },
-  
+        metadata: { department: 'IT', phone: '+1-555-0101' }
+    }
 ];
 
 async function seedUsers() {
     try {
-        // Connect to MongoDB
         const mongoUri = process.env.MONGODB_URI;
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 
+        // ── Ensure default org exists ──────────────────────────────────────
+        let defaultOrg = await Organization.findOne({ slug: DEFAULT_ORG.slug });
+        if (!defaultOrg) {
+            defaultOrg = await Organization.create(DEFAULT_ORG);
+            console.log(`Created default organization: ${defaultOrg.name}`);
+        } else {
+            if (defaultOrg.limits?.maxBooths === undefined) {
+                defaultOrg.limits = { ...defaultOrg.limits, maxBooths: 0 };
+                await defaultOrg.save();
+                console.log('Updated default organization limits with maxBooths');
+            }
+            console.log(`Default organization already exists: ${defaultOrg.name}`);
+        }
 
-
-        // Hash passwords and create users
-        const createdUsers = [];
-
-        // Check if --force flag is passed to delete existing users
         const forceMode = process.argv.includes('--force');
         if (forceMode) {
             console.log('⚠️  Force mode: Will delete and recreate existing users');
         }
 
+        const createdUsers = [];
+
         for (const userData of testUsers) {
-            // Check if user already exists
             const existingUser = await User.findOne({ email: userData.email });
             if (existingUser) {
                 if (forceMode) {
                     await User.deleteOne({ email: userData.email });
-                    console.log(`🗑️  Deleted existing user: ${userData.email}`);
+                    console.log(`Deleted existing user: ${userData.email}`);
                 } else {
                     console.log(`User ${userData.email} already exists, skipping... (use --force to recreate)`);
                     continue;
                 }
             }
 
-            // Create user with plain password - the pre-save middleware will hash it
+            // Assign default org to non-global roles
+            const orgScopedRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
+            const organizationId = orgScopedRoles.includes(userData.role) ? defaultOrg._id : null;
+
             const user = new User({
                 name: userData.name,
                 email: userData.email,
-                hashedPassword: userData.password, // Store plain password, middleware will hash it
+                hashedPassword: userData.password,
                 role: userData.role,
                 avatarUrl: userData.avatarUrl,
                 metadata: userData.metadata,
-                isActive: true,           // Required for login
-                emailVerified: true       // Skip email verification for seeded users
+                organizationId,
+                isActive: true,
+                emailVerified: true
             });
 
             await user.save();
@@ -258,11 +217,10 @@ async function seedUsers() {
 
         console.log(`\n✅ Successfully seeded ${createdUsers.length} users`);
 
-        // Display login credentials
         console.log('\n📋 Test User Credentials:');
         console.log('=====================================');
-        testUsers.forEach(user => {
-            console.log(`${user.role}: ${user.email} / ${user.password}`);
+        testUsers.forEach(u => {
+            console.log(`${u.role}: ${u.email} / ${u.password}`);
         });
 
     } catch (error) {
@@ -273,7 +231,6 @@ async function seedUsers() {
     }
 }
 
-// Run the seed function
 if (require.main === module) {
     seedUsers();
 }

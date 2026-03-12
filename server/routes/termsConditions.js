@@ -19,8 +19,13 @@ router.get('/', authenticateToken, async (req, res) => {
         let query = {};
 
         // Non-admin users can only see active terms
-        if (!['Admin', 'GlobalSupport', 'AdminEvent'].includes(user.role)) {
+        if (!['SuperAdmin', 'Admin', 'GlobalSupport', 'AdminEvent'].includes(user.role)) {
             query.isActive = true;
+        }
+
+        // Org-scope: Admin sees only their org's terms
+        if (user.role === 'Admin' && req.orgId) {
+            query.organizationId = req.orgId;
         }
 
         // Apply active filter
@@ -200,6 +205,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'AdminEvent']), [
             version,
             isActive,
             isRequired,
+            organizationId: req.orgId || null,
             createdBy: user._id,
             updatedBy: user._id
         });

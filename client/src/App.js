@@ -31,6 +31,7 @@ import TermsConditionsForm from './components/TermsConditions/TermsConditionsFor
 import TermsConditionsView from './components/TermsConditions/TermsConditionsView';
 import UserManagement from './components/UserManagement/UserManagement';
 import JobSeekerManagement from './components/JobSeekerManagement/JobSeekerManagement';
+import RegisteredJobSeekerManagement from './components/JobSeekerManagement/RegisteredJobSeekerManagement';
 import MeetingRecords from './components/MeetingRecords/MeetingRecords';
 import MeetingRecordDetail from './components/MeetingRecords/MeetingRecordDetail';
 import JobSeekerInterests from './components/JobSeekerInterests/JobSeekerInterests';
@@ -49,6 +50,8 @@ import NoteForm from './components/Notes/NoteForm';
 import NoteView from './components/Notes/NoteView';
 import NoteViewUser from './components/Notes/NoteViewUser';
 import RoleMessageManagement from './components/RoleMessages/RoleMessageManagement';
+import OrganizationManagement from './components/OrganizationManagement/OrganizationManagement';
+import UserOrgAssignment from './components/UserManagement/UserOrgAssignment';
 import './App.css';
 
 // Component to conditionally render header and footer
@@ -92,6 +95,14 @@ function App() {
             return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
         }
         return children;
+    };
+
+    // Route that shows full JobSeekerManagement for SuperAdmin, and RegisteredJobSeekerManagement for Admin
+    const JobSeekerManagementRouter = () => {
+        const { user } = useAuth();
+        if (user?.role === 'SuperAdmin') return <JobSeekerManagement />;
+        if (user?.role === 'Admin' || user?.role === 'AdminEvent') return <RegisteredJobSeekerManagement />;
+        return <JobSeekerManagement />;
     };
 
     const RequireRole = ({ children, allowedRoles }) => {
@@ -139,7 +150,12 @@ function App() {
                                     <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                     <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
                                     <Route path="/usermanagement" element={<RequireAuth><UserManagement /></RequireAuth>} />
-                                    <Route path="/jobseekermanagement" element={<RequireAuth><JobSeekerManagement /></RequireAuth>} />
+                                    <Route path="/jobseekermanagement" element={
+                                        <RequireAuth>
+                                            {/* SuperAdmin sees all job seekers; Admin sees only their org's registered job seekers */}
+                                            <JobSeekerManagementRouter />
+                                        </RequireAuth>
+                                    } />
                                     <Route path="/meeting-records" element={<RequireAuth><MeetingRecords /></RequireAuth>} />
                                     <Route path="/meeting-records/:id" element={<RequireAuth><MeetingRecordDetail /></RequireAuth>} />
                                     <Route path="/jobseeker-interests" element={<RequireAuth><JobSeekerInterests /></RequireAuth>} />
@@ -165,6 +181,9 @@ function App() {
                                     <Route path="/troubleshooting" element={<RequireAuth><NoteViewUser type="troubleshooting" /></RequireAuth>} />
                                     <Route path="/instructions" element={<RequireAuth><NoteViewUser type="instruction" /></RequireAuth>} />
                                     <Route path="/role-messages" element={<RequireAuth><RoleMessageManagement /></RequireAuth>} />
+                                    {/* Organization Management (SuperAdmin) */}
+                                    <Route path="/organizations" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin', 'Admin']}><OrganizationManagement /></RequireRole></RequireAuth>} />
+                                    <Route path="/org-users" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><UserOrgAssignment /></RequireRole></RequireAuth>} />
                                     {/* Booth Queue Routes */}
                                     <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
                                     <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />

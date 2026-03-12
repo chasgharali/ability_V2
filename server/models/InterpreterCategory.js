@@ -5,8 +5,7 @@ const interpreterCategorySchema = new mongoose.Schema({
         type: String,
         required: [true, 'Category name is required'],
         trim: true,
-        maxlength: [100, 'Category name cannot exceed 100 characters'],
-        unique: true
+        maxlength: [100, 'Category name cannot exceed 100 characters']
     },
     description: {
         type: String,
@@ -19,8 +18,13 @@ const interpreterCategorySchema = new mongoose.Schema({
         trim: true,
         uppercase: true,
         maxlength: [10, 'Category code cannot exceed 10 characters'],
-        unique: true,
         match: [/^[A-Z0-9_]+$/, 'Code can only contain uppercase letters, numbers, and underscores']
+    },
+    // Organization scope — null means platform-wide (legacy / SuperAdmin)
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
     },
     isActive: {
         type: Boolean,
@@ -49,7 +53,9 @@ const interpreterCategorySchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Indexes for performance (name and code indexes are created by unique: true)
+// Indexes for performance — uniqueness scoped per organization
+interpreterCategorySchema.index({ organizationId: 1, name: 1 }, { unique: true });
+interpreterCategorySchema.index({ organizationId: 1, code: 1 }, { unique: true });
 interpreterCategorySchema.index({ isActive: 1 });
 interpreterCategorySchema.index({ sortOrder: 1 });
 
