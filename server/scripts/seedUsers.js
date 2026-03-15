@@ -11,7 +11,7 @@ const DEFAULT_ORG = {
     slug: 'abilityjobfair',
     description: 'Default organization.',
     isActive: true,
-    limits: { maxEvents: 0, maxRecruiters: 0, maxJobSeekers: 0, maxBooths: 0 }
+    limits: { maxEvents: 0, maxRecruiters: 0, maxUsers: 0, maxJobSeekers: 0, maxBooths: 0 }
 };
 
 // ─── Seed Users ──────────────────────────────────────────────────────────────
@@ -167,10 +167,14 @@ async function seedUsers() {
             defaultOrg = await Organization.create(DEFAULT_ORG);
             console.log(`Created default organization: ${defaultOrg.name}`);
         } else {
-            if (defaultOrg.limits?.maxBooths === undefined) {
-                defaultOrg.limits = { ...defaultOrg.limits, maxBooths: 0 };
+            if (defaultOrg.limits?.maxBooths === undefined || defaultOrg.limits?.maxUsers === undefined) {
+                defaultOrg.limits = {
+                    ...defaultOrg.limits,
+                    maxBooths: defaultOrg.limits?.maxBooths ?? 0,
+                    maxUsers: defaultOrg.limits?.maxUsers ?? 0
+                };
                 await defaultOrg.save();
-                console.log('Updated default organization limits with maxBooths');
+                console.log('Updated default organization limits with maxBooths/maxUsers');
             }
             console.log(`Default organization already exists: ${defaultOrg.name}`);
         }

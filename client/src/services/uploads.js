@@ -24,10 +24,17 @@ export async function uploadBoothLogoToS3(file) {
   const { upload, download } = presignRes.data;
   const { url, key } = upload;
 
-  // Upload to S3
-  await axios.put(url, file, {
+  // Upload to S3 directly using fetch.
+  // Axios can add default headers/interceptors that may invalidate presigned requests.
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    mode: 'cors',
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
   });
+  if (!putRes.ok) {
+    throw new Error(`S3 upload failed: ${putRes.status}`);
+  }
 
   // Confirm upload
   const completeRes = await axios.post(

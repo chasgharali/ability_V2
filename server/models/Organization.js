@@ -47,6 +47,11 @@ const organizationSchema = new mongoose.Schema({
             default: 0, // 0 = unlimited
             min: 0
         },
+        maxUsers: {
+            type: Number,
+            default: 0, // 0 = unlimited
+            min: 0
+        },
         maxJobSeekers: {
             type: Number,
             default: 0, // 0 = unlimited

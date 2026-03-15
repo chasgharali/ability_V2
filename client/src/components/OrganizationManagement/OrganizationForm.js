@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { createOrganization, updateOrganization, uploadOrganizationLogo } from '../../services/organizations';
 
-const DEFAULT_LIMITS = { maxEvents: 0, maxRecruiters: 0, maxJobSeekers: 0, maxBooths: 0 };
+const DEFAULT_LIMITS = { maxEvents: 0, maxRecruiters: 0, maxUsers: 0, maxJobSeekers: 0, maxBooths: 0 };
 
 export default function OrganizationForm({ org, onSave, onCancel }) {
   const { user } = useAuth();
@@ -259,6 +259,18 @@ export default function OrganizationForm({ org, onSave, onCancel }) {
             </div>
 
             <div className="form-group">
+              <label htmlFor="limit-users">Maximum Users</label>
+              <input
+                id="limit-users"
+                type="number"
+                min={0}
+                value={form.limits.maxUsers}
+                onChange={e => setLimit('maxUsers', e.target.value)}
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
               <label htmlFor="limit-js">Maximum Job Seekers</label>
               <input
                 id="limit-js"
@@ -288,7 +300,7 @@ export default function OrganizationForm({ org, onSave, onCancel }) {
             <p>Limits are managed by the platform Super Admin.</p>
             <ul>
               <li>Max Events: {form.limits.maxEvents || 'Unlimited'}</li>
-              <li>Max Recruiters: {form.limits.maxRecruiters || 'Unlimited'}</li>
+              <li>Max Users: {form.limits.maxUsers || form.limits.maxRecruiters || 'Unlimited'}</li>
               <li>Max Job Seekers: {form.limits.maxJobSeekers || 'Unlimited'}</li>
               <li>Max Booths: {form.limits.maxBooths || 'Unlimited'}</li>
             </ul>

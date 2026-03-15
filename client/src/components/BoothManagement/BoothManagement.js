@@ -525,6 +525,7 @@ export default function BoothManagement() {
       const latestSecondHtml = getLatestRteHtml(rteSecondRef, boothForm.secondHtml);
       const latestThirdHtml = getLatestRteHtml(rteThirdRef, boothForm.thirdHtml);
 
+      const customInviteSlug = sanitizeInvite(boothForm.customInviteText || '');
       const payload = {
         name: boothForm.boothName,
         description: latestFirstHtml || '',
@@ -534,7 +535,7 @@ export default function BoothManagement() {
         companyPage: boothForm.companyPage || undefined,
         recruitersCount: boothForm.recruitersCount || 1,
         expireLinkTime: expireLinkTimeValue,
-        customInviteSlug: sanitizeInvite(boothForm.customInviteText || ''),
+        customInviteSlug: customInviteSlug || undefined,
         joinBoothButtonLink: boothForm.joinBoothButtonLink || '',
         richSections: [
           { title: 'First Placeholder', contentHtml: latestFirstHtml || '' },

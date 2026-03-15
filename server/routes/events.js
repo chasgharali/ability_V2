@@ -815,6 +815,38 @@ router.get('/upcoming', authenticateToken, async (req, res) => {
             ]
         };
 
+        // For job seekers, hide events from orgs that reached registered job seeker capacity.
+        if (user.role === 'JobSeeker') {
+            const cappedOrgs = await Organization.find(
+                { 'limits.maxJobSeekers': { $gt: 0 } },
+                { _id: 1, 'limits.maxJobSeekers': 1 }
+            ).lean();
+
+            if (cappedOrgs.length > 0) {
+                const cappedOrgIds = cappedOrgs.map(org => org._id);
+                const registrationCounts = await RegisteredJobSeeker.aggregate([
+                    { $match: { organizationId: { $in: cappedOrgIds } } },
+                    { $group: { _id: '$organizationId', count: { $sum: 1 } } }
+                ]);
+
+                const registrationCountByOrg = new Map(
+                    registrationCounts.map(item => [item._id.toString(), item.count])
+                );
+
+                const capacityReachedOrgIds = cappedOrgs
+                    .filter(org => {
+                        const maxJobSeekers = org?.limits?.maxJobSeekers || 0;
+                        const currentCount = registrationCountByOrg.get(org._id.toString()) || 0;
+                        return maxJobSeekers > 0 && currentCount >= maxJobSeekers;
+                    })
+                    .map(org => org._id);
+
+                if (capacityReachedOrgIds.length > 0) {
+                    query.organizationId = { $nin: capacityReachedOrgIds };
+                }
+            }
+        }
+
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         const [events, totalCount] = await Promise.all([

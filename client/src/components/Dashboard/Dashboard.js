@@ -748,7 +748,11 @@ const Dashboard = () => {
                                     </span>
                                     <span>
                                         User Limit:{' '}
-                                        <strong>{user.organizationId?.limits?.maxRecruiters || 0}</strong>
+                                        <strong>{user.organizationId?.limits?.maxUsers || user.organizationId?.limits?.maxRecruiters || 0}</strong>
+                                    </span>
+                                    <span>
+                                        Registered JobSeeker Limit:{' '}
+                                        <strong>{user.organizationId?.limits?.maxJobSeekers || 0}</strong>
                                     </span>
                                 </div>
                             </>

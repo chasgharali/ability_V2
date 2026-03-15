@@ -136,8 +136,8 @@ export default function OrgDashboardDropdown({ org: initialOrg, onClose }) {
                     <strong>{orgInfo.limits.maxEvents || 'Unlimited'}</strong>
                   </div>
                   <div>
-                    <span>Max Recruiters</span>
-                    <strong>{orgInfo.limits.maxRecruiters || 'Unlimited'}</strong>
+                    <span>Max Users</span>
+                    <strong>{orgInfo.limits.maxUsers || orgInfo.limits.maxRecruiters || 'Unlimited'}</strong>
                   </div>
                   <div>
                     <span>Max Job Seekers</span>

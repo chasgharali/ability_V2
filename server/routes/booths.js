@@ -221,7 +221,12 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
     body('companyPage').optional().isURL(),
     body('recruitersCount').optional().isInt({ min: 1 }),
     body('expireLinkTime').optional().isISO8601().toDate(),
-    body('customInviteSlug').optional().isString().toLowerCase().matches(/^[a-z0-9-]+$/).withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
+    body('customInviteSlug')
+        .optional({ nullable: true, checkFalsy: true })
+        .isString()
+        .toLowerCase()
+        .matches(/^[a-z0-9-]+$/)
+        .withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
     body('joinBoothButtonLink').optional().isString().trim(),
     body('richSections').optional().isArray({ max: 3 }),
     body('richSections.*.title').optional().isString().isLength({ min: 1, max: 100 }),

@@ -154,7 +154,9 @@ export default function OrganizationManagement() {
 
               {isSuperAdmin && org.limits && (
                 <div className="org-limits">
-                  <span>Limits: {org.limits.maxEvents || '∞'} events / {org.limits.maxRecruiters || '∞'} recruiters / {org.limits.maxBooths || '∞'} booths</span>
+                  <span>
+                    Limits: {org.limits.maxEvents || '∞'} events / {org.limits.maxRecruiters || '∞'} recruiters / {org.limits.maxUsers || org.limits.maxRecruiters || '∞'} users / {org.limits.maxJobSeekers || '∞'} job seekers / {org.limits.maxBooths || '∞'} booths
+                  </span>
                 </div>
               )}
 
