@@ -18,6 +18,15 @@ export default function EventDetail() {
   const [serverIsRegistered, setServerIsRegistered] = useState(false);
   const registrationInstruction = getMessage('event-registration', 'registration-instruction') || '';
   const navigate = useNavigate();
+  const organization = event?.organization || (event?.organizationId && typeof event.organizationId === 'object'
+    ? {
+      name: event.organizationId.name,
+      logoUrl: event.organizationId.logoUrl,
+      logoAltText: event.organizationId.logoAltText
+    }
+    : null);
+  const organizationName = organization?.name || 'Not specified';
+  const showOrganizationLogo = Boolean(organization?.logoUrl && organization.logoUrl !== event?.logoUrl);
 
   // Determine if current user is already registered for this event
   // Use server-side verification as primary source, fallback to client metadata
@@ -129,6 +138,19 @@ export default function EventDetail() {
                             hour12: true
                           });
                         })() : '-'}</dd>
+                      </div>
+                      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <dt style={{ fontWeight: 700, margin: 0 }}>Organized by:</dt>
+                        <dd style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: 0, color: '#111827' }}>
+                          {showOrganizationLogo && (
+                            <img
+                              src={organization.logoUrl}
+                              alt={organization.logoAltText || organization.name}
+                              style={{ height: 16, width: 'auto', objectFit: 'contain' }}
+                            />
+                          )}
+                          <strong>{organizationName}</strong>
+                        </dd>
                       </div>
                     </dl>
                     {event.logoUrl && (

@@ -104,6 +104,20 @@ function createVideoHtml(video) {
     </span>`;
 }
 
+function buildOrganizationSummary(orgDoc) {
+    if (!orgDoc || typeof orgDoc !== 'object' || Array.isArray(orgDoc)) {
+        return null;
+    }
+    if (!orgDoc.name) {
+        return null;
+    }
+    return {
+        name: orgDoc.name,
+        logoUrl: orgDoc.logoUrl || null,
+        logoAltText: orgDoc.logoAltText || orgDoc.name
+    };
+}
+
 /**
  * GET /api/events
  * Get list of events
@@ -226,7 +240,8 @@ router.get('/slug/:slug', authenticateToken, async (req, res) => {
         const event = await Event.findOne({ slug })
             .populate('createdBy', 'name email')
             .populate('administrators', 'name email')
-            .populate('booths', 'name description logoUrl status');
+            .populate('booths', 'name description logoUrl status')
+            .populate('organizationId', 'name logoUrl logoAltText');
 
         if (!event) {
             return res.status(404).json({
@@ -247,7 +262,8 @@ router.get('/slug/:slug', authenticateToken, async (req, res) => {
                 ...event.toObject(),
                 isActive: event.isActive,
                 isUpcoming: event.isUpcoming,
-                duration: event.duration
+                duration: event.duration,
+                organization: buildOrganizationSummary(event.organizationId)
             }
         });
     } catch (error) {
@@ -1093,13 +1109,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
             event = await Event.findById(id)
                 .populate('createdBy', 'name email')
                 .populate('administrators', 'name email')
-                .populate('booths', 'name description logoUrl status');
+                .populate('booths', 'name description logoUrl status')
+                .populate('organizationId', 'name logoUrl logoAltText');
         }
         if (!event) {
             event = await Event.findOne({ slug: id })
                 .populate('createdBy', 'name email')
                 .populate('administrators', 'name email')
-                .populate('booths', 'name description logoUrl status');
+                .populate('booths', 'name description logoUrl status')
+                .populate('organizationId', 'name logoUrl logoAltText');
         }
 
         if (!event) {
@@ -1121,7 +1139,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
                 ...event.toObject(),
                 isActive: event.isActive,
                 isUpcoming: event.isUpcoming,
-                duration: event.duration
+                duration: event.duration,
+                organization: buildOrganizationSummary(event.organizationId)
             }
         });
     } catch (error) {

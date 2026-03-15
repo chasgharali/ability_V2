@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 export default function RegisteredEvents() {
   const { user, loading } = useAuth();
   const [events, setEvents] = useState([]);
+  const [selectedOrganization, setSelectedOrganization] = useState('all');
   const [fetching, setFetching] = useState(true);
   const navigate = useNavigate();
 
@@ -31,9 +32,6 @@ export default function RegisteredEvents() {
       }
     })();
   }, [loading, user]);
-
-  if (loading) return null;
-  if (!user) return null;
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not specified';
@@ -59,6 +57,40 @@ export default function RegisteredEvents() {
     return { text: 'Active', color: '#10b981' };
   };
 
+  const organizationFilterOptions = useMemo(() => {
+    const map = new Map();
+    events.forEach((evt) => {
+      const name = evt?.organization?.name?.trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, name);
+      }
+    });
+
+    return Array.from(map.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [events]);
+
+  const hasEventsWithoutOrganization = useMemo(
+    () => events.some((evt) => !evt?.organization?.name),
+    [events]
+  );
+
+  const filteredEvents = useMemo(() => {
+    if (selectedOrganization === 'all') return events;
+    if (selectedOrganization === '__none__') {
+      return events.filter((evt) => !evt?.organization?.name);
+    }
+    return events.filter(
+      (evt) => (evt?.organization?.name || '').trim().toLowerCase() === selectedOrganization
+    );
+  }, [events, selectedOrganization]);
+
+  if (loading) return null;
+  if (!user) return null;
+
   return (
     <>
       <Helmet>
@@ -75,11 +107,35 @@ export default function RegisteredEvents() {
               <header className="registered-events-header">
                 <h1 tabIndex={-1}>My Current Registrations</h1>
                 <p className="subtitle">
-                  {events.length > 0 
-                    ? `You are registered for ${events.length} ${events.length === 1 ? 'event' : 'events'}`
+                  {filteredEvents.length > 0
+                    ? `You are registered for ${filteredEvents.length} ${filteredEvents.length === 1 ? 'event' : 'events'}`
                     : 'Manage your job fair registrations'
                   }
                 </p>
+                {!fetching && events.length > 0 && (
+                  <div className="organization-filter-row">
+                    <label htmlFor="registered-organization-filter" className="organization-filter-label">
+                      Organization
+                    </label>
+                    <select
+                      id="registered-organization-filter"
+                      className="organization-filter-select"
+                      value={selectedOrganization}
+                      onChange={(e) => setSelectedOrganization(e.target.value)}
+                      aria-label="Filter registered events by organization"
+                    >
+                      <option value="all">All Organizations</option>
+                      {organizationFilterOptions.map((org) => (
+                        <option key={org.value} value={org.value}>
+                          {org.label}
+                        </option>
+                      ))}
+                      {hasEventsWithoutOrganization && (
+                        <option value="__none__">No Organization</option>
+                      )}
+                    </select>
+                  </div>
+                )}
               </header>
 
               {fetching && (
@@ -89,24 +145,30 @@ export default function RegisteredEvents() {
                 </div>
               )}
 
-              {!fetching && events.length === 0 && (
+              {!fetching && filteredEvents.length === 0 && (
                 <div className="empty-state" role="status">
                   <div className="empty-state-icon" aria-hidden="true">📋</div>
-                  <h3>No Registrations Yet</h3>
-                  <p>You haven't registered for any job fairs. Browse available events to get started.</p>
-                  <button 
-                    className="btn-browse-events"
-                    onClick={() => navigate('/events')}
-                    aria-label="Browse available job fairs"
-                  >
-                    Browse Job Fairs
-                  </button>
+                  <h3>{events.length === 0 ? 'No Registrations Yet' : 'No Matching Registrations'}</h3>
+                  <p>
+                    {events.length === 0
+                      ? "You haven't registered for any job fairs. Browse available events to get started."
+                      : 'No registered events match the selected organization.'}
+                  </p>
+                  {events.length === 0 && (
+                    <button
+                      className="btn-browse-events"
+                      onClick={() => navigate('/events')}
+                      aria-label="Browse available job fairs"
+                    >
+                      Browse Job Fairs
+                    </button>
+                  )}
                 </div>
               )}
 
-              {!fetching && events.length > 0 && (
+              {!fetching && filteredEvents.length > 0 && (
                 <ul className="events-grid" aria-label="Your registered job fairs">
-                  {events.map(evt => {
+                  {filteredEvents.map(evt => {
                     const status = getEventStatus(evt);
                     return (
                       <li key={evt._id} className="event-card">
@@ -131,72 +193,76 @@ export default function RegisteredEvents() {
                           />
                         )}
 
-                        <div className="event-details-grid">
-                          <div className="event-detail-item">
-                            <span className="event-detail-label">Opens</span>
-                            <div className="event-detail-value date-time">
-                              <span className="icon" aria-hidden="true">📅</span>
-                              <time dateTime={evt.start}>{formatDate(evt.start)}</time>
-                            </div>
-                          </div>
-                          <div className="event-detail-item">
-                            <span className="event-detail-label">Closes</span>
-                            <div className="event-detail-value date-time">
-                              <span className="icon" aria-hidden="true">🕐</span>
-                              <time dateTime={evt.end}>{formatDate(evt.end)}</time>
-                            </div>
-                          </div>
-                          {evt.location && (
+                        <div className="event-card-bottom">
+                          <div className="event-details-grid">
                             <div className="event-detail-item">
-                              <span className="event-detail-label">Location</span>
-                              <div className="event-detail-value">
-                                <span className="icon" aria-hidden="true">📍</span>
-                                {evt.location}
+                              <span className="event-detail-label">Opens</span>
+                              <div className="event-detail-value date-time">
+                                <span className="icon" aria-hidden="true">📅</span>
+                                <time dateTime={evt.start}>{formatDate(evt.start)}</time>
                               </div>
                             </div>
-                          )}
-                          {evt.eventType && (
                             <div className="event-detail-item">
-                              <span className="event-detail-label">Type</span>
-                              <div className="event-detail-value">{evt.eventType}</div>
+                              <span className="event-detail-label">Closes</span>
+                              <div className="event-detail-value date-time">
+                                <span className="icon" aria-hidden="true">🕐</span>
+                                <time dateTime={evt.end}>{formatDate(evt.end)}</time>
+                              </div>
                             </div>
-                          )}
-                        </div>
-
-                        <div className="event-meta" aria-label="Event metadata">
-                          {evt.status && (
-                            <div className="event-meta-item">
-                              <span className="icon" aria-hidden="true">🎯</span>
-                              <span>Status: {status.text}</span>
-                            </div>
-                          )}
-                          <div className="event-meta-item">
-                            <span className="icon" aria-hidden="true">🏢</span>
-                            <span>{evt.boothCount || 0} Booths</span>
+                            {evt.location && (
+                              <div className="event-detail-item">
+                                <span className="event-detail-label">Location</span>
+                                <div className="event-detail-value">
+                                  <span className="icon" aria-hidden="true">📍</span>
+                                  {evt.location}
+                                </div>
+                              </div>
+                            )}
+                            {evt.eventType && (
+                              <div className="event-detail-item">
+                                <span className="event-detail-label">Type</span>
+                                <div className="event-detail-value">{evt.eventType}</div>
+                              </div>
+                            )}
                           </div>
-                          {evt.organization && (
-                            <div className="event-meta-item">
-                              {evt.organization.logoUrl && (
-                                <img
-                                  src={evt.organization.logoUrl}
-                                  alt={evt.organization.logoAltText || evt.organization.name}
-                                  style={{ height: '20px', width: 'auto', marginRight: '6px', verticalAlign: 'middle' }}
-                                />
-                              )}
-                              <span>Organized by: <strong>{evt.organization.name}</strong></span>
-                            </div>
-                          )}
-                        </div>
 
-                        <div className="event-actions">
-                          <button 
-                            className="btn-view-event"
-                            onClick={() => navigate(`/event/${encodeURIComponent(evt.slug)}`)}
-                            aria-label={`View details and explore ${evt.name}`}
-                          >
-                            <span aria-hidden="true">🎪</span>
-                            View Job Fair
-                          </button>
+                          <div className="event-card-footer">
+                            <div className="event-meta" aria-label="Event metadata">
+                              {evt.status && (
+                                <div className="event-meta-item">
+                                  <span className="icon" aria-hidden="true">🎯</span>
+                                  <span>Status: {status.text}</span>
+                                </div>
+                              )}
+                              <div className="event-meta-item">
+                                <span className="icon" aria-hidden="true">🏢</span>
+                                <span>{evt.boothCount || 0} Booths</span>
+                              </div>
+                              {evt.organization && (
+                                <div className="event-meta-item">
+                                  {evt.organization.logoUrl && (
+                                    <img
+                                      src={evt.organization.logoUrl}
+                                      alt={evt.organization.logoAltText || evt.organization.name}
+                                      style={{ height: '20px', width: 'auto', marginRight: '6px', verticalAlign: 'middle' }}
+                                    />
+                                  )}
+                                  <span>Organized by: <strong>{evt.organization.name}</strong></span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="event-actions">
+                              <button 
+                                className="btn-view-event"
+                                onClick={() => navigate(`/event/${encodeURIComponent(evt.slug)}`)}
+                                aria-label={`View details and explore ${evt.name}`}
+                              >
+                                <span aria-hidden="true">🎪</span>
+                                View Job Fair
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </li>
                     );
