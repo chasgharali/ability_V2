@@ -220,7 +220,10 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
     body('logoUrl').optional().isURL(),
     body('companyPage').optional().isURL(),
     body('recruitersCount').optional().isInt({ min: 1 }),
-    body('expireLinkTime').optional().isISO8601().toDate(),
+    body('expireLinkTime')
+        .optional({ nullable: true, checkFalsy: true })
+        .isISO8601()
+        .toDate(),
     body('customInviteSlug')
         .optional({ nullable: true, checkFalsy: true })
         .isString()

@@ -490,6 +490,12 @@ export default function BoothManagement() {
     e.preventDefault();
     setBoothSaving(true);
     try {
+      // Require at least one selected event before calling the API
+      if (!Array.isArray(boothForm.eventIds) || boothForm.eventIds.length === 0) {
+        showToast('Please select at least one event', 'Error', 5000);
+        return;
+      }
+
       // Client-side recruiters limit validation per event
       const exceeded = validateRecruiterLimits();
       if (exceeded.length) {
@@ -497,8 +503,8 @@ export default function BoothManagement() {
         showToast(`Max number of recruiters reached for selected event(s):\n\n${lines}`, 'Error', 7000);
         return; // block submit
       }
-      // Process expireLinkTime: convert datetime-local to ISO string, or null if disabled
-      let expireLinkTimeValue = null;
+      // Process expireLinkTime: convert datetime-local to ISO string, or undefined if disabled
+      let expireLinkTimeValue;
       if (boothForm.enableExpiry && boothForm.expireLinkTime) {
         try {
           const date = new Date(boothForm.expireLinkTime);
@@ -506,7 +512,7 @@ export default function BoothManagement() {
             expireLinkTimeValue = date.toISOString();
           }
         } catch (e) {
-          expireLinkTimeValue = null;
+          expireLinkTimeValue = undefined;
         }
       }
 
