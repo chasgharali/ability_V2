@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import '../Dashboard/Dashboard.css';
 import './UserManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -13,7 +14,7 @@ import { Input, Select, MultiSelect } from '../UI/FormComponents';
 import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, deleteUserPermanently, bulkDeleteUsers } from '../../services/users';
 import { listBooths, getBoothEvents } from '../../services/booths';
 import { listEvents } from '../../services/events';
-import { listOrganizations } from '../../services/organizations';
+import { listOrganizations, assignUserToOrg, removeUserFromOrg } from '../../services/organizations';
 import { JOB_CATEGORY_LIST } from '../../constants/options';
 import MassUploadModal from './MassUploadModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -34,6 +35,9 @@ export default function UserManagement() {
   const [orgsList, setOrgsList] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [users, setUsers] = useState([]);
+  const [assignOrgRow, setAssignOrgRow] = useState(null); // user row being assigned
+  const [assignOrgTarget, setAssignOrgTarget] = useState('');
+  const [assignOrgLoading, setAssignOrgLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
@@ -139,7 +143,7 @@ export default function UserManagement() {
   // Hide JobSeeker from filter and create lists
   const roleOptionsNoJobSeeker = useMemo(() => roleOptionsAll.filter(r => r.value !== 'JobSeeker'), [roleOptionsAll]);
 
-  const [form, setForm] = useState({
+  const getEmptyFormState = () => ({
     firstName: '',
     lastName: '',
     email: '',
@@ -150,6 +154,11 @@ export default function UserManagement() {
     field: '',
     eventId: '',
     selectedEvents: [], // Events assigned to recruiter (multi-select)
+    organizationId: '',
+  });
+
+  const [form, setForm] = useState({
+    ...getEmptyFormState(),
   });
   
   // State for booth-specific events (loaded when booth is selected)
@@ -417,6 +426,7 @@ export default function UserManagement() {
         const lastName = parts.slice(1).join(' ') || '';
         const orgData = u.organizationId;
         const orgName = orgData && typeof orgData === 'object' ? orgData.name : null;
+        const orgId = orgData && typeof orgData === 'object' ? orgData._id : (orgData || '');
         return {
           id: u._id,
           firstName,
@@ -429,6 +439,7 @@ export default function UserManagement() {
           isActive: u.isActive,
           createdAt: u.createdAt,
           organizationName: orgName || '-',
+          organizationId: orgId,
         };
       }));
       // announce results for screen readers
@@ -472,11 +483,17 @@ export default function UserManagement() {
     }
   }, [paginatedDataSource]);
 
-  const loadBoothsAndEvents = async () => {
+  const loadBoothsAndEvents = async (organizationId = '') => {
     try {
+      const boothParams = { page: 1, limit: 200 };
+      const eventParams = { page: 1, limit: 200 };
+      if (organizationId) {
+        boothParams.organizationId = organizationId;
+        eventParams.organizationId = organizationId;
+      }
       const [boothRes, eventRes] = await Promise.all([
-        listBooths({ page: 1, limit: 200 }),
-        listEvents({ page: 1, limit: 200 }),
+        listBooths(boothParams),
+        listEvents(eventParams),
       ]);
       setBoothOptions((boothRes?.booths || []).map(b => ({ value: b._id, label: b.name })));
       setEventOptions((eventRes?.events || []).map(e => ({ value: e._id, label: e.name })));
@@ -486,7 +503,20 @@ export default function UserManagement() {
   };
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
-  useEffect(() => { if (mode !== 'list') loadBoothsAndEvents(); }, [mode]);
+  useEffect(() => {
+    if (mode === 'list') return;
+    if (isSuperAdmin && !editingId) {
+      if (!form.organizationId) {
+        setBoothOptions([]);
+        setEventOptions([]);
+        setBoothEvents([]);
+        return;
+      }
+      loadBoothsAndEvents(form.organizationId);
+      return;
+    }
+    loadBoothsAndEvents();
+  }, [mode, isSuperAdmin, editingId, form.organizationId]);
   useEffect(() => {
     if (isSuperAdmin) {
       listOrganizations({ limit: 200 })
@@ -743,6 +773,8 @@ export default function UserManagement() {
     }
   }, [confirmOpen]);
 
+  const ORG_SCOPED_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
+
   // Grid template functions for custom column renders - using Syncfusion ButtonComponent
   const actionsTemplate = (props) => {
     const row = props;
@@ -772,8 +804,18 @@ export default function UserManagement() {
             Reactivate
           </ButtonComponent>
         )}
-        <ButtonComponent 
-          cssClass="e-outline e-danger e-small" 
+        {isSuperAdmin && ORG_SCOPED_ROLES.includes(row.role) && (
+          <ButtonComponent
+            cssClass="e-outline e-small"
+            style={{ borderColor: '#6c757d', color: '#6c757d' }}
+            onClick={() => { setAssignOrgRow(row); setAssignOrgTarget(row.organizationId || ''); }}
+            aria-label={`Assign organization for ${row.firstName} ${row.lastName}`}
+          >
+            Assign Org
+          </ButtonComponent>
+        )}
+        <ButtonComponent
+          cssClass="e-outline e-danger e-small"
           onClick={() => handleDelete(row)}
           aria-label={`Delete ${row.firstName} ${row.lastName}`}
         >
@@ -827,7 +869,51 @@ export default function UserManagement() {
     }
   };
 
-  const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+  const handleAssignOrg = async () => {
+    if (!assignOrgRow) return;
+    setAssignOrgLoading(true);
+    try {
+      if (assignOrgTarget) {
+        // Assign to selected organization
+        await assignUserToOrg(assignOrgTarget, assignOrgRow.id);
+        showToast('Organization assigned successfully', 'Success');
+      } else if (assignOrgRow.organizationId) {
+        // Remove from current organization (unassign)
+        await removeUserFromOrg(assignOrgRow.organizationId, assignOrgRow.id);
+        showToast('User removed from organization successfully', 'Success');
+      } else {
+        showToast('Please select an organization', 'Warning');
+        setAssignOrgLoading(false);
+        return;
+      }
+      setAssignOrgRow(null);
+      setAssignOrgTarget('');
+      await loadUsers();
+    } catch (e) {
+      showToast(e.response?.data?.error || 'Failed to update organization', 'Error');
+    } finally {
+      setAssignOrgLoading(false);
+    }
+  };
+
+  const setField = (k, v) => {
+    if (k === 'organizationId') {
+      setForm((prev) => {
+        const nextOrg = v || '';
+        if (prev.organizationId === nextOrg) return prev;
+        return {
+          ...prev,
+          organizationId: nextOrg,
+          boothId: '',
+          eventId: '',
+          selectedEvents: []
+        };
+      });
+      setBoothEvents([]);
+      return;
+    }
+    setForm(prev => ({ ...prev, [k]: v }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -913,12 +999,16 @@ export default function UserManagement() {
         if (form.role === 'GlobalSupport') {
           payload.assignedEvents = [form.eventId];
         }
-        await createUser(payload);
+        const created = await createUser(payload);
+        const createdUserId = created?.user?._id || created?.user?.id;
+        if (isSuperAdmin && form.organizationId && createdUserId) {
+          await assignUserToOrg(form.organizationId, createdUserId);
+        }
         showToast('User created', 'Success');
       }
       setMode('list');
       setEditingId(null);
-      setForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '', role: '', boothId: '', field: '', eventId: '', selectedEvents: [] });
+      setForm(getEmptyFormState());
       await loadUsers();
     } catch (e) {
       console.error('Save user failed', e);
@@ -1000,12 +1090,28 @@ export default function UserManagement() {
                     <ButtonComponent cssClass="e-outline e-primary" onClick={() => setShowMassUpload(true)} aria-label="Mass upload users from spreadsheet">
                       Mass Upload
                     </ButtonComponent>
-                    <ButtonComponent cssClass="e-primary" onClick={() => setMode('create')} aria-label="Create new user">
+                    <ButtonComponent
+                      cssClass="e-primary"
+                      onClick={() => {
+                        setEditingId(null);
+                        setForm(getEmptyFormState());
+                        setMode('create');
+                      }}
+                      aria-label="Create new user"
+                    >
                       Create User
                     </ButtonComponent>
                   </>
                 ) : (
-                  <ButtonComponent cssClass="e-outline e-primary" onClick={() => { setMode('list'); setEditingId(null); }} aria-label="Back to user list">
+                  <ButtonComponent
+                    cssClass="e-outline e-primary"
+                    onClick={() => {
+                      setMode('list');
+                      setEditingId(null);
+                      setForm(getEmptyFormState());
+                    }}
+                    aria-label="Back to user list"
+                  >
                     Back to List
                   </ButtonComponent>
                 )}
@@ -1200,9 +1306,9 @@ export default function UserManagement() {
                         </div>
                       )}
                     />
-                    <ColumnDirective 
-                      headerText='Action' 
-                      width='350' 
+                    <ColumnDirective
+                      headerText='Action'
+                      width='430'
                       allowSorting={false} 
                       allowFiltering={false}
                       template={actionsTemplate}
@@ -1368,58 +1474,89 @@ export default function UserManagement() {
                 <Input label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
                 <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
                 <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
+                {isSuperAdmin && !editingId && (
+                  <Select
+                    label="Select Organization"
+                    value={form.organizationId}
+                    onChange={(e) => setField('organizationId', e.target.value)}
+                    options={[{ value: '', label: 'No organization (unassigned)' }, ...orgsList.map(o => ({ value: o._id, label: o.name }))]}
+                  />
+                )}
                 <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
-                <div className="password-field-container">
-                  <Input 
-                    label={editingId ? "New Password (leave blank to keep current)" : "Password"} 
-                    type={showPwd ? 'text' : 'password'} 
-                    value={form.password} 
-                    onChange={(e) => setField('password', e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                      }
-                    }}
-                    autoComplete="new-password"
-                    required={!editingId} 
-                  />
-                  <ButtonComponent 
-                    cssClass="e-outline e-primary e-small password-toggle-btn" 
-                    aria-pressed={showPwd} 
-                    aria-label={showPwd ? 'Hide password' : 'Show password'} 
-                    onClick={() => setShowPwd(s => !s)}
-                  >
-                    {showPwd ? 'Hide' : 'Show'}
-                  </ButtonComponent>
+                <div className="form-field password-field-container">
+                  <label htmlFor="um-password-input" className="form-label">
+                    {editingId ? "New Password (leave blank to keep current)" : "Password"}
+                    {!editingId && <span className="form-required" aria-label="required">*</span>}
+                  </label>
+                  <div className="password-input-wrap">
+                    <input
+                      id="um-password-input"
+                      className="form-input password-input-with-toggle"
+                      type={showPwd ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={(e) => setField('password', e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          return false;
+                        }
+                      }}
+                      autoComplete="new-password"
+                      required={!editingId}
+                    />
+                    <ButtonComponent
+                      type="button"
+                      cssClass="e-outline e-primary e-small password-toggle-btn"
+                      aria-pressed={showPwd}
+                      aria-label={showPwd ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowPwd(s => !s)}
+                    >
+                      {showPwd ? 'Hide' : 'Show'}
+                    </ButtonComponent>
+                  </div>
                 </div>
-                <div className="password-field-container">
-                  <Input 
-                    label={editingId ? "Confirm New Password (leave blank to keep current)" : "Confirm Password"} 
-                    type={showConfirmPwd ? 'text' : 'password'} 
-                    value={form.confirmPassword} 
-                    onChange={(e) => setField('confirmPassword', e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                      }
-                    }}
-                    autoComplete="new-password"
-                    required={!editingId} 
-                  />
-                  <ButtonComponent 
-                    cssClass="e-outline e-primary e-small password-toggle-btn" 
-                    aria-pressed={showConfirmPwd} 
-                    aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'} 
-                    onClick={() => setShowConfirmPwd(s => !s)}
-                  >
-                    {showConfirmPwd ? 'Hide' : 'Show'}
-                  </ButtonComponent>
+                <div className="form-field password-field-container">
+                  <label htmlFor="um-confirm-password-input" className="form-label">
+                    {editingId ? "Confirm New Password (leave blank to keep current)" : "Confirm Password"}
+                    {!editingId && <span className="form-required" aria-label="required">*</span>}
+                  </label>
+                  <div className="password-input-wrap">
+                    <input
+                      id="um-confirm-password-input"
+                      className="form-input password-input-with-toggle"
+                      type={showConfirmPwd ? 'text' : 'password'}
+                      value={form.confirmPassword}
+                      onChange={(e) => setField('confirmPassword', e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          return false;
+                        }
+                      }}
+                      autoComplete="new-password"
+                      required={!editingId}
+                    />
+                    <ButtonComponent
+                      type="button"
+                      cssClass="e-outline e-primary e-small password-toggle-btn"
+                      aria-pressed={showConfirmPwd}
+                      aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'}
+                      onClick={() => setShowConfirmPwd(s => !s)}
+                    >
+                      {showConfirmPwd ? 'Hide' : 'Show'}
+                    </ButtonComponent>
+                  </div>
                 </div>
-                <Select label="Select Booth" value={form.boothId} onChange={(e) => setField('boothId', e.target.value)} options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]} required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)} disabled={['GlobalSupport', 'GlobalInterpreter'].includes(form.role)} />
+                <Select
+                  label="Select Booth"
+                  value={form.boothId}
+                  onChange={(e) => setField('boothId', e.target.value)}
+                  options={[{ value: '', label: 'Choose your Booth' }, ...boothOptions]}
+                  required={['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role)}
+                  disabled={['GlobalSupport', 'GlobalInterpreter'].includes(form.role) || (isSuperAdmin && !editingId && !form.organizationId)}
+                />
                 
                 {/* Multi-select events for Recruiter/BoothAdmin/Support/Interpreter when booth is selected */}
                 {['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role) && form.boothId && (
@@ -1443,15 +1580,23 @@ export default function UserManagement() {
                     value={form.selectedEvents}
                     onChange={(e) => setField('selectedEvents', e.target.value)}
                     options={eventOptions}
-                    placeholder="Select events for this interpreter"
+                    placeholder={isSuperAdmin && !editingId && !form.organizationId ? 'Select organization first' : 'Select events for this interpreter'}
                     name="selectedEvents"
                     required
+                    disabled={isSuperAdmin && !editingId && !form.organizationId}
                   />
                 )}
                 
                 {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
                 {!['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalInterpreter'].includes(form.role) && (
-                  <Select label="Select Event" value={form.eventId} onChange={(e) => setField('eventId', e.target.value)} options={[{ value: '', label: 'Select Event' }, ...eventOptions]} disabled={!['AdminEvent', 'GlobalSupport'].includes(form.role)} required={form.role === 'GlobalSupport'} />
+                  <Select
+                    label="Select Event"
+                    value={form.eventId}
+                    onChange={(e) => setField('eventId', e.target.value)}
+                    options={[{ value: '', label: 'Select Event' }, ...eventOptions]}
+                    disabled={!['AdminEvent', 'GlobalSupport'].includes(form.role) || (isSuperAdmin && !editingId && !form.organizationId)}
+                    required={form.role === 'GlobalSupport'}
+                  />
                 )}
                 <ButtonComponent 
                   cssClass="e-primary" 
@@ -1473,6 +1618,181 @@ export default function UserManagement() {
           </div>
         </main>
       </div>
+
+      {/* Assign Org modal - SuperAdmin only — rendered via Portal to avoid Syncfusion DOM conflicts */}
+      {assignOrgRow && ReactDOM.createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Assign / Update Organization"
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20
+          }}
+          onKeyDown={e => { if (e.key === 'Escape') { setAssignOrgRow(null); setAssignOrgTarget(''); } }}
+        >
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            width: '100%',
+            maxWidth: 480,
+            boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '18px 24px 16px',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>
+                Assign / Update Organization
+              </h2>
+              <button
+                type="button"
+                onClick={() => { setAssignOrgRow(null); setAssignOrgTarget(''); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '1.2rem', color: '#6b7280', lineHeight: 1,
+                  padding: '2px 6px', borderRadius: 4
+                }}
+                aria-label="Close dialog"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '20px 24px', flex: 1 }}>
+              <p style={{ margin: '0 0 16px', lineHeight: '1.6', color: '#374151', fontSize: '0.9rem' }}>
+                Select an organization for{' '}
+                <strong>{assignOrgRow.firstName} {assignOrgRow.lastName}</strong>{' '}
+                ({assignOrgRow.email}).
+              </p>
+
+              {assignOrgRow.organizationId && assignOrgRow.organizationName && assignOrgRow.organizationName !== '-' && (
+                <div style={{
+                  background: '#fffbeb', border: '1px solid #f59e0b',
+                  borderRadius: 8, padding: '10px 14px', marginBottom: 16,
+                  fontSize: '0.875rem', color: '#92400e',
+                  display: 'flex', alignItems: 'center', gap: 8
+                }}>
+                  <span style={{ fontSize: '1rem' }}>🏢</span>
+                  <span><strong>Currently assigned to:</strong> {assignOrgRow.organizationName}</span>
+                </div>
+              )}
+
+              <label
+                htmlFor="assign-org-select"
+                style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: 6, color: '#374151' }}
+              >
+                Organization
+              </label>
+              <select
+                id="assign-org-select"
+                value={assignOrgTarget}
+                onChange={e => setAssignOrgTarget(e.target.value)}
+                style={{
+                  width: '100%', padding: '9px 12px',
+                  border: '1px solid #d1d5db', borderRadius: 8,
+                  fontSize: '0.9rem', color: '#111',
+                  background: '#fff', outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <option value="">-- Select organization --</option>
+                {orgsList.map(o => (
+                  <option key={o._id} value={o._id}>{o.name}</option>
+                ))}
+              </select>
+
+              {assignOrgRow.organizationId && (
+                <div style={{
+                  marginTop: 18, paddingTop: 16,
+                  borderTop: '1px solid #f3f4f6',
+                  display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'
+                }}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setAssignOrgLoading(true);
+                      try {
+                        await removeUserFromOrg(assignOrgRow.organizationId, assignOrgRow.id);
+                        showToast('User removed from organization successfully', 'Success');
+                        setAssignOrgRow(null);
+                        setAssignOrgTarget('');
+                        await loadUsers();
+                      } catch (e) {
+                        showToast(e.response?.data?.error || 'Failed to remove from organization', 'Error');
+                      } finally {
+                        setAssignOrgLoading(false);
+                      }
+                    }}
+                    disabled={assignOrgLoading}
+                    style={{
+                      background: '#fff', color: '#dc2626',
+                      border: '1.5px solid #dc2626', borderRadius: 8,
+                      padding: '7px 16px', fontSize: '0.85rem',
+                      cursor: assignOrgLoading ? 'not-allowed' : 'pointer',
+                      fontWeight: 600, opacity: assignOrgLoading ? 0.6 : 1,
+                      transition: 'background 0.15s'
+                    }}
+                  >
+                    Remove from Organization
+                  </button>
+                  <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>
+                    Unassigns user from current organization
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              display: 'flex', justifyContent: 'flex-end', gap: 10,
+              padding: '14px 24px 18px',
+              borderTop: '1px solid #f3f4f6',
+              background: '#fafafa'
+            }}>
+              <button
+                type="button"
+                onClick={() => { setAssignOrgRow(null); setAssignOrgTarget(''); }}
+                disabled={assignOrgLoading}
+                style={{
+                  padding: '9px 22px', borderRadius: 8,
+                  border: '1.5px solid #d1d5db', background: '#fff',
+                  color: '#374151', fontWeight: 600, fontSize: '0.9rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignOrg}
+                disabled={assignOrgLoading || (!assignOrgTarget && !assignOrgRow?.organizationId)}
+                style={{
+                  padding: '9px 26px', borderRadius: 8,
+                  border: 'none',
+                  background: assignOrgLoading || (!assignOrgTarget && !assignOrgRow?.organizationId)
+                    ? '#9ca3af' : '#111',
+                  color: '#fff', fontWeight: 700, fontSize: '0.9rem',
+                  cursor: assignOrgLoading || (!assignOrgTarget && !assignOrgRow?.organizationId)
+                    ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.15s'
+                }}
+              >
+                {assignOrgLoading ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
 
       {/* Delete confirm modal - Syncfusion DialogComponent */}
       <DialogComponent

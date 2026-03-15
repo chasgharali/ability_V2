@@ -332,15 +332,26 @@
 
 /* Password toggle button styling */
 .password-toggle-btn {
-  margin-top: 8px !important;
-  align-self: flex-start !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  min-width: 56px !important;
+  height: 34px !important;
+  z-index: 2 !important;
 }
 
 .password-field-container {
   position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+}
+
+.password-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-with-toggle {
+  padding-right: 76px !important;
 }
 
 /* ========================================

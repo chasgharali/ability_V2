@@ -174,6 +174,18 @@ export default function RegisteredEvents() {
                             <span className="icon" aria-hidden="true">🏢</span>
                             <span>{evt.boothCount || 0} Booths</span>
                           </div>
+                          {evt.organization && (
+                            <div className="event-meta-item">
+                              {evt.organization.logoUrl && (
+                                <img
+                                  src={evt.organization.logoUrl}
+                                  alt={evt.organization.logoAltText || evt.organization.name}
+                                  style={{ height: '20px', width: 'auto', marginRight: '6px', verticalAlign: 'middle' }}
+                                />
+                              )}
+                              <span>Organized by: <strong>{evt.organization.name}</strong></span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="event-actions">

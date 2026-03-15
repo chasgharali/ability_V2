@@ -50,6 +50,19 @@ const authenticateToken = async (req, res, next) => {
             });
         }
 
+        // Block org-scoped users when their organization is inactive.
+        if (
+            ORG_SCOPED_ROLES.includes(user.role) &&
+            user.organizationId &&
+            typeof user.organizationId === 'object' &&
+            user.organizationId.isActive === false
+        ) {
+            return res.status(403).json({
+                error: 'OrganizationInactive',
+                message: 'Your organization is inactive. Please contact your administrator.'
+            });
+        }
+
         req.user = user;
         // Convenience accessor — null for SuperAdmin / JobSeeker
         req.orgId = user.organizationId?._id || user.organizationId || null;
@@ -333,7 +346,8 @@ const validateRefreshToken = async (req, res, next) => {
 
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
-        const user = await User.findById(decoded.userId);
+        const user = await User.findById(decoded.userId)
+            .populate('organizationId', 'name slug isActive limits');
 
         if (!user) {
             return res.status(401).json({
@@ -366,6 +380,19 @@ const validateRefreshToken = async (req, res, next) => {
             return res.status(401).json({
                 error: 'Account deactivated',
                 message: 'Your account has been deactivated'
+            });
+        }
+
+        // Block org-scoped users when their organization is inactive.
+        if (
+            ORG_SCOPED_ROLES.includes(user.role) &&
+            user.organizationId &&
+            typeof user.organizationId === 'object' &&
+            user.organizationId.isActive === false
+        ) {
+            return res.status(403).json({
+                error: 'OrganizationInactive',
+                message: 'Your organization is inactive. Please contact your administrator.'
             });
         }
 

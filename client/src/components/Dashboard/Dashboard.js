@@ -717,9 +717,41 @@ const Dashboard = () => {
                     <div className="dashboard-content">
                         <h1>Organization Admin Dashboard</h1>
                         {user?.organizationId && (
-                            <p style={{ color: '#555', marginBottom: 20 }}>
-                                Managing: <strong>{user.organizationId?.name || 'Your Organization'}</strong>
-                            </p>
+                            <>
+                                <p style={{ color: '#555', marginBottom: 8 }}>
+                                    Managing: <strong>{user.organizationId?.name || 'Your Organization'}</strong>
+                                </p>
+                                <div
+                                    style={{
+                                        marginBottom: 20,
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '12px',
+                                        alignItems: 'center',
+                                        color: '#374151',
+                                        fontSize: '0.92rem'
+                                    }}
+                                >
+                                    <span>
+                                        Status:{' '}
+                                        <strong style={{ color: user.organizationId?.isActive ? '#166534' : '#b91c1c' }}>
+                                            {user.organizationId?.isActive ? 'Active' : 'Inactive'}
+                                        </strong>
+                                    </span>
+                                    <span>
+                                        Event Limit:{' '}
+                                        <strong>{user.organizationId?.limits?.maxEvents || 0}</strong>
+                                    </span>
+                                    <span>
+                                        Booth Limit:{' '}
+                                        <strong>{user.organizationId?.limits?.maxBooths || 0}</strong>
+                                    </span>
+                                    <span>
+                                        User Limit:{' '}
+                                        <strong>{user.organizationId?.limits?.maxRecruiters || 0}</strong>
+                                    </span>
+                                </div>
+                            </>
                         )}
                         <div className="dashboard-cards">
                             <div className="dashboard-card">

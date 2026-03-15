@@ -20236,3 +20236,102 @@
 2026-03-13 01:19:28:1928 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
 2026-03-13 01:20:30:2030 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
 2026-03-13 01:20:33:2033 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-13 02:48:48:4848 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-13 05:24:15:2415 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-13 05:24:18:2418 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-13 10:38:29:3829 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-13 11:10:51:1051 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-13 13:57:57:5757 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-13 14:09:21:921 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30002ms (connectTimeoutMS: 30000)[39m
+2026-03-13 14:26:20:2620 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30610ms (connectTimeoutMS: 30000)[39m
+2026-03-13 15:21:07:217 [31merror[39m: [31mRedis Client Error: read ETIMEDOUT[39m
+2026-03-13 18:04:51:451 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-13 18:38:24:3824 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30057ms (connectTimeoutMS: 30000)[39m
+2026-03-13 18:48:49:4849 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 981643ms (connectTimeoutMS: 30000)[39m
+2026-03-13 18:53:55:5355 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30009ms (connectTimeoutMS: 30000)[39m
+2026-03-13 19:08:55:855 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30003ms (connectTimeoutMS: 30000)[39m
+2026-03-13 19:25:22:2522 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 311881ms (connectTimeoutMS: 30000)[39m
+2026-03-13 19:44:32:4432 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30061ms (connectTimeoutMS: 30000)[39m
+2026-03-13 19:56:45:5645 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30156ms (connectTimeoutMS: 30000)[39m
+2026-03-13 20:15:34:1534 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 961235ms (connectTimeoutMS: 30000)[39m
+2026-03-13 20:30:34:3034 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30053ms (connectTimeoutMS: 30000)[39m
+2026-03-13 20:45:34:4534 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30100ms (connectTimeoutMS: 30000)[39m
+2026-03-13 21:00:34:034 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30004ms (connectTimeoutMS: 30000)[39m
+2026-03-13 21:36:25:3625 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1070042ms (connectTimeoutMS: 30000)[39m
+2026-03-13 21:36:56:3656 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 945323ms (connectTimeoutMS: 30000)[39m
+2026-03-13 21:54:15:5415 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-13 22:24:55:2455 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 923619ms (connectTimeoutMS: 30000)[39m
+2026-03-13 22:25:25:2525 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 905802ms (connectTimeoutMS: 30000)[39m
+2026-03-13 23:03:34:334 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30051ms (connectTimeoutMS: 30000)[39m
+2026-03-13 23:36:26:3626 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-13 23:51:59:5159 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 00:04:33:433 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 932256ms (connectTimeoutMS: 30000)[39m
+2026-03-14 00:39:05:395 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 00:39:35:3935 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 983678ms (connectTimeoutMS: 30000)[39m
+2026-03-14 00:58:09:589 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30055ms (connectTimeoutMS: 30000)[39m
+2026-03-14 01:13:09:139 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 424182ms (connectTimeoutMS: 30000)[39m
+2026-03-14 01:30:05:305 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-14 01:50:31:5031 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 02:41:58:4158 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 02:59:35:5935 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 03:16:05:165 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1056787ms (connectTimeoutMS: 30000)[39m
+2026-03-14 03:35:43:3543 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 989335ms (connectTimeoutMS: 30000)[39m
+2026-03-14 03:51:16:5116 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1177896ms (connectTimeoutMS: 30000)[39m
+2026-03-14 04:07:02:72 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 932545ms (connectTimeoutMS: 30000)[39m
+2026-03-14 04:24:05:245 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 04:24:36:2436 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 04:42:42:4242 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30629ms (connectTimeoutMS: 30000)[39m
+2026-03-14 05:29:16:2916 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1879639ms (connectTimeoutMS: 30000)[39m
+2026-03-14 05:29:47:2947 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 903506ms (connectTimeoutMS: 30000)[39m
+2026-03-14 06:10:16:1016 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1013569ms (connectTimeoutMS: 30000)[39m
+2026-03-14 06:27:04:274 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 940327ms (connectTimeoutMS: 30000)[39m
+2026-03-14 06:27:35:2735 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1007325ms (connectTimeoutMS: 30000)[39m
+2026-03-14 07:10:06:106 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30894ms (connectTimeoutMS: 30000)[39m
+2026-03-14 07:27:27:2727 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 07:27:57:2757 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.79:27017[39m
+2026-03-14 08:14:09:149 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30754ms (connectTimeoutMS: 30000)[39m
+2026-03-14 08:40:27:4027 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1002279ms (connectTimeoutMS: 30000)[39m
+2026-03-14 08:40:57:4057 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1577318ms (connectTimeoutMS: 30000)[39m
+2026-03-14 09:31:06:316 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1016878ms (connectTimeoutMS: 30000)[39m
+2026-03-14 09:41:53:4153 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1980059ms (connectTimeoutMS: 30000)[39m
+2026-03-14 10:16:22:1622 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 964038ms (connectTimeoutMS: 30000)[39m
+2026-03-14 10:32:18:3218 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1054214ms (connectTimeoutMS: 30000)[39m
+2026-03-14 10:32:48:3248 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-14 11:16:57:1657 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-14 11:43:47:4347 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-14 12:01:47:147 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1607500ms (connectTimeoutMS: 30000)[39m
+2026-03-14 12:17:42:1742 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 1079398ms (connectTimeoutMS: 30000)[39m
+2026-03-14 12:35:16:3516 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-14 12:44:37:4437 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-14 12:55:45:5545 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30001ms (connectTimeoutMS: 30000)[39m
+2026-03-14 12:58:31:5831 [31merror[39m: [31mRedis Client Error: read ETIMEDOUT[39m
+2026-03-15 02:31:15:3115 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-15 02:37:23:3723 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-15 02:38:51:3851 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-15 03:45:56:4556 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-15 22:16:20:1620 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-15 23:49:20:4920 [31merror[39m: [31mAuthentication error: Topology is closed[39m
+2026-03-15 23:49:22:4922 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-15 23:49:22:4922 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:22:4922 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:22:4922 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:22:4922 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:22:4922 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:22:4922 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:23:4923 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:23:4923 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:24:4924 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:24:4924 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:25:4925 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:25:4925 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:26:4926 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:26:4926 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:27:4927 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:28:4928 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:29:4929 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:29:4929 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:30:4930 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:31:4931 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:32:4932 [31merror[39m: [31mSocket authentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-03-15 23:49:32:4932 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-15 23:49:33:4933 [31merror[39m: [31mSocket authentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m

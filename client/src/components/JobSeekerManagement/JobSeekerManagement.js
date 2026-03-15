@@ -17,6 +17,7 @@ import '@syncfusion/ej2-inputs/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { listUsers, deactivateUser, reactivateUser, deleteUserPermanently, verifyUserEmail, updateUser, bulkDeleteJobSeekers } from '../../services/users';
 import { listEvents } from '../../services/events';
+import { listOrganizations } from '../../services/organizations';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { 
@@ -127,6 +128,7 @@ export default function JobSeekerManagement() {
         const parsed = JSON.parse(savedFilters);
         return {
           statusFilter: parsed.statusFilter || '',
+          organizationFilter: parsed.organizationFilter || '',
           eventFilter: parsed.eventFilter || '',
         };
       }
@@ -135,13 +137,16 @@ export default function JobSeekerManagement() {
     }
     return {
       statusFilter: '',
+      organizationFilter: '',
       eventFilter: '',
     };
   };
 
   const initialFilters = loadFiltersFromSession();
   const [statusFilter, setStatusFilter] = useState(initialFilters.statusFilter);
+  const [organizationFilter, setOrganizationFilter] = useState(initialFilters.organizationFilter);
   const [eventFilter, setEventFilter] = useState(initialFilters.eventFilter);
+  const [organizations, setOrganizations] = useState([]);
   const [events, setEvents] = useState([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [eventSearchLoading, setEventSearchLoading] = useState(false);
@@ -159,6 +164,7 @@ export default function JobSeekerManagement() {
   const selectionUpdateRef = useRef(false); // Prevent multiple simultaneous selection updates
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
+  const organizationFilterRef = useRef('');
   const eventFilterRef = useRef('');
   const eventDropdownRef = useRef(null);
   const currentPageRef = useRef(1);
@@ -228,6 +234,21 @@ export default function JobSeekerManagement() {
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
   ], []);
+  
+  const canFilterByOrganization = useMemo(
+    () => ['SuperAdmin', 'GlobalSupport'].includes(user?.role),
+    [user?.role]
+  );
+
+  const organizationOptions = useMemo(() => {
+    const options = [{ value: '', label: 'All Organizations' }];
+    if (organizations && Array.isArray(organizations)) {
+      organizations.forEach((org) => {
+        options.push({ value: org._id, label: org.name });
+      });
+    }
+    return options;
+  }, [organizations]);
 
   // Event filter options - built from fetched events
   const eventOptions = useMemo(() => {
@@ -482,6 +503,10 @@ export default function JobSeekerManagement() {
       if (eventFilter && eventFilter.trim()) {
         allFilters.eventId = eventFilter.trim();
       }
+      const organizationFilter = organizationFilterRef.current;
+      if (organizationFilter && String(organizationFilter).trim()) {
+        allFilters.organizationId = String(organizationFilter).trim();
+      }
       
       const res = await listUsers(allFilters);
       const items = (res?.users || []).filter(u => u.role === 'JobSeeker');
@@ -497,7 +522,7 @@ export default function JobSeekerManagement() {
     }
   }, [showToast]);
 
-  const loadJobSeekers = useCallback(async (page, limit, search, isActive, event) => {
+  const loadJobSeekers = useCallback(async (page, limit, search, isActive, event, organizationId) => {
     // Prevent multiple simultaneous fetches
     if (loadingJobSeekersRef.current) {
       console.log('LoadJobSeekers already in progress, skipping duplicate call');
@@ -536,6 +561,13 @@ export default function JobSeekerManagement() {
       if (event && event.trim()) {
         params.eventId = event.trim();
         console.log('Filtering by event ID:', event.trim());
+      }
+
+      const effectiveOrganizationId = organizationId !== undefined
+        ? organizationId
+        : organizationFilterRef.current;
+      if (effectiveOrganizationId && String(effectiveOrganizationId).trim()) {
+        params.organizationId = String(effectiveOrganizationId).trim();
       }
       
       const res = await listUsers(params);
@@ -638,6 +670,10 @@ export default function JobSeekerManagement() {
   }, [statusFilter]);
 
   useEffect(() => {
+    organizationFilterRef.current = organizationFilter;
+  }, [organizationFilter]);
+
+  useEffect(() => {
     eventFilterRef.current = eventFilter;
   }, [eventFilter]);
 
@@ -646,13 +682,14 @@ export default function JobSeekerManagement() {
     try {
       const filtersToSave = {
         statusFilter,
+        organizationFilter,
         eventFilter,
       };
       sessionStorage.setItem('jobSeekerManagement_filters', JSON.stringify(filtersToSave));
     } catch (error) {
       console.error('Error saving Job Seeker Management filters to sessionStorage:', error);
     }
-  }, [statusFilter, eventFilter]);
+  }, [statusFilter, organizationFilter, eventFilter]);
 
   // Set search input value from sessionStorage on mount
   useEffect(() => {
@@ -685,13 +722,17 @@ export default function JobSeekerManagement() {
 
 
   // Load events on mount - memoized to prevent unnecessary re-renders
-  const loadEventsData = useCallback(async () => {
+  const loadEventsData = useCallback(async (organizationId = '') => {
     // Prevent multiple simultaneous fetches
     if (loadingEventsRef.current) return;
     
     try {
       loadingEventsRef.current = true;
-      const res = await listEvents({ page: 1, limit: 200 });
+      const eventParams = { page: 1, limit: 200 };
+      if (organizationId && String(organizationId).trim()) {
+        eventParams.organizationId = String(organizationId).trim();
+      }
+      const res = await listEvents(eventParams);
       setEvents(res.events || []);
     } catch (e) {
       console.error('Failed to load events', e);
@@ -701,10 +742,42 @@ export default function JobSeekerManagement() {
     }
   }, [showToast]);
 
+  // Load organization options for roles that can filter across orgs
+  useEffect(() => {
+    if (!canFilterByOrganization) {
+      setOrganizations([]);
+      if (organizationFilterRef.current) {
+        setOrganizationFilter('');
+        organizationFilterRef.current = '';
+      }
+      return;
+    }
+
+    let mounted = true;
+    listOrganizations({ page: 1, limit: 200 })
+      .then((res) => {
+        if (mounted) {
+          setOrganizations(res.organizations || []);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load organizations', error);
+        if (mounted) {
+          setOrganizations([]);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [canFilterByOrganization]);
+
   // Load events on mount - only runs once
   useEffect(() => {
-    loadEventsData();
-  }, [loadEventsData]);
+    const initialOrgFilter = canFilterByOrganization ? (initialFilters.organizationFilter || '') : '';
+    loadEventsData(initialOrgFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadEventsData, canFilterByOrganization]);
 
   // Initial load on mount - only runs once
   useEffect(() => {
@@ -716,10 +789,18 @@ export default function JobSeekerManagement() {
       verifiedCount: 0
     });
     // Load with saved search query if available
-    loadJobSeekers(1, pageSize, savedSearchQuery || '', initialFilters.statusFilter || '', initialFilters.eventFilter || '');
+    const initialOrganizationFilter = canFilterByOrganization ? (initialFilters.organizationFilter || '') : '';
+    loadJobSeekers(
+      1,
+      pageSize,
+      savedSearchQuery || '',
+      initialFilters.statusFilter || '',
+      initialFilters.eventFilter || '',
+      initialOrganizationFilter
+    );
     isFirstRender.current = false; // Mark first render as complete
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [canFilterByOrganization]);
 
   // Handle active search query changes
   useEffect(() => {
@@ -763,8 +844,40 @@ export default function JobSeekerManagement() {
     }
   }, [statusFilter, pageSize, activeSearchQuery]);
 
+  const prevOrganizationFilter = useRef(organizationFilter);
+  useEffect(() => {
+    if (isFirstRender.current) return;
+
+    if (prevOrganizationFilter.current !== organizationFilter) {
+      prevOrganizationFilter.current = organizationFilter;
+      setCurrentPage(1);
+
+      // Organization changed, so dependent event filter must reset.
+      setEventFilter('');
+      eventFilterRef.current = '';
+      if (eventDropdownRef.current) {
+        eventDropdownRef.current.value = '';
+      }
+
+      loadEventsData(organizationFilter || '');
+      loadJobSeekersRef.current(
+        1,
+        pageSize,
+        activeSearchQuery || '',
+        statusFilterRef.current,
+        '',
+        organizationFilter || ''
+      );
+    }
+  }, [organizationFilter, pageSize, activeSearchQuery, loadEventsData]);
+
   // Function to trigger event search - only called explicitly by button
   const triggerEventSearch = useCallback(() => {
+    if (canFilterByOrganization && !organizationFilterRef.current) {
+      showToast('Please select an organization first', 'Warning');
+      return;
+    }
+
     // Get the current value from the dropdown ref if available, otherwise use state
     let currentEventValue = eventFilter;
     if (eventDropdownRef.current && eventDropdownRef.current.value) {
@@ -789,8 +902,15 @@ export default function JobSeekerManagement() {
     eventFilterRef.current = currentEventValue;
     
     console.log('Triggering event search with eventId:', currentEventValue);
-    loadJobSeekersRef.current(1, pageSize, activeSearchQuery || '', statusFilterRef.current, currentEventValue);
-  }, [eventFilter, pageSize, activeSearchQuery, showToast]);
+    loadJobSeekersRef.current(
+      1,
+      pageSize,
+      activeSearchQuery || '',
+      statusFilterRef.current,
+      currentEventValue,
+      organizationFilterRef.current
+    );
+  }, [eventFilter, pageSize, activeSearchQuery, showToast, canFilterByOrganization]);
 
   // Function to trigger search - only called explicitly by button or Enter key
   const triggerSearch = useCallback(() => {
@@ -2456,6 +2576,26 @@ export default function JobSeekerManagement() {
                   width="100%"
                 />
               </div>
+              {/* Organization Filter */}
+              {canFilterByOrganization && (
+                <div style={{ width: '250px', flexShrink: 0 }}>
+                  <DropDownListComponent
+                    id="organization-filter-dropdown"
+                    dataSource={organizationOptions.map(o => ({ value: o.value, text: o.label }))}
+                    fields={{ value: 'value', text: 'text' }}
+                    value={organizationFilter}
+                    change={(e) => {
+                      const selectedOrg = e.value || '';
+                      setOrganizationFilter(selectedOrg);
+                      organizationFilterRef.current = selectedOrg;
+                    }}
+                    placeholder="Select Organization"
+                    cssClass="organization-filter-dropdown"
+                    popupHeight="300px"
+                    width="100%"
+                  />
+                </div>
+              )}
               {/* Event Filter */}
               <div style={{ width: '250px', flexShrink: 0 }}>
                 <DropDownListComponent
@@ -2475,13 +2615,14 @@ export default function JobSeekerManagement() {
                   cssClass="event-filter-dropdown"
                   popupHeight="300px"
                   width="100%"
+                  enabled={!canFilterByOrganization || Boolean(organizationFilter)}
                 />
               </div>
               {/* Search by Event Button */}
               <ButtonComponent
                 cssClass="e-primary e-small"
                 onClick={triggerEventSearch}
-                disabled={eventSearchLoading || !eventFilter}
+                disabled={eventSearchLoading || !eventFilter || (canFilterByOrganization && !organizationFilter)}
                 aria-label="Search by event"
                 style={{ minWidth: '140px', height: '44px' }}
               >

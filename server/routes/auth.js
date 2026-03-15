@@ -6,7 +6,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Booth = require('../models/Booth');
 const Event = require('../models/Event');
-const { authenticateToken, validateRefreshToken } = require('../middleware/auth');
+const { authenticateToken, validateRefreshToken, ORG_SCOPED_ROLES } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 
@@ -458,6 +458,19 @@ router.post('/login', [
             return res.status(401).json({
                 error: 'Incorrect password',
                 message: 'Incorrect password.'
+            });
+        }
+
+        // Block org-scoped users if their organization has been disabled.
+        if (
+            ORG_SCOPED_ROLES.includes(user.role) &&
+            user.organizationId &&
+            typeof user.organizationId === 'object' &&
+            user.organizationId.isActive === false
+        ) {
+            return res.status(403).json({
+                error: 'OrganizationInactive',
+                message: 'Your organization is inactive. Please contact your administrator.'
             });
         }
 

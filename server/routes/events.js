@@ -111,7 +111,7 @@ function createVideoHtml(video) {
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { user } = req;
-        const { status, upcoming, active, page = 1, limit = 20 } = req.query;
+        const { status, upcoming, active, organizationId, page = 1, limit = 20 } = req.query;
 
         // Build query based on user role and filters
         let query = {};
@@ -124,6 +124,8 @@ router.get('/', authenticateToken, async (req, res) => {
         // Org-scope: Admin sees only their org's events; SuperAdmin/GlobalSupport see all
         if (user.role === 'Admin' && req.orgId) {
             query.organizationId = req.orgId;
+        } else if (['SuperAdmin', 'GlobalSupport', 'AdminEvent'].includes(user.role) && organizationId) {
+            query.organizationId = organizationId;
         }
 
         // Apply status filter
@@ -819,6 +821,7 @@ router.get('/upcoming', authenticateToken, async (req, res) => {
             Event.find(query)
                 .populate('createdBy', 'name email')
                 .populate('booths', '_id name description logoUrl status')
+                .populate('organizationId', 'name logoUrl logoAltText')
                 .sort({ start: 1 }) // Sort by start date ascending (soonest first)
                 .skip(skip)
                 .limit(parseInt(limit)),
@@ -829,7 +832,10 @@ router.get('/upcoming', authenticateToken, async (req, res) => {
             events: events.map(event => ({
                 ...event.getSummary(),
                 isUpcoming: true,
-                daysUntilStart: Math.ceil((event.start - new Date()) / (1000 * 60 * 60 * 24))
+                daysUntilStart: Math.ceil((event.start - new Date()) / (1000 * 60 * 60 * 24)),
+                organization: event.organizationId
+                    ? { name: event.organizationId.name, logoUrl: event.organizationId.logoUrl, logoAltText: event.organizationId.logoAltText }
+                    : null
             })),
             pagination: {
                 currentPage: parseInt(page),
@@ -884,6 +890,7 @@ router.get('/registered', authenticateToken, async (req, res) => {
             Event.find(or.length ? { $or: or } : { _id: null })
                 .populate('createdBy', 'name email')
                 .populate('booths', '_id name description logoUrl status')
+                .populate('organizationId', 'name logoUrl logoAltText')
                 .sort({ start: -1 }) // Sort by start date descending (most recent first)
                 .skip(skip)
                 .limit(parseInt(limit)),
@@ -904,7 +911,10 @@ router.get('/registered', authenticateToken, async (req, res) => {
                     isUpcoming: event.start > new Date(),
                     isActive: event.start <= new Date() && event.end >= new Date(),
                     isCompleted: event.end < new Date()
-                }
+                },
+                organization: event.organizationId
+                    ? { name: event.organizationId.name, logoUrl: event.organizationId.logoUrl, logoAltText: event.organizationId.logoAltText }
+                    : null
             };
         });
 

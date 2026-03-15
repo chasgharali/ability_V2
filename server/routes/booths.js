@@ -13,7 +13,7 @@ const router = express.Router();
  */
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const { eventId, page = 1, limit = 50 } = req.query;
+        const { eventId, organizationId, page = 1, limit = 50 } = req.query;
         const filter = {};
         if (eventId) {
             // Filter by eventId or events array containing the event
@@ -25,6 +25,8 @@ router.get('/', authenticateToken, async (req, res) => {
         // Org-scope: Admin sees only their org's booths
         if (req.user?.role === 'Admin' && req.orgId) {
             filter.organizationId = req.orgId;
+        } else if (['SuperAdmin', 'GlobalSupport', 'AdminEvent'].includes(req.user?.role) && organizationId) {
+            filter.organizationId = organizationId;
         }
         const skip = (parseInt(page) - 1) * parseInt(limit);
 

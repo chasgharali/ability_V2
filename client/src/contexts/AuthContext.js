@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -15,6 +15,25 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const orgInactiveAlertShownRef = useRef(false);
+
+    const handleOrganizationInactive = (message) => {
+        const inactiveMessage = message || 'Your organization status is Inactive. You cannot proceed.';
+
+        if (!orgInactiveAlertShownRef.current) {
+            orgInactiveAlertShownRef.current = true;
+            window.alert(inactiveMessage);
+        }
+
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        setUser(null);
+        setError(inactiveMessage);
+
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
+    };
 
     // Refresh auth token function
     const refreshAuthToken = async () => {
@@ -85,6 +104,14 @@ export const AuthProvider = ({ children }) => {
                 if (originalRequest.url?.includes('/auth/refresh') || 
                     originalRequest.url?.includes('/auth/login') ||
                     originalRequest.url?.includes('/auth/register')) {
+                    return Promise.reject(error);
+                }
+
+                if (
+                    error.response?.status === 403 &&
+                    error.response?.data?.error === 'OrganizationInactive'
+                ) {
+                    handleOrganizationInactive(error.response?.data?.message);
                     return Promise.reject(error);
                 }
 
@@ -229,6 +256,8 @@ export const AuthProvider = ({ children }) => {
                 }
             } else if (status === 403 && (data?.error === 'Role not allowed' || /Please use the (Company|Job) Seeker login/i.test(data?.message || ''))) {
                 errorMessage = data?.message || 'This account type is not allowed on the selected login. Try the other login tab.';
+            } else if (status === 403 && data?.error === 'OrganizationInactive') {
+                errorMessage = data?.message || 'Your organization status is Inactive. You cannot proceed.';
             } else if (status === 403 || data?.error === 'Account deactivated' || /deactivated/i.test(data?.message || '')) {
                 errorMessage = 'Your account has been deactivated. Please contact support.';
             } else {
