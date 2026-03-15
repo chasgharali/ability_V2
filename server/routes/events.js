@@ -765,6 +765,35 @@ router.post('/:id/booths', authenticateToken, requireResourceAccess('event', 'id
 
         const { name, description, logoUrl } = req.body;
         const { event, user } = req;
+        const orgId = event.organizationId || req.orgId || null;
+
+        // Enforce event-level booth limit
+        const eventBoothLimit = event?.limits?.maxBooths || 0;
+        if (eventBoothLimit > 0) {
+            const currentEventBooths = await Booth.countDocuments({
+                $or: [{ eventId: event._id }, { events: event._id }]
+            });
+            if (currentEventBooths >= eventBoothLimit) {
+                return res.status(403).json({
+                    error: 'Booth limit reached',
+                    message: `This event has reached its maximum booth limit of ${eventBoothLimit}`
+                });
+            }
+        }
+
+        // Enforce organization-level booth limit
+        if (orgId) {
+            const org = await Organization.findById(orgId).select('limits');
+            if (org?.limits?.maxBooths > 0) {
+                const currentOrgBooths = await Booth.countDocuments({ organizationId: orgId });
+                if (currentOrgBooths >= org.limits.maxBooths) {
+                    return res.status(403).json({
+                        error: 'Booth limit reached',
+                        message: `Your organization has reached its maximum booth limit of ${org.limits.maxBooths}`
+                    });
+                }
+            }
+        }
 
         // Create new booth
         const booth = new Booth({
@@ -772,6 +801,7 @@ router.post('/:id/booths', authenticateToken, requireResourceAccess('event', 'id
             name,
             description,
             logoUrl,
+            organizationId: orgId,
             administrators: [user._id]
         });
 

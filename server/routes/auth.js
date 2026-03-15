@@ -6,7 +6,8 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Booth = require('../models/Booth');
 const Event = require('../models/Event');
-const { authenticateToken, validateRefreshToken, ORG_SCOPED_ROLES } = require('../middleware/auth');
+const Organization = require('../models/Organization');
+const { authenticateToken, optionalAuth, validateRefreshToken, ORG_SCOPED_ROLES } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 
@@ -77,7 +78,7 @@ const generateTokens = (user) => {
  * POST /api/auth/register
  * Register a new user
  */
-router.post('/register', [
+router.post('/register', optionalAuth, [
     body('name')
         .trim()
         .isLength({ min: 2, max: 100 })
@@ -120,6 +121,9 @@ router.post('/register', [
 ], async (req, res) => {
     try {
         const { name, email, password, role = 'JobSeeker', phoneNumber, languages, assignedBooth, assignedEvents, subscribeAnnouncements, redirectPath } = req.body;
+        const isAdminCreatingUser = req.user?.role === 'Admin' && !!req.orgId;
+        const shouldAssignCreatorOrg = isAdminCreatingUser && ORG_SCOPED_ROLES.includes(role);
+        const creatorOrgId = shouldAssignCreatorOrg ? req.orgId : null;
 
         // Check for validation errors, but separate email format validation
         const errors = validationResult(req);
@@ -159,6 +163,36 @@ router.post('/register', [
                 message: mainMessage,
                 details: errorArray
             });
+        }
+
+        // Enforce organization user/recruiter limits for admin-created users
+        if (creatorOrgId) {
+            const org = await Organization.findById(creatorOrgId).select('limits');
+            if (org?.limits?.maxUsers > 0) {
+                const currentOrgUsers = await User.countDocuments({
+                    organizationId: creatorOrgId,
+                    role: { $in: ORG_SCOPED_ROLES }
+                });
+                if (currentOrgUsers >= org.limits.maxUsers) {
+                    return res.status(403).json({
+                        error: 'User limit reached',
+                        message: `Your organization has reached its maximum user limit of ${org.limits.maxUsers}`
+                    });
+                }
+            }
+            if (org?.limits?.maxRecruiters > 0 && ['Recruiter', 'BoothAdmin'].includes(role)) {
+                const currentRecruiters = await User.countDocuments({
+                    organizationId: creatorOrgId,
+                    role: { $in: ['Recruiter', 'BoothAdmin'] },
+                    isActive: true
+                });
+                if (currentRecruiters >= org.limits.maxRecruiters) {
+                    return res.status(403).json({
+                        error: 'Recruiter limit reached',
+                        message: `Your organization has reached its maximum recruiter limit of ${org.limits.maxRecruiters}`
+                    });
+                }
+            }
         }
 
         // Validate assignedBooth based on role
@@ -256,6 +290,7 @@ router.post('/register', [
             email: trimmedEmail, // Store exactly as user typed it (trimmed only)
             hashedPassword: password, // Will be hashed by pre-save middleware
             role,
+            organizationId: creatorOrgId,
             phoneNumber,
             languages: role === 'Interpreter' || role === 'GlobalInterpreter' ? languages : undefined,
             assignedBooth: ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) ? assignedBooth : undefined,

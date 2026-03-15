@@ -44,6 +44,7 @@ export default function UserManagement() {
   // Keep selectedUsers state but minimize updates to prevent blinking
   const [selectedUsers, setSelectedUsers] = useState([]);
   const selectedUsersRef = useRef([]); // Store in ref for immediate access without re-render
+  const [orgUsageCounts, setOrgUsageCounts] = useState({ totalUsers: 0, activeRecruiters: 0 });
 
   // Load filters from sessionStorage on mount (per-table persistence for role filter)
   const loadRoleFilterFromSession = () => {
@@ -433,7 +434,7 @@ export default function UserManagement() {
           lastName,
           email: u.email,
           role: u.role,
-          booth: u.boothName || '-',
+          booth: u.boothName || u.assignedBooth?.name || u.assignedBooth?.company || '-',
           assignedBoothId: u.assignedBooth?._id || u.assignedBooth || '',
           assignedEvents: (u.assignedEvents || []).map(e => e?._id || e),
           isActive: u.isActive,
@@ -448,6 +449,25 @@ export default function UserManagement() {
       const roleText = roleLabel ? ` with role "${roleLabel}"` : '';
       const searchText = activeSearchQuery ? ` matching "${activeSearchQuery}"` : '';
       setLiveMsg(`${count} user${count === 1 ? '' : 's'} loaded${roleText}${searchText}`);
+
+      // For Admin users, load unfiltered org usage counters for reliable limit gating
+      if (currentUser?.role === 'Admin') {
+        const getTotal = (response) => (
+          Number(response?.pagination?.totalCount) ||
+          Number(response?.stats?.totalCount) ||
+          Number(response?.users?.length) ||
+          0
+        );
+        const [allUsersRes, recruiterRes, boothAdminRes] = await Promise.all([
+          listUsers({ page: 1, limit: 1 }),
+          listUsers({ page: 1, limit: 1, role: 'Recruiter', isActive: true }),
+          listUsers({ page: 1, limit: 1, role: 'BoothAdmin', isActive: true }),
+        ]);
+        setOrgUsageCounts({
+          totalUsers: getTotal(allUsersRes),
+          activeRecruiters: getTotal(recruiterRes) + getTotal(boothAdminRes),
+        });
+      }
     } catch (e) {
       if (gen === loadRequestGenRef.current) {
         console.error('Failed to load users', e);
@@ -458,7 +478,7 @@ export default function UserManagement() {
         setLoading(false);
       }
     }
-  }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker, orgFilter]);
+  }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker, orgFilter, currentUser]);
 
   // Memoize paginated data source to ensure grid updates when users change
   const paginatedDataSource = useMemo(() => {
@@ -774,6 +794,17 @@ export default function UserManagement() {
   }, [confirmOpen]);
 
   const ORG_SCOPED_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
+  const orgLimits = currentUser?.organizationId?.limits || {};
+  const maxUsersLimit = Number(orgLimits?.maxUsers || 0);
+  const maxRecruitersLimit = Number(orgLimits?.maxRecruiters || 0);
+  const currentOrgScopedUsersCount = currentUser?.role === 'Admin'
+    ? orgUsageCounts.totalUsers
+    : users.filter(u => ORG_SCOPED_ROLES.includes(u.role)).length;
+  const currentActiveRecruitersCount = currentUser?.role === 'Admin'
+    ? orgUsageCounts.activeRecruiters
+    : users.filter(u => ['Recruiter', 'BoothAdmin'].includes(u.role) && u.isActive).length;
+  const orgUserLimitReached = currentUser?.role === 'Admin' && maxUsersLimit > 0 && currentOrgScopedUsersCount >= maxUsersLimit;
+  const recruiterLimitReached = currentUser?.role === 'Admin' && maxRecruitersLimit > 0 && currentActiveRecruitersCount >= maxRecruitersLimit;
 
   // Grid template functions for custom column renders - using Syncfusion ButtonComponent
   const actionsTemplate = (props) => {
@@ -940,6 +971,14 @@ export default function UserManagement() {
         showToast('Please select a role', 'Error');
         return;
       }
+      if (orgUserLimitReached && ORG_SCOPED_ROLES.includes(form.role)) {
+        showToast(`User limit reached (${maxUsersLimit}). You cannot create more users in this organization.`, 'Error');
+        return;
+      }
+      if (recruiterLimitReached && ['Recruiter', 'BoothAdmin'].includes(form.role)) {
+        showToast(`Recruiter limit reached (${maxRecruitersLimit}). You cannot create additional recruiters/booth admins.`, 'Error');
+        return;
+      }
       if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role) && !form.boothId) {
         showToast('Please select a booth for this role', 'Error');
         return;
@@ -1092,15 +1131,22 @@ export default function UserManagement() {
                     </ButtonComponent>
                     <ButtonComponent
                       cssClass="e-primary"
+                      disabled={orgUserLimitReached}
                       onClick={() => {
                         setEditingId(null);
                         setForm(getEmptyFormState());
                         setMode('create');
                       }}
+                      title={orgUserLimitReached ? `User limit reached (${maxUsersLimit})` : 'Create new user'}
                       aria-label="Create new user"
                     >
                       Create User
                     </ButtonComponent>
+                    {orgUserLimitReached && (
+                      <span style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '8px' }}>
+                        User limit reached ({currentOrgScopedUsersCount}/{maxUsersLimit})
+                      </span>
+                    )}
                   </>
                 ) : (
                   <ButtonComponent
@@ -1474,6 +1520,11 @@ export default function UserManagement() {
                 <Input label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
                 <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
                 <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
+                {recruiterLimitReached && ['Recruiter', 'BoothAdmin'].includes(form.role) && !editingId && (
+                  <p style={{ marginTop: '-4px', marginBottom: '10px', color: '#b91c1c', fontSize: '12px' }}>
+                    Recruiter limit reached ({currentActiveRecruitersCount}/{maxRecruitersLimit}). Select a different role.
+                  </p>
+                )}
                 {isSuperAdmin && !editingId && (
                   <Select
                     label="Select Organization"

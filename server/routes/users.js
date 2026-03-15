@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const Booth = require('../models/Booth');
+const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -1499,9 +1500,27 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
         };
 
         const VALID_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'];
+        const orgScopedRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
         const created = [];
         const skipped = [];
         const errors = [];
+        let orgLimits = null;
+        let currentOrgUsers = 0;
+        let currentRecruiters = 0;
+
+        // Preload organization limits/counters once for Admin mass-upload
+        if (req.orgId) {
+            orgLimits = await Organization.findById(req.orgId).select('limits').lean();
+            currentOrgUsers = await User.countDocuments({
+                organizationId: req.orgId,
+                role: { $in: orgScopedRoles }
+            });
+            currentRecruiters = await User.countDocuments({
+                organizationId: req.orgId,
+                role: { $in: ['Recruiter', 'BoothAdmin'] },
+                isActive: true
+            });
+        }
 
         for (let i = 0; i < rows.length; i++) {
             const row = normalizeRow(rows[i]);
@@ -1522,8 +1541,29 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
             if (existingUser) { skipped.push({ row: rowNum, email, reason: 'Email already exists' }); continue; }
 
             // Org scoping
-            const orgScopedRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
             const organizationId = orgScopedRoles.includes(role) ? (req.orgId || null) : null;
+
+            // Enforce org limits when uploading into an organization
+            if (organizationId && orgLimits?.limits?.maxUsers > 0 && orgScopedRoles.includes(role)) {
+                if (currentOrgUsers >= orgLimits.limits.maxUsers) {
+                    skipped.push({
+                        row: rowNum,
+                        email,
+                        reason: `User limit reached (${orgLimits.limits.maxUsers})`
+                    });
+                    continue;
+                }
+            }
+            if (organizationId && orgLimits?.limits?.maxRecruiters > 0 && ['Recruiter', 'BoothAdmin'].includes(role)) {
+                if (currentRecruiters >= orgLimits.limits.maxRecruiters) {
+                    skipped.push({
+                        row: rowNum,
+                        email,
+                        reason: `Recruiter limit reached (${orgLimits.limits.maxRecruiters})`
+                    });
+                    continue;
+                }
+            }
 
             try {
                 const user = new User({
@@ -1541,6 +1581,8 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
                 });
                 await user.save();
                 created.push({ row: rowNum, email, name, role });
+                if (organizationId && orgScopedRoles.includes(role)) currentOrgUsers += 1;
+                if (organizationId && ['Recruiter', 'BoothAdmin'].includes(role) && user.isActive) currentRecruiters += 1;
             } catch (err) {
                 errors.push({ row: rowNum, email, error: err.message });
             }

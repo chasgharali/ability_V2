@@ -70,6 +70,7 @@ export default function BoothManagement() {
     joinBoothButtonLink: ''
   });
   const [booths, setBooths] = useState([]);
+  const [boothsTotalCount, setBoothsTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [loadingBooths, setLoadingBooths] = useState(false);
@@ -488,6 +489,12 @@ export default function BoothManagement() {
   };
   const handleCreateBooth = async (e) => {
     e.preventDefault();
+    const orgBoothLimit = Number(user?.organizationId?.limits?.maxBooths || 0);
+    const orgBoothLimitReached = orgBoothLimit > 0 && boothsTotalCount >= orgBoothLimit;
+    if (!editingBoothId && orgBoothLimitReached) {
+      showToast(`Booth limit reached (${orgBoothLimit}). You cannot create more booths.`, 'Error', 5000);
+      return;
+    }
     setBoothSaving(true);
     try {
       // Require at least one selected event before calling the API
@@ -714,6 +721,7 @@ export default function BoothManagement() {
       const params = { page: 1, limit };
       const res = await listBooths(params);
       let items = res?.booths || [];
+      setBoothsTotalCount(Number(res?.total || 0));
       
       // Client-side filtering if search query exists
       if (activeSearchQuery && activeSearchQuery.trim()) {
@@ -766,6 +774,7 @@ export default function BoothManagement() {
       if (gen === loadRequestGenRef.current) {
         console.error('Failed to load booths', e);
         setBooths([]);
+        setBoothsTotalCount(0);
       }
     } finally { 
       if (gen === loadRequestGenRef.current) {
@@ -1160,6 +1169,8 @@ export default function BoothManagement() {
 
   // Check user role before rendering - all hooks must be called first
   const allowedRoles = ['Admin', 'AdminEvent', 'GlobalSupport'];
+  const orgBoothLimit = Number(user?.organizationId?.limits?.maxBooths || 0);
+  const orgBoothLimitReached = orgBoothLimit > 0 && boothsTotalCount >= orgBoothLimit;
   if (!user || !allowedRoles.includes(user.role)) {
     return null; // Will redirect via useEffect
   }
@@ -1234,9 +1245,19 @@ export default function BoothManagement() {
                         </ButtonComponent>
                       </>
                     )}
-                    <ButtonComponent cssClass="e-primary" onClick={() => setBoothMode('create')}>
+                    <ButtonComponent
+                      cssClass="e-primary"
+                      onClick={() => setBoothMode('create')}
+                      disabled={orgBoothLimitReached}
+                      title={orgBoothLimitReached ? `Booth limit reached (${orgBoothLimit})` : 'Create Booth'}
+                    >
                       Create Booth
                     </ButtonComponent>
+                    {orgBoothLimitReached && (
+                      <span style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '8px' }}>
+                        Booth limit reached ({boothsTotalCount}/{orgBoothLimit})
+                      </span>
+                    )}
                   </>
                 ) : (
                   <ButtonComponent cssClass="e-outline e-primary" onClick={() => setBoothMode('list')}>

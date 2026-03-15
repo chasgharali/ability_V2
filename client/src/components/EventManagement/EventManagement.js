@@ -309,6 +309,7 @@ export default function EventManagement() {
     }, [showToast]);
 
     const [events, setEvents] = useState([]);
+    const [eventsTotalCount, setEventsTotalCount] = useState(0);
     const [loadingList, setLoadingList] = useState(false);
     const [termsOptions, setTermsOptions] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -384,6 +385,20 @@ export default function EventManagement() {
                 params.status = statusFilter.trim();
             }
             const res = await listEvents(params);
+            const getTotalCount = (response) => (
+                Number(response?.pagination?.totalCount) ||
+                Number(response?.totalCount) ||
+                Number(response?.total) ||
+                Number(response?.events?.length) ||
+                0
+            );
+            let totalCount = getTotalCount(res);
+            // Keep org event usage independent of status filtering for limit gating
+            if (user?.role === 'Admin') {
+                const fullRes = await listEvents({ page: 1, limit: 1 });
+                totalCount = getTotalCount(fullRes);
+            }
+            setEventsTotalCount(totalCount);
             let items = res?.events || [];
             
             // Client-side filtering if search query exists
@@ -465,13 +480,14 @@ export default function EventManagement() {
             if (gen === loadRequestGenRef.current) {
                 console.error('Failed to load events', err);
                 setEvents([]);
+                setEventsTotalCount(0);
             }
         } finally {
             if (gen === loadRequestGenRef.current) {
                 setLoadingList(false);
             }
         }
-    }, [statusFilter, activeSearchQuery]);
+    }, [statusFilter, activeSearchQuery, user]);
 
     const loadTerms = useCallback(async () => {
         try {
@@ -801,6 +817,12 @@ export default function EventManagement() {
     };
 
     const handleNew = () => {
+        const orgEventLimit = Number(user?.organizationId?.limits?.maxEvents || 0);
+        const orgEventLimitReached = orgEventLimit > 0 && eventsTotalCount >= orgEventLimit;
+        if (orgEventLimitReached) {
+            showToast(`Event limit reached (${orgEventLimit}). You cannot create more events.`, 'Error');
+            return;
+        }
         resetForm();
         setMode('create');
     };
@@ -912,6 +934,12 @@ export default function EventManagement() {
         if (e && e.preventDefault) {
             e.preventDefault();
         }
+        const orgEventLimit = Number(user?.organizationId?.limits?.maxEvents || 0);
+        const orgEventLimitReached = orgEventLimit > 0 && eventsTotalCount >= orgEventLimit;
+        if (mode !== 'edit' && orgEventLimitReached) {
+            showToast(`Event limit reached (${orgEventLimit}). You cannot create more events.`, 'Error');
+            return;
+        }
         setSaving(true);
         try {
             // Convert datetime-local format to ISO string
@@ -973,6 +1001,9 @@ export default function EventManagement() {
             await loadEvents();
             resetForm();
             setMode('list');
+        } catch (err) {
+            console.error('Failed to save event', err);
+            showToast(err?.response?.data?.message || 'Failed to save event', 'Error');
         } finally {
             setSaving(false);
         }
@@ -1048,9 +1079,21 @@ export default function EventManagement() {
                                                 </ButtonComponent>
                                             </>
                                         )}
-                                        <ButtonComponent cssClass="e-primary" onClick={handleNew}>
+                                        <ButtonComponent
+                                            cssClass="e-primary"
+                                            onClick={handleNew}
+                                            disabled={Number(user?.organizationId?.limits?.maxEvents || 0) > 0 && eventsTotalCount >= Number(user?.organizationId?.limits?.maxEvents || 0)}
+                                            title={(Number(user?.organizationId?.limits?.maxEvents || 0) > 0 && eventsTotalCount >= Number(user?.organizationId?.limits?.maxEvents || 0))
+                                                ? `Event limit reached (${Number(user?.organizationId?.limits?.maxEvents || 0)})`
+                                                : 'Create Event'}
+                                        >
                                             Create Event
                                         </ButtonComponent>
+                                        {(Number(user?.organizationId?.limits?.maxEvents || 0) > 0 && eventsTotalCount >= Number(user?.organizationId?.limits?.maxEvents || 0)) && (
+                                            <span style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '8px' }}>
+                                                Event limit reached ({eventsTotalCount}/{Number(user?.organizationId?.limits?.maxEvents || 0)})
+                                            </span>
+                                        )}
                                     </>
                                 ) : (
                                     <ButtonComponent cssClass="e-outline e-primary" onClick={() => { resetForm(); setMode('list'); }}>
