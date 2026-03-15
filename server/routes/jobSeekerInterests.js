@@ -17,6 +17,7 @@ const router = express.Router();
 const Event = require('../models/Event');
 const Booth = require('../models/Booth');
 const User = require('../models/User');
+const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 
 const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
 
@@ -34,6 +35,15 @@ const resolveInterestOrgId = async (eventId, boothId) => {
         Booth.findById(boothId).select('organizationId').lean()
     ]);
     return event?.organizationId || booth?.organizationId || null;
+};
+
+const hasRegisteredEventInMetadata = (user, eventId) => {
+    const registrations = user?.metadata?.registeredEvents || [];
+    if (!Array.isArray(registrations) || !eventId) return false;
+    const eventIdString = String(eventId);
+    return registrations.some((registration) => (
+        registration?.id && String(registration.id) === eventIdString
+    ));
 };
 
 /**
@@ -62,8 +72,28 @@ router.post('/', authenticateToken, requireRole(['JobSeeker']), async (req, res)
         }
 
         if (!isSuperAdmin(req)) {
-            if (!req.orgId || organizationId.toString() !== req.orgId.toString()) {
+            // Org-scoped users must stay in their org. JobSeekers often have no orgId, so
+            // allow only when they are actually registered for this event/org.
+            if (req.orgId && organizationId.toString() !== req.orgId.toString()) {
                 return res.status(403).json({ error: 'Access denied', message: 'Cross-organization access denied' });
+            }
+
+            if (!req.orgId) {
+                const [isOrgMember, hasEventRegistration] = await Promise.all([
+                    RegisteredJobSeeker.exists({
+                        organizationId,
+                        jobSeekerId: req.user._id,
+                        eventId
+                    }),
+                    Promise.resolve(hasRegisteredEventInMetadata(req.user, eventId))
+                ]);
+
+                if (!isOrgMember && !hasEventRegistration) {
+                    return res.status(403).json({
+                        error: 'Access denied',
+                        message: 'You must be registered for this event before selecting employer interest'
+                    });
+                }
             }
         }
 
