@@ -65,6 +65,12 @@ const attachmentSchema = new mongoose.Schema({
 }, { _id: true });
 
 const meetingRecordSchema = new mongoose.Schema({
+    // Organization this meeting belongs to
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
+    },
     eventId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event',
@@ -281,6 +287,7 @@ const meetingRecordSchema = new mongoose.Schema({
 // Indexes for performance
 meetingRecordSchema.index({ eventId: 1 });
 meetingRecordSchema.index({ boothId: 1 });
+meetingRecordSchema.index({ organizationId: 1 });
 meetingRecordSchema.index({ recruiterId: 1 });
 meetingRecordSchema.index({ jobseekerId: 1 });
 meetingRecordSchema.index({ interpreterId: 1 });

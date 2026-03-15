@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const jobSeekerInterestSchema = new mongoose.Schema({
+    organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null
+    },
     jobSeeker: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -67,6 +72,7 @@ const jobSeekerInterestSchema = new mongoose.Schema({
 
 // Compound index to prevent duplicate interests
 jobSeekerInterestSchema.index({ jobSeeker: 1, event: 1, booth: 1 }, { unique: true });
+jobSeekerInterestSchema.index({ organizationId: 1 });
 
 // Update the updatedAt field before saving
 jobSeekerInterestSchema.pre('save', function(next) {

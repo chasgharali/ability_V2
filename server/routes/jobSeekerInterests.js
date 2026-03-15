@@ -14,6 +14,28 @@ const {
 
 const router = express.Router();
 
+const Event = require('../models/Event');
+const Booth = require('../models/Booth');
+const User = require('../models/User');
+
+const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
+
+const ensureOrgContext = (req, res) => {
+    if (!isSuperAdmin(req) && !req.orgId) {
+        res.status(403).json({ message: 'No organization assigned to user' });
+        return false;
+    }
+    return true;
+};
+
+const resolveInterestOrgId = async (eventId, boothId) => {
+    const [event, booth] = await Promise.all([
+        Event.findById(eventId).select('organizationId').lean(),
+        Booth.findById(boothId).select('organizationId').lean()
+    ]);
+    return event?.organizationId || booth?.organizationId || null;
+};
+
 /**
  * POST /api/job-seeker-interests
  * Create or update job seeker interest in a booth
@@ -31,6 +53,20 @@ router.post('/', authenticateToken, requireRole(['JobSeeker']), async (req, res)
             });
         }
 
+        const organizationId = await resolveInterestOrgId(eventId, boothId);
+        if (!organizationId) {
+            return res.status(400).json({
+                error: 'Invalid event or booth',
+                message: 'Could not resolve organization from event/booth'
+            });
+        }
+
+        if (!isSuperAdmin(req)) {
+            if (!req.orgId || organizationId.toString() !== req.orgId.toString()) {
+                return res.status(403).json({ error: 'Access denied', message: 'Cross-organization access denied' });
+            }
+        }
+
         // Check if interest already exists
         let interest = await JobSeekerInterest.findOne({
             jobSeeker: jobSeekerId,
@@ -45,6 +81,7 @@ router.post('/', authenticateToken, requireRole(['JobSeeker']), async (req, res)
             interest.notes = notes !== undefined ? notes : interest.notes;
             interest.company = company;
             interest.companyLogo = companyLogo || interest.companyLogo;
+            interest.organizationId = organizationId;
 
             await interest.save();
         } else {
@@ -53,6 +90,7 @@ router.post('/', authenticateToken, requireRole(['JobSeeker']), async (req, res)
                 jobSeeker: jobSeekerId,
                 event: eventId,
                 booth: boothId,
+                organizationId,
                 company,
                 companyLogo,
                 isInterested: isInterested !== undefined ? isInterested : true,
@@ -140,16 +178,20 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         console.log('JobSeeker Interests API called by user:', req.user.role, req.user._id);
         console.log('Query params:', { eventId, boothId, recruiterId, page, limit });
 
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         // Build query based on user role and filters
         let query = { isInterested: true };
+        if (!isSuperAdmin(req)) {
+            query.organizationId = req.orgId;
+        }
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
             // Recruiters can only see interests for their booths
             // Check both assignedBooth field on User AND administrators array on Booth
-            const Booth = require('../models/Booth');
-            const User = require('../models/User');
-            
             // Get the recruiter's assigned booth and events directly from User model
             const recruiter = await User.findById(req.user._id).select('assignedBooth assignedEvents');
             const boothIds = new Set();
@@ -163,7 +205,8 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             
             // Also check booths where recruiter is in administrators array
             const adminBooths = await Booth.find({
-                administrators: req.user._id
+                administrators: req.user._id,
+                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
             }).select('_id');
             
             adminBooths.forEach(booth => {
@@ -208,9 +251,6 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
             // Admins can filter by recruiter or see all
             if (recruiterId) {
-                const Booth = require('../models/Booth');
-                const User = require('../models/User');
-                
                 // Get the recruiter's assigned booth directly from User model
                 const recruiter = await User.findById(recruiterId).select('assignedBooth');
                 const boothIds = new Set();
@@ -223,7 +263,8 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
                 
                 // Also check booths where recruiter is in administrators array
                 const adminBooths = await Booth.find({
-                    administrators: recruiterId
+                    administrators: recruiterId,
+                    ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
                 }).select('_id');
                 
                 adminBooths.forEach(booth => {
@@ -251,7 +292,27 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
                 console.log('📅 Filtering by legacy event ID:', cleanEventId);
             }
         }
-        if (boothId) query.booth = boothId;
+        if (boothId) {
+            if (req.user.role === 'Recruiter' && query.booth && query.booth.$in) {
+                const requestedBoothId = boothId.toString();
+                const allowedBoothIds = query.booth.$in.map(id => id.toString());
+                if (!allowedBoothIds.includes(requestedBoothId)) {
+                    return res.json({
+                        interests: [],
+                        pagination: {
+                            currentPage: parseInt(page),
+                            totalPages: 0,
+                            totalInterests: 0,
+                            hasNext: false,
+                            hasPrev: parseInt(page) > 1
+                        }
+                    });
+                }
+                query.booth = new mongoose.Types.ObjectId(requestedBoothId);
+            } else {
+                query.booth = boothId;
+            }
+        }
 
         // Sort options
         const sortOptions = {};
@@ -267,7 +328,6 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
             
             // Find matching user IDs from User collection
-            const User = require('../models/User');
             const matchingUsers = await User.find({
                 $or: [
                     { name: searchRegex },
@@ -285,13 +345,16 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             const legacyUserIds = matchingUsers.map(u => u.legacyId).filter(Boolean);
             
             // Find matching event and booth IDs
-            const Event = require('../models/Event');
-            const Booth = require('../models/Booth');
-            
-            const matchingEvents = await Event.find({ name: searchRegex }).select('_id').lean();
+            const matchingEvents = await Event.find({
+                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId }),
+                name: searchRegex
+            }).select('_id').lean();
             const eventIds = matchingEvents.map(e => e._id);
             
-            const matchingBooths = await Booth.find({ name: searchRegex }).select('_id').lean();
+            const matchingBooths = await Booth.find({
+                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId }),
+                name: searchRegex
+            }).select('_id').lean();
             const boothIds = matchingBooths.map(b => b._id);
             
             // Build optimized search query - combine with existing query
@@ -362,10 +425,6 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         console.log('Found interests:', interests.length, 'Total matching query:', totalInterests);
 
         // Handle missing or unpopulated data - fetch actual user/event/booth data when populate returns null or string ID
-        const User = require('../models/User');
-        const Event = require('../models/Event');
-        const Booth = require('../models/Booth');
-
         // Collect all job seeker IDs that need to be looked up (both missing and legacy)
         const jobSeekerIdsToFetch = new Set();
         const legacyJobSeekerIds = [];
@@ -542,6 +601,17 @@ router.get('/booth/:boothId', authenticateToken, requireRole(['Recruiter', 'Admi
     try {
         const { boothId } = req.params;
 
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
+        if (!isSuperAdmin(req)) {
+            const booth = await Booth.findById(boothId).select('organizationId').lean();
+            if (!booth || !booth.organizationId || booth.organizationId.toString() !== req.orgId.toString()) {
+                return res.status(403).json({ error: 'Access denied', message: 'Cross-organization access denied' });
+            }
+        }
+
         const interests = await JobSeekerInterest.getBoothInterests(boothId);
 
         res.json({
@@ -570,9 +640,14 @@ router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSu
             return res.status(400).json({ message: 'No interest IDs provided' });
         }
 
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         // Delete the interests
         const result = await JobSeekerInterest.deleteMany({
-            _id: { $in: interestIds }
+            _id: { $in: interestIds },
+            ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
         });
 
         logger.info(`Bulk deleted ${result.deletedCount} job seeker interests by ${user.email}`);
@@ -673,6 +748,10 @@ router.put('/:interestId/toggle', authenticateToken, requireRole(['JobSeeker']),
  */
 router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         // Get query params and filter out undefined/empty values
         const eventId = req.query.eventId && req.query.eventId !== 'undefined' && req.query.eventId !== '' 
             ? req.query.eventId 
@@ -691,12 +770,12 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
         // Build query based on user role and filters (same logic as GET endpoint)
         // When no filters are provided, this will export ALL interests (for Admin/GlobalSupport)
         let query = { isInterested: true };
+        if (!isSuperAdmin(req)) {
+            query.organizationId = req.orgId;
+        }
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
-            const Booth = require('../models/Booth');
-            const User = require('../models/User');
-            
             const recruiter = await User.findById(new mongoose.Types.ObjectId(req.user._id)).select('assignedBooth');
             const boothIds = new Set();
             
@@ -706,7 +785,8 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             }
             
             const adminBooths = await Booth.find({
-                administrators: new mongoose.Types.ObjectId(req.user._id)
+                administrators: new mongoose.Types.ObjectId(req.user._id),
+                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
             }).select('_id');
             
             adminBooths.forEach(booth => {
@@ -724,9 +804,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             query.booth = { $in: boothIdsArray };
         } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
             if (recruiterId && recruiterId !== 'undefined' && recruiterId !== '' && mongoose.Types.ObjectId.isValid(recruiterId)) {
-                const Booth = require('../models/Booth');
-                const User = require('../models/User');
-                
                 const recruiter = await User.findById(new mongoose.Types.ObjectId(recruiterId)).select('assignedBooth');
                 const boothIds = new Set();
                 
@@ -736,7 +813,8 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 }
                 
                 const adminBooths = await Booth.find({
-                    administrators: new mongoose.Types.ObjectId(recruiterId)
+                    administrators: new mongoose.Types.ObjectId(recruiterId),
+                    ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
                 }).select('_id');
                 
                 adminBooths.forEach(booth => {
@@ -770,7 +848,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
         }
 
         // First, get ALL job seeker IDs from interests (before populate) to ensure we capture all IDs
-        const User = require('../models/User');
         const rawInterests = await JobSeekerInterest.find(query)
             .select('_id jobSeeker legacyJobSeekerId')
             .lean();
@@ -914,13 +991,16 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             const legacyUserIds = matchingUsers.map(u => u.legacyId).filter(Boolean);
             
             // Find matching event and booth IDs
-            const Event = require('../models/Event');
-            const Booth = require('../models/Booth');
-            
-            const matchingEvents = await Event.find({ name: searchRegex }).select('_id').lean();
+            const matchingEvents = await Event.find({
+                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId }),
+                name: searchRegex
+            }).select('_id').lean();
             const eventIds = matchingEvents.map(e => e._id);
             
-            const matchingBooths = await Booth.find({ name: searchRegex }).select('_id').lean();
+            const matchingBooths = await Booth.find({
+                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId }),
+                name: searchRegex
+            }).select('_id').lean();
             const boothIds = matchingBooths.map(b => b._id);
             
             // Build optimized search query
@@ -1025,7 +1105,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
         }
         
         // Batch fetch recruiters for booths that weren't populated properly
-        const Booth = require('../models/Booth');
         const boothIdsToFetch = new Set();
         interests.forEach(interest => {
             // If booth is not populated or administrators are missing, fetch it

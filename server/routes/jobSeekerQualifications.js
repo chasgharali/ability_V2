@@ -3,10 +3,21 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Event = require('../models/Event');
 const BoothQueue = require('../models/BoothQueue');
+const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 const router = express.Router();
+
+const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
+
+const ensureOrgContext = (req, res) => {
+    if (!isSuperAdmin(req) && !req.orgId) {
+        res.status(403).json({ message: 'No organization assigned to user' });
+        return false;
+    }
+    return true;
+};
 
 // Label mappings for human-readable output
 const EXPERIENCE_LEVEL_MAP = {
@@ -184,9 +195,22 @@ const getLabel = (map, value) => {
  * - eventId: job seekers who registered for the event (metadata.registeredEvents)
  * Returns null when no filter is applied (full report).
  */
-async function getJobSeekerIdsForEvent(eventId) {
+async function getJobSeekerIdsForEvent(req, eventId) {
     const e = (v) => (v && String(v).trim()) || '';
     const ev = e(eventId);
+    const orgScoped = !isSuperAdmin(req);
+
+    if (orgScoped) {
+        const query = { organizationId: req.orgId };
+        if (ev && mongoose.Types.ObjectId.isValid(ev)) {
+            const scopedEvent = await Event.findOne({ _id: ev, organizationId: req.orgId }).select('_id').lean();
+            if (!scopedEvent) return [];
+            query.eventId = scopedEvent._id;
+        } else if (ev) {
+            return [];
+        }
+        return RegisteredJobSeeker.find(query).distinct('jobSeekerId');
+    }
 
     if (ev) {
         const conditions = [{ 'metadata.registeredEvents': { $elemMatch: { slug: eventId } } }];
@@ -212,13 +236,17 @@ async function getJobSeekerIdsForEvent(eventId) {
  */
 router.get('/report', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         const { eventId } = req.query;
 
         // Build base query - only get JobSeekers
         let query = { role: 'JobSeeker' };
 
         // Filter by event if provided
-        const ids = await getJobSeekerIdsForEvent(eventId);
+        const ids = await getJobSeekerIdsForEvent(req, eventId);
         if (ids !== null) {
             query._id = { $in: ids };
         }
@@ -369,9 +397,14 @@ router.get('/report', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
  */
 router.get('/events', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         // Get all events that are published, active, or completed (not draft or cancelled)
         const events = await Event.find({ 
-            status: { $in: ['published', 'active', 'completed'] }
+            status: { $in: ['published', 'active', 'completed'] },
+            ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
         })
             .select('_id name slug start end status')
             .sort({ start: -1 })
@@ -393,13 +426,17 @@ router.get('/events', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
  */
 router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         const { eventId } = req.query;
 
         // Build base query - only get JobSeekers
         let query = { role: 'JobSeeker' };
 
         // Filter by event if provided
-        const ids = await getJobSeekerIdsForEvent(eventId);
+        const ids = await getJobSeekerIdsForEvent(req, eventId);
         if (ids !== null) {
             query._id = { $in: ids };
         }
@@ -407,7 +444,10 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         // Get event name for filename if filtering
         let eventName = 'Full';
         if (eventId) {
-            const event = await Event.findById(eventId).select('name').lean();
+            const event = await Event.findOne({
+                _id: eventId,
+                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
+            }).select('name').lean();
             if (event) {
                 eventName = event.name.replace(/[^a-zA-Z0-9]/g, '_');
             }

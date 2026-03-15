@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const BoothQueue = require('../models/BoothQueue');
+const Event = require('../models/Event');
+const Booth = require('../models/Booth');
+const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { toCountryDisplayName } = require('../utils/countryNames');
 const { toRaceDisplayName } = require('../utils/raceNames');
@@ -10,6 +13,16 @@ const logger = require('../utils/logger');
 
 const router = express.Router();
 
+const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
+
+const ensureOrgContext = (req, res) => {
+    if (!isSuperAdmin(req) && !req.orgId) {
+        res.status(403).json({ message: 'No organization assigned to user' });
+        return false;
+    }
+    return true;
+};
+
 /**
  * Resolve job seeker IDs for event/booth filter.
  * - eventId only: job seekers who registered for the event (metadata.registeredEvents)
@@ -17,16 +30,44 @@ const router = express.Router();
  * - boothId only: job seekers who joined that booth's queue
  * Returns null when no filter is applied.
  */
-async function getJobSeekerIdsForEvent(eventId, boothId) {
+async function getJobSeekerIdsForEvent(req, eventId, boothId) {
   const e = (v) => (v && String(v).trim()) || '';
   const ev = e(eventId);
   const bv = e(boothId);
+  const orgScoped = !isSuperAdmin(req);
+  const orgId = req.orgId ? req.orgId.toString() : null;
+
+  let orgRegisteredIds = null;
+  if (orgScoped) {
+    const registeredQuery = { organizationId: req.orgId };
+    if (ev && mongoose.Types.ObjectId.isValid(ev)) {
+      const scopedEvent = await Event.findOne({ _id: ev, organizationId: req.orgId }).select('_id').lean();
+      if (!scopedEvent) return [];
+      registeredQuery.eventId = scopedEvent._id;
+    } else if (ev) {
+      return [];
+    }
+
+    orgRegisteredIds = await RegisteredJobSeeker.find(registeredQuery).distinct('jobSeekerId');
+  }
 
   if (bv && mongoose.Types.ObjectId.isValid(boothId)) {
+    if (orgScoped) {
+      const scopedBooth = await Booth.findOne({ _id: boothId, organizationId: req.orgId }).select('_id').lean();
+      if (!scopedBooth) return [];
+    }
+
     const q = { booth: new mongoose.Types.ObjectId(boothId) };
     if (ev && mongoose.Types.ObjectId.isValid(eventId)) q.event = new mongoose.Types.ObjectId(eventId);
     const ids = await BoothQueue.find(q).distinct('jobSeeker');
-    return ids.length ? ids : null;
+    if (!orgScoped) return ids.length ? ids : null;
+    const orgSet = new Set(orgRegisteredIds.map(id => id.toString()));
+    const scopedIds = ids.filter(id => orgSet.has(id.toString()));
+    return scopedIds.length ? scopedIds : [];
+  }
+
+  if (orgScoped) {
+    return orgRegisteredIds;
   }
 
   if (ev) {
@@ -53,6 +94,10 @@ async function getJobSeekerIdsForEvent(eventId, boothId) {
  */
 router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         const {
             page = 1,
             limit = 50,
@@ -73,7 +118,7 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
         };
 
         // Filter by event or booth: event = registered for event; booth = joined that booth's queue
-        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        const ids = await getJobSeekerIdsForEvent(req, eventId, boothId);
         if (ids) query._id = { $in: ids };
 
         // Search filter (by name or email)
@@ -151,6 +196,10 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
  */
 router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         const {
             eventId,
             boothId
@@ -162,7 +211,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
         };
 
         // Filter by event or booth: event = registered for event; booth = joined that booth's queue
-        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        const ids = await getJobSeekerIdsForEvent(req, eventId, boothId);
         if (ids) {
             query._id = { $in: ids };
             logger.info(`Found ${ids.length} job seekers for eventId=${eventId}, boothId=${boothId}`);
@@ -294,6 +343,10 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
  */
 router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         const { eventId, boothId } = req.query;
 
         // Build base query - only get JobSeekers
@@ -302,7 +355,7 @@ router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']),
         };
 
         // Filter by event or booth: event = registered for event; booth = joined that booth's queue
-        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        const ids = await getJobSeekerIdsForEvent(req, eventId, boothId);
         if (ids) baseQuery._id = { $in: ids };
 
         // Build query for users with survey data
@@ -382,6 +435,10 @@ router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']),
  */
 router.get('/breakdown', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
     try {
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         const { eventId, boothId } = req.query;
 
         // Build query - only get JobSeekers
@@ -390,7 +447,7 @@ router.get('/breakdown', authenticateToken, requireRole(['Admin', 'GlobalSupport
         };
 
         // Filter by event or booth: event = registered for event; booth = joined that booth's queue
-        const ids = await getJobSeekerIdsForEvent(eventId, boothId);
+        const ids = await getJobSeekerIdsForEvent(req, eventId, boothId);
         if (ids) query._id = { $in: ids };
 
         // Get all users matching the filter (no pagination)

@@ -15,6 +15,49 @@ const {
     getVeteranStatusLabel
 } = require('../utils/profileFieldLabels');
 
+const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
+
+const ensureOrgContext = (req, res) => {
+    if (!isSuperAdmin(req) && !req.orgId) {
+        res.status(403).json({ message: 'No organization assigned to user' });
+        return false;
+    }
+    return true;
+};
+
+const buildMeetingOrgScope = async (req) => {
+    if (isSuperAdmin(req)) return {};
+
+    const orgId = req.orgId.toString();
+    const orgEvents = await Event.find({ organizationId: orgId }).select('_id').lean();
+    const orgEventIds = orgEvents.map(event => event._id);
+
+    // Backward compatibility for legacy rows that still have null organizationId.
+    return {
+        $or: [
+            { organizationId: req.orgId },
+            {
+                $and: [
+                    { $or: [{ organizationId: null }, { organizationId: { $exists: false } }] },
+                    { eventId: { $in: orgEventIds } }
+                ]
+            }
+        ]
+    };
+};
+
+const canAccessMeetingByOrg = async (meetingRecord, req) => {
+    if (isSuperAdmin(req)) return true;
+    if (!req.orgId) return false;
+
+    if (meetingRecord.organizationId) {
+        return meetingRecord.organizationId.toString() === req.orgId.toString();
+    }
+
+    const event = await Event.findById(meetingRecord.eventId).select('organizationId').lean();
+    return !!event?.organizationId && event.organizationId.toString() === req.orgId.toString();
+};
+
 // Get meeting records with filtering
 router.get('/', authenticateToken, async (req, res) => {
     try {
@@ -61,8 +104,12 @@ router.get('/', authenticateToken, async (req, res) => {
             });
         }
 
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         // Build query based on user role and filters
-        let query = {};
+        let query = await buildMeetingOrgScope(req);
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
@@ -131,6 +178,7 @@ router.get('/', authenticateToken, async (req, res) => {
             const User = require('../models/User');
             const Event = require('../models/Event');
             const Booth = require('../models/Booth');
+            const orgScopedFilter = !isSuperAdmin(req) ? { organizationId: req.orgId } : {};
             
             const [matchingUsers, matchingEvents, matchingBooths] = await Promise.all([
                 User.find({
@@ -151,8 +199,8 @@ router.get('/', authenticateToken, async (req, res) => {
                         { 'metadata.profile.languages': searchRegex }
                     ]
                 }).select('_id').lean(),
-                Event.find({ name: searchRegex }).select('_id').lean(),
-                Booth.find({ name: searchRegex }).select('_id').lean()
+                Event.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean(),
+                Booth.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean()
             ]);
             
             const userIds = matchingUsers.map(u => u._id);
@@ -298,9 +346,14 @@ router.get('/:id', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'Meeting record not found' });
         }
 
+        if (!(await canAccessMeetingByOrg(meetingRecord, req))) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
         // Check access permissions
         let canAccess = req.user.role === 'Admin' ||
             req.user.role === 'GlobalSupport' ||
+            req.user.role === 'SuperAdmin' ||
             meetingRecord.jobseekerId._id.toString() === req.user._id.toString() ||
             (meetingRecord.interpreterId && meetingRecord.interpreterId._id.toString() === req.user._id.toString());
 
@@ -360,9 +413,17 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             return res.status(404).json({ message: 'Video call not found' });
         }
 
+        const recordOrgId = videoCall.event?.organizationId || videoCall.booth?.organizationId || req.orgId || null;
+        if (!isSuperAdmin(req) && (!recordOrgId || recordOrgId.toString() !== req.orgId.toString())) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
         // Check if meeting record already exists
         const existingRecord = await MeetingRecord.findOne({ videoCallId });
         if (existingRecord) {
+            if (!(await canAccessMeetingByOrg(existingRecord, req))) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
             return res.json(existingRecord);
         }
 
@@ -384,6 +445,7 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
 
         // Create meeting record
         const meetingRecord = new MeetingRecord({
+            organizationId: recordOrgId,
             eventId: videoCall.event._id,
             boothId: videoCall.booth._id,
             queueId: videoCall.queueEntry._id,
@@ -435,9 +497,14 @@ router.post('/:id/rating', authenticateToken, requireRole(['Recruiter', 'Admin',
             return res.status(404).json({ message: 'Meeting record not found' });
         }
 
+        if (!(await canAccessMeetingByOrg(meetingRecord, req))) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
         // Check if user is the recruiter or admin
         const canRate = req.user.role === 'Admin' ||
             req.user.role === 'GlobalSupport' ||
+            req.user.role === 'SuperAdmin' ||
             meetingRecord.recruiterId.toString() === req.user._id.toString();
 
         if (!canRate) {
@@ -485,7 +552,11 @@ router.get('/stats/overview', authenticateToken, requireRole(['Admin', 'GlobalSu
             });
         }
 
-        let matchQuery = {};
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
+        let matchQuery = await buildMeetingOrgScope(req);
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
@@ -596,7 +667,11 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
     try {
         const { recruiterId, eventId, boothId, status, startDate, endDate, search } = req.query;
 
-        let query = {};
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
+        let query = await buildMeetingOrgScope(req);
 
         // Role-based filtering
         if (req.user.role === 'Recruiter') {
@@ -636,6 +711,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
             
             // Find matching user IDs (job seekers, recruiters)
+            const orgScopedFilter = !isSuperAdmin(req) ? { organizationId: req.orgId } : {};
             const matchingUsers = await User.find({
                 $or: [
                     { name: searchRegex },
@@ -651,10 +727,10 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             const userIds = matchingUsers.map(u => u._id);
             
             // Find matching event and booth IDs
-            const matchingEvents = await Event.find({ name: searchRegex }).select('_id').lean();
+            const matchingEvents = await Event.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean();
             const eventIds = matchingEvents.map(e => e._id);
             
-            const matchingBooths = await Booth.find({ name: searchRegex }).select('_id').lean();
+            const matchingBooths = await Booth.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean();
             const boothIds = matchingBooths.map(b => b._id);
             
             // Build optimized search query
@@ -978,6 +1054,10 @@ router.get('/export/resumes', authenticateToken, requireRole(['Admin', 'GlobalSu
         const { recruiterId, eventId, boothId, status, startDate, endDate, selectedIds } = req.query;
         const mongoose = require('mongoose');
 
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
         console.log('🎯 Resume Export Request:', {
             user: req.user.email,
             role: req.user.role,
@@ -1005,7 +1085,7 @@ router.get('/export/resumes', authenticateToken, requireRole(['Admin', 'GlobalSu
             });
         }
 
-        let query = {};
+        let query = await buildMeetingOrgScope(req);
 
         // If specific record IDs are provided, use those (selected records)
         if (selectedIds) {
@@ -1143,9 +1223,16 @@ router.delete('/bulk-delete', authenticateToken, requireRole(['Admin', 'GlobalSu
             return res.status(400).json({ message: 'No record IDs provided' });
         }
 
+        if (!ensureOrgContext(req, res)) {
+            return;
+        }
+
+        const scopeQuery = await buildMeetingOrgScope(req);
+
         // Delete the records
         const result = await MeetingRecord.deleteMany({
-            _id: { $in: recordIds }
+            _id: { $in: recordIds },
+            ...scopeQuery
         });
 
         console.log(`Deleted ${result.deletedCount} meeting records`);
