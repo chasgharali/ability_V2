@@ -581,7 +581,9 @@ export default function BoothManagement() {
         showToast('Booth updated', 'Success', 2500);
       } else {
         const res = await createBooths(payload);
-        const createdCount = Array.isArray(res?.created) ? res.created.length : 0;
+        const createdFromArray = Array.isArray(res?.created) ? res.created.length : 0;
+        const createdFromSingle = res?.booth ? 1 : 0;
+        const createdCount = createdFromArray + createdFromSingle;
         const skipped = Array.isArray(res?.skipped) ? res.skipped : [];
         if (skipped.length) {
           console.warn('Some events skipped due to limits:', skipped);
