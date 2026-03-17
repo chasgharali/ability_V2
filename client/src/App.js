@@ -182,7 +182,7 @@ function App() {
                                     <Route path="/instructions" element={<RequireAuth><NoteViewUser type="instruction" /></RequireAuth>} />
                                     <Route path="/role-messages" element={<RequireAuth><RoleMessageManagement /></RequireAuth>} />
                                     {/* Organization Management (SuperAdmin) */}
-                                    <Route path="/organizations" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin', 'Admin']}><OrganizationManagement /></RequireRole></RequireAuth>} />
+                                    <Route path="/organizations" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><OrganizationManagement /></RequireRole></RequireAuth>} />
                                     <Route path="/org-users" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><UserOrgAssignment /></RequireRole></RequireAuth>} />
                                     {/* Booth Queue Routes */}
                                     <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />

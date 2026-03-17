@@ -14,7 +14,7 @@ import '../Dashboard/Dashboard.css';
 import './OrganizationManagement.css';
 
 export default function OrganizationManagement() {
-  const { user } = useAuth();
+  const { user, startImpersonation } = useAuth();
   const navigate = useNavigate();
 
   const [organizations, setOrganizations] = useState([]);
@@ -31,12 +31,13 @@ export default function OrganizationManagement() {
   const [editOrg, setEditOrg] = useState(null);
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const [accessingOrgId, setAccessingOrgId] = useState(null);
 
   const isSuperAdmin = user?.role === 'SuperAdmin';
 
   // Redirect if not authorized
   useEffect(() => {
-    if (user && !['SuperAdmin', 'Admin'].includes(user.role)) {
+    if (user && user.role !== 'SuperAdmin') {
       navigate('/dashboard', { replace: true });
     }
   }, [user, navigate]);
@@ -83,6 +84,21 @@ export default function OrganizationManagement() {
       setShowStats(true);
     } catch (err) {
       alert('Failed to load stats');
+    }
+  };
+
+  const handleAccessOrganization = async (org) => {
+    if (!isSuperAdmin || !org?._id || accessingOrgId) return;
+    setAccessingOrgId(org._id);
+    try {
+      const result = await startImpersonation(org._id);
+      if (!result?.success) {
+        alert(result?.error || 'Failed to access organization');
+        return;
+      }
+      navigate('/dashboard');
+    } finally {
+      setAccessingOrgId(null);
     }
   };
 
@@ -167,6 +183,15 @@ export default function OrganizationManagement() {
                 >
                   View Stats
                 </button>
+                {isSuperAdmin && (
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleAccessOrganization(org)}
+                    disabled={accessingOrgId === org._id}
+                  >
+                    {accessingOrgId === org._id ? 'Accessing...' : 'Access'}
+                  </button>
+                )}
                 <button
                   className="btn btn-sm btn-secondary"
                   onClick={() => { setEditOrg(org); setShowForm(true); }}

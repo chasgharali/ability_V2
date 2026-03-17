@@ -13,6 +13,22 @@ const ORG_SCOPED_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Int
  */
 const isGlobalRole = (role) => GLOBAL_ROLES.includes(role);
 
+const buildAuthContextFromDecoded = (decoded = {}) => {
+    const isImpersonating = decoded?.isImpersonating === true;
+    if (!isImpersonating) {
+        return { isImpersonating: false, impersonation: null };
+    }
+
+    return {
+        isImpersonating: true,
+        impersonation: {
+            impersonatorUserId: decoded.impersonatorUserId || null,
+            impersonatorRole: decoded.impersonatorRole || null,
+            targetOrganizationId: decoded.targetOrganizationId || null
+        }
+    };
+};
+
 /**
  * Middleware to authenticate JWT tokens.
  * Verifies the token and attaches user information to req.user.
@@ -64,6 +80,7 @@ const authenticateToken = async (req, res, next) => {
         }
 
         req.user = user;
+        req.authContext = buildAuthContextFromDecoded(decoded);
         // Convenience accessor — null for SuperAdmin / JobSeeker
         req.orgId = user.organizationId?._id || user.organizationId || null;
         next();
@@ -320,6 +337,7 @@ const optionalAuth = async (req, res, next) => {
 
             if (user && user.isActive) {
                 req.user = user;
+                req.authContext = buildAuthContextFromDecoded(decoded);
                 req.orgId = user.organizationId?._id || user.organizationId || null;
             }
         }
@@ -397,6 +415,7 @@ const validateRefreshToken = async (req, res, next) => {
         }
 
         req.user = user;
+        req.authContext = buildAuthContextFromDecoded(decoded);
         req.refreshToken = refreshToken;
         next();
     } catch (error) {

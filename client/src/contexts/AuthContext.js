@@ -17,6 +17,20 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const orgInactiveAlertShownRef = useRef(false);
 
+    const withAuthContext = (userProfile, authContext) => {
+        if (!userProfile) return null;
+        const impersonation = authContext?.impersonation || null;
+        const isImpersonating = authContext?.isImpersonating === true;
+
+        return {
+            ...userProfile,
+            isImpersonating,
+            impersonatorRole: impersonation?.impersonatorRole || null,
+            impersonatorUserId: impersonation?.impersonatorUserId || null,
+            impersonatedOrganizationId: impersonation?.targetOrganizationId || null
+        };
+    };
+
     const handleOrganizationInactive = (message) => {
         const inactiveMessage = message || 'Your organization status is Inactive. You cannot proceed.';
 
@@ -174,11 +188,12 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.get('/api/auth/me', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setUser(response.data.user);
+            setUser(withAuthContext(response.data.user, response.data.authContext));
         } catch (error) {
             console.error('Token verification failed:', error);
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
+            setUser(null);
         } finally {
             setLoading(false);
         }
@@ -193,7 +208,14 @@ export const AuthProvider = ({ children }) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Update local user with server's canonical data
-            setUser(response.data.user);
+            setUser(prev => withAuthContext(response.data.user, {
+                isImpersonating: prev?.isImpersonating === true,
+                impersonation: prev?.isImpersonating ? {
+                    impersonatorRole: prev?.impersonatorRole,
+                    impersonatorUserId: prev?.impersonatorUserId,
+                    targetOrganizationId: prev?.impersonatedOrganizationId
+                } : null
+            }));
             return { success: true, user: response.data.user };
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Profile update failed';
@@ -233,7 +255,7 @@ export const AuthProvider = ({ children }) => {
             const { tokens, user } = response.data;
             localStorage.setItem('token', tokens.accessToken);
             localStorage.setItem('refreshToken', tokens.refreshToken);
-            setUser(user);
+            setUser(withAuthContext(user, response.data.authContext));
             return { success: true };
         } catch (error) {            
             const status = error.response?.status;
@@ -277,10 +299,52 @@ export const AuthProvider = ({ children }) => {
             const { tokens, user } = response.data;
             localStorage.setItem('token', tokens.accessToken);
             localStorage.setItem('refreshToken', tokens.refreshToken);
-            setUser(user);
+            setUser(withAuthContext(user, response.data.authContext));
             return { success: true };
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Registration failed';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        }
+    };
+
+    const startImpersonation = async (organizationId) => {
+        try {
+            setError(null);
+            const response = await axios.post('/api/auth/impersonate/start', { organizationId });
+            const { tokens, user: impersonatedUser, authContext } = response.data || {};
+
+            if (!tokens?.accessToken || !tokens?.refreshToken || !impersonatedUser) {
+                throw new Error('Invalid impersonation response');
+            }
+
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
+            setUser(withAuthContext(impersonatedUser, authContext));
+            return { success: true };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to access organization admin panel';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        }
+    };
+
+    const stopImpersonation = async () => {
+        try {
+            setError(null);
+            const response = await axios.post('/api/auth/impersonate/stop');
+            const { tokens, user: restoredUser, authContext } = response.data || {};
+
+            if (!tokens?.accessToken || !tokens?.refreshToken || !restoredUser) {
+                throw new Error('Invalid stop impersonation response');
+            }
+
+            localStorage.setItem('token', tokens.accessToken);
+            localStorage.setItem('refreshToken', tokens.refreshToken);
+            setUser(withAuthContext(restoredUser, authContext));
+            return { success: true };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to exit impersonation';
             setError(errorMessage);
             return { success: false, error: errorMessage };
         }
@@ -300,6 +364,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        startImpersonation,
+        stopImpersonation,
         updateProfile,
         changePassword,
         refreshAuthToken,

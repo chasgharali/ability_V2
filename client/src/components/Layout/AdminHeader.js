@@ -8,7 +8,7 @@ import './AdminHeader.css';
 import settingsAPI from '../../services/settings';
 
 export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, brandingLogoAlt, secondaryLogo, secondaryLogoAlt, hideMenuToggle = false, hideLogout = false }) {
-  const { user, logout } = useAuth();
+  const { user, logout, stopImpersonation } = useAuth();
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
   const [brandingLogoAltFromAPI, setBrandingLogoAltFromAPI] = useState('');
@@ -90,6 +90,15 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
     }
   };
 
+  const handleExitToSuperAdmin = async () => {
+    const result = await stopImpersonation();
+    if (!result?.success) {
+      window.alert(result?.error || 'Failed to exit impersonation');
+      return;
+    }
+    navigate('/organizations', { replace: true });
+  };
+
   // Simple state for mobile menu toggle - sync with body class
   const [mobileOpen, setMobileOpen] = useState(false);
   
@@ -146,6 +155,7 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
 
   const isBoothUser = ['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support'].includes(user?.role);
   const isJobSeeker = user?.role === 'JobSeeker';
+  const canExitToSuperAdmin = user?.isImpersonating && user?.impersonatorRole === 'SuperAdmin';
 
   // Add body class for booth users and jobseekers on mobile (for sidebar positioning)
   useEffect(() => {
@@ -213,6 +223,15 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
         )}
         <div className="user-info admin-user-info">
           <span className="user-name admin-user-name">{user?.name || 'User'} / {user?.role || 'Guest'}</span>
+          {canExitToSuperAdmin && (
+            <button
+              onClick={handleExitToSuperAdmin}
+              className="exit-superadmin-button"
+              aria-label="Exit to Super Admin"
+            >
+              Exit to Super Admin
+            </button>
+          )}
           <div className="connection-status admin-connection">
             <MdRefresh className="refresh-icon" />
             <span className="connection-text">Connection: Active</span>

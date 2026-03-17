@@ -47,12 +47,19 @@ const normalizeEmailForLookup = (email) => {
  * @param {Object} user - User object
  * @returns {Object} - Access and refresh tokens
  */
-const generateTokens = (user) => {
+const generateTokens = (user, impersonationClaims = null) => {
     const payload = {
         userId: user._id,
         email: user.email,
         role: user.role
     };
+
+    if (impersonationClaims?.isImpersonating) {
+        payload.isImpersonating = true;
+        payload.impersonatorUserId = impersonationClaims.impersonatorUserId;
+        payload.impersonatorRole = impersonationClaims.impersonatorRole;
+        payload.targetOrganizationId = impersonationClaims.targetOrganizationId;
+    }
 
     // Generate lifetime tokens (no expiry)
     // Tokens will never expire unless explicitly set via environment variables
@@ -71,7 +78,21 @@ const generateTokens = (user) => {
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET, accessTokenOptions);
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, refreshTokenOptions);
 
-    return { accessToken, refreshToken };
+    // Keep alias for backward compatibility with existing refresh route usage.
+    return { accessToken, refreshToken, newRefreshToken: refreshToken };
+};
+
+const extractImpersonationClaimsFromRequest = (req) => {
+    if (!req?.authContext?.isImpersonating || !req?.authContext?.impersonation) {
+        return null;
+    }
+
+    return {
+        isImpersonating: true,
+        impersonatorUserId: req.authContext.impersonation.impersonatorUserId,
+        impersonatorRole: req.authContext.impersonation.impersonatorRole,
+        targetOrganizationId: req.authContext.impersonation.targetOrganizationId
+    };
 };
 
 /**
@@ -590,9 +611,10 @@ router.post('/login', [
 router.post('/refresh', validateRefreshToken, async (req, res) => {
     try {
         const { user, refreshToken } = req;
+        const impersonationClaims = extractImpersonationClaimsFromRequest(req);
 
         // Generate new tokens
-        const { accessToken, newRefreshToken } = generateTokens(user);
+        const { accessToken, newRefreshToken } = generateTokens(user, impersonationClaims);
 
         // Remove old refresh token and add new one
         user.refreshTokens = user.refreshTokens.filter(token => token.token !== refreshToken);
@@ -692,12 +714,172 @@ router.post('/logout', authenticateToken, async (req, res) => {
 });
 
 /**
+ * POST /api/auth/impersonate/start
+ * Start an impersonation session as an organization Admin/AdminEvent.
+ */
+router.post('/impersonate/start', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'SuperAdmin') {
+            return res.status(403).json({
+                error: 'Insufficient permissions',
+                message: 'Only SuperAdmin can start impersonation'
+            });
+        }
+
+        const { organizationId } = req.body || {};
+        if (!organizationId || !mongoose.Types.ObjectId.isValid(organizationId)) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: 'A valid organizationId is required'
+            });
+        }
+
+        const organization = await Organization.findById(organizationId).select('_id name slug isActive');
+        if (!organization) {
+            return res.status(404).json({
+                error: 'Organization not found',
+                message: 'Organization does not exist'
+            });
+        }
+
+        if (!organization.isActive) {
+            return res.status(403).json({
+                error: 'OrganizationInactive',
+                message: 'Cannot impersonate an inactive organization'
+            });
+        }
+
+        // Prefer an active Admin, then fallback to AdminEvent.
+        let targetUser = await User.findOne({
+            organizationId,
+            role: 'Admin',
+            isActive: true
+        }).select('+legacyPassword');
+
+        if (!targetUser) {
+            targetUser = await User.findOne({
+                organizationId,
+                role: 'AdminEvent',
+                isActive: true
+            }).select('+legacyPassword');
+        }
+
+        if (!targetUser) {
+            return res.status(404).json({
+                error: 'No organization admin found',
+                message: 'No active Admin/AdminEvent user exists for this organization'
+            });
+        }
+
+        const impersonationClaims = {
+            isImpersonating: true,
+            impersonatorUserId: req.user._id.toString(),
+            impersonatorRole: req.user.role,
+            targetOrganizationId: organization._id.toString()
+        };
+
+        const { accessToken, refreshToken } = generateTokens(targetUser, impersonationClaims);
+
+        // Persist refresh token on impersonated account for standard refresh lifecycle.
+        targetUser.refreshTokens.push({ token: refreshToken });
+        await targetUser.save();
+
+        const impersonatedUser = await User.findById(targetUser._id)
+            .select('-hashedPassword -refreshTokens')
+            .populate('organizationId', 'name slug logoUrl isActive limits');
+
+        logger.info(`SuperAdmin ${req.user.email} started impersonation for org ${organization.slug}`);
+
+        return res.json({
+            message: 'Impersonation started',
+            user: impersonatedUser.getPublicProfile(),
+            authContext: {
+                isImpersonating: true,
+                impersonation: impersonationClaims
+            },
+            tokens: {
+                accessToken,
+                refreshToken
+            }
+        });
+    } catch (error) {
+        logger.error('Start impersonation error:', error);
+        return res.status(500).json({
+            error: 'Impersonation start failed',
+            message: 'An error occurred while starting impersonation'
+        });
+    }
+});
+
+/**
+ * POST /api/auth/impersonate/stop
+ * Exit impersonation and restore the original SuperAdmin session.
+ */
+router.post('/impersonate/stop', authenticateToken, async (req, res) => {
+    try {
+        const impersonation = req.authContext?.impersonation;
+        const isImpersonating = req.authContext?.isImpersonating === true;
+
+        if (!isImpersonating || !impersonation?.impersonatorUserId) {
+            return res.status(400).json({
+                error: 'No active impersonation',
+                message: 'Current session is not impersonating'
+            });
+        }
+
+        if (impersonation.impersonatorRole !== 'SuperAdmin') {
+            return res.status(403).json({
+                error: 'Invalid impersonation context',
+                message: 'Only SuperAdmin-origin sessions can be restored with this action'
+            });
+        }
+
+        const originalUser = await User.findById(impersonation.impersonatorUserId)
+            .select('+legacyPassword')
+            .populate('organizationId', 'name slug logoUrl isActive limits');
+
+        if (!originalUser || !originalUser.isActive || originalUser.role !== 'SuperAdmin') {
+            return res.status(403).json({
+                error: 'Original session unavailable',
+                message: 'Unable to restore SuperAdmin session'
+            });
+        }
+
+        const { accessToken, refreshToken } = generateTokens(originalUser);
+        originalUser.refreshTokens.push({ token: refreshToken });
+        await originalUser.save();
+
+        logger.info(`Impersonation stopped by ${req.user.email}; restored ${originalUser.email}`);
+
+        return res.json({
+            message: 'Impersonation stopped',
+            user: originalUser.getPublicProfile(),
+            authContext: {
+                isImpersonating: false,
+                impersonation: null
+            },
+            tokens: {
+                accessToken,
+                refreshToken
+            }
+        });
+    } catch (error) {
+        logger.error('Stop impersonation error:', error);
+        return res.status(500).json({
+            error: 'Impersonation stop failed',
+            message: 'An error occurred while stopping impersonation'
+        });
+    }
+});
+
+/**
  * GET /api/auth/me
  * Get current user information
  */
 router.get('/me', authenticateToken, (req, res) => {
     res.json({
-        user: req.user.getPublicProfile()
+        user: req.user.getPublicProfile(),
+        authContext: req.authContext || { isImpersonating: false, impersonation: null }
     });
 });
 

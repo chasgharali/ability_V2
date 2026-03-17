@@ -6,6 +6,7 @@ const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const Booth = require('../models/Booth');
 const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
+const mongoose = require('mongoose');
 
 const router = express.Router();
 
@@ -467,6 +468,7 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
     try {
         const { role, isActive, page = 1, limit = 50, search, eventId, organizationId: orgFilterId, sortBy = 'createdAt', sortDir = 'desc' } = req.query;
         const currentUser = req.user;
+        const requestingJobSeekers = role === 'JobSeeker';
 
         logger.info(`Get users request - role: ${role}, isActive: ${isActive}, search: ${search}, eventId: ${eventId}, orgFilter: ${orgFilterId}, requestedBy: ${currentUser.email} (${currentUser.role})`);
 
@@ -521,16 +523,65 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
             }
 
             // Org scoping: Admin sees only users in their own organization
-            // SuperAdmin and GlobalSupport see all users (optionally filtered by orgFilterId)
+            // SuperAdmin and GlobalSupport see all users (optionally filtered by orgFilterId).
+            // NOTE: JobSeekers are not directly org-assigned; org filtering for JobSeekers is
+            // derived from RegisteredJobSeeker below.
             if (currentUser.role === 'Admin' && req.orgId) {
                 query.organizationId = req.orgId;
             } else if (['SuperAdmin', 'GlobalSupport'].includes(currentUser.role) && orgFilterId) {
-                if (orgFilterId === 'unassigned') {
+                if (requestingJobSeekers) {
+                    // Skip direct organizationId filter for JobSeekers.
+                } else if (orgFilterId === 'unassigned') {
                     query.organizationId = null;
                 } else {
                     query.organizationId = orgFilterId;
                 }
             }
+        }
+
+        // Registration-based org scoping for JobSeekers.
+        // This enforces: selected organization (+ optional selected event) -> allowed jobSeekerIds.
+        if (
+            ['SuperAdmin', 'GlobalSupport'].includes(currentUser.role) &&
+            requestingJobSeekers &&
+            orgFilterId
+        ) {
+            let allowedJobSeekerIds = [];
+
+            if (orgFilterId !== 'unassigned' && mongoose.Types.ObjectId.isValid(orgFilterId)) {
+                const registrationQuery = {
+                    organizationId: new mongoose.Types.ObjectId(orgFilterId)
+                };
+
+                // If eventId is provided, intersect org + event in registration lookup.
+                if (eventId) {
+                    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+                        logger.info(`Invalid eventId "${eventId}" for org-filtered JobSeekers; returning empty set`);
+                        allowedJobSeekerIds = [];
+                    } else {
+                        registrationQuery.eventId = new mongoose.Types.ObjectId(eventId);
+                    }
+                }
+
+                if (allowedJobSeekerIds.length === 0 && (!eventId || mongoose.Types.ObjectId.isValid(eventId))) {
+                    allowedJobSeekerIds = await RegisteredJobSeeker.distinct('jobSeekerId', registrationQuery);
+                }
+            }
+
+            if (Object.keys(query).length > 0) {
+                query = {
+                    $and: [
+                        query,
+                        { _id: { $in: allowedJobSeekerIds } }
+                    ]
+                };
+            } else {
+                query = { _id: { $in: allowedJobSeekerIds } };
+            }
+
+            logger.info(
+                `Registration-based org filter applied for JobSeekers: org=${orgFilterId}, event=${eventId || 'any'}, matched=${allowedJobSeekerIds.length}`
+            );
         }
 
         if (isActive !== undefined) {
@@ -600,9 +651,11 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
             logger.info(`Number of search conditions: ${searchConditions.length}`);
         }
 
-        // Filter by event registration
-        if (eventId) {
-            const mongoose = require('mongoose');
+        // Filter by event registration (metadata-based path).
+        // Skip this when JobSeekers are already org-filtered via RegisteredJobSeeker, because
+        // org+event intersection is handled in the registration lookup above.
+        const shouldApplyMetadataEventFilter = !(requestingJobSeekers && orgFilterId);
+        if (eventId && shouldApplyMetadataEventFilter) {
             // Convert to ObjectId if it's a valid MongoDB ID
             if (mongoose.Types.ObjectId.isValid(eventId)) {
                 const objectId = new mongoose.Types.ObjectId(eventId);
@@ -707,8 +760,7 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
         }
 
         // Debug: If eventId filter is active, log a sample of registered events data
-        if (eventId) {
-            const mongoose = require('mongoose');
+        if (eventId && shouldApplyMetadataEventFilter) {
             if (mongoose.Types.ObjectId.isValid(eventId)) {
                 const objectId = new mongoose.Types.ObjectId(eventId);
                 const objectIdString = objectId.toString();
@@ -802,10 +854,13 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
 
         // Calculate server-side stats for filtered results using MongoDB queries
         // Run all count queries in parallel for better performance
+        const withAdditionalCondition = (baseQuery, condition) => ({
+            $and: [baseQuery, condition]
+        });
         const [activeCount, inactiveCount, verifiedCount] = await Promise.all([
-            User.countDocuments({ ...query, isActive: true }),
-            User.countDocuments({ ...query, isActive: false }),
-            User.countDocuments({ ...query, emailVerified: true })
+            User.countDocuments(withAdditionalCondition(query, { isActive: true })),
+            User.countDocuments(withAdditionalCondition(query, { isActive: false })),
+            User.countDocuments(withAdditionalCondition(query, { emailVerified: true }))
         ]);
 
         logger.info(`Stats - Active: ${activeCount}, Inactive: ${inactiveCount}, Verified: ${verifiedCount}`);
