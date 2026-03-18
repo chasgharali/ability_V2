@@ -1113,6 +1113,13 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'Globa
             });
         }
 
+        if (role === 'SuperAdmin' && user.role !== 'SuperAdmin') {
+            return res.status(403).json({
+                error: 'Insufficient permissions',
+                message: 'Only SuperAdmin can assign SuperAdmin role'
+            });
+        }
+
         // Store old email if email is being changed (for notifications)
         const oldEmail = targetUser.email;
         const emailChanged = email !== undefined && email !== null && normalizeEmailForLookup(email.trim()) !== normalizeEmailForLookup(oldEmail);

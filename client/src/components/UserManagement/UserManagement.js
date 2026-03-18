@@ -130,17 +130,20 @@ export default function UserManagement() {
   }, [activeSearchQuery]);
 
 
-  const roleOptionsAll = useMemo(() => [
-    { value: 'Admin', label: 'Admin' },
-    { value: 'AdminEvent', label: 'Event Admin' },
-    { value: 'BoothAdmin', label: 'Booth Admin' },
-    { value: 'Recruiter', label: 'Recruiter' },
-    { value: 'Interpreter', label: 'Interpreter' },
-    { value: 'GlobalInterpreter', label: 'Global Interpreter' },
-    { value: 'Support', label: 'Support' },
-    { value: 'GlobalSupport', label: 'Global Support' },
-    { value: 'JobSeeker', label: 'Job Seeker' },
-  ], []);
+  const roleOptionsAll = useMemo(() => {
+    const baseRoles = [
+      { value: 'Admin', label: 'Admin' },
+      { value: 'AdminEvent', label: 'Event Admin' },
+      { value: 'BoothAdmin', label: 'Booth Admin' },
+      { value: 'Recruiter', label: 'Recruiter' },
+      { value: 'Interpreter', label: 'Interpreter' },
+      { value: 'GlobalInterpreter', label: 'Global Interpreter' },
+      { value: 'Support', label: 'Support' },
+      { value: 'GlobalSupport', label: 'Global Support' },
+      { value: 'JobSeeker', label: 'Job Seeker' },
+    ];
+    return isSuperAdmin ? [{ value: 'SuperAdmin', label: 'Super Admin' }, ...baseRoles] : baseRoles;
+  }, [isSuperAdmin]);
   // Hide JobSeeker from filter and create lists
   const roleOptionsNoJobSeeker = useMemo(() => roleOptionsAll.filter(r => r.value !== 'JobSeeker'), [roleOptionsAll]);
 
@@ -1040,7 +1043,7 @@ export default function UserManagement() {
         }
         const created = await createUser(payload);
         const createdUserId = created?.user?._id || created?.user?.id;
-        if (isSuperAdmin && form.organizationId && createdUserId) {
+        if (isSuperAdmin && ORG_SCOPED_ROLES.includes(form.role) && form.organizationId && createdUserId) {
           await assignUserToOrg(form.organizationId, createdUserId);
         }
         showToast('User created', 'Success');
@@ -1525,7 +1528,7 @@ export default function UserManagement() {
                     Recruiter limit reached ({currentActiveRecruitersCount}/{maxRecruitersLimit}). Select a different role.
                   </p>
                 )}
-                {isSuperAdmin && !editingId && (
+                {isSuperAdmin && !editingId && form.role !== 'SuperAdmin' && (
                   <Select
                     label="Select Organization"
                     value={form.organizationId}

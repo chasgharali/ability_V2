@@ -113,8 +113,16 @@ router.post('/register', optionalAuth, [
         .withMessage('Password must be at least 8 characters long'),
     body('role')
         .optional()
-        .isIn(['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'])
-        .withMessage('Invalid role specified'),
+        .custom((value, { req }) => {
+            const allowedRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'];
+            if (req.user?.role === 'SuperAdmin') {
+                allowedRoles.push('SuperAdmin');
+            }
+            if (!allowedRoles.includes(value)) {
+                throw new Error('Invalid role specified');
+            }
+            return true;
+        }),
     body('phoneNumber')
         .optional({ nullable: true, checkFalsy: true })
         .customSanitizer(v => typeof v === 'string' ? v.trim() : v)
