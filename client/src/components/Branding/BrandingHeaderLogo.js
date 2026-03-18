@@ -3,6 +3,7 @@ import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
 import settingsAPI from '../../services/settings';
+import { uploadImageToS3 } from '../../services/uploads';
 
 const DEFAULT_ICON = 'https://upload.wikimedia.org/wikipedia/commons/7/70/Example.png';
 
@@ -11,6 +12,7 @@ export default function BrandingHeaderLogo() {
   const [brandingLogoAlt, setBrandingLogoAlt] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
   // Fetch logo on mount
   useEffect(() => {
@@ -37,15 +39,15 @@ export default function BrandingHeaderLogo() {
     }
   };
 
-  const saveBrandingLogo = async (dataUrl) => {
+  const saveBrandingLogo = async (logoUrl) => {
     try {
-      if (dataUrl) {
-        await settingsAPI.setSetting('branding_logo', dataUrl, 'Header logo for the application');
+      if (logoUrl) {
+        await settingsAPI.setSetting('branding_logo', logoUrl, 'Header logo for the application');
       } else {
         await settingsAPI.deleteSetting('branding_logo');
       }
-      setBrandingLogo(dataUrl || '');
-      setMessage(dataUrl ? 'Header logo updated' : 'Header logo removed');
+      setBrandingLogo(logoUrl || '');
+      setMessage(logoUrl ? 'Header logo updated' : 'Header logo removed');
       setTimeout(() => setMessage(''), 2000);
     } catch (e) {
       console.error('Failed to save header logo:', e);
@@ -72,14 +74,26 @@ export default function BrandingHeaderLogo() {
 
   const onPickLogoFile = async (file) => {
     if (!file) return;
-    if (!/^image\//.test(file.type)) { setMessage('Please select an image file'); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      saveBrandingLogo(dataUrl);
-    };
-    reader.onerror = () => setMessage('Failed to read file');
-    reader.readAsDataURL(file);
+    if (!/^image\//.test(file.type)) {
+      setMessage('Please select an image file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setMessage('Uploading logo...');
+      const { downloadUrl } = await uploadImageToS3(file);
+      if (!downloadUrl) {
+        throw new Error('Upload did not return a logo URL');
+      }
+      await saveBrandingLogo(downloadUrl);
+    } catch (error) {
+      console.error('Failed to upload branding logo:', error);
+      setMessage('Failed to upload logo to storage');
+      setTimeout(() => setMessage(''), 2000);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -99,12 +113,12 @@ export default function BrandingHeaderLogo() {
               <h4>Current Logo</h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <img src={brandingLogo || DEFAULT_ICON} alt="Current header logo" style={{ height: 36, objectFit: 'contain', border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 6 }} />
-                <button className="dashboard-button" style={{ width: 'auto' }} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
+                <button className="dashboard-button" style={{ width: 'auto' }} disabled={loading || uploading} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
               </div>
               <div className="upload-actions" style={{ marginTop: '1rem' }}>
-                <label className="dashboard-button" style={{ width: 'auto', cursor: 'pointer' }}>
-                  Choose Image
-                  <input type="file" accept="image/*" onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
+                <label className="dashboard-button" style={{ width: 'auto', cursor: loading || uploading ? 'not-allowed' : 'pointer', opacity: loading || uploading ? 0.7 : 1 }}>
+                  {loading ? 'Loading...' : uploading ? 'Uploading...' : 'Choose Image'}
+                  <input type="file" accept="image/*" disabled={loading || uploading} onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
                 </label>
               </div>
               

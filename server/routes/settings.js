@@ -46,8 +46,8 @@ router.get('/:key', async (req, res) => {
 
 // @route   POST /api/settings
 // @desc    Create or update a setting
-// @access  Private (Admin/GlobalSupport only)
-router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+// @access  Private (Admin/GlobalSupport/SuperAdmin only)
+router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'SuperAdmin']), async (req, res) => {
   try {
     const { key, value, description } = req.body;
     
@@ -84,8 +84,8 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asy
 
 // @route   DELETE /api/settings/:key
 // @desc    Delete a setting
-// @access  Private (Admin/GlobalSupport only)
-router.delete('/:key', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+// @access  Private (Admin/GlobalSupport/SuperAdmin only)
+router.delete('/:key', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'SuperAdmin']), async (req, res) => {
   try {
     const { key } = req.params;
     const result = await Settings.deleteOne({ key });

@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -12,6 +13,7 @@ const connectDB = require('./config/database');
 const { connectRedis } = require('./config/redis');
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
+const Settings = require('./models/Settings');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -243,6 +245,15 @@ const startServer = async () => {
         // Connect to MongoDB (optional in development)
         await connectDB();
         logger.info('MongoDB connection attempted');
+
+        // One-time index normalization for legacy settings index conflicts.
+        if (mongoose.connection.readyState === 1) {
+            try {
+                await Settings.normalizeLegacyIndexes(logger);
+            } catch (indexError) {
+                logger.error('Settings index normalization failed:', indexError);
+            }
+        }
 
         // Connect to Redis (optional in development)
         const redisClient = await connectRedis();

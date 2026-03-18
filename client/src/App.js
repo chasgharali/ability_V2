@@ -148,7 +148,16 @@ function App() {
                                     <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/boothmanagement" element={<RequireAuth><RequireRole allowedRoles={['Admin', 'AdminEvent', 'GlobalSupport']}><BoothManagement /></RequireRole></RequireAuth>} />
                                     <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
-                                    <Route path="/branding" element={<RequireAuth><BrandingHeaderLogo /></RequireAuth>} />
+                                    <Route
+                                        path="/branding"
+                                        element={
+                                            <RequireAuth>
+                                                <RequireRole allowedRoles={['Admin', 'GlobalSupport', 'SuperAdmin']}>
+                                                    <BrandingHeaderLogo />
+                                                </RequireRole>
+                                            </RequireAuth>
+                                        }
+                                    />
                                     <Route path="/usermanagement" element={<RequireAuth><UserManagement /></RequireAuth>} />
                                     <Route path="/jobseekermanagement" element={
                                         <RequireAuth>
