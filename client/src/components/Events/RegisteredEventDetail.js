@@ -106,14 +106,14 @@ export default function RegisteredEventDetail() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <Helmet>
         <title>{event?.name ? `You are registered for ${event.name}` : 'Registered Event'} - abilityconnect</title>
       </Helmet>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="my-current-registrations" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}

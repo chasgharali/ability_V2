@@ -93,18 +93,17 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
   };
 
   return (
-    <div 
-      className="incall-chat-panel" 
+    <div
+      className="incall-chat-panel"
       ref={panelRef}
-      role="complementary" 
-      aria-label="Chat panel"
-      aria-live="polite"
+      role="complementary"
+      aria-label="Meeting Group Chat"
     >
       {/* Screen reader announcements */}
       <div id="chat-announcements" className="sr-only" aria-live="assertive"></div>
       
       {/* Header */}
-      <div className="incall-chat-header" role="banner">
+      <div className="incall-chat-header" role="heading" aria-level={2}>
         <div className="incall-chat-title">
           <FiMessageCircle size={20} aria-hidden="true" />
           <h2>Chat</h2>
@@ -123,11 +122,13 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
       </div>
 
       {/* Messages */}
-      <div 
-        className="incall-chat-messages" 
-        role="log" 
-        aria-label="Chat messages"
+      <div
+        className="incall-chat-messages"
+        role="log"
+        aria-label="Chat messages log"
         aria-live="polite"
+        aria-relevant="additions"
+        aria-atomic="false"
         tabIndex={0}
       >
         {messages.length === 0 ? (

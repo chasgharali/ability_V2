@@ -351,7 +351,8 @@
 .phone-field-wrapper select:focus,
 .phone-field-wrapper input:focus {
   background: #ffffff;
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   border-color: #000000;
 }
 

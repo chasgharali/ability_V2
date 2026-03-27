@@ -168,8 +168,8 @@ const LoginPage = () => {
         <Helmet>
             <title>{userType === 'jobseeker' ? 'Job Seeker Login' : 'Company & Staff Login'} - abilityconnect</title>
         </Helmet>
-        <a href="#login-form" className="skip-link">Skip to login form</a>
-        <main className="login-container" aria-label="main content">
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+        <main id="main-content" className="login-container" aria-label="main content">
             <div className="login-card">
                 {/* Back to Landing Link */}
                 <Link to="/" className="login-back-link" aria-label="Back to landing page">

@@ -122,7 +122,8 @@
 }
 
 .login-form-input:focus {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
     border-color: var(--login-accent-color);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }

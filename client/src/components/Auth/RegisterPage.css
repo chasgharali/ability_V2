@@ -192,7 +192,8 @@
 .register-phone-input:focus {
     border: none !important;
     box-shadow: none !important;
-    outline: none !important;
+    outline: 3px solid #005aff !important;
+    outline-offset: 4px !important;
 }
 
 /* Syncfusion DropDownList styling for country code - match other inputs */
@@ -573,7 +574,8 @@
 }
 
 .register-form-input:focus {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
     border-color: var(--register-accent-color);
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }

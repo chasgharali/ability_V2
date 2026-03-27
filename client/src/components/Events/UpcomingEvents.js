@@ -111,11 +111,11 @@ export default function UpcomingEvents() {
         <title>Upcoming Events - abilityconnect</title>
       </Helmet>
       <div className="dashboard">
-        <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <AdminHeader />
         <div className="dashboard-layout">
           <AdminSidebar active="events" />
-          <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+          <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
             <div className="dashboard-content">
             <div className="upcoming-events-container">
               <header className="upcoming-events-header">

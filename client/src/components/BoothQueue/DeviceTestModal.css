@@ -174,7 +174,8 @@
 }
 
 .device-select:focus {
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   border-color: #667eea;
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
   background: #ffffff;
@@ -263,7 +264,8 @@
 }
 
 .btn-back:focus {
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -524,7 +526,8 @@
 }
 
 .device-test-modal .btn-cancel:focus {
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
@@ -560,7 +563,8 @@
 }
 
 .device-test-modal .btn-save:focus {
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
 }
 

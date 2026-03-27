@@ -165,7 +165,8 @@
 }
 
 .feedback-textarea:focus {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
     border-color: #333;
 }
 

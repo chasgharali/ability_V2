@@ -88,14 +88,10 @@
     background-color: #1f2937;
 }
 
-.login-option-button:focus {
+.login-option-button:focus-visible {
     background-color: #1f2937;
-    outline: 3px solid #000000;
-    outline-offset: 2px;
-}
-
-.login-option-button:focus:not(:focus-visible) {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
 }
 
 .login-option-button:focus-visible {

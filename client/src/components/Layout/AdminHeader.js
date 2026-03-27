@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { MdLogout, MdRefresh, MdMenu, MdClose } from 'react-icons/md';
+import { MdLogout, MdRefresh } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './AdminHeader.css';
 import settingsAPI from '../../services/settings';
 
-export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, brandingLogoAlt, secondaryLogo, secondaryLogoAlt, hideMenuToggle = false, hideLogout = false }) {
+export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, brandingLogoAlt, secondaryLogo, secondaryLogoAlt, hideLogout = false }) {
   const { user, logout, stopImpersonation } = useAuth();
   const navigate = useNavigate();
   const [brandingLogoFromAPI, setBrandingLogoFromAPI] = useState('');
@@ -99,27 +99,6 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
     navigate('/organizations', { replace: true });
   };
 
-  // Simple state for mobile menu toggle - sync with body class
-  const [mobileOpen, setMobileOpen] = useState(false);
-  
-  // Sync icon with body class state (so it updates when sidebar closes via overlay or other methods)
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const updateState = () => {
-        setMobileOpen(document.body.classList.contains('sidebar-open'));
-      };
-      
-      // Check initial state
-      updateState();
-      
-      // Watch for body class changes
-      const observer = new MutationObserver(updateState);
-      observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-      
-      return () => observer.disconnect();
-    }
-  }, []);
-  
   // Close sidebar on mount for small screens (fresh start on each page)
   useEffect(() => {
     if (typeof document !== 'undefined' && typeof window !== 'undefined') {
@@ -140,19 +119,6 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
     }
   }, []);
   
-  // Simple toggle function - just add/remove body class
-  const toggleMobile = () => {
-    if (typeof document !== 'undefined') {
-      const isOpen = document.body.classList.contains('sidebar-open');
-      if (isOpen) {
-        document.body.classList.remove('sidebar-open');
-      } else {
-        document.body.classList.add('sidebar-open');
-      }
-      // State will update automatically via MutationObserver
-    }
-  };
-
   const isBoothUser = ['Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support'].includes(user?.role);
   const isJobSeeker = user?.role === 'JobSeeker';
   const canExitToSuperAdmin = user?.isImpersonating && user?.impersonatorRole === 'SuperAdmin';
@@ -170,7 +136,7 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
   }, [isBoothUser, isJobSeeker, brandingLogo, secondaryLogo]);
 
   return (
-    <header className={`dashboard-header admin-header ${isJobSeeker ? 'admin-header-jobseeker' : ''}`}>
+    <header role="banner" className={`dashboard-header admin-header ${isJobSeeker ? 'admin-header-jobseeker' : ''}`}>
       {/* Mobile logo bar for booth users and jobseekers - shows on mobile/tablet only */}
       {(isBoothUser || isJobSeeker) && (brandingLogo || secondaryLogo) && (
         <div className="mobile-logo-bar">
@@ -193,8 +159,8 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
         <div className="header-left">
           {/* Logo link is first in DOM so it gets focus after the skip link (tab order: skip link → logo → logout) */}
           {brandingLogo && brandingLogo.trim() !== '' && (
-            <a href="/dashboard" className={`header-logo-link ${(isBoothUser || isJobSeeker) ? 'hide-on-mobile-booth' : ''}`} aria-label="Go to dashboard home">
-              <img src={brandingLogo} alt={finalBrandingLogoAlt} className="header-logo" />
+            <a href="/dashboard" className={`header-logo-link ${(isBoothUser || isJobSeeker) ? 'hide-on-mobile-booth' : ''}`} aria-label="abilityCONNECT home">
+              <img src={brandingLogo} alt="abilityCONNECT home" className="header-logo" />
             </a>
           )}
           {/* Secondary (booth) logo if provided - not on left for Recruiters/Interpreters/Support/JobSeekers */}
@@ -207,12 +173,7 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
               <span className="header-text">ABILITY Job Fair</span>
             </a>
           )}
-          {/* Menu toggle comes after logo in DOM so logo is 2nd in tab order; CSS positions it visually first on mobile */}
-          {!hideMenuToggle && (
-            <button className="mobile-menu-toggle" onClick={toggleMobile} aria-label="Toggle navigation menu">
-              {mobileOpen ? <MdClose /> : <MdMenu />}
-            </button>
-          )}
+          {/* Menu toggle is rendered inside the sidebar nav landmark for accessibility */}
         </div>
 
         {/* Centered booth logo for Recruiter, Interpreter, Support, and JobSeekers - hide on mobile */}
@@ -223,6 +184,13 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
         )}
         <div className="user-info admin-user-info">
           <span className="user-name admin-user-name">{user?.name || 'User'} / {user?.role || 'Guest'}</span>
+          <div className="connection-status admin-connection" aria-label="Online status: Active">
+            <MdRefresh className="refresh-icon" aria-hidden="true" />
+            <span className="connection-text">Connection: Active</span>
+            <span className="connection-text-mobile">Active</span>
+            <div className="connection-dot" aria-hidden="true"></div>
+          </div>
+          {/* Exit to Super Admin must come before Logout in DOM so Logout is always last in tab order */}
           {canExitToSuperAdmin && (
             <button
               onClick={handleExitToSuperAdmin}
@@ -232,15 +200,10 @@ export default function AdminHeader({ onLogout, brandingLogo: brandingLogoProp, 
               Exit to Super Admin
             </button>
           )}
-          <div className="connection-status admin-connection">
-            <MdRefresh className="refresh-icon" />
-            <span className="connection-text">Connection: Active</span>
-            <span className="connection-text-mobile">Active</span>
-            <div className="connection-dot"></div>
-          </div>
           {!hideLogout && (
             <button onClick={handleLogout} className="logout-button" aria-label="Logout">
-              <MdLogout />
+              <MdLogout aria-hidden="true" />
+              <span className="logout-button-text">Logout</span>
             </button>
           )}
         </div>

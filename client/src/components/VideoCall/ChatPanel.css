@@ -52,9 +52,9 @@
 }
 
 .incall-chat-message-count {
-  color: #666;
+  color: #595959;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .incall-chat-close-button {
@@ -72,9 +72,9 @@
   color: #333;
 }
 
-.incall-chat-close-button:focus {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
+.incall-chat-close-button:focus-visible {
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
 }
 
 /* Messages */
@@ -141,8 +141,8 @@
   border-radius: 15px;
   padding: 8px 12px;
   text-align: center;
-  font-size: 13px;
-  color: #666;
+  font-size: 0.8125rem;
+  color: #595959;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -156,7 +156,7 @@
 /* Regular Messages */
 .incall-chat-message-sender {
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .incall-chat-sender-name {
@@ -196,12 +196,13 @@
 
 .incall-chat-message-bubble p {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
+/* Timestamps: min 0.75rem, min 7:1 contrast ratio (#595959 on white = 7.0:1) */
 .incall-chat-message-time {
-  font-size: 11px;
-  color: #999;
+  font-size: 0.75rem;
+  color: #595959;
   margin-top: 2px;
 }
 
@@ -216,8 +217,8 @@
 /* Typing Indicator */
 .incall-chat-typing-indicator {
   padding: 8px 15px;
-  font-size: 12px;
-  color: #666;
+  font-size: 0.75rem;
+  color: #595959;
   font-style: italic;
   border-top: 1px solid #eee;
   background: #f8f9fa;
@@ -241,18 +242,21 @@
   border: 1px solid #ddd;
   border-radius: 20px;
   padding: 10px 15px;
-  font-size: 14px;
+  font-size: 0.875rem;
   resize: none;
-  outline: none;
   transition: border-color 0.2s ease;
   max-height: 100px;
   min-height: 40px;
 }
 
-.incall-chat-message-input:focus {
-  border-color: #007bff;
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
+.incall-chat-message-input:hover {
+  border-color: #aaa;
+}
+
+.incall-chat-message-input:focus-visible {
+  border-color: #005aff;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
 }
 
 .incall-chat-send-button {
@@ -289,9 +293,9 @@
   opacity: 0.6;
 }
 
-.incall-chat-send-button:focus {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
+.incall-chat-send-button:focus-visible {
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
 }
 
 .incall-chat-input-footer {
@@ -299,8 +303,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 15px 10px;
-  font-size: 11px;
-  color: #999;
+  font-size: 0.6875rem;
+  color: #595959;
 }
 
 .incall-chat-character-count {

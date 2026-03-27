@@ -705,11 +705,11 @@ export default function RegisteredJobSeekerManagement() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="jobseekers" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1}>
+        <main id="main-content" className="dashboard-main" tabIndex={-1}>
           {pageContent}
         </main>
       </div>

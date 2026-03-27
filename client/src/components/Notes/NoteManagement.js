@@ -152,11 +152,11 @@ const NoteManagement = () => {
     if (loading) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="notes" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading notes...</div>
                     </main>
                 </div>
@@ -167,11 +167,11 @@ const NoteManagement = () => {
     if (error) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="notes" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="error">
                             <h3>Error</h3>
                             <p>{error}</p>
@@ -185,11 +185,11 @@ const NoteManagement = () => {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="notes" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h1>Notes Management</h1>
                         <div className="bm-header-actions">

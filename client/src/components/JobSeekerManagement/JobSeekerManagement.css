@@ -272,7 +272,8 @@
 /* Focus state - beautiful animation */
 .e-grid .e-toolbar .e-search input.e-input:focus,
 .e-grid .e-toolbar .e-search input.e-input-search:focus {
-  outline: none !important;
+  outline: 3px solid #005aff !important;
+  outline-offset: 4px !important;
   border-color: #111111 !important;
   box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
   background: #ffffff !important;
@@ -1378,7 +1379,6 @@ body .jsm-delete-dialog.e-dialog {
   white-space: nowrap;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   position: relative;
-  outline: none;
   line-height: 1.4;
   display: inline-flex;
   align-items: center;
@@ -1393,7 +1393,8 @@ body .jsm-delete-dialog.e-dialog {
 }
 
 .jsm-tab-btn:focus {
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -1544,7 +1545,8 @@ body .jsm-delete-dialog.e-dialog {
 }
 
 .jsm-select:focus {
-  outline: none !important;
+  outline: 3px solid #005aff !important;
+  outline-offset: 4px !important;
   border-color: #111111 !important;
   box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1) !important;
 }
@@ -2192,7 +2194,6 @@ body .jsm-delete-dialog.e-dialog {
   font-size: 14px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  outline: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   background-color: #fff;
@@ -2200,6 +2201,8 @@ body .jsm-delete-dialog.e-dialog {
 }
 
 .jsm-search-input-native:focus {
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   border-color: #111111;
   box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.1);
 }

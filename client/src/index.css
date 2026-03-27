@@ -22,10 +22,19 @@ code {
         monospace;
 }
 
-/* High contrast focus indicators */
-*:focus {
-    outline: 3px solid #000000;
-    outline-offset: 2px;
+/* High contrast focus indicators — keyboard only (:focus-visible) */
+*:focus-visible {
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
+}
+
+/* Silence programmatic focus on non-interactive elements (h1, main, app-root) */
+h1:focus,
+h2:focus,
+h3:focus,
+main:focus,
+#app-root:focus {
+    outline: none;
 }
 
 /* Skip link for accessibility */
@@ -89,11 +98,19 @@ select {
     border-radius: 4px;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
+input:hover,
+textarea:hover,
+select:hover {
     border-color: #000000;
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    border-color: #005aff;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
+    box-shadow: none;
 }
 
 /* Link styles */
@@ -106,9 +123,9 @@ a:hover {
     text-decoration: none;
 }
 
-a:focus {
-    outline: 3px solid #000000;
-    outline-offset: 2px;
+a:focus-visible {
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
 }
 
 /* Utility classes */
@@ -182,4 +199,22 @@ html body .e-popup.e-column-chooser .e-css.e-checkbox-wrapper .e-frame.e-check {
     background-color: #000000 !important;
     border-color: transparent !important;
     color: #ffffff !important;
+}
+
+/* ── WCAG 2.4.7 Global Focus Halo Override ──────────────────────────
+   Overrides any component-level outline:none on interactive elements.
+   :focus-visible targets keyboard navigation only, not mouse clicks.
+   ──────────────────────────────────────────────────────────────────── */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[tabindex="0"]:focus-visible {
+    outline: 3px solid #005aff !important;
+    outline-offset: 4px !important;
+    box-shadow: none !important;
 }

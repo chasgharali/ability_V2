@@ -429,7 +429,7 @@ export default function RegistrationWizard() {
   }, [termsDocuments, termsAccepted]);
 
   if (loading || fetching) {
-    return <div className="dashboard"><a href="#dashboard-main" className="skip-link">Skip to main content</a><div className="dashboard-layout"><main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content"><div>Loading…</div></main></div></div>;
+    return <div className="dashboard"><a href="#main-content" className="skip-link">Skip to main content</a><div className="dashboard-layout"><main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content"><div>Loading…</div></main></div></div>;
   }
   if (!user) return null;
 
@@ -449,14 +449,14 @@ export default function RegistrationWizard() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <Helmet>
         <title>{pageTitle}</title>
       </Helmet>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="events" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <h1 ref={pageHeadingRef} style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{event?.name || 'Event Registration'}</h1>
             {isAlreadyRegistered ? (

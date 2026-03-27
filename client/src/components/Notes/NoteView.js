@@ -37,11 +37,11 @@ const NoteView = () => {
     if (loading) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="notes" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading note...</div>
                     </main>
                 </div>
@@ -52,11 +52,11 @@ const NoteView = () => {
     if (error) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="notes" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="error">
                             <h3>Error</h3>
                             <p>{error}</p>
@@ -71,11 +71,11 @@ const NoteView = () => {
     if (!note) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="notes" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="error">
                             <h3>Note Not Found</h3>
                             <p>The requested note could not be found.</p>
@@ -91,11 +91,11 @@ const NoteView = () => {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="notes" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h1>{note.title}</h1>
                         <div className="bm-header-actions">

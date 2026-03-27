@@ -149,30 +149,8 @@ export const FocusManager = ({ children }) => {
     );
 };
 
-const getPageHeadingText = () => {
-    const mainArea = document.getElementById('dashboard-main');
-    const heading = (mainArea || document).querySelector('h1, h2, h3');
-    return heading ? heading.textContent.trim() : '';
-};
-
-const announcePageLoaded = (headingText) => {
-    const politeRegion = document.getElementById('announcements-polite');
-    if (!politeRegion || !headingText) return;
-
-    const messageNode = document.createElement('div');
-    messageNode.textContent = `Page loaded: ${headingText}`;
-    politeRegion.appendChild(messageNode);
-
-    // Keep this aligned with existing announcer timing.
-    setTimeout(() => {
-        if (politeRegion.contains(messageNode)) {
-            politeRegion.removeChild(messageNode);
-        }
-    }, 1000);
-};
-
 const focusPageHeadingOrMain = () => {
-    const mainArea = document.getElementById('dashboard-main');
+    const mainArea = document.getElementById('main-content') || document.getElementById('dashboard-main');
     const heading = (mainArea || document).querySelector('h1, h2, h3');
     if (heading) {
         heading.setAttribute('tabindex', '-1');
@@ -218,14 +196,11 @@ export const GlobalRouteObserver = () => {
         }
 
         if (previousPathRef.current !== location.pathname) {
-            let hasAnnounced = false;
             const menuInitiatedNav = isMenuInitiatedNavigation();
             const attemptFocus = () => {
-                const headingText = getPageHeadingText();
-                if (!hasAnnounced && headingText) {
-                    announcePageLoaded(headingText);
-                    hasAnnounced = true;
-                }
+                // Do NOT call announcePageLoaded here — programmatic focus to <h1>
+                // is the primary page-load indicator. Announcing via live region AND
+                // focusing the h1 causes screen readers to double-announce the heading.
                 if (!menuInitiatedNav) {
                     focusPageHeadingOrMain();
                 }

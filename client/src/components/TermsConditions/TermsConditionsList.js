@@ -292,11 +292,11 @@ const TermsConditionsList = () => {
     if (loading) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="terms-conditions" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading terms and conditions...</div>
                     </main>
                 </div>
@@ -307,11 +307,11 @@ const TermsConditionsList = () => {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="terms-conditions" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h1>Terms & Conditions Management</h1>
                         <div className="bm-header-actions">

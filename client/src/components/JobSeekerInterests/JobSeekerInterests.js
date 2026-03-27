@@ -1846,7 +1846,7 @@ const JobSeekerInterests = () => {
     if (loading) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader
                     brandingLogo={event?.logoUrl || event?.logo || ''}
                     brandingLogoAlt={event?.logoAltText || ''}
@@ -1855,7 +1855,7 @@ const JobSeekerInterests = () => {
                 />
                 <div className="dashboard-layout">
                     <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading-container">
                             <div className="loading-spinner"></div>
                             <p>Loading...</p>
@@ -1868,7 +1868,7 @@ const JobSeekerInterests = () => {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 brandingLogoAlt={event?.logoAltText || ''}
@@ -1877,7 +1877,7 @@ const JobSeekerInterests = () => {
             />
             <div className="dashboard-layout">
                 <AdminSidebar active={user?.role === 'Recruiter' ? 'interests' : 'jobseeker-interests'} />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="jobseeker-interests-container">
                             {/* Page Header */}

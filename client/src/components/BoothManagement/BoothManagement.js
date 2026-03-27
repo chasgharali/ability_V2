@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import useModalAriaHidden from '../../hooks/useModalAriaHidden';
 import '../Dashboard/Dashboard.css';
 import './BoothManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -96,6 +97,9 @@ export default function BoothManagement() {
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [selectedBooths, setSelectedBooths] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // WCAG 1.3.1 / 2.4.3 — aria-hide background when any modal is open
+  useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen);
   const toastRef = useRef(null);
   const gridRef = useRef(null);
   const deleteDialogRef = useRef(null);
@@ -1179,7 +1183,7 @@ export default function BoothManagement() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Video Upload Progress Modal */}
       <VideoUploadProgress 
         progress={uploadProgress}
@@ -1192,7 +1196,7 @@ export default function BoothManagement() {
       <div className="dashboard-layout">
         <AdminSidebar active="booths" />
 
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
               <h1>Booth Management</h1>

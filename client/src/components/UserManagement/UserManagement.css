@@ -287,7 +287,8 @@
 .e-grid .e-toolbar .e-search input.e-input:focus,
 .e-grid .e-toolbar .e-search input.e-input-search:focus,
 .e-grid .e-toolbar .e-toolbar-items .e-toolbar-item.e-search-item input:focus {
-    outline: none !important;
+    outline: 3px solid #005aff !important;
+    outline-offset: 4px !important;
     border-color: #111111 !important;
     box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     background: #ffffff !important;
@@ -1031,7 +1032,8 @@ body .um-delete-dialog.e-dialog {
 }
 
 .form-row .form-field .form-input:focus {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
     border-color: #111111;
     box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
 }

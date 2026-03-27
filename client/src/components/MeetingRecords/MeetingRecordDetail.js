@@ -99,7 +99,7 @@ export default function MeetingRecordDetail() {
     if (loadingData) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader 
                     brandingLogo={event?.logoUrl || event?.logo || ''}
                     brandingLogoAlt={event?.logoAltText || ''}
@@ -108,7 +108,7 @@ export default function MeetingRecordDetail() {
                 />
                 <div className="dashboard-layout">
                     <AdminSidebar active="meeting-records" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="dashboard-content">
                             <div className="loading-container">
                                 <div className="loading-spinner"></div>
@@ -124,7 +124,7 @@ export default function MeetingRecordDetail() {
     if (error || !meetingRecord) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader 
                     brandingLogo={event?.logoUrl || event?.logo || ''}
                     brandingLogoAlt={event?.logoAltText || ''}
@@ -133,7 +133,7 @@ export default function MeetingRecordDetail() {
                 />
                 <div className="dashboard-layout">
                     <AdminSidebar active="meeting-records" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="dashboard-content">
                             <div className="error-container">
                                 <h2>Error</h2>
@@ -155,7 +155,7 @@ export default function MeetingRecordDetail() {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader 
                 brandingLogo={event?.logoUrl || event?.logo || ''}
                 brandingLogoAlt={event?.logoAltText || ''}
@@ -164,7 +164,7 @@ export default function MeetingRecordDetail() {
             />
             <div className="dashboard-layout">
                 <AdminSidebar active="meeting-records" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="meeting-detail-container">
                             <div className="page-header">

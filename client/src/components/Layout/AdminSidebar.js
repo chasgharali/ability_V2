@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { MdExpandMore, MdExpandLess } from 'react-icons/md';
+import { MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import { listUpcomingEvents, listRegisteredEvents } from '../../services/events';
 
@@ -181,6 +181,16 @@ export default function AdminSidebar({ active = 'booths' }) {
   const closeMobileMenu = () => {
     if (window.innerWidth <= 1024) {
       document.body.classList.remove('sidebar-open');
+    }
+  };
+
+  const toggleMobileMenu = () => {
+    if (typeof document === 'undefined') return;
+    const isOpen = document.body.classList.contains('sidebar-open');
+    if (isOpen) {
+      document.body.classList.remove('sidebar-open');
+    } else {
+      document.body.classList.add('sidebar-open');
     }
   };
 
@@ -614,7 +624,16 @@ export default function AdminSidebar({ active = 'booths' }) {
         onClick={closeMobileMenu}
         aria-hidden="true"
       />
-      <nav className={`dashboard-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+      <nav id="primary-navigation" className={`dashboard-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+        <button
+          className="mobile-menu-toggle nav-landmark-toggle"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle navigation menu"
+          aria-expanded={mobileOpen}
+          aria-controls="primary-navigation"
+        >
+          {mobileOpen ? <MdClose /> : <MdMenu />}
+        </button>
         {renderSidebarContent()}
       </nav>
     </>

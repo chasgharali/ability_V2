@@ -103,7 +103,8 @@
 }
 
 .team-chat-search input:focus {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
     border-color: #1a1a1a;
     background: white;
     box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);

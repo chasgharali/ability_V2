@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import useModalAriaHidden from '../../hooks/useModalAriaHidden';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -179,6 +180,9 @@ export default function JobSeekerManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
+
+  // WCAG 1.3.1 / 2.4.3 — aria-hide background when any modal is open
+  useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen || verifyEmailOpen);
   const [rowPendingVerify, setRowPendingVerify] = useState(null);
   // Password visibility toggles
   const [showPwd, setShowPwd] = useState(false);
@@ -2068,11 +2072,11 @@ export default function JobSeekerManagement() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="jobseekers" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           {mode === 'view' ? (
             renderJobSeekerProfile()
           ) : mode === 'edit' ? (

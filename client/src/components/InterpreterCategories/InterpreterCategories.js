@@ -178,11 +178,11 @@ export default function InterpreterCategories() {
   if (loading) {
     return (
       <div className="dashboard">
-        <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <AdminHeader />
         <div className="dashboard-layout">
           <AdminSidebar active="interpreter-categories" />
-          <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+          <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
             <div className="loading">Loading...</div>
           </main>
         </div>
@@ -192,11 +192,11 @@ export default function InterpreterCategories() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="interpreter-categories" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
               <h1>Interpreter Categories</h1>
@@ -215,7 +215,9 @@ export default function InterpreterCategories() {
             {/* Filters */}
             <div className="filters-section">
               <div className="search-filter">
+                <label htmlFor="category-search" className="sr-only">Search categories</label>
                 <input
+                  id="category-search"
                   type="text"
                   placeholder="Search categories..."
                   value={searchTerm}

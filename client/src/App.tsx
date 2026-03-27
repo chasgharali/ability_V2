@@ -49,7 +49,7 @@ function App() {
                     <AuthProvider>
                         <SocketProvider>
                             <Router>
-                                <div className="App">
+                                <div id="app-root" tabIndex={-1} className="App">
                                     {/* Accessibility components */}
                                     <AccessibilityAnnouncer />
                                     <FocusManager />

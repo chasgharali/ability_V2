@@ -258,11 +258,11 @@ const TermsConditionsForm = () => {
     if (loading && isEdit) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="terms-conditions" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading terms and conditions...</div>
                     </main>
                     {/* hidden input for S3 image insert */}
@@ -274,11 +274,11 @@ const TermsConditionsForm = () => {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="terms-conditions" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="terms-form-container">
                         <div className="terms-form-header">
                             <h1>{isEdit ? 'Edit Terms & Conditions' : 'Create Terms & Conditions'}</h1>

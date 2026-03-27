@@ -1011,7 +1011,7 @@ export default function EventManagement() {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             {/* Video Upload Progress Modal */}
             <VideoUploadProgress 
                 progress={uploadProgress}
@@ -1024,7 +1024,7 @@ export default function EventManagement() {
             <div className="dashboard-layout">
                 <AdminSidebar active="events" />
 
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="bm-header">
                             <h1>Event Management</h1>

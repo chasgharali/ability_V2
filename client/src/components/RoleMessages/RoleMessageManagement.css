@@ -235,7 +235,8 @@
 }
 
 .edit-textarea:focus {
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   border-color: #111827;
   box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
 }
@@ -252,7 +253,8 @@
 }
 
 .edit-input:focus {
-  outline: none;
+  outline: 3px solid #005aff;
+  outline-offset: 4px;
   border-color: #111827;
   box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
 }

@@ -727,7 +727,7 @@ export default function BoothQueueManagement() {
   if (loading) {
     return (
       <div className="dashboard">
-        <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <AdminHeader
           brandingLogo={event?.logoUrl || event?.logo || ''}
           brandingLogoAlt={event?.logoAltText || ''}
@@ -736,7 +736,7 @@ export default function BoothQueueManagement() {
         />
         <div className="dashboard-layout">
           <AdminSidebar active="booths" />
-          <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+          <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
             <div className="loading">Loading booth queue...</div>
           </main>
         </div>
@@ -751,7 +751,7 @@ export default function BoothQueueManagement() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader
         brandingLogo={displayEvent?.logoUrl || displayEvent?.logo || ''}
         brandingLogoAlt={displayEvent?.logoAltText || ''}
@@ -760,7 +760,7 @@ export default function BoothQueueManagement() {
       />
       <div className="dashboard-layout">
         <AdminSidebar active="booths" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="booth-queue-management">
             {/* Header */}
             {infoBannerMessage && (

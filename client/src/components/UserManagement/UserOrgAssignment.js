@@ -111,11 +111,11 @@ export default function UserOrgAssignment() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="org-users" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div style={{ padding: 24, maxWidth: 1100, margin: '0 auto' }}>
               <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: 24 }}>User Organization Assignment</h1>

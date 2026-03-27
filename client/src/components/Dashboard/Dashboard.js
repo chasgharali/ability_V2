@@ -806,7 +806,7 @@ const Dashboard = () => {
                 })()}</title>
             </Helmet>
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 {/* Video Upload Progress Modal */}
                 <VideoUploadProgress 
                     progress={uploadProgress}
@@ -840,7 +840,7 @@ const Dashboard = () => {
                     )
                 )} />
 
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
                         <div className="dashboard-content">
                             <h1>Branding – Header Logo</h1>

@@ -61,6 +61,7 @@ const CallControls = ({
       icon: isAudioEnabled ? FiMic : FiMicOff,
       label: isAudioEnabled ? 'Mute' : 'Unmute',
       ariaLabel: isAudioEnabled ? 'Mute microphone' : 'Unmute microphone',
+      ariaPressed: !isAudioEnabled, // pressed = muted
       onClick: onToggleAudio,
       className: `control-button ${isAudioEnabled ? 'enabled' : 'disabled'}`,
       primary: true
@@ -70,6 +71,7 @@ const CallControls = ({
       icon: isVideoEnabled ? FiVideo : FiVideoOff,
       label: isVideoEnabled ? 'Stop video' : 'Start video',
       ariaLabel: isVideoEnabled ? 'Stop video' : 'Start video',
+      ariaPressed: !isVideoEnabled, // pressed = video off
       onClick: onToggleVideo,
       className: `control-button ${isVideoEnabled ? 'enabled' : 'disabled'}`,
       primary: true
@@ -79,6 +81,7 @@ const CallControls = ({
       icon: FiType,
       label: isCaptionEnabled ? 'CC On' : 'CC Off',
       ariaLabel: isCaptionEnabled ? 'Turn off captions' : 'Turn on captions',
+      ariaPressed: isCaptionEnabled,
       onClick: onToggleCaption,
       className: `control-button caption-button ${isCaptionEnabled ? 'enabled caption-active' : 'disabled'}`,
       primary: true
@@ -140,6 +143,7 @@ const CallControls = ({
                   onClick={button.onClick}
                   title={button.ariaLabel}
                   aria-label={button.ariaLabel}
+                  aria-pressed={button.ariaPressed !== undefined ? button.ariaPressed : undefined}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {

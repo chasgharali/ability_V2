@@ -269,11 +269,11 @@ const NoteForm = () => {
     if (loading && isEdit) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active="notes" />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading note...</div>
                     </main>
                     <input type="file" accept="image/*" ref={hiddenImageInputRef} onChange={onHiddenImagePicked} style={{ display: 'none' }} />
@@ -284,11 +284,11 @@ const NoteForm = () => {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="notes" />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="note-form-container">
                         <div className="note-form-header">
                             <h1>{isEdit ? 'Edit Note' : 'Create New Note'}</h1>

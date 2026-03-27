@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(npm ls:*)",
+      "Bash(which:*)",
+      "Bash(pandoc:*)",
+      "Bash(npm list:*)",
+      "Bash(open:*)"
+    ]
+  }
+}

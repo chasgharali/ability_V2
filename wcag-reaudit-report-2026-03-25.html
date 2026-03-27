@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WCAG 2.1 AA Re-Audit Report — abilityCONNECT ability_V2 — 2026-03-25</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:    #c0152b;
+      --orange: #b84d00;
+      --yellow: #7a5c00;
+      --green:  #1a6b2e;
+      --blue:   #003fa3;
+      --teal:   #0e6e72;
+      --bg:     #f5f6f8;
+      --card:   #ffffff;
+      --border: #dde1e8;
+      --text:   #111827;
+      --muted:  #4b5563;
+      --code-bg:#f0f2f5;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    /* ── Header ── */
+    .page-header { background: #0a0f1e; color: #fff; padding: 3rem 2rem 2.5rem; border-bottom: 4px solid #005aff; }
+    .page-header h1 { font-size: 1.875rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+    .page-header .subtitle { font-size: 1rem; opacity: 0.75; margin-bottom: 1.5rem; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.875rem; }
+    .meta-item strong { color: #93c5fd; }
+
+    .container { max-width: 1120px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* ── Badges ── */
+    .badge { display: inline-block; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 4px; white-space: nowrap; }
+    .badge-critical { background: #fde8e8; color: var(--red);    border: 1px solid #fca5a5; }
+    .badge-high     { background: #fff3e0; color: var(--orange);  border: 1px solid #fdba74; }
+    .badge-medium   { background: #fefce8; color: var(--yellow);  border: 1px solid #fde047; }
+    .badge-low      { background: #ecfdf5; color: var(--green);   border: 1px solid #6ee7b7; }
+    .badge-fixed    { background: #ecfdf5; color: var(--green);   border: 1px solid #6ee7b7; }
+    .badge-partial  { background: #eff6ff; color: var(--blue);    border: 1px solid #93c5fd; }
+    .badge-new      { background: #fdf4ff; color: #7c3aed;        border: 1px solid #c4b5fd; }
+
+    /* ── Progress panel ── */
+    .progress-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0; }
+    @media(max-width:640px){ .progress-panel { grid-template-columns: 1fr; } }
+
+    .progress-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .progress-card h3 { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 1rem; }
+
+    .progress-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+    .progress-row:last-child { border-bottom: none; }
+    .progress-row .lbl { color: var(--muted); }
+    .progress-row .val { font-weight: 700; }
+    .val-green { color: var(--green); }
+    .val-red   { color: var(--red); }
+    .val-blue  { color: var(--blue); }
+    .val-yellow{ color: var(--yellow); }
+    .val-purple{ color: #7c3aed; }
+
+    /* ── Stats bar ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; }
+    .stat-card .num { font-size: 2.5rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
+    .stat-card .label { font-size: 0.8125rem; color: var(--muted); font-weight: 500; }
+    .num-total    { color: #1e293b; }
+    .num-critical { color: var(--red); }
+    .num-high     { color: var(--orange); }
+    .num-medium   { color: var(--yellow); }
+    .num-low      { color: var(--green); }
+    .num-fixed    { color: var(--green); }
+    .num-new      { color: #7c3aed; }
+
+    /* ── Severity bar ── */
+    .severity-bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin-bottom: 2rem; border: 1px solid var(--border); }
+    .bar-critical { background: var(--red);   flex: 1; }
+    .bar-high     { background: var(--orange); flex: 11; }
+    .bar-medium   { background: var(--yellow); flex: 9; }
+    .bar-low      { background: var(--green);  flex: 1; }
+
+    /* ── Fixed items ── */
+    .fixed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 0.75rem; margin-bottom: 2rem; }
+    .fixed-item { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: flex-start; gap: 0.5rem; }
+    .fixed-item .tick { color: var(--green); font-size: 1.1rem; flex-shrink: 0; }
+    .fixed-item .fix-id { font-size: 0.75rem; font-weight: 700; color: var(--green); margin-right: 0.25rem; }
+    .fixed-item .fix-desc { font-size: 0.8125rem; }
+
+    /* ── Section headings ── */
+    .section-header { display: flex; align-items: center; gap: 0.75rem; margin: 2.5rem 0 1rem; }
+    .section-header h2 { font-size: 1.125rem; font-weight: 700; }
+    .section-num { background: #0a0f1e; color: #fff; font-size: 0.75rem; font-weight: 700; width: 1.75rem; height: 1.75rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-new { background: #7c3aed; color: #fff; font-size: 0.6875rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; }
+
+    /* ── Violation cards ── */
+    .violation-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.875rem; overflow: hidden; }
+    .violation-card.new-violation { border-color: #c4b5fd; }
+    .violation-card.partial-fix { border-color: #93c5fd; }
+
+    .violation-card-header { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem 1.25rem; cursor: pointer; user-select: none; }
+    .violation-card-header:hover { background: #f9fafb; }
+    .new-violation .violation-card-header:hover { background: #fdf4ff; }
+
+    .v-id { font-size: 0.75rem; font-weight: 700; color: var(--muted); white-space: nowrap; padding-top: 0.05rem; min-width: 3.5rem; }
+    .v-title { font-weight: 600; font-size: 0.9375rem; flex: 1; }
+    .v-chevron { margin-left: auto; font-size: 1rem; color: var(--muted); transition: transform 0.2s; flex-shrink: 0; }
+    details[open] .v-chevron { transform: rotate(180deg); }
+
+    .violation-body { border-top: 1px solid var(--border); padding: 1.25rem; }
+    .violation-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: 0.8125rem; color: var(--muted); margin-bottom: 1rem; }
+    .violation-meta span strong { color: var(--text); }
+    .violation-desc { font-size: 0.9375rem; margin-bottom: 1rem; }
+    .violation-desc p { margin-bottom: 0.5rem; }
+
+    .partial-note { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 6px 6px 0; padding: 0.6rem 0.9rem; font-size: 0.8125rem; margin-bottom: 0.75rem; }
+    .partial-note strong { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--blue); margin-bottom: 0.2rem; }
+
+    /* ── Code blocks ── */
+    pre { background: var(--code-bg); border: 1px solid #d1d5db; border-radius: 8px; padding: 1rem; overflow-x: auto; font-size: 0.8125rem; line-height: 1.6; margin: 0.75rem 0; font-family: 'SFMono-Regular', 'Fira Code', Consolas, monospace; }
+    code { font-family: 'SFMono-Regular', 'Fira Code', Consolas, monospace; font-size: 0.875em; background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 3px; border: 1px solid #d1d5db; }
+    pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+    /* ── Impact boxes ── */
+    .impact-box, .note-box { border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; margin-top: 0.75rem; }
+    .impact-box { background: #fef2f2; border-left: 4px solid var(--red); }
+    .impact-box.orange { background: #fff7ed; border-left-color: #ea580c; }
+    .impact-box.yellow { background: #fefce8; border-left-color: #ca8a04; }
+    .impact-box.purple { background: #fdf4ff; border-left-color: #7c3aed; }
+    .note-box { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .impact-box strong, .note-box strong { display: block; margin-bottom: 0.25rem; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── Summary table ── */
+    .summary-table-wrap { overflow-x: auto; margin-top: 2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    thead { background: #0a0f1e; color: #fff; }
+    thead th { padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    tbody tr { border-top: 1px solid var(--border); }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    tbody td { padding: 0.65rem 1rem; vertical-align: top; }
+    tbody tr:hover { background: #f0f4ff; }
+    .status-fixed   { color: var(--green); font-weight: 600; }
+    .status-open    { color: var(--orange); font-weight: 600; }
+    .status-partial { color: var(--blue); font-weight: 600; }
+    .status-new     { color: #7c3aed; font-weight: 600; }
+
+    /* ── TOC ── */
+    .toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 2rem 0; }
+    .toc h2 { font-size: 0.9375rem; font-weight: 700; margin-bottom: 1rem; }
+    .toc ol { padding-left: 1.25rem; }
+    .toc li { margin-bottom: 0.4rem; font-size: 0.875rem; }
+    .toc a { color: #2563eb; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* ── Footer ── */
+    .report-footer { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1.5rem; font-size: 0.8125rem; color: var(--muted); text-align: center; }
+
+    @media(max-width:640px){ .page-header h1 { font-size: 1.375rem; } }
+  </style>
+</head>
+<body>
+
+<!-- ══ PAGE HEADER ══ -->
+<header class="page-header">
+  <h1>WCAG 2.1 AA Re-Audit Report</h1>
+  <p class="subtitle">abilityCONNECT — ability_V2 React SPA — Comparing audit of 2026-03-24 vs. current code</p>
+  <div class="meta-row">
+    <div class="meta-item"><strong>Re-Audit Date:</strong> 2026-03-25</div>
+    <div class="meta-item"><strong>Previous Audit:</strong> 2026-03-24 (31 violations)</div>
+    <div class="meta-item"><strong>Standard:</strong> WCAG 2.1 AA + Custom Structural Protocol</div>
+    <div class="meta-item"><strong>Status:</strong> Pre-fix report — no code modified</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── TOC ── -->
+  <nav class="toc" aria-label="Table of contents">
+    <h2>Sections</h2>
+    <ol>
+      <li><a href="#scorecard">Score Card — Fixed vs. Remaining</a></li>
+      <li><a href="#fixed">What Was Fixed (14 violations closed)</a></li>
+      <li><a href="#new">New Violations Introduced (2)</a></li>
+      <li><a href="#sec1">Section 1 — Page Load, Title &amp; Focus Protocol</a></li>
+      <li><a href="#sec2">Section 2 — Global Banner Group</a></li>
+      <li><a href="#sec3">Section 3 — Navigation &amp; SPA Routing</a></li>
+      <li><a href="#sec4">Section 4 — Main Content Area</a></li>
+      <li><a href="#sec5">Section 5 — Sidebars &amp; Footer</a></li>
+      <li><a href="#sec6">Section 6 — Global Technical Standards</a></li>
+      <li><a href="#sec7">Section 7 — Silent Failure Audit</a></li>
+      <li><a href="#summary">Full Re-Audit Summary Table</a></li>
+    </ol>
+  </nav>
+
+  <!-- ══ SCORE CARD ══ -->
+  <div class="section-header" id="scorecard">
+    <div class="section-num">◎</div>
+    <h2>Score Card — Audit 1 vs. Re-Audit</h2>
+  </div>
+
+  <div class="progress-panel">
+    <div class="progress-card">
+      <h3>Violation Counts</h3>
+      <div class="progress-row"><span class="lbl">Previous audit total</span><span class="val">31</span></div>
+      <div class="progress-row"><span class="lbl">Fully fixed</span><span class="val val-green">14</span></div>
+      <div class="progress-row"><span class="lbl">Partially fixed (still open)</span><span class="val val-blue">3</span></div>
+      <div class="progress-row"><span class="lbl">Unchanged (still open)</span><span class="val val-red">14</span></div>
+      <div class="progress-row"><span class="lbl">New violations introduced</span><span class="val val-purple">2</span></div>
+      <div class="progress-row"><span class="lbl"><strong>Current total</strong></span><span class="val"><strong>19</strong></span></div>
+    </div>
+    <div class="progress-card">
+      <h3>Severity Breakdown (Current)</h3>
+      <div class="progress-row"><span class="lbl">Critical</span><span class="val val-red">1</span></div>
+      <div class="progress-row"><span class="lbl">High</span><span class="val val-red">10</span></div>
+      <div class="progress-row"><span class="lbl">Medium</span><span class="val val-yellow">7</span></div>
+      <div class="progress-row"><span class="lbl">Low</span><span class="val val-green">1</span></div>
+      <div class="progress-row"><span class="lbl">Previous Critical count</span><span class="val">2</span></div>
+      <div class="progress-row"><span class="lbl">Previous High count</span><span class="val">18</span></div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="num num-fixed">14</div><div class="label">Fixed</div></div>
+    <div class="stat-card"><div class="num num-total">19</div><div class="label">Remaining</div></div>
+    <div class="stat-card"><div class="num num-critical">1</div><div class="label">Critical</div></div>
+    <div class="stat-card"><div class="num num-high">10</div><div class="label">High</div></div>
+    <div class="stat-card"><div class="num num-medium">7</div><div class="label">Medium</div></div>
+    <div class="stat-card"><div class="num num-new">2</div><div class="label">New</div></div>
+  </div>
+
+  <div class="severity-bar" aria-hidden="true">
+    <div class="bar-critical"></div>
+    <div class="bar-high"></div>
+    <div class="bar-medium"></div>
+    <div class="bar-low"></div>
+  </div>
+
+
+  <!-- ══ FIXED ══ -->
+  <div class="section-header" id="fixed">
+    <div class="section-num">✓</div>
+    <h2>Violations Closed Since Last Audit (14)</h2>
+  </div>
+
+  <div class="fixed-grid">
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-1.1</span><span class="fix-desc"><code>GlobalRouteObserver</code> now imported and rendered in App.tsx:55</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-1.4</span><span class="fix-desc">Auth.css <code>h1:focus</code> now correctly sets <code>outline: none</code></span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-1.5</span><span class="fix-desc"><code>focusPageHeadingOrMain</code> now queries only <code>h1</code> — no h2/h3 fallthrough</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-1.6</span><span class="fix-desc">Menu-initiated navigation no longer skips focus reset</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-3.1</span><span class="fix-desc">Skip link now appears <em>before</em> <code>PublicSiteHeader</code> in LoginPage DOM</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-4.1</span><span class="fix-desc"><code>&lt;h1&gt;</code> is now the first element inside <code>&lt;main&gt;</code> on Login page</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-4.2</span><span class="fix-desc">Input hover border now darkens: <code>#4b5563</code> → <code>#111827</code></span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-4.5</span><span class="fix-desc">Toolbar arrow-key (←→ Home End) navigation implemented in CallControls</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-5.1</span><span class="fix-desc">ChatPanel: <code>role="heading"</code> removed from wrapper div — duplicate heading gone</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-6.1</span><span class="fix-desc">Chat input footer font-size raised to <code>0.75rem</code> (12px minimum met)</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-6.3</span><span class="fix-desc">Auth.css cascade: <code>h1:focus</code> override resolved — global silence rule now wins</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-7.1</span><span class="fix-desc"><code>useModalAriaHidden</code> now hides sibling nodes, not <code>#app-root</code> itself</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-7.2</span><span class="fix-desc">More-options menu: focus moves in on open; Escape/item-click return to trigger button</span></div>
+    </div>
+    <div class="fixed-item">
+      <span class="tick">✓</span>
+      <div><span class="fix-id">V-7.3</span><span class="fix-desc">Escape key listener now uses named <code>handleKeydown</code> — memory leak fixed</span></div>
+    </div>
+  </div>
+
+
+  <!-- ══ NEW VIOLATIONS ══ -->
+  <div class="section-header" id="new">
+    <div class="section-num" style="background:#7c3aed">N</div>
+    <h2>New Violations Introduced <span class="section-new">REGRESSION</span></h2>
+  </div>
+
+  <!-- N-1 -->
+  <div class="violation-card new-violation">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id" style="color:#7c3aed">N-1</span>
+        <span class="v-title">Login page now renders identical text as both <code>&lt;h1&gt;</code> and <code>&lt;h2&gt;</code> — duplicate heading announcement</span>
+        <span class="badge badge-new">New</span>&nbsp;<span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> LoginPage.js:176, 213</span>
+          <span><strong>WCAG:</strong> 1.3.1 Info and Relationships, 4.1.2</span>
+          <span><strong>Introduced by:</strong> V-4.1 fix attempt</span>
+        </div>
+        <div class="violation-desc">
+          <p>The fix for V-4.1 moved the <code>&lt;h1&gt;</code> to the top of the card correctly. However the old <code>&lt;h1&gt;</code> inside <code>.login-form-container</code> was downgraded to <code>&lt;h2&gt;</code> rather than removed. Both elements render the same text string and both are visible on screen simultaneously.</p>
+        </div>
+        <pre><code>// LoginPage.js:176 — new h1 (correct position)
+&lt;h1 id="login-page-title" className="login-title"&gt;
+    {userType === 'jobseeker' ? 'Job Seeker Login' : 'Company &amp; Staff Login'}
+&lt;/h1&gt;
+
+// LoginPage.js:213 — old heading, demoted to h2 but not removed
+&lt;h2 className="login-title"&gt;
+    {userType === 'jobseeker' ? 'Job Seeker Login' : 'Company &amp; Staff Login'}
+&lt;/h2&gt;
+// Both render: "Job Seeker Login" — screen readers announce heading twice</code></pre>
+        <div class="impact-box purple">
+          <strong>Impact — Regression</strong>
+          Screen reader users navigating by headings encounter the same page title twice, as a level-1 and then a level-2 heading. This inflates the heading structure and produces a confusing duplicate announcement every time the page loads or the user type tab is switched.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- N-2 -->
+  <div class="violation-card new-violation">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id" style="color:#7c3aed">N-2</span>
+        <span class="v-title"><code>GlobalRouteObserver</code> focuses <code>#app-root</code> then immediately overrides it with <code>h1</code> focus in the same synchronous call</span>
+        <span class="badge badge-new">New</span>&nbsp;<span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> FocusManager.js:193–197</span>
+          <span><strong>WCAG:</strong> 2.4.3 Focus Order</span>
+          <span><strong>Introduced by:</strong> V-3.3 fix attempt</span>
+        </div>
+        <div class="violation-desc">
+          <p>The fix for V-3.3 added <code>appRoot.focus()</code> before <code>focusPageHeadingOrMain()</code>. However, both calls are made synchronously within the same <code>attemptFocus()</code> function. The browser does not render between them, so the <code>#app-root</code> focus is immediately overridden by the <code>&lt;h1&gt;</code> focus in the same event-loop tick. The <code>#app-root</code> focus event may not even be dispatched. It never serves as an observable reset point for keyboard users.</p>
+        </div>
+        <pre><code>// FocusManager.js:183-197 — same-tick double focus
+const attemptFocus = () => {
+    if (!document.title || !document.title.trim()) { ... }
+
+    const appRoot = document.getElementById('app-root');
+    if (appRoot) {
+        appRoot.focus({ preventScroll: true });  // ← focus #1 (immediately lost)
+    }
+    focusPageHeadingOrMain();                    // ← focus #2 overrides #1 synchronously
+};
+// The spec requires #app-root to be a stable resting point so the next Tab
+// lands on the skip link — but #app-root never holds focus long enough.</code></pre>
+        <div class="impact-box purple">
+          <strong>Impact — Regression</strong>
+          The intent of focusing <code>#app-root</code> first (so Tab → skip link → main) is lost. After every route change, focus jumps directly to the <code>&lt;h1&gt;</code>, bypassing the skip link anchor entirely. Additionally, the spec's sequential protocol (document.title set → then focus) is still not enforced — the title check only applies when the title is completely empty.
+        </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       REMAINING VIOLATIONS BY SECTION
+  ════════════════════════════════════════════ -->
+
+  <!-- SECTION 1 -->
+  <div class="section-header" id="sec1">
+    <div class="section-num">1</div>
+    <h2>Page Load, Title &amp; Focus Protocol — 2 remaining</h2>
+  </div>
+
+  <!-- V-1.2 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-1.2</span>
+        <span class="v-title"><code>document.title</code> → <code>h1</code> focus sequence still not guaranteed</span>
+        <span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> FocusManager.js:184–197</span>
+          <span><strong>WCAG:</strong> 2.4.2 Page Titled</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>The new code checks <code>if (!document.title || !document.title.trim())</code> and sets a fallback title from the h1 text. This only fires when the title is <strong>completely empty</strong> — it does not handle the race where <code>&lt;Helmet&gt;</code> is still writing the new title while <code>focusPageHeadingOrMain()</code> already runs. The focus call and the title update are still not sequenced.</p>
+        </div>
+        <pre><code>// FocusManager.js:184-197
+const attemptFocus = () => {
+    if (!document.title || !document.title.trim()) {
+        // Only handles empty title — does NOT wait for Helmet to finish writing
+        document.title = `${fallbackHeading.textContent.trim()} - abilityconnect`;
+    }
+    appRoot.focus({ preventScroll: true });
+    focusPageHeadingOrMain();   // ← no guarantee title is fully updated yet
+};</code></pre>
+        <div class="impact-box orange">
+          <strong>Impact</strong>
+          On fast navigation, the screen reader may announce the previous page's title (still in <code>document.title</code>) while simultaneously reading the new page's <code>&lt;h1&gt;</code>, producing a double-announce from two different page titles.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-1.3 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-1.3</span>
+        <span class="v-title"><code>&lt;h1&gt;</code> elements lack <code>tabIndex={-1}</code> as a React prop — patched by DOM mutation only</span>
+        <span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>Files:</strong> EventDetail.js:100, LoginPage.js:176 (new h1)</span>
+          <span><strong>WCAG:</strong> 2.4.3 Focus Order</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p><code>focusPageHeadingOrMain()</code> still patches the attribute via <code>heading.setAttribute('tabindex', '-1')</code> at runtime (FocusManager.js:155). This DOM mutation is lost on any React re-render that replaces the element. Neither the new <code>h1</code> in LoginPage.js (line 176) nor the <code>h1</code> in EventDetail.js (line 100) carry <code>tabIndex={-1}</code> as a React prop.</p>
+        </div>
+        <pre><code>// EventDetail.js:100 — still no tabIndex
+&lt;h1 style={{ textAlign: 'center', ... }}&gt;{event.name}&lt;/h1&gt;
+
+// LoginPage.js:176 — newly introduced h1, also missing tabIndex
+&lt;h1 id="login-page-title" className="login-title"&gt;
+    {userType === 'jobseeker' ? 'Job Seeker Login' : ...}
+&lt;/h1&gt;
+
+// FocusManager.js:154-156 — fragile DOM patch, lost on re-render
+heading.setAttribute('tabindex', '-1');
+heading.focus();</code></pre>
+        <div class="impact-box orange">
+          <strong>Impact</strong>
+          Programmatic <code>.focus()</code> on an element without <code>tabindex="-1"</code> silently fails in most browsers. Screen readers receive no focus event and no page-load signal.
+        </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- SECTION 2 -->
+  <div class="section-header" id="sec2">
+    <div class="section-num">2</div>
+    <h2>Global Banner Group — 5 remaining</h2>
+  </div>
+
+  <!-- V-2.1 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-2.1</span>
+        <span class="v-title"><code>PublicSiteHeader</code> still missing SVG logo, user info, and logout button on all public pages</span>
+        <span class="badge badge-critical">Critical</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> PublicSiteHeader.js:5–17</span>
+          <span><strong>Used on:</strong> /login, /register, /forgot-password, /reset-password</span>
+          <span><strong>WCAG:</strong> 1.3.1, 2.4.1, 2.4.3</span>
+          <span><strong>Status since last audit:</strong> Partially fixed — tagline text added, 3 requirements still absent</span>
+        </div>
+        <div class="partial-note">
+          <strong>What improved</strong>
+          "abilityCONNECT.online Events." tagline text was added (line 13). The spec requirement for this text is now met in PublicSiteHeader.
+        </div>
+        <div class="violation-desc">
+          <p>Three critical banner requirements remain unimplemented in <code>PublicSiteHeader</code>: a logo image (SVG, 200px, alt="abilityCONNECT home"), a Username / Online Status display, and a Logout button with the Logout button as the final tab stop.</p>
+        </div>
+        <pre><code>// PublicSiteHeader.js — current state
+export default function PublicSiteHeader() {
+  return (
+    &lt;header role="banner" className="public-site-header"&gt;
+      &lt;div className="public-site-header-inner"&gt;
+        &lt;Link to="/" aria-label="Go to home page"&gt;
+          &lt;span aria-hidden="true"&gt;◈&lt;/span&gt;
+          &lt;span&gt;ABILITY Job Fair&lt;/span&gt;      {/* ✗ no 200px SVG logo */}
+        &lt;/Link&gt;
+        &lt;span&gt;abilityCONNECT.online Events.&lt;/span&gt;  {/* ✓ fixed */}
+        {/* ✗ no Username / Online Status */}
+        {/* ✗ no Logout button */}
+      &lt;/div&gt;
+    &lt;/header&gt;
+  );
+}</code></pre>
+        <div class="impact-box">
+          <strong>Critical Impact</strong>
+          All authenticated users land on /login after session expiry. The persistent banner — with user identity and logout — is absent on the page most likely to be seen after an unexpected sign-out.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-2.2 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-2.2</span>
+        <span class="v-title"><code>AdminHeader</code> logo absent during API load — text+icon fallback does not meet spec</span>
+        <span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> AdminHeader.js:195–221</span>
+          <span><strong>WCAG:</strong> 3.2.3 Consistent Navigation</span>
+          <span><strong>Status since last audit:</strong> Unchanged — fallback now has inline SVG bolt icon, still not the required logo</span>
+        </div>
+        <div class="violation-desc">
+          <p>The fallback when <code>brandingLogo</code> is empty now renders an 18×18px inline SVG lightning bolt beside "ABILITY Job Fair" text. This is not the required 200px "abilityCONNECT home" logo. During API load time, the required logo is absent.</p>
+        </div>
+        <pre><code>// AdminHeader.js:205-221 — fallback still not the spec-required logo
+{(!brandingLogo || brandingLogo.trim() === '') && (...) && (
+    &lt;a href="/dashboard" aria-label="Go to dashboard home"&gt;
+        &lt;span className="header-text"&gt;
+            &lt;svg width="18" height="18" ... /&gt;   {/* ✗ 18px icon ≠ 200px logo */}
+            ABILITY Job Fair
+        &lt;/span&gt;
+    &lt;/a&gt;
+)}</code></pre>
+        <div class="impact-box orange">
+          <strong>Impact</strong>
+          On every authenticated page load, there is a window where the spec-required logo is absent. Users who navigate quickly or have slow network connections see the wrong branding.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-2.3 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-2.3</span>
+        <span class="v-title">Logo is a raster image URL — not a 200px-wide inline SVG</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> AdminHeader.js:197</span>
+          <span><strong>Spec Requirement:</strong> 200px wide SVG, alt="abilityCONNECT home"</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>The logo is rendered as a raster <code>&lt;img&gt;</code> from an S3 URL with no enforced 200px width and no guarantee of SVG format. At 200% browser zoom, a raster image pixelates.</p>
+        </div>
+        <pre><code>// AdminHeader.js:197
+&lt;img src={brandingLogo} alt="abilityCONNECT home" className="header-logo" /&gt;
+// brandingLogo = S3 URL — format is JPEG/PNG/WebP depending on upload</code></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-2.4 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-2.4</span>
+        <span class="v-title">Logout button is icon-only — no visible text label</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> AdminHeader.js:255–257</span>
+          <span><strong>WCAG:</strong> 2.5.3 Label in Name</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>The logout button contains only <code>&lt;MdLogout aria-hidden="true"/&gt;</code>. No visible text is present. WCAG 2.5.3 and the spec's "Logout Button" language require a visible text label. Speech-input users cannot activate the button by saying "click Logout" when there is no visible label that matches.</p>
+        </div>
+        <pre><code>// AdminHeader.js:255-257
+&lt;button onClick={handleLogout} aria-label="Logout"&gt;
+    &lt;MdLogout aria-hidden="true" /&gt;   {/* icon only */}
+&lt;/button&gt;</code></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-2.5 -->
+  <div class="violation-card partial-fix">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-2.5</span>
+        <span class="v-title">"abilityCONNECT.online Events." text absent from <code>AdminHeader</code></span>
+        <span class="badge badge-partial">Partial Fix</span>&nbsp;<span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> AdminHeader.js (all authenticated routes)</span>
+          <span><strong>WCAG:</strong> 1.3.1</span>
+          <span><strong>Status since last audit:</strong> Fixed in PublicSiteHeader — still absent in AdminHeader</span>
+        </div>
+        <div class="partial-note">
+          <strong>What improved</strong>
+          <code>PublicSiteHeader</code> now renders the tagline at line 13. The public pages meet this requirement.
+        </div>
+        <div class="violation-desc">
+          <p>The required visual site-name text "abilityCONNECT.online Events." was added to the public header but not the authenticated <code>AdminHeader</code>. Authenticated users — the majority of the application's audience — still see no persistent visible site name in the banner.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- SECTION 3 -->
+  <div class="section-header" id="sec3">
+    <div class="section-num">3</div>
+    <h2>Navigation &amp; SPA Routing — 4 remaining</h2>
+  </div>
+
+  <!-- V-3.2 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-3.2</span>
+        <span class="v-title">Skip link discoverable by Screen Reader Virtual Cursor</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> index.css:41–56</span>
+          <span><strong>WCAG:</strong> 2.4.1 Bypass Blocks</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>The skip link uses <code>top: -40px</code> to hide visually but remains in the accessibility tree. JAWS/NVDA virtual cursor (Up/Down arrow) will encounter it while reading page content. The spec requires it to be keyboard-Tab–only.</p>
+        </div>
+        <pre><code>/* index.css:41-56 — off-screen, still in accessibility tree */
+.skip-link {
+    position: absolute;
+    top: -40px;   /* visually hidden but AT-reachable via virtual cursor */
+    left: 6px;
+    z-index: 3000;
+}
+.skip-link:focus { top: 6px; }</code></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-3.3 -->
+  <div class="violation-card partial-fix">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-3.3</span>
+        <span class="v-title"><code>#app-root</code> focus reset is not observable — same-tick override by <code>focusPageHeadingOrMain()</code></span>
+        <span class="badge badge-partial">Partial Fix</span>&nbsp;<span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> FocusManager.js:193–197</span>
+          <span><strong>WCAG:</strong> 2.4.3 Focus Order</span>
+          <span><strong>Status since last audit:</strong> Attempt made, but regression introduced (see N-2)</span>
+        </div>
+        <div class="partial-note">
+          <strong>What improved</strong>
+          The intent to focus <code>#app-root</code> before the heading is now present in the code. Previously, <code>#app-root</code> was never targeted.
+        </div>
+        <div class="violation-desc">
+          <p>The implementation is correct in principle but broken in execution: <code>appRoot.focus()</code> and <code>focusPageHeadingOrMain()</code> run in the same synchronous function call. The browser processes both focus commands before any paint or event dispatch, so <code>#app-root</code> never holds focus in a way that is visible or observable to AT users.</p>
+        </div>
+        <pre><code>// FocusManager.js:193-197 — synchronous, #app-root focus immediately overridden
+appRoot.focus({ preventScroll: true });  // ← lost before browser can process it
+focusPageHeadingOrMain();                // ← overrides above in same tick</code></pre>
+        <div class="impact-box orange">
+          <strong>Impact</strong>
+          After any route change, keyboard users still cannot Tab from a predictable reset point to reach the skip link. The Tab sequence after navigation remains unpredictable.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-3.4 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-3.4</span>
+        <span class="v-title">External links inside RTE-rendered content bypass <code>ExternalLink</code> component</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> EventDetail.js:169</span>
+          <span><strong>WCAG:</strong> 2.4.4 Link Purpose</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>Event descriptions rendered via <code>dangerouslySetInnerHTML</code> may contain raw <code>&lt;a target="_blank"&gt;</code> links that bypass the <code>ExternalLink</code> component. These links have no external-link icon, no <code>aria-label "(opens in new window)"</code> suffix, and no <code>aria-live</code> announcement.</p>
+        </div>
+        <pre><code>// EventDetail.js:169
+&lt;div dangerouslySetInnerHTML={{ __html: event.description }} /&gt;</code></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-3.5 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-3.5</span>
+        <span class="v-title">ExternalLink announce message wording differs from spec</span>
+        <span class="badge badge-low">Low</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> ExternalLink.js:48</span>
+          <span><strong>WCAG:</strong> 2.4.4</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>Spec requires: <em>"Opening external link. Leaving application."</em> — current default: <em>"Opening external link and leaving application."</em></p>
+        </div>
+        <pre><code>// ExternalLink.js:48
+announceMessage = 'Opening external link and leaving application.'
+// Required:     'Opening external link. Leaving application.'</code></pre>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- SECTION 4 -->
+  <div class="section-header" id="sec4">
+    <div class="section-num">4</div>
+    <h2>Main Content Area — 4 remaining</h2>
+  </div>
+
+  <!-- V-4.3 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-4.3</span>
+        <span class="v-title">Multiple Auth.css interactive elements still use <code>:focus</code> instead of <code>:focus-visible</code> with wrong width/colour</span>
+        <span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>Files:</strong> Auth.css:85, 283, 321, 427</span>
+          <span><strong>WCAG:</strong> 2.4.7 Focus Visible</span>
+          <span><strong>Status since last audit:</strong> Unchanged — the <code>.auth-card</code> override was fixed (V-4.4) but component-level rules were not</span>
+        </div>
+        <div class="violation-desc">
+          <p>Four component-level focus rules remain using <code>:focus</code> (fires on mouse click) instead of <code>:focus-visible</code> (keyboard only), and carry the wrong specification values.</p>
+        </div>
+        <pre><code>/* Auth.css — still wrong pseudo-class and/or wrong values */
+.role-tab:focus      { outline: 2px solid #000000; outline-offset: 2px; }  /* ✗ :focus, 2px, #000 */
+.form-input:focus    { outline: 3px solid #005aff; outline-offset: 4px; }  /* ✗ :focus (color OK) */
+.password-toggle:focus { outline: 2px solid #000000; outline-offset: 2px; } /* ✗ :focus, 2px, #000 */
+.submit-button:focus { outline: 2px solid #ffffff; outline-offset: 2px; }  /* ✗ :focus, white on black */
+
+/* Correct pattern for all: */
+.element:focus-visible { outline: 3px solid #005aff; outline-offset: 4px; }</code></pre>
+        <div class="impact-box orange">
+          <strong>Impact</strong>
+          (1) Mouse users see distracting halos on every click on auth forms. (2) The <code>.submit-button:focus</code> white outline on a black background is functionally invisible — keyboard users submitting the form get no visible focus indicator. (3) Inconsistent halo widths (2px vs 3px) and colours across the form break the visual design system.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-4.4 -->
+  <div class="violation-card partial-fix">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-4.4</span>
+        <span class="v-title">Auth.css <code>.auth-card</code> halo <code>outline-offset</code> still <code>2px</code> instead of <code>4px</code></span>
+        <span class="badge badge-partial">Partial Fix</span>&nbsp;<span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> Auth.css:542–547</span>
+          <span><strong>Spec Requirement:</strong> outline: 3px solid #005aff; outline-offset: 4px;</span>
+          <span><strong>Status since last audit:</strong> Colour fixed (#005aff), pseudo-class fixed (:focus-visible) — offset still wrong</span>
+        </div>
+        <div class="partial-note">
+          <strong>What improved</strong>
+          Halo colour corrected from <code>#3b82f6</code> to <code>#005aff</code>. Pseudo-class corrected from <code>:focus</code> to <code>:focus-visible</code>.
+        </div>
+        <div class="violation-desc">
+          <p>The <code>outline-offset</code> on the <code>.auth-card</code> override block remains <code>2px</code> instead of the required <code>4px</code>. The reduced gap between the element boundary and the halo reduces the contrast between the halo and the element's own background colour.</p>
+        </div>
+        <pre><code>/* Auth.css:542-547 — offset still 2px */
+.auth-card a:focus-visible,
+.auth-card button:focus-visible {
+    outline: 3px solid #005aff;  /* ✓ correct */
+    outline-offset: 2px;         /* ✗ should be 4px */
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 5px #005aff;
+}</code></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-4.6 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-4.6</span>
+        <span class="v-title">Checkbox touch target is 10×10px — below the 44×44px minimum</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> Auth.css:347–360</span>
+          <span><strong>WCAG:</strong> 2.5.5 Target Size</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>The custom checkbox is explicitly sized at <code>0.625rem × 0.625rem</code> (10×10px) and overrides the global <code>min-height: 44px</code> with <code>min-height: 0.625rem</code>. This affects "Remember me" and consent checkboxes.</p>
+        </div>
+        <pre><code>/* Auth.css:347-360 */
+.checkbox-input {
+    width: 0.625rem;      /* = 10px */
+    height: 0.625rem;     /* = 10px */
+    min-height: 0.625rem; /* ✗ overrides global 44px min-height */
+}</code></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- N-1 (cross-reference) -->
+  <div class="violation-card new-violation">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id" style="color:#7c3aed">N-1</span>
+        <span class="v-title">Login page — duplicate h1 + h2 with identical text (cross-reference)</span>
+        <span class="badge badge-new">New</span>&nbsp;<span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> LoginPage.js:176, 213</span>
+          <span><strong>WCAG:</strong> 1.3.1, 4.1.2</span>
+        </div>
+        <div class="violation-desc"><p>See <strong>New Violations &gt; N-1</strong> for full details. Both the h1 and the h2 render the identical login title string.</p></div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- SECTION 5 -->
+  <div class="section-header" id="sec5">
+    <div class="section-num">5</div>
+    <h2>Sidebars &amp; Footer — 2 remaining</h2>
+  </div>
+
+  <!-- V-5.2 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-5.2</span>
+        <span class="v-title">No "Private Chat" panel with a unique <code>aria-label</code></span>
+        <span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>Spec Requirement:</strong> aria-label="Meeting Group Chat" + aria-label="Private Chat"</span>
+          <span><strong>WCAG:</strong> 1.3.1, 4.1.2</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>Only the "Meeting Group Chat" <code>ChatPanel</code> exists. No private/direct chat panel with a unique <code>aria-label="Private Chat"</code> was found anywhere in the codebase. If a Syncfusion Chat widget serves this purpose, its label cannot be confirmed from source.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-5.3 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-5.3</span>
+        <span class="v-title">No global <code>&lt;footer&gt;</code> — no Privacy or Help links</span>
+        <span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>Scope:</strong> All pages</span>
+          <span><strong>WCAG:</strong> 2.4.1, 3.2.3</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>No <code>&lt;footer&gt;</code> landmark was found in any reviewed file. The spec requires a global footer with Privacy and Help links following ExternalLink standards. Screen reader users have no <code>contentinfo</code> landmark to navigate to.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- SECTION 6 -->
+  <div class="section-header" id="sec6">
+    <div class="section-num">6</div>
+    <h2>Global Technical Standards — 2 remaining</h2>
+  </div>
+
+  <!-- V-6.2 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-6.2</span>
+        <span class="v-title"><code>font-size: 13px</code> in 480px breakpoint — <code>px</code> unit violates rem-only policy</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> ChatPanel.css:378</span>
+          <span><strong>WCAG:</strong> 1.4.4 Resize Text</span>
+          <span><strong>Status since last audit:</strong> Footer fixed (0.75rem) — message input still uses px</span>
+        </div>
+        <div class="partial-note">
+          <strong>What improved</strong>
+          <code>.incall-chat-input-footer</code> was fixed to <code>0.75rem</code> (was 11px). The critical 11px violation is resolved.
+        </div>
+        <div class="violation-desc">
+          <p>The 480px breakpoint still overrides the message input's font-size with an absolute <code>px</code> unit. Users who set a larger default browser font size will not see proportionally larger text in this element.</p>
+        </div>
+        <pre><code>/* ChatPanel.css:376-379 — 480px breakpoint */
+@media (max-width: 480px) {
+    .incall-chat-message-input { font-size: 13px; }  /* ✗ should be 0.8125rem */
+}</code></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-6.4 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-6.4</span>
+        <span class="v-title">Password toggle in Auth.css uses <code>:focus</code> with wrong colour and width</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> Auth.css:320–325</span>
+          <span><strong>WCAG:</strong> 2.4.7 Focus Visible</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>The password toggle button still declares a <code>:focus</code> (not <code>:focus-visible</code>) rule with the wrong colour (<code>#000000</code>) and wrong width (<code>2px</code>). This fires on mouse clicks and produces an incorrect halo.</p>
+        </div>
+        <pre><code>/* Auth.css:320-325 */
+.password-toggle:hover,
+.password-toggle:focus {
+    background: #f0f0f0;
+    outline: 2px solid #000000;    /* ✗ :focus + 2px + #000000 */
+    outline-offset: 2px;           /* ✗ should be 4px */
+}</code></pre>
+        <div class="note-box">
+          <strong>Note</strong>
+          The global <code>!important</code> override in <code>index.css</code> provides a <code>3px #005aff</code> halo via <code>:focus-visible</code>, which partially compensates — but the <code>:focus</code> rule still fires on mouse clicks producing an unwanted visible ring.
+        </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- SECTION 7 -->
+  <div class="section-header" id="sec7">
+    <div class="section-num">7</div>
+    <h2>Silent Failure Audit — 2 remaining</h2>
+  </div>
+
+  <!-- V-7.4 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-7.4</span>
+        <span class="v-title">Chat panel close button drops focus on component unmount</span>
+        <span class="badge badge-high">High</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> ChatPanel.js:114–121</span>
+          <span><strong>WCAG:</strong> 2.4.3 Focus Order</span>
+          <span><strong>Status since last audit:</strong> Ref added to CallControls chat button, not wired in ChatPanel</span>
+        </div>
+        <div class="partial-note">
+          <strong>What improved</strong>
+          <code>chatToggleButtonRef</code> prop was added to <code>CallControls</code> (line 32) and the Chat button in the toolbar now receives this ref (line 228). The infrastructure for focus return exists.
+        </div>
+        <div class="violation-desc">
+          <p>The <code>chatToggleButtonRef</code> is wired to the Chat trigger button in <code>CallControls</code> but <code>ChatPanel</code> never receives this ref and does not call <code>chatToggleButtonRef.current?.focus()</code> inside <code>onClose</code> or a cleanup <code>useEffect</code>. When the panel unmounts, focus is dropped to <code>document.body</code>.</p>
+        </div>
+        <pre><code>// ChatPanel.js:114-121 — close button has no focus-return logic
+&lt;button
+    className="incall-chat-close-button"
+    onClick={onClose}      {/* unmounts panel */}
+    aria-label="Close chat panel"
+&gt;
+    &lt;FiX /&gt;
+&lt;/button&gt;
+{/* ✗ chatToggleButtonRef never passed into ChatPanel */}
+{/* ✗ onClose never calls chatToggleButtonRef.current?.focus() */}
+{/* ✗ no useEffect cleanup to restore focus */}</code></pre>
+        <div class="impact-box orange">
+          <strong>Impact</strong>
+          Screen reader users who open and close the chat during a video call lose their position in the page every time. Focus drops to <code>&lt;body&gt;</code> and the next Tab press lands on an unpredictable element.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- V-7.5 -->
+  <div class="violation-card">
+    <details>
+      <summary class="violation-card-header">
+        <span class="v-id">V-7.5</span>
+        <span class="v-title"><code>FocusManager</code> modal API is opt-in — no enforcement wrapper</span>
+        <span class="badge badge-medium">Medium</span>
+        <span class="v-chevron">▼</span>
+      </summary>
+      <div class="violation-body">
+        <div class="violation-meta">
+          <span><strong>File:</strong> FocusManager.js:134–148</span>
+          <span><strong>WCAG:</strong> 2.4.3, 2.1.2</span>
+          <span><strong>Status since last audit:</strong> Unchanged</span>
+        </div>
+        <div class="violation-desc">
+          <p>Focus trap, Escape-key handling, and <code>previousActiveElement</code> restoration all require components to manually call <code>openModal(ref)</code> and <code>closeModal()</code>. There is no enforcing <code>&lt;Modal&gt;</code> or <code>&lt;Dialog&gt;</code> wrapper. Any dialog implemented without knowing the API silently breaks modal accessibility.</p>
+        </div>
+        <pre><code>// FocusManager.js:134-148 — API is contextual, opt-in only
+const value = { isModalOpen, openModal, closeModal, saveFocus, ... };
+// No enforcing wrapper component — developers must discover and call this API</code></pre>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- ══ SUMMARY TABLE ══ -->
+  <div class="section-header" id="summary">
+    <div class="section-num">☰</div>
+    <h2>Full Re-Audit Summary Table</h2>
+  </div>
+
+  <div class="summary-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Section</th>
+          <th>Severity</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th>WCAG SC</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>V-1.1</strong></td><td>Focus Protocol</td><td><span class="badge badge-critical">Critical</span></td><td><code>GlobalRouteObserver</code> never mounted in App.tsx</td><td class="status-fixed">Fixed</td><td>2.4.3</td></tr>
+        <tr><td><strong>V-7.1</strong></td><td>Modal Trap</td><td><span class="badge badge-critical">Critical</span></td><td><code>useModalAriaHidden</code> hides modal itself</td><td class="status-fixed">Fixed</td><td>1.3.1, 2.4.3</td></tr>
+        <tr><td><strong>V-2.1</strong></td><td>Banner</td><td><span class="badge badge-critical">Critical</span></td><td>PublicSiteHeader missing SVG logo, user info, logout</td><td class="status-open">Open</td><td>1.3.1, 2.4.1</td></tr>
+        <tr><td><strong>V-1.2</strong></td><td>Focus Protocol</td><td><span class="badge badge-high">High</span></td><td>document.title → h1 focus sequence not guaranteed</td><td class="status-open">Open</td><td>2.4.2</td></tr>
+        <tr><td><strong>V-1.3</strong></td><td>Focus Protocol</td><td><span class="badge badge-high">High</span></td><td><code>&lt;h1&gt;</code> missing tabIndex="-1" as React prop</td><td class="status-open">Open</td><td>2.4.3</td></tr>
+        <tr><td><strong>V-1.4</strong></td><td>Focus Silence</td><td><span class="badge badge-high">High</span></td><td>Auth.css adds visible outline to h1:focus</td><td class="status-fixed">Fixed</td><td>2.4.7</td></tr>
+        <tr><td><strong>V-1.5</strong></td><td>Focus Protocol</td><td><span class="badge badge-medium">Medium</span></td><td>focusPageHeadingOrMain falls through to h2/h3</td><td class="status-fixed">Fixed</td><td>1.3.1</td></tr>
+        <tr><td><strong>V-1.6</strong></td><td>Focus Protocol</td><td><span class="badge badge-high">High</span></td><td>Menu-initiated navigation skips all focus handling</td><td class="status-fixed">Fixed</td><td>2.4.3</td></tr>
+        <tr><td><strong>V-2.2</strong></td><td>Banner</td><td><span class="badge badge-high">High</span></td><td>AdminHeader logo absent during API load</td><td class="status-open">Open</td><td>3.2.3</td></tr>
+        <tr><td><strong>V-2.3</strong></td><td>Banner</td><td><span class="badge badge-medium">Medium</span></td><td>Logo is raster URL, not 200px SVG</td><td class="status-open">Open</td><td>1.4.4</td></tr>
+        <tr><td><strong>V-2.4</strong></td><td>Banner</td><td><span class="badge badge-medium">Medium</span></td><td>Logout button icon-only, no visible text</td><td class="status-open">Open</td><td>2.5.3</td></tr>
+        <tr><td><strong>V-2.5</strong></td><td>Banner</td><td><span class="badge badge-medium">Medium</span></td><td>"abilityCONNECT.online Events." absent from AdminHeader</td><td class="status-partial">Partial</td><td>1.3.1</td></tr>
+        <tr><td><strong>V-3.1</strong></td><td>Navigation</td><td><span class="badge badge-high">High</span></td><td>Skip link not first focusable element on Login</td><td class="status-fixed">Fixed</td><td>2.4.1</td></tr>
+        <tr><td><strong>V-3.2</strong></td><td>Navigation</td><td><span class="badge badge-medium">Medium</span></td><td>Skip link discoverable by SR virtual cursor</td><td class="status-open">Open</td><td>2.4.1</td></tr>
+        <tr><td><strong>V-3.3</strong></td><td>Navigation</td><td><span class="badge badge-high">High</span></td><td>#app-root focus reset not observable (same-tick override)</td><td class="status-partial">Partial</td><td>2.4.3</td></tr>
+        <tr><td><strong>V-3.4</strong></td><td>Navigation</td><td><span class="badge badge-medium">Medium</span></td><td>RTE-rendered external links bypass ExternalLink</td><td class="status-open">Open</td><td>2.4.4</td></tr>
+        <tr><td><strong>V-3.5</strong></td><td>Navigation</td><td><span class="badge badge-low">Low</span></td><td>ExternalLink announce wording differs from spec</td><td class="status-open">Open</td><td>2.4.4</td></tr>
+        <tr><td><strong>V-4.1</strong></td><td>Main Content</td><td><span class="badge badge-high">High</span></td><td>h1 not first element in main on Login</td><td class="status-fixed">Fixed</td><td>1.3.1</td></tr>
+        <tr><td><strong>V-4.2</strong></td><td>Main Content</td><td><span class="badge badge-medium">Medium</span></td><td>Input hover border no visual change</td><td class="status-fixed">Fixed</td><td>1.4.11</td></tr>
+        <tr><td><strong>V-4.3</strong></td><td>Focus Halo</td><td><span class="badge badge-high">High</span></td><td>:focus used instead of :focus-visible; wrong width/colour</td><td class="status-open">Open</td><td>2.4.7</td></tr>
+        <tr><td><strong>V-4.4</strong></td><td>Focus Halo</td><td><span class="badge badge-medium">Medium</span></td><td>Auth.css halo colour fixed; outline-offset still 2px</td><td class="status-partial">Partial</td><td>2.4.7</td></tr>
+        <tr><td><strong>V-4.5</strong></td><td>Main Content</td><td><span class="badge badge-medium">Medium</span></td><td>role="toolbar" lacks arrow-key navigation</td><td class="status-fixed">Fixed</td><td>2.1.1</td></tr>
+        <tr><td><strong>V-4.6</strong></td><td>Main Content</td><td><span class="badge badge-medium">Medium</span></td><td>Checkbox touch target 10×10px</td><td class="status-open">Open</td><td>2.5.5</td></tr>
+        <tr><td><strong>V-5.1</strong></td><td>Chat</td><td><span class="badge badge-high">High</span></td><td>ChatPanel duplicate heading role</td><td class="status-fixed">Fixed</td><td>1.3.1</td></tr>
+        <tr><td><strong>V-5.2</strong></td><td>Chat</td><td><span class="badge badge-high">High</span></td><td>No "Private Chat" panel with unique aria-label</td><td class="status-open">Open</td><td>1.3.1</td></tr>
+        <tr><td><strong>V-5.3</strong></td><td>Footer</td><td><span class="badge badge-high">High</span></td><td>No global footer — no Privacy/Help links</td><td class="status-open">Open</td><td>2.4.1</td></tr>
+        <tr><td><strong>V-6.1</strong></td><td>Typography</td><td><span class="badge badge-high">High</span></td><td>Chat footer 0.6875rem (11px) below 12px minimum</td><td class="status-fixed">Fixed</td><td>1.4.4</td></tr>
+        <tr><td><strong>V-6.2</strong></td><td>Typography</td><td><span class="badge badge-medium">Medium</span></td><td>px units in 480px breakpoint (message input 13px)</td><td class="status-open">Open</td><td>1.4.4</td></tr>
+        <tr><td><strong>V-6.3</strong></td><td>Focus / Typography</td><td><span class="badge badge-high">High</span></td><td>Auth.css h1:focus cascade override (same as V-1.4)</td><td class="status-fixed">Fixed</td><td>2.4.7</td></tr>
+        <tr><td><strong>V-6.4</strong></td><td>Focus Halo</td><td><span class="badge badge-medium">Medium</span></td><td>Password toggle :focus, wrong width/colour</td><td class="status-open">Open</td><td>2.4.7</td></tr>
+        <tr><td><strong>V-7.2</strong></td><td>Modal / Focus</td><td><span class="badge badge-high">High</span></td><td>More-options menu: no focus trap, no return</td><td class="status-fixed">Fixed</td><td>2.1.2, 2.4.3</td></tr>
+        <tr><td><strong>V-7.3</strong></td><td>JS Bug</td><td><span class="badge badge-high">High</span></td><td>Escape listener cleanup removes wrong handler</td><td class="status-fixed">Fixed</td><td>2.1.1</td></tr>
+        <tr><td><strong>V-7.4</strong></td><td>Focus Return</td><td><span class="badge badge-high">High</span></td><td>Chat close drops focus on unmount</td><td class="status-open">Open</td><td>2.4.3</td></tr>
+        <tr><td><strong>V-7.5</strong></td><td>Modal API</td><td><span class="badge badge-medium">Medium</span></td><td>FocusManager modal API opt-in with no enforcement</td><td class="status-open">Open</td><td>2.4.3</td></tr>
+        <tr style="background:#fdf4ff"><td><strong>N-1</strong></td><td>Main Content</td><td><span class="badge badge-new">New</span>&nbsp;<span class="badge badge-high">High</span></td><td>Login: h1 + h2 with identical text — duplicate heading</td><td class="status-new">New</td><td>1.3.1, 4.1.2</td></tr>
+        <tr style="background:#fdf4ff"><td><strong>N-2</strong></td><td>Focus Protocol</td><td><span class="badge badge-new">New</span>&nbsp;<span class="badge badge-high">High</span></td><td>GlobalRouteObserver: same-tick #app-root + h1 double focus</td><td class="status-new">New</td><td>2.4.3</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="report-footer">
+    <p>Re-Audit — 2026-03-25 &mdash; abilityCONNECT ability_V2 &mdash; WCAG 2.1 AA + Custom Structural Protocol</p>
+    <p style="margin-top:0.4rem;">
+      Previous: 31 violations &nbsp;|&nbsp;
+      Fixed: 14 &nbsp;|&nbsp;
+      Remaining: 19 (17 open + 3 partial) &nbsp;|&nbsp;
+      New regressions: 2 &nbsp;|&nbsp;
+      No code was modified during this audit.
+    </p>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('details').forEach(d => {
+    d.addEventListener('toggle', () => {
+      const chevron = d.querySelector('.v-chevron');
+      if (chevron) chevron.textContent = d.open ? '▲' : '▼';
+    });
+  });
+</script>
+</body>
+</html>

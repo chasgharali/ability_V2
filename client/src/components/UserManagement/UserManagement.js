@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
+import useModalAriaHidden from '../../hooks/useModalAriaHidden';
 import '../Dashboard/Dashboard.css';
 import './UserManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -101,6 +102,9 @@ export default function UserManagement() {
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
   // Bulk delete
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+
+  // WCAG 1.3.1 / 2.4.3 — aria-hide background when any modal is open
+  useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Persist role filter in sessionStorage so it survives navigation within the session
@@ -1063,11 +1067,11 @@ export default function UserManagement() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="users" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
               <h1>User Management</h1>

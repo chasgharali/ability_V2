@@ -41,11 +41,11 @@ const NoteViewUser = ({ type }) => {
     if (loading) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active={type === 'troubleshooting' ? 'troubleshooting' : 'instructions'} />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="loading">Loading {type === 'troubleshooting' ? 'troubleshooting notes' : 'instructions'}...</div>
                     </main>
                 </div>
@@ -56,11 +56,11 @@ const NoteViewUser = ({ type }) => {
     if (error) {
         return (
             <div className="dashboard">
-                <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+                <a href="#main-content" className="skip-link">Skip to main content</a>
                 <AdminHeader />
                 <div className="dashboard-layout">
                     <AdminSidebar active={type === 'troubleshooting' ? 'troubleshooting' : 'instructions'} />
-                    <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                         <div className="error">
                             <h3>Error</h3>
                             <p>{error}</p>
@@ -76,11 +76,11 @@ const NoteViewUser = ({ type }) => {
 
     return (
         <div className="dashboard">
-            <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active={type === 'troubleshooting' ? 'troubleshooting' : 'instructions'} />
-                <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h1>{title}</h1>
                         <div className="bm-header-actions">

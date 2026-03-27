@@ -558,7 +558,7 @@
 /* Mobile logo bar for booth users - hidden by default, shown on mobile/tablet */
 .mobile-logo-bar {
     display: none;
-    background: #f9fafb;
+    background: #ffffff;
     border-bottom: 1px solid #e5e7eb;
     padding: 12px 1rem;
     min-height: 80px;
@@ -1655,8 +1655,18 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
 /* Responsive Design */
 @media (max-width: 1024px) {
+    .dashboard-header-content {
+        /* Reserve horizontal room for the fixed nav landmark toggle. */
+        padding-left: 3.75rem;
+    }
+
     .mobile-menu-toggle {
         display: block;
+    }
+
+    /* Center logo(s) in mobile/tablet header logo bar. */
+    .mobile-logo-container {
+        justify-content: center;
     }
 
     .dashboard-layout {
@@ -1788,7 +1798,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
     }
 
     .dashboard-header-content {
-        padding: 0 3.5rem 0 0.75rem;
+        /* Keep clear space for fixed nav toggle on the left. */
+        padding: 0 3.5rem 0 3.25rem;
         height: 72px;
         flex-wrap: nowrap;
     }
@@ -1868,6 +1879,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     /* Mobile logo bar adjustments */
     .mobile-logo-bar {
         display: block;
+        /* Prevent brand logo from colliding with fixed toggle button. */
         padding: 10px 0.75rem;
         min-height: 68px;
     }
@@ -1968,6 +1980,16 @@ body.sidebar-open .mobile-menu-toggle:hover {
         background: #fff;
     }
 
+    /* Keep the nav toggle inside the nav landmark but visually in the header area. */
+    .dashboard-sidebar .nav-landmark-toggle {
+        position: fixed;
+        top: 36px;
+        transform: translateY(-50%);
+        left: 12px;
+        z-index: 1101;
+        margin-right: 0;
+    }
+
     /* Make the overlay visible when open */
     body.sidebar-open .mobile-overlay {
         display: block;
@@ -1999,7 +2021,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
 /* Extra small screens - further optimize header */
 @media (max-width: 480px) {
     .dashboard-header-content {
-        padding: 0 3.5rem 0 0.5rem;
+        padding: 0 3.5rem 0 2.9rem;
     }
 
     .header-left {
@@ -2061,6 +2083,13 @@ body.sidebar-open .mobile-menu-toggle:hover {
         font-size: 1.25rem;
         flex-shrink: 0;
         /* never shrink hamburger */
+    }
+
+    .dashboard-sidebar .nav-landmark-toggle {
+        top: 36px;
+        transform: translateY(-50%);
+        left: 8px;
+        margin-right: 0;
     }
 }
 

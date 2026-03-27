@@ -317,7 +317,8 @@ body .e-dialog.e-rte-imagedialog {
 .e-dialog.e-rte-audiodialog .e-input:focus,
 .e-dialog.e-rte-imagedialog .e-input:focus {
     border-color: #000000 !important;
-    outline: none !important;
+    outline: 3px solid #005aff !important;
+    outline-offset: 4px !important;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
 }
 

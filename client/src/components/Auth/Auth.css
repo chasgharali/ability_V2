@@ -281,7 +281,8 @@
 }
 
 .form-input:focus {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
     border-color: #000000;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }

@@ -83,7 +83,8 @@
 
 .note-form .form-group input[type="text"]:focus,
 .note-form .form-group select:focus {
-    outline: none;
+    outline: 3px solid #005aff;
+    outline-offset: 4px;
     border-color: #2c3e50;
     box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
 }

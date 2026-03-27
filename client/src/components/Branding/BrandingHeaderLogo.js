@@ -98,11 +98,11 @@ export default function BrandingHeaderLogo() {
 
   return (
     <div className="dashboard">
-      <a href="#dashboard-main" className="skip-link">Skip to main content</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="branding" />
-        <main id="dashboard-main" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <h1>Branding – Header Logo</h1>
             {message && <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>{message}</div>}
