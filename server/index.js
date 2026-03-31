@@ -81,6 +81,8 @@ app.use(helmet({
                 "'self'",
                 "https://www.youtube.com",
                 "https://youtube.com",
+                "https://www.youtube-nocookie.com",
+                "https://youtube-nocookie.com",
                 "https://player.vimeo.com",
                 "https://www.instagram.com",
                 "https://www.facebook.com",
