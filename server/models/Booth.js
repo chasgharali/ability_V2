@@ -23,6 +23,39 @@ const richSectionSchema = new mongoose.Schema({
     }
 }, { _id: true });
 
+const employerPageSectionSchema = new mongoose.Schema({
+    key: {
+        type: String,
+        required: [true, 'Employer page section key is required'],
+        trim: true,
+        enum: ['about', 'program', 'video', 'gallery', 'jobs', 'benefits', 'contact', 'social']
+    },
+    title: {
+        type: String,
+        required: [true, 'Employer page section title is required'],
+        trim: true,
+        maxlength: [100, 'Section title cannot exceed 100 characters']
+    },
+    contentHtml: {
+        type: String,
+        required: false,
+        default: '',
+        maxlength: [10000, 'Section content cannot exceed 10000 characters']
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    order: {
+        type: Number,
+        default: 0
+    },
+    contentData: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
+    }
+}, { _id: true });
+
 const boothSchema = new mongoose.Schema({
     eventId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -84,6 +117,17 @@ const boothSchema = new mongoose.Schema({
     },
     // Rich content sections for the waiting area
     richSections: [richSectionSchema],
+    waitingAreaMode: {
+        type: String,
+        enum: ['placeholders', 'employerPage'],
+        default: 'placeholders'
+    },
+    employerPageTemplateId: {
+        type: String,
+        default: 'default-v1',
+        trim: true
+    },
+    employerPageSections: [employerPageSectionSchema],
     // Queue reference
     queueId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -220,6 +264,7 @@ boothSchema.methods.canUserManage = function (user) {
 // Instance method to get booth summary
 boothSchema.methods.getSummary = function () {
     const sections = Array.isArray(this.richSections) ? this.richSections : [];
+    const employerSections = Array.isArray(this.employerPageSections) ? this.employerPageSections : [];
     return {
         _id: this._id,
         eventId: this.eventId,
@@ -231,6 +276,8 @@ boothSchema.methods.getSummary = function () {
         expireLinkTime: this.expireLinkTime,
         customInviteSlug: this.customInviteSlug,
         joinBoothButtonLink: this.joinBoothButtonLink || '',
+        waitingAreaMode: this.waitingAreaMode || 'placeholders',
+        employerPageTemplateId: this.employerPageTemplateId || 'default-v1',
         status: this.status,
         isAvailableForQueue: this.isAvailableForQueue,
         queueId: this.queueId,
@@ -239,13 +286,26 @@ boothSchema.methods.getSummary = function () {
         richSections: sections
             .slice(0, 3)
             .sort((a, b) => a.order - b.order)
-            .map(s => ({ _id: s._id, title: s.title, contentHtml: s.contentHtml, order: s.order, isActive: s.isActive }))
+            .map(s => ({ _id: s._id, title: s.title, contentHtml: s.contentHtml, order: s.order, isActive: s.isActive })),
+        employerPageSections: employerSections
+            .filter(s => s.isActive !== false)
+            .sort((a, b) => a.order - b.order)
+            .map(s => ({
+                _id: s._id,
+                key: s.key,
+                title: s.title,
+                contentHtml: s.contentHtml,
+                contentData: s.contentData ?? null,
+                order: s.order,
+                isActive: s.isActive
+            }))
     };
 };
 
 // Instance method to get public booth info (for job seekers)
 boothSchema.methods.getPublicInfo = function () {
     const sections = Array.isArray(this.richSections) ? this.richSections : [];
+    const employerSections = Array.isArray(this.employerPageSections) ? this.employerPageSections : [];
     return {
         _id: this._id,
         name: this.name,
@@ -254,6 +314,8 @@ boothSchema.methods.getPublicInfo = function () {
         recruitersCount: this.recruitersCount,
         companyPage: this.companyPage,
         joinBoothButtonLink: this.joinBoothButtonLink || '',
+        waitingAreaMode: this.waitingAreaMode || 'placeholders',
+        employerPageTemplateId: this.employerPageTemplateId || 'default-v1',
         isAvailableForQueue: this.isAvailableForQueue,
         expireLinkTime: this.expireLinkTime,
         estimatedWaitTime: this.settings.queueSettings.estimatedWaitTime,
@@ -263,6 +325,15 @@ boothSchema.methods.getPublicInfo = function () {
             .map(section => ({
                 title: section.title,
                 contentHtml: section.contentHtml
+            })),
+        employerPageSections: employerSections
+            .filter(section => section.isActive)
+            .sort((a, b) => a.order - b.order)
+            .map(section => ({
+                key: section.key,
+                title: section.title,
+                contentHtml: section.contentHtml,
+                contentData: section.contentData ?? null
             }))
     };
 };

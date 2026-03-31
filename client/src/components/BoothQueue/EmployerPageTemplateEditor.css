@@ -1,0 +1,238 @@
+/* ============================================================
+   Employer Template Editor — Page Styles
+   ============================================================ */
+
+/* Remove default dashboard-content padding for this page only */
+.employer-editor-page {
+  padding: 0 !important;
+}
+
+/* Fill the main column and delegate vertical scroll to .elr-editor-scroll so the
+   toolbar stays visible and content never scrolls underneath it. */
+.dashboard-main:has(.employer-editor-page) {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.employer-editor-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Unified topbar ─────────────────────────────────────────── */
+.elr-topbar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 20px;
+  height: 52px;
+  flex-shrink: 0;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Left zone */
+.elr-topbar-left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.elr-topbar-title {
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+}
+.elr-topbar-booth {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+/* Center zone — layout tabs */
+.elr-layout-tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1 1 auto;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.elr-layout-tab {
+  padding: 5px 13px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1.5px solid #d1d5db;
+  border-radius: 5px;
+  background: #fff;
+  color: #4b5563;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  line-height: 1.5;
+}
+.elr-layout-tab:hover {
+  border-color: #6b9fff;
+  color: #2563eb;
+  background: #f0f5ff;
+}
+.elr-layout-tab.active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+.elr-layout-tab:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* Right zone */
+.elr-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.elr-topbar-divider {
+  width: 1px;
+  height: 22px;
+  background: #e5e7eb;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* View toggle */
+.elr-view-toggle {
+  padding: 5px 12px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1.5px solid;
+  white-space: nowrap;
+  transition: background 0.12s;
+  line-height: 1.5;
+}
+.elr-view-toggle.edit {
+  background: #fefce8;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.elr-view-toggle.edit:hover { background: #fef3c7; }
+.elr-view-toggle.live {
+  background: #f0fdf4;
+  color: #14532d;
+  border-color: #86efac;
+}
+.elr-view-toggle.live:hover { background: #dcfce7; }
+.elr-view-toggle:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* Back button */
+.elr-topbar-btn-back {
+  padding: 5px 13px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+  line-height: 1.5;
+}
+.elr-topbar-btn-back:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+.elr-topbar-btn-back:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* Save button */
+.elr-topbar-btn-save {
+  padding: 5px 14px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1.5px solid #1d4ed8;
+  background: #2563eb;
+  color: #fff;
+  white-space: nowrap;
+  transition: background 0.12s;
+  line-height: 1.5;
+}
+.elr-topbar-btn-save:hover { background: #1d4ed8; }
+.elr-topbar-btn-save:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* ── Scroll stack (hint + canvas) ─────────────────────────── */
+.elr-editor-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Edit hint banner ───────────────────────────────────────── */
+.elr-edit-hint {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: #78350f;
+  background: #fffbeb;
+  border-bottom: 1px solid #fde68a;
+  padding: 7px 20px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ── Canvas wrapper ─────────────────────────────────────────── */
+.elr-editor-canvas {
+  background: #f3f4f6;
+  padding: 20px;
+  padding-bottom: 48px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 920px) {
+  .elr-topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .elr-layout-tabs {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .elr-topbar-left  { flex: 1 1 auto; }
+  .elr-topbar-right { flex: 0 0 auto; }
+  .elr-topbar-divider { display: none; }
+}

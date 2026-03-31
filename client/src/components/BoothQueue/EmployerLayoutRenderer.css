@@ -1,0 +1,752 @@
+/* =========================================================
+   Employer Layout Renderer — mirrors wireframe CSS
+   ========================================================= */
+
+.elr-wrap {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.12);
+  position: relative;
+}
+
+/* ---------- Placeholder (empty slot) ---------- */
+.elr-ph {
+  background: #f0efec;
+  border: 1.5px dashed #bbb;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.elr-ph::before,
+.elr-ph::after {
+  content: '';
+  position: absolute;
+  width: 142%;
+  height: 1.5px;
+  background: #d0cec9;
+}
+.elr-ph::before { transform: rotate(45deg); }
+.elr-ph::after  { transform: rotate(-45deg); }
+.elr-ph-label {
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  border: 1px solid #ccc;
+  font-family: monospace;
+  font-size: 11px;
+  color: #777;
+  padding: 3px 10px;
+  border-radius: 2px;
+  text-align: center;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+/* ---------- Editable image zone ---------- */
+.elr-img-zone {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.elr-img-zone img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #fff;
+}
+
+/* Logo slots should keep full logo visible */
+.elr-a-logo-zone img,
+.elr-b-logo-zone img,
+.elr-c-logo-zone img,
+.elr-d-logo-zone img {
+  object-fit: contain;
+}
+.elr-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  cursor: pointer;
+  z-index: 4;
+}
+.elr-img-zone:hover .elr-img-overlay,
+.elr-img-zone:focus .elr-img-overlay {
+  opacity: 1;
+}
+.elr-img-overlay-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.elr-img-overlay-text {
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.elr-img-uploading {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.elr-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: elr-spin 0.7s linear infinite;
+}
+@keyframes elr-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Editable text zone ---------- */
+.elr-text-editable {
+  outline: none;
+  cursor: text;
+  border-radius: 3px;
+  transition: box-shadow 0.15s ease, background 0.15s ease;
+}
+.elr-edit-mode .elr-text-editable {
+  position: relative;
+}
+.elr-edit-mode .elr-text-editable:hover {
+  box-shadow: 0 0 0 2px #6b9fff88;
+  background: rgba(107, 159, 255, 0.06);
+}
+.elr-edit-mode .elr-text-editable:focus {
+  box-shadow: 0 0 0 2px #6b9fff;
+  background: rgba(107, 159, 255, 0.09);
+}
+.elr-edit-mode .elr-text-editable.elr-text-empty {
+  border: 1px dashed #9aa8bd;
+  background: rgba(229, 236, 248, 0.45);
+  padding: 0.3rem 0.45rem;
+  min-height: 1.5em;
+}
+.elr-edit-mode .elr-text-editable[data-empty='true']::before {
+  content: attr(data-placeholder);
+  color: #7a8799;
+  font-style: italic;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* ---------- Typography ---------- */
+/* Scoped under .elr-wrap to beat .dashboard-content h2 { color: #000 } (0,1,1) */
+.elr-wrap .elr-h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: inherit;
+  margin-bottom: 0;
+}
+.elr-wrap .elr-h2 {
+  font-family: Georgia, serif;
+  font-size: clamp(1.2rem, 2.5vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
+  margin-bottom: 0;
+}
+.elr-wrap .elr-h3 {
+  font-family: Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-style: italic;
+  color: inherit;
+  margin-bottom: 0;
+}
+.elr-wrap .elr-body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: inherit;
+}
+.elr-wrap .elr-nav-link {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.7;
+}
+.elr-wrap .elr-nav-link:hover { opacity: 1; }
+
+/* ---------- Colors ---------- */
+/* Default text colors per section background type */
+.elr-bg-white { background: #ffffff; color: #111; }
+.elr-bg-light { background: #f4f2ee; color: #222; }
+.elr-bg-blue  { background: #eef2f9; color: #1e3a5f; }
+.elr-bg-dark  { background: #1c2533; color: #fff; }
+
+/* ---------- Sections ---------- */
+.elr-sec    { padding: 3.5rem 3rem; }
+.elr-sec-sm { padding: 2rem 3rem; }
+.elr-divider { border: none; border-top: 1px solid #e0ddd8; margin: 0; }
+
+/* ---------- Dual images ---------- */
+.elr-dual-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 2rem 3rem;
+}
+.elr-dual-images .elr-img-zone,
+.elr-dual-images .elr-ph {
+  aspect-ratio: 3/2;
+  width: 100%;
+}
+
+/* ---------- Buttons ---------- */
+.elr-btn-primary {
+  display: inline-block;
+  padding: 12px 28px;
+  background: #1c2533;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid #1c2533;
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.elr-btn-primary:focus-visible { outline: 3px solid #6b9fff; outline-offset: 2px; }
+.elr-btn-outline {
+  display: inline-block;
+  padding: 12px 28px;
+  background: #fff;
+  color: #1c2533;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid #1c2533;
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.elr-btn-outline:focus-visible { outline: 3px solid #6b9fff; outline-offset: 2px; }
+
+/* ---------- Social icons ---------- */
+.elr-social-icons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.elr-social-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: #e8e6e1;
+  border: 1.5px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: #555;
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.elr-social-icon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.elr-social-icon-svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+.elr-social-icon-label {
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Jobs list ---------- */
+.elr-jobs-list { list-style: disc; padding-left: 1.25rem; }
+.elr-jobs-list li {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: inherit;
+  padding: 3px 0;
+  line-height: 1.5;
+}
+
+/* ---------- Benefits list ---------- */
+.elr-ben-list { list-style: none; padding: 0; }
+.elr-ben-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.elr-ben-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ---------- Play button ---------- */
+.elr-play-btn {
+  position: absolute;
+  z-index: 5;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.elr-play-arrow {
+  width: 0;
+  height: 0;
+  border-top: 11px solid transparent;
+  border-bottom: 11px solid transparent;
+  border-left: 18px solid #555;
+  margin-left: 4px;
+}
+
+/* ================================================================
+   LAYOUT A — Centered Classic
+   ================================================================ */
+.elr-a-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 2rem 1.5rem;
+  border-bottom: 1px solid #e8e5e0;
+}
+.elr-a-nav {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.elr-a-logo-zone {
+  width: 240px;
+  height: 100px;
+}
+.elr-a-hero-zone {
+  width: 100%;
+  max-width: 800px;
+  height: 280px;
+  margin: 0 auto;
+}
+.elr-a-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.elr-a-gallery .elr-img-zone,
+.elr-a-gallery .elr-ph {
+  aspect-ratio: 3/2;
+  width: 100%;
+}
+.elr-a-jobs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 3rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.elr-a-ben-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 3rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.elr-a-video-zone {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* ================================================================
+   LAYOUT B — Split / Square Images
+   ================================================================ */
+.elr-b-header {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  border-bottom: 1px solid #e0ddd8;
+}
+.elr-b-logo-col {
+  padding: 2rem;
+  border-right: 1px solid #e0ddd8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.elr-b-logo-zone {
+  width: 150px;
+  height: 80px;
+}
+.elr-b-nav-col {
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  align-items: center;
+}
+.elr-b-nav { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+.elr-b-about-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.elr-b-about-img-zone {
+  min-height: 320px;
+  width: 100%;
+}
+.elr-b-about-txt {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+.elr-b-prog-row { display: grid; grid-template-columns: 1fr 1fr; }
+.elr-b-prog-txt {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+.elr-b-prog-img-zone { min-height: 280px; width: 100%; }
+.elr-b-gal-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 1.5rem 3rem 2.5rem;
+}
+.elr-b-gal-row .elr-img-zone,
+.elr-b-gal-row .elr-ph {
+  aspect-ratio: 1/1;
+  width: 100%;
+}
+.elr-b-jobs-ben { display: grid; grid-template-columns: 3fr 2fr; }
+.elr-b-ben-col { padding: 2.5rem; }
+.elr-b-video-zone {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* ================================================================
+   LAYOUT C — Editorial / Mosaic
+   ================================================================ */
+.elr-c-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 3rem;
+  border-bottom: 1px solid #e0ddd8;
+}
+.elr-c-logo-zone { width: 110px; height: 48px; }
+.elr-c-nav { display: flex; gap: 2rem; flex-wrap: wrap; }
+.elr-c-about-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.elr-c-about-portrait {
+  width: 100%;
+  aspect-ratio: 3/4;
+}
+.elr-c-prog-full {
+  position: relative;
+  width: 100%;
+  height: 340px;
+}
+.elr-c-prog-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(20, 30, 50, 0.85);
+  padding: 1.75rem 2.25rem;
+}
+.elr-c-mosaic {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 8px;
+}
+.elr-c-mosaic-big {
+  grid-row: 1 / 3;
+  min-height: 340px;
+}
+.elr-c-mosaic-sm { aspect-ratio: 1/1; }
+.elr-c-mosaic-land { aspect-ratio: 3/2; }
+.elr-c-video-zone {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  position: relative;
+  margin: 0 auto;
+}
+.elr-c-jobs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 3rem;
+}
+.elr-c-ben-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 3rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ================================================================
+   LAYOUT D — Compact / Inline
+   ================================================================ */
+.elr-d-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2.5rem;
+  background: #1c2533;
+}
+.elr-d-logo-zone { width: 95px; height: 40px; }
+.elr-d-nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.elr-d-nav a {
+  text-decoration: none;
+  color: #aab5cc;
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.elr-d-identity { display: grid; grid-template-columns: 280px 1fr; }
+.elr-d-id-img-zone {
+  min-height: 260px;
+  border-right: 1px solid #e0ddd8;
+}
+.elr-d-id-txt {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+.elr-d-prog-row { display: grid; grid-template-columns: 1fr 1fr; }
+.elr-d-prog-txt {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+.elr-d-prog-img-zone { aspect-ratio: 4/3; width: 100%; }
+.elr-d-gal-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0.75rem 3rem 2.5rem;
+}
+.elr-d-gal-row .elr-img-zone,
+.elr-d-gal-row .elr-ph {
+  aspect-ratio: 3/2;
+  width: 100%;
+}
+.elr-d-cta-banner {
+  padding: 2rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.elr-d-jobs-ben { display: grid; grid-template-columns: 3fr 2fr; }
+.elr-d-ben-col { background: #1c2533; padding: 2.5rem; }
+.elr-d-video-zone {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  position: relative;
+  margin: 0 auto;
+}
+.elr-d-jobs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 2rem;
+}
+
+/* ---------- edit-mode field highlight outlines ---------- */
+.elr-edit-mode .elr-img-zone {
+  cursor: pointer;
+}
+.elr-edit-mode .elr-ph {
+  cursor: pointer;
+}
+.elr-edit-mode .elr-ph:hover {
+  background: #e8f0ff;
+  border-color: #6b9fff;
+}
+
+/* ---------- Responsive adjustments ---------- */
+@media (max-width: 760px) {
+  .elr-b-about-row,
+  .elr-b-prog-row,
+  .elr-c-about-row,
+  .elr-d-identity,
+  .elr-d-prog-row,
+  .elr-b-jobs-ben,
+  .elr-d-jobs-ben { grid-template-columns: 1fr; }
+  .elr-b-gal-row,
+  .elr-d-gal-row { grid-template-columns: repeat(2, 1fr); }
+  .elr-c-mosaic { grid-template-columns: 1fr 1fr; }
+  .elr-c-mosaic-big { grid-row: auto; min-height: 200px; }
+  .elr-a-gallery,
+  .elr-a-jobs-grid,
+  .elr-a-ben-grid,
+  .elr-c-jobs-grid,
+  .elr-c-ben-grid { grid-template-columns: 1fr; }
+  .elr-dual-images { grid-template-columns: 1fr; }
+  .elr-sec, .elr-sec-sm { padding: 2rem 1.25rem; }
+  .elr-b-about-txt, .elr-b-prog-txt,
+  .elr-d-id-txt, .elr-d-prog-txt { padding: 1.75rem; }
+}
+
+/* =========================================================
+   Section Color Bar — edit-mode controls
+   ========================================================= */
+.elr-color-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #e2e8f0;
+  backdrop-filter: blur(4px);
+  flex-wrap: wrap;
+  min-height: 36px;
+  position: relative;
+  z-index: 10;
+}
+
+.elr-color-bar-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
+.elr-color-bar-sep {
+  width: 1px;
+  height: 18px;
+  background: #cbd5e1;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Circular color swatch buttons */
+.elr-color-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.elr-color-swatch:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+.elr-color-swatch.elr-swatch-active {
+  box-shadow: 0 0 0 2.5px #2563eb;
+  transform: scale(1.1);
+}
+
+/* Custom color picker trigger */
+.elr-color-custom-wrap {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+.elr-color-custom-wrap input[type="color"] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+  padding: 0;
+  border: none;
+}
+.elr-color-custom-swatch {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 0 2px rgba(0,0,0,0.4);
+}
+
+/* Reset button */
+.elr-color-reset {
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  color: #ef4444;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: background 0.12s, color 0.12s;
+}
+.elr-color-reset:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}

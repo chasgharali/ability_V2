@@ -6,6 +6,7 @@ const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
 
 const router = express.Router();
+const EMPLOYER_SECTION_KEYS = ['about', 'program', 'video', 'gallery', 'jobs', 'benefits', 'contact', 'social'];
 
 /**
  * GET /api/booths
@@ -231,6 +232,14 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
         .matches(/^[a-z0-9-]+$/)
         .withMessage('Custom invite must be lowercase letters, numbers, and dashes only'),
     body('joinBoothButtonLink').optional().isString().trim(),
+    body('waitingAreaMode').optional().isIn(['placeholders', 'employerPage']),
+    body('employerPageTemplateId').optional().isString().trim().isLength({ min: 1, max: 100 }),
+    body('employerPageSections').optional().isArray({ max: 8 }),
+    body('employerPageSections.*.key').optional().isIn(EMPLOYER_SECTION_KEYS),
+    body('employerPageSections.*.title').optional().isString().isLength({ min: 1, max: 100 }),
+    body('employerPageSections.*.contentHtml').optional().isString().isLength({ min: 0, max: 10000 }),
+    body('employerPageSections.*.isActive').optional().isBoolean(),
+    body('employerPageSections.*.order').optional().isInt({ min: 0, max: 7 }),
     body('richSections').optional().isArray({ max: 3 }),
     body('richSections.*.title').optional().isString().isLength({ min: 1, max: 100 }),
     body('richSections.*.contentHtml').optional().isString().isLength({ min: 0, max: 5000 }),
@@ -243,7 +252,21 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             return res.status(400).json({ error: 'Validation failed', details: errors.array() });
         }
 
-        const { name, description, logoUrl, companyPage, recruitersCount, expireLinkTime, customInviteSlug, joinBoothButtonLink, richSections = [], eventIds } = req.body;
+        const {
+            name,
+            description,
+            logoUrl,
+            companyPage,
+            recruitersCount,
+            expireLinkTime,
+            customInviteSlug,
+            joinBoothButtonLink,
+            waitingAreaMode,
+            employerPageTemplateId,
+            employerPageSections = [],
+            richSections = [],
+            eventIds
+        } = req.body;
         const Event = require('../models/Event');
 
         const validEvents = [];
@@ -334,10 +357,20 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             expireLinkTime: expireLinkTime || null,
             customInviteSlug: customInviteSlug || undefined,
             joinBoothButtonLink: joinBoothButtonLink || '',
+            waitingAreaMode: waitingAreaMode || 'placeholders',
+            employerPageTemplateId: employerPageTemplateId || 'default-v1',
             organizationId: resolvedOrgId || null,
             richSections: (richSections || []).slice(0, 3).map((s, index) => ({
                 title: s.title || `Section ${index + 1}`,
                 contentHtml: s.contentHtml || '',
+                isActive: s.isActive !== false,
+                order: s.order ?? index
+            })),
+            employerPageSections: (employerPageSections || []).slice(0, 8).map((s, index) => ({
+                key: EMPLOYER_SECTION_KEYS.includes(s.key) ? s.key : EMPLOYER_SECTION_KEYS[index],
+                title: s.title || `Section ${index + 1}`,
+                contentHtml: s.contentHtml || '',
+                contentData: s.contentData ?? null,
                 isActive: s.isActive !== false,
                 order: s.order ?? index
             }))
@@ -607,6 +640,16 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .optional()
         .isString()
         .trim(),
+    body('waitingAreaMode')
+        .optional()
+        .isIn(['placeholders', 'employerPage'])
+        .withMessage('Waiting area mode must be placeholders or employerPage'),
+    body('employerPageTemplateId')
+        .optional()
+        .isString()
+        .trim()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Employer page template id must be between 1 and 100 characters'),
     body('eventId')
         .optional()
         .isMongoId()
@@ -635,7 +678,21 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             });
         }
 
-        const { name, description, logoUrl, status, companyPage, recruitersCount, expireLinkTime, customInviteSlug, joinBoothButtonLink, eventId, events } = req.body;
+        const {
+            name,
+            description,
+            logoUrl,
+            status,
+            companyPage,
+            recruitersCount,
+            expireLinkTime,
+            customInviteSlug,
+            joinBoothButtonLink,
+            waitingAreaMode,
+            employerPageTemplateId,
+            eventId,
+            events
+        } = req.body;
         const { booth, user } = req;
         const Event = require('../models/Event');
 
@@ -704,6 +761,8 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             updateData.customInviteSlug = slugValue;
         }
         if (joinBoothButtonLink !== undefined) updateData.joinBoothButtonLink = joinBoothButtonLink;
+        if (waitingAreaMode !== undefined) updateData.waitingAreaMode = waitingAreaMode;
+        if (employerPageTemplateId !== undefined) updateData.employerPageTemplateId = employerPageTemplateId || 'default-v1';
         if (eventId !== undefined) {
             const targetEvent = await Event.findById(eventId);
             if (!targetEvent) {
@@ -903,6 +962,98 @@ router.put('/:id/rich-sections', authenticateToken, requireResourceAccess('booth
         res.status(500).json({
             error: 'Failed to update rich sections',
             message: 'An error occurred while updating the rich sections'
+        });
+    }
+});
+
+/**
+ * PUT /api/booths/:id/employer-page-sections
+ * Update booth employer page sections
+ */
+router.put('/:id/employer-page-sections', authenticateToken, requireResourceAccess('booth', 'id'), [
+    body('sections')
+        .isArray({ min: 1, max: 8 })
+        .withMessage('Must provide 1-8 employer page sections'),
+    body('sections.*.key')
+        .isIn(EMPLOYER_SECTION_KEYS)
+        .withMessage(`Section key must be one of: ${EMPLOYER_SECTION_KEYS.join(', ')}`),
+    body('sections.*.title')
+        .trim()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Section title must be between 1 and 100 characters'),
+    body('sections.*.contentHtml')
+        .optional({ nullable: true, checkFalsy: false })
+        .trim()
+        .isLength({ min: 0, max: 10000 })
+        .withMessage('Section content cannot exceed 10000 characters'),
+    body('sections.*.isActive')
+        .optional()
+        .isBoolean()
+        .withMessage('Section active status must be boolean'),
+    body('sections.*.order')
+        .optional()
+        .isInt({ min: 0, max: 7 })
+        .withMessage('Section order must be between 0 and 7')
+], async (req, res) => {
+    try {
+        const { sections } = req.body;
+        const { booth, user } = req;
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: 'Please check your input data',
+                details: errors.array()
+            });
+        }
+
+        const dedupedKeys = new Set();
+        for (const section of sections) {
+            if (dedupedKeys.has(section.key)) {
+                return res.status(400).json({
+                    error: 'Validation failed',
+                    message: `Duplicate section key: ${section.key}`
+                });
+            }
+            dedupedKeys.add(section.key);
+        }
+
+        const employerPageSectionsData = sections.map((section, index) => ({
+            key: section.key,
+            title: section.title,
+            contentHtml: section.contentHtml || '',
+            contentData: section.contentData ?? null,
+            isActive: section.isActive !== undefined ? section.isActive : true,
+            order: section.order !== undefined ? section.order : index
+        }));
+
+        const updatedBooth = await Booth.findByIdAndUpdate(
+            booth._id,
+            {
+                $set: {
+                    waitingAreaMode: 'employerPage',
+                    employerPageSections: employerPageSectionsData
+                }
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedBooth) {
+            return res.status(404).json({ error: 'Booth not found' });
+        }
+
+        logger.info(`Booth employer page sections updated: ${updatedBooth.name} by ${user.email}`);
+
+        res.json({
+            message: 'Employer page sections updated successfully',
+            sections: updatedBooth.employerPageSections
+        });
+    } catch (error) {
+        logger.error('Update booth employer page sections error:', error);
+        res.status(500).json({
+            error: 'Failed to update employer page sections',
+            message: 'An error occurred while updating the employer page sections'
         });
     }
 });

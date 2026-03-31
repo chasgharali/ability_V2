@@ -50,6 +50,13 @@ export async function updateBoothRichSections(id, sections) {
   return res.data;
 }
 
+export async function updateBoothEmployerPageSections(id, sections) {
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+  const res = await axios.put(`/api/booths/${id}/employer-page-sections`, { sections }, { headers });
+  return res.data;
+}
+
 // Resolve booth by invite slug for job seeker queue links
 export async function resolveBoothInvite(slug) {
   const token = localStorage.getItem('token');

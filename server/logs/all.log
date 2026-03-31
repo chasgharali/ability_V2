@@ -4632,3 +4632,1375 @@
 2026-03-16 01:44:55:4455 [32minfo[39m: [32mUser canada.admin@gmail.com connected via socket[39m
 2026-03-16 01:47:59:4759 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
 2026-03-16 01:47:59:4759 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:13:52:1352 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 19:13:52:1352 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:13:52:1352 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-29 19:13:52:1352 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-29 19:13:52:1352 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 19:13:52:1352 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 19:13:52:1352 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 19:13:52:1352 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 19:13:52:1352 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 19:13:52:1352 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 19:13:52:1352 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 19:13:53:1353 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-29 19:13:53:1353 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-29 19:13:55:1355 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-29 19:13:56:1356 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 19:13:56:1356 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-29 19:13:59:1359 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-29 19:14:19:1419 [32minfo[39m: [32mUser testorg.js@yopmail.com connected via socket[39m
+2026-03-29 19:14:19:1419 [32minfo[39m: [32mUser testorg.js@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-29 19:14:19:1419 [32minfo[39m: [32mUser testorg.js@yopmail.com connected via socket[39m
+2026-03-29 19:14:30:1430 [32minfo[39m: [32mUser testorg.js@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-29 19:14:59:1459 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-29 19:14:59:1459 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-29 19:15:02:152 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-29 19:15:03:153 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-29 19:15:03:153 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-29 19:15:03:153 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-29 19:15:36:1536 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/download.jpeg[39m
+2026-03-29 19:15:38:1538 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/download.jpeg[39m
+2026-03-29 19:15:45:1545 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-29 19:15:46:1546 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-29 19:15:47:1547 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-29 19:15:47:1547 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-29 19:15:49:1549 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-29 19:16:20:1620 [32minfo[39m: [32mUser logged in: superadmin@abilityconnect.online[39m
+2026-03-29 19:16:20:1620 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-29 19:16:24:1624 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 19:16:34:1634 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-29 19:16:54:1654 [31merror[39m: [31mError listing organizations: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-29 19:16:54:1654 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-29 19:16:56:1656 [31merror[39m: [31mAuthentication error: Topology is closed[39m
+2026-03-29 19:17:07:177 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 19:17:07:177 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mMongoDB connection failed: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-29 19:17:37:1737 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-29 19:17:37:1737 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 19:17:37:1737 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 19:17:37:1737 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 19:17:37:1737 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 19:17:37:1737 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 19:17:37:1737 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 19:17:37:1737 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:39:1739 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:39:1739 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:39:1739 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:40:1740 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:41:1741 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:41:1741 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:42:1742 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:43:1743 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:43:1743 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:44:1744 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:45:1745 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:46:1746 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:47:1747 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:47:1747 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-29 19:22:24:2224 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 19:22:24:2224 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:22:54:2254 [31merror[39m: [31mMongoDB connection failed: getaddrinfo ENOTFOUND cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-29 19:22:54:2254 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-29 19:22:54:2254 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 19:22:54:2254 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 19:22:54:2254 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 19:22:54:2254 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 19:22:54:2254 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 19:22:54:2254 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 19:22:54:2254 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 19:22:55:2255 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-29 19:22:55:2255 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-29 19:25:28:2528 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-29 19:25:30:2530 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 19:25:30:2530 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:25:30:2530 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-29 19:25:30:2530 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-29 19:25:30:2530 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-29 19:25:47:2547 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:25:49:2549 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:25:50:2550 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:10:2610 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-29 19:26:11:2611 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 19:26:11:2611 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:26:11:2611 [31merror[39m: [31mMongoDB connection failed: queryTxt ESERVFAIL cluster-ability.okhfe.mongodb.net[39m
+2026-03-29 19:26:11:2611 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-29 19:26:11:2611 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 19:26:11:2611 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 19:26:11:2611 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 19:26:11:2611 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 19:26:11:2611 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 19:26:11:2611 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 19:26:11:2611 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 19:26:12:2612 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-29 19:26:12:2612 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-29 19:26:15:2615 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:16:2616 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:18:2618 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:19:2619 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:22:2622 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-29 19:26:24:2624 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 19:26:24:2624 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 19:26:54:2654 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-29 19:26:54:2654 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 19:26:54:2654 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-29 19:26:55:2655 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-29 19:27:03:273 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:44:30:4430 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 20:20:15:2015 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 21:07:35:735 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 21:09:25:925 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 21:09:28:928 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-29 21:09:31:931 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-29 21:09:31:931 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-29 21:09:34:934 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-29 21:09:35:935 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-29 21:09:35:935 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-29 21:13:06:136 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:13:07:137 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:13:17:1317 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 21:13:18:1318 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:24:08:248 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:24:08:248 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:24:27:2427 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 21:24:27:2427 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:24:36:2436 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 21:24:36:2436 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 21:42:01:421 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:42:01:421 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:42:03:423 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 21:42:03:423 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:42:04:424 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 21:42:04:424 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 21:59:38:5938 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 21:59:40:5940 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 21:59:40:5940 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 22:16:04:164 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 22:16:04:164 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 22:33:42:3342 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 22:33:42:3342 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 22:33:44:3344 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 22:33:44:3344 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 22:51:49:5149 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 22:51:51:5151 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 22:51:51:5151 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 22:51:52:5152 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 22:51:52:5152 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:08:33:833 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:08:35:835 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 23:08:35:835 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:08:37:837 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 23:08:37:837 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:24:51:2451 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:24:53:2453 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 23:24:53:2453 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:24:55:2455 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 23:24:55:2455 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:40:46:4046 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:40:48:4048 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 23:40:48:4048 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:40:50:4050 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 23:40:50:4050 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:58:37:5837 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:58:39:5839 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-29 23:58:39:5839 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-29 23:58:41:5841 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-29 23:58:41:5841 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 00:16:25:1625 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:16:27:1627 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 00:16:27:1627 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:16:28:1628 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 00:16:28:1628 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 00:25:52:2552 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:26:03:263 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 00:26:03:263 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:42:48:4248 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:42:51:4251 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 00:42:51:4251 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:42:53:4253 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 00:42:53:4253 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 00:59:14:5914 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:59:14:5914 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:59:16:5916 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 00:59:16:5916 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 00:59:18:5918 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 00:59:18:5918 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 01:15:50:1550 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:15:50:1550 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:15:51:1551 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 01:15:51:1551 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:15:53:1553 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 01:15:53:1553 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 01:26:53:2653 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:26:53:2653 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:27:04:274 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 01:27:04:274 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:43:33:4333 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:43:36:4336 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 01:43:36:4336 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:43:38:4338 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 01:43:38:4338 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 01:53:58:5358 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:53:58:5358 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 01:54:09:549 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 01:54:09:549 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:12:16:1216 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:12:16:1216 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:12:19:1219 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 02:12:19:1219 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:12:21:1221 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 02:12:21:1221 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 02:27:54:2754 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:27:56:2756 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 02:27:56:2756 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:27:57:2757 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 02:27:57:2757 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 02:46:26:4626 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:46:28:4628 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 02:46:28:4628 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 02:46:30:4630 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 02:46:30:4630 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 03:04:01:41 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 03:04:04:44 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 03:04:04:44 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 03:21:52:2152 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 03:21:52:2152 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 03:44:58:4458 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 03:44:58:4458 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 03:45:00:450 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 03:45:00:450 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 04:02:30:230 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:02:32:232 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 04:02:32:232 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:02:34:234 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 04:02:34:234 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 04:18:41:1841 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:18:43:1843 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 04:18:43:1843 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:18:44:1844 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 04:18:44:1844 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 04:29:56:2956 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:33:01:331 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 04:33:02:332 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:50:04:504 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:50:07:507 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 04:50:07:507 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 04:50:09:509 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 04:50:09:509 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 05:06:08:68 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 05:06:10:610 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 05:06:10:610 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 05:06:12:612 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 05:06:12:612 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 05:21:20:2120 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 05:30:58:3058 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-30 05:57:20:5720 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 05:57:20:5720 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 05:57:21:5721 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 05:57:21:5721 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 06:13:26:1326 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 06:13:26:1326 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 06:31:21:3121 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 06:31:21:3121 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 06:31:22:3122 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 06:31:22:3122 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 06:47:25:4725 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 06:47:27:4727 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 06:47:27:4727 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 06:47:28:4728 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 06:47:28:4728 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 07:03:16:316 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 07:03:18:318 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 07:03:18:318 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 07:03:19:319 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 07:03:19:319 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 07:19:15:1915 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 07:19:18:1918 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 07:19:18:1918 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 07:32:31:3231 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 07:32:31:3231 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 07:49:00:490 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 07:49:05:495 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 07:49:05:495 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 08:05:49:549 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 08:05:51:551 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 08:05:51:551 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 08:05:52:552 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 08:05:52:552 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 08:20:57:2057 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 08:20:59:2059 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 08:20:59:2059 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 08:21:00:210 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 08:21:00:210 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 08:33:21:3321 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 08:33:32:3332 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 08:33:32:3332 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 08:50:37:5037 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 08:50:42:5042 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 08:50:42:5042 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 09:08:19:819 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 09:08:19:819 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 09:25:12:2512 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 09:25:12:2512 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 09:25:13:2513 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 09:25:13:2513 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 09:34:22:3422 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 09:34:33:3433 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 09:34:33:3433 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 09:51:59:5159 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 09:52:04:524 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 09:52:04:524 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 10:09:23:923 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:09:26:926 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 10:09:27:927 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:26:03:263 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:26:03:263 [31merror[39m: [31mQueue cleanup error: connection 58 to 89.194.51.79:27017 timed out[39m
+2026-03-30 10:26:06:266 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 10:26:06:266 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:26:07:267 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 10:26:07:267 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 10:35:23:3523 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:35:23:3523 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:35:34:3534 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 10:35:34:3534 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:53:09:539 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:53:09:539 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:53:12:5312 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 10:53:12:5312 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 10:53:14:5314 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 10:53:14:5314 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 11:11:11:1111 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:11:11:1111 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:11:13:1113 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 11:11:13:1113 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:11:15:1115 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 11:11:15:1115 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 11:26:56:2656 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:26:56:2656 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:26:58:2658 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 11:26:58:2658 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:26:59:2659 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 11:26:59:2659 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 11:36:23:3623 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:36:23:3623 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:36:34:3634 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 11:36:34:3634 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:43:47:4347 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:43:47:4347 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:43:49:4349 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 11:43:49:4349 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 11:43:51:4351 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 11:43:51:4351 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 12:00:21:021 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 12:00:25:025 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 12:00:25:025 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 12:16:56:1656 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 12:16:56:1656 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 12:37:31:3731 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 12:37:32:3732 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 12:37:33:3733 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 12:37:33:3733 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 12:38:30:3830 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-30 18:23:25:2325 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 18:23:25:2325 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 18:23:25:2325 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-30 18:23:25:2325 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-30 18:23:25:2325 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 18:23:25:2325 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 18:23:25:2325 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 18:23:25:2325 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 18:23:25:2325 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 18:23:25:2325 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 18:23:25:2325 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 18:23:26:2326 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 18:23:26:2326 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 18:25:15:2515 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-30 18:25:19:2519 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 18:25:19:2519 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 18:25:21:2521 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 18:25:22:2522 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 18:25:22:2522 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 18:25:46:2546 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-30 18:25:46:2546 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:40:22:4022 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 18:40:22:4022 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 18:53:21:5321 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 18:53:21:5321 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 18:53:23:5323 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 18:53:24:5324 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 18:53:24:5324 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 18:53:27:5327 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 18:54:07:547 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 18:54:07:547 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 18:54:10:5410 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 18:54:12:5412 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 18:54:12:5412 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 18:54:13:5413 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:09:11:911 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 19:09:11:911 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:24:11:2411 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 19:24:11:2411 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 19:34:45:3445 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 19:34:45:3445 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 19:34:47:3447 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-30 19:34:47:3447 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 19:34:48:3448 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 19:34:50:3450 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:36:12:3612 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 19:36:12:3612 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 19:36:15:3615 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 19:36:16:3616 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 19:36:17:3617 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 19:36:17:3617 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 19:36:19:3619 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-30 19:36:19:3619 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 19:36:20:3620 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 19:36:22:3622 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:36:28:3628 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 19:36:28:3628 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 19:36:30:3630 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-30 19:36:30:3630 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 19:36:31:3631 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 19:36:33:3633 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:36:36:3636 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 19:36:36:3636 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 19:36:38:3638 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 19:36:39:3639 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 19:36:41:3641 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:43:15:4315 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-30 19:43:15:4315 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-30 19:43:17:4317 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-30 19:43:18:4318 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-30 19:43:18:4318 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-30 19:43:20:4320 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:44:44:4444 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:44:44:4444 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-30 19:44:44:4444 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:58:18:5818 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 19:58:18:5818 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 20:13:18:1318 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 20:13:18:1318 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:16:55:1655 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-30 20:16:55:1655 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-30 20:16:56:1656 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 20:16:57:1657 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-30 20:20:44:2044 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 20:20:44:2044 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 20:56:08:568 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30120ms (connectTimeoutMS: 30000)[39m
+2026-03-30 21:29:38:2938 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.70:27017[39m
+2026-03-30 21:32:29:3229 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.70:27017[39m
+2026-03-30 21:45:16:4516 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 21:45:16:4516 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 21:45:18:4518 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 21:45:18:4518 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:01:45:145 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:01:45:145 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:01:47:147 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 22:01:47:147 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:01:48:148 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 22:01:48:148 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:17:55:1755 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:17:57:1757 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 22:17:57:1757 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:17:58:1758 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 22:17:58:1758 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:34:08:348 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:34:10:3410 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-30 22:34:10:3410 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:34:11:3411 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 22:34:11:3411 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:49:43:4943 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:49:43:4943 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-30 22:49:46:4946 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 22:49:46:4946 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 23:08:20:820 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 23:08:20:820 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 23:36:53:3653 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 23:36:53:3653 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 23:54:46:5446 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-30 23:54:46:5446 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 00:06:04:64 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 00:09:45:945 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 00:09:45:945 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 00:21:03:213 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 00:21:03:213 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 00:21:05:215 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 00:21:06:216 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 00:21:06:216 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 00:21:06:216 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 00:21:06:216 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 00:21:07:217 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 00:37:27:3727 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 00:37:27:3727 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 01:11:28:1128 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-31 01:28:29:2829 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-31 01:28:32:2832 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 01:28:32:2832 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 01:44:26:4426 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 01:44:26:4426 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 01:44:27:4427 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 01:44:27:4427 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:00:47:047 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 02:00:47:047 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 02:00:48:048 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 02:00:48:048 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:16:24:1624 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 02:16:26:1626 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 02:16:26:1626 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 02:16:27:1627 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 02:16:27:1627 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:22:06:226 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 02:22:17:2217 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 02:22:17:2217 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 02:38:28:3828 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 02:38:32:3832 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 02:38:32:3832 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:55:38:5538 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 02:55:38:5538 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 03:12:40:1240 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 03:12:40:1240 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 03:12:41:1241 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 03:12:41:1241 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 03:23:06:236 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 03:39:36:3936 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 03:39:36:3936 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 03:55:34:5534 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 03:55:34:5534 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 04:13:56:1356 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 04:13:56:1356 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 04:13:57:1357 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 04:13:57:1357 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 04:24:06:246 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 04:30:01:301 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 04:30:01:301 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 04:47:00:470 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 04:47:01:471 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 04:47:02:472 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 04:47:02:472 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:03:25:325 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 05:03:26:326 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 05:03:27:327 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 05:03:28:328 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 05:03:28:328 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:19:52:1952 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 05:19:55:1955 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 05:19:55:1955 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:25:17:2517 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 05:25:17:2517 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 05:41:32:4132 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 05:41:36:4136 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 05:41:36:4136 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:57:38:5738 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 05:57:38:5738 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 06:14:50:1450 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 06:14:50:1450 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 06:26:17:2617 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 06:26:17:2617 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 06:42:37:4237 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 06:42:41:4241 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 06:42:41:4241 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 07:00:20:020 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 07:00:20:020 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 07:00:22:022 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 07:00:22:022 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 07:16:04:164 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 07:16:06:166 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 07:16:06:166 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 07:16:07:167 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 07:16:07:167 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 07:27:06:276 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 07:27:20:2720 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 07:45:24:4524 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 07:45:26:4526 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 07:45:26:4526 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 08:02:02:22 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 08:02:05:25 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 08:02:05:25 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 08:19:37:1937 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 08:19:37:1937 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 08:19:39:1939 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 08:19:39:1939 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 08:28:06:286 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 08:28:17:2817 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 08:28:17:2817 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 08:46:46:4646 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 08:46:50:4650 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 08:46:50:4650 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 09:03:10:310 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 09:03:10:310 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 09:20:04:204 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 09:20:04:204 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 09:46:55:4655 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 09:46:55:4655 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 10:04:29:429 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 10:04:29:429 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 10:04:31:431 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 10:04:31:431 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 10:19:59:1959 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 10:19:59:1959 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 10:20:01:201 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 10:20:01:201 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 10:30:06:306 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 10:46:33:4633 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 10:46:33:4633 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:03:45:345 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 11:03:45:345 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 11:03:47:347 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 11:03:47:347 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:21:02:212 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 11:21:05:215 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 11:21:05:215 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:42:09:429 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-31 11:42:09:429 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-31 11:42:10:4210 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-31 11:42:10:4210 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 11:42:10:4210 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 11:42:11:4211 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 11:42:11:4211 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:43:20:4320 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 11:57:04:574 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 11:57:34:5734 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-31 12:02:26:226 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 12:12:06:126 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 12:12:06:126 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 12:22:34:2234 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 12:27:04:274 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 12:27:04:274 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 12:39:30:3930 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 12:39:32:3932 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 12:42:04:424 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 12:42:04:424 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 12:57:04:574 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 12:57:04:574 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 13:12:04:124 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 13:12:04:124 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 13:27:29:2729 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 13:27:29:2729 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 13:28:01:281 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-31 13:42:34:4234 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30013ms (connectTimeoutMS: 30000)[39m
+2026-03-31 13:57:34:5734 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30003ms (connectTimeoutMS: 30000)[39m
+2026-03-31 14:06:52:652 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 14:07:00:70 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 14:07:02:72 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 14:07:02:72 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 14:07:32:732 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-31 14:07:32:732 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-31 14:07:32:732 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 14:07:32:732 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 14:07:32:732 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 14:07:32:732 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 14:07:32:732 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 14:07:32:732 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 14:07:32:732 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 14:07:33:733 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-31 14:07:33:733 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-31 14:22:42:2242 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-31 14:24:39:2439 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 14:24:40:2440 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 14:24:40:2440 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mMongoDB connection failed: querySrv ECONNREFUSED _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 14:24:40:2440 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-31 14:24:40:2440 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 14:24:40:2440 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 14:24:40:2440 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 14:24:40:2440 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 14:24:40:2440 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 14:24:40:2440 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 14:24:40:2440 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:41:2441 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:41:2441 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:41:2441 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:42:2442 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 14:24:44:2444 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 14:24:44:2444 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 14:24:46:2446 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-31 14:24:46:2446 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-31 14:24:47:2447 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-31 14:24:54:2454 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-31 14:24:55:2455 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 14:39:47:3947 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 14:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 14:46:43:4643 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 14:46:46:4646 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 14:46:46:4646 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-31 14:46:46:4646 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 14:52:18:5218 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 14:52:20:5220 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 14:52:20:5220 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-31 14:52:20:5220 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 14:52:55:5255 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/FA-JobsAbilityCAN.png[39m
+2026-03-31 14:52:57:5257 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/FA-JobsAbilityCAN.png[39m
+2026-03-31 14:53:23:5323 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Gemini_Generated_Image_g0vnjpg0vnjpg0vn (1).png[39m
+2026-03-31 14:53:27:5327 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Gemini_Generated_Image_g0vnjpg0vnjpg0vn__1_.png[39m
+2026-03-31 14:53:43:5343 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/unnamed.jpg[39m
+2026-03-31 14:53:47:5347 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/unnamed.jpg[39m
+2026-03-31 14:54:19:5419 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Gemini_Generated_Image_l1md3dl1md3dl1md.png[39m
+2026-03-31 14:54:23:5423 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Gemini_Generated_Image_l1md3dl1md3dl1md.png[39m
+2026-03-31 14:54:47:5447 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 14:54:47:5447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 14:57:59:5759 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/510-5104408_high-resolution-toshiba-logo-png-logo-toshiba-transparent.png[39m
+2026-03-31 14:58:02:582 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/510-5104408_high-resolution-toshiba-logo-png-logo-toshiba-transparent.png[39m
+2026-03-31 14:58:09:589 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/abilityconnect.online.png[39m
+2026-03-31 14:58:11:5811 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/abilityconnect.online.png[39m
+2026-03-31 14:58:16:5816 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/FA-JobsAbilityCAN.png[39m
+2026-03-31 14:58:19:5819 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/FA-JobsAbilityCAN.png[39m
+2026-03-31 14:58:50:5850 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 14:58:50:5850 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-31 14:58:50:5850 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 14:58:52:5852 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 15:04:12:412 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 15:04:14:414 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 15:04:14:414 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-31 15:04:14:414 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 15:06:29:629 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 15:06:31:631 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 15:06:31:631 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-31 15:06:32:632 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 15:09:47:947 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 15:09:47:947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 15:09:56:956 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: booth-logo/Dartmouth-sq.webp[39m
+2026-03-31 15:09:59:959 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: booth-logo/697c6b4937938cf1ff0299d7/Dartmouth-sq.webp[39m
+2026-03-31 15:10:05:105 [32minfo[39m: [32mBooth updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 15:10:06:106 [32minfo[39m: [32mBooth rich sections updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 15:10:22:1022 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Dartmouth-sq.webp[39m
+2026-03-31 15:10:24:1024 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Dartmouth-sq.webp[39m
+2026-03-31 15:13:26:1326 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Dartmouth-community-members-in-a-healthfood-store.jpg[39m
+2026-03-31 15:13:29:1329 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Dartmouth-community-members-in-a-healthfood-store.jpg[39m
+2026-03-31 15:13:57:1357 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Researcher-and-professor-on-campus-grounds-landscape-ff4d30a4378fcd112d00308b847bb962-60d6667be69fc.jpg[39m
+2026-03-31 15:13:59:1359 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Researcher-and-professor-on-campus-grounds-landscape-ff4d30a4378fcd112d00308b847bb962-60d6667be69fc.jpg[39m
+2026-03-31 15:14:05:145 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Dartmouth-community-members-in-a-healthfood-store.jpg[39m
+2026-03-31 15:14:08:148 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Dartmouth-community-members-in-a-healthfood-store.jpg[39m
+2026-03-31 15:14:15:1415 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Researcher-and-professor-on-campus-grounds-landscape-ff4d30a4378fcd112d00308b847bb962-60d6667be69fc.jpg[39m
+2026-03-31 15:14:18:1418 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Researcher-and-professor-on-campus-grounds-landscape-ff4d30a4378fcd112d00308b847bb962-60d6667be69fc.jpg[39m
+2026-03-31 15:21:32:2132 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/dartmouth-college-campus-with-blooming-tree-in-foreground.jpg[39m
+2026-03-31 15:21:35:2135 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/dartmouth-college-campus-with-blooming-tree-in-foreground.jpg[39m
+2026-03-31 15:21:56:2156 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/People-talking-at-Wellness-Fair-booths.jpg[39m
+2026-03-31 15:21:58:2158 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/People-talking-at-Wellness-Fair-booths.jpg[39m
+2026-03-31 15:22:04:224 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Library-employees-holding-favorite-books.jpg[39m
+2026-03-31 15:22:07:227 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Library-employees-holding-favorite-books.jpg[39m
+2026-03-31 15:22:10:2210 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Visiting-Scholar-Ambassador-Johnnie-Carson-speaks-to-students-landscape-afb9b23ae8ab40f02d6f389108467ef0-60d6667be69d0.jpg[39m
+2026-03-31 15:22:12:2212 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Visiting-Scholar-Ambassador-Johnnie-Carson-speaks-to-students-landscape-afb9b23ae8ab40f02d6f389108467ef0-60d6667be69d0.jpg[39m
+2026-03-31 15:24:47:2447 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 15:24:47:2447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 15:39:47:3947 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 15:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 15:54:47:5447 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 15:54:47:5447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:09:47:947 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 16:09:47:947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:24:47:2447 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 16:24:47:2447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:39:47:3947 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 16:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:54:47:5447 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 16:54:47:5447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:07:39:739 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Dartmouth-sq.webp[39m
+2026-03-31 17:07:42:742 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Dartmouth-sq.webp[39m
+2026-03-31 17:07:55:755 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/dartmouth-college-campus-with-blooming-tree-in-foreground.jpg[39m
+2026-03-31 17:07:58:758 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/dartmouth-college-campus-with-blooming-tree-in-foreground.jpg[39m
+2026-03-31 17:08:24:824 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Dartmouth-community-members-in-a-healthfood-store.jpg[39m
+2026-03-31 17:08:27:827 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Dartmouth-community-members-in-a-healthfood-store.jpg[39m
+2026-03-31 17:09:02:92 [32minfo[39m: [32mBooth updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:09:03:93 [32minfo[39m: [32mBooth employer page sections updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:09:14:914 [32minfo[39m: [32mBooth updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:09:15:915 [32minfo[39m: [32mBooth employer page sections updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:09:47:947 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 17:09:47:947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:24:47:2447 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 17:24:47:2447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:25:53:2553 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Researcher-and-professor-on-campus-grounds-landscape-ff4d30a4378fcd112d00308b847bb962-60d6667be69fc.jpg[39m
+2026-03-31 17:25:57:2557 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Researcher-and-professor-on-campus-grounds-landscape-ff4d30a4378fcd112d00308b847bb962-60d6667be69fc.jpg[39m
+2026-03-31 17:27:48:2748 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Library-employees-holding-favorite-books.jpg[39m
+2026-03-31 17:27:52:2752 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/Visiting-Scholar-Ambassador-Johnnie-Carson-speaks-to-students-landscape-afb9b23ae8ab40f02d6f389108467ef0-60d6667be69d0.jpg[39m
+2026-03-31 17:27:52:2752 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Library-employees-holding-favorite-books.jpg[39m
+2026-03-31 17:27:54:2754 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/Visiting-Scholar-Ambassador-Johnnie-Carson-speaks-to-students-landscape-afb9b23ae8ab40f02d6f389108467ef0-60d6667be69d0.jpg[39m
+2026-03-31 17:27:55:2755 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/People-talking-at-Wellness-Fair-booths.jpg[39m
+2026-03-31 17:27:57:2757 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/People-talking-at-Wellness-Fair-booths.jpg[39m
+2026-03-31 17:27:57:2757 [32minfo[39m: [32mPresigned URL generated for user tadmin.ability@yopmail.com: image/dartmouth-college-campus-with-blooming-tree-in-foreground.jpg[39m
+2026-03-31 17:27:59:2759 [32minfo[39m: [32mFile upload confirmed for user tadmin.ability@yopmail.com: image/697c6b4937938cf1ff0299d7/dartmouth-college-campus-with-blooming-tree-in-foreground.jpg[39m
+2026-03-31 17:32:06:326 [32minfo[39m: [32mBooth updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:32:07:327 [32minfo[39m: [32mBooth employer page sections updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:35:06:356 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: transport close[39m
+2026-03-31 17:35:08:358 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 17:35:08:358 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-31 17:35:08:358 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 17:39:47:3947 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 17:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:40:10:4010 [32minfo[39m: [32mBooth updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:40:11:4011 [32minfo[39m: [32mBooth employer page sections updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:41:09:419 [32minfo[39m: [32mBooth updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:41:10:4110 [32minfo[39m: [32mBooth employer page sections updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:42:44:4244 [32minfo[39m: [32mUser logged in: test.devjs@yopmail.com[39m
+2026-03-31 17:42:44:4244 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-03-31 17:42:45:4245 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:42:49:4249 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:42:55:4255 [32minfo[39m: [32mUser tadmin.ability@yopmail.com disconnected: client namespace disconnect[39m
+2026-03-31 17:43:07:437 [32minfo[39m: [32mUser logged in: superadmin@abilityconnect.online[39m
+2026-03-31 17:43:07:437 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-31 17:43:08:438 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:43:13:4313 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:43:13:4313 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-03-31 17:43:33:4333 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-03-31 17:43:43:4343 [31merror[39m: [31mError listing organizations: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-31 17:44:00:440 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:44:00:440 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:44:02:442 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 17:44:02:442 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 17:44:05:445 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:44:05:445 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-31 17:44:05:445 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 17:44:05:445 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 17:44:05:445 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 17:44:05:445 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 17:44:05:445 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 17:44:05:445 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 17:44:05:445 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 17:44:06:446 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-31 17:44:06:446 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-31 17:44:08:448 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:44:08:448 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:44:09:449 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:44:09:449 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:44:17:4417 [31merror[39m: [31mSocket authentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-03-31 17:44:17:4417 [32minfo[39m: [32mProcess terminated[39m
+2026-03-31 17:44:22:4422 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 17:44:22:4422 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 17:44:22:4422 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:44:22:4422 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-31 17:44:22:4422 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 17:44:22:4422 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 17:44:22:4422 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 17:44:22:4422 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 17:44:22:4422 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 17:44:22:4422 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 17:44:22:4422 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:24:4424 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:24:4424 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:24:4424 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:25:4425 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:25:4425 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:44:27:4427 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 17:44:27:4427 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:44:27:4427 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-31 17:44:27:4427 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 17:44:27:4427 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 17:44:27:4427 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 17:44:27:4427 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 17:44:27:4427 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 17:44:27:4427 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 17:44:27:4427 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:28:4428 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:28:4428 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:28:4428 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:29:4429 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:29:4429 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:30:4430 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:30:4430 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:31:4431 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:31:4431 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:45:02:452 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 17:45:02:452 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mMongoDB connection failed: queryTxt ESERVFAIL cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:45:09:459 [33mwarn[39m: [33mContinuing without database connection in development mode[39m
+2026-03-31 17:45:09:459 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 17:45:09:459 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 17:45:09:459 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 17:45:09:459 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 17:45:09:459 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 17:45:09:459 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 17:45:09:459 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:10:4510 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:10:4510 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:10:4510 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:11:4511 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:11:4511 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:12:4512 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:13:4513 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:13:4513 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:14:4514 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:15:4515 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:16:4516 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:16:4516 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:17:4517 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:18:4518 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:19:4519 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:20:4520 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:21:4521 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:23:4523 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:24:4524 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:25:4525 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:26:4526 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:28:4528 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:29:4529 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:31:4531 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:32:4532 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:34:4534 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:35:4535 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:37:4537 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:39:4539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:44:4544 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:46:4546 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:48:4548 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:50:4550 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:52:4552 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:54:4554 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:56:4556 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:58:4558 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:00:460 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:02:462 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:04:464 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:06:466 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:08:468 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:10:4610 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:12:4612 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:14:4614 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:16:4616 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:18:4618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:20:4620 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:22:4622 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:24:4624 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:26:4626 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:28:4628 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:30:4630 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:32:4632 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:34:4634 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:36:4636 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:38:4638 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:40:4640 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:42:4642 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:44:4644 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:46:4646 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:48:4648 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:50:4650 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:52:4652 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:54:4654 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:56:4656 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:58:4658 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:47:00:470 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:47:02:472 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-31 17:47:03:473 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-31 17:49:04:494 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 17:49:06:496 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 17:49:06:496 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 17:49:08:498 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-31 17:49:08:498 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-31 17:49:09:499 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-31 17:49:21:4921 [32minfo[39m: [32mUser logged in: superadmin@abilityconnect.online[39m
+2026-03-31 17:49:21:4921 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-03-31 17:49:46:4946 [32minfo[39m: [32mOrganization updated: ABILITY Job Fair by superadmin@abilityconnect.online[39m
+2026-03-31 17:49:48:4948 [32minfo[39m: [32mOrganization logo uploaded for ABILITY Job Fair by superadmin@abilityconnect.online[39m
+2026-03-31 17:50:01:501 [32minfo[39m: [32mOrganization updated: Canada Organization by superadmin@abilityconnect.online[39m
+2026-03-31 17:50:03:503 [32minfo[39m: [32mOrganization logo uploaded for Canada Organization by superadmin@abilityconnect.online[39m
+2026-03-31 17:50:16:5016 [32minfo[39m: [32mPresigned URL generated for user superadmin@abilityconnect.online: image/abilityconnect.online.png[39m
+2026-03-31 17:50:18:5018 [32minfo[39m: [32mFile upload confirmed for user superadmin@abilityconnect.online: image/69b0804c0c97c13c79f0bf36/abilityconnect.online.png[39m
+2026-03-31 17:50:40:5040 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-03-31 17:50:48:5048 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-03-31 17:50:54:5054 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-03-31 17:51:00:510 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-03-31 17:51:02:512 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-03-31 17:54:12:5412 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: client namespace disconnect[39m
+2026-03-31 17:54:22:5422 [32minfo[39m: [32mUser logged in: tadmin.ability@yopmail.com[39m
+2026-03-31 17:54:22:5422 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 17:54:45:5445 [32minfo[39m: [32mBooth updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:54:46:5446 [32minfo[39m: [32mBooth employer page sections updated: Dartmouth by tadmin.ability@yopmail.com[39m
+2026-03-31 17:58:35:5835 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 17:58:36:5836 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 17:58:36:5836 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:00:36:036 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:00:50:050 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:00:51:051 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:02:51:251 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:04:09:49 [32minfo[39m: [32mFound 1 stale queue entries to clean up[39m
+2026-03-31 18:04:09:49 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 18:04:51:451 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:06:51:651 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:08:51:851 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:10:51:1051 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:12:51:1251 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:14:51:1451 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:16:26:1626 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 18:16:26:1626 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:20:1720 [31merror[39m: [31mError handling queue heartbeat: Socket 'secureConnect' timed out after 30069ms (connectTimeoutMS: 30000)[39m
+2026-03-31 18:17:28:1728 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-03-31 18:17:31:1731 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-03-31 18:17:31:1731 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-03-31 18:17:39:1739 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-31 18:17:39:1739 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mConnected to Redis[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mRedis Client Connected[39m
+2026-03-31 18:17:40:1740 [32minfo[39m: [32mRedis Client Ready[39m
+2026-03-31 18:17:42:1742 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-03-31 18:17:42:1742 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:17:44:1744 [32minfo[39m: [32mUser tadmin.ability@yopmail.com connected via socket[39m
+2026-03-31 18:19:08:198 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-03-31 18:19:08:198 [32minfo[39m: [32mAuto-removed user test.devjs@yopmail.com from queue for booth 69217b85a664a77e2f75b9f1 due to disconnect[39m
+2026-03-31 18:19:09:199 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-03-31 18:19:22:1922 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:19:22:1922 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-03-31 18:19:22:1922 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 69217b85a664a77e2f75b9f1[39m

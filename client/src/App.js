@@ -41,6 +41,7 @@ import InterpreterCategories from './components/InterpreterCategories/Interprete
 import BoothQueueEntry from './components/BoothQueue/BoothQueueEntry';
 import BoothQueueWaiting from './components/BoothQueue/BoothQueueWaiting';
 import BoothQueueManagement from './components/BoothQueue/BoothQueueManagement';
+import EmployerPageTemplateEditor from './components/BoothQueue/EmployerPageTemplateEditor';
 import VideoCall from './components/VideoCall/VideoCall';
 import QueueInviteResolver from './components/BoothQueue/QueueInviteResolver';
 import LandingPage from './components/Landing/LandingPage';
@@ -147,6 +148,7 @@ function App() {
                                     <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/boothmanagement" element={<RequireAuth><RequireRole allowedRoles={['Admin', 'AdminEvent', 'GlobalSupport']}><BoothManagement /></RequireRole></RequireAuth>} />
+                                    <Route path="/boothmanagement/template-editor" element={<RequireAuth><RequireRole allowedRoles={['Admin', 'AdminEvent', 'GlobalSupport']}><EmployerPageTemplateEditor /></RequireRole></RequireAuth>} />
                                     <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
                                     <Route
                                         path="/branding"

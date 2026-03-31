@@ -9,6 +9,7 @@ import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt, FaBars } 
 import VideoCall from '../VideoCall/VideoCall';
 import CallInviteModal from '../VideoCall/CallInviteModal';
 import DeviceTestModal from './DeviceTestModal';
+import EmployerPageTemplate from './EmployerPageTemplate';
 import { useToast, ToastContainer } from '../common/Toast';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -1084,8 +1085,10 @@ export default function BoothQueueWaiting() {
     );
   }
 
+  const isEmployerPageMode = booth?.waitingAreaMode === 'employerPage';
+
   return (
-    <div className="booth-queue-waiting">
+    <div className={`booth-queue-waiting${isEmployerPageMode ? ' employer-mode' : ''}`}>
       {/* Global header with event branding */}
       <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} brandingLogoAlt={event?.logoAltText || ''} hideMenuToggle={true} />
 
@@ -1225,7 +1228,7 @@ export default function BoothQueueWaiting() {
         </div>
 
         {/* Main content */}
-        <div className="waiting-main">
+        <div className={`waiting-main${isEmployerPageMode ? ' employer-mode' : ''}`}>
           {/* Mobile toggle for queue panel - only shows action buttons */}
           <button
             className="mobile-toggle-btn"
@@ -1290,10 +1293,12 @@ export default function BoothQueueWaiting() {
           </div>
 
           {/* Waiting message on top of placeholders */}
-          <div className="waiting-message-header waiting-message-centered" role="status" aria-live="polite">
-            <h3>You are now in the queue.</h3>
-            <p>An invitation to join will appear when it's your turn.</p>
-          </div>
+          {!isEmployerPageMode && (
+            <div className="waiting-message-header waiting-message-centered" role="status" aria-live="polite">
+              <h3>You are now in the queue.</h3>
+              <p>An invitation to join will appear when it's your turn.</p>
+            </div>
+          )}
 
           {/* ARIA Live Regions for Screen Reader Announcements */}
           <div aria-live="assertive" aria-atomic="true" className="sr-only">
@@ -1302,34 +1307,39 @@ export default function BoothQueueWaiting() {
             ))}
           </div>
 
-          {/* Content sections - expanded */}
-          <div className="content-grid-expanded">
-            {(booth?.richSections && booth.richSections.length > 0
-              ? booth.richSections
-                .filter(s => s.isActive !== false)
-                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                .slice(0, 3)
-              : [
-                {
-                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Welcome to the booth</div>'
-                },
-                {
-                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Resources coming soon</div>'
-                },
-                {
-                  contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Please stay on this page</div>'
-                }
-              ]
-            ).map((section, idx) => (
-              <div key={section._id || idx} className="content-card-expanded">
-                {section.contentHtml ? (
-                  <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
-                ) : (
-                  <p className="content-placeholder">Content will be available soon.</p>
-                )}
-              </div>
-            ))}
-          </div>
+          {isEmployerPageMode ? (
+            <div className="waiting-employer-pane">
+              <EmployerPageTemplate booth={booth} />
+            </div>
+          ) : (
+            <div className="content-grid-expanded">
+              {(booth?.richSections && booth.richSections.length > 0
+                ? booth.richSections
+                  .filter(s => s.isActive !== false)
+                  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                  .slice(0, 3)
+                : [
+                  {
+                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Welcome to the booth</div>'
+                  },
+                  {
+                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Resources coming soon</div>'
+                  },
+                  {
+                    contentHtml: '<div style="width:100%;height:180px;border-radius:8px;background:linear-gradient(135deg,#f3f4f6,#e5e7eb);display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:600;">Please stay on this page</div>'
+                  }
+                ]
+              ).map((section, idx) => (
+                <div key={section._id || idx} className="content-card-expanded">
+                  {section.contentHtml ? (
+                    <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
+                  ) : (
+                    <p className="content-placeholder">Content will be available soon.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Removed old right sidebar */}

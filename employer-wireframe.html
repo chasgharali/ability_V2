@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employer Page Wireframe Variations</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, 'Times New Roman', serif; background: #e8e6e1; color: #1a1a1a; }
+
+  #switcher {
+    position: sticky; top: 0; z-index: 100;
+    background: #1a1a1a; padding: 0 1rem;
+    display: flex; align-items: stretch;
+    border-bottom: 3px solid #4a4a4a;
+  }
+  #switcher-label {
+    color: #888; font-family: monospace; font-size: 11px;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: 0 1rem 0 0; display: flex; align-items: center;
+    border-right: 1px solid #333; margin-right: 4px;
+  }
+  .var-btn {
+    background: none; border: none; color: #888;
+    font-family: monospace; font-size: 12px;
+    padding: 14px 18px; cursor: pointer;
+    letter-spacing: .05em; text-transform: uppercase;
+    border-bottom: 3px solid transparent; margin-bottom: -3px;
+    transition: color .15s, border-color .15s;
+  }
+  .var-btn:hover { color: #ccc; }
+  .var-btn.active { color: #fff; border-bottom-color: #6b9fff; }
+  .var-btn:focus-visible { outline: 2px solid #6b9fff; outline-offset: -2px; }
+
+  .variation { display: none; }
+  .variation.active { display: block; }
+
+  .page-wrap {
+    max-width: 1400px; margin: 2rem auto;
+    background: #fff; box-shadow: 0 4px 40px rgba(0,0,0,.18);
+  }
+
+  .ph {
+    background: #f0efec; border: 1.5px dashed #bbb;
+    position: relative; display: flex;
+    align-items: center; justify-content: center; overflow: hidden;
+  }
+  .ph::before, .ph::after {
+    content: ""; position: absolute;
+    width: 142%; height: 1.5px; background: #d0cec9;
+  }
+  .ph::before { transform: rotate(45deg); }
+  .ph::after  { transform: rotate(-45deg); }
+  .ph-label {
+    position: relative; z-index: 2;
+    background: #fff; border: 1px solid #ccc;
+    font-family: monospace; font-size: 11px; color: #777;
+    padding: 3px 10px; border-radius: 2px;
+    text-align: center; line-height: 1.4; pointer-events: none;
+  }
+
+  .skip-link {
+    position: absolute; top: -999px; left: 0;
+    background: #1a1a1a; color: #fff; padding: 8px 16px;
+    font-size: 13px; z-index: 9999; font-family: monospace;
+  }
+  .skip-link:focus { top: 0; }
+
+  .wf-h1   { font-family: Georgia,serif; font-size: clamp(2rem,4vw,3rem); font-weight: 700; line-height: 1.15; color: #111; }
+  .wf-h2   { font-family: Georgia,serif; font-size: clamp(1.3rem,2.5vw,1.75rem); font-weight: 700; line-height: 1.25; color: #111; }
+  .wf-h3   { font-family: Georgia,serif; font-size: 1.2rem; font-weight: 600; font-style: italic; color: #444; }
+  .wf-body { font-family: Arial,Helvetica,sans-serif; font-size: 1rem; line-height: 1.7; color: #555; }
+  .wf-nav  { font-family: Arial,sans-serif; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #888; }
+
+  .bg-white { background: #ffffff; }
+  .bg-light { background: #f4f2ee; }
+  .bg-blue  { background: #eef2f9; }
+  .bg-dark  { background: #1c2533; color: #fff; }
+  .bg-dark .wf-h2  { color: #fff; }
+  .bg-dark .wf-body{ color: #b0b8c8; }
+
+  .sec    { padding: 3.5rem 3rem; }
+  .sec-sm { padding: 2rem 3rem; }
+
+  /* Two side-by-side 600x400 images — replaces single hero in every layout */
+  .dual-images {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.5rem; padding: 2rem 3rem;
+  }
+  .dual-images .ph { aspect-ratio: 3/2; }
+
+  .btn-primary {
+    display: inline-block; padding: 14px 32px;
+    background: #1c2533; color: #fff;
+    font-family: Arial,sans-serif; font-size: 15px; font-weight: 700;
+    border: 2px solid #1c2533; text-decoration: none; border-radius: 4px;
+  }
+  .btn-primary:focus-visible { outline: 3px solid #6b9fff; outline-offset: 2px; }
+  .btn-outline {
+    display: inline-block; padding: 14px 32px;
+    background: #fff; color: #1c2533;
+    font-family: Arial,sans-serif; font-size: 15px; font-weight: 700;
+    border: 2px solid #1c2533; text-decoration: none; border-radius: 4px;
+  }
+  .btn-outline:focus-visible { outline: 3px solid #6b9fff; outline-offset: 2px; }
+
+  .social-icons { display: flex; gap: 16px; justify-content: center; }
+  .social-icon {
+    width: 40px; height: 40px; border-radius: 6px;
+    background: #e8e6e1; border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-family: monospace; font-size: 9px; font-weight: 700; color: #555;
+    text-decoration: none;
+  }
+
+  .jobs-list { list-style: disc; padding-left: 1.25rem; }
+  .jobs-list li { font-family: Arial,sans-serif; font-size: 14px; color: #555; padding: 4px 0; line-height: 1.5; }
+
+  .ben-list { list-style: none; padding: 0; }
+  .ben-list li {
+    display: flex; align-items: center; gap: 10px;
+    font-family: Arial,sans-serif; font-size: 15px; font-weight: 700;
+    color: #d0d8e8; padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .ben-dot { width: 8px; height: 8px; border-radius: 50%; background: #4a6a99; flex-shrink: 0; }
+
+  .play-btn {
+    position: absolute; z-index: 5;
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(255,255,255,.9); border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .play-arrow {
+    width: 0; height: 0;
+    border-top: 12px solid transparent; border-bottom: 12px solid transparent;
+    border-left: 20px solid #555; margin-left: 4px;
+  }
+
+  .divider { border: none; border-top: 1px solid #e0ddd8; margin: 0; }
+
+  .ann {
+    display: inline-block; font-family: monospace; font-size: 10px;
+    background: #eef2f9; border: 1px solid #b8c8e8;
+    color: #3355aa; padding: 2px 8px; border-radius: 2px;
+    margin-bottom: 6px; letter-spacing: .04em;
+  }
+  .ann-dk { color: #8899bb; background: #0d1522; border-color: #2a3a55; }
+
+  /* Layout A */
+  .va-header { display: flex; flex-direction: column; align-items: center; padding: 2.5rem 2rem 1.5rem; border-bottom: 1px solid #e8e5e0; }
+  .va-nav    { display: flex; gap: 2.5rem; margin-top: 1.25rem; }
+
+  /* Layout B */
+  .vb-header    { display: grid; grid-template-columns: 220px 1fr; border-bottom: 1px solid #e0ddd8; }
+  .vb-logo-col  { padding: 2rem; border-right: 1px solid #e0ddd8; display: flex; align-items: center; justify-content: center; }
+  .vb-nav-col   { padding: 1.5rem 2.5rem; display: flex; align-items: center; }
+  .vb-nav       { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+  .vb-about-row { display: grid; grid-template-columns: 1fr 1fr; }
+  .vb-about-txt { padding: 3rem; display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
+  .vb-prog-row  { display: grid; grid-template-columns: 1fr 1fr; }
+  .vb-gal-row   { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; padding: 1.5rem 3rem 2.5rem; }
+
+  /* Layout C */
+  .vc-header    { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 3rem; border-bottom: 1px solid #e0ddd8; }
+  .vc-nav       { display: flex; gap: 2rem; }
+  .vc-about-row { display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: start; }
+  .vc-mosaic    { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: auto auto; gap: 8px; }
+  .vc-mosaic-big{ grid-row: 1 / 3; }
+
+  /* Layout D */
+  .vd-header    { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2.5rem; background: #1c2533; }
+  .vd-identity  { display: grid; grid-template-columns: 300px 1fr; }
+  .vd-id-txt    { padding: 3rem; display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
+  .vd-prog-row  { display: grid; grid-template-columns: 1fr 1fr; }
+  .vd-jobs-ben  { display: grid; grid-template-columns: 3fr 2fr; }
+  .vd-ben-col   { background: #1c2533; padding: 3rem; }
+</style>
+</head>
+<body>
+
+<nav id="switcher" aria-label="Layout variation selector">
+  <span id="switcher-label" aria-hidden="true">Layout</span>
+  <button class="var-btn active" onclick="showVar('a')" aria-pressed="true"  id="btn-a">A — Centered Classic</button>
+  <button class="var-btn"        onclick="showVar('b')" aria-pressed="false" id="btn-b">B — Split / Square Images</button>
+  <button class="var-btn"        onclick="showVar('c')" aria-pressed="false" id="btn-c">C — Editorial / Mosaic</button>
+  <button class="var-btn"        onclick="showVar('d')" aria-pressed="false" id="btn-d">D — Compact / Inline</button>
+</nav>
+
+
+<!-- ══ A: CENTERED CLASSIC ══
+     Logo centered · dual images above identity text · 2×2 gallery ══ -->
+<section class="variation active" id="var-a" aria-label="Variation A: Centered Classic">
+<div class="page-wrap">
+  <a href="#main-a" class="skip-link">Skip to main content</a>
+
+  <header class="va-header bg-white" role="banner">
+    <span class="ann">§1 Company Logo — centered, large</span>
+    <div class="ph" style="width:260px;height:110px;" role="img" aria-label="Company logo placeholder 260 by 110 pixels">
+      <span class="ph-label">Company Logo · 260 × 110</span>
+    </div>
+    <nav class="va-nav" aria-label="Page sections">
+      <a href="#a-about"    class="wf-nav" style="text-decoration:none;">About</a>
+      <a href="#a-program"  class="wf-nav" style="text-decoration:none;">Programs</a>
+      <a href="#a-video"    class="wf-nav" style="text-decoration:none;">Video</a>
+      <a href="#a-gallery"  class="wf-nav" style="text-decoration:none;">Gallery</a>
+      <a href="#a-jobs"     class="wf-nav" style="text-decoration:none;">Careers</a>
+      <a href="#a-benefits" class="wf-nav" style="text-decoration:none;">Benefits</a>
+      <a href="#a-contact"  class="wf-nav" style="text-decoration:none;">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main-a">
+    <!-- §2 Brand Identity: centered hero image → centered text block -->
+    <section id="a-about" class="bg-white" aria-labelledby="a-about-h">
+      <div style="padding:2rem 3rem .25rem;"><span class="ann">§2 Brand Identity — centered hero image 800×300, then name + tagline + about</span></div>
+      <div style="display:flex;justify-content:center;padding:0 3rem;">
+        <div class="ph" style="width:100%;max-width:800px;height:300px;" role="img" aria-label="Hero banner image placeholder 800 by 300 pixels">
+          <span class="ph-label">Hero / Banner Image · 800 × 300 px</span>
+        </div>
+      </div>
+      <div class="sec" style="padding-top:2rem;text-align:center;">
+        <div style="max-width:720px;margin:0 auto;">
+          <h1 class="wf-h1" id="a-about-h" style="margin-bottom:.75rem;">Company Name</h1>
+          <p class="wf-h2" style="font-size:1.25rem;margin-bottom:1rem;color:#446;">Mission Statement / Tagline Goes Here</p>
+          <p class="wf-body">About Us paragraph — describes the company's history, core values, and overall mission. Serves as the primary introduction for job seekers explaining what the company does and why it is a great place to work.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §3 Special Program -->
+    <section id="a-program" class="sec bg-blue" aria-labelledby="a-prog-h">
+      <span class="ann">§3 Special Program — image top, title + text below · centered</span>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;max-width:680px;margin:0 auto;text-align:center;">
+        <div class="ph" style="width:100%;max-width:600px;aspect-ratio:3/2;" role="img" aria-label="Special program image 600 by 400 pixels"><span class="ph-label">Program Image · 600 × 400</span></div>
+        <h2 class="wf-h2" id="a-prog-h">Special Program Title</h2>
+        <p class="wf-body">Description of a specific initiative — internships, veteran hiring, or diversity programs that distinguish this employer from others at the job fair.</p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §4 Video -->
+    <section id="a-video" class="sec bg-white" aria-labelledby="a-vid-h">
+      <span class="ann">§4 Hosted Video</span>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+        <h2 class="wf-h2" id="a-vid-h">Executive Welcome Video</h2>
+        <div class="ph" style="width:100%;max-width:800px;aspect-ratio:16/9;position:relative;" role="img" aria-label="YouTube video player placeholder 16 by 9">
+          <span class="ph-label">YouTube Video Embed · 16:9</span>
+          <div class="play-btn" aria-hidden="true"><div class="play-arrow"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §5 Gallery 2×2 -->
+    <section id="a-gallery" class="sec bg-light" aria-labelledby="a-gal-h">
+      <span class="ann">§5 Image Gallery — 2 × 2 grid · each 600 × 400</span>
+      <h2 class="wf-h2" id="a-gal-h" style="text-align:center;margin-bottom:2rem;">Life at the Company</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:900px;margin:0 auto;">
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 1 placeholder 600 by 400"><span class="ph-label">Gallery Image 1 · 600 × 400</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 2 placeholder 600 by 400"><span class="ph-label">Gallery Image 2 · 600 × 400</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 3 placeholder 600 by 400"><span class="ph-label">Gallery Image 3 · 600 × 400</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 4 placeholder 600 by 400"><span class="ph-label">Gallery Image 4 · 600 × 400</span></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §6 CTA -->
+    <section id="a-contact" class="sec bg-white" aria-labelledby="a-cta-h">
+      <span class="ann">§6 Call to Action</span>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;text-align:center;">
+        <h2 class="wf-h2" id="a-cta-h">Contact</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;">
+          <a href="#" class="btn-primary">Join Our Talent Community</a>
+          <a href="#" class="btn-outline">View Our Open Positions</a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §7 Jobs -->
+    <section id="a-jobs" class="sec bg-light" aria-labelledby="a-jobs-h">
+      <span class="ann">§7 Hiring Categories & Roles</span>
+      <div style="max-width:900px;margin:0 auto;">
+        <h2 class="wf-h2" id="a-jobs-h" style="margin-bottom:1.5rem;">Open Positions</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 3rem;">
+          <ul class="jobs-list" aria-label="Open positions column 1">
+            <li>Senior Software Engineer (Remote)</li><li>Project Manager – Operations</li><li>Customer Success Specialist</li><li>Marketing Data Analyst</li><li>Human Resources Business Partner</li><li>Laboratory Technician I</li><li>Account Executive – Sales</li><li>UX/UI Designer</li><li>QA Automation Engineer</li><li>Financial Planning Analyst</li>
+          </ul>
+          <ul class="jobs-list" aria-label="Open positions column 2">
+            <li>Cloud Infrastructure Lead</li><li>Network Security Engineer</li><li>Entry Level Lab Assistant</li><li>Content Strategist</li><li>Legal Counsel – Employment</li><li>Supply Chain Coordinator</li><li>Facilities Manager</li><li>Business Systems Analyst</li><li>Technical Writer</li><li>Administrative Assistant</li>
+          </ul>
+        </div>
+        <div style="margin-top:2.5rem;">
+          <h3 class="wf-h3" style="margin-bottom:.5rem;">Locations</h3>
+          <p class="wf-body">New York, San Francisco, Austin, Chicago, London, Berlin, Tokyo, Sydney, Remote (US), Remote (Global)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- §8 Benefits -->
+    <section id="a-benefits" class="sec bg-dark" aria-labelledby="a-ben-h">
+      <span class="ann ann-dk">§8 Employee Benefits Grid</span>
+      <div style="max-width:900px;margin:0 auto;">
+        <h2 class="wf-h2" id="a-ben-h" style="margin-bottom:1.5rem;">Benefits</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 3rem;">
+          <ul class="ben-list" aria-label="Benefits column 1">
+            <li><span class="ben-dot" aria-hidden="true"></span>Medical, Dental, Vision</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>401(k) Retirement Plan</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>Flexible Time Off (FTO)</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>Paid Parental Leave</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>Tuition Reimbursement</li>
+          </ul>
+          <ul class="ben-list" aria-label="Benefits column 2">
+            <li><span class="ben-dot" aria-hidden="true"></span>Stock Purchase Plan (ESPP)</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>Wellness Stipend</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>Home Office Setup Fund</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>Life Insurance (AD&D)</li>
+            <li><span class="ben-dot" aria-hidden="true"></span>Career Mentorship</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="sec-sm bg-white" style="text-align:center;border-top:1px solid #e8e5e0;" role="contentinfo">
+    <span class="ann">§9 Social Media</span>
+    <nav class="social-icons" aria-label="Social media links" style="margin-bottom:1rem;">
+      <a href="#" class="social-icon" aria-label="Facebook">FB</a><a href="#" class="social-icon" aria-label="LinkedIn">IN</a><a href="#" class="social-icon" aria-label="Instagram">IG</a><a href="#" class="social-icon" aria-label="Bluesky">BS</a><a href="#" class="social-icon" aria-label="Threads">TH</a><a href="#" class="social-icon" aria-label="X (formerly Twitter)">X</a>
+    </nav>
+    <p style="font-family:monospace;font-size:12px;color:#aaa;">© 2026 Employer Name. All Rights Reserved.</p>
+  </footer>
+</div>
+</section>
+
+
+<!-- ══ B: SPLIT / SQUARE IMAGES ══
+     Logo left col · nav right · name once in about text
+     Dual images top · square about image · square program image · 4 square gallery ══ -->
+<section class="variation" id="var-b" aria-label="Variation B: Split layout with square images">
+<div class="page-wrap">
+  <a href="#main-b" class="skip-link">Skip to main content</a>
+
+  <header class="vb-header bg-white" role="banner">
+    <div class="vb-logo-col">
+      <div class="ph" style="width:160px;height:90px;" role="img" aria-label="Company logo placeholder 160 by 90 pixels"><span class="ph-label">Company Logo · 160 × 90</span></div>
+    </div>
+    <div class="vb-nav-col">
+      <nav class="vb-nav" aria-label="Page sections">
+        <a href="#b-about"    class="wf-nav" style="text-decoration:none;">About</a>
+        <a href="#b-program"  class="wf-nav" style="text-decoration:none;">Programs</a>
+        <a href="#b-video"    class="wf-nav" style="text-decoration:none;">Video</a>
+        <a href="#b-gallery"  class="wf-nav" style="text-decoration:none;">Gallery</a>
+        <a href="#b-jobs"     class="wf-nav" style="text-decoration:none;">Careers</a>
+        <a href="#b-benefits" class="wf-nav" style="text-decoration:none;">Benefits</a>
+        <a href="#b-contact"  class="wf-nav" style="text-decoration:none;">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-b">
+    <!-- Dual identity images at top -->
+    <div style="padding:.75rem 3rem 0;background:#fff;"><span class="ann">Two 600×400 brand images — replacing single hero banner</span></div>
+    <div class="dual-images bg-white" role="group" aria-label="Company identity images">
+      <div class="ph" role="img" aria-label="Brand image 1, 600 by 400 pixels"><span class="ph-label">Brand Image 1 · 600 × 400</span></div>
+      <div class="ph" role="img" aria-label="Brand image 2, 600 by 400 pixels"><span class="ph-label">Brand Image 2 · 600 × 400</span></div>
+    </div>
+
+    <!-- §2 About: square image left, text right -->
+    <section id="b-about" class="bg-white" aria-labelledby="b-about-h">
+      <div style="padding:.5rem 3rem 0;"><span class="ann">§2 Brand Identity — square image left, name + tagline + about right</span></div>
+      <div class="vb-about-row">
+        <div class="ph" style="min-height:340px;" role="img" aria-label="Company square image placeholder, roughly 340 by 340 pixels"><span class="ph-label">Company Image<br>~340 × 340 square</span></div>
+        <div class="vb-about-txt">
+          <h1 class="wf-h1" id="b-about-h">Company Name</h1>
+          <p class="wf-h2" style="font-size:1.2rem;color:#446;">Mission Statement / Tagline</p>
+          <p class="wf-body">About Us paragraph — describes the company's history, core values, and overall mission. Primary introduction for job seekers explaining what the company does and why it's a great place to work.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §3 Program: text left, square image right -->
+    <section id="b-program" class="bg-blue" aria-labelledby="b-prog-h">
+      <div style="padding:.75rem 3rem 0;"><span class="ann">§3 Special Program — text left, square image right</span></div>
+      <div class="vb-prog-row">
+        <div style="padding:3rem;display:flex;flex-direction:column;justify-content:center;gap:1rem;">
+          <h2 class="wf-h2" id="b-prog-h">Special Program Title</h2>
+          <p class="wf-body">Description of a specific initiative — internships, veteran hiring, or diversity programs that distinguish this employer at the job fair.</p>
+        </div>
+        <div class="ph" style="min-height:300px;" role="img" aria-label="Special program square image, roughly 300 by 300 pixels"><span class="ph-label">Program Image<br>~300 × 300 square</span></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §4 Video -->
+    <section id="b-video" class="sec bg-white" aria-labelledby="b-vid-h">
+      <span class="ann">§4 Hosted Video</span>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+        <h2 class="wf-h2" id="b-vid-h">Executive Welcome Video</h2>
+        <div class="ph" style="width:100%;max-width:800px;aspect-ratio:16/9;position:relative;" role="img" aria-label="YouTube video player placeholder"><span class="ph-label">YouTube Video Embed · 16:9</span><div class="play-btn" aria-hidden="true"><div class="play-arrow"></div></div></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §5 Gallery: 4 squares in one row -->
+    <section id="b-gallery" class="bg-light" aria-labelledby="b-gal-h">
+      <div style="padding:.75rem 3rem 0;"><span class="ann">§5 Image Gallery — 4 square thumbnails in a single row</span></div>
+      <div style="padding:1.5rem 3rem .75rem;"><h2 class="wf-h2" id="b-gal-h">Life at the Company</h2></div>
+      <div class="vb-gal-row">
+        <div class="ph" style="aspect-ratio:1/1;" role="img" aria-label="Gallery image 1 square placeholder"><span class="ph-label">Image 1<br>~260 × 260</span></div>
+        <div class="ph" style="aspect-ratio:1/1;" role="img" aria-label="Gallery image 2 square placeholder"><span class="ph-label">Image 2<br>~260 × 260</span></div>
+        <div class="ph" style="aspect-ratio:1/1;" role="img" aria-label="Gallery image 3 square placeholder"><span class="ph-label">Image 3<br>~260 × 260</span></div>
+        <div class="ph" style="aspect-ratio:1/1;" role="img" aria-label="Gallery image 4 square placeholder"><span class="ph-label">Image 4<br>~260 × 260</span></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §6 CTA -->
+    <section id="b-contact" class="sec bg-blue" aria-labelledby="b-cta-h">
+      <span class="ann">§6 Call to Action</span>
+      <h2 class="wf-h2" id="b-cta-h" style="margin-bottom:1.5rem;">Contact</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;">
+        <a href="#" class="btn-primary">Join Our Talent Community</a>
+        <a href="#" class="btn-outline">View Our Open Positions</a>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §7 + §8 side by side -->
+    <div style="display:grid;grid-template-columns:3fr 2fr;">
+      <section id="b-jobs" class="sec bg-light" aria-labelledby="b-jobs-h">
+        <span class="ann">§7 Open Positions</span>
+        <h2 class="wf-h2" id="b-jobs-h" style="margin-bottom:1.25rem;">Open Positions</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem 2rem;">
+          <ul class="jobs-list" aria-label="Positions column 1"><li>Senior Software Engineer</li><li>Project Manager</li><li>Customer Success Specialist</li><li>Marketing Data Analyst</li><li>HR Business Partner</li><li>Laboratory Technician I</li><li>Account Executive</li><li>UX/UI Designer</li><li>QA Automation Engineer</li><li>Financial Analyst</li></ul>
+          <ul class="jobs-list" aria-label="Positions column 2"><li>Cloud Infrastructure Lead</li><li>Network Security Engineer</li><li>Entry Level Lab Assistant</li><li>Content Strategist</li><li>Legal Counsel</li><li>Supply Chain Coordinator</li><li>Facilities Manager</li><li>Business Systems Analyst</li><li>Technical Writer</li><li>Administrative Assistant</li></ul>
+        </div>
+        <div style="margin-top:1.5rem;">
+          <h3 class="wf-h3" style="margin-bottom:.4rem;">Locations</h3>
+          <p class="wf-body" style="font-size:.9rem;">New York, San Francisco, Austin, Chicago, London, Berlin, Tokyo, Sydney, Remote (US), Remote (Global)</p>
+        </div>
+      </section>
+      <section id="b-benefits" class="bg-dark" style="padding:2.5rem;" aria-labelledby="b-ben-h">
+        <span class="ann ann-dk">§8 Benefits</span>
+        <h2 class="wf-h2" id="b-ben-h" style="margin-bottom:1.25rem;">Benefits</h2>
+        <ul class="ben-list" aria-label="Company benefits">
+          <li><span class="ben-dot" aria-hidden="true"></span>Medical, Dental, Vision</li><li><span class="ben-dot" aria-hidden="true"></span>401(k) Retirement Plan</li><li><span class="ben-dot" aria-hidden="true"></span>Flexible Time Off</li><li><span class="ben-dot" aria-hidden="true"></span>Paid Parental Leave</li><li><span class="ben-dot" aria-hidden="true"></span>Tuition Reimbursement</li><li><span class="ben-dot" aria-hidden="true"></span>Stock Purchase Plan</li><li><span class="ben-dot" aria-hidden="true"></span>Wellness Stipend</li><li><span class="ben-dot" aria-hidden="true"></span>Home Office Fund</li><li><span class="ben-dot" aria-hidden="true"></span>Life Insurance (AD&D)</li><li><span class="ben-dot" aria-hidden="true"></span>Career Mentorship</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="sec-sm bg-white" style="text-align:center;border-top:1px solid #e8e5e0;" role="contentinfo">
+    <span class="ann">§9 Social Media</span>
+    <nav class="social-icons" aria-label="Social media links" style="margin-bottom:1rem;">
+      <a href="#" class="social-icon" aria-label="Facebook">FB</a><a href="#" class="social-icon" aria-label="LinkedIn">IN</a><a href="#" class="social-icon" aria-label="Instagram">IG</a><a href="#" class="social-icon" aria-label="Bluesky">BS</a><a href="#" class="social-icon" aria-label="Threads">TH</a><a href="#" class="social-icon" aria-label="X">X</a>
+    </nav>
+    <p style="font-family:monospace;font-size:12px;color:#aaa;">© 2026 Employer Name. All Rights Reserved.</p>
+  </footer>
+</div>
+</section>
+
+
+<!-- ══ C: EDITORIAL / MOSAIC ══
+     Inline header: logo + nav only · name once in about text
+     Dual images at top · wide text + portrait in about · overlay program · mosaic gallery ══ -->
+<section class="variation" id="var-c" aria-label="Variation C: Editorial magazine layout">
+<div class="page-wrap">
+  <a href="#main-c" class="skip-link">Skip to main content</a>
+
+  <header class="vc-header bg-white" role="banner">
+    <div class="ph" style="width:120px;height:52px;" role="img" aria-label="Company logo placeholder 120 by 52 pixels"><span class="ph-label">Logo · 120 × 52</span></div>
+    <nav class="vc-nav" aria-label="Page sections">
+      <a href="#c-about"    class="wf-nav" style="text-decoration:none;">About</a>
+      <a href="#c-program"  class="wf-nav" style="text-decoration:none;">Programs</a>
+      <a href="#c-video"    class="wf-nav" style="text-decoration:none;">Video</a>
+      <a href="#c-gallery"  class="wf-nav" style="text-decoration:none;">Gallery</a>
+      <a href="#c-jobs"     class="wf-nav" style="text-decoration:none;">Careers</a>
+      <a href="#c-benefits" class="wf-nav" style="text-decoration:none;">Benefits</a>
+      <a href="#c-contact"  class="wf-nav" style="text-decoration:none;">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main-c">
+    <!-- Dual images replacing panoramic hero -->
+    <div style="padding:.75rem 3rem 0;background:#fff;"><span class="ann">Two 600×400 brand images — replacing single panoramic hero</span></div>
+    <div class="dual-images bg-white" role="group" aria-label="Company identity images">
+      <div class="ph" role="img" aria-label="Brand image 1, 600 by 400 pixels"><span class="ph-label">Brand Image 1 · 600 × 400</span></div>
+      <div class="ph" role="img" aria-label="Brand image 2, 600 by 400 pixels"><span class="ph-label">Brand Image 2 · 600 × 400</span></div>
+    </div>
+
+    <!-- §2 About: wide text left, portrait right -->
+    <section id="c-about" class="sec bg-white" aria-labelledby="c-about-h">
+      <span class="ann">§2 Brand Identity — editorial two-col · name + tagline + about left, portrait right</span>
+      <div class="vc-about-row">
+        <div>
+          <h1 class="wf-h1" id="c-about-h" style="margin-bottom:.75rem;">Company Name</h1>
+          <p class="wf-h2" style="font-size:1.2rem;margin-bottom:1rem;color:#446;">Mission Statement / Tagline Goes Here</p>
+          <p class="wf-body">About Us paragraph — describes the company's history, core values, and overall mission. Serves as the primary introduction for job seekers explaining what the company does and why it is a great place to work.</p>
+        </div>
+        <div class="ph" style="width:100%;aspect-ratio:3/4;" role="img" aria-label="Accent portrait image 3 by 4 ratio"><span class="ph-label">Accent Image<br>Portrait 3:4</span></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §3 Program: full-bleed image + overlay -->
+    <section id="c-program" class="bg-light" aria-labelledby="c-prog-h">
+      <div style="padding:.75rem 3rem 0;"><span class="ann">§3 Special Program — full-width image with dark text overlay</span></div>
+      <div style="position:relative;">
+        <div class="ph" style="width:100%;height:360px;" role="img" aria-label="Special program full width image 360 pixels tall"><span class="ph-label">Program Image · Full Width × 360 px</span></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(20,30,50,.85);padding:2rem 2.5rem;">
+          <h2 class="wf-h2" id="c-prog-h" style="color:#fff;margin-bottom:.5rem;">Special Program Title</h2>
+          <p style="font-family:Arial,sans-serif;font-size:14px;color:#b8c8e0;line-height:1.6;max-width:680px;">Description of a specific initiative — internships, veteran hiring, or diversity programs that distinguish this employer.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- §4 Video: label left, embed right -->
+    <section id="c-video" class="sec bg-white" aria-labelledby="c-vid-h">
+      <span class="ann">§4 Hosted Video</span>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+        <h2 class="wf-h2" id="c-vid-h">Executive Welcome Video</h2>
+        <div class="ph" style="width:100%;max-width:800px;aspect-ratio:16/9;position:relative;" role="img" aria-label="YouTube video player placeholder 16 by 9"><span class="ph-label">YouTube Video Embed · 16:9</span><div class="play-btn" aria-hidden="true"><div class="play-arrow"></div></div></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §5 Mosaic gallery -->
+    <section id="c-gallery" class="sec bg-blue" aria-labelledby="c-gal-h">
+      <span class="ann">§5 Image Gallery — mosaic: 1 large left + 4 smaller right</span>
+      <h2 class="wf-h2" id="c-gal-h" style="margin-bottom:1.5rem;">Life at the Company</h2>
+      <div class="vc-mosaic">
+        <div class="ph vc-mosaic-big" style="min-height:360px;" role="img" aria-label="Large gallery image placeholder"><span class="ph-label">Image 1 — Large<br>~460 × 360</span></div>
+        <div class="ph" style="aspect-ratio:1/1;" role="img" aria-label="Gallery image 2 small square"><span class="ph-label">Image 2<br>~220 × 175</span></div>
+        <div class="ph" style="aspect-ratio:1/1;" role="img" aria-label="Gallery image 3 small square"><span class="ph-label">Image 3<br>~220 × 175</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 4 landscape"><span class="ph-label">Image 4<br>~220 × 175</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 5 landscape"><span class="ph-label">Image 5<br>~220 × 175</span></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §6 CTA dark banner -->
+    <section id="c-contact" class="sec bg-dark" aria-labelledby="c-cta-h">
+      <span class="ann ann-dk">§6 Call to Action — dark banner</span>
+      <div style="text-align:center;">
+        <h2 class="wf-h2" id="c-cta-h" style="margin-bottom:.75rem;">Ready to Join Our Team?</h2>
+        <p class="wf-body" style="margin-bottom:1.5rem;max-width:480px;margin-left:auto;margin-right:auto;">Explore open roles or connect with our talent team.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;">
+          <a href="#" class="btn-primary" style="background:#4a7acc;border-color:#4a7acc;">Join Our Talent Community</a>
+          <a href="#" class="btn-outline" style="color:#d0dff0;border-color:#4a7acc;">View Our Open Positions</a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §7 Jobs -->
+    <section id="c-jobs" class="sec bg-light" aria-labelledby="c-jobs-h">
+      <span class="ann">§7 Open Positions</span>
+      <div style="max-width:900px;">
+        <h2 class="wf-h2" id="c-jobs-h" style="margin-bottom:1.5rem;">Open Positions</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem 3rem;">
+          <ul class="jobs-list" aria-label="Positions column 1"><li>Senior Software Engineer</li><li>Project Manager</li><li>Customer Success Specialist</li><li>Marketing Data Analyst</li><li>HR Business Partner</li><li>Laboratory Technician I</li><li>Account Executive</li><li>UX/UI Designer</li><li>QA Automation Engineer</li><li>Financial Analyst</li></ul>
+          <ul class="jobs-list" aria-label="Positions column 2"><li>Cloud Infrastructure Lead</li><li>Network Security Engineer</li><li>Entry Level Lab Assistant</li><li>Content Strategist</li><li>Legal Counsel</li><li>Supply Chain Coordinator</li><li>Facilities Manager</li><li>Business Systems Analyst</li><li>Technical Writer</li><li>Administrative Assistant</li></ul>
+        </div>
+        <div style="margin-top:2rem;">
+          <h3 class="wf-h3" style="margin-bottom:.4rem;">Locations</h3>
+          <p class="wf-body">New York, San Francisco, Austin, Chicago, London, Berlin, Tokyo, Sydney, Remote (US), Remote (Global)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- §8 Benefits -->
+    <section id="c-benefits" class="sec bg-dark" aria-labelledby="c-ben-h">
+      <span class="ann ann-dk">§8 Benefits</span>
+      <div style="max-width:900px;margin:0 auto;">
+        <h2 class="wf-h2" id="c-ben-h" style="margin-bottom:1.5rem;">Benefits</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 3rem;">
+          <ul class="ben-list" aria-label="Benefits column 1"><li><span class="ben-dot" aria-hidden="true"></span>Medical, Dental, Vision</li><li><span class="ben-dot" aria-hidden="true"></span>401(k) Retirement Plan</li><li><span class="ben-dot" aria-hidden="true"></span>Flexible Time Off</li><li><span class="ben-dot" aria-hidden="true"></span>Paid Parental Leave</li><li><span class="ben-dot" aria-hidden="true"></span>Tuition Reimbursement</li></ul>
+          <ul class="ben-list" aria-label="Benefits column 2"><li><span class="ben-dot" aria-hidden="true"></span>Stock Purchase Plan</li><li><span class="ben-dot" aria-hidden="true"></span>Wellness Stipend</li><li><span class="ben-dot" aria-hidden="true"></span>Home Office Fund</li><li><span class="ben-dot" aria-hidden="true"></span>Life Insurance (AD&D)</li><li><span class="ben-dot" aria-hidden="true"></span>Career Mentorship</li></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="sec-sm bg-white" style="text-align:center;border-top:1px solid #e8e5e0;" role="contentinfo">
+    <span class="ann">§9 Social Media</span>
+    <nav class="social-icons" aria-label="Social media links" style="margin-bottom:1rem;">
+      <a href="#" class="social-icon" aria-label="Facebook">FB</a><a href="#" class="social-icon" aria-label="LinkedIn">IN</a><a href="#" class="social-icon" aria-label="Instagram">IG</a><a href="#" class="social-icon" aria-label="Bluesky">BS</a><a href="#" class="social-icon" aria-label="Threads">TH</a><a href="#" class="social-icon" aria-label="X">X</a>
+    </nav>
+    <p style="font-family:monospace;font-size:12px;color:#aaa;">© 2026 Employer Name. All Rights Reserved.</p>
+  </footer>
+</div>
+</section>
+
+
+<!-- ══ D: COMPACT / INLINE ══
+     Dark header: logo + nav only · name once in identity text
+     Identity square image left · dual 600×400 images below identity
+     4-up landscape gallery · inline CTA · jobs + benefits side by side ══ -->
+<section class="variation" id="var-d" aria-label="Variation D: Compact inline layout">
+<div class="page-wrap">
+  <a href="#main-d" class="skip-link">Skip to main content</a>
+
+  <header class="vd-header" role="banner">
+    <div class="ph" style="width:100px;height:44px;background:#2d3a50;border-color:#445;" role="img" aria-label="Company logo placeholder on dark background 100 by 44 pixels"><span class="ph-label" style="color:#8899aa;background:#1c2533;border-color:#3a4a60;">Logo · 100 × 44</span></div>
+    <nav style="display:flex;gap:1.5rem;" aria-label="Page sections">
+      <a href="#d-about"    style="text-decoration:none;color:#aab5cc;font-family:monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;">About</a>
+      <a href="#d-program"  style="text-decoration:none;color:#aab5cc;font-family:monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Programs</a>
+      <a href="#d-video"    style="text-decoration:none;color:#aab5cc;font-family:monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Video</a>
+      <a href="#d-gallery"  style="text-decoration:none;color:#aab5cc;font-family:monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Gallery</a>
+      <a href="#d-jobs"     style="text-decoration:none;color:#aab5cc;font-family:monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Careers</a>
+      <a href="#d-benefits" style="text-decoration:none;color:#aab5cc;font-family:monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Benefits</a>
+      <a href="#d-contact"  style="text-decoration:none;color:#aab5cc;font-family:monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main-d">
+    <!-- §2 Identity: square image left, text right -->
+    <section id="d-about" class="bg-white" aria-labelledby="d-about-h">
+      <div style="padding:.75rem 2.5rem 0;"><span class="ann">§2 Brand Identity — square image left, name + tagline + about right</span></div>
+      <div class="vd-identity">
+        <div class="ph" style="min-height:280px;border-right:1px solid #e0ddd8;" role="img" aria-label="Company square identity image placeholder roughly 300 by 280 pixels"><span class="ph-label">Identity Image<br>~300 × 280 square</span></div>
+        <div class="vd-id-txt">
+          <h1 class="wf-h1" id="d-about-h">Company Name</h1>
+          <p class="wf-h2" style="font-size:1.1rem;color:#446;">Mission Statement / Tagline</p>
+          <p class="wf-body">About Us paragraph describing the company's history, core values, and overall mission for job seekers.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dual images below identity (replacing compact hero) -->
+    <div style="padding:.5rem 3rem 0;background:#fff;"><span class="ann">Two 600×400 brand images — replacing compact hero banner</span></div>
+    <div class="dual-images bg-white" style="padding-top:1rem;" role="group" aria-label="Additional company images">
+      <div class="ph" role="img" aria-label="Brand image 1, 600 by 400 pixels"><span class="ph-label">Brand Image 1 · 600 × 400</span></div>
+      <div class="ph" role="img" aria-label="Brand image 2, 600 by 400 pixels"><span class="ph-label">Brand Image 2 · 600 × 400</span></div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- §3 Program -->
+    <section id="d-program" class="sec bg-blue" aria-labelledby="d-prog-h">
+      <span class="ann">§3 Special Program — text left, landscape image right</span>
+      <div class="vd-prog-row">
+        <div style="padding-right:2.5rem;display:flex;flex-direction:column;justify-content:center;gap:1rem;">
+          <h2 class="wf-h2" id="d-prog-h">Special Program Title</h2>
+          <p class="wf-body">Description of a specific initiative — internships, veteran hiring, or diversity programs that distinguish this employer.</p>
+        </div>
+        <div class="ph" style="aspect-ratio:4/3;" role="img" aria-label="Special program landscape image 4 by 3 ratio"><span class="ph-label">Program Image<br>Landscape 4:3</span></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §4 Video -->
+    <section id="d-video" class="sec bg-white" aria-labelledby="d-vid-h">
+      <span class="ann">§4 Hosted Video</span>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;">
+        <h2 class="wf-h2" id="d-vid-h">Executive Welcome Video</h2>
+        <div class="ph" style="width:100%;max-width:800px;aspect-ratio:16/9;position:relative;" role="img" aria-label="YouTube video player placeholder"><span class="ph-label">YouTube Video Embed · 16:9</span><div class="play-btn" aria-hidden="true"><div class="play-arrow"></div></div></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §5 Gallery: 4 compact landscape in a row -->
+    <section id="d-gallery" class="bg-light" aria-labelledby="d-gal-h">
+      <div style="padding:.75rem 3rem 0;"><span class="ann">§5 Image Gallery — 4 compact landscape thumbnails in a row</span></div>
+      <div style="padding:1.5rem 3rem .5rem;"><h2 class="wf-h2" id="d-gal-h">Life at the Company</h2></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:.75rem 3rem 2.5rem;">
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 1 compact placeholder"><span class="ph-label">Image 1<br>~300 × 200</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 2 compact placeholder"><span class="ph-label">Image 2<br>~300 × 200</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 3 compact placeholder"><span class="ph-label">Image 3<br>~300 × 200</span></div>
+        <div class="ph" style="aspect-ratio:3/2;" role="img" aria-label="Gallery image 4 compact placeholder"><span class="ph-label">Image 4<br>~300 × 200</span></div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §6 CTA: inline banner -->
+    <section id="d-contact" class="bg-blue" style="padding:2rem 3rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;" aria-labelledby="d-cta-h">
+      <span class="ann">§6 CTA — inline banner</span>
+      <h2 class="wf-h2" id="d-cta-h" style="font-size:1.2rem;">Ready to explore a career with us?</h2>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+        <a href="#" class="btn-primary">Join Our Talent Community</a>
+        <a href="#" class="btn-outline">View Our Open Positions</a>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- §7 + §8 Jobs left, Benefits right -->
+    <div class="vd-jobs-ben">
+      <section id="d-jobs" class="sec bg-light" aria-labelledby="d-jobs-h">
+        <span class="ann">§7 Open Positions</span>
+        <h2 class="wf-h2" id="d-jobs-h" style="margin-bottom:1.25rem;">Open Positions</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem 2rem;">
+          <ul class="jobs-list" aria-label="Positions column 1"><li>Senior Software Engineer</li><li>Project Manager</li><li>Customer Success Specialist</li><li>Marketing Data Analyst</li><li>HR Business Partner</li><li>Laboratory Technician I</li><li>Account Executive</li><li>UX/UI Designer</li><li>QA Automation Engineer</li><li>Financial Analyst</li></ul>
+          <ul class="jobs-list" aria-label="Positions column 2"><li>Cloud Infrastructure Lead</li><li>Network Security Engineer</li><li>Lab Assistant</li><li>Content Strategist</li><li>Legal Counsel</li><li>Supply Chain Coordinator</li><li>Facilities Manager</li><li>Business Systems Analyst</li><li>Technical Writer</li><li>Administrative Assistant</li></ul>
+        </div>
+        <div style="margin-top:1.5rem;">
+          <h3 class="wf-h3" style="margin-bottom:.4rem;">Locations</h3>
+          <p class="wf-body" style="font-size:.9rem;">New York, San Francisco, Austin, Chicago, London, Berlin, Tokyo, Sydney, Remote (US), Remote (Global)</p>
+        </div>
+      </section>
+      <section id="d-benefits" class="vd-ben-col" aria-labelledby="d-ben-h">
+        <span class="ann ann-dk">§8 Benefits</span>
+        <h2 class="wf-h2" id="d-ben-h" style="margin-bottom:1rem;">Benefits</h2>
+        <ul class="ben-list" aria-label="Company benefits">
+          <li><span class="ben-dot" aria-hidden="true"></span>Medical, Dental, Vision</li><li><span class="ben-dot" aria-hidden="true"></span>401(k) Retirement Plan</li><li><span class="ben-dot" aria-hidden="true"></span>Flexible Time Off</li><li><span class="ben-dot" aria-hidden="true"></span>Paid Parental Leave</li><li><span class="ben-dot" aria-hidden="true"></span>Tuition Reimbursement</li><li><span class="ben-dot" aria-hidden="true"></span>Stock Purchase Plan</li><li><span class="ben-dot" aria-hidden="true"></span>Wellness Stipend</li><li><span class="ben-dot" aria-hidden="true"></span>Home Office Fund</li><li><span class="ben-dot" aria-hidden="true"></span>Life Insurance (AD&D)</li><li><span class="ben-dot" aria-hidden="true"></span>Career Mentorship</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="sec-sm bg-white" style="text-align:center;border-top:1px solid #e8e5e0;" role="contentinfo">
+    <span class="ann">§9 Social Media</span>
+    <nav class="social-icons" aria-label="Social media links" style="margin-bottom:1rem;">
+      <a href="#" class="social-icon" aria-label="Facebook">FB</a><a href="#" class="social-icon" aria-label="LinkedIn">IN</a><a href="#" class="social-icon" aria-label="Instagram">IG</a><a href="#" class="social-icon" aria-label="Bluesky">BS</a><a href="#" class="social-icon" aria-label="Threads">TH</a><a href="#" class="social-icon" aria-label="X">X</a>
+    </nav>
+    <p style="font-family:monospace;font-size:12px;color:#aaa;">© 2026 Employer Name. All Rights Reserved.</p>
+  </footer>
+</div>
+</section>
+
+
+<script>
+function showVar(id) {
+  document.querySelectorAll('.variation').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.var-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+  document.getElementById('var-' + id).classList.add('active');
+  const btn = document.getElementById('btn-' + id);
+  btn.classList.add('active');
+  btn.setAttribute('aria-pressed','true');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('.var-btn').forEach(btn => {
+  btn.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+  });
+});
+</script>
+</body>
+</html>

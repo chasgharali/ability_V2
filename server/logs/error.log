@@ -20335,3 +20335,510 @@
 2026-03-15 23:49:32:4932 [31merror[39m: [31mSocket authentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
 2026-03-15 23:49:32:4932 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
 2026-03-15 23:49:33:4933 [31merror[39m: [31mSocket authentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-03-29 19:13:52:1352 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-29 19:16:54:1654 [31merror[39m: [31mError listing organizations: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-29 19:16:56:1656 [31merror[39m: [31mAuthentication error: Topology is closed[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mMongoDB connection failed: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:37:1737 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:38:1738 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:39:1739 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:39:1739 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:39:1739 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:40:1740 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:41:1741 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:41:1741 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:42:1742 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:43:1743 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:43:1743 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:44:1744 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:45:1745 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:46:1746 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:17:47:1747 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-29 19:22:54:2254 [31merror[39m: [31mMongoDB connection failed: getaddrinfo ENOTFOUND cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-29 19:25:30:2530 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-29 19:25:47:2547 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:25:49:2549 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:25:50:2550 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:11:2611 [31merror[39m: [31mMongoDB connection failed: queryTxt ESERVFAIL cluster-ability.okhfe.mongodb.net[39m
+2026-03-29 19:26:15:2615 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:16:2616 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:18:2618 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:19:2619 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:26:54:2654 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-29 19:27:03:273 [31merror[39m: [31mMongoDB not connected. ReadyState:[39m
+2026-03-29 19:44:30:4430 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 20:20:15:2015 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 21:07:35:735 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 21:09:25:925 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-29 21:24:36:2436 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 21:42:04:424 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 21:59:40:5940 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 22:16:04:164 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 22:33:44:3344 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 22:51:52:5152 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:08:37:837 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:24:55:2455 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:40:50:4050 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-29 23:58:41:5841 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 00:16:28:1628 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 00:42:53:4253 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 00:59:18:5918 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 01:15:53:1553 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 01:43:38:4338 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 02:12:21:1221 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 02:27:57:2757 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 02:46:30:4630 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 03:04:04:44 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 03:21:52:2152 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 03:45:00:450 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 04:02:34:234 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 04:18:44:1844 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 04:50:09:509 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 05:06:12:612 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 05:30:58:3058 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-03-30 05:57:21:5721 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 06:13:26:1326 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 06:31:22:3122 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 06:47:28:4728 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 07:03:19:319 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 07:19:18:1918 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 07:49:05:495 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 08:05:52:552 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 08:21:00:210 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 08:50:42:5042 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 09:08:19:819 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 09:25:13:2513 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 09:52:04:524 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 10:26:03:263 [31merror[39m: [31mQueue cleanup error: connection 58 to 89.194.51.79:27017 timed out[39m
+2026-03-30 10:26:07:267 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 10:53:14:5314 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 11:11:15:1115 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 11:26:59:2659 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 11:43:51:4351 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 12:00:25:025 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 12:16:56:1656 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 12:37:33:3733 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 18:23:25:2325 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:26:06:266 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 18:40:22:4022 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:12:312 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:03:42:342 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:09:11:911 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:24:1724 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:31:1731 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:34:1734 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:36:1736 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:17:38:1738 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:18:50:1850 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:24:11:2411 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:55:14:5514 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 19:58:18:5818 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 20:13:18:1318 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:14:30:1430 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-03-30 20:56:08:568 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30120ms (connectTimeoutMS: 30000)[39m
+2026-03-30 21:29:38:2938 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.70:27017[39m
+2026-03-30 21:32:29:3229 [31merror[39m: [31mQueue cleanup error: connect ETIMEDOUT 89.194.51.70:27017[39m
+2026-03-30 21:45:18:4518 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:01:48:148 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:17:58:1758 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:34:11:3411 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 22:49:46:4946 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 23:08:20:820 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 23:36:53:3653 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-30 23:54:46:5446 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 00:09:45:945 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 00:37:27:3727 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 01:11:28:1128 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-31 01:28:29:2829 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-31 01:28:32:2832 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 01:44:27:4427 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:00:48:048 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:16:27:1627 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:38:32:3832 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 02:55:38:5538 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 03:12:41:1241 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 03:39:36:3936 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 03:55:34:5534 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 04:13:57:1357 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 04:30:01:301 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 04:47:02:472 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:03:28:328 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:19:55:1955 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:41:36:4136 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 05:57:38:5738 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 06:14:50:1450 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 06:42:41:4241 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 07:00:22:022 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 07:16:07:167 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 07:45:26:4526 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 08:02:05:25 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 08:19:39:1939 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 08:46:50:4650 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 09:03:10:310 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 09:20:04:204 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 09:46:55:4655 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 10:04:31:431 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 10:20:01:201 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 10:46:33:4633 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:03:47:347 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:21:05:215 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:42:09:429 [31merror[39m: [31mRedis Client Error: read ECONNRESET[39m
+2026-03-31 11:42:11:4211 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 11:57:34:5734 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-31 12:12:06:126 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 12:27:04:274 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 12:42:04:424 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 12:57:04:574 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 13:12:04:124 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 13:28:01:281 [31merror[39m: [31mQueue cleanup error: getaddrinfo ENOTFOUND cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-03-31 13:42:34:4234 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30013ms (connectTimeoutMS: 30000)[39m
+2026-03-31 13:57:34:5734 [31merror[39m: [31mQueue cleanup error: Socket 'secureConnect' timed out after 30003ms (connectTimeoutMS: 30000)[39m
+2026-03-31 14:07:32:732 [31merror[39m: [31mMongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/[39m
+2026-03-31 14:22:42:2242 [31merror[39m: [31mQueue cleanup error: Operation `boothqueues.find()` buffering timed out after 10000ms[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mMongoDB connection failed: querySrv ECONNREFUSED _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:40:2440 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:41:2441 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:41:2441 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:24:41:2441 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 14:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 14:54:47:5447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 15:09:47:947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 15:24:47:2447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 15:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 15:54:47:5447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:09:47:947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:24:47:2447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 16:54:47:5447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:09:47:947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:24:47:2447 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:39:47:3947 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 17:42:45:4245 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:42:49:4249 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:43:08:438 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:43:13:4313 [31merror[39m: [31mRTE content image proxy error: Inaccessible host: `ability-v2-dev-uploads.s3.amazonaws.com' at port `undefined'. This service may not be available in the `us-east-1' region.[39m
+2026-03-31 17:43:43:4343 [31merror[39m: [31mError listing organizations: getaddrinfo ENOTFOUND cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-03-31 17:44:05:445 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:44:17:4417 [31merror[39m: [31mSocket authentication error: Operation `users.findOne()` buffering timed out after 10000ms[39m
+2026-03-31 17:44:22:4422 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:23:4423 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:24:4424 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:24:4424 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:24:4424 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:25:4425 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mMongoDB connection failed: querySrv ESERVFAIL _mongodb._tcp.cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:27:4427 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:28:4428 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:28:4428 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:28:4428 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:29:4429 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:29:4429 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:30:4430 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:30:4430 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:44:31:4431 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mMongoDB connection failed: queryTxt ESERVFAIL cluster-ability.okhfe.mongodb.net[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:09:459 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:10:4510 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:10:4510 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:10:4510 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:11:4511 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:11:4511 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:12:4512 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:13:4513 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:13:4513 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:14:4514 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:15:4515 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:16:4516 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:16:4516 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:17:4517 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:18:4518 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:19:4519 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:20:4520 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:21:4521 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:23:4523 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:24:4524 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:25:4525 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:26:4526 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:28:4528 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:29:4529 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:31:4531 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:32:4532 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:34:4534 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:35:4535 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:37:4537 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:39:4539 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:44:4544 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:46:4546 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:48:4548 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:50:4550 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:52:4552 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:54:4554 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:56:4556 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:45:58:4558 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:00:460 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:02:462 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:04:464 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:06:466 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:08:468 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:10:4610 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:12:4612 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:14:4614 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:16:4616 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:18:4618 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:20:4620 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:22:4622 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:24:4624 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:26:4626 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:28:4628 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:30:4630 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:32:4632 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:34:4634 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:36:4636 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:38:4638 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:40:4640 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:42:4642 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:44:4644 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:46:4646 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:48:4648 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:50:4650 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:52:4652 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:54:4654 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:56:4656 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:46:58:4658 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 17:47:00:470 [31merror[39m: [31mRedis Client Error: getaddrinfo ENOTFOUND redis-13693.c246.us-east-1-4.ec2.cloud.redislabs.com[39m
+2026-03-31 18:04:09:49 [31merror[39m: [31mQueue cleanup error: getIO is not a function[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
+2026-03-31 18:17:20:1720 [31merror[39m: [31mError handling queue heartbeat: Socket 'secureConnect' timed out after 30069ms (connectTimeoutMS: 30000)[39m
+2026-03-31 18:17:28:1728 [31merror[39m: [31mAuthentication error: Topology is closed[39m

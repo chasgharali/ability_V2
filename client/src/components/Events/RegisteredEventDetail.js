@@ -268,7 +268,13 @@ export default function RegisteredEventDetail() {
                                 <button
                                   className="join-queue-btn"
                                   onClick={() => {
-                                    // Use custom joinBoothButtonLink if set, otherwise use default queue link
+                                    // Employer-page booths should always enter the queue flow.
+                                    if (booth.waitingAreaMode === 'employerPage') {
+                                      navigate(`/booth-queue/${event.slug}/${booth._id}/entry`);
+                                      return;
+                                    }
+
+                                    // For non-employer-page booths, allow optional custom button link.
                                     const customLink = booth.joinBoothButtonLink;
                                     if (customLink) {
                                       // Check if it's an external URL
