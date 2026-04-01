@@ -302,7 +302,7 @@ export default function EmployerPageTemplateEditor() {
                 onClick={() => setIsLiveView((v) => !v)}
                 aria-pressed={isLiveView}
               >
-                {isLiveView ? '👁 Live' : '✎ Edit'}
+                {isLiveView ? '✎ Edit' : '👁 Preview'}
               </button>
               <div className="elr-topbar-divider" aria-hidden="true" />
               <button type="button" className="elr-topbar-btn-back" onClick={goBackWithoutSaving}>

@@ -42,9 +42,12 @@ export default function EmployerLayoutRenderer({
     NAV_SECTIONS
       .map((item, index) => {
         const section = getSec(item.key);
+        const headingFromContent = section?.contentData?.sectionHeading;
         return {
           ...item,
-          title: normalizeSectionTitle(section?.title || item.label || '') || item.label,
+          title: headingFromContent
+            || normalizeSectionTitle(section?.title || item.label || '')
+            || item.label,
           order: typeof section?.order === 'number' ? section.order : index,
           isActive: section?.isActive !== false,
         };
@@ -188,21 +191,29 @@ function ImgZone({ sectionKey, fieldName, url, alt, label, className, style, isE
   );
 }
 
-/** Inline editable text span */
-function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagName, isEditMode, onUpdateField }) {
+/** Inline editable text span.
+ *  When showColorPicker=true (edit mode only), renders a compact color swatch row
+ *  beneath the text so users can set per-paragraph text color.
+ *  colorValue / colorFieldName control the stored color (defaults to fieldName + '__color').
+ */
+function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagName, isEditMode, onUpdateField, showColorPicker = false, colorValue, colorFieldName }) {
   const Tag = tagName || 'span';
   const hasValue = typeof value === 'string' && value.trim().length > 0;
+  const resolvedColorField = colorFieldName || `${fieldName}__color`;
+  const appliedColor = colorValue || undefined;
 
   const syncEditableEmptyState = (el) => {
     const isEmpty = !(el.textContent || '').trim();
     el.setAttribute('data-empty', isEmpty ? 'true' : 'false');
   };
 
+  const colorStyle = appliedColor ? { ...style, color: appliedColor } : style;
+
   if (isEditMode) {
-    return (
+    const editableEl = (
       <Tag
         className={`elr-text-editable${!hasValue ? ' elr-text-empty' : ''}${className ? ` ${className}` : ''}`}
-        style={style}
+        style={colorStyle}
         contentEditable
         suppressContentEditableWarning
         onInput={(e) => syncEditableEmptyState(e.currentTarget)}
@@ -218,9 +229,57 @@ function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagN
         {value || ''}
       </Tag>
     );
+
+    if (!showColorPicker) return editableEl;
+
+    return (
+      <div className="elr-txt-wrap">
+        {editableEl}
+        <div className="elr-txt-color-bar" role="toolbar" aria-label={`Text color for ${placeholder || fieldName}`}>
+          <span className="elr-color-bar-label">Color</span>
+          {TEXT_PRESETS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              className={`elr-color-swatch${appliedColor === p.value ? ' elr-swatch-active' : ''}`}
+              style={{ background: p.value }}
+              title={p.label}
+              onClick={() => onUpdateField && onUpdateField(sectionKey, resolvedColorField, appliedColor === p.value ? '' : p.value)}
+              aria-label={`Text color: ${p.label}`}
+              aria-pressed={appliedColor === p.value}
+            />
+          ))}
+          <label className="elr-color-custom-wrap" title="Custom text color">
+            <span
+              className="elr-color-swatch elr-color-custom-swatch"
+              style={{ background: appliedColor && !TEXT_PRESETS.find((p) => p.value === appliedColor) ? appliedColor : 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
+              aria-hidden="true"
+            />
+            <input
+              type="color"
+              value={appliedColor || '#111827'}
+              onChange={(e) => onUpdateField && onUpdateField(sectionKey, resolvedColorField, e.target.value)}
+              aria-label="Custom text color"
+            />
+          </label>
+          {appliedColor && (
+            <button
+              type="button"
+              className="elr-txt-color-clear"
+              onClick={() => onUpdateField && onUpdateField(sectionKey, resolvedColorField, '')}
+              title="Clear color override"
+              aria-label="Clear text color"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+    );
   }
+
   return (
-    <Tag className={className} style={style}>
+    <Tag className={className} style={colorStyle}>
       {value || <span style={{ color: '#aaa', fontStyle: 'italic' }}>{placeholder}</span>}
     </Tag>
   );
@@ -472,6 +531,7 @@ function JobsList({ sectionKey, jobsList, isEditMode, onUpdateField }) {
   }
 
   if (items.length === 0) {
+    if (!isEditMode) return null;
     return <p className="elr-body" style={{ color: '#aaa', fontStyle: 'italic' }}>No positions listed yet.</p>;
   }
   return (
@@ -525,6 +585,7 @@ function BenefitsList({ sectionKey, benefitsList, isEditMode, onUpdateField }) {
   }
 
   if (items.length === 0) {
+    if (!isEditMode) return null;
     return <p style={{ color: '#aaa', fontStyle: 'italic', fontFamily: 'Arial,sans-serif', fontSize: 14 }}>No benefits listed yet.</p>;
   }
   return (
@@ -749,7 +810,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <div style={{ marginTop: '0.75rem' }} />
               <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.2rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
               <div style={{ marginTop: '1rem' }} />
-              <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
             </div>
           </div>
         </SecWrap>
@@ -761,7 +822,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', maxWidth: 660, margin: '0 auto', textAlign: 'center' }}>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · 600 × 400" style={{ width: '100%', maxWidth: 560, aspectRatio: '3/2' }} {...imgProps} />
             <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative or program..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+            <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative or program..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
           </div>
         </SecWrap>
       );
@@ -791,17 +852,19 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       return (
         <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-contact" className="elr-sec elr-bg-white" aria-label="Contact section">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
-            <h2 className="elr-h2">Contact</h2>
+            <TXT sectionKey="contact" fieldName="sectionHeading" value={contact.sectionHeading || 'Contact'} placeholder="Contact" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <CtaButtons sectionKey="contact" contentData={contact} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
       );
     }
     if (key === 'jobs') {
+      const hasJobsContent = (jobs.jobsList?.length > 0) || jobs.locationsText;
+      if (!isEditMode && !hasJobsContent) return null;
       return (
         <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
-            <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Open Positions</h2>
+            <TXT sectionKey="jobs" fieldName="sectionHeading" value={jobs.sectionHeading || 'Open Positions'} placeholder="Open Positions" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '2.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.5rem' }}>Locations</h3><p className="elr-body">{jobs.locationsText}</p></div>)}
             {isEditMode && (<div style={{ marginTop: 12 }}><label style={{ fontFamily: 'Arial,sans-serif', fontSize: 13, color: '#555' }}>Locations:</label><input type="text" defaultValue={jobs.locationsText || ''} placeholder="e.g. New York, San Francisco, Remote" style={{ width: '100%', marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 14 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
@@ -810,10 +873,11 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
+      if (!isEditMode && !benefits.benefitsList?.length) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-benefits" className="elr-sec elr-bg-dark" aria-label="Benefits section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
-            <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Benefits</h2>
+            <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
@@ -893,7 +957,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <div className="elr-b-about-txt">
                 <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
               </div>
             </div>
           </SecWrap>
@@ -906,7 +970,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
           <div className="elr-b-prog-row">
             <div className="elr-b-prog-txt">
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
             </div>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · ~300 × 300 square" className="elr-b-prog-img-zone" {...imgProps} />
           </div>
@@ -939,15 +1003,17 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     if (key === 'contact') {
       return (
         <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-contact" className="elr-sec elr-bg-blue" aria-label="Contact section">
-          <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Contact</h2>
+          <TXT sectionKey="contact" fieldName="sectionHeading" value={contact.sectionHeading || 'Contact'} placeholder="Contact" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <CtaButtons sectionKey="contact" contentData={contact} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
       );
     }
     if (key === 'jobs') {
+      const hasJobsContent = (jobs.jobsList?.length > 0) || jobs.locationsText;
+      if (!isEditMode && !hasJobsContent) return null;
       return (
         <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
-          <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Open Positions</h2>
+          <TXT sectionKey="jobs" fieldName="sectionHeading" value={jobs.sectionHeading || 'Open Positions'} placeholder="Open Positions" className="elr-h2" tagName="h2" style={{ marginBottom: '1.25rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '1.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.4rem' }}>Locations</h3><p className="elr-body" style={{ fontSize: '0.9rem' }}>{jobs.locationsText}</p></div>)}
           {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
@@ -955,9 +1021,10 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
+      if (!isEditMode && !benefits.benefitsList?.length) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-benefits" className="elr-b-ben-col elr-bg-dark" aria-label="Benefits section">
-          <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Benefits</h2>
+          <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1.25rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
       );
@@ -1040,7 +1107,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
                 <div style={{ marginTop: '0.75rem' }} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <div style={{ marginTop: '1rem' }} />
-                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
               </div>
               <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Accent portrait'} label="Accent Portrait · 3:4" className="elr-c-about-portrait" {...imgProps} />
             </div>
@@ -1055,7 +1122,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · Full Width × 320px" className="elr-c-prog-full" {...imgProps} />
             <div className="elr-c-prog-overlay">
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" style={{ color: '#fff', marginBottom: '0.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, color: '#b8c8e0', lineHeight: 1.6, maxWidth: 680, display: 'block' }} tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, color: program.programText__color || '#b8c8e0', lineHeight: 1.6, maxWidth: 680, display: 'block' }} tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
             </div>
           </div>
         </SecWrap>
@@ -1090,7 +1157,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       return (
         <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-contact" className="elr-sec elr-bg-dark" aria-label="Contact section">
           <div style={{ textAlign: 'center' }}>
-            <h2 className="elr-h2" style={{ marginBottom: '0.75rem' }}>Ready to Join Our Team?</h2>
+            <TXT sectionKey="contact" fieldName="sectionHeading" value={contact.sectionHeading || 'Ready to Join Our Team?'} placeholder="Ready to Join Our Team?" className="elr-h2" tagName="h2" style={{ marginBottom: '0.75rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <p className="elr-body" style={{ marginBottom: '1.5rem', maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>Explore open roles or connect with our talent team.</p>
             <CtaButtons sectionKey="contact" contentData={{ ...contact, primaryBtnText: contact.primaryBtnText || 'Join Our Talent Community', secondaryBtnText: contact.secondaryBtnText || 'View Our Open Positions' }} isEditMode={isEditMode} onUpdateField={onUpdateField} className="justify-center" />
           </div>
@@ -1098,10 +1165,12 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'jobs') {
+      const hasJobsContent = (jobs.jobsList?.length > 0) || jobs.locationsText;
+      if (!isEditMode && !hasJobsContent) return null;
       return (
         <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
           <div style={{ maxWidth: 860 }}>
-            <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Open Positions</h2>
+            <TXT sectionKey="jobs" fieldName="sectionHeading" value={jobs.sectionHeading || 'Open Positions'} placeholder="Open Positions" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '2rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.4rem' }}>Locations</h3><p className="elr-body">{jobs.locationsText}</p></div>)}
             {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
@@ -1110,10 +1179,11 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
+      if (!isEditMode && !benefits.benefitsList?.length) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-benefits" className="elr-sec elr-bg-dark" aria-label="Benefits section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
-            <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Benefits</h2>
+            <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
@@ -1188,7 +1258,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <div className="elr-d-id-txt">
                 <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.05rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
               </div>
             </div>
           </SecWrap>
@@ -1205,7 +1275,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
           <div className="elr-d-prog-row">
             <div className="elr-d-prog-txt">
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
             </div>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · Landscape 4:3" className="elr-d-prog-img-zone" {...imgProps} />
           </div>
@@ -1244,9 +1314,11 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'jobs') {
+      const hasJobsContent = (jobs.jobsList?.length > 0) || jobs.locationsText;
+      if (!isEditMode && !hasJobsContent) return null;
       return (
         <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
-          <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Open Positions</h2>
+          <TXT sectionKey="jobs" fieldName="sectionHeading" value={jobs.sectionHeading || 'Open Positions'} placeholder="Open Positions" className="elr-h2" tagName="h2" style={{ marginBottom: '1.25rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '1.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.4rem' }}>Locations</h3><p className="elr-body" style={{ fontSize: '0.9rem' }}>{jobs.locationsText}</p></div>)}
           {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
@@ -1254,9 +1326,10 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
+      if (!isEditMode && !benefits.benefitsList?.length) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-benefits" className="elr-d-ben-col" aria-label="Benefits section">
-          <h2 className="elr-h2" style={{ marginBottom: '1rem' }}>Benefits</h2>
+          <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
       );
