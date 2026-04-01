@@ -53,6 +53,7 @@ import NoteViewUser from './components/Notes/NoteViewUser';
 import RoleMessageManagement from './components/RoleMessages/RoleMessageManagement';
 import OrganizationManagement from './components/OrganizationManagement/OrganizationManagement';
 import UserOrgAssignment from './components/UserManagement/UserOrgAssignment';
+import CookieConsent from './components/common/CookieConsent';
 import './App.css';
 
 // Component to conditionally render header and footer
@@ -73,6 +74,7 @@ const AppLayout = ({ children }) => {
             {/* Show ChatPanel for authenticated users with chat-enabled roles */}
             {showChat && <ChatPanel />}
 
+            <CookieConsent />
             <AccessibilityAnnouncer />
             <GlobalRouteObserver />
         </div>
