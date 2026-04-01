@@ -143,6 +143,13 @@ export default function EmployerPageTemplateEditor() {
     }
   }, [handleUpdateField]);
 
+  const handleSetSectionActive = useCallback((sectionKey, isActive) => {
+    setSections((prev) => prev.map((s) => (s.key === sectionKey ? { ...s, isActive } : s)));
+  }, []);
+
+  const activeSections = sections.filter((s) => s.isActive !== false);
+  const hiddenSections = sections.filter((s) => s.isActive === false);
+
   const saveAndReturn = () => {
     try {
       const raw = sessionStorage.getItem(BOOTH_FORM_DRAFT_KEY);
@@ -227,6 +234,39 @@ export default function EmployerPageTemplateEditor() {
 
           {/* Scroll region below toolbar so content never slides under the header */}
           <div className="elr-editor-scroll">
+            {!isLiveView && (
+              <div className="elr-sections-manager" aria-label="Section visibility manager">
+                <div className="elr-sections-row">
+                  <span className="elr-sections-label">Active sections:</span>
+                  {activeSections.map((section) => (
+                    <button
+                      key={section.key}
+                      type="button"
+                      className="elr-section-pill active"
+                      onClick={() => handleSetSectionActive(section.key, false)}
+                    >
+                      {SECTION_TITLES[section.key] || section.title} ×
+                    </button>
+                  ))}
+                </div>
+                {hiddenSections.length > 0 && (
+                  <div className="elr-sections-row">
+                    <span className="elr-sections-label">Hidden sections:</span>
+                    {hiddenSections.map((section) => (
+                      <button
+                        key={section.key}
+                        type="button"
+                        className="elr-section-pill hidden"
+                        onClick={() => handleSetSectionActive(section.key, true)}
+                      >
+                        Restore {SECTION_TITLES[section.key] || section.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Edit mode hint */}
             {!isLiveView && (
               <p className="elr-edit-hint">

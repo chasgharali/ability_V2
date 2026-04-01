@@ -199,6 +199,49 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.elr-sections-manager {
+  padding: 8px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.elr-sections-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.elr-sections-label {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.elr-section-pill {
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.elr-section-pill.active {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.elr-section-pill.hidden {
+  background: #f3f4f6;
+  color: #374151;
+}
+
 /* ── Edit hint banner ───────────────────────────────────────── */
 .elr-edit-hint {
   font-family: Arial, sans-serif;

@@ -68,6 +68,11 @@ const io = socketIo(server, {
 
 // Security middleware
 app.use(helmet({
+    // YouTube embeds can fail with Error 153 if Referer is fully stripped.
+    // Allow origin referrer on cross-origin requests so embeds can validate origin.
+    referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin'
+    },
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],

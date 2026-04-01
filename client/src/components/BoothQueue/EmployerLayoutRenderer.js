@@ -27,7 +27,13 @@ export default function EmployerLayoutRenderer({
   uploadingFields = new Set(),
 }) {
   const getSec = (key) => sections.find((s) => s.key === key) || { key, contentData: null };
-  const cd = (key) => getSec(key).contentData || {};
+  const cd = (key) => {
+    const section = getSec(key);
+    return {
+      ...(section.contentData || {}),
+      isActive: section.isActive !== false,
+    };
+  };
 
   const commonProps = { isEditMode, onUpdateField, onUploadImage, uploadingFields };
 
@@ -56,6 +62,25 @@ export default function EmployerLayoutRenderer({
 /* ================================================================
    Shared sub-components
    ================================================================ */
+const NAV_SECTIONS = [
+  { key: 'about', label: 'About' },
+  { key: 'program', label: 'Programs' },
+  { key: 'video', label: 'Video' },
+  { key: 'gallery', label: 'Gallery' },
+  { key: 'jobs', label: 'Careers' },
+  { key: 'benefits', label: 'Benefits' },
+  { key: 'contact', label: 'Contact' },
+];
+
+function renderNavLinks(prefix, isSectionActive, linkClassName = '') {
+  return NAV_SECTIONS
+    .filter((item) => isSectionActive(item.key))
+    .map((item) => (
+      <a key={item.key} href={`#${prefix}-${item.label.toLowerCase()}`} className={linkClassName}>
+        {item.label}
+      </a>
+    ));
+}
 
 /** Clickable image zone: shows image or placeholder; in edit mode lets user upload */
 function ImgZone({ sectionKey, fieldName, url, alt, label, className, style, isEditMode, onUploadImage, uploadingFields }) {
@@ -379,6 +404,7 @@ function ColorBar({ sectionKey, data, onUpdateField }) {
  */
 function SecWrap({ sectionKey, cd, isEditMode, onUpdateField, id, className, style, children, as: Tag = 'section', ...rest }) {
   const data = cd(sectionKey);
+  if (data?.isActive === false) return null;
   const colorStyle = getSectionStyle(data);
   return (
     <Tag
@@ -679,7 +705,8 @@ function VideoUrlEditor({ sectionKey, videoUrl, videoTitle, isEditMode, onUpdate
 /* ================================================================
    LAYOUT A — Centered Classic
    ================================================================ */
-function LayoutA({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const isSectionActive = (key) => getSec(key)?.isActive !== false;
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -698,9 +725,7 @@ function LayoutA({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields
       <header className="elr-a-header elr-bg-white" style={getSectionStyle(about)} role="banner">
         <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Company Logo · 240 × 100" className="elr-a-logo-zone" {...imgProps} />
         <nav className="elr-a-nav" aria-label="Page sections">
-          {['About', 'Programs', 'Video', 'Gallery', 'Careers', 'Benefits', 'Contact'].map((label) => (
-            <a key={label} href={`#a-${label.toLowerCase()}`} className="elr-nav-link">{label}</a>
-          ))}
+          {renderNavLinks('a', isSectionActive, 'elr-nav-link')}
         </nav>
       </header>
 
@@ -805,7 +830,8 @@ function LayoutA({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields
 /* ================================================================
    LAYOUT B — Split / Square Images
    ================================================================ */
-function LayoutB({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+function LayoutB({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const isSectionActive = (key) => getSec(key)?.isActive !== false;
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -827,9 +853,7 @@ function LayoutB({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields
         </div>
         <div className="elr-b-nav-col">
           <nav className="elr-b-nav" aria-label="Page sections">
-            {['About', 'Programs', 'Video', 'Gallery', 'Careers', 'Benefits', 'Contact'].map((label) => (
-              <a key={label} href={`#b-${label.toLowerCase()}`} className="elr-nav-link">{label}</a>
-            ))}
+            {renderNavLinks('b', isSectionActive, 'elr-nav-link')}
           </nav>
         </div>
       </header>
@@ -934,7 +958,8 @@ function LayoutB({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields
 /* ================================================================
    LAYOUT C — Editorial / Mosaic
    ================================================================ */
-function LayoutC({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const isSectionActive = (key) => getSec(key)?.isActive !== false;
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -953,9 +978,7 @@ function LayoutC({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields
       <header className="elr-c-header elr-bg-white" style={getSectionStyle(about)} role="banner">
         <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 110 × 48" className="elr-c-logo-zone" {...imgProps} />
         <nav className="elr-c-nav" aria-label="Page sections">
-          {['About', 'Programs', 'Video', 'Gallery', 'Careers', 'Benefits', 'Contact'].map((label) => (
-            <a key={label} href={`#c-${label.toLowerCase()}`} className="elr-nav-link">{label}</a>
-          ))}
+          {renderNavLinks('c', isSectionActive, 'elr-nav-link')}
         </nav>
       </header>
 
@@ -1068,7 +1091,8 @@ function LayoutC({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields
 /* ================================================================
    LAYOUT D — Compact / Inline
    ================================================================ */
-function LayoutD({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+function LayoutD({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const isSectionActive = (key) => getSec(key)?.isActive !== false;
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -1087,9 +1111,7 @@ function LayoutD({ cd, isEditMode, onUpdateField, onUploadImage, uploadingFields
       <header className="elr-d-header" style={getSectionStyle(about)} role="banner">
         <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} {...imgProps} />
         <nav className="elr-d-nav" aria-label="Page sections">
-          {['About', 'Programs', 'Video', 'Gallery', 'Careers', 'Benefits', 'Contact'].map((label) => (
-            <a key={label} href={`#d-${label.toLowerCase()}`}>{label}</a>
-          ))}
+          {renderNavLinks('d', isSectionActive)}
         </nav>
       </header>
 
