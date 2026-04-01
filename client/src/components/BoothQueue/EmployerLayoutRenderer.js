@@ -26,6 +26,9 @@ export default function EmployerLayoutRenderer({
   onUploadImage,
   uploadingFields = new Set(),
 }) {
+  const normalizeSectionTitle = (title = '') =>
+    String(title).replace(/\s+section\s*$/i, '').trim();
+
   const getSec = (key) => sections.find((s) => s.key === key) || { key, contentData: null };
   const cd = (key) => {
     const section = getSec(key);
@@ -35,7 +38,21 @@ export default function EmployerLayoutRenderer({
     };
   };
 
-  const commonProps = { isEditMode, onUpdateField, onUploadImage, uploadingFields };
+  const getNavItems = () =>
+    NAV_SECTIONS
+      .map((item, index) => {
+        const section = getSec(item.key);
+        return {
+          ...item,
+          title: normalizeSectionTitle(section?.title || item.label || '') || item.label,
+          order: typeof section?.order === 'number' ? section.order : index,
+          isActive: section?.isActive !== false,
+        };
+      })
+      .filter((item) => item.isActive)
+      .sort((a, b) => a.order - b.order);
+
+  const commonProps = { isEditMode, onUpdateField, onUploadImage, uploadingFields, getNavItems };
 
   const layoutMap = {
     'layout-a': (
@@ -63,23 +80,21 @@ export default function EmployerLayoutRenderer({
    Shared sub-components
    ================================================================ */
 const NAV_SECTIONS = [
-  { key: 'about', label: 'About' },
-  { key: 'program', label: 'Programs' },
-  { key: 'video', label: 'Video' },
-  { key: 'gallery', label: 'Gallery' },
-  { key: 'jobs', label: 'Careers' },
-  { key: 'benefits', label: 'Benefits' },
-  { key: 'contact', label: 'Contact' },
+  { key: 'about', label: 'About', anchor: 'about' },
+  { key: 'program', label: 'Programs', anchor: 'programs' },
+  { key: 'video', label: 'Video', anchor: 'video' },
+  { key: 'gallery', label: 'Gallery', anchor: 'gallery' },
+  { key: 'jobs', label: 'Careers', anchor: 'careers' },
+  { key: 'benefits', label: 'Benefits', anchor: 'benefits' },
+  { key: 'contact', label: 'Contact', anchor: 'contact' },
 ];
 
-function renderNavLinks(prefix, isSectionActive, linkClassName = '') {
-  return NAV_SECTIONS
-    .filter((item) => isSectionActive(item.key))
-    .map((item) => (
-      <a key={item.key} href={`#${prefix}-${item.label.toLowerCase()}`} className={linkClassName}>
-        {item.label}
-      </a>
-    ));
+function renderNavLinks(prefix, navItems, linkClassName = '') {
+  return navItems.map((item) => (
+    <a key={item.key} href={`#${prefix}-${item.anchor}`} className={linkClassName}>
+      {item.title}
+    </a>
+  ));
 }
 
 /** Clickable image zone: shows image or placeholder; in edit mode lets user upload */
@@ -286,7 +301,6 @@ function extractYouTubeVideoId(rawUrl) {
   } catch {
     return fallbackMatch?.[1] || null;
   }
-  return null;
 }
 
 function getDefaultCopyrightText() {
@@ -705,8 +719,8 @@ function VideoUrlEditor({ sectionKey, videoUrl, videoTitle, isEditMode, onUpdate
 /* ================================================================
    LAYOUT A — Centered Classic
    ================================================================ */
-function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
-  const isSectionActive = (key) => getSec(key)?.isActive !== false;
+function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const navItems = getNavItems();
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -718,19 +732,13 @@ function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
   const copyrightText = social.copyrightText || getDefaultCopyrightText();
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const orderedMainKeys = navItems
+    .map((item) => item.key)
+    .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
 
-  return (
-    <>
-      {/* Header */}
-      <header className="elr-a-header elr-bg-white" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Company Logo · 240 × 100" className="elr-a-logo-zone" {...imgProps} />
-        <nav className="elr-a-nav" aria-label="Page sections">
-          {renderNavLinks('a', isSectionActive, 'elr-nav-link')}
-        </nav>
-      </header>
-
-      <main>
-        {/* §2 About */}
+  const renderSection = (key) => {
+    if (key === 'about') {
+      return (
         <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-about" className="elr-bg-white" aria-label="About section">
           <div style={{ padding: '2rem 3rem 0.5rem', display: 'flex', justifyContent: 'center' }}>
             <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Hero banner'} label="Hero / Banner Image · 800 × 280" className="elr-a-hero-zone" {...imgProps} />
@@ -745,10 +753,10 @@ function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             </div>
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §3 Program */}
+      );
+    }
+    if (key === 'program') {
+      return (
         <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-programs" className="elr-sec elr-bg-blue" aria-label="Programs section">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', maxWidth: 660, margin: '0 auto', textAlign: 'center' }}>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · 600 × 400" style={{ width: '100%', maxWidth: 560, aspectRatio: '3/2' }} {...imgProps} />
@@ -756,10 +764,10 @@ function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative or program..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §4 Video */}
+      );
+    }
+    if (key === 'video') {
+      return (
         <SecWrap sectionKey="video" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-video" className="elr-sec elr-bg-white" aria-label="Video section">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
             <TXT sectionKey="video" fieldName="videoTitle" value={video.videoTitle} placeholder="Executive Welcome Video" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
@@ -767,30 +775,30 @@ function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
           </div>
           <VideoUrlEditor sectionKey="video" videoUrl={video.videoUrl} videoTitle={video.videoTitle} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §5 Gallery */}
+      );
+    }
+    if (key === 'gallery') {
+      return (
         <SecWrap sectionKey="gallery" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-gallery" className="elr-sec elr-bg-light" aria-label="Gallery section">
           <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" style={{ textAlign: 'center', marginBottom: '2rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <div className="elr-a-gallery">
             {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} label={`Gallery Image ${i + 1} · 600 × 400`} {...imgProps} />); })}
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §6 Contact / CTA */}
+      );
+    }
+    if (key === 'contact') {
+      return (
         <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-contact" className="elr-sec elr-bg-white" aria-label="Contact section">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
             <h2 className="elr-h2">Contact</h2>
             <CtaButtons sectionKey="contact" contentData={contact} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §7 Jobs */}
+      );
+    }
+    if (key === 'jobs') {
+      return (
         <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
             <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Open Positions</h2>
@@ -799,14 +807,38 @@ function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             {isEditMode && (<div style={{ marginTop: 12 }}><label style={{ fontFamily: 'Arial,sans-serif', fontSize: 13, color: '#555' }}>Locations:</label><input type="text" defaultValue={jobs.locationsText || ''} placeholder="e.g. New York, San Francisco, Remote" style={{ width: '100%', marginTop: 4, border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 14 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
           </div>
         </SecWrap>
-
-        {/* §8 Benefits */}
+      );
+    }
+    if (key === 'benefits') {
+      return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-benefits" className="elr-sec elr-bg-dark" aria-label="Benefits section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
             <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Benefits</h2>
             <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <>
+      {/* Header */}
+      <header className="elr-a-header elr-bg-white" style={getSectionStyle(about)} role="banner">
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Company Logo · 240 × 100" className="elr-a-logo-zone" {...imgProps} />
+        <nav className="elr-a-nav" aria-label="Page sections">
+          {renderNavLinks('a', navItems, 'elr-nav-link')}
+        </nav>
+      </header>
+
+      <main>
+        {orderedMainKeys.map((sectionKey, index) => (
+          <React.Fragment key={sectionKey}>
+            {renderSection(sectionKey)}
+            {index < orderedMainKeys.length - 1 && <hr className="elr-divider" />}
+          </React.Fragment>
+        ))}
       </main>
 
       {/* Footer / Social */}
@@ -830,8 +862,8 @@ function LayoutA({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
 /* ================================================================
    LAYOUT B — Split / Square Images
    ================================================================ */
-function LayoutB({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
-  const isSectionActive = (key) => getSec(key)?.isActive !== false;
+function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const navItems = getNavItems();
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -843,6 +875,95 @@ function LayoutB({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
   const copyrightText = social.copyrightText || getDefaultCopyrightText();
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const orderedMainKeys = navItems
+    .map((item) => item.key)
+    .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
+
+  const renderSection = (key) => {
+    if (key === 'about') {
+      return (
+        <React.Fragment>
+          <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
+            <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
+            <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
+          </div>
+          <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-about" className="elr-bg-white" aria-label="About section">
+            <div className="elr-b-about-row">
+              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Company image'} label="Company Image · ~340 × 340 square" className="elr-b-about-img-zone" {...imgProps} />
+              <div className="elr-b-about-txt">
+                <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              </div>
+            </div>
+          </SecWrap>
+        </React.Fragment>
+      );
+    }
+    if (key === 'program') {
+      return (
+        <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-programs" className="elr-bg-blue" aria-label="Programs section">
+          <div className="elr-b-prog-row">
+            <div className="elr-b-prog-txt">
+              <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+            </div>
+            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · ~300 × 300 square" className="elr-b-prog-img-zone" {...imgProps} />
+          </div>
+        </SecWrap>
+      );
+    }
+    if (key === 'video') {
+      return (
+        <SecWrap sectionKey="video" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-video" className="elr-sec elr-bg-white" aria-label="Video section">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+            <TXT sectionKey="video" fieldName="videoTitle" value={video.videoTitle} placeholder="Executive Welcome Video" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+            <VideoZone sectionKey="video" url={video.videoUrl} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+          </div>
+          <VideoUrlEditor sectionKey="video" videoUrl={video.videoUrl} videoTitle={video.videoTitle} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        </SecWrap>
+      );
+    }
+    if (key === 'gallery') {
+      return (
+        <SecWrap sectionKey="gallery" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-gallery" className="elr-bg-light" aria-label="Gallery section">
+          <div style={{ padding: '1.5rem 3rem 0.75rem' }}>
+            <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+          </div>
+          <div className="elr-b-gal-row">
+            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} label={`Image ${i + 1} · ~260 × 260`} {...imgProps} />); })}
+          </div>
+        </SecWrap>
+      );
+    }
+    if (key === 'contact') {
+      return (
+        <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-contact" className="elr-sec elr-bg-blue" aria-label="Contact section">
+          <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Contact</h2>
+          <CtaButtons sectionKey="contact" contentData={contact} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        </SecWrap>
+      );
+    }
+    if (key === 'jobs') {
+      return (
+        <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
+          <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Open Positions</h2>
+          <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+          {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '1.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.4rem' }}>Locations</h3><p className="elr-body" style={{ fontSize: '0.9rem' }}>{jobs.locationsText}</p></div>)}
+          {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
+        </SecWrap>
+      );
+    }
+    if (key === 'benefits') {
+      return (
+        <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-benefits" className="elr-b-ben-col elr-bg-dark" aria-label="Benefits section">
+          <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Benefits</h2>
+          <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        </SecWrap>
+      );
+    }
+    return null;
+  };
 
   return (
     <>
@@ -853,89 +974,18 @@ function LayoutB({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
         </div>
         <div className="elr-b-nav-col">
           <nav className="elr-b-nav" aria-label="Page sections">
-            {renderNavLinks('b', isSectionActive, 'elr-nav-link')}
+            {renderNavLinks('b', navItems, 'elr-nav-link')}
           </nav>
         </div>
       </header>
 
       <main>
-        {/* Dual brand images */}
-        <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-          <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-          <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
-        </div>
-
-        {/* §2 About */}
-        <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-about" className="elr-bg-white" aria-label="About section">
-          <div className="elr-b-about-row">
-            <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Company image'} label="Company Image · ~340 × 340 square" className="elr-b-about-img-zone" {...imgProps} />
-            <div className="elr-b-about-txt">
-              <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            </div>
-          </div>
-        </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §3 Program */}
-        <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-programs" className="elr-bg-blue" aria-label="Programs section">
-          <div className="elr-b-prog-row">
-            <div className="elr-b-prog-txt">
-              <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            </div>
-            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · ~300 × 300 square" className="elr-b-prog-img-zone" {...imgProps} />
-          </div>
-        </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §4 Video */}
-        <SecWrap sectionKey="video" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-video" className="elr-sec elr-bg-white" aria-label="Video section">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-            <TXT sectionKey="video" fieldName="videoTitle" value={video.videoTitle} placeholder="Executive Welcome Video" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            <VideoZone sectionKey="video" url={video.videoUrl} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-          </div>
-          <VideoUrlEditor sectionKey="video" videoUrl={video.videoUrl} videoTitle={video.videoTitle} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-        </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §5 Gallery */}
-        <SecWrap sectionKey="gallery" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-gallery" className="elr-bg-light" aria-label="Gallery section">
-          <div style={{ padding: '1.5rem 3rem 0.75rem' }}>
-            <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-          </div>
-          <div className="elr-b-gal-row">
-            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} label={`Image ${i + 1} · ~260 × 260`} {...imgProps} />); })}
-          </div>
-        </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §6 CTA */}
-        <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-contact" className="elr-sec elr-bg-blue" aria-label="Contact section">
-          <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Contact</h2>
-          <CtaButtons sectionKey="contact" contentData={contact} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-        </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §7 + §8 side by side */}
-        <div className="elr-b-jobs-ben">
-          <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
-            <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Open Positions</h2>
-            <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '1.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.4rem' }}>Locations</h3><p className="elr-body" style={{ fontSize: '0.9rem' }}>{jobs.locationsText}</p></div>)}
-            {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
-          </SecWrap>
-          <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-benefits" className="elr-b-ben-col elr-bg-dark" aria-label="Benefits section">
-            <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Benefits</h2>
-            <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-          </SecWrap>
-        </div>
+        {orderedMainKeys.map((sectionKey, index) => (
+          <React.Fragment key={sectionKey}>
+            {renderSection(sectionKey)}
+            {index < orderedMainKeys.length - 1 && <hr className="elr-divider" />}
+          </React.Fragment>
+        ))}
       </main>
 
       <SecWrap sectionKey="social" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} className="elr-sec-sm elr-bg-white" style={{ textAlign: 'center', borderTop: '1px solid #e8e5e0' }} as="footer" role="contentinfo">
@@ -958,8 +1008,8 @@ function LayoutB({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
 /* ================================================================
    LAYOUT C — Editorial / Mosaic
    ================================================================ */
-function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
-  const isSectionActive = (key) => getSec(key)?.isActive !== false;
+function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const navItems = getNavItems();
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -971,41 +1021,35 @@ function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
   const copyrightText = social.copyrightText || getDefaultCopyrightText();
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(5).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const orderedMainKeys = navItems
+    .map((item) => item.key)
+    .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
 
-  return (
-    <>
-      {/* Header: logo + nav inline */}
-      <header className="elr-c-header elr-bg-white" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 110 × 48" className="elr-c-logo-zone" {...imgProps} />
-        <nav className="elr-c-nav" aria-label="Page sections">
-          {renderNavLinks('c', isSectionActive, 'elr-nav-link')}
-        </nav>
-      </header>
-
-      <main>
-        {/* Dual brand images */}
-        <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-          <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-          <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
-        </div>
-
-        {/* §2 About */}
-        <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-about" className="elr-sec elr-bg-white" aria-label="About section">
-          <div className="elr-c-about-row">
-            <div>
-              <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <div style={{ marginTop: '0.75rem' }} />
-              <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <div style={{ marginTop: '1rem' }} />
-              <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            </div>
-            <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Accent portrait'} label="Accent Portrait · 3:4" className="elr-c-about-portrait" {...imgProps} />
+  const renderSection = (key) => {
+    if (key === 'about') {
+      return (
+        <React.Fragment>
+          <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
+            <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
+            <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
           </div>
-        </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §3 Program */}
+          <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-about" className="elr-sec elr-bg-white" aria-label="About section">
+            <div className="elr-c-about-row">
+              <div>
+                <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <div style={{ marginTop: '0.75rem' }} />
+                <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <div style={{ marginTop: '1rem' }} />
+                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              </div>
+              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Accent portrait'} label="Accent Portrait · 3:4" className="elr-c-about-portrait" {...imgProps} />
+            </div>
+          </SecWrap>
+        </React.Fragment>
+      );
+    }
+    if (key === 'program') {
+      return (
         <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-programs" className="elr-bg-light" aria-label="Programs section">
           <div style={{ position: 'relative' }}>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · Full Width × 320px" className="elr-c-prog-full" {...imgProps} />
@@ -1015,8 +1059,10 @@ function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             </div>
           </div>
         </SecWrap>
-
-        {/* §4 Video */}
+      );
+    }
+    if (key === 'video') {
+      return (
         <SecWrap sectionKey="video" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-video" className="elr-sec elr-bg-white" aria-label="Video section">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
             <TXT sectionKey="video" fieldName="videoTitle" value={video.videoTitle} placeholder="Executive Welcome Video" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
@@ -1024,10 +1070,10 @@ function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
           </div>
           <VideoUrlEditor sectionKey="video" videoUrl={video.videoUrl} videoTitle={video.videoTitle} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §5 Mosaic gallery */}
+      );
+    }
+    if (key === 'gallery') {
+      return (
         <SecWrap sectionKey="gallery" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-gallery" className="elr-sec elr-bg-blue" aria-label="Gallery section">
           <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <div className="elr-c-mosaic">
@@ -1038,10 +1084,10 @@ function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             <ImgZone sectionKey="gallery" fieldName="images.4" url={galleryImages[4]?.url} alt="Gallery 5" label="Image 5 · ~220 × 175" className="elr-c-mosaic-land" {...imgProps} />
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §6 CTA dark banner */}
+      );
+    }
+    if (key === 'contact') {
+      return (
         <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-contact" className="elr-sec elr-bg-dark" aria-label="Contact section">
           <div style={{ textAlign: 'center' }}>
             <h2 className="elr-h2" style={{ marginBottom: '0.75rem' }}>Ready to Join Our Team?</h2>
@@ -1049,10 +1095,10 @@ function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             <CtaButtons sectionKey="contact" contentData={{ ...contact, primaryBtnText: contact.primaryBtnText || 'Join Our Talent Community', secondaryBtnText: contact.secondaryBtnText || 'View Our Open Positions' }} isEditMode={isEditMode} onUpdateField={onUpdateField} className="justify-center" />
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §7 Jobs */}
+      );
+    }
+    if (key === 'jobs') {
+      return (
         <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
           <div style={{ maxWidth: 860 }}>
             <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Open Positions</h2>
@@ -1061,14 +1107,38 @@ function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
           </div>
         </SecWrap>
-
-        {/* §8 Benefits */}
+      );
+    }
+    if (key === 'benefits') {
+      return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-benefits" className="elr-sec elr-bg-dark" aria-label="Benefits section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
             <h2 className="elr-h2" style={{ marginBottom: '1.5rem' }}>Benefits</h2>
             <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <>
+      {/* Header: logo + nav inline */}
+      <header className="elr-c-header elr-bg-white" style={getSectionStyle(about)} role="banner">
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 110 × 48" className="elr-c-logo-zone" {...imgProps} />
+        <nav className="elr-c-nav" aria-label="Page sections">
+          {renderNavLinks('c', navItems, 'elr-nav-link')}
+        </nav>
+      </header>
+
+      <main>
+        {orderedMainKeys.map((sectionKey, index) => (
+          <React.Fragment key={sectionKey}>
+            {renderSection(sectionKey)}
+            {index < orderedMainKeys.length - 1 && <hr className="elr-divider" />}
+          </React.Fragment>
+        ))}
       </main>
 
       <SecWrap sectionKey="social" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} className="elr-sec-sm elr-bg-white" style={{ textAlign: 'center', borderTop: '1px solid #e8e5e0' }} as="footer" role="contentinfo">
@@ -1091,8 +1161,8 @@ function LayoutC({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
 /* ================================================================
    LAYOUT D — Compact / Inline
    ================================================================ */
-function LayoutD({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
-  const isSectionActive = (key) => getSec(key)?.isActive !== false;
+function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, uploadingFields }) {
+  const navItems = getNavItems();
   const about = cd('about');
   const program = cd('program');
   const video = cd('video');
@@ -1104,39 +1174,33 @@ function LayoutD({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
   const copyrightText = social.copyrightText || getDefaultCopyrightText();
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const orderedMainKeys = navItems
+    .map((item) => item.key)
+    .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
 
-  return (
-    <>
-      {/* Dark header */}
-      <header className="elr-d-header" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} {...imgProps} />
-        <nav className="elr-d-nav" aria-label="Page sections">
-          {renderNavLinks('d', isSectionActive)}
-        </nav>
-      </header>
-
-      <main>
-        {/* §2 Identity */}
-        <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-about" className="elr-bg-white" aria-label="About section">
-          <div className="elr-d-identity">
-            <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Identity image'} label="Identity Image · ~300 × 280" className="elr-d-id-img-zone" {...imgProps} />
-            <div className="elr-d-id-txt">
-              <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.05rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+  const renderSection = (key) => {
+    if (key === 'about') {
+      return (
+        <React.Fragment>
+          <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-about" className="elr-bg-white" aria-label="About section">
+            <div className="elr-d-identity">
+              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Identity image'} label="Identity Image · ~300 × 280" className="elr-d-id-img-zone" {...imgProps} />
+              <div className="elr-d-id-txt">
+                <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.05rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} />
+              </div>
             </div>
+          </SecWrap>
+          <div className="elr-dual-images elr-bg-white" style={{ paddingTop: '1rem' }} role="group" aria-label="Additional company images">
+            <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
+            <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
           </div>
-        </SecWrap>
-
-        {/* Dual brand images */}
-        <div className="elr-dual-images elr-bg-white" style={{ paddingTop: '1rem' }} role="group" aria-label="Additional company images">
-          <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-          <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
-        </div>
-
-        <hr className="elr-divider" />
-
-        {/* §3 Program */}
+        </React.Fragment>
+      );
+    }
+    if (key === 'program') {
+      return (
         <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-programs" className="elr-sec elr-bg-blue" aria-label="Programs section">
           <div className="elr-d-prog-row">
             <div className="elr-d-prog-txt">
@@ -1146,10 +1210,10 @@ function LayoutD({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · Landscape 4:3" className="elr-d-prog-img-zone" {...imgProps} />
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §4 Video */}
+      );
+    }
+    if (key === 'video') {
+      return (
         <SecWrap sectionKey="video" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-video" className="elr-sec elr-bg-white" aria-label="Video section">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
             <TXT sectionKey="video" fieldName="videoTitle" value={video.videoTitle} placeholder="Executive Welcome Video" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
@@ -1157,10 +1221,10 @@ function LayoutD({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
           </div>
           <VideoUrlEditor sectionKey="video" videoUrl={video.videoUrl} videoTitle={video.videoTitle} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §5 Gallery */}
+      );
+    }
+    if (key === 'gallery') {
+      return (
         <SecWrap sectionKey="gallery" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-gallery" className="elr-bg-light" aria-label="Gallery section">
           <div style={{ padding: '1.5rem 3rem 0.5rem' }}>
             <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
@@ -1169,30 +1233,54 @@ function LayoutD({ cd, getSec, isEditMode, onUpdateField, onUploadImage, uploadi
             {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} label={`Image ${i + 1} · ~300 × 200`} {...imgProps} />); })}
           </div>
         </SecWrap>
-
-        <hr className="elr-divider" />
-
-        {/* §6 CTA inline banner */}
+      );
+    }
+    if (key === 'contact') {
+      return (
         <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-contact" className="elr-d-cta-banner elr-bg-blue" aria-label="Contact section">
           <TXT sectionKey="contact" fieldName="ctaHeadline" value={contact.ctaHeadline} placeholder="Ready to explore a career with us?" className="elr-h2" tagName="h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <CtaButtons sectionKey="contact" contentData={contact} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
+      );
+    }
+    if (key === 'jobs') {
+      return (
+        <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
+          <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Open Positions</h2>
+          <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+          {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '1.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.4rem' }}>Locations</h3><p className="elr-body" style={{ fontSize: '0.9rem' }}>{jobs.locationsText}</p></div>)}
+          {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
+        </SecWrap>
+      );
+    }
+    if (key === 'benefits') {
+      return (
+        <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-benefits" className="elr-d-ben-col" aria-label="Benefits section">
+          <h2 className="elr-h2" style={{ marginBottom: '1rem' }}>Benefits</h2>
+          <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        </SecWrap>
+      );
+    }
+    return null;
+  };
 
-        <hr className="elr-divider" />
+  return (
+    <>
+      {/* Dark header */}
+      <header className="elr-d-header" style={getSectionStyle(about)} role="banner">
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} {...imgProps} />
+        <nav className="elr-d-nav" aria-label="Page sections">
+          {renderNavLinks('d', navItems)}
+        </nav>
+      </header>
 
-        {/* §7 + §8 Jobs + Benefits */}
-        <div className="elr-d-jobs-ben">
-          <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
-            <h2 className="elr-h2" style={{ marginBottom: '1.25rem' }}>Open Positions</h2>
-            <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '1.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.4rem' }}>Locations</h3><p className="elr-body" style={{ fontSize: '0.9rem' }}>{jobs.locationsText}</p></div>)}
-            {isEditMode && (<div style={{ marginTop: 10 }}><input type="text" defaultValue={jobs.locationsText || ''} placeholder="Locations" style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 13 }} onBlur={(e) => onUpdateField && onUpdateField('jobs', 'locationsText', e.target.value)} aria-label="Locations" /></div>)}
-          </SecWrap>
-          <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-benefits" className="elr-d-ben-col" aria-label="Benefits section">
-            <h2 className="elr-h2" style={{ marginBottom: '1rem' }}>Benefits</h2>
-            <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-          </SecWrap>
-        </div>
+      <main>
+        {orderedMainKeys.map((sectionKey, index) => (
+          <React.Fragment key={sectionKey}>
+            {renderSection(sectionKey)}
+            {index < orderedMainKeys.length - 1 && <hr className="elr-divider" />}
+          </React.Fragment>
+        ))}
       </main>
 
       <SecWrap sectionKey="social" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} className="elr-sec-sm elr-bg-white" style={{ textAlign: 'center', borderTop: '1px solid #e8e5e0' }} as="footer" role="contentinfo">

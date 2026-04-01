@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { uploadImageToS3 } from '../../services/uploads';
 import AdminHeader from '../Layout/AdminHeader';
@@ -47,12 +47,17 @@ const LAYOUTS = [
   { id: 'layout-d', label: 'D — Compact / Inline' },
 ];
 
+function normalizeSectionTitle(title = '') {
+  return String(title).replace(/\s+section\s*$/i, '').trim();
+}
+
 function normalizeSections(source = []) {
   return SECTION_KEYS.map((key, index) => {
     const existing = source.find((s) => s.key === key);
+    const normalizedTitle = normalizeSectionTitle(existing?.title || '');
     return {
       key,
-      title: existing?.title || SECTION_TITLES[key],
+      title: normalizedTitle || SECTION_TITLES[key],
       contentHtml: existing?.contentHtml || '',
       contentData: existing?.contentData || { ...DEFAULT_CONTENT_DATA[key] },
       isActive: existing?.isActive !== false,
@@ -70,6 +75,9 @@ export default function EmployerPageTemplateEditor() {
   const [sections, setSections] = useState(normalizeSections([]));
   const [isLiveView, setIsLiveView] = useState(false);
   const [uploadingFields, setUploadingFields] = useState(new Set());
+  const [editingSectionKey, setEditingSectionKey] = useState(null);
+  const [editingSectionTitle, setEditingSectionTitle] = useState('');
+  const [dragSectionKey, setDragSectionKey] = useState(null);
 
   // Load draft from sessionStorage on mount
   useEffect(() => {
@@ -147,8 +155,82 @@ export default function EmployerPageTemplateEditor() {
     setSections((prev) => prev.map((s) => (s.key === sectionKey ? { ...s, isActive } : s)));
   }, []);
 
-  const activeSections = sections.filter((s) => s.isActive !== false);
-  const hiddenSections = sections.filter((s) => s.isActive === false);
+  const handleMoveSection = useCallback((sectionKey, direction) => {
+    setSections((prev) => {
+      const activeOrdered = [...prev]
+        .filter((s) => s.isActive !== false)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const currentIndex = activeOrdered.findIndex((s) => s.key === sectionKey);
+      const targetIndex = currentIndex + direction;
+      if (currentIndex < 0 || targetIndex < 0 || targetIndex >= activeOrdered.length) return prev;
+
+      const current = activeOrdered[currentIndex];
+      const target = activeOrdered[targetIndex];
+      const currentOrder = current.order ?? currentIndex;
+      const targetOrder = target.order ?? targetIndex;
+
+      return prev.map((s) => {
+        if (s.key === current.key) return { ...s, order: targetOrder };
+        if (s.key === target.key) return { ...s, order: currentOrder };
+        return s;
+      });
+    });
+  }, []);
+
+  const handleBeginRename = useCallback((section) => {
+    setEditingSectionKey(section.key);
+    setEditingSectionTitle(normalizeSectionTitle(section.title || SECTION_TITLES[section.key] || ''));
+  }, []);
+
+  const handleSaveRename = useCallback((sectionKey) => {
+    const nextTitle = normalizeSectionTitle(editingSectionTitle) || SECTION_TITLES[sectionKey] || sectionKey;
+    setSections((prev) => prev.map((s) => (s.key === sectionKey ? { ...s, title: nextTitle } : s)));
+    setEditingSectionKey(null);
+    setEditingSectionTitle('');
+  }, [editingSectionTitle]);
+
+  const handleCancelRename = useCallback(() => {
+    setEditingSectionKey(null);
+    setEditingSectionTitle('');
+  }, []);
+
+  const handleDropReorder = useCallback((targetSectionKey) => {
+    if (!dragSectionKey || dragSectionKey === targetSectionKey) return;
+    setSections((prev) => {
+      const orderedActive = [...prev]
+        .filter((s) => s.isActive !== false)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const fromIndex = orderedActive.findIndex((s) => s.key === dragSectionKey);
+      const toIndex = orderedActive.findIndex((s) => s.key === targetSectionKey);
+      if (fromIndex < 0 || toIndex < 0) return prev;
+
+      const moved = [...orderedActive];
+      const [item] = moved.splice(fromIndex, 1);
+      moved.splice(toIndex, 0, item);
+      const nextOrder = new Map(moved.map((s, idx) => [s.key, idx]));
+
+      return prev.map((s) => (nextOrder.has(s.key) ? { ...s, order: nextOrder.get(s.key) } : s));
+    });
+    setDragSectionKey(null);
+  }, [dragSectionKey]);
+
+  const handleResetSectionOrder = useCallback(() => {
+    const defaultOrderMap = new Map(SECTION_KEYS.map((key, index) => [key, index]));
+    setSections((prev) =>
+      prev.map((section) => ({
+        ...section,
+        order: defaultOrderMap.get(section.key) ?? section.order ?? 0,
+      }))
+    );
+    setDragSectionKey(null);
+  }, []);
+
+  const orderedSections = useMemo(
+    () => [...sections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    [sections]
+  );
+  const activeSections = orderedSections.filter((s) => s.isActive !== false);
+  const hiddenSections = orderedSections.filter((s) => s.isActive === false);
 
   const saveAndReturn = () => {
     try {
@@ -236,17 +318,87 @@ export default function EmployerPageTemplateEditor() {
           <div className="elr-editor-scroll">
             {!isLiveView && (
               <div className="elr-sections-manager" aria-label="Section visibility manager">
+                <div className="elr-sections-head">
+                  <div className="elr-sections-label">Sections:</div>
+                  <button
+                    type="button"
+                    className="elr-sections-reset-btn"
+                    onClick={handleResetSectionOrder}
+                    title="Reset section positions to default"
+                  >
+                    Reset positions
+                  </button>
+                </div>
                 <div className="elr-sections-row">
-                  <span className="elr-sections-label">Active sections:</span>
-                  {activeSections.map((section) => (
-                    <button
+                  {activeSections.map((section, index) => (
+                    <div
                       key={section.key}
-                      type="button"
-                      className="elr-section-pill active"
-                      onClick={() => handleSetSectionActive(section.key, false)}
+                      className={`elr-section-chip${dragSectionKey === section.key ? ' dragging' : ''}`}
+                      draggable
+                      onDragStart={() => setDragSectionKey(section.key)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDropReorder(section.key)}
                     >
-                      {SECTION_TITLES[section.key] || section.title} ×
-                    </button>
+                      <span
+                        className="elr-chip-grip"
+                        title="Drag to reorder"
+                        aria-hidden="true"
+                      >
+                        ::
+                      </span>
+                      {editingSectionKey === section.key ? (
+                        <input
+                          type="text"
+                          className="elr-chip-input"
+                          value={editingSectionTitle}
+                          autoFocus
+                          onChange={(e) => setEditingSectionTitle(e.target.value)}
+                          onBlur={() => handleSaveRename(section.key)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveRename(section.key);
+                            if (e.key === 'Escape') handleCancelRename();
+                          }}
+                          aria-label={`Rename ${SECTION_TITLES[section.key] || section.key} section`}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          className="elr-chip-title-btn"
+                          onClick={() => handleBeginRename(section)}
+                          title="Click to rename"
+                        >
+                          {section.title || SECTION_TITLES[section.key] || section.key}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="elr-chip-mini-btn"
+                        disabled={index === 0}
+                        onClick={() => handleMoveSection(section.key, -1)}
+                        aria-label={`Move ${section.title || section.key} left`}
+                        title="Move left"
+                      >
+                        ←
+                      </button>
+                      <button
+                        type="button"
+                        className="elr-chip-mini-btn"
+                        disabled={index === activeSections.length - 1}
+                        onClick={() => handleMoveSection(section.key, 1)}
+                        aria-label={`Move ${section.title || section.key} right`}
+                        title="Move right"
+                      >
+                        →
+                      </button>
+                      <button
+                        type="button"
+                        className="elr-chip-hide-btn"
+                        onClick={() => handleSetSectionActive(section.key, false)}
+                        title="Hide section"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
                 {hiddenSections.length > 0 && (
