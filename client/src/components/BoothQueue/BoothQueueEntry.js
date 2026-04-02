@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
 import { boothQueueAPI } from '../../services/boothQueue';
+import { legalPagesAPI } from '../../services/legalPages';
 import './BoothQueueEntry.css';
 import AdminHeader from '../Layout/AdminHeader';
-import '../Dashboard/Dashboard.css'; // Import header styles
+import '../Dashboard/Dashboard.css';
 
 export default function BoothQueueEntry() {
   const { eventSlug, boothId } = useParams();
@@ -20,10 +21,29 @@ export default function BoothQueueEntry() {
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
   const [isBoothExpired, setIsBoothExpired] = useState(false);
+  const [legalLinks, setLegalLinks] = useState({ termsOfUse: null, privacyPolicy: null });
 
   useEffect(() => {
     loadData();
   }, [eventSlug, boothId]);
+
+  useEffect(() => {
+    const fetchLegalLinks = async () => {
+      try {
+        const [termsRes, privacyRes] = await Promise.allSettled([
+          legalPagesAPI.getByType('terms-of-use'),
+          legalPagesAPI.getByType('privacy-policy')
+        ]);
+        setLegalLinks({
+          termsOfUse: termsRes.status === 'fulfilled' ? '/legal/terms-of-use' : null,
+          privacyPolicy: privacyRes.status === 'fulfilled' ? '/legal/privacy-policy' : null
+        });
+      } catch {
+        // Fall back to external links
+      }
+    };
+    fetchLegalLinks();
+  }, []);
 
   const loadData = async () => {
     try {
@@ -286,11 +306,21 @@ export default function BoothQueueEntry() {
               onChange={(e) => setAgreedToTerms(e.target.checked)}
             />
             <span>I agree to </span>
-            <a href="https://abilityjobfair.org/terms-of-use/" target="_blank" rel="noopener noreferrer">
+            <a
+              href={legalLinks.termsOfUse || 'https://abilityjobfair.org/terms-of-use/'}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Terms of Use (opens in new tab)"
+            >
               Terms of Use
             </a>
             <span> and </span>
-            <a href="https://abilityjobfair.org/privacy-policy/" target="_blank" rel="noopener noreferrer">
+            <a
+              href={legalLinks.privacyPolicy || 'https://abilityjobfair.org/privacy-policy/'}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Privacy Policy (opens in new tab)"
+            >
               Privacy Policy
             </a>
             <span className="required"> *</span>

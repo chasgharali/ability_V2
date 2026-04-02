@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { legalPagesAPI } from '../../services/legalPages';
-import { MdArrowBack } from 'react-icons/md';
+import settingsAPI from '../../services/settings';
 import './Legal.css';
 
 const PAGE_LABELS = {
@@ -13,7 +12,8 @@ const LegalPageView = ({ type }) => {
     const [page, setPage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const navigate = useNavigate();
+    const [brandingLogo, setBrandingLogo] = useState('');
+    const [brandingLogoAlt, setBrandingLogoAlt] = useState('ABILITY Job Fair');
     const pageLabel = PAGE_LABELS[type] || type;
 
     const load = useCallback(async () => {
@@ -37,15 +37,23 @@ const LegalPageView = ({ type }) => {
         load();
     }, [load]);
 
-    const handleBack = () => {
-        // Legal pages are often opened in a new tab; in that case there may be no
-        // usable browser history entry to go back to.
-        if (window.history.length > 1) {
-            navigate(-1);
-            return;
-        }
-        navigate('/');
-    };
+    useEffect(() => {
+        const fetchBranding = async () => {
+            try {
+                const logoRes = await settingsAPI.getSetting('branding_logo');
+                if (logoRes.success && logoRes.value) {
+                    setBrandingLogo(logoRes.value);
+                }
+                const altRes = await settingsAPI.getSetting('branding_logo_alt');
+                if (altRes.success && altRes.value) {
+                    setBrandingLogoAlt(altRes.value);
+                }
+            } catch {
+                // Keep defaults
+            }
+        };
+        fetchBranding();
+    }, []);
 
     return (
         <div className="legal-view-wrapper">
@@ -53,16 +61,15 @@ const LegalPageView = ({ type }) => {
 
             <header className="legal-view-header" role="banner">
                 <div className="legal-view-header-inner">
-                    <button
-                        type="button"
-                        className="legal-back-btn"
-                        onClick={handleBack}
-                        aria-label="Go back"
-                    >
-                        <MdArrowBack aria-hidden="true" />
-                        Back
-                    </button>
-                    <span className="legal-view-logo-text">ABILITY Job Fair</span>
+                    {brandingLogo ? (
+                        <img
+                            src={brandingLogo}
+                            alt={brandingLogoAlt}
+                            className="legal-view-logo"
+                        />
+                    ) : (
+                        <span className="legal-view-logo-text">{brandingLogoAlt}</span>
+                    )}
                 </div>
             </header>
 
@@ -102,10 +109,6 @@ const LegalPageView = ({ type }) => {
                     </article>
                 )}
             </main>
-
-            <footer className="legal-view-footer" role="contentinfo">
-                <p>&copy; {new Date().getFullYear()} ABILITY Job Fair. All rights reserved.</p>
-            </footer>
         </div>
     );
 };

@@ -1,9 +1,7 @@
 /* Dashboard Styles - Inspired by ABILITYJOBFAIR */
 .dashboard {
-    /* Reserve space for the fixed footer (~50px) so dashboard content never
-       extends behind it. All scrolling happens inside .dashboard-main only. */
-    height: calc(100vh - 56px);
-    max-height: calc(100vh - 56px);
+    height: 100vh;
+    max-height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -906,19 +904,13 @@ body.sidebar-open .mobile-menu-toggle:hover {
     color: #ffffff;
     padding: 1rem 0;
     overflow-y: hidden !important;
-    /* Sidebar should NOT scroll */
     overflow-x: hidden !important;
     position: fixed !important;
-    /* Fix sidebar position */
     top: 72px !important;
-    /* Below fixed header (72px height), above footer (56px) */
     left: 0 !important;
-    height: calc(100vh - 72px - 56px) !important;
-    /* Full height minus header and footer */
+    height: calc(100vh - 72px) !important;
     flex-shrink: 0 !important;
-    /* Don't shrink */
     z-index: 100 !important;
-    /* Above content but below dialogs and header - overridden on mobile */
     transition: transform 0.3s ease;
 }
 
@@ -1110,9 +1102,10 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
 .dashboard-main {
     flex: 1;
-    min-height: 0; /* let flex shrink so this container stays within viewport */
+    min-height: 0;
     background: #ffffff;
     padding: 2rem;
+    padding-bottom: 60px;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     margin-left: 260px !important;
@@ -1126,7 +1119,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     padding-top: 1.5rem;
     padding-left: 0.25rem;
     padding-right: 0.25rem;
-    padding-bottom: 1rem;
+    padding-bottom: 60px;
 }
 
 /* Skip link for accessibility - Dashboard specific */
@@ -1837,7 +1830,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
         margin-left: 0 !important;
         padding: 0.5rem 1rem !important;
         padding-top: 0.25rem !important;
-        padding-bottom: 1rem !important;
+        padding-bottom: 60px !important;
         position: relative;
         z-index: 1;
     }

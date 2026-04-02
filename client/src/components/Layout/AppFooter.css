@@ -41,6 +41,8 @@ html.theme-high-contrast .app-footer {
     left: 0;
     right: 0;
     bottom: 0;
+    height: var(--app-footer-height, 50px);
+    box-sizing: border-box;
     z-index: 1200;
     border-top: 1px solid var(--footer-border);
 }

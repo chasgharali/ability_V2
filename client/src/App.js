@@ -62,6 +62,11 @@ import './App.css';
 // Component to conditionally render header and footer
 const AppLayout = ({ children }) => {
     const { user } = useAuth();
+    const location = useLocation();
+
+    const hideFooter = location.pathname.startsWith('/booth-queue/')
+        || location.pathname.startsWith('/video-call/')
+        || location.pathname.startsWith('/legal/');
 
     // Roles that should have access to Team Chat
     const chatEnabledRoles = new Set(
@@ -80,7 +85,7 @@ const AppLayout = ({ children }) => {
             <CookieConsent />
             <AccessibilityAnnouncer />
             <GlobalRouteObserver />
-            <AppFooter />
+            {!hideFooter && <AppFooter />}
         </div>
     );
 };

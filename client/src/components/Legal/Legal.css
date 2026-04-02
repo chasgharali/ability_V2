@@ -181,10 +181,10 @@
 }
 
 .legal-view-header {
-    background: #2c3e50;
-    color: #fff;
-    padding: 0.95rem 1.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: #ffffff;
+    color: #111827;
+    padding: 0.75rem 1.75rem;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .legal-view-header-inner {
@@ -192,36 +192,21 @@
     margin: 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
     gap: 0.75rem;
 }
 
-.legal-back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    color: #fff;
-    border-radius: 6px;
-    padding: 0.4rem 0.85rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.legal-back-btn:hover,
-.legal-back-btn:focus-visible {
-    background: rgba(255, 255, 255, 0.25);
-    outline: 2px solid #fff;
-    outline-offset: 2px;
+.legal-view-logo {
+    height: 40px;
+    width: auto;
+    display: block;
+    object-fit: contain;
 }
 
 .legal-view-logo-text {
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.1rem;
     letter-spacing: 0.02em;
+    color: #111827;
 }
 
 .legal-view-main {
@@ -313,13 +298,7 @@
     color: #1a252f;
 }
 
-.legal-view-footer {
-    background: #2c3e50;
-    color: rgba(255, 255, 255, 0.75);
-    text-align: center;
-    padding: 0.9rem 1rem;
-    font-size: 0.8rem;
-}
+/* Footer removed from legal page view */
 
 /* ===================================================
    Responsive
