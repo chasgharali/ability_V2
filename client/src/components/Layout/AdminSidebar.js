@@ -554,6 +554,26 @@ export default function AdminSidebar({ active = 'booths' }) {
               </div>
             )}
           </div>
+          <div className="sidebar-section">
+            <button
+              className="sidebar-header"
+              onClick={() => setExpanded(s => ({ ...s, footer: !s.footer }))}
+              aria-expanded={expanded.footer !== false}
+            >
+              <span>Footer</span>
+              {expanded.footer !== false ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.footer !== false && (
+              <div className="sidebar-items">
+                <button className={itemClass('legal-terms-of-use')} onClick={() => handleItemClick('/legal/terms-of-use/edit')}>
+                  Terms of Use
+                </button>
+                <button className={itemClass('legal-privacy-policy')} onClick={() => handleItemClick('/legal/privacy-policy/edit')}>
+                  Privacy Policy
+                </button>
+              </div>
+            )}
+          </div>
         </>
       );
     } else {

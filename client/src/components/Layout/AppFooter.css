@@ -1,0 +1,133 @@
+.app-footer {
+    --footer-bg: #2c3e50;
+    --footer-border: rgba(255, 255, 255, 0.14);
+    --footer-text: rgba(255, 255, 255, 0.9);
+    --footer-muted: rgba(255, 255, 255, 0.72);
+    --footer-separator: rgba(255, 255, 255, 0.35);
+    --footer-link: rgba(255, 255, 255, 0.92);
+    --footer-link-hover: #ffffff;
+    --footer-focus: #ffffff;
+}
+
+html[data-theme='grayscale'] .app-footer,
+html.theme-grayscale .app-footer {
+    --footer-bg: #2a2a2a;
+    --footer-border: rgba(255, 255, 255, 0.12);
+    --footer-text: rgba(255, 255, 255, 0.92);
+    --footer-muted: rgba(255, 255, 255, 0.78);
+    --footer-separator: rgba(255, 255, 255, 0.5);
+    --footer-link: #ffffff;
+    --footer-link-hover: #f3f4f6;
+    --footer-focus: #ffffff;
+}
+
+html[data-theme='high-contrast'] .app-footer,
+html.theme-high-contrast .app-footer {
+    --footer-bg: #000000;
+    --footer-border: #ffffff;
+    --footer-text: #ffffff;
+    --footer-muted: #ffffff;
+    --footer-separator: #ffffff;
+    --footer-link: #ffffff;
+    --footer-link-hover: #ffffff;
+    --footer-focus: #ffffff;
+}
+
+.app-footer {
+    background: var(--footer-bg);
+    color: var(--footer-text);
+    padding: 0.9rem 2rem;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    border-top: 1px solid var(--footer-border);
+}
+
+/* On dashboard pages, align footer with main content area (not under sidebar) */
+.App:has(.dashboard-sidebar) .app-footer {
+    left: 260px;
+}
+
+.app-footer-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.app-footer-copy {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--footer-muted);
+}
+
+.app-footer-nav {
+    /* nav is already a landmark */
+}
+
+.app-footer-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.app-footer-sep {
+    color: var(--footer-separator);
+    font-size: 0.8rem;
+    user-select: none;
+}
+
+.app-footer-link {
+    color: var(--footer-link);
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.app-footer-link:hover {
+    color: var(--footer-link-hover);
+    text-decoration: underline;
+}
+
+.app-footer-link:focus-visible {
+    outline: 2px solid var(--footer-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+    color: var(--footer-link-hover);
+}
+
+.app-footer-sr-only {
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+@media (max-width: 480px) {
+    .app-footer-inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+/* Mobile/tablet: sidebar overlays or is hidden, so footer should span full width */
+@media (max-width: 768px) {
+    .App:has(.dashboard-sidebar) .app-footer {
+        left: 0;
+    }
+}

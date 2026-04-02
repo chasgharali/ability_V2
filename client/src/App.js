@@ -54,6 +54,9 @@ import RoleMessageManagement from './components/RoleMessages/RoleMessageManageme
 import OrganizationManagement from './components/OrganizationManagement/OrganizationManagement';
 import UserOrgAssignment from './components/UserManagement/UserOrgAssignment';
 import CookieConsent from './components/common/CookieConsent';
+import LegalPageEditor from './components/Legal/LegalPageEditor';
+import LegalPageView from './components/Legal/LegalPageView';
+import AppFooter from './components/Layout/AppFooter';
 import './App.css';
 
 // Component to conditionally render header and footer
@@ -77,6 +80,7 @@ const AppLayout = ({ children }) => {
             <CookieConsent />
             <AccessibilityAnnouncer />
             <GlobalRouteObserver />
+            <AppFooter />
         </div>
     );
 };
@@ -203,6 +207,12 @@ function App() {
                                     <Route path="/booth-queue/:eventSlug/:boothId/waiting" element={<RequireAuth><BoothQueueWaiting /></RequireAuth>} />
                                     <Route path="/booth-queue/manage/:boothId" element={<RequireAuth><BoothQueueManagement /></RequireAuth>} />
                                     <Route path="/video-call/:callId" element={<RequireAuth><VideoCall /></RequireAuth>} />
+                                    {/* Legal Pages — public view */}
+                                    <Route path="/legal/terms-of-use" element={<LegalPageView type="terms-of-use" />} />
+                                    <Route path="/legal/privacy-policy" element={<LegalPageView type="privacy-policy" />} />
+                                    {/* Legal Pages — SuperAdmin editor */}
+                                    <Route path="/legal/terms-of-use/edit" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><LegalPageEditor type="terms-of-use" /></RequireRole></RequireAuth>} />
+                                    <Route path="/legal/privacy-policy/edit" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><LegalPageEditor type="privacy-policy" /></RequireRole></RequireAuth>} />
                                 </Routes>
                             </AppLayout>
                         </Router>

@@ -6,6 +6,7 @@ import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { countryCodes } from './countryCodes';
+import { legalPagesAPI } from '../../services/legalPages';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -29,6 +30,7 @@ const RegisterPage = () => {
     const [isLoadingEvent, setIsLoadingEvent] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorModalMessage, setErrorModalMessage] = useState('');
+    const [legalLinks, setLegalLinks] = useState({ termsOfUse: null, privacyPolicy: null });
 
     const { register, user, loading } = useAuth();
     const navigate = useNavigate();
@@ -84,6 +86,25 @@ const RegisterPage = () => {
             navigate(decodeURIComponent(redirectPath), { replace: true });
         }
     }, [user, loading, redirectPath, navigate]);
+
+    // Fetch dynamic legal page availability (silently fails if not yet published)
+    useEffect(() => {
+        const fetchLegalLinks = async () => {
+            try {
+                const [termsRes, privacyRes] = await Promise.allSettled([
+                    legalPagesAPI.getByType('terms-of-use'),
+                    legalPagesAPI.getByType('privacy-policy')
+                ]);
+                setLegalLinks({
+                    termsOfUse: termsRes.status === 'fulfilled' ? '/legal/terms-of-use' : null,
+                    privacyPolicy: privacyRes.status === 'fulfilled' ? '/legal/privacy-policy' : null
+                });
+            } catch {
+                // Silently fall back to external links
+            }
+        };
+        fetchLegalLinks();
+    }, []);
 
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
     const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
@@ -609,7 +630,27 @@ const RegisterPage = () => {
                                         aria-describedby={validationErrors.agreeToTerms ? "terms-error" : undefined}
                                     />
                                     <span className="register-checkbox-text">
-                                        I agree to ABILITY Job Fair's <a href="https://abilityjobfair.org/terms-of-use/" target="_blank" rel="noopener noreferrer" className="register-terms-link">Terms of Use</a> and <a href="https://abilityjobfair.org/privacy-policy/" target="_blank" rel="noopener noreferrer" className="register-terms-link">Privacy Policy</a>.
+                                        I agree to ABILITY Job Fair's{' '}
+                                        <a
+                                            href={legalLinks.termsOfUse || 'https://abilityjobfair.org/terms-of-use/'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="register-terms-link"
+                                            aria-label="Terms of Use (opens in new tab)"
+                                        >
+                                            Terms of Use
+                                        </a>
+                                        {' '}and{' '}
+                                        <a
+                                            href={legalLinks.privacyPolicy || 'https://abilityjobfair.org/privacy-policy/'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="register-terms-link"
+                                            aria-label="Privacy Policy (opens in new tab)"
+                                        >
+                                            Privacy Policy
+                                        </a>
+                                        .
                                     </span>
                                 </label>
                                 {validationErrors.agreeToTerms && (

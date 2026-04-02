@@ -239,7 +239,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
           <title>Survey - abilityconnect</title>
         </Helmet>
       )}
-      <div className="dashboard-content">
+      <div className={`dashboard-content survey-page-content${embedded ? ' survey-page-content-embedded' : ''}`}>
         {toast.visible && (
           <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
         )}

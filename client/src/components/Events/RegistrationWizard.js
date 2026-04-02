@@ -672,7 +672,7 @@ export default function RegistrationWizard() {
                     </label>
                   </div>
                 </div>
-                <div className="form-actions form-actions-split" style={{ marginBottom: '3rem' }}>
+                <div className="form-actions form-actions-split registration-final-actions">
                   <button className="ajf-btn ajf-btn-outline" onClick={prev} disabled={isAlreadyRegistered} aria-label="Go to previous step">Previous</button>
                   <button
                     className={`ajf-btn ${isAlreadyRegistered ? 'ajf-btn-disabled' : 'ajf-btn-dark'}`}

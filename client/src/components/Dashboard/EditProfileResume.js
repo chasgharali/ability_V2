@@ -701,22 +701,20 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
                 />
               </div>
               <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Preview shown above. Click Upload to save.</p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className="avatar-pending-actions">
                 <button 
                   type="button" 
-                  className="update-button" 
+                  className="update-button avatar-action-btn avatar-action-btn-primary" 
                   onClick={confirmAvatarUpload}
                   disabled={uploading}
-                  style={{ padding: '0.5rem 1.5rem', whiteSpace: 'nowrap', minWidth: '140px', boxSizing: 'border-box' }}
                 >
                   {uploading ? 'Uploading…' : 'Upload'}
                 </button>
                 <button 
                   type="button" 
-                  className="dashboard-button" 
+                  className="dashboard-button avatar-action-btn avatar-action-btn-secondary" 
                   onClick={cancelAvatarUpload}
                   disabled={uploading}
-                  style={{ padding: '0.5rem 1.5rem', whiteSpace: 'nowrap', minWidth: '100px', boxSizing: 'border-box' }}
                 >
                   Cancel
                 </button>
@@ -726,8 +724,8 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
           {/* Upload Controls */}
           {!pendingAvatarPreview && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem' }}>
+            <div className="avatar-upload-controls">
+              <div className="avatar-file-actions">
                 <input
                   ref={avatarInputRef}
                   type="file"
@@ -740,25 +738,29 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
                 />
                 <button
                   type="button"
-                  className="update-button"
+                  className="update-button avatar-file-btn"
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={uploading}
-                  style={{ textAlign: 'center', whiteSpace: 'nowrap', boxSizing: 'border-box', margin: 0 }}
                 >
                   Choose Picture
                 </button>
                 {avatarPreviewUrl && (
                   <button 
                     type="button" 
-                    className="update-button" 
+                    className="update-button avatar-file-btn" 
                     onClick={deleteAvatar} 
-                    style={{ whiteSpace: 'nowrap', boxSizing: 'border-box', margin: 0 }}
                   >
                     Remove Picture
                   </button>
                 )}
               </div>
-              <button type="button" className="dashboard-button" onClick={openCamera} disabled={uploading} ref={cameraTriggerRef}>
+              <button
+                type="button"
+                className="dashboard-button avatar-camera-btn"
+                onClick={openCamera}
+                disabled={uploading}
+                ref={cameraTriggerRef}
+              >
                 Take your Picture
               </button>
             </div>
@@ -960,9 +962,24 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
               <video ref={videoRef} playsInline muted style={{ width: 480, height: 360, background: '#000', maxWidth: '100%' }} />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
             </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
-              <button ref={cameraCaptureButtonRef} type="button" className="update-button" onClick={capturePhoto} disabled={uploading}>{uploading ? 'Uploading…' : 'Capture & Use Photo'}</button>
-              <button ref={cameraCancelButtonRef} type="button" className="dashboard-button" onClick={closeCamera}>Cancel</button>
+            <div className="camera-modal-actions">
+              <button
+                ref={cameraCaptureButtonRef}
+                type="button"
+                className="dashboard-button camera-modal-btn camera-modal-btn-primary"
+                onClick={capturePhoto}
+                disabled={uploading}
+              >
+                {uploading ? 'Uploading...' : 'Capture & Use Photo'}
+              </button>
+              <button
+                ref={cameraCancelButtonRef}
+                type="button"
+                className="dashboard-button camera-modal-btn camera-modal-btn-secondary"
+                onClick={closeCamera}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

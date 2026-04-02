@@ -5,6 +5,16 @@
     display: flex;
     flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    /* Padding reserves space above the fixed footer for non-dashboard pages
+       (login, register, legal view, etc.).
+       Dashboard pages lock their own height to 100vh so this padding has
+       no effect on them. */
+    padding-bottom: 80px;
+}
+
+/* Dashboard pages are self-contained at 100vh — no extra body padding needed */
+.App:has(.dashboard) {
+    padding-bottom: 0;
 }
 
 /* ========================================

@@ -158,6 +158,12 @@
   justify-content: space-between;
 }
 
+/* Keep final registration actions visible above fixed app footer */
+.registration-final-actions {
+  margin-bottom: 0;
+  padding-bottom: calc(1rem + 80px);
+}
+
 .form-actions .ajf-btn {
   padding: 0.75rem 1.5rem;
   font-weight: 600;
