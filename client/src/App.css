@@ -1,5 +1,9 @@
 /* App.css - Global styles for the Ability V2 application */
 
+:root {
+    --app-footer-height: 50px;
+}
+
 .App {
     min-height: 100vh;
     display: flex;
@@ -15,6 +19,27 @@
 /* Dashboard pages are self-contained at 100vh — no extra body padding needed */
 .App:has(.dashboard) {
     padding-bottom: 0;
+}
+
+/* Routes that hide the global fixed footer should not reserve footer space. */
+.App:has(.booth-queue-waiting),
+.App:has(.video-call-container-new),
+.App:has(.legal-view-wrapper) {
+    padding-bottom: 0;
+}
+
+/* Auth pages manage their own spacing against the fixed footer. */
+.App:has(.login-container),
+.App:has(.register-container) {
+    padding-bottom: 0;
+}
+
+/* Make footer feel visually integrated with auth gradient backgrounds. */
+.App:has(.login-container) .app-footer,
+.App:has(.register-container) .app-footer {
+    background: rgba(17, 24, 39, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(4px);
 }
 
 /* ========================================

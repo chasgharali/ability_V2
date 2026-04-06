@@ -15,9 +15,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--app-footer-height, 50px));
     background: radial-gradient(ellipse at center, #4a5568 0%, #1a202c 100%);
-    padding: 1rem;
+    padding: 1rem 1rem calc(1rem + var(--app-footer-height, 50px));
 }
 
 .login-card {

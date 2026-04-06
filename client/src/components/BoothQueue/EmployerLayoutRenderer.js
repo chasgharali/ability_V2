@@ -52,7 +52,11 @@ export default function EmployerLayoutRenderer({
           isActive: section?.isActive !== false,
         };
       })
-      .filter((item) => item.isActive)
+      .filter((item) => {
+        if (!item.isActive) return false;
+        if (isEditMode) return true;
+        return hasRenderableSectionContent(item.key, getSec(item.key));
+      })
       .sort((a, b) => a.order - b.order);
 
   const commonProps = { isEditMode, onUpdateField, onUploadImage, uploadingFields, getNavItems };
@@ -98,6 +102,44 @@ function renderNavLinks(prefix, navItems, linkClassName = '') {
       {item.title}
     </a>
   ));
+}
+
+const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
+const hasAnyImage = (images = []) => Array.isArray(images) && images.some((img) => hasText(img?.url));
+const hasActionLink = (text, url) => hasText(text) && hasText(url) && url.trim() !== '#';
+
+function hasRenderableSectionContent(sectionKey, section) {
+  const data = section?.contentData || {};
+  switch (sectionKey) {
+    case 'about':
+      return (
+        hasText(data.companyName)
+        || hasText(data.tagline)
+        || hasText(data.aboutText)
+        || hasText(data.heroImageUrl)
+        || hasText(data.brandImage1Url)
+        || hasText(data.brandImage2Url)
+      );
+    case 'program':
+      return hasText(data.programTitle) || hasText(data.programText) || hasText(data.programImageUrl);
+    case 'video':
+      return hasText(data.videoTitle) || hasText(data.videoUrl);
+    case 'gallery':
+      return hasText(data.galleryTitle) || hasAnyImage(data.images);
+    case 'jobs':
+      return (Array.isArray(data.jobsList) && data.jobsList.length > 0) || hasText(data.locationsText);
+    case 'benefits':
+      return Array.isArray(data.benefitsList) && data.benefitsList.length > 0;
+    case 'contact':
+      return (
+        hasText(data.sectionHeading)
+        || hasText(data.ctaHeadline)
+        || hasActionLink(data.primaryBtnText, data.primaryBtnUrl)
+        || hasActionLink(data.secondaryBtnText, data.secondaryBtnUrl)
+      );
+    default:
+      return false;
+  }
 }
 
 /** Clickable image zone: shows image or placeholder; in edit mode lets user upload */
@@ -198,7 +240,7 @@ function ImgZone({ sectionKey, fieldName, url, alt, label, className, style, isE
  */
 function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagName, isEditMode, onUpdateField, showColorPicker = false, colorValue, colorFieldName }) {
   const Tag = tagName || 'span';
-  const hasValue = typeof value === 'string' && value.trim().length > 0;
+  const hasValue = hasText(value);
   const resolvedColorField = colorFieldName || `${fieldName}__color`;
   const appliedColor = colorValue || undefined;
 
@@ -278,9 +320,11 @@ function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagN
     );
   }
 
+  if (!hasValue) return null;
+
   return (
     <Tag className={className} style={colorStyle}>
-      {value || <span style={{ color: '#aaa', fontStyle: 'italic' }}>{placeholder}</span>}
+      {value}
     </Tag>
   );
 }
@@ -307,6 +351,9 @@ function VideoZone({ sectionKey, url, isEditMode, onUpdateField, className }) {
         )}
       </div>
     );
+  }
+  if (!isEditMode) {
+    return null;
   }
   return (
     <div className={`elr-ph${className ? ` ${className}` : ''}`} style={{ width: '100%', aspectRatio: '16/9', maxWidth: 800, margin: '0 auto', position: 'relative' }}>
@@ -678,11 +725,13 @@ function SocialFooter({ sectionKey, links, bgColor, textColor, isEditMode, onUpd
 /** CTA buttons section (contact) */
 function CtaButtons({ sectionKey, contentData, isEditMode, onUpdateField, className }) {
   const {
-    primaryBtnText = 'Join Our Talent Community',
+    primaryBtnText = '',
     primaryBtnUrl = '#',
-    secondaryBtnText = 'View Our Open Positions',
+    secondaryBtnText = '',
     secondaryBtnUrl = '#',
   } = contentData;
+  const resolvedPrimaryBtnText = hasText(primaryBtnText) ? primaryBtnText.trim() : 'Join Our Talent Community';
+  const resolvedSecondaryBtnText = hasText(secondaryBtnText) ? secondaryBtnText.trim() : 'View Our Open Positions';
   const accentColor = contentData?.textColor || 'currentColor';
   const primaryBtnStyle = {
     background: accentColor,
@@ -699,7 +748,7 @@ function CtaButtons({ sectionKey, contentData, isEditMode, onUpdateField, classN
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <input
             type="text"
-            defaultValue={primaryBtnText}
+            defaultValue={primaryBtnText || ''}
             placeholder="Primary button text"
             style={{ border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 14 }}
             onBlur={(e) => onUpdateField && onUpdateField(sectionKey, 'primaryBtnText', e.target.value)}
@@ -715,7 +764,7 @@ function CtaButtons({ sectionKey, contentData, isEditMode, onUpdateField, classN
           />
           <input
             type="text"
-            defaultValue={secondaryBtnText}
+            defaultValue={secondaryBtnText || ''}
             placeholder="Secondary button text"
             style={{ border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 10px', fontSize: 14 }}
             onBlur={(e) => onUpdateField && onUpdateField(sectionKey, 'secondaryBtnText', e.target.value)}
@@ -731,21 +780,33 @@ function CtaButtons({ sectionKey, contentData, isEditMode, onUpdateField, classN
           />
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 4 }}>
-          <span className="elr-btn-primary" style={primaryBtnStyle}>{primaryBtnText}</span>
-          <span className="elr-btn-outline" style={outlineBtnStyle}>{secondaryBtnText}</span>
+          <span className="elr-btn-primary" style={primaryBtnStyle}>{resolvedPrimaryBtnText}</span>
+          <span className="elr-btn-outline" style={outlineBtnStyle}>{resolvedSecondaryBtnText}</span>
         </div>
       </div>
     );
   }
 
+  const liveButtons = [
+    hasActionLink(primaryBtnText, primaryBtnUrl)
+      ? { key: 'primary', href: primaryBtnUrl.trim(), text: primaryBtnText.trim(), className: 'elr-btn-primary', style: primaryBtnStyle }
+      : null,
+    hasActionLink(secondaryBtnText, secondaryBtnUrl)
+      ? { key: 'secondary', href: secondaryBtnUrl.trim(), text: secondaryBtnText.trim(), className: 'elr-btn-outline', style: outlineBtnStyle }
+      : null,
+  ].filter(Boolean);
+
+  if (liveButtons.length === 0) {
+    return null;
+  }
+
   return (
     <div className={`${className || ''}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-      <a href={primaryBtnUrl} className="elr-btn-primary" style={primaryBtnStyle} target="_blank" rel="noopener noreferrer">
-        {primaryBtnText}
-      </a>
-      <a href={secondaryBtnUrl} className="elr-btn-outline" style={outlineBtnStyle} target="_blank" rel="noopener noreferrer">
-        {secondaryBtnText}
-      </a>
+      {liveButtons.map((button) => (
+        <a key={button.key} href={button.href} className={button.className} style={button.style} target="_blank" rel="noopener noreferrer">
+          {button.text}
+        </a>
+      ))}
     </div>
   );
 }
@@ -790,7 +851,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const jobs = cd('jobs');
   const benefits = cd('benefits');
   const social = cd('social');
-  const copyrightText = social.copyrightText || getDefaultCopyrightText();
+  const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
   const orderedMainKeys = navItems
@@ -936,9 +997,10 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const jobs = cd('jobs');
   const benefits = cd('benefits');
   const social = cd('social');
-  const copyrightText = social.copyrightText || getDefaultCopyrightText();
+  const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const hasAboutDualImages = isEditMode || hasText(about.brandImage1Url) || hasText(about.brandImage2Url);
   const orderedMainKeys = navItems
     .map((item) => item.key)
     .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
@@ -947,10 +1009,12 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     if (key === 'about') {
       return (
         <React.Fragment>
-          <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-            <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-            <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
-          </div>
+          {hasAboutDualImages && (
+            <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
+            </div>
+          )}
           <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-about" className="elr-bg-white" aria-label="About section">
             <div className="elr-b-about-row">
               <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Company image'} label="Company Image · ~340 × 340 square" className="elr-b-about-img-zone" {...imgProps} />
@@ -1085,9 +1149,10 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const jobs = cd('jobs');
   const benefits = cd('benefits');
   const social = cd('social');
-  const copyrightText = social.copyrightText || getDefaultCopyrightText();
+  const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(5).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const hasAboutDualImages = isEditMode || hasText(about.brandImage1Url) || hasText(about.brandImage2Url);
   const orderedMainKeys = navItems
     .map((item) => item.key)
     .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
@@ -1096,10 +1161,12 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     if (key === 'about') {
       return (
         <React.Fragment>
-          <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-            <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-            <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
-          </div>
+          {hasAboutDualImages && (
+            <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
+            </div>
+          )}
           <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-about" className="elr-sec elr-bg-white" aria-label="About section">
             <div className="elr-c-about-row">
               <div>
@@ -1158,8 +1225,12 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <SecWrap sectionKey="contact" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-contact" className="elr-sec elr-bg-dark" aria-label="Contact section">
           <div style={{ textAlign: 'center' }}>
             <TXT sectionKey="contact" fieldName="sectionHeading" value={contact.sectionHeading || 'Ready to Join Our Team?'} placeholder="Ready to Join Our Team?" className="elr-h2" tagName="h2" style={{ marginBottom: '0.75rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            <p className="elr-body" style={{ marginBottom: '1.5rem', maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>Explore open roles or connect with our talent team.</p>
-            <CtaButtons sectionKey="contact" contentData={{ ...contact, primaryBtnText: contact.primaryBtnText || 'Join Our Talent Community', secondaryBtnText: contact.secondaryBtnText || 'View Our Open Positions' }} isEditMode={isEditMode} onUpdateField={onUpdateField} className="justify-center" />
+            {isEditMode && (
+              <p className="elr-body" style={{ marginBottom: '1.5rem', maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
+                Explore open roles or connect with our talent team.
+              </p>
+            )}
+            <CtaButtons sectionKey="contact" contentData={contact} isEditMode={isEditMode} onUpdateField={onUpdateField} className="justify-center" />
           </div>
         </SecWrap>
       );
@@ -1241,9 +1312,10 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const jobs = cd('jobs');
   const benefits = cd('benefits');
   const social = cd('social');
-  const copyrightText = social.copyrightText || getDefaultCopyrightText();
+  const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
   const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const hasAboutDualImages = isEditMode || hasText(about.brandImage1Url) || hasText(about.brandImage2Url);
   const orderedMainKeys = navItems
     .map((item) => item.key)
     .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
@@ -1262,10 +1334,12 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               </div>
             </div>
           </SecWrap>
-          <div className="elr-dual-images elr-bg-white" style={{ paddingTop: '1rem' }} role="group" aria-label="Additional company images">
-            <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-            <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
-          </div>
+          {hasAboutDualImages && (
+            <div className="elr-dual-images elr-bg-white" style={{ paddingTop: '1rem' }} role="group" aria-label="Additional company images">
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
+            </div>
+          )}
         </React.Fragment>
       );
     }

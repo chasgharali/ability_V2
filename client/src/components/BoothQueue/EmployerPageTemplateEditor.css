@@ -9,9 +9,28 @@
 
 /* Fill the main column and delegate vertical scroll to .elr-editor-scroll so the
    toolbar stays visible and content never scrolls underneath it. */
+
+/* 1. Lock the root App container to the viewport — prevents body scroll */
+.App:has(.employer-editor-page) {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  padding-bottom: 0 !important;
+}
+
+/* 2. The layout row (sidebar + main) fills the remaining space below the header */
+.dashboard-layout:has(.employer-editor-page) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 3. The main column is a flex column with no padding; only .elr-editor-scroll scrolls */
 .dashboard-main:has(.employer-editor-page) {
   display: flex !important;
   flex-direction: column !important;
+  padding: 0 !important;
+  overflow-y: hidden !important;
 }
 
 .employer-editor-page {
@@ -192,7 +211,7 @@
 
 /* ── Scroll stack (hint + canvas) ─────────────────────────── */
 .elr-editor-scroll {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;

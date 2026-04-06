@@ -1,7 +1,7 @@
 /* Dashboard Styles - Inspired by ABILITYJOBFAIR */
 .dashboard {
-    height: 100vh;
-    max-height: 100vh;
+    height: calc(100vh - var(--app-footer-height, 50px));
+    max-height: calc(100vh - var(--app-footer-height, 50px));
     overflow: hidden;
     display: flex;
     flex-direction: column;

@@ -14,7 +14,17 @@ const deepgramService = require('../services/deepgramService');
  * Socket.IO connection handler with authentication and real-time features
  * @param {Object} io - Socket.IO server instance
  */
+let _io = null;
+
+const getIO = () => {
+    if (!_io) {
+        throw new Error('Socket.IO has not been initialized yet');
+    }
+    return _io;
+};
+
 const socketHandler = (io) => {
+    _io = io;
     // Middleware to authenticate socket connections
     io.use(async (socket, next) => {
         try {
@@ -1440,3 +1450,4 @@ const socketHandler = (io) => {
 };
 
 module.exports = socketHandler;
+module.exports.getIO = getIO;

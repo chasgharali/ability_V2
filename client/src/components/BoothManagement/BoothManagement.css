@@ -431,17 +431,14 @@
 .dashboard .dashboard-main {
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  height: calc(100vh - 72px) !important; /* Subtract fixed header height (72px) */
-  max-height: calc(100vh - 72px) !important;
   position: relative !important;
-  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch !important;
 }
 
 /* Ensure dashboard-content can scroll independently */
 .dashboard .dashboard-content {
   min-height: 100% !important;
   position: relative !important;
-  padding-bottom: 2rem !important; /* Add padding at bottom for better scroll experience */
 }
 
 /* Booth Management grid wrap - ensure it doesn't break scrolling */
