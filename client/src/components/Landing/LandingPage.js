@@ -39,6 +39,10 @@ const LandingPage = () => {
                         </div>
                     </div>
                 </div>
+
+                <div className="landing-branding">
+                    <p>powered by abilityCONNECT.online</p>
+                </div>
             </main>
         </>
     );

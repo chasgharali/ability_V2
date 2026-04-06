@@ -2,11 +2,18 @@
 
 .landing-page-container {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--app-footer-height, 50px));
     background: radial-gradient(ellipse at center, #4a5568 0%, #1a202c 100%);
-    padding: 2rem;
+    padding: 1rem 1rem calc(1rem + var(--app-footer-height, 50px));
+}
+
+.landing-branding {
+    margin-top: 2rem;
+    text-align: center;
+    color: #6b7280;
 }
 
 .landing-card {
@@ -103,8 +110,8 @@
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
     .landing-page-container {
-        padding: 1rem;
-        min-height: 100vh;
+        padding: 1rem 1rem calc(1rem + var(--app-footer-height, 50px));
+        min-height: calc(100vh - var(--app-footer-height, 50px));
     }
 
     .landing-card {
@@ -157,7 +164,7 @@
 /* Extra Small Mobile Screens */
 @media (max-width: 480px) {
     .landing-page-container {
-        padding: 0.75rem;
+        padding: 0.75rem 0.75rem calc(0.75rem + var(--app-footer-height, 50px));
     }
 
     .landing-card {

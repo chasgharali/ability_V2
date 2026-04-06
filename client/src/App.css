@@ -28,15 +28,18 @@
     padding-bottom: 0;
 }
 
-/* Auth pages manage their own spacing against the fixed footer. */
+/* Auth and landing pages manage their own spacing against the fixed footer. */
 .App:has(.login-container),
-.App:has(.register-container) {
+.App:has(.register-container),
+.App:has(.landing-page-container) {
     padding-bottom: 0;
 }
 
-/* Make footer feel visually integrated with auth gradient backgrounds. */
+/* Make footer feel visually integrated with auth / landing gradient backgrounds. */
 .App:has(.login-container) .app-footer,
-.App:has(.register-container) .app-footer {
+.App:has(.register-container) .app-footer,
+.App:has(.landing-page-container) .app-footer,
+.App:has(.dashboard) .app-footer {
     background: rgba(17, 24, 39, 0.95);
     border-top: 1px solid rgba(255, 255, 255, 0.14);
     backdrop-filter: blur(4px);
