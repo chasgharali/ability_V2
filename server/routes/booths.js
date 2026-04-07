@@ -4,6 +4,7 @@ const Booth = require('../models/Booth');
 const { authenticateToken, requireRole, requireResourceAccess } = require('../middleware/auth');
 const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
+const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 const router = express.Router();
 const EMPLOYER_SECTION_KEYS = ['about', 'program', 'video', 'gallery', 'jobs', 'benefits', 'contact', 'social'];
@@ -218,7 +219,14 @@ router.get('/invite/:slug', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), [
     body('name').isString().trim().isLength({ min: 2, max: 200 }),
     body('description').optional().isString(),
-    body('logoUrl').optional().isURL(),
+    body('logoUrl')
+        .optional()
+        .custom((value) => {
+            if (value.startsWith('/api/')) return true;
+            const urlRegex = /^https?:\/\/.+/i;
+            if (urlRegex.test(value)) return true;
+            throw new Error('Logo URL must be a valid URL or internal path');
+        }),
     body('companyPage').optional().isURL(),
     body('recruitersCount').optional().isInt({ min: 1 }),
     body('expireLinkTime')
@@ -351,7 +359,7 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             events: validEvents, // All events in array
             name,
             description: description || '',
-            logoUrl: logoUrl || null,
+            logoUrl: toStablePublicImageUrl(logoUrl) || null,
             companyPage: companyPage || '',
             recruitersCount: recruitersCount || 1,
             expireLinkTime: expireLinkTime || null,
@@ -606,8 +614,12 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .trim(),
     body('logoUrl')
         .optional()
-        .isURL()
-        .withMessage('Logo URL must be a valid URL'),
+        .custom((value) => {
+            if (value.startsWith('/api/')) return true;
+            const urlRegex = /^https?:\/\/.+/i;
+            if (urlRegex.test(value)) return true;
+            throw new Error('Logo URL must be a valid URL or internal path');
+        }),
     body('companyPage')
         .optional()
         .isURL()
@@ -732,7 +744,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         const updateData = {};
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
-        if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+        if (logoUrl !== undefined) updateData.logoUrl = toStablePublicImageUrl(logoUrl);
         if (companyPage !== undefined) updateData.companyPage = companyPage;
         if (recruitersCount !== undefined) updateData.recruitersCount = recruitersCount;
         

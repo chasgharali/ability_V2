@@ -6,6 +6,7 @@ const { authenticateToken, requireRole, requireResourceAccess } = require('../mi
 const Organization = require('../models/Organization');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const logger = require('../utils/logger');
+const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 const router = express.Router();
 
@@ -113,7 +114,7 @@ function buildOrganizationSummary(orgDoc) {
     }
     return {
         name: orgDoc.name,
-        logoUrl: orgDoc.logoUrl || null,
+        logoUrl: toStablePublicImageUrl(orgDoc.logoUrl) || null,
         logoAltText: orgDoc.logoAltText || orgDoc.name
     };
 }
@@ -213,7 +214,7 @@ router.get('/public/slug/:slug', async (req, res) => {
             event: {
                 name: event.name,
                 slug: event.slug,
-                logoUrl: event.logoUrl,
+                logoUrl: toStablePublicImageUrl(event.logoUrl),
                 start: event.start,
                 end: event.end,
                 status: event.status
@@ -260,6 +261,7 @@ router.get('/slug/:slug', authenticateToken, async (req, res) => {
         res.json({
             event: {
                 ...event.toObject(),
+                logoUrl: toStablePublicImageUrl(event.logoUrl),
                 isActive: event.isActive,
                 isUpcoming: event.isUpcoming,
                 duration: event.duration,
@@ -380,7 +382,7 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             start: startDate,
             end: endDate,
             timezone,
-            logoUrl,
+            logoUrl: toStablePublicImageUrl(logoUrl),
             logoAltText: logoAltText || '',
             sendyId: sendyId || null,
             link: link || null,
@@ -515,7 +517,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         if (start !== undefined) event.start = new Date(start);
         if (end !== undefined) event.end = new Date(end);
         if (timezone !== undefined) event.timezone = timezone;
-        if (logoUrl !== undefined) event.logoUrl = logoUrl;
+        if (logoUrl !== undefined) event.logoUrl = toStablePublicImageUrl(logoUrl);
         if (logoAltText !== undefined) event.logoAltText = logoAltText;
         if (sendyId !== undefined) event.sendyId = sendyId || null;
         if (status !== undefined) event.status = status;
@@ -1137,6 +1139,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         res.json({
             event: {
                 ...event.toObject(),
+                logoUrl: toStablePublicImageUrl(event.logoUrl),
                 isActive: event.isActive,
                 isUpcoming: event.isUpcoming,
                 duration: event.duration,

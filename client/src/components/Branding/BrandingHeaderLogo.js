@@ -82,7 +82,7 @@ export default function BrandingHeaderLogo() {
     try {
       setUploading(true);
       setMessage('Uploading logo...');
-      const { downloadUrl } = await uploadImageToS3(file);
+      const { downloadUrl } = await uploadImageToS3(file, { variant: 'public' });
       if (!downloadUrl) {
         throw new Error('Upload did not return a logo URL');
       }

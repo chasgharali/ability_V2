@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const { extractS3KeyFromUrl, encodeKeyForPath } = require('../utils/mediaUrl');
 
 // Multer configured for memory storage (files buffered in RAM then streamed to S3)
 const upload = multer({
@@ -269,6 +270,7 @@ router.post('/complete', authenticateToken, [
                 // Stable URL that redirects to a fresh presigned URL.
                 // Use this for <video>/<audio> tags so playback doesn't break when URLs expire.
                 streamUrl: `/api/uploads/stream?key=${encodeURIComponent(fileKey)}`,
+                publicUrl: /^((image|booth-logo|organization-logo)\/)/.test(fileKey) ? `/api/uploads/public/${encodeKeyForPath(fileKey)}` : null,
                 uploadedAt: new Date()
             }
         });
@@ -278,6 +280,42 @@ router.post('/complete', authenticateToken, [
             error: 'Failed to confirm file upload',
             message: 'An error occurred while confirming the file upload'
         });
+    }
+});
+
+/**
+ * GET /api/uploads/public/*
+ * Public image/logo proxy for stable image URLs.
+ * No auth required; only serves safe image/logo key prefixes.
+ */
+router.get('/public/*', async (req, res) => {
+    try {
+        const rawPath = req.params[0];
+        const decoded = decodeURIComponent(rawPath || '');
+        const key = extractS3KeyFromUrl(decoded) || decoded;
+
+        if (!key || !/^(image|booth-logo|organization-logo)\//.test(key)) {
+            return res.status(400).json({
+                error: 'Invalid key',
+                message: 'Only image, organization-logo, and booth-logo keys are allowed'
+            });
+        }
+
+        await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
+
+        const url = s3.getSignedUrl('getObject', {
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Expires: 3600
+        });
+
+        return res.redirect(302, url);
+    } catch (error) {
+        if (error.code === 'NotFound' || error.code === 'NoSuchKey') {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+        logger.error('Public media proxy error:', error);
+        return res.status(500).json({ error: 'Failed to serve image' });
     }
 });
 

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 const eventSchema = new mongoose.Schema({
     name: {
@@ -307,7 +308,7 @@ eventSchema.methods.getSummary = function () {
         description: fullDescription,
         link: this.link,
         sendyId: this.sendyId,
-        logoUrl: this.logoUrl,
+        logoUrl: toStablePublicImageUrl(this.logoUrl),
         logoAltText: this.logoAltText || '',
         start: this.start,
         end: this.end,

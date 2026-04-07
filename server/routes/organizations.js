@@ -11,6 +11,7 @@ const Booth = require('../models/Booth');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { authenticateToken, requireRole, requireSuperAdmin, requireOrgAccess } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,14 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin']), async (
             const org = await Organization.findById(req.orgId);
             if (!org) return res.status(404).json({ error: 'Organization not found' });
             const stats = await buildOrgStats(org._id);
-            return res.json({ organizations: [{ ...org.toObject(), stats }], total: 1 });
+            return res.json({
+                organizations: [{
+                    ...org.toObject(),
+                    logoUrl: toStablePublicImageUrl(org.logoUrl),
+                    stats
+                }],
+                total: 1
+            });
         }
 
         // SuperAdmin: list all
@@ -99,6 +107,7 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin']), async (
         const orgsWithStats = await Promise.all(
             orgs.map(async (org) => ({
                 ...org,
+                logoUrl: toStablePublicImageUrl(org.logoUrl),
                 stats: await buildOrgStats(org._id)
             }))
         );
@@ -136,7 +145,7 @@ router.post('/', authenticateToken, requireSuperAdmin, async (req, res) => {
             name: name.trim(),
             slug: slug?.trim() || undefined,
             description: description?.trim() || '',
-            logoUrl: logoUrl || null,
+            logoUrl: toStablePublicImageUrl(logoUrl) || null,
             logoAltText: logoAltText?.trim() || '',
             limits: limits || {},
             createdBy: req.user._id
@@ -145,7 +154,7 @@ router.post('/', authenticateToken, requireSuperAdmin, async (req, res) => {
         await org.save();
         logger.info(`Organization created: ${org.name} by ${req.user.email}`);
 
-        res.status(201).json({ organization: org });
+        res.status(201).json({ organization: org.getSummary() });
     } catch (error) {
         logger.error('Error creating organization:', error);
         if (error.code === 11000) {
@@ -177,7 +186,13 @@ router.get('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin']), asyn
         if (!org) return res.status(404).json({ error: 'Organization not found' });
 
         const stats = await buildOrgStats(org._id);
-        res.json({ organization: { ...org.toObject(), stats } });
+        res.json({
+            organization: {
+                ...org.toObject(),
+                logoUrl: toStablePublicImageUrl(org.logoUrl),
+                stats
+            }
+        });
     } catch (error) {
         logger.error('Error fetching organization:', error);
         res.status(500).json({ error: 'Failed to fetch organization' });
@@ -208,7 +223,7 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin']), asyn
         // OrgAdmin can update description, logoUrl, logoAltText
         if (name !== undefined) org.name = name.trim();
         if (description !== undefined) org.description = description.trim();
-        if (logoUrl !== undefined) org.logoUrl = logoUrl;
+        if (logoUrl !== undefined) org.logoUrl = toStablePublicImageUrl(logoUrl);
         if (logoAltText !== undefined) org.logoAltText = logoAltText.trim();
 
         // Only SuperAdmin can change slug, limits, isActive
@@ -221,7 +236,7 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin']), asyn
         await org.save();
         logger.info(`Organization updated: ${org.name} by ${req.user.email}`);
 
-        res.json({ organization: org });
+        res.json({ organization: org.getSummary() });
     } catch (error) {
         logger.error('Error updating organization:', error);
         if (error.code === 11000) {
@@ -272,11 +287,7 @@ router.post('/:id/logo-upload', authenticateToken, requireRole(['SuperAdmin', 'A
             }
         }).promise();
 
-        const logoUrl = s3.getSignedUrl('getObject', {
-            Bucket: BUCKET_NAME,
-            Key: key,
-            Expires: 604800 // 7 days
-        });
+        const logoUrl = `/api/uploads/public/${encodeKeyForPath(key)}`;
 
         org.logoUrl = logoUrl;
         await org.save();
@@ -286,7 +297,7 @@ router.post('/:id/logo-upload', authenticateToken, requireRole(['SuperAdmin', 'A
             message: 'Organization logo uploaded successfully',
             logoUrl,
             key,
-            organization: org
+            organization: org.getSummary()
         });
     } catch (error) {
         logger.error('Organization logo upload error:', error);

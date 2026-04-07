@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const encodeKeyForPath = (key) => encodeURIComponent(key).replace(/%2F/g, '/');
+
 // Helper to request a presigned URL and upload a file to S3
 // Returns: { key, downloadUrl }
 
@@ -21,7 +23,7 @@ export async function uploadBoothLogoToS3(file) {
     { headers }
   );
 
-  const { upload, download } = presignRes.data;
+  const { upload } = presignRes.data;
   const { url, key } = upload;
 
   // Upload to S3 directly using fetch.
@@ -51,10 +53,10 @@ export async function uploadBoothLogoToS3(file) {
 
   return {
     key,
-    downloadUrl: completeRes?.data?.file?.downloadUrl || download?.url,
+    downloadUrl: completeRes?.data?.file?.publicUrl || `/api/uploads/public/${encodeKeyForPath(key)}`,
   };
 }
-export async function uploadImageToS3(file) {
+export async function uploadImageToS3(file, options = {}) {
   if (!file) throw new Error('No file provided');
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -70,7 +72,7 @@ export async function uploadImageToS3(file) {
     { headers }
   );
 
-  const { upload, download } = presignRes.data;
+  const { upload } = presignRes.data;
   const { url, key } = upload;
 
   // 2) Upload the file to S3 directly using fetch (axios adds extra headers that break presigned URLs)
@@ -83,7 +85,7 @@ export async function uploadImageToS3(file) {
   if (!putRes.ok) throw new Error(`S3 upload failed: ${putRes.status}`);
 
   // 3) Confirm upload so server can return a long-lived download URL
-  const completeRes = await axios.post(
+  await axios.post(
     '/api/uploads/complete',
     {
       fileKey: key,
@@ -96,9 +98,14 @@ export async function uploadImageToS3(file) {
   );
 
   // Use stable proxy URL so images never expire in RTE HTML content
+  const variant = options?.variant || 'rte';
+  const stableUrl = variant === 'public'
+    ? `/api/uploads/public/${encodeKeyForPath(key)}`
+    : `/api/uploads/rte-content/${key}`;
+
   return {
     key,
-    downloadUrl: `/api/uploads/rte-content/${key}`,
+    downloadUrl: stableUrl,
   };
 }
 

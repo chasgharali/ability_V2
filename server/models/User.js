@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 // Sub-schema for JobSeeker survey
 const surveySchema = new mongoose.Schema({
@@ -403,6 +404,16 @@ userSchema.methods.getPublicProfile = function () {
         profile.assignedEvents = this.assignedEvents.map(e => 
             typeof e === 'object' && e._id ? e._id : e
         );
+    }
+
+    if (profile.organizationId && typeof profile.organizationId === 'object' && !Array.isArray(profile.organizationId)) {
+        const orgObject = typeof profile.organizationId.toObject === 'function'
+            ? profile.organizationId.toObject()
+            : profile.organizationId;
+        profile.organizationId = {
+            ...orgObject,
+            logoUrl: toStablePublicImageUrl(profile.organizationId.logoUrl)
+        };
     }
 
     return profile;

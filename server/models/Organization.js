@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 const organizationSchema = new mongoose.Schema({
     name: {
@@ -97,7 +98,7 @@ organizationSchema.methods.getSummary = function () {
         _id: this._id,
         name: this.name,
         slug: this.slug,
-        logoUrl: this.logoUrl,
+        logoUrl: toStablePublicImageUrl(this.logoUrl),
         logoAltText: this.logoAltText,
         description: this.description,
         isActive: this.isActive,

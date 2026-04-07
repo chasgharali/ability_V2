@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 const richSectionSchema = new mongoose.Schema({
     title: {
@@ -270,7 +271,7 @@ boothSchema.methods.getSummary = function () {
         eventId: this.eventId,
         name: this.name,
         description: this.description,
-        logoUrl: this.logoUrl,
+        logoUrl: toStablePublicImageUrl(this.logoUrl),
         recruitersCount: this.recruitersCount,
         companyPage: this.companyPage,
         expireLinkTime: this.expireLinkTime,
@@ -310,7 +311,7 @@ boothSchema.methods.getPublicInfo = function () {
         _id: this._id,
         name: this.name,
         description: this.description,
-        logoUrl: this.logoUrl,
+        logoUrl: toStablePublicImageUrl(this.logoUrl),
         recruitersCount: this.recruitersCount,
         companyPage: this.companyPage,
         joinBoothButtonLink: this.joinBoothButtonLink || '',

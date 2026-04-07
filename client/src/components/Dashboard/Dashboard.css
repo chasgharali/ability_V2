@@ -591,14 +591,14 @@
 }
 
 .mobile-event-logo {
-    height: 64px;
-    max-width: 360px;
+    width: 180px;
+    height: 48px;
     object-fit: contain;
 }
 
 .mobile-booth-logo {
-    height: 64px;
-    max-width: 360px;
+    width: 180px;
+    height: 48px;
     object-fit: contain;
 }
 
@@ -673,12 +673,13 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
 /* Header uploaded logo */
 .header-logo {
-    height: 48px;
-    max-width: 300px;
+    height: 60px;
+    width: 240px;
+    max-width: 180px;
     object-fit: contain;
+    border-radius: 8px;
+    flex-shrink: 0;
     display: block;
-    flex-shrink: 1;
-    /* allow logo to shrink if needed */
 }
 
 /* Centered booth logo wrapper (overlay, doesn't affect layout) */
@@ -695,8 +696,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 .header-center-logo .booth-centered {
-    height: 28px;
-    max-width: 260px;
+    width: 240px;
+    height: 60px;
 }
 
 /* Header text fallback */
@@ -1847,13 +1848,17 @@ body.sidebar-open .mobile-menu-toggle:hover {
     }
 
     .header-logo {
-        max-width: 240px;
-        height: 42px;
+        height: 60px;
+        width: 240px;
+        max-width: 180px;
+        object-fit: contain;
+        border-radius: 8px;
+        flex-shrink: 0;
     }
 
     .header-center-logo .booth-centered {
-        height: 24px;
-        max-width: 200px;
+        width: 180px;
+        height: 48px;
     }
 
     /* Show mobile logo bar for booth users on tablets */
@@ -1868,8 +1873,15 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
     .mobile-event-logo,
     .mobile-booth-logo {
-        height: 56px;
-        max-width: 320px;
+        width: 180px;
+        height: 48px;
+    }
+
+    /* If only one logo is shown in mobile logo bar, make it larger */
+    .mobile-logo-container .mobile-logo-link:only-child .mobile-event-logo,
+    .mobile-logo-container .mobile-logo-link:only-child .mobile-booth-logo {
+        width: 240px;
+        height: 60px;
     }
 }
 
@@ -1943,9 +1955,12 @@ body.sidebar-open .mobile-menu-toggle:hover {
     }
 
     .header-logo {
+        height: 60px;
+        width: 240px;
         max-width: 180px;
-        height: 33px;
-        flex-shrink: 1;
+        object-fit: contain;
+        border-radius: 8px;
+        flex-shrink: 0;
     }
 
     .header-center-logo {
@@ -1953,8 +1968,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
     }
 
     .header-center-logo .booth-centered {
-        height: 22px;
-        max-width: 180px;
+        width: 180px;
+        height: 48px;
     }
 
     /* Mobile logo bar adjustments */
@@ -1967,8 +1982,14 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
     .mobile-event-logo,
     .mobile-booth-logo {
+        width: 180px;
         height: 48px;
-        max-width: 280px;
+    }
+
+    .mobile-logo-container .mobile-logo-link:only-child .mobile-event-logo,
+    .mobile-logo-container .mobile-logo-link:only-child .mobile-booth-logo {
+        width: 220px;
+        height: 56px;
     }
 
     .form-row-4 {
@@ -2112,13 +2133,17 @@ body.sidebar-open .mobile-menu-toggle:hover {
     }
 
     .header-logo {
-        max-width: 150px;
-        height: 30px;
+        height: 60px;
+        width: 240px;
+        max-width: 180px;
+        object-fit: contain;
+        border-radius: 8px;
+        flex-shrink: 0;
     }
 
     .header-center-logo .booth-centered {
-        height: 20px;
-        max-width: 160px;
+        width: 180px;
+        height: 48px;
     }
 
     /* Mobile logo bar for small screens */
@@ -2133,8 +2158,14 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
     .mobile-event-logo,
     .mobile-booth-logo {
-        height: 40px;
-        max-width: 240px;
+        width: 180px;
+        height: 48px;
+    }
+
+    .mobile-logo-container .mobile-logo-link:only-child .mobile-event-logo,
+    .mobile-logo-container .mobile-logo-link:only-child .mobile-booth-logo {
+        width: 200px;
+        height: 52px;
     }
 
     /* Adjust sidebar for small mobile with logo bar */

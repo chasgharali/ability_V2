@@ -831,7 +831,7 @@ export default function EventManagement() {
         if (!file) return;
         try {
             setSaving(true);
-            const { downloadUrl } = await uploadImageToS3(file);
+            const { downloadUrl } = await uploadImageToS3(file, { variant: 'public' });
             setField('logoUrl', downloadUrl);
         } catch (e) {
             console.error('Logo upload failed', e);
