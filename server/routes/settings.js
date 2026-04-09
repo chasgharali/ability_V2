@@ -2,6 +2,23 @@ const express = require('express');
 const router = express.Router();
 const Settings = require('../models/Settings');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl');
+
+function normalizeBrandingLogoValue(value) {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+
+  // Backward compatibility: old branding logos may still be saved as rte-content URLs.
+  if (trimmed.startsWith('/api/uploads/rte-content/')) {
+    const key = decodeURIComponent(trimmed.replace('/api/uploads/rte-content/', '').replace(/^\/+/, ''));
+    if (/^(image|booth-logo|organization-logo)\//.test(key)) {
+      return `/api/uploads/public/${encodeKeyForPath(key)}`;
+    }
+  }
+
+  return toStablePublicImageUrl(trimmed);
+}
 
 // @route   GET /api/settings
 // @desc    Get all settings (public)
@@ -9,6 +26,9 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const settings = await Settings.getSettings();
+    if (settings.branding_logo) {
+      settings.branding_logo = normalizeBrandingLogoValue(settings.branding_logo);
+    }
     res.json({ success: true, settings });
   } catch (error) {
     console.error('Error fetching settings:', error);
@@ -25,7 +45,10 @@ router.get('/', async (req, res) => {
 router.get('/:key', async (req, res) => {
   try {
     const { key } = req.params;
-    const value = await Settings.getSetting(key);
+    let value = await Settings.getSetting(key);
+    if (key === 'branding_logo') {
+      value = normalizeBrandingLogoValue(value);
+    }
     
     if (value === null) {
       return res.status(404).json({ 
@@ -58,9 +81,26 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Supe
       });
     }
     
+    let sanitizedValue = value;
+    if (key === 'branding_logo') {
+      if (typeof value !== 'string' || !value.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Branding logo value must be a non-empty string'
+        });
+      }
+      sanitizedValue = normalizeBrandingLogoValue(value.trim());
+      if (!sanitizedValue.startsWith('/api/uploads/public/')) {
+        return res.status(400).json({
+          success: false,
+          error: 'Branding logo must be uploaded to S3 via the image uploader'
+        });
+      }
+    }
+
     const setting = await Settings.setSetting(
       key, 
-      value, 
+      sanitizedValue,
       req.user.id, 
       description || ''
     );

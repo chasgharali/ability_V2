@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { createOrganization, updateOrganization, uploadOrganizationLogo } from '../../services/organizations';
+import { createOrganization, updateOrganization } from '../../services/organizations';
+import { uploadImageToS3 } from '../../services/uploads';
 
 const DEFAULT_LIMITS = { maxEvents: 0, maxRecruiters: 0, maxUsers: 0, maxJobSeekers: 0, maxBooths: 0 };
 
@@ -78,10 +79,20 @@ export default function OrganizationForm({ org, onSave, onCancel }) {
     setSaving(true);
     setError('');
     try {
+      let logoUrl = form.logoUrl.trim() || null;
+      if (selectedLogoFile) {
+        setLogoUploading(true);
+        const { downloadUrl } = await uploadImageToS3(selectedLogoFile, { variant: 'public' });
+        if (!downloadUrl) {
+          throw new Error('Organization logo upload did not return a URL');
+        }
+        logoUrl = downloadUrl;
+      }
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
-        logoUrl: form.logoUrl.trim() || null,
+        logoUrl,
         logoAltText: form.logoAltText.trim()
       };
       if (isSuperAdmin) {
@@ -89,23 +100,12 @@ export default function OrganizationForm({ org, onSave, onCancel }) {
         payload.isActive = form.isActive;
         payload.limits = form.limits;
       }
-      let savedOrg;
       if (isNew) {
-        const created = await createOrganization(payload);
-        savedOrg = created?.organization;
+        await createOrganization(payload);
       } else {
-        const updated = await updateOrganization(org._id, payload);
-        savedOrg = updated?.organization;
+        await updateOrganization(org._id, payload);
       }
 
-      if (selectedLogoFile) {
-        const targetOrgId = savedOrg?._id || org?._id;
-        if (!targetOrgId) {
-          throw new Error('Organization ID is not available for logo upload');
-        }
-        setLogoUploading(true);
-        await uploadOrganizationLogo(targetOrgId, selectedLogoFile);
-      }
       onSave();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save organization');

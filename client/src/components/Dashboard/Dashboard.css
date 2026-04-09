@@ -675,7 +675,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
 .header-logo {
     height: 60px;
     width: 240px;
-    max-width: 180px;
+    max-width: 240px;
     object-fit: contain;
     border-radius: 8px;
     flex-shrink: 0;
@@ -1850,7 +1850,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     .header-logo {
         height: 60px;
         width: 240px;
-        max-width: 180px;
+        max-width: 240px;
         object-fit: contain;
         border-radius: 8px;
         flex-shrink: 0;
@@ -1957,7 +1957,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     .header-logo {
         height: 60px;
         width: 240px;
-        max-width: 180px;
+        max-width: 240px;
         object-fit: contain;
         border-radius: 8px;
         flex-shrink: 0;
@@ -2135,7 +2135,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     .header-logo {
         height: 60px;
         width: 240px;
-        max-width: 180px;
+        max-width: 240px;
         object-fit: contain;
         border-radius: 8px;
         flex-shrink: 0;

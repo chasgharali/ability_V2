@@ -5,8 +5,6 @@ import '../Dashboard/Dashboard.css';
 import settingsAPI from '../../services/settings';
 import { uploadImageToS3 } from '../../services/uploads';
 
-const DEFAULT_ICON = 'https://upload.wikimedia.org/wikipedia/commons/7/70/Example.png';
-
 export default function BrandingHeaderLogo() {
   const [brandingLogo, setBrandingLogo] = useState('');
   const [brandingLogoAlt, setBrandingLogoAlt] = useState('');
@@ -112,8 +110,11 @@ export default function BrandingHeaderLogo() {
             <div className="upload-card" style={{ maxWidth: 520 }}>
               <h4>Current Logo</h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <img src={brandingLogo || DEFAULT_ICON} alt="Current header logo" style={{ height: 36, objectFit: 'contain', border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 6 }} />
-                <button className="dashboard-button" style={{ width: 'auto' }} disabled={loading || uploading} onClick={() => saveBrandingLogo(DEFAULT_ICON)}>Use Default Icon</button>
+                {brandingLogo ? (
+                  <img src={brandingLogo} alt="Current header logo" style={{ height: 36, objectFit: 'contain', border: '1px solid #e5e7eb', borderRadius: 6, background: '#fff', padding: 6 }} />
+                ) : (
+                  <div style={{ height: 36, display: 'flex', alignItems: 'center', color: '#6b7280' }}>No logo uploaded yet.</div>
+                )}
               </div>
               <div className="upload-actions" style={{ marginTop: '1rem' }}>
                 <label className="dashboard-button" style={{ width: 'auto', cursor: loading || uploading ? 'not-allowed' : 'pointer', opacity: loading || uploading ? 0.7 : 1 }}>

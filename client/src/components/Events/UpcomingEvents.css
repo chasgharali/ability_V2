@@ -96,11 +96,13 @@
 }
 
 .event-card-title .event-slug {
-    color: #6b7280;
+    color: #1f2937;
     font-size: 13px;
     font-family: monospace;
-    background: #f3f4f6;
-    padding: 2px 8px;
+    font-weight: 600;
+    background: #e5e7eb;
+    border: 1px solid #9ca3af;
+    padding: 3px 8px;
     border-radius: 4px;
     display: inline-block;
 }
