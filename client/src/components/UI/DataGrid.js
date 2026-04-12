@@ -253,7 +253,7 @@ const DataGrid = ({
             {/* Table */}
             <div className="data-grid-table-container" role="region" aria-label="Table content">
                 <table
-                    className="data-grid-table"
+                    className={`data-grid-table ${selectable ? 'data-grid-table--selectable' : ''}`}
                     role="table"
                     aria-label={ariaLabel}
                 >

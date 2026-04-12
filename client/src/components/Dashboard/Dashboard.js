@@ -30,7 +30,7 @@ import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, gener
 import { TabComponent, TabItemsDirective, TabItemDirective } from '@syncfusion/ej2-react-navigations';
 import { MultiSelectComponent } from '@syncfusion/ej2-react-dropdowns';
 import { DateTimePickerComponent } from '@syncfusion/ej2-react-calendars';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze } from '@syncfusion/ej2-react-grids';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-inputs/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
@@ -903,11 +903,12 @@ const Dashboard = () => {
                                         selectionSettings={{ type: 'Multiple' }}
                                     >
                                         <ColumnsDirective>
-                                            <ColumnDirective type='checkbox' width='40' />
+                                            <ColumnDirective type='checkbox' width='40' freeze='Left' />
                                             <ColumnDirective
                                                 field='name'
                                                 headerText='Booth Name'
                                                 width='220'
+                                                freeze='Left'
                                                 template={(props) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                                                         {props.name || '-'}
@@ -975,7 +976,7 @@ const Dashboard = () => {
                                                 </div>
                                             )} />
                                         </ColumnsDirective>
-                                        <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                                        <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze]} />
                                     </GridComponent>
                                 </>
                             ) : (

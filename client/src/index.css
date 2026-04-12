@@ -218,3 +218,35 @@ a:focus-visible,
     outline-offset: 4px !important;
     box-shadow: none !important;
 }
+
+/* Syncfusion v31 frozen (sticky) columns: e-leftfreeze is the modern sticky approach */
+.e-grid .e-headercell.e-leftfreeze {
+    background: #f3f4f6 !important;
+    vertical-align: middle !important;
+    z-index: 2 !important;
+}
+
+.e-grid .e-rowcell.e-leftfreeze {
+    background: #ffffff !important;
+    z-index: 2 !important;
+}
+
+/* Keep row hover color consistent on frozen data cells */
+.e-grid .e-row:hover .e-rowcell.e-leftfreeze {
+    background: #f9fafb !important;
+}
+
+/* Prevent frozen boundary shadow/clip from covering next header text */
+.e-grid .e-headercell.e-leftfreeze.e-freezeleftborder,
+.e-grid .e-rowcell.e-leftfreeze.e-freezeleftborder {
+    clip-path: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+}
+
+/* Keep the first movable header fully visible next to frozen columns */
+.e-grid .e-headercell.e-leftfreeze + .e-headercell {
+    position: relative;
+    z-index: 3 !important;
+}
+

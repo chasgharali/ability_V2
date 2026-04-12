@@ -375,39 +375,21 @@
    Grid Horizontal Scrolling Support
    ======================================== */
 
-/* Grid containers - allow horizontal scrolling for wide tables */
+/* Grid containers - let Syncfusion manage internal scroll; only set structural props */
 .bm-grid-wrap,
 .data-grid-container {
   position: relative !important;
   width: 100% !important;
-  overflow-x: auto !important; /* Allow horizontal scrolling for wide tables */
-  overflow-y: visible !important; /* Allow ColumnChooser to overflow vertically */
-  min-height: 400px !important; /* Ensure minimum height for content */
-  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
+  overflow-y: visible !important;
+  min-height: 400px !important;
 }
 
-/* Syncfusion Grid - allow horizontal scrolling */
+/* Syncfusion Grid - structural only; internal scroll handled by Syncfusion */
 .bm-grid-wrap .e-grid,
 .data-grid-container .e-grid {
   position: relative !important;
-  overflow-x: auto !important; /* Allow horizontal scrolling when table is wide */
-  overflow-y: visible !important; /* Allow ColumnChooser to show */
-  min-width: 100% !important; /* Ensure grid takes full width at minimum */
-}
-
-/* Grid content area - allow horizontal scrolling */
-.bm-grid-wrap .e-grid .e-content,
-.data-grid-container .e-grid .e-content {
-  position: relative !important;
-  overflow-x: auto !important; /* Allow horizontal scrolling for wide content */
-  overflow-y: visible !important; /* Allow ColumnChooser to overflow */
-}
-
-/* Grid table wrapper - ensure horizontal scrolling works */
-.bm-grid-wrap .e-grid .e-gridcontent,
-.data-grid-container .e-grid .e-gridcontent {
-    overflow-x: auto !important;
-    overflow-y: visible !important;
+  overflow-y: visible !important;
+  min-width: 100% !important;
 }
 
 /* Ensure dropdown wrapper doesn't break */
@@ -780,6 +762,14 @@ body .um-delete-dialog.e-dialog {
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
+    margin: 0 !important;
+}
+
+/* Keep frozen header text aligned with movable headers */
+.e-grid .e-headercell.e-leftfreeze .e-headercelldiv {
+    margin: 0 !important;
+    height: auto !important;
+    line-height: normal !important;
 }
 
 .e-grid .e-headercell .e-headertext {
@@ -881,87 +871,18 @@ body .um-delete-dialog.e-dialog {
 }
 
 /* ========================================
-   Top Scrollbar for Header - Synchronized Scrolling
+   Grid Scrollbar Styling
    ======================================== */
 
-/* Make header scrollable with visible scrollbar - Force it to show */
-.bm-grid-wrap .e-grid .e-gridheader,
-.data-grid-container .e-grid .e-gridheader {
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    position: relative !important;
-    margin-bottom: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    scrollbar-width: thin !important;
-    scrollbar-color: #888 #f1f1f1 !important;
-    box-sizing: border-box !important;
-    min-height: 0 !important;
-}
-
-/* Ensure header table can be wider than container */
-.bm-grid-wrap .e-grid .e-gridheader .e-table,
-.data-grid-container .e-grid .e-gridheader .e-table {
-    width: auto !important;
-    min-width: 100% !important;
-    table-layout: auto !important;
-}
-
-/* Override any Syncfusion default that might hide the scrollbar */
-.bm-grid-wrap .e-grid .e-gridheader *,
-.data-grid-container .e-grid .e-gridheader * {
-    box-sizing: border-box !important;
-}
-
-/* Ensure header table wrapper allows scrolling */
-.bm-grid-wrap .e-grid .e-gridheader .e-headercontent,
-.data-grid-container .e-grid .e-gridheader .e-headercontent {
-    overflow-x: visible !important;
-    overflow-y: hidden !important;
-}
-
-/* Style header scrollbar - Force visibility */
-.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar,
-.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar {
-    height: 15px !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar-track,
-.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar-track {
-    background: #f1f1f1 !important;
-    border-radius: 0 !important;
-    display: block !important;
-}
-
-.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar-thumb,
-.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar-thumb {
-    background: #888 !important;
-    border-radius: 6px !important;
-    min-width: 20px !important;
-    display: block !important;
-}
-
-.bm-grid-wrap .e-grid .e-gridheader::-webkit-scrollbar-thumb:hover,
-.data-grid-container .e-grid .e-gridheader::-webkit-scrollbar-thumb:hover {
-    background: #555 !important;
-}
-
-/* Ensure content scrollbar matches header scrollbar size */
+/* Content scrollbar - thin, clean; header scroll is handled by Syncfusion internally */
 .bm-grid-wrap .e-grid .e-content::-webkit-scrollbar,
 .data-grid-container .e-grid .e-content::-webkit-scrollbar {
-    height: 15px !important;
-    display: block !important;
+    height: 8px !important;
 }
 
 .bm-grid-wrap .e-grid .e-content::-webkit-scrollbar-track,
 .data-grid-container .e-grid .e-content::-webkit-scrollbar-track {
     background: #f1f1f1 !important;
-    border-radius: 0 !important;
-    display: block !important;
 }
 
 .bm-grid-wrap .e-grid .e-content::-webkit-scrollbar-thumb,
@@ -969,19 +890,11 @@ body .um-delete-dialog.e-dialog {
     background: #888 !important;
     border-radius: 6px !important;
     min-width: 20px !important;
-    display: block !important;
 }
 
 .bm-grid-wrap .e-grid .e-content::-webkit-scrollbar-thumb:hover,
 .data-grid-container .e-grid .e-content::-webkit-scrollbar-thumb:hover {
     background: #555 !important;
-}
-
-/* Firefox - match scrollbar size */
-.bm-grid-wrap .e-grid .e-gridheader,
-.data-grid-container .e-grid .e-gridheader {
-    scrollbar-width: thin !important;
-    scrollbar-color: #888 #f1f1f1 !important;
 }
 
 .bm-grid-wrap .e-grid .e-content,

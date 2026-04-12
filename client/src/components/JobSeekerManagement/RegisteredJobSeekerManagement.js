@@ -8,7 +8,7 @@ import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, ExcelExport } from '@syncfusion/ej2-react-grids';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, ExcelExport, Freeze } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import '@syncfusion/ej2-base/styles/material.css';
@@ -157,66 +157,8 @@ export default function RegisteredJobSeekerManagement() {
       });
   }, [jobSeekers]);
 
-  // Sync header and content horizontal scrolling so column headers track table scroll.
-  useEffect(() => {
-    if (mode !== 'list') return;
-
-    let syncActive = false;
-    const grid = gridRef.current?.element;
-    if (!grid) return;
-
-    const header = grid.querySelector('.e-gridheader');
-    const content = grid.querySelector('.e-content');
-    if (!header || !content) return;
-
-    const matchTableWidths = () => {
-      const contentTable = content.querySelector('table');
-      const headerTable = header.querySelector('table');
-      const headerContent = header.querySelector('.e-headercontent');
-      if (!contentTable || !headerTable) return;
-
-      const contentWidth = contentTable.scrollWidth || contentTable.offsetWidth;
-      if (contentWidth > 0) {
-        headerTable.style.width = `${contentWidth}px`;
-        headerTable.style.minWidth = `${contentWidth}px`;
-        if (headerContent) {
-          headerContent.style.width = `${contentWidth}px`;
-          headerContent.style.minWidth = `${contentWidth}px`;
-        }
-      }
-    };
-
-    const syncContentToHeader = () => {
-      if (syncActive) return;
-      syncActive = true;
-      header.scrollLeft = content.scrollLeft;
-      requestAnimationFrame(() => { syncActive = false; });
-    };
-
-    const syncHeaderToContent = () => {
-      if (syncActive) return;
-      syncActive = true;
-      content.scrollLeft = header.scrollLeft;
-      requestAnimationFrame(() => { syncActive = false; });
-    };
-
-    matchTableWidths();
-    const t1 = setTimeout(matchTableWidths, 60);
-    const t2 = setTimeout(matchTableWidths, 220);
-    const t3 = setTimeout(matchTableWidths, 600);
-
-    content.addEventListener('scroll', syncContentToHeader, { passive: true });
-    header.addEventListener('scroll', syncHeaderToContent, { passive: true });
-    header.scrollLeft = content.scrollLeft;
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      content.removeEventListener('scroll', syncContentToHeader);
-      header.removeEventListener('scroll', syncHeaderToContent);
-    };
-  }, [mode, flatDataSource.length, loading]);
+  // Frozen columns rely on native Syncfusion movable/frozen pane scrolling.
+  useEffect(() => undefined, [mode, flatDataSource.length, loading]);
 
   const handleViewProfile = useCallback((rowData) => {
     if (rowData?.jobSeekerId) {
@@ -667,9 +609,9 @@ export default function RegisteredJobSeekerManagement() {
             enableHover={true}
           >
             <ColumnsDirective>
-              <ColumnDirective type="checkbox" width="50" allowSorting={false} allowFiltering={false} showInColumnChooser={false} />
+              <ColumnDirective type="checkbox" width="50" allowSorting={false} allowFiltering={false} showInColumnChooser={false} freeze='Left' />
+              <ColumnDirective field="name" headerText="Name" width="180" allowFiltering={true} freeze='Left' />
               <ColumnDirective field="_id" headerText="" width="0" visible={false} isPrimaryKey />
-              <ColumnDirective field="name" headerText="Name" width="180" allowFiltering={true} />
               <ColumnDirective field="email" headerText="Email" width="220" allowFiltering={true} />
               <ColumnDirective field="phoneNumber" headerText="Phone" width="140" allowFiltering={true} />
               <ColumnDirective field="city" headerText="City" width="120" allowFiltering={true} />
@@ -699,7 +641,7 @@ export default function RegisteredJobSeekerManagement() {
               <ColumnDirective field="lastLogin" headerText="Last Login" width="140" template={lastLoginTemplate} />
               <ColumnDirective headerText="Actions" width="100" allowSorting={false} allowFiltering={false} template={actionsTemplate} />
             </ColumnsDirective>
-            <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, ExcelExport]} />
+            <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, ExcelExport, Freeze]} />
           </GridComponent>
         </div>
 

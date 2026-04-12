@@ -218,6 +218,45 @@
     padding: 16px 12px;
 }
 
+/* Sticky columns: checkbox + first data column */
+.data-grid-table .data-grid-checkbox-header,
+.data-grid-table .data-grid-checkbox-cell {
+    position: sticky;
+    left: 0;
+    z-index: 6;
+    background: #ffffff;
+}
+
+.data-grid-table .data-grid-checkbox-header {
+    z-index: 7;
+    background: #f8f9fa;
+}
+
+.data-grid-table.data-grid-table--selectable thead th:nth-child(2),
+.data-grid-table.data-grid-table--selectable tbody td:nth-child(2) {
+    position: sticky;
+    left: 50px;
+    z-index: 5;
+    background: #ffffff;
+}
+
+.data-grid-table.data-grid-table--selectable thead th:nth-child(2) {
+    z-index: 6;
+    background: #f8f9fa;
+}
+
+.data-grid-table.data-grid-table--selectable thead th:nth-child(2)::after,
+.data-grid-table.data-grid-table--selectable tbody td:nth-child(2)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -1px;
+    width: 10px;
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.12), transparent);
+}
+
 /* Checkboxes */
 .data-grid-checkbox {
     width: 18px;

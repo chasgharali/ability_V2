@@ -5,7 +5,7 @@ import './MeetingRecords.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import filterIcon from '../../assets/filter.png';
-import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu } from '@syncfusion/ej2-react-grids';
+import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
@@ -248,133 +248,8 @@ export default function MeetingRecords() {
         hasPrev: false
     });
 
-    // Sync header and content horizontal scrolling
-    useEffect(() => {
-        let scrollSyncActive = false;
-
-        const syncScroll = () => {
-            const grids = document.querySelectorAll('.meeting-records-container .e-grid, .data-grid-container .e-grid');
-            grids.forEach(grid => {
-                const header = grid.querySelector('.e-gridheader');
-                const content = grid.querySelector('.e-content');
-                if (!header || !content) return;
-
-                // Force enable scrolling on header
-                header.style.overflowX = 'scroll';
-                header.style.overflowY = 'hidden';
-                header.style.position = 'relative';
-                header.style.display = 'block';
-                header.style.width = '100%';
-
-                // Match header table width to content table width for synchronized scrolling
-                const matchTableWidths = () => {
-                    const contentTable = content.querySelector('table');
-                    const headerTable = header.querySelector('table');
-                    const headerContent = header.querySelector('.e-headercontent');
-                    
-                    if (contentTable && headerTable) {
-                        // Force layout recalculation
-                        void contentTable.offsetWidth;
-                        void headerTable.offsetWidth;
-                        
-                        // Get content table's full scroll width (includes all columns)
-                        const contentScrollWidth = contentTable.scrollWidth || contentTable.offsetWidth;
-                        const headerContainerWidth = header.offsetWidth || header.clientWidth;
-                        
-                        // Always set header table width to match content table exactly
-                        if (contentScrollWidth > 0) {
-                            headerTable.style.width = contentScrollWidth + 'px';
-                            headerTable.style.minWidth = contentScrollWidth + 'px';
-                            headerTable.style.maxWidth = 'none';
-                            
-                            if (headerContent) {
-                                headerContent.style.width = contentScrollWidth + 'px';
-                                headerContent.style.minWidth = contentScrollWidth + 'px';
-                                headerContent.style.maxWidth = 'none';
-                            }
-                        }
-                        
-                        // Enable scrolling if content is scrollable
-                        if (contentScrollWidth > headerContainerWidth) {
-                            header.style.overflowX = 'auto';
-                            header.style.overflowY = 'hidden';
-                        }
-                    }
-                };
-                
-                // Match widths with multiple attempts to catch grid render timing
-                matchTableWidths();
-                setTimeout(matchTableWidths, 50);
-                setTimeout(matchTableWidths, 200);
-                setTimeout(matchTableWidths, 500);
-                setTimeout(matchTableWidths, 1000);
-
-                // Sync scroll positions
-                const syncContentToHeader = () => {
-                    if (!scrollSyncActive) {
-                        scrollSyncActive = true;
-                        header.scrollLeft = content.scrollLeft;
-                        requestAnimationFrame(() => {
-                            scrollSyncActive = false;
-                        });
-                    }
-                };
-
-                const syncHeaderToContent = () => {
-                    if (!scrollSyncActive) {
-                        scrollSyncActive = true;
-                        content.scrollLeft = header.scrollLeft;
-                        requestAnimationFrame(() => {
-                            scrollSyncActive = false;
-                        });
-                    }
-                };
-
-                // Remove old listeners
-                content.removeEventListener('scroll', syncContentToHeader);
-                header.removeEventListener('scroll', syncHeaderToContent);
-
-                // Add new listeners
-                content.addEventListener('scroll', syncContentToHeader, { passive: true });
-                header.addEventListener('scroll', syncHeaderToContent, { passive: true });
-
-                // Initial sync
-                setTimeout(() => {
-                    header.scrollLeft = content.scrollLeft;
-                }, 50);
-            });
-        };
-
-        // Run immediately and after delays
-        syncScroll();
-        const timer1 = setTimeout(syncScroll, 100);
-        const timer2 = setTimeout(syncScroll, 500);
-        const timer3 = setTimeout(syncScroll, 1000);
-        const timer4 = setTimeout(syncScroll, 2000);
-        
-        const observer = new MutationObserver(() => {
-            setTimeout(syncScroll, 100);
-        });
-        // Scope to just the Syncfusion grid element to avoid firing on every
-        // search-input keystroke (which would force expensive layout reflows).
-        const gridEl = gridRef.current?.element || document.querySelector('.bm-grid-wrap .e-grid');
-        if (gridEl) {
-            observer.observe(gridEl, { childList: true, subtree: true });
-        }
-
-        // Also watch for window resize
-        const handleResize = () => setTimeout(syncScroll, 100);
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            clearTimeout(timer1);
-            clearTimeout(timer2);
-            clearTimeout(timer3);
-            clearTimeout(timer4);
-            observer.disconnect();
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [meetingRecords]);
+    // Frozen columns rely on native Syncfusion movable/frozen pane scrolling.
+    useEffect(() => undefined, [meetingRecords]);
 
     // Statistics
     const [stats, setStats] = useState({
@@ -2088,10 +1963,11 @@ export default function MeetingRecords() {
                                         <ColumnDirective 
                                             type='checkbox' 
                                             width='50' 
+                                            freeze='Left'
                                         />
                                     )}
+                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} textAlign='Center' freeze='Left' />
                                     <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} textAlign='Center' />
@@ -2125,7 +2001,7 @@ export default function MeetingRecords() {
                                         visible={true}
                                     />
                                 </ColumnsDirective>
-                                <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu]} />
+                                <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze]} />
                             </GridComponent>
                             
                             {/* Custom Pagination Footer */}
