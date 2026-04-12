@@ -224,6 +224,7 @@ a:focus-visible,
     background: #f3f4f6 !important;
     vertical-align: middle !important;
     z-index: 2 !important;
+    left: 0 !important;
 }
 
 .e-grid .e-rowcell.e-leftfreeze {
