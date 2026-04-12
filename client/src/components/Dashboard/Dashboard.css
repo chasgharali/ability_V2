@@ -91,6 +91,27 @@
     border: 4px solid #ffffff;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    display: block;
+}
+
+.profile-avatar-initials {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4b5563;
+    line-height: 1;
+    user-select: none;
 }
 
 .profile-status-indicator {
@@ -314,6 +335,10 @@
     .profile-avatar {
         width: 100px;
         height: 100px;
+    }
+
+    .profile-avatar-initials {
+        font-size: 2rem;
     }
 
     .profile-name {
@@ -1643,8 +1668,22 @@ body.sidebar-open .mobile-menu-toggle:hover {
     background: #fafafa;
 }
 
+.upload-card h2,
 .upload-card h4 {
     margin: 0 0 0.5rem 0;
+    /* Smaller than .dashboard-content h2 — card section titles, not page-level headings */
+    font-size: 1rem;
+    font-weight: 600;
+    color: #000000;
+    line-height: 1.3;
+}
+
+/* Modal title: semantic h2 without inheriting page-level .dashboard-content h2 sizing */
+.dashboard-content .camera-dialog-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #000000;
 }
 
 .muted {
@@ -1665,6 +1704,36 @@ body.sidebar-open .mobile-menu-toggle:hover {
     border-radius: 8px;
     background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"96\" height=\"96\"><rect width=\"96\" height=\"96\" fill=\"%23ddd\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-size=\"10\" fill=\"%23888\">Preview</text></svg>') center/cover no-repeat;
     border: 1px solid #e0e0e0;
+}
+
+/* Saved profile photo: <img> fills circle (avoids CSS url() issues with long presigned S3 URLs) */
+.avatar-preview.avatar-preview-saved {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border: 2px solid #e5e7eb;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.avatar-preview-saved-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.avatar-preview-saved-initials {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4b5563;
+    line-height: 1;
+    user-select: none;
 }
 
 .avatar-pending-actions {

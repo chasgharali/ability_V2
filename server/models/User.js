@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
+const BOOTH_REQUIRED_ROLES = ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'];
 
 // Sub-schema for JobSeeker survey
 const surveySchema = new mongoose.Schema({
@@ -176,6 +177,20 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
         default: {}
     },
+    importStatus: {
+        type: String,
+        enum: ['complete', 'incomplete'],
+        default: 'complete'
+    },
+    importMissingFields: [{
+        type: String,
+        trim: true
+    }],
+    importMeta: {
+        source: { type: String, trim: true, default: null },
+        importedAt: { type: Date, default: null },
+        importedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+    },
     // Refresh tokens for JWT management
     // NOTE: Do NOT use 'expires' on array subdocuments - MongoDB TTL indexes
     // work at the document level, which would delete the entire User document!
@@ -213,6 +228,7 @@ userSchema.index({ role: 1, isActive: 1 }); // Compound index for common filter 
 userSchema.index({ role: 1, createdAt: -1 }); // Compound index for listing with role filter
 userSchema.index({ city: 1 }); // For location-based search
 userSchema.index({ state: 1 }); // For location-based search
+userSchema.index({ importStatus: 1 });
 
 // Text index for full-text search capability (optional, for future use)
 // This enables MongoDB's built-in text search on these fields
@@ -366,7 +382,7 @@ userSchema.methods.getPublicProfile = function () {
         name: this.name,
         email: this.email,
         role: this.role,
-        avatarUrl: this.avatarUrl,
+        avatarUrl: toStablePublicImageUrl(this.avatarUrl),
         emailVerified: this.emailVerified,
         resumeUrl: this.resumeUrl,
         linkedInUrl: this.linkedInUrl,
@@ -390,7 +406,10 @@ userSchema.methods.getPublicProfile = function () {
         assignedEvents: this.assignedEvents || [],
         createdAt: this.createdAt,
         pendingEmail: this.pendingEmail,
-        organizationId: this.organizationId
+        organizationId: this.organizationId,
+        importStatus: this.importStatus || 'complete',
+        importMissingFields: Array.isArray(this.importMissingFields) ? this.importMissingFields : [],
+        importMeta: this.importMeta || null
     };
 
     // If assignedBooth is populated, include booth name
@@ -419,10 +438,34 @@ userSchema.methods.getPublicProfile = function () {
     return profile;
 };
 
-// Validate recruiter/booth admin/booth support/booth interpreter must have assignedBooth
+const getMissingImportFields = (userLike = {}) => {
+    const missing = [];
+    const role = userLike.role;
+    const needsBooth = BOOTH_REQUIRED_ROLES.includes(role);
+    if (needsBooth && !userLike.assignedBooth) {
+        missing.push('assignedBooth');
+    }
+    return missing;
+};
+
+userSchema.methods.refreshImportReadiness = function refreshImportReadiness() {
+    const missing = getMissingImportFields(this);
+    this.importMissingFields = missing;
+    this.importStatus = missing.length > 0 ? 'incomplete' : 'complete';
+    if (this.importStatus === 'complete') {
+        this.importMissingFields = [];
+    }
+    return this.importStatus;
+};
+
+userSchema.statics.getMissingImportFields = getMissingImportFields;
+
+// Validate recruiter/booth admin/booth support/booth interpreter must have assignedBooth.
+// Allow incomplete imported users to persist and be fixed later.
 userSchema.pre('validate', function (next) {
     const role = this.role;
-    if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(role) && !this.assignedBooth) {
+    const allowIncompleteImport = this.importStatus === 'incomplete';
+    if (BOOTH_REQUIRED_ROLES.includes(role) && !this.assignedBooth && !allowIncompleteImport) {
         this.invalidate('assignedBooth', 'Assigned booth is required for recruiters, booth admins, booth support, and booth interpreters');
     }
     next();

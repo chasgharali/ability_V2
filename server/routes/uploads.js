@@ -244,13 +244,15 @@ router.post('/complete', authenticateToken, [
             Expires: 604800 // 7 days (max for SigV4)
         });
 
-        // Update user profile if it's an avatar
+        const stablePublicUrl = `/api/uploads/public/${encodeKeyForPath(fileKey)}`;
+
+        // Update user profile if it's an avatar — store stable app URL (redirects to fresh S3 URL)
         if (fileType === 'avatar') {
             const User = require('../models/User');
-            await User.findByIdAndUpdate(user._id, { avatarUrl: downloadUrl });
+            await User.findByIdAndUpdate(user._id, { avatarUrl: stablePublicUrl });
         }
 
-        // Update user resume if it's a resume
+        // Update user resume if it's a resume (presigned URL; documents are not served via /public)
         if (fileType === 'resume') {
             const User = require('../models/User');
             await User.findByIdAndUpdate(user._id, { resumeUrl: downloadUrl });
@@ -270,7 +272,9 @@ router.post('/complete', authenticateToken, [
                 // Stable URL that redirects to a fresh presigned URL.
                 // Use this for <video>/<audio> tags so playback doesn't break when URLs expire.
                 streamUrl: `/api/uploads/stream?key=${encodeURIComponent(fileKey)}`,
-                publicUrl: /^((image|booth-logo|organization-logo)\/)/.test(fileKey) ? `/api/uploads/public/${encodeKeyForPath(fileKey)}` : null,
+                publicUrl: /^((image|booth-logo|organization-logo|avatar)\/)/.test(fileKey)
+                    ? `/api/uploads/public/${encodeKeyForPath(fileKey)}`
+                    : null,
                 uploadedAt: new Date()
             }
         });
@@ -294,10 +298,10 @@ router.get('/public/*', async (req, res) => {
         const decoded = decodeURIComponent(rawPath || '');
         const key = extractS3KeyFromUrl(decoded) || decoded;
 
-        if (!key || !/^(image|booth-logo|organization-logo)\//.test(key)) {
+        if (!key || !/^(image|booth-logo|organization-logo|avatar)\//.test(key)) {
             return res.status(400).json({
                 error: 'Invalid key',
-                message: 'Only image, organization-logo, and booth-logo keys are allowed'
+                message: 'Only image, avatar, organization-logo, and booth-logo keys are allowed'
             });
         }
 

@@ -913,9 +913,7 @@ router.get('/upcoming', authenticateToken, async (req, res) => {
                 ...event.getSummary(),
                 isUpcoming: true,
                 daysUntilStart: Math.ceil((event.start - new Date()) / (1000 * 60 * 60 * 24)),
-                organization: event.organizationId
-                    ? { name: event.organizationId.name, logoUrl: event.organizationId.logoUrl, logoAltText: event.organizationId.logoAltText }
-                    : null
+                organization: buildOrganizationSummary(event.organizationId)
             })),
             pagination: {
                 currentPage: parseInt(page),
@@ -992,9 +990,7 @@ router.get('/registered', authenticateToken, async (req, res) => {
                     isActive: event.start <= new Date() && event.end >= new Date(),
                     isCompleted: event.end < new Date()
                 },
-                organization: event.organizationId
-                    ? { name: event.organizationId.name, logoUrl: event.organizationId.logoUrl, logoAltText: event.organizationId.logoAltText }
-                    : null
+                organization: buildOrganizationSummary(event.organizationId)
             };
         });
 

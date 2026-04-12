@@ -5,8 +5,10 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const Booth = require('../models/Booth');
 const Organization = require('../models/Organization');
+const ImportRun = require('../models/ImportRun');
 const logger = require('../utils/logger');
 const mongoose = require('mongoose');
+const { randomUUID } = require('crypto');
 
 const router = express.Router();
 
@@ -37,6 +39,13 @@ const normalizeEmailForLookup = (email) => {
     
     // For non-Gmail addresses, just return lowercase trimmed version
     return trimmed;
+};
+
+const emitImportEvent = (req, eventName, payload = {}) => {
+    const io = req.app.get('io');
+    const targetId = req.user?._id?.toString?.();
+    if (!io || !targetId) return;
+    io.to(`user:${targetId}`).emit(eventName, payload);
 };
 
 /**
@@ -844,7 +853,10 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
                 needsASL: user.needsASL,
                 needsCaptions: user.needsCaptions,
                 needsOther: user.needsOther,
-                organizationId: user.organizationId || null
+                organizationId: user.organizationId || null,
+                importStatus: user.importStatus || 'complete',
+                importMissingFields: Array.isArray(user.importMissingFields) ? user.importMissingFields : [],
+                importMeta: user.importMeta || null
             };
             return publicProfile;
         });
@@ -933,6 +945,48 @@ router.get('/interpreters', authenticateToken, async (req, res) => {
             error: 'Failed to retrieve interpreters',
             message: 'An error occurred while retrieving interpreters'
         });
+    }
+});
+
+/**
+ * GET /api/users/import-runs
+ * Recent import audit runs for current admin.
+ */
+router.get('/import-runs', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport']), async (req, res) => {
+    try {
+        const limitRaw = Number(req.query.limit || 10);
+        const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(100, limitRaw)) : 10;
+        const query = {};
+        if (req.user.role !== 'SuperAdmin') {
+            query.initiatedBy = req.user._id;
+        }
+        const runs = await ImportRun.find(query)
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .select('jobId entityType filename totalRows summary createdAt initiatedBy')
+            .lean();
+        res.json({ runs });
+    } catch (error) {
+        logger.error('Import runs retrieval error:', error);
+        res.status(500).json({ error: 'Failed to retrieve import logs', message: error.message });
+    }
+});
+
+router.get('/import-runs/:jobId', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { jobId } = req.params;
+        const query = { jobId };
+        if (req.user.role !== 'SuperAdmin') {
+            query.initiatedBy = req.user._id;
+        }
+        const run = await ImportRun.findOne(query).lean();
+        if (!run) {
+            return res.status(404).json({ error: 'Import run not found' });
+        }
+        return res.json({ run });
+    } catch (error) {
+        logger.error('Import run detail retrieval error:', error);
+        return res.status(500).json({ error: 'Failed to retrieve import run', message: error.message });
     }
 });
 
@@ -1293,6 +1347,8 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'Globa
             }
         }
 
+        // Recompute import readiness after admin edit updates required fields.
+        targetUser.refreshImportReadiness();
         await targetUser.save();
 
         // Send email notifications if email was changed (only for JobSeekers)
@@ -1517,60 +1573,68 @@ router.post('/:id/reactivate', authenticateToken, requireRole(['SuperAdmin', 'Ad
 
 /**
  * POST /api/users/mass-upload
- * Parse an XLS/XLSX file and bulk-create users (Admin/SuperAdmin only).
- * Expects multipart form-data with a field "file" containing the spreadsheet.
- *
- * Required columns (case-insensitive): name, email, password, role
- * Optional: phone, city, state, country
- *
- * Returns a summary: { created, skipped, errors }
+ * Parse XLS/XLSX/CSV file and bulk-create users/jobseekers with row-by-row live logs.
  */
-router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), async (req, res) => {
+router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport']), async (req, res) => {
+    let jobId = null;
     try {
         const XLSX = require('xlsx');
         const multer = require('multer');
         const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
-
-        // Handle file upload middleware inline
         const runMiddleware = (middleware) => new Promise((resolve, reject) => {
-            middleware(req, res, (err) => err ? reject(err) : resolve());
+            middleware(req, res, (err) => (err ? reject(err) : resolve()));
         });
 
         await runMiddleware(upload.single('file'));
 
         if (!req.file) {
-            return res.status(400).json({ error: 'No file provided. Upload an XLS or XLSX file with field name "file".' });
+            return res.status(400).json({ error: 'No file provided. Upload XLS/XLSX/CSV using field "file".' });
         }
 
-        // Parse workbook
+        const requestedJobId = typeof req.body?.importJobId === 'string' ? req.body.importJobId.trim() : '';
+        jobId = requestedJobId || randomUUID();
+        const entityType = req.body?.entityType === 'jobseekers' ? 'jobseekers' : 'users';
+        const defaultRoleInput = typeof req.body?.defaultRole === 'string' ? req.body.defaultRole.trim() : '';
+
         const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-
         if (rows.length === 0) {
             return res.status(400).json({ error: 'The spreadsheet is empty or has no data rows.' });
         }
 
-        // Normalize column names to lowercase
+        emitImportEvent(req, 'import-started', {
+            jobId,
+            total: rows.length,
+            entityType,
+            filename: req.file.originalname || ''
+        });
+
         const normalizeRow = (row) => {
             const out = {};
             for (const [k, v] of Object.entries(row)) {
-                out[k.toLowerCase().trim().replace(/\s+/g, '')] = typeof v === 'string' ? v.trim() : v;
+                const key = String(k).replace(/^\ufeff/, '').toLowerCase().trim().replace(/\s+/g, '');
+                if (v === null || v === undefined) out[key] = '';
+                else if (typeof v === 'string') out[key] = v.trim();
+                else out[key] = String(v).trim();
             }
             return out;
         };
 
         const VALID_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'];
         const orgScopedRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
+        const roleDefaultResolved = VALID_ROLES.find((r) => r.toLowerCase() === defaultRoleInput.toLowerCase()) || '';
+
         const created = [];
         const skipped = [];
         const errors = [];
+        const rowLogs = [];
+        let incomplete = 0;
         let orgLimits = null;
         let currentOrgUsers = 0;
         let currentRecruiters = 0;
 
-        // Preload organization limits/counters once for Admin mass-upload
         if (req.orgId) {
             orgLimits = await Organization.findById(req.orgId).select('limits').lean();
             currentOrgUsers = await User.countDocuments({
@@ -1584,88 +1648,188 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
             });
         }
 
-        for (let i = 0; i < rows.length; i++) {
+        for (let i = 0; i < rows.length; i += 1) {
             const row = normalizeRow(rows[i]);
-            const rowNum = i + 2; // 1-indexed + header row
-
-            const name = row.name || row.fullname || '';
-            const email = row.email || row.emailaddress || '';
-            const password = row.password || row.pass || '';
-            const role = row.role || 'JobSeeker';
-
-            if (!name) { errors.push({ row: rowNum, error: 'Missing name' }); continue; }
-            if (!email || !/\S+@\S+\.\S+/.test(email)) { errors.push({ row: rowNum, error: 'Invalid or missing email', email }); continue; }
-            if (!password || password.length < 8) { errors.push({ row: rowNum, error: 'Password must be at least 8 characters', email }); continue; }
-            if (!VALID_ROLES.includes(role)) { errors.push({ row: rowNum, error: `Invalid role: ${role}`, email }); continue; }
-
-            // Check for existing user
-            const existingUser = await User.findOne({ email: email.toLowerCase() });
-            if (existingUser) { skipped.push({ row: rowNum, email, reason: 'Email already exists' }); continue; }
-
-            // Org scoping
-            const organizationId = orgScopedRoles.includes(role) ? (req.orgId || null) : null;
-
-            // Enforce org limits when uploading into an organization
-            if (organizationId && orgLimits?.limits?.maxUsers > 0 && orgScopedRoles.includes(role)) {
-                if (currentOrgUsers >= orgLimits.limits.maxUsers) {
-                    skipped.push({
-                        row: rowNum,
-                        email,
-                        reason: `User limit reached (${orgLimits.limits.maxUsers})`
-                    });
-                    continue;
-                }
-            }
-            if (organizationId && orgLimits?.limits?.maxRecruiters > 0 && ['Recruiter', 'BoothAdmin'].includes(role)) {
-                if (currentRecruiters >= orgLimits.limits.maxRecruiters) {
-                    skipped.push({
-                        row: rowNum,
-                        email,
-                        reason: `Recruiter limit reached (${orgLimits.limits.maxRecruiters})`
-                    });
-                    continue;
-                }
-            }
+            const rowNum = i + 2;
+            let rowStatus = 'created';
+            let rowMessage = '';
+            let rowEmail = '';
+            let rowRole = '';
+            let rowMissingFields = [];
+            let rowImportStatus = 'n/a';
 
             try {
-                const user = new User({
-                    name,
-                    email: email.toLowerCase(),
-                    hashedPassword: password,
-                    role,
-                    phoneNumber: row.phone || row.phonenumber || null,
-                    city: row.city || '',
-                    state: row.state || '',
-                    country: row.country || 'US',
-                    organizationId,
-                    isActive: true,
-                    emailVerified: true
-                });
-                await user.save();
-                created.push({ row: rowNum, email, name, role });
-                if (organizationId && orgScopedRoles.includes(role)) currentOrgUsers += 1;
-                if (organizationId && ['Recruiter', 'BoothAdmin'].includes(role) && user.isActive) currentRecruiters += 1;
+                let name = (row.name || row.fullname || '').trim();
+                if (!name) {
+                    const fn = (row.firstname || '').trim();
+                    const ln = (row.lastname || '').trim();
+                    name = [fn, ln].filter(Boolean).join(' ').trim();
+                }
+
+                const email = row.email || row.emailaddress || '';
+                const password = row.password || row.pass || '';
+                const roleInput = (row.role || roleDefaultResolved || 'JobSeeker').toString().trim();
+                const roleResolved = VALID_ROLES.find((r) => r.toLowerCase() === roleInput.toLowerCase());
+                const role = roleResolved || roleInput;
+                rowEmail = email;
+                rowRole = role;
+
+                if (!name) throw new Error('Missing name');
+                if (!email || !/\S+@\S+\.\S+/.test(email)) throw new Error('Invalid or missing email');
+                if (!password || password.length < 8) throw new Error('Password must be at least 8 characters');
+                if (!VALID_ROLES.includes(role)) throw new Error(`Invalid role: ${roleInput}`);
+
+                const boothIdRaw = row.boothid || row.assignedbooth || row.booth || row.booth_id || '';
+                let assignedBooth = null;
+                if (boothIdRaw) {
+                    const bid = String(boothIdRaw).trim();
+                    if (!mongoose.Types.ObjectId.isValid(bid)) {
+                        throw new Error('Booth Id must be a valid booth _id (MongoDB ObjectId)');
+                    }
+                    const boothDoc = await Booth.findById(bid).select('_id').lean();
+                    if (!boothDoc) {
+                        throw new Error(`No booth found with id ${bid}`);
+                    }
+                    assignedBooth = boothDoc._id;
+                }
+
+                const existingUser = await User.findOne({ email: email.toLowerCase() }).select('_id').lean();
+                if (existingUser) {
+                    rowStatus = 'skipped';
+                    rowMessage = 'Email already exists';
+                    skipped.push({ row: rowNum, email, reason: rowMessage });
+                } else {
+                    const organizationId = orgScopedRoles.includes(role) ? (req.orgId || null) : null;
+                    if (organizationId && orgLimits?.limits?.maxUsers > 0 && orgScopedRoles.includes(role) && currentOrgUsers >= orgLimits.limits.maxUsers) {
+                        rowStatus = 'skipped';
+                        rowMessage = `User limit reached (${orgLimits.limits.maxUsers})`;
+                        skipped.push({ row: rowNum, email, reason: rowMessage });
+                    } else if (organizationId && orgLimits?.limits?.maxRecruiters > 0 && ['Recruiter', 'BoothAdmin'].includes(role) && currentRecruiters >= orgLimits.limits.maxRecruiters) {
+                        rowStatus = 'skipped';
+                        rowMessage = `Recruiter limit reached (${orgLimits.limits.maxRecruiters})`;
+                        skipped.push({ row: rowNum, email, reason: rowMessage });
+                    } else {
+                        rowMissingFields = User.getMissingImportFields({ role, assignedBooth });
+                        rowImportStatus = rowMissingFields.length > 0 ? 'incomplete' : 'complete';
+                        if (rowImportStatus === 'incomplete') incomplete += 1;
+
+                        const user = new User({
+                            name,
+                            email: email.toLowerCase(),
+                            hashedPassword: password,
+                            role,
+                            phoneNumber: row.phone || row.phonenumber || null,
+                            city: row.city || '',
+                            state: row.state || '',
+                            country: row.country || 'US',
+                            organizationId,
+                            assignedBooth: assignedBooth || null,
+                            isActive: true,
+                            emailVerified: true,
+                            importStatus: rowImportStatus,
+                            importMissingFields: rowMissingFields,
+                            importMeta: {
+                                source: 'mass-upload',
+                                importedAt: new Date(),
+                                importedBy: req.user._id
+                            }
+                        });
+                        await user.save();
+                        created.push({
+                            row: rowNum,
+                            email,
+                            name,
+                            role,
+                            importStatus: rowImportStatus,
+                            missingFields: rowMissingFields
+                        });
+                        rowMessage = rowImportStatus === 'incomplete'
+                            ? `Created with missing fields: ${rowMissingFields.join(', ')}`
+                            : 'Created successfully';
+                        if (organizationId && orgScopedRoles.includes(role)) currentOrgUsers += 1;
+                        if (organizationId && ['Recruiter', 'BoothAdmin'].includes(role) && user.isActive) currentRecruiters += 1;
+                    }
+                }
             } catch (err) {
-                errors.push({ row: rowNum, email, error: err.message });
+                rowStatus = 'error';
+                rowMessage = err.message || 'Unexpected import error';
+                errors.push({ row: rowNum, email: rowEmail, error: rowMessage });
             }
+
+            const rowLog = {
+                row: rowNum,
+                status: rowStatus,
+                email: rowEmail,
+                role: rowRole,
+                message: rowMessage,
+                importStatus: rowImportStatus,
+                missingFields: rowMissingFields
+            };
+            rowLogs.push(rowLog);
+            emitImportEvent(req, 'import-row', {
+                jobId,
+                progress: {
+                    processed: i + 1,
+                    total: rows.length
+                },
+                row: rowLog,
+                summary: {
+                    created: created.length,
+                    incomplete,
+                    skipped: skipped.length,
+                    errors: errors.length
+                }
+            });
         }
 
-        logger.info(`Mass upload by ${req.user.email}: ${created.length} created, ${skipped.length} skipped, ${errors.length} errors`);
+        const summary = {
+            total: rows.length,
+            created: created.length,
+            incomplete,
+            skipped: skipped.length,
+            errors: errors.length
+        };
+
+        await ImportRun.create({
+            jobId,
+            entityType,
+            initiatedBy: req.user._id,
+            organizationId: req.orgId || null,
+            filename: req.file.originalname || '',
+            totalRows: rows.length,
+            summary: {
+                created: summary.created,
+                incomplete: summary.incomplete,
+                skipped: summary.skipped,
+                errors: summary.errors
+            },
+            rows: rowLogs
+        });
+
+        logger.info(`Mass upload by ${req.user.email} [${jobId}]: ${created.length} created (${incomplete} incomplete), ${skipped.length} skipped, ${errors.length} errors`);
+        emitImportEvent(req, 'import-summary', {
+            jobId,
+            entityType,
+            summary
+        });
 
         res.status(201).json({
-            message: `Mass upload complete: ${created.length} created, ${skipped.length} skipped, ${errors.length} errors`,
+            jobId,
+            message: `Mass upload complete: ${summary.created} created, ${summary.skipped} skipped, ${summary.errors} errors`,
             created,
             skipped,
             errors,
-            summary: {
-                total: rows.length,
-                created: created.length,
-                skipped: skipped.length,
-                errors: errors.length
-            }
+            logs: rowLogs,
+            summary
         });
     } catch (error) {
         logger.error('Mass upload error:', error);
+        if (jobId) {
+            emitImportEvent(req, 'import-failed', {
+                jobId,
+                message: error.message || 'Mass upload failed'
+            });
+        }
         res.status(500).json({ error: 'Mass upload failed', message: error.message });
     }
 });
@@ -1714,7 +1878,25 @@ router.put('/bulk-update', authenticateToken, requireRole(['SuperAdmin', 'Admin'
             query.organizationId = req.orgId;
         }
 
-        const result = await User.updateMany(query, { $set: updateFields });
+        const affectsImportReadiness = updateFields.role !== undefined || updateFields.assignedBooth !== undefined;
+        let result = null;
+        if (affectsImportReadiness) {
+            const usersToUpdate = await User.find(query);
+            let modifiedCount = 0;
+            for (const target of usersToUpdate) {
+                if (updateFields.isActive !== undefined) target.isActive = updateFields.isActive;
+                if (updateFields.assignedEvents !== undefined) target.assignedEvents = updateFields.assignedEvents;
+                if (updateFields.assignedBooth !== undefined) target.assignedBooth = updateFields.assignedBooth;
+                if (updateFields.role !== undefined) target.role = updateFields.role;
+                if (updateFields.organizationId !== undefined) target.organizationId = updateFields.organizationId;
+                target.refreshImportReadiness();
+                await target.save();
+                modifiedCount += 1;
+            }
+            result = { modifiedCount };
+        } else {
+            result = await User.updateMany(query, { $set: updateFields });
+        }
 
         // If assignedEvents was updated, emit socket event to refresh affected sessions
         logger.info(`Bulk updated ${result.modifiedCount} users by ${currentUser.email}`);

@@ -21,6 +21,7 @@ import { listEvents } from '../../services/events';
 import { listOrganizations } from '../../services/organizations';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
+import MassUploadModal from '../UserManagement/MassUploadModal';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -180,9 +181,10 @@ export default function JobSeekerManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
+  const [showMassUpload, setShowMassUpload] = useState(false);
 
   // WCAG 1.3.1 / 2.4.3 — aria-hide background when any modal is open
-  useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen || verifyEmailOpen);
+  useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen || verifyEmailOpen || showMassUpload);
   const [rowPendingVerify, setRowPendingVerify] = useState(null);
   // Password visibility toggles
   const [showPwd, setShowPwd] = useState(false);
@@ -608,6 +610,8 @@ export default function JobSeekerManagement() {
           needsASL: u.needsASL,
           needsCaptions: u.needsCaptions,
           needsOther: u.needsOther,
+          importStatus: u.importStatus || 'complete',
+          importMissingFields: Array.isArray(u.importMissingFields) ? u.importMissingFields : [],
         };
       });
       
@@ -2533,6 +2537,13 @@ export default function JobSeekerManagement() {
                 <p>Manage job seeker accounts and profiles</p>
               </div>
               <div className="header-actions">
+                <ButtonComponent
+                  cssClass="e-outline e-primary e-small"
+                  onClick={() => setShowMassUpload(true)}
+                  aria-label="Import job seekers from CSV or spreadsheet"
+                >
+                  Import
+                </ButtonComponent>
                 <ButtonComponent 
                   cssClass="e-outline e-primary e-small" 
                   onClick={handleSelectAll}
@@ -2877,6 +2888,33 @@ export default function JobSeekerManagement() {
                   allowFiltering={true}
                   template={statusTemplate}
                 />
+                <ColumnDirective
+                  field='importStatus'
+                  headerText='Import Status'
+                  width='160'
+                  allowFiltering={true}
+                  template={(props) => {
+                    const needsInfo = props.importStatus === 'incomplete';
+                    const missing = Array.isArray(props.importMissingFields) ? props.importMissingFields : [];
+                    return (
+                      <div style={{ padding: '8px 0' }}>
+                        <span
+                          title={needsInfo && missing.length > 0 ? `Missing: ${missing.join(', ')}` : 'Ready'}
+                          style={{
+                            background: needsInfo ? '#fff4e5' : '#e8f5e9',
+                            color: needsInfo ? '#b45309' : '#166534',
+                            padding: '2px 8px',
+                            borderRadius: 10,
+                            fontSize: '0.82rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          {needsInfo ? 'Needs Info' : 'Ready'}
+                        </span>
+                      </div>
+                    );
+                  }}
+                />
                 <ColumnDirective 
                   field='emailVerified' 
                   headerText='Email Verified' 
@@ -3199,6 +3237,21 @@ export default function JobSeekerManagement() {
           Verify email for <strong>{rowPendingVerify?.firstName} {rowPendingVerify?.lastName}</strong> ({rowPendingVerify?.email})?
         </p>
       </DialogComponent>
+
+      {showMassUpload && (
+        <MassUploadModal
+          title="Import Job Seekers"
+          entityType="jobseekers"
+          defaultRole="JobSeeker"
+          onClose={() => setShowMassUpload(false)}
+          onSuccess={(data) => {
+            const created = data?.summary?.created || 0;
+            const incomplete = data?.summary?.incomplete || 0;
+            showToast(`Import complete: ${created} created, ${incomplete} need info`, 'Success');
+            loadJobSeekersRef.current(1, pageSizeRef.current, searchFilterRef.current, statusFilterRef.current, eventFilterRef.current);
+          }}
+        />
+      )}
 
       {/* Bulk Delete confirm modal */}
       <DialogComponent

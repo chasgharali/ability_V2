@@ -121,3 +121,19 @@ export async function verifyUserEmail(id) {
   return res.data;
 }
 
+export async function massImportUsers(formData) {
+  const res = await axios.post('/api/users/mass-upload', formData, {
+    headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' },
+    timeout: 120000
+  });
+  return res.data;
+}
+
+export async function listImportRuns({ limit = 10 } = {}) {
+  const res = await axios.get('/api/users/import-runs', {
+    headers: authHeaders(),
+    params: { limit }
+  });
+  return res.data;
+}
+

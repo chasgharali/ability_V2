@@ -16,7 +16,19 @@ import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 // Use centralized JOB_TYPE_LIST for employment types
 const VETERAN_STATUS = ['None', 'Veteran', 'Active Duty', 'Reservist', 'Military Spouse'];
 
+function getNameInitials(displayName) {
+  if (!displayName || !String(displayName).trim()) return '?';
+  const parts = String(displayName).trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0].slice(0, 2).toUpperCase();
+}
+
 export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev, embedded }) {
+  // Standalone page uses h1 → h2; embedded wizard uses h3 → h4 (avoid skipped levels in either context)
+  const ProfileSectionHeading = embedded ? 'h4' : 'h2';
+  const CameraDialogHeading = embedded ? 'h4' : 'h2';
   const { user } = useAuth();
   const { getMessage } = useRoleMessages();
   const [form, setForm] = useState({
@@ -42,6 +54,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const [avatarKey, setAvatarKey] = useState('');
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState(null);
+  const [avatarImageError, setAvatarImageError] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const videoRef = useRef(null);
@@ -249,15 +262,25 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         const avatarUrl = data?.user?.avatarUrl;
         if (avatarUrl) {
           setAvatarPreviewUrl(avatarUrl);
-          // Extract avatar key from URL if it's an S3 URL
           try {
-            const u = new URL(avatarUrl);
-            const path = decodeURIComponent(u.pathname.startsWith('/') ? u.pathname.slice(1) : u.pathname);
-            // path is the S3 key, e.g., "avatar/<userId>/<filename>"
-            if (path && path.startsWith('avatar/')) {
-              setAvatarKey(path);
+            const u = new URL(avatarUrl, window.location.origin);
+            const pathname = u.pathname || '';
+            if (pathname.startsWith('/api/uploads/public/')) {
+              const key = decodeURIComponent(pathname.slice('/api/uploads/public/'.length));
+              if (key.startsWith('avatar/')) setAvatarKey(key);
+            } else {
+              const path = decodeURIComponent(pathname.startsWith('/') ? pathname.slice(1) : pathname);
+              if (path && path.startsWith('avatar/')) setAvatarKey(path);
             }
-          } catch { }
+          } catch {
+            try {
+              const u = new URL(avatarUrl);
+              const path = decodeURIComponent(u.pathname.startsWith('/') ? u.pathname.slice(1) : u.pathname);
+              if (path && path.startsWith('avatar/')) setAvatarKey(path);
+            } catch {
+              /* ignore */
+            }
+          }
         }
 
         const rUrl = data?.user?.resumeUrl;
@@ -288,6 +311,10 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       }
     };
   }, [pendingAvatarPreview]);
+
+  useEffect(() => {
+    setAvatarImageError(false);
+  }, [avatarPreviewUrl]);
 
   // Auto-clear success message after 10 seconds
   useEffect(() => {
@@ -364,19 +391,11 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         // Clear input so selecting the same file again triggers onChange
         if (resumeInputRef.current) resumeInputRef.current.value = '';
       } else if (fileType === 'avatar') {
-        // Store the key for deletion later
         setAvatarKey(key);
-        // Create local preview; avatarUrl in DB updated by server
-        const url = URL.createObjectURL(file);
-        setAvatarPreviewUrl(url);
-        // Also update with the download URL from server
-        const completedUrl = complete?.file?.downloadUrl || immediateDownload;
-        if (completedUrl) {
-          // Use server URL after a short delay to ensure it's updated
-          setTimeout(() => {
-            setAvatarPreviewUrl(completedUrl);
-          }, 500);
-        }
+        const displayUrl =
+          complete?.file?.publicUrl || complete?.file?.downloadUrl || immediateDownload;
+        if (!displayUrl) throw new Error('No URL returned after avatar upload');
+        setAvatarPreviewUrl(displayUrl);
         showToast('Profile picture uploaded');
       }
     } catch (e) {
@@ -609,7 +628,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
       <div className="upload-row">
         <div className="upload-card">
-          <h4>Upload your resume (required)</h4>
+          <ProfileSectionHeading>Upload your resume (required)</ProfileSectionHeading>
           <p className="muted">Accepted file types: PDF and DOC (PDF preferred)</p>
           <div className="upload-actions">
             <input
@@ -643,28 +662,29 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         </div>
 
         <div className="upload-card">
-          <h4>Add a Profile Picture (Optional)</h4>
+          <ProfileSectionHeading>Add a Profile Picture (Optional)</ProfileSectionHeading>
           <p className="muted">Accepted file types: JPG, PNG, GIF (max size: 2MB)</p>
           
           {/* Current Avatar Preview (already uploaded) */}
           {avatarPreviewUrl && !pendingAvatarPreview && (
             <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-              <div 
-                className="avatar-preview" 
-                style={{ 
-                  width: '150px', 
-                  height: '150px', 
-                  borderRadius: '50%', 
-                  backgroundImage: `url(${avatarPreviewUrl})`, 
-                  backgroundSize: 'cover', 
-                  backgroundPosition: 'center',
-                  border: '2px solid #e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
+              <div
+                className="avatar-preview avatar-preview-saved"
                 aria-label="Profile picture preview"
-              />
+              >
+                {!avatarImageError ? (
+                  <img
+                    src={avatarPreviewUrl}
+                    alt=""
+                    className="avatar-preview-saved-img"
+                    onError={() => setAvatarImageError(true)}
+                  />
+                ) : (
+                  <span className="avatar-preview-saved-initials" aria-hidden="true">
+                    {getNameInitials(user?.name)}
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
@@ -951,13 +971,14 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <div
             ref={cameraDialogRef}
+            className="camera-dialog-panel"
             role="dialog"
             aria-modal="true"
             aria-labelledby="take-picture-dialog-title"
             onKeyDown={handleCameraDialogKeyDown}
             style={{ background: '#fff', borderRadius: 8, padding: 16, width: 520, maxWidth: '95vw', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
           >
-            <h4 id="take-picture-dialog-title" style={{ marginTop: 0 }}>Take your picture</h4>
+            <CameraDialogHeading id="take-picture-dialog-title" className="camera-dialog-title" style={{ marginTop: 0 }}>Take your picture</CameraDialogHeading>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, placeItems: 'center' }}>
               <video ref={videoRef} playsInline muted style={{ width: 480, height: 360, background: '#000', maxWidth: '100%' }} />
               <canvas ref={canvasRef} style={{ display: 'none' }} />

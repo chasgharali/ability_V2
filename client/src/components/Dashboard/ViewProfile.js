@@ -10,16 +10,24 @@ import {
   SECURITY_CLEARANCE_LIST,
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
-import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 
+function getNameInitials(displayName) {
+  if (!displayName || !String(displayName).trim()) return '?';
+  const parts = String(displayName).trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0].slice(0, 2).toUpperCase();
+}
+
 export default function ViewProfile() {
-  const { user: authUser } = useAuth();
   const { getMessage } = useRoleMessages();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
   const profileNotice = getMessage('view-profile', 'profile-notice') || '';
 
   const getToken = () => localStorage.getItem('token');
@@ -49,6 +57,11 @@ export default function ViewProfile() {
     run();
   }, []);
 
+  const avatarUrl = user?.avatarUrl || '';
+
+  useEffect(() => {
+    setAvatarLoadError(false);
+  }, [avatarUrl]);
 
   if (loading) {
     return (
@@ -67,7 +80,6 @@ export default function ViewProfile() {
     );
   }
 
-  const avatarUrl = user?.avatarUrl || '';
   const name = user?.name || '';
   const email = user?.email || '';
   const phone = user?.phoneNumber || '';
@@ -131,12 +143,26 @@ export default function ViewProfile() {
         <section className="profile-hero-card" aria-labelledby="profile-hero-heading">
           <div className="profile-hero-content">
             <div className="profile-avatar-section">
-              <div 
-                className="profile-avatar" 
-                style={{ backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined }}
+              <div
+                className="profile-avatar"
                 role="img"
-                aria-label={`Profile photo of ${name || 'user'}`}
-              />
+                aria-label={
+                  avatarUrl && !avatarLoadError
+                    ? `Profile photo of ${name || 'user'}`
+                    : `Avatar for ${name || 'user'}`
+                }
+              >
+                {avatarUrl && !avatarLoadError ? (
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="profile-avatar-img"
+                    onError={() => setAvatarLoadError(true)}
+                  />
+                ) : (
+                  <span className="profile-avatar-initials">{getNameInitials(name)}</span>
+                )}
+              </div>
               <div className="profile-status-indicator" aria-label="Profile active"></div>
             </div>
             

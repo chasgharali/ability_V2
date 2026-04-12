@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { useAuth } from '../../contexts/AuthContext';
 import { listRegisteredJobSeekers } from '../../services/organizations';
 import { listEvents } from '../../services/events';
+import MassUploadModal from '../UserManagement/MassUploadModal';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
@@ -53,6 +54,7 @@ export default function RegisteredJobSeekerManagement() {
   const [events, setEvents] = useState([]);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [showMassUpload, setShowMassUpload] = useState(false);
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [zipLoading, setZipLoading] = useState(false);
@@ -148,7 +150,9 @@ export default function RegisteredJobSeekerManagement() {
           registeredEvent: reg.eventId?.name,
           registeredAt: reg.registeredAt,
           jobSeekerId: js,
-          registration: reg
+          registration: reg,
+          importStatus: js.importStatus || 'complete',
+          importMissingFields: Array.isArray(js.importMissingFields) ? js.importMissingFields : []
         };
       });
   }, [jobSeekers]);
@@ -564,6 +568,13 @@ export default function RegisteredJobSeekerManagement() {
           />
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+          <ButtonComponent
+            cssClass="e-outline e-primary e-small"
+            onClick={() => setShowMassUpload(true)}
+            style={{ minWidth: '100px', height: '44px' }}
+          >
+            Import
+          </ButtonComponent>
           <ButtonComponent cssClass="e-outline e-primary e-small" onClick={handleExcelExport} disabled={loading || flatDataSource.length === 0} style={{ minWidth: '110px', height: '44px' }}>
             Export Excel
           </ButtonComponent>
@@ -665,6 +676,23 @@ export default function RegisteredJobSeekerManagement() {
               <ColumnDirective field="state" headerText="State" width="100" allowFiltering={true} />
               <ColumnDirective field="country" headerText="Country" width="120" allowFiltering={true} />
               <ColumnDirective field="isActive" headerText="Status" width="100" textAlign="Center" template={statusTemplate} />
+              <ColumnDirective
+                field="importStatus"
+                headerText="Import Status"
+                width="150"
+                template={(props) => {
+                  const needsInfo = props.importStatus === 'incomplete';
+                  const missing = Array.isArray(props.importMissingFields) ? props.importMissingFields : [];
+                  return (
+                    <span
+                      title={needsInfo && missing.length > 0 ? `Missing: ${missing.join(', ')}` : 'Ready'}
+                      className={`status-badge ${needsInfo ? 'inactive' : 'verified'}`}
+                    >
+                      {needsInfo ? 'Needs Info' : 'Ready'}
+                    </span>
+                  );
+                }}
+              />
               <ColumnDirective field="emailVerified" headerText="Email Verified" width="120" textAlign="Center" template={emailVerifiedTemplate} />
               <ColumnDirective field="registeredEvent" headerText="Registered Event" width="200" allowFiltering={true} />
               <ColumnDirective field="registeredAt" headerText="Registered Date" width="140" template={registeredAtTemplate} />
@@ -713,6 +741,15 @@ export default function RegisteredJobSeekerManagement() {
           {pageContent}
         </main>
       </div>
+      {showMassUpload && (
+        <MassUploadModal
+          title="Import Job Seekers"
+          entityType="jobseekers"
+          defaultRole="JobSeeker"
+          onClose={() => setShowMassUpload(false)}
+          onSuccess={() => fetchJobSeekers()}
+        />
+      )}
     </div>
   );
 }

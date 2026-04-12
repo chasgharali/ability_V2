@@ -104,7 +104,7 @@ export default function UserManagement() {
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
 
   // WCAG 1.3.1 / 2.4.3 — aria-hide background when any modal is open
-  useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen);
+  useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen || showMassUpload || showBulkUpdate);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Persist role filter in sessionStorage so it survives navigation within the session
@@ -400,6 +400,46 @@ export default function UserManagement() {
     }
   }, []);
 
+  const escapeCsvCell = (v) => {
+    const s = v === null || v === undefined ? '' : String(v);
+    if (/[",\n\r]/.test(s)) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  };
+
+  const handleExportUsers = useCallback(() => {
+    if (!users.length) {
+      showToast('No users to export', 'Warning');
+      return;
+    }
+    const headers = ['First Name', 'Last Name', 'Email', 'Role', 'Organization', 'Booth'];
+    const lines = [
+      headers.map(escapeCsvCell).join(','),
+      ...users.map((u) =>
+        [
+          u.firstName,
+          u.lastName,
+          u.email,
+          u.role,
+          u.organizationName,
+          u.booth === '-' ? '' : u.booth,
+        ]
+          .map(escapeCsvCell)
+          .join(',')
+      ),
+    ];
+    const csv = `\uFEFF${lines.join('\n')}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `users-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${users.length} user(s)`, 'Success');
+  }, [users]);
+
   const loadUsers = useCallback(async () => {
     // Track this specific request so stale responses can be discarded
     const gen = ++loadRequestGenRef.current;
@@ -448,6 +488,8 @@ export default function UserManagement() {
           createdAt: u.createdAt,
           organizationName: orgName || '-',
           organizationId: orgId,
+          importStatus: u.importStatus || 'complete',
+          importMissingFields: Array.isArray(u.importMissingFields) ? u.importMissingFields : [],
         };
       }));
       // announce results for screen readers
@@ -1133,8 +1175,16 @@ export default function UserManagement() {
                         Update Selected ({selectedUsers.length})
                       </ButtonComponent>
                     )}
-                    <ButtonComponent cssClass="e-outline e-primary" onClick={() => setShowMassUpload(true)} aria-label="Mass upload users from spreadsheet">
-                      Mass Upload
+                    <ButtonComponent cssClass="e-outline e-primary" onClick={() => setShowMassUpload(true)} aria-label="Import users from CSV or spreadsheet">
+                      Import
+                    </ButtonComponent>
+                    <ButtonComponent
+                      cssClass="e-outline e-primary"
+                      onClick={handleExportUsers}
+                      disabled={loading || !users.length}
+                      aria-label="Export users to CSV"
+                    >
+                      Export
                     </ButtonComponent>
                     <ButtonComponent
                       cssClass="e-primary"
@@ -1358,6 +1408,33 @@ export default function UserManagement() {
                           {props.booth || '-'}
                         </div>
                       )}
+                    />
+                    <ColumnDirective
+                      field='importStatus'
+                      headerText='Import Status'
+                      width='170'
+                      allowFiltering={true}
+                      template={(props) => {
+                        const needsInfo = props.importStatus === 'incomplete';
+                        const missing = Array.isArray(props.importMissingFields) ? props.importMissingFields : [];
+                        return (
+                          <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                            <span
+                              title={needsInfo && missing.length > 0 ? `Missing: ${missing.join(', ')}` : 'Ready'}
+                              style={{
+                                background: needsInfo ? '#fff4e5' : '#e8f5e9',
+                                color: needsInfo ? '#b45309' : '#166534',
+                                padding: '2px 8px',
+                                borderRadius: 10,
+                                fontSize: '0.82rem',
+                                fontWeight: 600
+                              }}
+                            >
+                              {needsInfo ? 'Needs Info' : 'Ready'}
+                            </span>
+                          </div>
+                        );
+                      }}
                     />
                     <ColumnDirective
                       headerText='Action'
@@ -1941,8 +2018,15 @@ export default function UserManagement() {
       {/* Mass Upload Modal */}
       {showMassUpload && (
         <MassUploadModal
+          title="Import Users"
+          entityType="users"
           onClose={() => setShowMassUpload(false)}
-          onSuccess={() => { setShowMassUpload(false); loadUsers(); showToast('Users uploaded successfully', 'Success'); }}
+          onSuccess={(data) => {
+            loadUsers();
+            const created = data?.summary?.created || 0;
+            const incomplete = data?.summary?.incomplete || 0;
+            showToast(`Import complete: ${created} created, ${incomplete} need info`, 'Success');
+          }}
         />
       )}
 

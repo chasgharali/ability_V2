@@ -11,7 +11,7 @@ function extractS3KeyFromUrl(value, bucketName = '') {
     if (!trimmed) return null;
 
     // Already a raw key
-    if (/^(image|booth-logo|organization-logo)\//.test(trimmed)) {
+    if (/^(image|booth-logo|organization-logo|avatar)\//.test(trimmed)) {
         return trimmed;
     }
 
@@ -48,7 +48,7 @@ function toStablePublicImageUrl(value, bucketName = process.env.AWS_S3_BUCKET) {
 
     const key = extractS3KeyFromUrl(trimmed, bucketName);
     if (!key) return trimmed;
-    if (!/^(image|booth-logo|organization-logo)\//.test(key)) return trimmed;
+    if (!/^(image|booth-logo|organization-logo|avatar)\//.test(key)) return trimmed;
 
     return `/api/uploads/public/${encodeKeyForPath(key)}`;
 }
