@@ -47,9 +47,16 @@ html.theme-high-contrast .app-footer {
     border-top: 1px solid var(--footer-border);
 }
 
-/* On dashboard pages, align footer with main content area (not under sidebar) */
+/* By default, footer spans full width (mobile/tablet and non-dashboard). */
 .App:has(.dashboard-sidebar) .app-footer {
-    left: 260px;
+    left: 0;
+}
+
+/* Desktop only: align footer with main content area beside fixed sidebar. */
+@media (min-width: 1025px) {
+    .App:has(.dashboard-sidebar) .app-footer {
+        left: 260px;
+    }
 }
 
 .app-footer-inner {
@@ -127,8 +134,8 @@ html.theme-high-contrast .app-footer {
     }
 }
 
-/* Mobile/tablet: sidebar overlays or is hidden, so footer should span full width */
-@media (max-width: 768px) {
+/* Mobile/tablet: sidebar overlays or is hidden, so footer spans full width */
+@media (max-width: 1024px) {
     .App:has(.dashboard-sidebar) .app-footer {
         left: 0;
     }

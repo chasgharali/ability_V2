@@ -76,6 +76,69 @@
     outline-offset: 2px;
 }
 
+.team-chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.team-chat-broadcast-btn.active {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.team-chat-broadcast-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+.team-chat-broadcast-composer label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #374151;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.team-chat-broadcast-composer textarea {
+    width: 100%;
+    resize: vertical;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    color: #111827;
+    background: #fff;
+    min-height: 88px;
+}
+
+.team-chat-broadcast-composer textarea:focus {
+    outline: 3px solid #005aff;
+    outline-offset: 2px;
+}
+
+.team-chat-broadcast-send {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.team-chat-broadcast-send:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Search */
 .team-chat-search {
     padding: 12px 16px;
@@ -232,6 +295,14 @@
     background: #94a3b8;
 }
 
+.team-chat-status-indicator.away {
+    background: #f59e0b;
+}
+
+.team-chat-status-indicator.meeting {
+    background: #8b5cf6;
+}
+
 /* Online/Offline Text Status */
 .team-chat-status {
     font-size: 0.8rem;
@@ -245,6 +316,14 @@
 
 .team-chat-status.offline {
     color: #94a3b8;
+}
+
+.team-chat-status.away {
+    color: #d97706;
+}
+
+.team-chat-status.meeting {
+    color: #7c3aed;
 }
 
 /* Booth name display for recruiters in participant list (GlobalSupport only) */
@@ -615,6 +694,65 @@
     background: white;
     flex-shrink: 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.team-chat-status-controls {
+    padding: 10px 24px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fafafa;
+}
+
+.team-chat-status-controls label {
+    font-size: 0.85rem;
+    color: #4b5563;
+    font-weight: 600;
+}
+
+.team-chat-status-controls select {
+    min-width: 145px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    background: #fff;
+}
+
+.team-chat-status-controls-sidebar {
+    padding: 12px;
+    border-bottom: none;
+    background: #f8fafc;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.team-chat-status-controls-sidebar select {
+    width: 100%;
+    min-height: 40px;
+    border-color: #cbd5e1;
+    border-radius: 10px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.team-chat-status-controls-sidebar select:focus {
+    outline: 3px solid #005aff;
+    outline-offset: 2px;
+}
+
+.team-chat-status-controls-sidebar label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #374151;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 /* Mobile back button - hidden by default */

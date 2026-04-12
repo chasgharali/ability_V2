@@ -5,6 +5,7 @@ const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const Booth = require('../models/Booth');
+const { getIO } = require('../socket/socketHandler');
 
 // Get all chats for current user
 router.get('/', authenticateToken, async (req, res) => {
@@ -281,6 +282,149 @@ router.post('/group', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error creating group chat:', error);
         res.status(500).json({ message: 'Failed to create group chat', error: error.message });
+    }
+});
+
+// Broadcast a message to all users in GlobalSupport's assigned event
+router.post('/broadcast-event', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'GlobalSupport') {
+            return res.status(403).json({ message: 'Only GlobalSupport can broadcast event messages' });
+        }
+
+        const { content } = req.body;
+        const trimmedContent = (content || '').trim();
+        if (!trimmedContent) {
+            return res.status(400).json({ message: 'Broadcast message is required' });
+        }
+
+        const gsUser = await User.findById(req.user._id).select('assignedEvents');
+        const eventId = gsUser?.assignedEvents?.[0]?.toString();
+        if (!eventId) {
+            return res.status(400).json({ message: 'GlobalSupport user is not assigned to an event' });
+        }
+
+        const eventBooths = await Booth.find({
+            $or: [{ eventId }, { events: eventId }]
+        }).select('_id');
+        const boothIds = eventBooths.map(booth => booth._id);
+
+        const recipientUsers = await User.find({
+            isActive: true,
+            _id: { $ne: req.user._id },
+            $or: [
+                { assignedBooth: { $in: boothIds } },
+                { assignedEvents: eventId }
+            ]
+        }).select('_id role');
+
+        const participantIdSet = new Set([
+            req.user._id.toString(),
+            ...recipientUsers.map(user => user._id.toString())
+        ]);
+        const participantIds = Array.from(participantIdSet);
+
+        const participantUsers = await User.find({ _id: { $in: participantIds } }).select('_id role');
+        const participants = participantUsers.map(user => ({
+            user: user._id,
+            role: user.role
+        }));
+
+        let chat = await Chat.findOne({
+            type: 'group',
+            isActive: true,
+            'metadata.broadcastType': 'event',
+            'metadata.broadcastEventId': eventId
+        });
+
+        if (!chat) {
+            chat = await Chat.create({
+                name: 'Event Broadcast',
+                type: 'group',
+                participants,
+                event: eventId,
+                metadata: {
+                    broadcastType: 'event',
+                    broadcastEventId: eventId,
+                    createdBy: req.user._id
+                }
+            });
+        } else {
+            // Keep participants up to date as users are added/removed from event context.
+            chat.participants = participants;
+        }
+
+        const message = await Message.create({
+            chat: chat._id,
+            sender: req.user._id,
+            content: trimmedContent,
+            type: 'text',
+            metadata: {
+                isBroadcast: true,
+                broadcastType: 'event',
+                broadcastEventId: eventId
+            }
+        });
+
+        chat.lastMessage = {
+            content: trimmedContent.substring(0, 100),
+            sender: req.user._id,
+            timestamp: message.createdAt
+        };
+        await chat.save();
+
+        const populatedChat = await Chat.findById(chat._id)
+            .populate({
+                path: 'participants.user',
+                select: 'name email avatarUrl role assignedBooth',
+                populate: {
+                    path: 'assignedBooth',
+                    select: 'name company'
+                }
+            })
+            .populate('booth', 'name company logoUrl')
+            .populate('event', 'name');
+
+        const populatedMessage = await Message.findById(message._id)
+            .populate({
+                path: 'sender',
+                select: 'name email avatarUrl role assignedBooth',
+                populate: {
+                    path: 'assignedBooth',
+                    select: 'name company'
+                }
+            });
+
+        // Real-time delivery: active chat participants get new-message; others get notification.
+        try {
+            const io = getIO();
+            io.to(`chat:${chat._id}`).emit('new-message', {
+                chatId: chat._id.toString(),
+                message: populatedMessage
+            });
+
+            participantIds
+                .filter(id => id !== req.user._id.toString())
+                .forEach((userId) => {
+                    io.to(`user:${userId}`).emit('chat-notification', {
+                        chatId: chat._id.toString(),
+                        message: populatedMessage,
+                        unreadCount: 1,
+                        chat: populatedChat
+                    });
+                });
+        } catch (socketError) {
+            console.error('Broadcast socket delivery warning:', socketError.message);
+        }
+
+        res.status(201).json({
+            chat: populatedChat,
+            message: populatedMessage,
+            recipientsCount: participantIds.length - 1
+        });
+    } catch (error) {
+        console.error('Error broadcasting event message:', error);
+        res.status(500).json({ message: 'Failed to broadcast event message', error: error.message });
     }
 });
 

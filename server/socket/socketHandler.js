@@ -62,6 +62,7 @@ const socketHandler = (io) => {
         logger.info(`User ${socket.user.email} connected via socket`);
 
         liveStatsStore.userConnected(socket.user);
+        const canSetTeamChatStatus = liveStatsStore.canSetChatStatus(socket.user.role);
 
         // Join user-specific room
         socket.join(`user:${socket.userId}`);
@@ -73,6 +74,7 @@ const socketHandler = (io) => {
         socket.broadcast.emit('user-online', {
             userId: socket.userId,
             userName: socket.user.name,
+            chatStatus: liveStatsStore.getChatStatus(socket.userId) || 'online',
             timestamp: new Date()
         });
 
@@ -91,8 +93,61 @@ const socketHandler = (io) => {
             logger.info(`Sending online users list to ${socket.user.email}: ${onlineUserIds.length} users`);
             socket.emit('online-users-list', {
                 userIds: onlineUserIds,
+                chatStatuses: liveStatsStore.getAllChatStatuses(),
                 timestamp: new Date()
             });
+        });
+
+        socket.on('set-chat-status', (data = {}) => {
+            try {
+                const { status } = data;
+
+                if (!canSetTeamChatStatus) {
+                    socket.emit('error', { message: 'Your role cannot set team chat status' });
+                    return;
+                }
+
+                if (!['online', 'away', 'meeting', 'offline'].includes(status)) {
+                    socket.emit('error', { message: 'Invalid status. Must be online, away, meeting, or offline.' });
+                    return;
+                }
+
+                const success = liveStatsStore.setChatStatus(socket.userId, status);
+                if (!success) {
+                    socket.emit('error', { message: 'Failed to update chat status' });
+                    return;
+                }
+
+                socket.emit('chat-status-updated', {
+                    userId: socket.userId,
+                    status,
+                    timestamp: new Date()
+                });
+
+                socket.broadcast.emit('user-chat-status-changed', {
+                    userId: socket.userId,
+                    userName: socket.user.name,
+                    status,
+                    timestamp: new Date()
+                });
+            } catch (error) {
+                logger.error('Set chat status error:', error);
+                socket.emit('error', { message: 'Failed to update chat status' });
+            }
+        });
+
+        socket.on('get-chat-status', () => {
+            try {
+                socket.emit('chat-status', {
+                    userId: socket.userId,
+                    status: liveStatsStore.getChatStatus(socket.userId) || 'online',
+                    canSetStatus: canSetTeamChatStatus,
+                    timestamp: new Date()
+                });
+            } catch (error) {
+                logger.error('Get chat status error:', error);
+                socket.emit('error', { message: 'Failed to get chat status' });
+            }
         });
 
         /**
@@ -289,8 +344,12 @@ const socketHandler = (io) => {
         socket.on('video-call-message', async (data) => {
             try {
                 const { callId, message } = data;
+                const messageText = typeof message === 'string'
+                    ? message.trim()
+                    : String(message?.message || message?.content || '').trim();
+                const messageType = message?.messageType || 'text';
 
-                if (!callId || !message) {
+                if (!callId || !messageText) {
                     socket.emit('error', { message: 'Call ID and message are required' });
                     return;
                 }
@@ -314,20 +373,34 @@ const socketHandler = (io) => {
                     return;
                 }
 
-                // Add message to video call record
+                // Persist using schema-compatible fields.
+                const senderRole = String(socket.user.role || '').toLowerCase();
+                const normalizedSenderRole = ['recruiter', 'jobseeker', 'interpreter'].includes(senderRole)
+                    ? senderRole
+                    : 'recruiter';
+                const timestamp = message?.timestamp || new Date().toISOString();
+
+                videoCall.chatMessages.push({
+                    sender: socket.userId,
+                    senderRole: normalizedSenderRole,
+                    message: messageText,
+                    timestamp,
+                    messageType
+                });
+                await videoCall.save();
+
+                // Broadcast client-friendly payload.
                 const messageData = {
                     sender: {
                         id: socket.userId,
                         name: socket.user.name,
                         role: socket.user.role
                     },
-                    message: message.message,
-                    timestamp: message.timestamp || new Date().toISOString(),
-                    messageType: message.messageType || 'text'
+                    senderRole: normalizedSenderRole,
+                    message: messageText,
+                    timestamp,
+                    messageType
                 };
-
-                videoCall.chatMessages.push(messageData);
-                await videoCall.save();
 
                 // Broadcast message to all participants in the video call room
                 // Use the same room format as join-video-call handler
@@ -1093,6 +1166,14 @@ const socketHandler = (io) => {
             socket.broadcast.emit('user-offline', {
                 userId: socket.userId,
                 userName: socket.user.name,
+                chatStatus: 'offline',
+                timestamp: new Date()
+            });
+
+            socket.broadcast.emit('user-chat-status-changed', {
+                userId: socket.userId,
+                userName: socket.user.name,
+                status: 'offline',
                 timestamp: new Date()
             });
 

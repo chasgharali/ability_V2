@@ -61,6 +61,45 @@ const getDefaultEmployerPageSections = () => EMPLOYER_PAGE_SECTION_DEFS.map((sec
 const BOOTH_FORM_DRAFT_KEY = 'boothManagement_formDraft';
 const BOOTH_FORM_RESTORE_FLAG_KEY = 'boothManagement_restoreDraft';
 
+const normalizeId = (value) => {
+  let current = value;
+  const visited = new Set();
+  for (let i = 0; i < 6; i += 1) {
+    if (current === null || current === undefined) return '';
+    if (typeof current === 'string') return current.trim();
+    if (typeof current === 'number' || typeof current === 'bigint') return String(current).trim();
+    if (typeof current === 'object') {
+      if (visited.has(current)) return '';
+      visited.add(current);
+      if (current._id !== undefined && current._id !== current) {
+        current = current._id;
+        continue;
+      }
+      if (current.id !== undefined && current.id !== current) {
+        current = current.id;
+        continue;
+      }
+    }
+    try {
+      return String(current).trim();
+    } catch (error) {
+      return '';
+    }
+  }
+  return '';
+};
+
+const normalizeIdArray = (values) => {
+  if (!Array.isArray(values)) return [];
+  return [...new Set(values.map(normalizeId).filter(Boolean))];
+};
+
+const getBoothAssignedEventIds = (booth) => {
+  if (!booth) return [];
+  const eventIds = Array.isArray(booth.eventIds) ? booth.eventIds : [];
+  return normalizeIdArray([...eventIds, booth.eventIdRaw]);
+};
+
 export default function BoothManagement() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -360,35 +399,42 @@ export default function BoothManagement() {
   const recruitersByEvent = useMemo(() => {
     const map = {};
     for (const b of booths) {
-      const eid = b.eventIdRaw;
-      if (!eid) continue;
-      map[eid] = (map[eid] || 0) + (b.recruitersCount ?? 0);
+      const recruitersCount = Number(b.recruitersCount) || 0;
+      const assignedEventIds = getBoothAssignedEventIds(b);
+      for (const eid of assignedEventIds) {
+        if (!eid) continue;
+        map[eid] = (map[eid] || 0) + recruitersCount;
+      }
     }
     return map;
   }, [booths]);
 
   // Validate recruiters limit per selected event
-  const validateRecruiterLimits = () => {
+  const validateRecruiterLimits = (selectedEventIdsInput = boothForm.eventIds) => {
     const exceeded = [];
-    for (const eid of boothForm.eventIds || []) {
+    const requestedRecruiters = Number(boothForm.recruitersCount) || 0;
+    const selectedEventIds = normalizeIdArray(selectedEventIdsInput);
+    const normalizedEditingBoothId = normalizeId(editingBoothId);
+    const editing = normalizedEditingBoothId
+      ? booths.find(b => normalizeId(b.id) === normalizedEditingBoothId)
+      : null;
+    const editingRecruiters = Number(editing?.recruitersCount) || 0;
+    const editingEventIds = new Set(getBoothAssignedEventIds(editing));
+    for (const eid of selectedEventIds) {
       const max = eventLimits?.[eid]?.maxRecruitersPerEvent || 0; // 0 => unlimited
       if (!max) continue;
       // existing recruiters for this event, excluding this booth if editing
       let existing = recruitersByEvent[eid] || 0;
-      if (editingBoothId) {
-        // subtract the editing booth's recruiters if it belongs to this event
-        const editing = booths.find(b => b.id === editingBoothId);
-        if (editing && editing.eventIdRaw === eid) {
-          existing = Math.max(0, existing - (editing.recruitersCount ?? 0));
-        }
+      if (editingEventIds.has(eid)) {
+        existing = Math.max(0, existing - editingRecruiters);
       }
-      const proposedTotal = existing + (boothForm.recruitersCount || 0);
+      const proposedTotal = existing + requestedRecruiters;
       if (proposedTotal > max) {
         exceeded.push({
           eventId: eid,
           name: eventLimits?.[eid]?.name || eid,
           existing,
-          adding: boothForm.recruitersCount || 0,
+          adding: requestedRecruiters,
           max,
         });
       }
@@ -406,11 +452,12 @@ export default function BoothManagement() {
       const res = await listEvents({ page: 1, limit: 200 });
       const items = res?.events || [];
       const options = items.map(e => {
+        const eventId = normalizeId(e?._id);
         const maxBooths = e?.limits?.maxBooths || 0; // 0 means unlimited
         const current = e?.boothCount || 0;
         const reached = maxBooths > 0 && current >= maxBooths;
         return {
-          value: e._id,
+          value: eventId,
           label: reached ? `${e.name} • limit reached` : e.name,
           disabled: reached,
         };
@@ -419,7 +466,9 @@ export default function BoothManagement() {
       // capture limits for validation
       const limitsMap = {};
       for (const e of items) {
-        limitsMap[e._id] = {
+        const eventId = normalizeId(e?._id);
+        if (!eventId) continue;
+        limitsMap[eventId] = {
           maxBooths: e?.limits?.maxBooths || 0,
           maxRecruitersPerEvent: e?.limits?.maxRecruitersPerEvent || 0,
           name: e?.name || 'Event',
@@ -608,17 +657,20 @@ export default function BoothManagement() {
     setBoothSaving(true);
     try {
       // Require at least one selected event before calling the API
-      if (!Array.isArray(boothForm.eventIds) || boothForm.eventIds.length === 0) {
+      const selectedEventIds = normalizeIdArray(boothForm.eventIds);
+      if (selectedEventIds.length === 0) {
         showToast('Please select at least one event', 'Error', 5000);
         return;
       }
 
       // Client-side recruiters limit validation per event
-      const exceeded = validateRecruiterLimits();
+      const exceeded = validateRecruiterLimits(selectedEventIds);
       if (exceeded.length) {
-        const lines = exceeded.map(x => `• ${x.name}: ${x.existing} + ${x.adding} > ${x.max}`).join('\n');
-        showToast(`Max number of recruiters reached for selected event(s):\n\n${lines}`, 'Error', 7000);
-        return; // block submit
+        if (!editingBoothId) {
+          const lines = exceeded.map(x => `• ${x.name}: ${x.existing} + ${x.adding} > ${x.max}`).join('\n');
+          showToast(`Max number of recruiters reached for selected event(s):\n\n${lines}`, 'Error', 7000);
+          return; // block create; updates are validated by backend as source of truth
+        }
       }
       // Process expireLinkTime: convert datetime-local to ISO string, or undefined if disabled
       let expireLinkTimeValue;
@@ -668,7 +720,7 @@ export default function BoothManagement() {
         description: primaryDescription || '',
         logoUrl: boothForm.boothLogo || undefined,
         logoAltText: boothForm.boothLogoAlt || undefined,
-        eventIds: boothForm.eventIds,
+        eventIds: selectedEventIds,
         companyPage: boothForm.companyPage || undefined,
         recruitersCount: boothForm.recruitersCount || 1,
         expireLinkTime: expireLinkTimeValue,
@@ -697,8 +749,8 @@ export default function BoothManagement() {
           joinBoothButtonLink: payload.joinBoothButtonLink,
           waitingAreaMode: payload.waitingAreaMode,
           employerPageTemplateId: payload.employerPageTemplateId,
-          events: boothForm.eventIds || [], // Send full events array
-          eventId: boothForm.eventIds && boothForm.eventIds.length > 0 ? boothForm.eventIds[0] : undefined, // Backward compat
+          events: selectedEventIds, // Send full events array
+          eventId: selectedEventIds.length > 0 ? selectedEventIds[0] : undefined, // Backward compat
         });
         if (payload.waitingAreaMode === 'employerPage') {
           await updateBoothEmployerPageSections(editingBoothId, payload.employerPageSections);
@@ -769,6 +821,12 @@ export default function BoothManagement() {
       let errorMessage = editingBoothId ? 'Failed to update booth' : 'Failed to create booth';
       
       if (errorData) {
+        if (Array.isArray(errorData.exceededEvents) && errorData.exceededEvents.length > 0) {
+          const lines = errorData.exceededEvents
+            .map(x => `• ${x.name || x.eventId}: ${x.existing} + ${x.adding} > ${x.max}`)
+            .join('\n');
+          errorMessage = `Max number of recruiters reached for selected event(s):\n\n${lines}`;
+        } else
         // Check for validation errors with details
         if (errorData.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
           const validationErrors = errorData.details
@@ -880,14 +938,15 @@ export default function BoothManagement() {
 
       // Map to grid rows expected by Syncfusion GridComponent
       setBooths(items.map(b => {
-        // Get events from the events array or fallback to single eventId
+        // Get events from both events array and single eventId (legacy)
         const eventsArray = b.events || [];
-        const eventNames = eventsArray.length > 0 
-          ? eventsArray.map(e => e?.name || '').filter(Boolean)
-          : (b.eventId?.name ? [b.eventId.name] : []);
-        const eventIds = eventsArray.length > 0
-          ? eventsArray.map(e => e?._id || e).filter(Boolean)
-          : (b.eventId?._id ? [b.eventId._id] : []);
+        const eventNames = [...new Set([
+          ...eventsArray.map(e => e?.name || '').filter(Boolean),
+          b.eventId?.name || '',
+        ].filter(Boolean))];
+        const eventIds = normalizeIdArray(
+          [...eventsArray.map(e => e?._id || e), b.eventId?._id || b.eventId]
+        );
         
         return {
           id: b._id,
@@ -897,7 +956,7 @@ export default function BoothManagement() {
           logoAltText: b.logoAltText || '',
           events: eventNames,
           eventName: eventNames.join(', ') || '', // Flattened for filtering
-          eventIdRaw: b.eventId?._id || null, // Keep for backward compat
+          eventIdRaw: normalizeId(b.eventId?._id || b.eventId) || null, // Keep for backward compat
           eventIds: eventIds, // Full events array
           richSections: b.richSections || [],
           waitingAreaMode: b.waitingAreaMode || 'placeholders',
@@ -1084,9 +1143,11 @@ export default function BoothManagement() {
   const startEdit = (row) => {
     const expireTime = formatDateTimeLocal(row.expireLinkTime);
     // Use the full eventIds array if available, otherwise fallback to eventIdRaw
-    const eventIdsToUse = row.eventIds && row.eventIds.length > 0 
-      ? row.eventIds 
-      : (row.eventIdRaw ? [row.eventIdRaw] : boothForm.eventIds);
+    const eventIdsToUse = normalizeIdArray(
+      row.eventIds && row.eventIds.length > 0
+        ? row.eventIds
+        : (row.eventIdRaw ? [row.eventIdRaw] : boothForm.eventIds)
+    );
     
     setBoothForm(prev => ({
       ...prev,
@@ -1120,7 +1181,7 @@ export default function BoothManagement() {
       enableExpiry: !!row.expireLinkTime,
     }));
     setBoothMode('create');
-    setEditingBoothId(row.id);
+    setEditingBoothId(normalizeId(row.id));
   };
 
   // Delete handlers

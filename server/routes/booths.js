@@ -9,6 +9,124 @@ const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 const router = express.Router();
 const EMPLOYER_SECTION_KEYS = ['about', 'program', 'video', 'gallery', 'jobs', 'benefits', 'contact', 'social'];
 
+const normalizeId = (value) => {
+    let current = value;
+    const visited = new Set();
+    for (let i = 0; i < 6; i += 1) {
+        if (current === null || current === undefined) return '';
+        if (typeof current === 'string') return current.trim();
+        if (typeof current === 'number' || typeof current === 'bigint') return String(current).trim();
+        if (typeof current === 'object') {
+            if (visited.has(current)) return '';
+            visited.add(current);
+            if (current._id !== undefined && current._id !== current) {
+                current = current._id;
+                continue;
+            }
+            if (current.id !== undefined && current.id !== current) {
+                current = current.id;
+                continue;
+            }
+        }
+        try {
+            return String(current).trim();
+        } catch (error) {
+            return '';
+        }
+    }
+    return '';
+};
+
+const normalizeIdArray = (values = []) => {
+    if (!Array.isArray(values)) return [];
+    return [...new Set(values.map(normalizeId).filter(Boolean))];
+};
+
+const getBoothEventIds = (booth) => {
+    if (!booth) return [];
+    const eventIds = Array.isArray(booth.events) ? booth.events : [];
+    return normalizeIdArray([...eventIds, booth.eventId]);
+};
+
+const buildRecruiterLimitErrorResponse = (exceededEvents) => {
+    const lines = exceededEvents.map(event => `${event.name}: ${event.existing} + ${event.adding} > ${event.max}`);
+    return {
+        error: 'Event recruiter limit reached',
+        message: `Max number of recruiters reached for selected event(s): ${lines.join('; ')}`,
+        exceededEvents
+    };
+};
+
+const validateRecruiterLimitsForEvents = async ({
+    eventIds = [],
+    requestedRecruiters = 0,
+    excludeBoothId = null,
+    organizationId = null
+}) => {
+    const normalizedEventIds = normalizeIdArray(eventIds);
+    if (normalizedEventIds.length === 0) return [];
+
+    const Event = require('../models/Event');
+    const events = await Event.find({ _id: { $in: normalizedEventIds } })
+        .select('_id name limits.maxRecruitersPerEvent')
+        .lean();
+    const eventMap = new Map(events.map(event => [normalizeId(event._id), event]));
+    const totalsByEvent = normalizedEventIds.reduce((acc, eventId) => {
+        acc[eventId] = 0;
+        return acc;
+    }, {});
+
+    const boothFilter = {
+        $or: [
+            { eventId: { $in: normalizedEventIds } },
+            { events: { $in: normalizedEventIds } }
+        ]
+    };
+    if (excludeBoothId) {
+        boothFilter._id = { $ne: excludeBoothId };
+    }
+    if (organizationId) {
+        boothFilter.organizationId = organizationId;
+    }
+
+    const existingBooths = await Booth.find(boothFilter)
+        .select('eventId events recruitersCount')
+        .lean();
+
+    for (const booth of existingBooths) {
+        const boothRecruiters = Number(booth.recruitersCount) || 0;
+        if (!boothRecruiters) continue;
+        const assignedEvents = new Set(getBoothEventIds(booth));
+        for (const eventId of normalizedEventIds) {
+            if (assignedEvents.has(eventId)) {
+                totalsByEvent[eventId] = (totalsByEvent[eventId] || 0) + boothRecruiters;
+            }
+        }
+    }
+
+    const addingRecruiters = Number(requestedRecruiters) || 0;
+    const exceededEvents = [];
+    for (const eventId of normalizedEventIds) {
+        const event = eventMap.get(eventId);
+        if (!event) continue;
+        const max = Number(event?.limits?.maxRecruitersPerEvent) || 0; // 0 => unlimited
+        if (!max) continue;
+        const existing = Number(totalsByEvent[eventId]) || 0;
+        const proposedTotal = existing + addingRecruiters;
+        if (proposedTotal > max) {
+            exceededEvents.push({
+                eventId,
+                name: event?.name || eventId,
+                existing,
+                adding: addingRecruiters,
+                max
+            });
+        }
+    }
+
+    return exceededEvents;
+};
+
 /**
  * GET /api/booths
  * List booths (optionally by eventId)
@@ -323,6 +441,15 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
                 message: 'None of the provided events are valid or available',
                 skipped
             });
+        }
+
+        const exceededEvents = await validateRecruiterLimitsForEvents({
+            eventIds: validEvents,
+            requestedRecruiters: recruitersCount || 1,
+            organizationId: resolvedOrgId || null
+        });
+        if (exceededEvents.length > 0) {
+            return res.status(400).json(buildRecruiterLimitErrorResponse(exceededEvents));
         }
 
         // Enforce org-level limits when applicable
@@ -707,6 +834,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         } = req.body;
         const { booth, user } = req;
         const Event = require('../models/Event');
+        let validatedEvents = null;
 
         // CRITICAL FIX: If expireLinkTime is stored as string "null" in DB, fix it directly in database first
         // This must happen before any validation or save operations
@@ -797,6 +925,31 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             if (validEvents.length === 0 && events.length > 0) {
                 return res.status(400).json({ error: 'No valid events provided' });
             }
+            validatedEvents = validEvents;
+        }
+
+        const currentBoothEventIds = getBoothEventIds(booth);
+        let targetEventIds = currentBoothEventIds;
+        if (Array.isArray(validatedEvents)) {
+            targetEventIds = normalizeIdArray(validatedEvents);
+        } else if (eventId !== undefined) {
+            targetEventIds = normalizeIdArray([eventId]);
+        }
+        const nextRecruitersCount = recruitersCount !== undefined
+            ? Number(recruitersCount)
+            : (Number(booth.recruitersCount) || 0);
+        const exceededEvents = await validateRecruiterLimitsForEvents({
+            eventIds: targetEventIds,
+            requestedRecruiters: nextRecruitersCount,
+            excludeBoothId: booth._id,
+            organizationId: booth.organizationId || req.orgId || null
+        });
+        if (exceededEvents.length > 0) {
+            return res.status(400).json(buildRecruiterLimitErrorResponse(exceededEvents));
+        }
+        
+        if (Array.isArray(validatedEvents)) {
+            const validEvents = validatedEvents;
             
             // Get current events for this booth
             const currentEvents = booth.events || [];

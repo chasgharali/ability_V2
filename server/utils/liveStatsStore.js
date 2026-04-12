@@ -3,6 +3,7 @@ class LiveStatsStore {
         this.onlineUsers = new Map(); // userId -> user info
         this.callParticipants = new Map(); // userId -> participant info
         this.interpreterStatuses = new Map(); // userId -> status (online, away, busy)
+        this.chatStatuses = new Map(); // userId -> status (online, away, meeting, offline)
     }
 
     userConnected(user) {
@@ -27,6 +28,13 @@ class LiveStatsStore {
                 this.interpreterStatuses.set(userId, 'online');
             }
         }
+
+        // Initialize team chat status for supported roles
+        if (this.canSetChatStatus(user.role)) {
+            if (!this.chatStatuses.has(userId)) {
+                this.chatStatuses.set(userId, 'online');
+            }
+        }
     }
 
     userDisconnected(userId) {
@@ -34,6 +42,7 @@ class LiveStatsStore {
         this.callParticipants.delete(userId.toString());
         this.onlineUsers.delete(userId.toString());
         this.interpreterStatuses.delete(userId.toString());
+        this.chatStatuses.delete(userId.toString());
     }
 
     // Interpreter status management
@@ -60,6 +69,29 @@ class LiveStatsStore {
         const status = this.interpreterStatuses.get(userId.toString());
         // Must be online (in the store) AND have 'online' status (not away or busy)
         return this.onlineUsers.has(userId.toString()) && status === 'online';
+    }
+
+    canSetChatStatus(role) {
+        return ['Support', 'Recruiter', 'Interpreter'].includes(role);
+    }
+
+    // Team chat status management
+    setChatStatus(userId, status) {
+        if (!userId) return false;
+        const validStatuses = ['online', 'away', 'meeting', 'offline'];
+        if (!validStatuses.includes(status)) return false;
+
+        this.chatStatuses.set(userId.toString(), status);
+        return true;
+    }
+
+    getChatStatus(userId) {
+        if (!userId) return null;
+        return this.chatStatuses.get(userId.toString()) || null;
+    }
+
+    getAllChatStatuses() {
+        return Object.fromEntries(this.chatStatuses);
     }
 
     userJoinedCall({ sessionId, boothId, eventId }, user) {

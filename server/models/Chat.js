@@ -74,7 +74,14 @@ chatSchema.statics.findUserChats = async function(userId) {
         'participants.user': userId,
         isActive: true
     })
-    .populate('participants.user', 'name email avatarUrl role')
+    .populate({
+        path: 'participants.user',
+        select: 'name email avatarUrl role assignedBooth',
+        populate: {
+            path: 'assignedBooth',
+            select: 'name company'
+        }
+    })
     .populate('booth', 'name company logoUrl')
     .populate('event', 'name')
     .sort({ updatedAt: -1 });
@@ -87,7 +94,14 @@ chatSchema.statics.findOrCreateDirectChat = async function(user1Id, user2Id) {
         'participants.user': { $all: [user1Id, user2Id] },
         isActive: true
     })
-    .populate('participants.user', 'name email avatarUrl role');
+    .populate({
+        path: 'participants.user',
+        select: 'name email avatarUrl role assignedBooth',
+        populate: {
+            path: 'assignedBooth',
+            select: 'name company'
+        }
+    });
 
     if (!chat) {
         const User = mongoose.model('User');
@@ -105,7 +119,14 @@ chatSchema.statics.findOrCreateDirectChat = async function(user1Id, user2Id) {
             ]
         });
 
-        chat = await chat.populate('participants.user', 'name email avatarUrl role');
+        chat = await chat.populate({
+            path: 'participants.user',
+            select: 'name email avatarUrl role assignedBooth',
+            populate: {
+                path: 'assignedBooth',
+                select: 'name company'
+            }
+        });
     }
 
     return chat;

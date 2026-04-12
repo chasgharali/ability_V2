@@ -76,7 +76,8 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
   };
 
   const getRoleColor = (role) => {
-    switch (role) {
+    const normalizedRole = String(role || '').toLowerCase();
+    switch (normalizedRole) {
       case 'recruiter':
         return '#007bff';
       case 'jobseeker':
@@ -89,7 +90,9 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
   };
 
   const isOwnMessage = (message) => {
-    return message.sender?.id === user?.id;
+    const currentUserId = String(user?._id || user?.id || '');
+    const senderId = String(message?.sender?.id || message?.sender?._id || '');
+    return senderId && senderId === currentUserId;
   };
 
   return (

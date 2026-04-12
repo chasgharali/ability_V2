@@ -115,6 +115,26 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     } catch (_) { /* ignore */ }
   };
 
+  const getCurrentUserId = () => String(user?._id || user?.id || '');
+
+  const normalizeIncomingChatMessage = (rawMessage = {}) => {
+    const senderValue = rawMessage.sender;
+    const senderId = senderValue?.id || senderValue?._id || senderValue || rawMessage.userId || '';
+    const senderRole = rawMessage.senderRole || senderValue?.role || rawMessage.role || '';
+
+    return {
+      sender: {
+        id: senderId ? String(senderId) : '',
+        name: senderValue?.name || rawMessage.user?.name || rawMessage.senderName || '',
+        role: senderRole
+      },
+      senderRole,
+      message: rawMessage.message || rawMessage.content || '',
+      timestamp: rawMessage.timestamp || new Date().toISOString(),
+      messageType: rawMessage.messageType || 'text'
+    };
+  };
+
   // Call state
   const [room, setRoom] = useState(null);
   const [participants, setParticipants] = useState(new Map());
@@ -575,26 +595,32 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     socket.on('call_invitation', handleCallInvitation);
     
-    // Listen for all possible message events
-    socket.on('chat_message', (data) => {
+    // Keep references so cleanup reliably removes listeners.
+    const handleChatMessage = (data) => {
       console.log('📨 Received chat_message event:', data);
       handleNewChatMessage(data);
-    });
-    
-    socket.on('new_chat_message', (data) => {
+    };
+
+    const handleNewChatMessageEvent = (data) => {
       console.log('📨 Received new_chat_message event:', data);
       handleNewChatMessage(data);
-    });
-    
-    socket.on('video-call-message', (data) => {
+    };
+
+    const handleVideoCallMessage = (data) => {
       console.log('📨 Received video-call-message event:', data);
       handleNewChatMessage(data);
-    });
+    };
 
-    socket.on('video-call-message-direct', (data) => {
+    const handleVideoCallMessageDirect = (data) => {
       console.log('📨 Received video-call-message-direct event:', data);
       handleNewChatMessage(data);
-    });
+    };
+    
+    // Listen for all possible message events
+    socket.on('chat_message', handleChatMessage);
+    socket.on('new_chat_message', handleNewChatMessageEvent);
+    socket.on('video-call-message', handleVideoCallMessage);
+    socket.on('video-call-message-direct', handleVideoCallMessageDirect);
 
     // Listen for caption transcriptions from other participants (via socket broadcast)
     // IMPORTANT: This listener works REGARDLESS of your mic state (muted/unmuted)
@@ -605,14 +631,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     console.log('🔍 Socket listener setup - isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
     
     // Listen for caption errors
-    socket.on('caption-error', (error) => {
+    const handleCaptionError = (error) => {
       console.error('❌ Caption error:', error);
       if (error.code === 'SERVICE_UNAVAILABLE') {
         setCaptionText('Caption service unavailable - check server configuration');
         alert('Caption service is not configured on the server. Please contact your administrator.\n\n' + 
               (error.details || 'DEEPGRAM_API_KEY not set in server configuration'));
       }
-    });
+    };
+    socket.on('caption-error', handleCaptionError);
     
     socket.on('participant_joined', handleParticipantJoined);
     socket.on('participant_left', handleParticipantLeft);
@@ -620,9 +647,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     socket.on('interpreter_response', handleInterpreterResponse);
     socket.on('interpreter-declined', handleInterpreterDeclined);
     socket.on('call_ended', handleCallEnded);
-    socket.on('error', (error) => {
+    const handleSocketError = (error) => {
       console.error('Socket error in video call:', error);
-    });
+    };
+    socket.on('error', handleSocketError);
 
     // Add success handler for room joining
     socket.on('participant-joined-video', (data) => {
@@ -632,10 +660,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     return () => {
       console.log('🔌 Cleaning up socket listeners');
       socket.off('call_invitation', handleCallInvitation);
-      socket.off('new_chat_message', handleNewChatMessage);
-      socket.off('chat_message', handleNewChatMessage);
-      socket.off('video-call-message', handleNewChatMessage);
-      socket.off('video-call-message-direct', handleNewChatMessage);
+      socket.off('new_chat_message', handleNewChatMessageEvent);
+      socket.off('chat_message', handleChatMessage);
+      socket.off('video-call-message', handleVideoCallMessage);
+      socket.off('video-call-message-direct', handleVideoCallMessageDirect);
       socket.off('participant_joined', handleParticipantJoined);
       socket.off('participant_left', handleParticipantLeft);
       socket.off('participant_left_call', handleParticipantLeftCall);
@@ -645,8 +673,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
       socket.off('caption-transcription', handleCaptionTranscription);
-      socket.off('caption-error');
-      socket.off('error');
+      socket.off('caption-error', handleCaptionError);
+      socket.off('error', handleSocketError);
     };
   }, [socket, handleCaptionTranscription]); // Include handleCaptionTranscription to ensure it's up to date
 
@@ -662,7 +690,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       // Use provided call data
       setCallInfo(data);
-      setChatMessages(data.chatMessages || []);
+      setChatMessages((data.chatMessages || []).map(normalizeIncomingChatMessage));
 
       // Validate and clean device preferences before using them
       const { audioDeviceId, videoDeviceId } = await validateAndCleanDevicePreferences();
@@ -804,7 +832,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // Get call details
       const callDetails = await videoCallService.joinCall(callId);
       setCallInfo(callDetails);
-      setChatMessages(callDetails.chatMessages || []);
+      setChatMessages((callDetails.chatMessages || []).map(normalizeIncomingChatMessage));
 
       // Validate and clean device preferences before using them
       const { audioDeviceId, videoDeviceId } = await validateAndCleanDevicePreferences();
@@ -1279,10 +1307,14 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     if (!message.trim() || !room) return;
 
     try {
+      const senderId = getCurrentUserId();
+      const resolvedCallId = callInfo?.id || callInfo?.callId || callInfo?._id || callId;
+      if (!senderId || !resolvedCallId) return;
+
       const messageData = {
         message: message.trim(),
         sender: {
-          id: user._id || user.id,
+          id: senderId,
           name: user.name,
           role: user.role
         },
@@ -1296,19 +1328,12 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // Send via socket if available
       if (socket) {
         const chatPayload = {
-          callId: callInfo?.id || callInfo?.callId || callId,
+          callId: resolvedCallId,
           message: messageData
         };
 
-        // Send using original method
+        // Server persists and broadcasts this event.
         socket.emit('video-call-message', chatPayload);
-
-        // Also try direct method as backup
-        const directPayload = {
-          roomName: callInfo?.roomName,
-          message: messageData.message
-        };
-        socket.emit('video-call-message-direct', directPayload);
       }
 
       // Chat message sent
@@ -1321,13 +1346,13 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   };
 
   const handleNewChatMessage = (messageData) => {
+    const formattedMessage = normalizeIncomingChatMessage(messageData);
+    const currentUserId = getCurrentUserId();
+    const senderId = String(formattedMessage.sender?.id || '');
+
     console.log('📩 handleNewChatMessage received:', messageData);
-    console.log('📩 Current user ID:', user._id || user.id);
-    console.log('📩 Message sender ID:', messageData.sender?.id);
-    
-    // Normalize IDs for comparison (handle both string and ObjectId)
-    const currentUserId = String(user._id || user.id);
-    const senderId = String(messageData.sender?.id || '');
+    console.log('📩 Current user ID:', currentUserId);
+    console.log('📩 Message sender ID:', senderId);
     
     // Don't add our own messages again (they're already added optimistically)
     if (senderId === currentUserId) {
@@ -1335,25 +1360,14 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       return;
     }
 
-    // Ensure message has the correct structure for ChatPanel
-    const formattedMessage = {
-      sender: {
-        id: messageData.sender?.id,
-        name: messageData.sender?.name,
-        role: messageData.sender?.role
-      },
-      message: messageData.message || messageData.content || '',
-      timestamp: messageData.timestamp || new Date().toISOString(),
-      messageType: messageData.messageType || 'text'
-    };
-
     console.log('✅ Adding message to chat:', formattedMessage);
 
     setChatMessages(prev => {
       // Check for duplicates based on timestamp and sender
-      const isDuplicate = prev.some(msg => 
-        msg.timestamp === formattedMessage.timestamp && 
-        String(msg.sender?.id) === senderId
+      const isDuplicate = prev.some(msg =>
+        msg.timestamp === formattedMessage.timestamp &&
+        String(msg.sender?.id || '') === senderId &&
+        msg.message === formattedMessage.message
       );
       
       if (isDuplicate) {

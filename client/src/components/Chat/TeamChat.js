@@ -48,6 +48,15 @@ const playNotificationSound = () => {
     }
 };
 
+const TEAM_CHAT_STATUS_OPTIONS = [
+    { value: 'online', label: 'Online' },
+    { value: 'away', label: 'Away' },
+    { value: 'meeting', label: 'Meeting' },
+    { value: 'offline', label: 'Offline' }
+];
+
+const TEAM_CHAT_STATUS_SETTER_ROLES = new Set(['Support', 'Recruiter', 'Interpreter']);
+
 const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     const { user } = useAuth();
     const [chats, setChats] = useState([]);
@@ -58,8 +67,14 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [onlineUsers, setOnlineUsers] = useState(new Set());
+    const [userStatuses, setUserStatuses] = useState(new Map());
+    const [myChatStatus, setMyChatStatus] = useState('online');
+    const [chatStatusUpdating, setChatStatusUpdating] = useState(false);
     const [typingUsers, setTypingUsers] = useState(new Map());
     const [notification, setNotification] = useState(null);
+    const [broadcastMessage, setBroadcastMessage] = useState('');
+    const [showBroadcastComposer, setShowBroadcastComposer] = useState(false);
+    const [broadcasting, setBroadcasting] = useState(false);
     const typingTimeoutRef = useRef(new Map());
     const typingIndicatorTimeoutRef = useRef(null);
     const notificationTimeoutRef = useRef(null);
@@ -70,6 +85,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     const selectedChatRef = useRef(null);
     const joinedChatsRef = useRef(new Set());
     const [socketConnected, setSocketConnected] = useState(false);
+    const canSetTeamChatStatus = TEAM_CHAT_STATUS_SETTER_ROLES.has(user?.role);
 
     // Define handleTyping before effects that use it
     const handleTyping = useCallback((isTyping) => {
@@ -127,11 +143,17 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
 
             // Request list of currently online users
             socketRef.current.emit('request-online-users');
+            socketRef.current.emit('get-chat-status');
         });
 
         socketRef.current.on('disconnect', () => {
             console.log('⚠️ Chat socket disconnected');
             setSocketConnected(false);
+            setChatStatusUpdating(false);
+        });
+
+        socketRef.current.on('error', () => {
+            setChatStatusUpdating(false);
         });
 
         socketRef.current.on('new-message', (data) => {
@@ -221,8 +243,24 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                         _id: data.chatId,
                         type: 'direct',
                         participants: sender && user ? [
-                            { user: { _id: user._id, name: user.name, avatarUrl: user.avatarUrl || '', role: user.role } },
-                            { user: { _id: sender._id, name: sender.name, avatarUrl: sender.avatarUrl || '', role: sender.role } }
+                            {
+                                user: {
+                                    _id: user._id,
+                                    name: user.name,
+                                    avatarUrl: user.avatarUrl || '',
+                                    role: user.role,
+                                    assignedBooth: user.assignedBooth || null
+                                }
+                            },
+                            {
+                                user: {
+                                    _id: sender._id,
+                                    name: sender.name,
+                                    avatarUrl: sender.avatarUrl || '',
+                                    role: sender.role,
+                                    assignedBooth: sender.assignedBooth || null
+                                }
+                            }
                         ] : [],
                         lastMessage: data.message,
                         unreadCount: 1
@@ -286,13 +324,37 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                     });
                 }
 
+                if (data.chat) {
+                    const notifiedChat = {
+                        ...data.chat,
+                        unreadCount: data.unreadCount || 1
+                    };
+                    return [notifiedChat, ...prevChats];
+                }
+
                 if (sender && user) {
                     const minimalChat = {
                         _id: data.chatId,
                         type: 'direct',
                         participants: [
-                            { user: { _id: user._id, name: user.name, avatarUrl: user.avatarUrl || '', role: user.role } },
-                            { user: { _id: sender._id, name: sender.name, avatarUrl: sender.avatarUrl || '', role: sender.role } }
+                            {
+                                user: {
+                                    _id: user._id,
+                                    name: user.name,
+                                    avatarUrl: user.avatarUrl || '',
+                                    role: user.role,
+                                    assignedBooth: user.assignedBooth || null
+                                }
+                            },
+                            {
+                                user: {
+                                    _id: sender._id,
+                                    name: sender.name,
+                                    avatarUrl: sender.avatarUrl || '',
+                                    role: sender.role,
+                                    assignedBooth: sender.assignedBooth || null
+                                }
+                            }
                         ],
                         lastMessage: data.message,
                         unreadCount: data.unreadCount || 1
@@ -309,6 +371,9 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         socketRef.current.on('online-users-list', (data) => {
             console.log('👥 Received online users list:', data.userIds);
             setOnlineUsers(new Set(data.userIds));
+            if (data.chatStatuses) {
+                setUserStatuses(new Map(Object.entries(data.chatStatuses)));
+            }
         });
 
         socketRef.current.on('user-online', (data) => {
@@ -319,6 +384,13 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                 console.log('👥 Updated online users:', newSet.size);
                 return newSet;
             });
+            if (data.userId) {
+                setUserStatuses(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(data.userId, data.chatStatus || 'online');
+                    return newMap;
+                });
+            }
         });
 
         socketRef.current.on('user-offline', (data) => {
@@ -329,6 +401,47 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                 console.log('👥 Updated online users:', newSet.size);
                 return newSet;
             });
+            if (data.userId) {
+                setUserStatuses(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(data.userId, 'offline');
+                    return newMap;
+                });
+            }
+        });
+
+        socketRef.current.on('user-chat-status-changed', (data) => {
+            if (!data?.userId) return;
+            setUserStatuses(prev => {
+                const newMap = new Map(prev);
+                newMap.set(data.userId, data.status || 'offline');
+                return newMap;
+            });
+        });
+
+        socketRef.current.on('chat-status', (data) => {
+            if (!data?.userId) return;
+            setUserStatuses(prev => {
+                const newMap = new Map(prev);
+                newMap.set(data.userId, data.status || 'online');
+                return newMap;
+            });
+            if (data.userId === user?._id) {
+                setMyChatStatus(data.status || 'online');
+            }
+        });
+
+        socketRef.current.on('chat-status-updated', (data) => {
+            if (!data?.userId) return;
+            setUserStatuses(prev => {
+                const newMap = new Map(prev);
+                newMap.set(data.userId, data.status || 'online');
+                return newMap;
+            });
+            if (data.userId === user?._id) {
+                setMyChatStatus(data.status || 'online');
+                setChatStatusUpdating(false);
+            }
         });
 
         socketRef.current.on('user-typing', (data) => {
@@ -707,6 +820,39 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         }
     };
 
+    const handleBroadcastMessage = async () => {
+        if (user?.role !== 'GlobalSupport') return;
+        const content = broadcastMessage.trim();
+        if (!content) return;
+
+        try {
+            setBroadcasting(true);
+            const response = await chatAPI.broadcastEventMessage(content);
+            const broadcastChat = response?.chat;
+            if (broadcastChat) {
+                setChats(prev => {
+                    const filtered = prev.filter(existingChat => existingChat._id !== broadcastChat._id);
+                    return [{ ...broadcastChat, unreadCount: 0 }, ...filtered];
+                });
+                setSelectedChat(broadcastChat);
+                selectedChatRef.current = broadcastChat;
+
+                if (socketRef.current) {
+                    socketRef.current.emit('join-chat', { chatId: broadcastChat._id });
+                    joinedChatsRef.current.add(broadcastChat._id);
+                }
+
+                await loadMessages(broadcastChat._id);
+            }
+            setBroadcastMessage('');
+            setShowBroadcastComposer(false);
+        } catch (error) {
+            console.error('Error broadcasting message:', error);
+        } finally {
+            setBroadcasting(false);
+        }
+    };
+
     const getChatTitle = (chat) => {
         if (chat.type === 'direct') {
             const otherParticipant = chat.participants.find(
@@ -737,6 +883,20 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         return chat.booth?.logoUrl || null;
     };
 
+    const getBoothDisplayName = (assignedBooth) => {
+        if (!assignedBooth) return '';
+        if (typeof assignedBooth === 'string') return assignedBooth;
+        return assignedBooth.name || assignedBooth.company || '';
+    };
+
+    const getChatBoothName = (chat) => {
+        if (chat.type !== 'direct') return '';
+        const otherParticipant = chat.participants.find(
+            p => p.user._id !== user?._id
+        );
+        return getBoothDisplayName(otherParticipant?.user?.assignedBooth);
+    };
+
     const getOtherParticipantId = (chat) => {
         if (chat.type === 'direct') {
             const otherParticipant = chat.participants.find(
@@ -746,6 +906,19 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
         }
         return null;
     };
+
+    const getEffectiveChatStatus = useCallback((targetUserId) => {
+        if (!targetUserId) return 'offline';
+        const explicitStatus = userStatuses.get(targetUserId);
+        if (explicitStatus) return explicitStatus;
+        return onlineUsers.has(targetUserId) ? 'online' : 'offline';
+    }, [onlineUsers, userStatuses]);
+
+    const handleSetMyChatStatus = useCallback((newStatus) => {
+        if (!socketRef.current || !canSetTeamChatStatus) return;
+        setChatStatusUpdating(true);
+        socketRef.current.emit('set-chat-status', { status: newStatus });
+    }, [canSetTeamChatStatus]);
 
     // Build a set of valid participant IDs from the backend (already event-filtered)
     const validParticipantIds = new Set(participants.map(p => p._id));
@@ -926,16 +1099,67 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
             <div className="team-chat-sidebar">
                 <div className="team-chat-sidebar-header">
                     <h2>Chats</h2>
-                    <button
-                        className="team-chat-new-btn"
-                        onClick={() => setShowNewChat(!showNewChat)}
-                        aria-label="Start new chat"
-                    >
-                        {showNewChat ? '✕' : '+'}
-                    </button>
+                    <div className="team-chat-header-actions">
+                        {user?.role === 'GlobalSupport' && (
+                            <button
+                                className={`team-chat-new-btn team-chat-broadcast-btn ${showBroadcastComposer ? 'active' : ''}`}
+                                onClick={() => setShowBroadcastComposer(!showBroadcastComposer)}
+                                aria-label="Broadcast message to all event users"
+                                title="Broadcast message to all event users"
+                            >
+                                📣
+                            </button>
+                        )}
+                        <button
+                            className="team-chat-new-btn"
+                            onClick={() => setShowNewChat(!showNewChat)}
+                            aria-label="Start new chat"
+                        >
+                            {showNewChat ? '✕' : '+'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="team-chat-search">
+                    {user?.role === 'GlobalSupport' && showBroadcastComposer && (
+                        <div className="team-chat-broadcast-composer">
+                            <label htmlFor="team-chat-broadcast-message">Broadcast to event users</label>
+                            <textarea
+                                id="team-chat-broadcast-message"
+                                value={broadcastMessage}
+                                onChange={(e) => setBroadcastMessage(e.target.value)}
+                                rows={3}
+                                maxLength={5000}
+                                placeholder="Type a message to broadcast to everyone in this event..."
+                            />
+                            <button
+                                type="button"
+                                className="team-chat-broadcast-send"
+                                onClick={handleBroadcastMessage}
+                                disabled={broadcasting || !broadcastMessage.trim()}
+                            >
+                                {broadcasting ? 'Sending...' : 'Send Broadcast'}
+                            </button>
+                        </div>
+                    )}
+                    {canSetTeamChatStatus && (
+                        <div className="team-chat-status-controls team-chat-status-controls-sidebar">
+                            <label htmlFor="team-chat-status-select">Your status</label>
+                            <select
+                                id="team-chat-status-select"
+                                value={myChatStatus}
+                                onChange={(e) => handleSetMyChatStatus(e.target.value)}
+                                disabled={chatStatusUpdating}
+                                aria-label="Set your team chat status"
+                            >
+                                {TEAM_CHAT_STATUS_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <input
                         type="text"
                         placeholder="Search..."
@@ -955,7 +1179,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                                 </div>
                             ) : (
                                 filteredParticipants.map(participant => {
-                                    const isOnline = onlineUsers.has(participant._id);
+                                    const participantStatus = getEffectiveChatStatus(participant._id);
                                     return (
                                         <div
                                             key={participant._id}
@@ -978,23 +1202,19 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                                                         {participant.name.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
-                                                <span className={`team-chat-status-indicator ${isOnline ? 'online' : 'offline'}`} />
+                                                <span className={`team-chat-status-indicator ${participantStatus}`} />
                                             </div>
                                             <div className="team-chat-info">
                                                 <div className="team-chat-name">
                                                     {participant.name} ({participant.role})
                                                 </div>
-                                                {user?.role === 'GlobalSupport' && 
-                                                 participant.role === 'Recruiter' && 
-                                                 participant.assignedBooth && (
+                                                {getBoothDisplayName(participant.assignedBooth) && (
                                                     <div className="team-chat-booth-name">
-                                                        {participant.assignedBooth?.name || 
-                                                         participant.assignedBooth?.company || 
-                                                         (typeof participant.assignedBooth === 'string' ? participant.assignedBooth : 'No Booth')}
+                                                        {getBoothDisplayName(participant.assignedBooth)}
                                                     </div>
                                                 )}
-                                                <div className={`team-chat-status ${isOnline ? 'online' : 'offline'}`}>
-                                                    {isOnline ? 'Online' : 'Offline'}
+                                                <div className={`team-chat-status ${participantStatus}`}>
+                                                    {TEAM_CHAT_STATUS_OPTIONS.find(option => option.value === participantStatus)?.label || 'Offline'}
                                                 </div>
                                             </div>
                                         </div>
@@ -1011,7 +1231,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                             ) : (
                                 filteredChats.map(chat => {
                                     const otherUserId = getOtherParticipantId(chat);
-                                    const isOnline = otherUserId && onlineUsers.has(otherUserId);
+                                    const chatStatus = getEffectiveChatStatus(otherUserId);
                                     const role = getChatRole(chat);
 
                                     return (
@@ -1037,7 +1257,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                                                     </div>
                                                 )}
                                                 {chat.type === 'direct' && (
-                                                    <span className={`team-chat-status-indicator ${isOnline ? 'online' : 'offline'}`} />
+                                                    <span className={`team-chat-status-indicator ${chatStatus}`} />
                                                 )}
                                             </div>
                                             <div className="team-chat-info">
@@ -1049,9 +1269,14 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                                                         <span className="team-chat-unread-badge">{chat.unreadCount}</span>
                                                     )}
                                                 </div>
+                                                {getChatBoothName(chat) && (
+                                                    <div className="team-chat-booth-name">
+                                                        {getChatBoothName(chat)}
+                                                    </div>
+                                                )}
                                                 {chat.type === 'direct' && (
-                                                    <div className={`team-chat-status ${isOnline ? 'online' : 'offline'}`}>
-                                                        {isOnline ? 'Online' : 'Offline'}
+                                                    <div className={`team-chat-status ${chatStatus}`}>
+                                                        {TEAM_CHAT_STATUS_OPTIONS.find(option => option.value === chatStatus)?.label || 'Offline'}
                                                     </div>
                                                 )}
                                                 {chat.lastMessage && (
@@ -1101,7 +1326,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                                         {selectedChat.type === 'direct' ? (
                                             (() => {
                                                 const otherUserId = getOtherParticipantId(selectedChat);
-                                                const isOnline = otherUserId && onlineUsers.has(otherUserId);
+                                                const chatStatus = getEffectiveChatStatus(otherUserId);
 
                                                 // Check if user is typing
                                                 if (typingUsers.size > 0) {
@@ -1109,7 +1334,7 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                                                     return `${typingNames.join(', ')} ${typingNames.length === 1 ? 'is' : 'are'} typing...`;
                                                 }
 
-                                                return isOnline ? 'Online' : 'Offline';
+                                                return TEAM_CHAT_STATUS_OPTIONS.find(option => option.value === chatStatus)?.label || 'Offline';
                                             })()
                                         ) : 'Group Chat'}
                                     </div>

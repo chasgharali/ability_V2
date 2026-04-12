@@ -127,3 +127,13 @@ export const deleteMessage = async (messageId) => {
         throw error.response?.data || error;
     }
 };
+
+// GlobalSupport: broadcast message to all event users
+export const broadcastEventMessage = async (content) => {
+    try {
+        const response = await axiosInstance.post('/broadcast-event', { content });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};

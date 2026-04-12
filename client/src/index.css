@@ -251,3 +251,20 @@ a:focus-visible,
     z-index: 3 !important;
 }
 
+/* ========================================
+   Global Data Table Scroll Behavior
+   ======================================== */
+
+:root {
+    /* Override per-page when needed: --app-data-table-max-height: 520px; */
+    --app-data-table-max-height: 65vh;
+}
+
+/* Syncfusion grids: keep header fixed and scroll only body */
+.e-grid .e-gridcontent,
+.e-grid .e-content {
+    max-height: var(--app-data-table-max-height) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+}
+
