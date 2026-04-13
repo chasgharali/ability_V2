@@ -281,13 +281,17 @@
     gap: 12px;
 }
 
+/* Explicit colors on all states so global `button:hover { color: #fff }` (index.css)
+   cannot pair with light hover background — that caused white-on-light unreadable text. */
 .form-multiselect-option:hover {
-    background: #f8f9fa;
+    background: #e5e7eb;
+    color: #111827;
 }
 
 .form-multiselect-option:focus {
     outline: 2px solid #000000;
     outline-offset: -2px;
+    color: #111827;
 }
 
 .form-multiselect-option-selected {
@@ -296,12 +300,30 @@
 }
 
 .form-multiselect-option-selected:hover {
-    background: #e0f2fe;
+    background: #bfdbfe;
+    color: #1e3a8a;
+}
+
+.form-multiselect-option:disabled,
+.form-multiselect-option-disabled:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    color: #6b7280;
+}
+
+.form-multiselect-option:disabled:hover {
+    background: #f3f4f6;
+    color: #4b5563;
 }
 
 .form-multiselect-select-all {
     border-bottom: 1px solid #e5e7eb;
     font-weight: 600;
+    color: #111827;
+}
+
+.form-multiselect-select-all:hover,
+.form-multiselect-select-all:focus {
     color: #111827;
 }
 

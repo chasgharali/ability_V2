@@ -20,6 +20,7 @@ import { JOB_CATEGORY_LIST } from '../../constants/options';
 import MassUploadModal from './MassUploadModal';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 function authHeaders() {
   const token = localStorage.getItem('token');
@@ -413,7 +414,7 @@ export default function UserManagement() {
       showToast('No users to export', 'Warning');
       return;
     }
-    const headers = ['First Name', 'Last Name', 'Email', 'Role', 'Organization', 'Booth'];
+    const headers = ['First Name', 'Last Name', 'Email', 'Role', 'Organization', 'Booth', 'Assigned Event(s)'];
     const lines = [
       headers.map(escapeCsvCell).join(','),
       ...users.map((u) =>
@@ -424,6 +425,7 @@ export default function UserManagement() {
           u.role,
           u.organizationName,
           u.booth === '-' ? '' : u.booth,
+          u.assignedEventsLabel === '-' ? '' : u.assignedEventsLabel,
         ]
           .map(escapeCsvCell)
           .join(',')
@@ -475,6 +477,11 @@ export default function UserManagement() {
         const orgData = u.organizationId;
         const orgName = orgData && typeof orgData === 'object' ? orgData.name : null;
         const orgId = orgData && typeof orgData === 'object' ? orgData._id : (orgData || '');
+        const rawAssignedEvents = u.assignedEvents || [];
+        const assignedEventNames = rawAssignedEvents
+          .map((e) => (e && typeof e === 'object' && e.name ? e.name : ''))
+          .filter(Boolean);
+        const assignedEventsLabel = assignedEventNames.length ? assignedEventNames.join(', ') : '-';
         return {
           id: u._id,
           firstName,
@@ -483,7 +490,8 @@ export default function UserManagement() {
           role: u.role,
           booth: u.boothName || u.assignedBooth?.name || u.assignedBooth?.company || '-',
           assignedBoothId: u.assignedBooth?._id || u.assignedBooth || '',
-          assignedEvents: (u.assignedEvents || []).map(e => e?._id || e),
+          assignedEvents: rawAssignedEvents.map((e) => e?._id || e).filter(Boolean),
+          assignedEventsLabel,
           isActive: u.isActive,
           createdAt: u.createdAt,
           organizationName: orgName || '-',
@@ -982,8 +990,14 @@ export default function UserManagement() {
     }
   };
 
+  const pageHeading =
+    mode === 'list' ? 'User Management' : editingId ? 'Edit User' : 'Create User';
+
   return (
     <div className="dashboard">
+      <Helmet>
+        <title>{`${pageHeading} - abilityconnect`}</title>
+      </Helmet>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <AdminHeader />
       <div className="dashboard-layout">
@@ -991,7 +1005,7 @@ export default function UserManagement() {
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <div className="bm-header">
-              <h1>User Management</h1>
+              <h1>{pageHeading}</h1>
               <div className="bm-header-actions">
                 {mode === 'list' ? (
                   <>
@@ -1282,6 +1296,21 @@ export default function UserManagement() {
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                           {props.booth || '-'}
+                        </div>
+                      )}
+                    />
+                    <ColumnDirective
+                      field='assignedEventsLabel'
+                      headerText='Assigned Event(s)'
+                      width='220'
+                      allowFiltering={true}
+                      template={(props) => (
+                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                          {props.assignedEventsLabel && props.assignedEventsLabel !== '-' ? (
+                            <span title={props.assignedEventsLabel}>{props.assignedEventsLabel}</span>
+                          ) : (
+                            <span style={{ color: '#aaa' }}>-</span>
+                          )}
                         </div>
                       )}
                     />
