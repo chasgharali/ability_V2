@@ -652,11 +652,6 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     };
     socket.on('error', handleSocketError);
 
-    // Add success handler for room joining
-    socket.on('participant-joined-video', (data) => {
-      // Handle participant joined
-    });
-
     return () => {
       console.log('🔌 Cleaning up socket listeners');
       socket.off('call_invitation', handleCallInvitation);
@@ -669,8 +664,6 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       socket.off('participant_left_call', handleParticipantLeftCall);
       socket.off('interpreter_response', handleInterpreterResponse);
       socket.off('interpreter-declined', handleInterpreterDeclined);
-      socket.off('participant-joined-video', handleParticipantJoined);
-      socket.off('participant-left-video', handleParticipantLeft);
       socket.off('call_ended', handleCallEnded);
       socket.off('caption-transcription', handleCaptionTranscription);
       socket.off('caption-error', handleCaptionError);

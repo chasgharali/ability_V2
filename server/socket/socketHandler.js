@@ -9,6 +9,44 @@ const Message = require('../models/Message');
 const logger = require('../utils/logger');
 const liveStatsStore = require('../utils/liveStatsStore');
 const deepgramService = require('../services/deepgramService');
+const { toStablePublicImageUrl } = require('../utils/mediaUrl');
+
+/**
+ * Resolve a populated or raw ObjectId ref to a string id (avoids assuming .\_id exists).
+ */
+function participantRefToId(ref) {
+    if (!ref) return '';
+    const id = ref._id ?? ref;
+    try {
+        return id.toString();
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * Minimal user payload for Socket.IO. Full getPublicProfile() includes metadata (Mixed) and
+ * other fields that can be extremely deep and cause "Maximum call stack size exceeded"
+ * when socket.io JSON-encodes the packet.
+ */
+function socketSafeUser(user) {
+    if (!user) return {};
+    const id = user._id || user.id;
+    if (!id) return {};
+    let orgId = user.organizationId;
+    if (orgId && typeof orgId === 'object' && orgId._id) {
+        orgId = orgId._id;
+    }
+    return {
+        _id: id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatarUrl: toStablePublicImageUrl(user.avatarUrl),
+        phoneNumber: user.phoneNumber || undefined,
+        organizationId: orgId || undefined
+    };
+}
 
 /**
  * Socket.IO connection handler with authentication and real-time features
@@ -251,7 +289,7 @@ const socketHandler = (io) => {
                 // Notify other participants that user joined
                 socket.to(`call:${meetingId}`).emit('participant-joined', {
                     userId: socket.userId,
-                    user: socket.user.getPublicProfile(),
+                    user: socketSafeUser(socket.user),
                     role: socket.user.role
                 });
 
@@ -278,7 +316,7 @@ const socketHandler = (io) => {
                 // Notify other participants that user left
                 socket.to(`call:${meetingId}`).emit('participant-left', {
                     userId: socket.userId,
-                    user: socket.user.getPublicProfile()
+                    user: socketSafeUser(socket.user)
                 });
 
                 if (socket.currentMeetingId === meetingId) {
@@ -323,7 +361,7 @@ const socketHandler = (io) => {
                 // Broadcast message to all participants
                 const messageData = {
                     userId: socket.userId,
-                    user: socket.user.getPublicProfile(),
+                    user: socketSafeUser(socket.user),
                     message,
                     messageType,
                     timestamp: new Date()
@@ -364,9 +402,11 @@ const socketHandler = (io) => {
                 }
 
                 // Check if user is a participant
-                const hasAccess = videoCall.recruiter._id.toString() === socket.userId ||
-                                 videoCall.jobSeeker._id.toString() === socket.userId ||
-                                 videoCall.interpreters.some(i => i.interpreter._id.toString() === socket.userId);
+                const hasAccess = participantRefToId(videoCall.recruiter) === socket.userId ||
+                                 participantRefToId(videoCall.jobSeeker) === socket.userId ||
+                                 videoCall.interpreters.some(
+                                     (i) => i.interpreter && participantRefToId(i.interpreter) === socket.userId
+                                 );
 
                 if (!hasAccess) {
                     socket.emit('error', { message: 'Access denied to send messages' });
@@ -694,7 +734,7 @@ const socketHandler = (io) => {
                     meetingId,
                     reason,
                     language,
-                    requestedBy: socket.user.getPublicProfile(),
+                    requestedBy: socketSafeUser(socket.user),
                     boothId: meeting.boothId,
                     eventId: meeting.eventId
                 });
@@ -703,7 +743,7 @@ const socketHandler = (io) => {
                 io.to(`call:${meetingId}`).emit('interpreter-requested', {
                     reason,
                     language,
-                    requestedBy: socket.user.getPublicProfile()
+                    requestedBy: socketSafeUser(socket.user)
                 });
 
                 logger.info(`Interpreter requested for meeting ${meetingId} by ${socket.user.email}`);
@@ -742,7 +782,7 @@ const socketHandler = (io) => {
 
                 // Notify call participants
                 io.to(`call:${meetingId}`).emit('interpreter-accepted', {
-                    interpreter: socket.user.getPublicProfile()
+                    interpreter: socketSafeUser(socket.user)
                 });
 
                 logger.info(`Interpreter request accepted for meeting ${meetingId} by ${socket.user.email}`);
@@ -893,9 +933,11 @@ const socketHandler = (io) => {
                 }
 
                 // Check if user has access to this call
-                const hasAccess = videoCall.recruiter._id.toString() === socket.userId ||
-                                 videoCall.jobSeeker._id.toString() === socket.userId ||
-                                 videoCall.interpreters.some(i => i.interpreter._id.toString() === socket.userId);
+                const hasAccess = participantRefToId(videoCall.recruiter) === socket.userId ||
+                                 participantRefToId(videoCall.jobSeeker) === socket.userId ||
+                                 videoCall.interpreters.some(
+                                     (i) => i.interpreter && participantRefToId(i.interpreter) === socket.userId
+                                 );
 
                 if (!hasAccess) {
                     socket.emit('error', { message: 'Access denied to video call' });
@@ -920,7 +962,7 @@ const socketHandler = (io) => {
                 // Notify other participants that user joined
                 socket.to(`call_${roomName}`).emit('participant-joined-video', {
                     userId: socket.userId,
-                    user: socket.user.getPublicProfile(),
+                    user: socketSafeUser(socket.user),
                     role: socket.user.role
                 });
 
@@ -943,7 +985,7 @@ const socketHandler = (io) => {
                 // Notify other participants that user left
                 socket.to(`call_${roomName}`).emit('participant-left-video', {
                     userId: socket.userId,
-                    user: socket.user.getPublicProfile()
+                    user: socketSafeUser(socket.user)
                 });
 
                 if (socket.currentVideoCallRoom === roomName) {
@@ -1028,7 +1070,7 @@ const socketHandler = (io) => {
                     // Notify call participants that interpreter accepted
                     const responseData = {
                         callId: callId,
-                        interpreter: socket.user.getPublicProfile(),
+                        interpreter: socketSafeUser(socket.user),
                         response: response,
                         timestamp: new Date()
                     };
@@ -1052,8 +1094,8 @@ const socketHandler = (io) => {
                         roomName: videoCall.roomName,
                         accessToken: interpreterToken,
                         booth: videoCall.booth,
-                        recruiter: videoCall.recruiter,
-                        jobSeeker: videoCall.jobSeeker
+                        recruiter: socketSafeUser(videoCall.recruiter),
+                        jobSeeker: socketSafeUser(videoCall.jobSeeker)
                     });
 
                     logger.info(`Interpreter ${socket.user.email} accepted call ${callId}`);
@@ -1061,7 +1103,7 @@ const socketHandler = (io) => {
                     // Notify call participants that interpreter declined
                     io.to(`call_${videoCall.roomName}`).emit('interpreter-declined', {
                         callId: callId,
-                        interpreter: socket.user.getPublicProfile(),
+                        interpreter: socketSafeUser(socket.user),
                         timestamp: new Date()
                     });
 
@@ -1181,7 +1223,7 @@ const socketHandler = (io) => {
             if (socket.currentMeetingId) {
                 socket.to(`call:${socket.currentMeetingId}`).emit('participant-disconnected', {
                     userId: socket.userId,
-                    user: socket.user.getPublicProfile()
+                    user: socketSafeUser(socket.user)
                 });
             }
 
@@ -1189,7 +1231,7 @@ const socketHandler = (io) => {
             if (socket.currentVideoCallRoom) {
                 socket.to(`call_${socket.currentVideoCallRoom}`).emit('participant-left-video', {
                     userId: socket.userId,
-                    user: socket.user.getPublicProfile(),
+                    user: socketSafeUser(socket.user),
                     reason: 'disconnected'
                 });
 
@@ -1243,7 +1285,7 @@ const socketHandler = (io) => {
                             action: 'left',
                             queueEntry: {
                                 _id: queueEntry._id,
-                                jobSeeker: socket.user.getPublicProfile(),
+                                jobSeeker: socketSafeUser(socket.user),
                                 position: queueEntry.position,
                                 status: 'left'
                             }
@@ -1458,12 +1500,12 @@ const socketHandler = (io) => {
             const participants = [
                 {
                     userId: meeting.recruiterId._id,
-                    user: meeting.recruiterId.getPublicProfile(),
+                    user: socketSafeUser(meeting.recruiterId),
                     role: 'recruiter'
                 },
                 {
                     userId: meeting.jobseekerId._id,
-                    user: meeting.jobseekerId.getPublicProfile(),
+                    user: socketSafeUser(meeting.jobseekerId),
                     role: 'jobseeker'
                 }
             ];
@@ -1471,7 +1513,7 @@ const socketHandler = (io) => {
             if (meeting.interpreterId) {
                 participants.push({
                     userId: meeting.interpreterId._id,
-                    user: meeting.interpreterId.getPublicProfile(),
+                    user: socketSafeUser(meeting.interpreterId),
                     role: 'interpreter'
                 });
             }

@@ -6,6 +6,7 @@ const Booth = require('../models/Booth');
 const Event = require('../models/Event');
 const MeetingRecord = require('../models/MeetingRecord');
 const VideoCall = require('../models/VideoCall');
+const { endRoom } = require('../config/twilio');
 const { authenticateToken } = require('../middleware/auth');
 const { getIO } = require('../socket/socketHandler');
 const logger = require('../utils/logger');
@@ -1117,20 +1118,44 @@ router.delete('/remove/:queueId', authenticateToken, async (req, res) => {
             });
         }
 
+        const io = req.app.get('io');
+
+        // End active video call for this queue entry so Twilio room closes and clients get call_ended
+        const activeCall = await VideoCall.findOne({
+            queueEntry: queueEntry._id,
+            status: 'active'
+        });
+        if (activeCall) {
+            try {
+                await endRoom(activeCall.roomName);
+            } catch (twilioErr) {
+                logger.warn('Twilio end room failed during queue remove (continuing):', twilioErr.message);
+            }
+            await activeCall.endCall();
+            if (io) {
+                io.to(`call_${activeCall.roomName}`).emit('call_ended', {
+                    callId: activeCall._id.toString(),
+                    endedBy: req.user._id,
+                    duration: activeCall.duration,
+                    reason: 'removed_from_queue'
+                });
+            }
+        }
+
         // Mark as removed (by recruiter) - different from 'left' (user action) or cleanup
         queueEntry.status = 'removed';
         queueEntry.leftAt = new Date();
         await queueEntry.save();
 
         // Emit socket event
-        if (req.app.get('io')) {
+        if (io) {
             const updateData = {
                 boothId: queueEntry.booth,
                 action: 'removed',
                 queueEntry: queueEntry.toJSON()
             };
-            req.app.get('io').to(`booth_${queueEntry.booth}`).emit('queue-updated', updateData);
-            req.app.get('io').to(`booth_management_${queueEntry.booth}`).emit('queue-updated', updateData);
+            io.to(`booth_${queueEntry.booth}`).emit('queue-updated', updateData);
+            io.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', updateData);
         }
 
         res.json({

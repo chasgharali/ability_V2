@@ -239,8 +239,8 @@ boothSchema.index({ organizationId: 1 });
 
 // Virtual for checking if booth is available for queue joining
 boothSchema.virtual('isAvailableForQueue').get(function () {
-    return this.status === 'active' &&
-        this.settings.queueSettings.allowQueueJoining;
+    const allow = this.settings?.queueSettings?.allowQueueJoining;
+    return this.status === 'active' && (allow !== false);
 });
 
 // Instance method to check if user can manage booth
@@ -319,7 +319,7 @@ boothSchema.methods.getPublicInfo = function () {
         employerPageTemplateId: this.employerPageTemplateId || 'default-v1',
         isAvailableForQueue: this.isAvailableForQueue,
         expireLinkTime: this.expireLinkTime,
-        estimatedWaitTime: this.settings.queueSettings.estimatedWaitTime,
+        estimatedWaitTime: this.settings?.queueSettings?.estimatedWaitTime ?? 15,
         richSections: sections
             .filter(section => section.isActive)
             .sort((a, b) => a.order - b.order)

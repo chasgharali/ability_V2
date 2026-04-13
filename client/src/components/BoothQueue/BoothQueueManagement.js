@@ -673,7 +673,11 @@ export default function BoothQueueManagement() {
 
   const handleRemoveFromQueue = async (queueEntry) => {
     const jobSeekerName = queueEntry.jobSeeker?.name || 'this job seeker';
-    if (window.confirm(`Remove ${jobSeekerName} from the queue?`)) {
+    const inCall = queueEntry.status === 'in_meeting' || queueEntry.status === 'invited' || queueEntry.isInCall;
+    const confirmMsg = inCall
+      ? `Remove ${jobSeekerName} from the queue? This will end the active video call if one is in progress.`
+      : `Remove ${jobSeekerName} from the queue?`;
+    if (window.confirm(confirmMsg)) {
       try {
         await boothQueueAPI.removeFromQueue(queueEntry._id);
         loadData(); // Refresh queue
@@ -961,10 +965,12 @@ export default function BoothQueueManagement() {
                             </button>
 
                             <button
+                              type="button"
                               onClick={() => handleRemoveFromQueue(queueEntry)}
                               className="btn-remove"
                               style={{ background: theme.danger, borderColor: theme.danger }}
-                              disabled
+                              title="Remove from queue and end any active video call"
+                              aria-label="Remove job seeker from queue and end active call if in progress"
                             >
                               Remove
                             </button>
