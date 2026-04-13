@@ -110,7 +110,7 @@ const NoteViewUser = ({ type }) => {
                                 {notes.map((note) => (
                                     <div key={note._id} className="note-card">
                                         <div className="note-card-header">
-                                            <h3>{note.title}</h3>
+                                            <h2>{note.title}</h2>
                                             {note.createdAt && (
                                                 <span className="note-date">
                                                     {new Date(note.createdAt).toLocaleDateString()}

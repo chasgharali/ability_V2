@@ -469,7 +469,7 @@ router.get('/:id/users', authenticateToken, requireRole(['SuperAdmin', 'Admin'])
  * List registered job seekers for this organization.
  * SuperAdmin or Admin of the same org.
  */
-router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Admin']), async (req, res) => {
+router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent']), async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) return res.status(400).json({ error: 'Invalid organization ID' });

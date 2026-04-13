@@ -61,12 +61,7 @@ const NoteManagement = () => {
         {
             key: 'title',
             label: 'Title',
-            render: (row) => (
-                <div className="note-title-cell">
-                    <strong>{row.title}</strong>
-                    <span className={`type-badge ${row.type}`}>{row.type}</span>
-                </div>
-            )
+            render: (row) => <strong>{row.title}</strong>
         },
         {
             key: 'type',
@@ -117,30 +112,44 @@ const NoteManagement = () => {
             render: (row) => (
                 <div className="note-actions">
                     <button
-                        className="action-btn view-btn"
-                        onClick={() => navigate(`/notes/${row._id}`)}
-                        title="View Details"
+                        type="button"
+                        className="action-btn view-btn action-btn--labeled"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/notes/${row._id}`);
+                        }}
+                        title="View read-only details"
                         aria-label={`View details for ${row.title}`}
                     >
-                        <MdVisibility />
+                        <MdVisibility aria-hidden="true" />
+                        <span>View</span>
                     </button>
                     {user?.role === 'Admin' && (
                         <>
                             <button
-                                className="action-btn edit-btn"
-                                onClick={() => navigate(`/notes/${row._id}/edit`)}
-                                title="Edit"
+                                type="button"
+                                className="action-btn edit-btn action-btn--labeled"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/notes/${row._id}/edit`);
+                                }}
+                                title="Edit note"
                                 aria-label={`Edit ${row.title}`}
                             >
-                                <MdEdit />
+                                <MdEdit aria-hidden="true" />
+                                <span>Edit</span>
                             </button>
                             <button
+                                type="button"
                                 className="action-btn delete-btn"
-                                onClick={() => handleDelete(row._id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(row._id);
+                                }}
                                 title="Delete"
                                 aria-label={`Delete ${row.title}`}
                             >
-                                <MdDelete />
+                                <MdDelete aria-hidden="true" />
                             </button>
                         </>
                     )}

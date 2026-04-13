@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { listRegisteredJobSeekers } from '../../services/organizations';
 import { listEvents } from '../../services/events';
 import MassUploadModal from '../UserManagement/MassUploadModal';
+import AdminJobSeekerEditor, { mapJobSeekerUserToAdminEditRow } from './AdminJobSeekerEditor';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
@@ -54,6 +55,7 @@ export default function RegisteredJobSeekerManagement() {
   const [events, setEvents] = useState([]);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [editRow, setEditRow] = useState(null);
   const [showMassUpload, setShowMassUpload] = useState(false);
 
   const [selectedIds, setSelectedIds] = useState([]);
@@ -166,6 +168,13 @@ export default function RegisteredJobSeekerManagement() {
       setSelectedRegistration(rowData.registration);
       setMode('view');
     }
+  }, []);
+
+  const handleEditJobSeeker = useCallback((rowData) => {
+    const mapped = mapJobSeekerUserToAdminEditRow(rowData?.jobSeekerId);
+    if (!mapped) return;
+    setEditRow(mapped);
+    setMode('edit');
   }, []);
 
   const handleRowSelection = useCallback(() => {
@@ -314,16 +323,23 @@ export default function RegisteredJobSeekerManagement() {
   const actionsTemplate = useCallback((props) => {
     const rowData = props?.data ?? props;
     return (
-      <div style={{ padding: '8px 0' }}>
+      <div style={{ padding: '8px 0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <ButtonComponent
           cssClass="e-outline e-primary e-small"
           onClick={() => handleViewProfile(rowData)}
         >
           View
         </ButtonComponent>
+        <ButtonComponent
+          cssClass="e-outline e-primary e-small"
+          onClick={() => handleEditJobSeeker(rowData)}
+          title="Edit job seeker profile"
+        >
+          Edit
+        </ButtonComponent>
       </div>
     );
-  }, [handleViewProfile]);
+  }, [handleViewProfile, handleEditJobSeeker]);
 
   const renderProfile = () => {
     const js = selectedJobSeeker;
@@ -332,7 +348,7 @@ export default function RegisteredJobSeekerManagement() {
       return (
         <div className="dashboard-content">
           <div className="form-header">
-            <ButtonComponent cssClass="e-outline e-primary" onClick={() => { setMode('list'); setSelectedJobSeeker(null); setSelectedRegistration(null); }}>
+            <ButtonComponent cssClass="e-outline e-primary" onClick={() => { setMode('list'); setSelectedJobSeeker(null); setSelectedRegistration(null); setEditRow(null); }}>
               ← Back to List
             </ButtonComponent>
             <h2>No Job Seeker Selected</h2>
@@ -348,7 +364,7 @@ export default function RegisteredJobSeekerManagement() {
     return (
       <div className="dashboard-content">
         <div className="form-header">
-          <ButtonComponent cssClass="e-outline e-primary" onClick={() => { setMode('list'); setSelectedJobSeeker(null); setSelectedRegistration(null); }}>
+          <ButtonComponent cssClass="e-outline e-primary" onClick={() => { setMode('list'); setSelectedJobSeeker(null); setSelectedRegistration(null); setEditRow(null); }}>
             ← Back to List
           </ButtonComponent>
           <h2>Job Seeker Profile: {displayName}</h2>
@@ -465,6 +481,21 @@ export default function RegisteredJobSeekerManagement() {
       <h2>Registered Job Seekers</h2>
       <p>Your account is not associated with an organization. Please contact a Super Admin.</p>
     </div>
+  ) : mode === 'edit' && editRow ? (
+    <AdminJobSeekerEditor
+      key={String(editRow.id)}
+      row={editRow}
+      idPrefix="rjsm-edit-"
+      onCancel={() => {
+        setMode('list');
+        setEditRow(null);
+      }}
+      onSaved={async () => {
+        await fetchJobSeekers();
+        setMode('list');
+        setEditRow(null);
+      }}
+    />
   ) : mode === 'view' ? (
     renderProfile()
   ) : (
@@ -639,7 +670,7 @@ export default function RegisteredJobSeekerManagement() {
               <ColumnDirective field="registeredEvent" headerText="Registered Event" width="200" allowFiltering={true} />
               <ColumnDirective field="registeredAt" headerText="Registered Date" width="140" template={registeredAtTemplate} />
               <ColumnDirective field="lastLogin" headerText="Last Login" width="140" template={lastLoginTemplate} />
-              <ColumnDirective headerText="Actions" width="100" allowSorting={false} allowFiltering={false} template={actionsTemplate} />
+              <ColumnDirective headerText="Actions" width="160" allowSorting={false} allowFiltering={false} template={actionsTemplate} />
             </ColumnsDirective>
             <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, ExcelExport, Freeze]} />
           </GridComponent>

@@ -1037,7 +1037,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
  * PUT /api/users/:id
  * Update user details (Admin/GlobalSupport only)
  */
-router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), [
+router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport']), [
     body('name')
         .optional()
         .trim()
@@ -1165,6 +1165,41 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'Globa
                 error: 'User not found',
                 message: 'The specified user does not exist'
             });
+        }
+
+        if (user.role === 'AdminEvent') {
+            if (targetUser.role !== 'JobSeeker') {
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'You can only edit job seeker profiles'
+                });
+            }
+            const orgId = user.organizationId?._id || user.organizationId;
+            if (!orgId) {
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'No organization context'
+                });
+            }
+            const hasReg = await RegisteredJobSeeker.exists({
+                organizationId: orgId,
+                jobSeekerId: targetUser._id
+            });
+            if (!hasReg) {
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'This job seeker is not registered for your organization'
+                });
+            }
+            const disallowedStaffFields = [role, isActive, assignedBooth, assignedEvents, languages, isAvailable].some(
+                (v) => v !== undefined
+            );
+            if (disallowedStaffFields) {
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'You cannot modify role, status, or staff assignments'
+                });
+            }
         }
 
         if (role === 'SuperAdmin' && user.role !== 'SuperAdmin') {
