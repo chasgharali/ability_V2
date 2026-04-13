@@ -739,17 +739,18 @@
   padding: 12px 45px 12px 20px; /* Extra right padding for settings button */
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  max-height: 80px; /* Limit height for ~2 rows */
+  max-height: 80px; /* Limit height for ~2 rows; taller values come from .caption-lines-* */
   width: 100%; /* Full width of container */
-  overflow-y: hidden; /* Hide overflow - only show 2 rows */
-  position: relative;
+  overflow-y: auto; /* Allow scroll when text wraps; pairs with scroll buttons + auto-scroll */
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.5);
-  position: relative;
 }
 
 .caption-content::-webkit-scrollbar {
@@ -840,7 +841,10 @@
 .caption-item .caption-text {
   color: #ffffff;
   text-align: left;
-  display: inline;
+  flex: 1;
+  min-width: 0; /* Let flex item shrink so long captions wrap instead of clipping */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Caption Size Variations */
