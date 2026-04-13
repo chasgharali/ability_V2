@@ -459,6 +459,10 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             throw new Error('Logo URL must be a valid URL or internal path');
         }),
     body('sendyId').optional().isLength({ max: 200 }),
+    body('link')
+        .optional({ checkFalsy: true })
+        .isURL()
+        .withMessage('Event link must be a valid URL'),
     body('status')
         .optional()
         .isIn(['draft', 'published', 'active', 'completed', 'cancelled'])
@@ -491,7 +495,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
             });
         }
 
-        const { name, description, start, end, timezone, logoUrl, logoAltText, status, sendyId, limits, theme, termsIds, isDemo } = req.body;
+        const { name, description, start, end, timezone, logoUrl, logoAltText, status, sendyId, link, limits, theme, termsIds, isDemo } = req.body;
         const { event, user } = req;
 
         // Handle description with video compression
@@ -520,6 +524,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         if (logoUrl !== undefined) event.logoUrl = toStablePublicImageUrl(logoUrl);
         if (logoAltText !== undefined) event.logoAltText = logoAltText;
         if (sendyId !== undefined) event.sendyId = sendyId || null;
+        if (link !== undefined) event.link = link ? String(link).trim() : null;
         if (status !== undefined) event.status = status;
         if (isDemo !== undefined) event.isDemo = isDemo;
 
