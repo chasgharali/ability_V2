@@ -5,6 +5,78 @@ import { MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import { listUpcomingEvents, listRegisteredEvents } from '../../services/events';
 
+/**
+ * When pathname matches a known app route, use this key for `.sidebar-item.active`
+ * so highlights stay correct even if a page passes the wrong `active` prop.
+ * Returns undefined when the path should fall back to the `active` prop.
+ */
+function getSidebarKeyFromPath(pathname, role) {
+  if (!pathname || !role) return undefined;
+
+  if (/^\/booth-queue\//.test(pathname)) {
+    return 'queue';
+  }
+  if (pathname.startsWith('/meeting-records')) {
+    return 'meeting-records';
+  }
+  if (pathname === '/jobseeker-interests' || pathname.startsWith('/jobseeker-interests/')) {
+    if (role === 'Recruiter' || role === 'BoothAdmin') return 'interests';
+    return 'jobseeker-interests';
+  }
+  if (pathname === '/analytics' || pathname.startsWith('/analytics/')) {
+    return 'analytics';
+  }
+  if (pathname === '/troubleshooting') return 'troubleshooting';
+  if (pathname === '/instructions') return 'instructions';
+
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    if (role === 'JobSeeker') {
+      if (pathname.startsWith('/dashboard/survey')) return 'survey';
+      if (pathname.startsWith('/dashboard/delete-account')) return 'delete-account';
+      if (pathname.startsWith('/dashboard/edit-profile')) return 'edit-profile';
+      if (pathname.startsWith('/dashboard/view-profile')) return 'view-profile';
+      return 'my-account';
+    }
+    if (
+      role === 'Interpreter' ||
+      role === 'GlobalInterpreter' ||
+      role === 'Support' ||
+      role === 'GlobalSupport'
+    ) {
+      return 'dashboard';
+    }
+    return undefined;
+  }
+
+  if (pathname === '/eventmanagement' || pathname.startsWith('/eventmanagement/')) return 'events';
+  if (pathname === '/boothmanagement' || pathname.startsWith('/boothmanagement')) return 'booths';
+  if (pathname === '/usermanagement' || pathname.startsWith('/usermanagement/')) return 'users';
+  if (pathname === '/jobseekermanagement' || pathname.startsWith('/jobseekermanagement/')) {
+    return 'jobseekers';
+  }
+  if (pathname === '/jobseeker-survey' || pathname.startsWith('/jobseeker-survey/')) {
+    return 'jobseeker-survey';
+  }
+  if (pathname === '/jobseeker-qualifications' || pathname.startsWith('/jobseeker-qualifications/')) {
+    return 'jobseeker-qualifications';
+  }
+  if (pathname === '/interpreter-categories' || pathname.startsWith('/interpreter-categories/')) {
+    return 'interpreter-categories';
+  }
+  if (pathname === '/branding' || pathname.startsWith('/branding/')) return 'branding';
+  if (pathname.startsWith('/terms-conditions')) return 'terms-conditions';
+  if (pathname.startsWith('/notes')) return 'notes';
+  if (pathname === '/role-messages' || pathname.startsWith('/role-messages/')) return 'role-messages';
+  if (pathname === '/organizations' || pathname.startsWith('/organizations/')) return 'organizations';
+  if (pathname === '/org-users' || pathname.startsWith('/org-users/')) return 'org-users';
+  if (pathname.startsWith('/legal/terms-of-use/edit')) return 'legal-terms-of-use';
+  if (pathname.startsWith('/legal/privacy-policy/edit')) return 'legal-privacy-policy';
+
+  return undefined;
+}
+
+const JOBSEEKER_ACCOUNT_KEYS = new Set(['my-account', 'survey', 'delete-account', 'edit-profile', 'view-profile']);
+
 export default function AdminSidebar({ active = 'booths' }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -81,7 +153,12 @@ export default function AdminSidebar({ active = 'booths' }) {
     return () => { cancelled = true; };
   }, [user?.role]);
 
-  const itemClass = (key) => `sidebar-item ${active === key ? 'active' : ''}`;
+  const pathSidebarKey = useMemo(
+    () => getSidebarKeyFromPath(location.pathname, user?.role),
+    [location.pathname, user?.role]
+  );
+  const effectiveActive = pathSidebarKey ?? active;
+  const itemClass = (key) => `sidebar-item ${effectiveActive === key ? 'active' : ''}`;
 
   const getSidebarFocusableElements = () => {
     const sidebar = document.querySelector('.dashboard-sidebar');
@@ -365,7 +442,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button
               type="button"
-              className="sidebar-header"
+              className={`sidebar-header ${JOBSEEKER_ACCOUNT_KEYS.has(effectiveActive) ? 'active' : ''}`}
               onClick={(e) => { handleItemClick('/dashboard/my-account', e); closeMobileMenu(); }}
               aria-label="Go to My Account"
               aria-expanded={expanded['my-account']}
@@ -381,13 +458,13 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded['my-account'] && (
               <div className="sidebar-items">
-                <button className={`sidebar-item ${active === 'survey' ? 'active' : ''}`}
+                <button type="button" className={itemClass('survey')}
                   onClick={(e) => { handleItemClick('/dashboard/survey', e); closeMobileMenu(); }}>Survey</button>
-                <button className={`sidebar-item ${active === 'delete-account' ? 'active' : ''}`}
+                <button type="button" className={itemClass('delete-account')}
                   onClick={(e) => { handleItemClick('/dashboard/delete-account', e); closeMobileMenu(); }}>Delete My Account</button>
-                <button className={`sidebar-item ${active === 'edit-profile' ? 'active' : ''}`}
+                <button type="button" className={itemClass('edit-profile')}
                   onClick={(e) => { handleItemClick('/dashboard/edit-profile', e); closeMobileMenu(); }}>Edit Profile & Resume</button>
-                <button className={`sidebar-item ${active === 'view-profile' ? 'active' : ''}`}
+                <button type="button" className={itemClass('view-profile')}
                   onClick={(e) => { handleItemClick('/dashboard/view-profile', e); closeMobileMenu(); }}>View My Profile</button>
               </div>
             )}

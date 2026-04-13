@@ -739,7 +739,7 @@ export default function BoothQueueManagement() {
           secondaryLogoAlt={booth?.logoAltText || ''}
         />
         <div className="dashboard-layout">
-          <AdminSidebar active="booths" />
+          <AdminSidebar active="queue" />
           <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
             <div className="loading">Loading booth queue...</div>
           </main>
@@ -763,7 +763,7 @@ export default function BoothQueueManagement() {
         secondaryLogoAlt={displayBooth?.logoAltText || ''}
       />
       <div className="dashboard-layout">
-        <AdminSidebar active="booths" />
+        <AdminSidebar active="queue" />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="booth-queue-management">
             {/* Header */}
