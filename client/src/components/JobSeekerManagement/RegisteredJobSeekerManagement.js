@@ -159,6 +159,13 @@ export default function RegisteredJobSeekerManagement() {
       });
   }, [jobSeekers]);
 
+  // Syncfusion Grid does not reliably pick up dataSource prop changes — refresh after data updates (e.g. search).
+  useEffect(() => {
+    if (gridRef.current && typeof gridRef.current.refresh === 'function') {
+      gridRef.current.refresh();
+    }
+  }, [flatDataSource]);
+
   // Frozen columns rely on native Syncfusion movable/frozen pane scrolling.
   useEffect(() => undefined, [mode, flatDataSource.length, loading]);
 

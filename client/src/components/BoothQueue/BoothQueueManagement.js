@@ -202,6 +202,32 @@ export default function BoothQueueManagement() {
     return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
   };
 
+  const formatEventDateTime = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
+  const eventStatusLabel = (status) => {
+    if (!status) return null;
+    const labels = {
+      draft: 'Draft',
+      published: 'Published',
+      active: 'Active',
+      completed: 'Completed',
+      cancelled: 'Cancelled'
+    };
+    return labels[status] || status;
+  };
+
 
   const loadData = async () => {
     try {
@@ -839,7 +865,93 @@ export default function BoothQueueManagement() {
 
             {/* Queue List */}
             <div className="queue-list">
-              <h2>Job Seekers in Queue</h2>
+              <section
+                className="queue-event-card"
+                aria-label="Event summary"
+              >
+                {displayEvent ? (
+                  <div className="queue-event-card-inner">
+                    <div className="queue-event-card-brand">
+                      {displayEvent.logoUrl ? (
+                        <img
+                          src={displayEvent.logoUrl}
+                          alt={displayEvent.logoAltText || `${displayEvent.name} logo`}
+                          className="queue-event-card-logo"
+                        />
+                      ) : (
+                        <div className="queue-event-card-logo-placeholder" aria-hidden="true">
+                          Event
+                        </div>
+                      )}
+                    </div>
+                    <div className="queue-event-card-body">
+                      <p className="queue-event-card-kicker">Event</p>
+                      <h2 id="queue-event-card-title" className="queue-event-card-title">
+                        {displayEvent.name}
+                      </h2>
+                      <dl className="queue-event-card-meta">
+                        {formatEventDateTime(displayEvent.start) && (
+                          <div className="queue-event-card-meta-item">
+                            <dt>Opens</dt>
+                            <dd>
+                              <time dateTime={displayEvent.start}>
+                                {formatEventDateTime(displayEvent.start)}
+                              </time>
+                            </dd>
+                          </div>
+                        )}
+                        {formatEventDateTime(displayEvent.end) && (
+                          <div className="queue-event-card-meta-item">
+                            <dt>Closes</dt>
+                            <dd>
+                              <time dateTime={displayEvent.end}>
+                                {formatEventDateTime(displayEvent.end)}
+                              </time>
+                            </dd>
+                          </div>
+                        )}
+                        {displayEvent.timezone && (
+                          <div className="queue-event-card-meta-item">
+                            <dt>Timezone</dt>
+                            <dd>{displayEvent.timezone}</dd>
+                          </div>
+                        )}
+                        {displayEvent.status && (
+                          <div className="queue-event-card-meta-item">
+                            <dt>Status</dt>
+                            <dd>
+                              <span className="queue-event-card-status">{eventStatusLabel(displayEvent.status)}</span>
+                            </dd>
+                          </div>
+                        )}
+                        {displayEvent.link && (
+                          <div className="queue-event-card-meta-item queue-event-card-meta-item--link">
+                            <dt>Event link</dt>
+                            <dd>
+                              <a
+                                href={displayEvent.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="queue-event-card-link"
+                              >
+                                {displayEvent.link}
+                              </a>
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="queue-event-card-inner queue-event-card-inner--empty">
+                    <p className="queue-event-card-missing">
+                      Event information is not available for this booth.
+                    </p>
+                  </div>
+                )}
+              </section>
+
+              <h2 className="queue-seekers-heading">Job Seekers in Queue</h2>
 
               {queue.length === 0 ? (
                 <div className="empty-queue">
