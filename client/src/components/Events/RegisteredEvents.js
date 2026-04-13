@@ -175,7 +175,6 @@ export default function RegisteredEvents() {
                         <div className="event-card-header">
                           <div className="event-card-title">
                             <h3>{evt.name}</h3>
-                            <span className="event-slug" aria-label="Event identifier">{evt.slug}</span>
                           </div>
                           <span 
                             className="registration-status-badge"
