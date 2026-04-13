@@ -46,9 +46,10 @@
 .video-call-container-new {
   position: fixed;
   top: 0;
+  right: 0;
+  bottom: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  /* Pin all edges — avoids iPadOS Safari 100vh/100% sizing that clips the footer bar */
   background: var(--call-bg);
   display: flex;
   flex-direction: column;
@@ -271,7 +272,7 @@
   .video-main-area {
     padding-top: 120px;
     /* More space for stacked mobile header */
-    padding-bottom: 100px;
+    padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Ensure remote participant videos are fully visible on mobile */
@@ -328,7 +329,7 @@
   }
 
   .video-main-area {
-    padding-bottom: 95px;
+    padding-bottom: calc(95px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Ensure remote participant videos are fully visible on small mobile */
@@ -492,8 +493,8 @@
   background: #000;
   overflow: hidden;
   padding-top: 80px;
-  /* Increased space for enhanced header */
-  padding-bottom: 90px;
+  /* Footer is ~100px+ with labels; + safe area on notched iPad/iPhone */
+  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
 }
 
 .participants-grid {
@@ -534,7 +535,7 @@
 /* Local Video Overlay */
 .local-video-overlay {
   position: absolute;
-  bottom: 110px;
+  bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   left: 20px;
   width: 200px;
   height: 150px;
@@ -579,7 +580,7 @@
 /* Caption Display */
 .caption-container {
   position: absolute;
-  bottom: 110px;
+  bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   left: 54%;
   transform: translateX(-50%);
   width: 600px; /* Fixed width */
@@ -971,7 +972,7 @@
 /* Caption display responsive */
 @media (max-width: 768px) {
   .caption-container {
-    bottom: 110px;
+    bottom: calc(110px + env(safe-area-inset-bottom, 0px));
     width: 90%; /* Responsive width on mobile */
     max-width: 600px;
   }
@@ -988,7 +989,7 @@
 
 @media (max-width: 480px) {
   .caption-container {
-    bottom: 115px;
+    bottom: calc(115px + env(safe-area-inset-bottom, 0px));
     max-width: 95%;
     min-width: 200px;
   }
@@ -1033,6 +1034,9 @@
   z-index: 20;
   background: var(--header-bg);
   backdrop-filter: blur(10px);
+  /* Keep mic/video/end controls above the home indicator on iPad / iPhone */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
 }
 
 /* Focus Indicators for Accessibility */
@@ -1076,7 +1080,7 @@
   .local-video-overlay {
     width: 160px;
     height: 120px;
-    bottom: 100px;
+    bottom: calc(110px + env(safe-area-inset-bottom, 0px));
     left: 10px;
     border-width: 2px;
   }
@@ -1099,14 +1103,14 @@
   .local-video-overlay {
     width: 140px;
     height: 105px;
-    bottom: 95px;
+    bottom: calc(95px + env(safe-area-inset-bottom, 0px));
     left: 8px;
     border-radius: 8px;
     margin-bottom: 12px;
   }
 
   .video-main-area {
-    padding-bottom: 100px;
+    padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   }
 
   .participants-grid {
@@ -1119,7 +1123,22 @@
   .local-video-overlay {
     width: 120px;
     height: 90px;
-    bottom: 90px;
+    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
     left: 5px;
+  }
+}
+
+/* iPad and large touch devices: width often > 768px so generic mobile rules do not run */
+@media (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+  .video-main-area {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .local-video-overlay {
+    bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .caption-container {
+    bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   }
 }
