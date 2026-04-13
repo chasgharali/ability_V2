@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdExpandMore, MdExpandLess, MdMenu, MdClose } from 'react-icons/md';
@@ -279,6 +279,26 @@ export default function AdminSidebar({ active = 'booths' }) {
     };
   }, [location.pathname, user?.role, upcomingEvents.length, myRegistrations.length]);
 
+  /** Path-based active state for JobSeeker (active prop is only used for My Account sub-routes). */
+  const jobSeekerPathActive = useMemo(() => {
+    if (user?.role !== 'JobSeeker') return null;
+    const path = location.pathname;
+    const regDetailMatch = path.match(/^\/events\/registered\/([^/]+)$/);
+    const eventMatch = path.match(/^\/event\/([^/]+)(?:\/register)?$/);
+    return {
+      registeredList: path === '/events/registered',
+      registeredSlug: regDetailMatch ? decodeURIComponent(regDetailMatch[1]) : null,
+      upcomingList: path === '/events/upcoming',
+      eventSlug: eventMatch ? decodeURIComponent(eventMatch[1]) : null,
+      troubleshooting: path === '/troubleshooting',
+      instructions: path === '/instructions'
+    };
+  }, [user?.role, location.pathname]);
+
+  const upcomingSlugActive = (slugOrId) =>
+    jobSeekerPathActive?.eventSlug &&
+    (slugOrId === jobSeekerPathActive.eventSlug || String(slugOrId) === jobSeekerPathActive.eventSlug);
+
   // Render role-specific sidebar content
   const renderSidebarContent = () => {
     if (user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter') {
@@ -344,9 +364,11 @@ export default function AdminSidebar({ active = 'booths' }) {
         <>
           <div className="sidebar-section">
             <button
+              type="button"
               className="sidebar-header"
               onClick={(e) => { handleItemClick('/dashboard/my-account', e); closeMobileMenu(); }}
               aria-label="Go to My Account"
+              aria-expanded={expanded['my-account']}
             >
               <span>My Account</span>
               <span
@@ -373,7 +395,8 @@ export default function AdminSidebar({ active = 'booths' }) {
 
           <div className="sidebar-section">
             <button
-              className="sidebar-header"
+              type="button"
+              className={`sidebar-header ${myRegistrations.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.registeredList || jobSeekerPathActive.registeredSlug) ? 'active' : ''}`}
               onClick={(e) => { 
                 if (myRegistrations.length > 0) {
                   handleItemClick('/events/registered', e); 
@@ -382,6 +405,8 @@ export default function AdminSidebar({ active = 'booths' }) {
               }}
               disabled={myRegistrations.length === 0}
               aria-label={myRegistrations.length === 0 ? "No current registrations available" : "Go to My Current Registrations"}
+              aria-expanded={myRegistrations.length === 0 ? undefined : expanded.registrations}
+              aria-current={jobSeekerPathActive?.registeredList ? 'page' : undefined}
               title={myRegistrations.length === 0 ? "No current registrations available" : ""}
             >
               <span>Current Registrations</span>
@@ -403,16 +428,28 @@ export default function AdminSidebar({ active = 'booths' }) {
                 {myRegistrations.length === 0 && (
                   <div className="sidebar-empty">No registrations yet.</div>
                 )}
-                {myRegistrations.map((e) => (
-                  <button key={e.slug} className="sidebar-item" onClick={(evt) => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`, evt); closeMobileMenu(); }}>{e.name}</button>
-                ))}
+                {myRegistrations.map((e) => {
+                  const isActive = jobSeekerPathActive?.registeredSlug === e.slug;
+                  return (
+                    <button
+                      key={e.slug}
+                      type="button"
+                      className={`sidebar-item ${isActive ? 'active' : ''}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      onClick={(evt) => { handleItemClick(`/events/registered/${encodeURIComponent(e.slug)}`, evt); closeMobileMenu(); }}
+                    >
+                      {e.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
           <div className="sidebar-section">
             <button
-              className="sidebar-header"
+              type="button"
+              className={`sidebar-header ${upcomingEvents.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.upcomingList || (jobSeekerPathActive.eventSlug && upcomingEvents.some((evt) => upcomingSlugActive(evt.slug || evt._id)))) ? 'active' : ''}`}
               onClick={(e) => { 
                 if (upcomingEvents.length > 0) {
                   handleItemClick('/events/upcoming', e); 
@@ -421,6 +458,8 @@ export default function AdminSidebar({ active = 'booths' }) {
               }}
               disabled={upcomingEvents.length === 0}
               aria-label={upcomingEvents.length === 0 ? "No upcoming events available" : "Go to Upcoming Events"}
+              aria-expanded={upcomingEvents.length === 0 ? undefined : expanded['upcoming-events']}
+              aria-current={jobSeekerPathActive?.upcomingList ? 'page' : undefined}
               title={upcomingEvents.length === 0 ? "No upcoming events available" : ""}
             >
               <span>Upcoming Events</span>
@@ -442,15 +481,21 @@ export default function AdminSidebar({ active = 'booths' }) {
                 {upcomingEvents.length === 0 && (
                   <div className="sidebar-empty">No upcoming events</div>
                 )}
-                {upcomingEvents.map(evt => (
-                  <button
-                    key={evt.slug || evt._id}
-                    className="sidebar-item"
-                    onClick={(e) => { handleItemClick(`/event/${encodeURIComponent(evt.slug || evt._id)}`, e); closeMobileMenu(); }}
-                  >
-                    {evt.name}
-                  </button>
-                ))}
+                {upcomingEvents.map((evt) => {
+                  const slugOrId = evt.slug || evt._id;
+                  const isActive = upcomingSlugActive(slugOrId);
+                  return (
+                    <button
+                      key={evt.slug || evt._id}
+                      type="button"
+                      className={`sidebar-item ${isActive ? 'active' : ''}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      onClick={(e) => { handleItemClick(`/event/${encodeURIComponent(slugOrId)}`, e); closeMobileMenu(); }}
+                    >
+                      {evt.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -465,8 +510,22 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button className="sidebar-item" onClick={(e) => handleItemClick('/troubleshooting', e)}>Trouble Shooting</button>
-            <button className="sidebar-item" onClick={(e) => handleItemClick('/instructions', e)}>Instructions</button>
+            <button
+              type="button"
+              className={`sidebar-item ${jobSeekerPathActive?.troubleshooting ? 'active' : ''}`}
+              aria-current={jobSeekerPathActive?.troubleshooting ? 'page' : undefined}
+              onClick={(e) => handleItemClick('/troubleshooting', e)}
+            >
+              Trouble Shooting
+            </button>
+            <button
+              type="button"
+              className={`sidebar-item ${jobSeekerPathActive?.instructions ? 'active' : ''}`}
+              aria-current={jobSeekerPathActive?.instructions ? 'page' : undefined}
+              onClick={(e) => handleItemClick('/instructions', e)}
+            >
+              Instructions
+            </button>
           </div>
         </>
       );

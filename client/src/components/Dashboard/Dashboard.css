@@ -1068,6 +1068,20 @@ body.sidebar-open .mobile-menu-toggle:hover {
     outline: none;
 }
 
+.sidebar-header.active {
+    background: #ffffff;
+    color: #000000;
+    font-weight: 600;
+}
+
+.sidebar-header.active:hover,
+.sidebar-header.active:focus-visible {
+    background: #f3f4f6;
+    color: #000000;
+    outline: 2px solid #000000;
+    outline-offset: -2px;
+}
+
 .sidebar-header:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -2114,7 +2128,8 @@ body.sidebar-open .mobile-menu-toggle:hover {
         border: 2px solid #000000;
     }
 
-    .sidebar-item.active {
+    .sidebar-item.active,
+    .sidebar-header.active {
         border: 2px solid #000000;
     }
 }
@@ -2166,28 +2181,6 @@ body.sidebar-open .mobile-menu-toggle:hover {
         display: block;
     }
 }
-
-/* ===== Collapsible arrows on sidebar headers ===== */
-.dashboard-sidebar .sidebar-header {
-    position: relative;
-    padding-right: 32px;
-    /* space for arrow */
-}
-
-.dashboard-sidebar .sidebar-header::after {
-    content: '▾';
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 12px;
-    opacity: 0.8;
-}
-
-.dashboard-sidebar .sidebar-header[aria-expanded="true"]::after {
-    content: '▴';
-}
-
 
 /* Extra small screens - further optimize header */
 @media (max-width: 480px) {
