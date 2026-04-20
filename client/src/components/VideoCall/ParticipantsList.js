@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiUsers, FiX, FiMic, FiVideo, FiUserPlus } from 'react-icons/fi';
 import { INTERPRETER_CATEGORIES } from '../../constants/options';
+import { formatRoleLabel, normalizeRoleKey } from '../../utils/videoCallRoles';
 import InterpreterSelectionModal from './InterpreterSelectionModal';
 import './ParticipantsList.css';
 
@@ -23,19 +24,6 @@ const ParticipantsList = ({
     setSelectedCategory('');
   };
 
-
-  const formatRole = (role) => {
-    switch (role) {
-      case 'recruiter':
-        return 'Recruiter';
-      case 'jobseeker':
-        return 'Job Seeker';
-      case 'interpreter':
-        return 'Interpreter';
-      default:
-        return 'Participant';
-    }
-  };
 
   // Process participants data with improved logic
   const processParticipants = () => {
@@ -81,7 +69,7 @@ const ParticipantsList = ({
             name === `${participants.localUser.firstName} ${participants.localUser.lastName}`.trim());
 
         // Determine role
-        let role = forcedRole || participant.role || 'participant';
+        let role = normalizeRoleKey(forcedRole || participant.role || 'participant');
 
         // If participant already exists, update their connection status
         if (participantMap.has(primaryId)) {
@@ -92,12 +80,12 @@ const ParticipantsList = ({
               ...existing,
               twilioConnected: true,
               status: 'connected',
-              role: existing.role // Keep the existing role (recruiter/jobseeker)
+              role: normalizeRoleKey(existing.role) // Keep the existing role (recruiter/jobseeker)
             });
           } else {
             // Keep the more specific role for non-Twilio updates
-            if (existing.role !== 'participant' && role === 'participant') {
-              role = existing.role;
+            if (normalizeRoleKey(existing.role) !== 'participant' && role === 'participant') {
+              role = normalizeRoleKey(existing.role);
             }
             participantMap.set(primaryId, {
               ...existing,
@@ -295,7 +283,7 @@ const ParticipantsList = ({
       const roleMap = new Map();
 
       allParticipantsList.forEach(participant => {
-        const role = participant.role;
+        const role = normalizeRoleKey(participant.role);
 
         // Allow multiple interpreters and generic participants
         if (role === 'interpreter') {
@@ -436,7 +424,7 @@ const ParticipantsList = ({
               key={participant.id || index}
               className="vcpl-item"
               role="listitem"
-              aria-label={`${participant.name}, ${formatRole(participant.role)}, status: ${interpreterStatus.toLowerCase()}`}
+              aria-label={`${participant.name}, ${formatRoleLabel(participant.role)}, status: ${interpreterStatus.toLowerCase()}`}
             >
               <div className="vcpl-avatar">
                 <div
@@ -459,8 +447,8 @@ const ParticipantsList = ({
                   )}
                 </div>
                 <div className="vcpl-role-row">
-                  <span className={`vcpl-role-badge vcpl-role-${participant.role}`} aria-label={`Role: ${formatRole(participant.role)}`}>
-                    {formatRole(participant.role)}
+                  <span className={`vcpl-role-badge vcpl-role-${normalizeRoleKey(participant.role)}`} aria-label={`Role: ${formatRoleLabel(participant.role)}`}>
+                    {formatRoleLabel(participant.role)}
                   </span>
                   {participant.category && (
                     <span className="vcpl-category-badge" aria-label={`Interpreter category: ${participant.category}`}>

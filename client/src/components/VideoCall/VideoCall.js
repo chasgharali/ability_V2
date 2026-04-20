@@ -11,6 +11,14 @@ import ParticipantsList from './ParticipantsList';
 import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
 import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
+import { AudioCapture } from '../../utils/audioCapture';
+import {
+  extractUserIdFromTwilioIdentity,
+  formatRoleLabel,
+  getRoleFromIdentity,
+  normalizeCallInfoParticipants,
+  normalizeRoleKey
+} from '../../utils/videoCallRoles';
 // Syncfusion Speech To Text Component
 import { SpeechToTextComponent } from '@syncfusion/ej2-react-inputs';
 import '@syncfusion/ej2-react-inputs/styles/material.css';
@@ -24,6 +32,46 @@ if (typeof Log !== 'undefined') {
 // Override console.warn and console.error to filter out unwanted warnings
 const originalConsoleWarn = console.warn;
 const originalConsoleError = console.error;
+const useBrowserSpeechFallback = process.env.REACT_APP_USE_BROWSER_SPEECH_FALLBACK === 'true';
+
+/** If > 0, final captions auto-clear after this many ms. Default 0 = captions stay until call ends or buffer trim. */
+const CAPTION_AUTO_CLEAR_MS = parseInt(process.env.REACT_APP_CAPTION_AUTO_CLEAR_MS || '0', 10);
+
+/** Max caption rows rendered (scroll inside panel). Larger than old "lines" limit so transcript persists. */
+const MAX_CAPTION_TRANSCRIPT_ROWS = 50;
+
+/** Max entries in remoteCaptions Map before oldest-by-timestamp rows are dropped (memory bound). */
+const MAX_CAPTION_MAP_ENTRIES = 100;
+
+/** Map key prefix for in-progress (non-final) caption row per speaker. */
+const LIVE_CAPTION_KEY_PREFIX = 'live__';
+
+function parseCaptionOwnerId(captionKey, caption) {
+  if (caption?.ownerId != null && caption.ownerId !== '') return String(caption.ownerId);
+  if (typeof captionKey !== 'string') return '';
+  if (captionKey.startsWith(LIVE_CAPTION_KEY_PREFIX)) {
+    return captionKey.slice(LIVE_CAPTION_KEY_PREFIX.length);
+  }
+  const mongo = captionKey.match(/^([a-f0-9]{24})_/i);
+  if (mongo) return mongo[1];
+  const u = captionKey.indexOf('_');
+  if (u === -1) return captionKey;
+  return captionKey.slice(0, u);
+}
+
+function trimCaptionsMap(map, maxEntries) {
+  if (map.size <= maxEntries) return map;
+  const entries = [...map.entries()].sort(
+    (a, b) =>
+      new Date(a[1].timestamp || 0).getTime() - new Date(b[1].timestamp || 0).getTime()
+  );
+  const next = new Map(map);
+  const excess = map.size - maxEntries;
+  for (let i = 0; i < excess; i++) {
+    next.delete(entries[i][0]);
+  }
+  return next;
+}
 
 console.warn = function(...args) {
   const message = args.join(' ');
@@ -135,11 +183,15 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     };
   };
 
+  const normalizeCallData = useCallback((rawCallData) => (
+    normalizeCallInfoParticipants(rawCallData || {}, user)
+  ), [user]);
+
   // Call state
   const [room, setRoom] = useState(null);
   const [participants, setParticipants] = useState(new Map());
   const [localTracks, setLocalTracks] = useState([]);
-  const [callInfo, setCallInfo] = useState(callData);
+  const [callInfo, setCallInfo] = useState(callData ? normalizeCallData(callData) : null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -186,6 +238,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const callEndedRef = useRef(false);
   // Syncfusion SpeechToText component reference
   const speechToTextRef = useRef(null);
+  const localAudioCaptureRef = useRef(null);
   // Ref to track caption enabled state (avoids stale closure in event handlers)
   const isCaptionEnabledRef = useRef(false);
   // Ref to track caption clear timeout (for cleanup)
@@ -335,246 +388,192 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   // Helper function to get role from participant ID
   const getParticipantRole = useCallback((participantId) => {
+    if (!participantId) return 'Participant';
+
     // Check if it's the local user
     const localId = user?._id || user?.id;
     if (participantId === localId || participantId === 'local') {
-      // Return local user's role
-      const userRole = user?.role?.toLowerCase();
-      if (userRole === 'recruiter') return 'Recruiter';
-      if (userRole === 'jobseeker') return 'Jobseeker';
-      if (userRole === 'interpreter' || userRole === 'globalinterpreter') return 'Interpreter';
-      return 'Participant';
+      return formatRoleLabel(user?.role);
     }
-    
-    // Check callInfo participants for role
-    if (callInfo?.participants) {
-      // Check recruiter
-      const recruiterId = callInfo.participants.recruiter?._id || 
-                         callInfo.participants.recruiter?.id ||
-                         callInfo.recruiter?._id || 
-                         callInfo.recruiter?.id;
-      if (recruiterId && String(recruiterId) === String(participantId)) {
-        return 'Recruiter';
-      }
-      
-      // Check job seeker
-      const jobSeekerId = callInfo.participants.jobSeeker?._id || 
-                          callInfo.participants.jobSeeker?.id ||
-                          callInfo.jobSeeker?._id || 
-                          callInfo.jobSeeker?.id ||
-                          callInfo.jobSeekerId;
-      if (jobSeekerId && String(jobSeekerId) === String(participantId)) {
-        return 'Jobseeker';
-      }
-      
-      // Check interpreters
-      const interpreters = callInfo.participants.interpreters || [];
-      for (const interpreterEntry of interpreters) {
-        const interpreterId = interpreterEntry.interpreter?._id || 
-                             interpreterEntry.interpreter?.id ||
-                             interpreterEntry._id || 
-                             interpreterEntry.id;
-        if (interpreterId && String(interpreterId) === String(participantId)) {
-          return 'Interpreter';
-        }
+
+    const normalizedCallInfo = normalizeCallData(callInfo || {});
+    const callParticipants = normalizedCallInfo?.participants || {};
+
+    const recruiterId = callParticipants.recruiter?._id || callParticipants.recruiter?.id;
+    if (recruiterId && String(recruiterId) === String(participantId)) {
+      return 'Recruiter';
+    }
+
+    const jobSeekerId = callParticipants.jobSeeker?._id || callParticipants.jobSeeker?.id || normalizedCallInfo?.jobSeekerId;
+    if (jobSeekerId && String(jobSeekerId) === String(participantId)) {
+      return 'Job Seeker';
+    }
+
+    const interpreters = callParticipants.interpreters || [];
+    for (const interpreterEntry of interpreters) {
+      const interpreterId = interpreterEntry?.interpreter?._id ||
+        interpreterEntry?.interpreter?.id ||
+        interpreterEntry?._id ||
+        interpreterEntry?.id;
+      if (interpreterId && String(interpreterId) === String(participantId)) {
+        return 'Interpreter';
       }
     }
-    
-    // Default fallback
+
+    for (const twilioParticipant of participants.values()) {
+      if (!twilioParticipant?.identity) continue;
+      const uid = extractUserIdFromTwilioIdentity(twilioParticipant.identity);
+      if (uid && String(uid) === String(participantId)) {
+        return formatRoleLabel(getRoleFromIdentity(twilioParticipant.identity));
+      }
+    }
+
     return 'Participant';
-  }, [user, callInfo]);
+  }, [user, callInfo, participants, normalizeCallData]);
 
   // Create caption transcription handler function (outside useEffect to avoid closure issues)
   const handleCaptionTranscription = useCallback((data) => {
-      // IMPORTANT: Always check the ref directly (refs don't have closure issues)
-      // The ref is updated synchronously when captions are enabled/disabled
-      const captionsCurrentlyEnabled = isCaptionEnabledRef.current;
-      
-      // Always process captions from socket (they're broadcast by other participants)
-      // We'll only display them if captions are enabled locally
-      // This ensures captions work independently for each participant
-      
       if (!data) {
         return;
       }
-      
-      // Process caption even if local CC is disabled (store it, but only display if enabled)
-      // This allows captions to be ready when user enables CC
-      
-      // Extract data first
-      const { participantId, participantName, text, isFinal, timestamp } = data;
-      
-      // Improved deduplication: Skip if we've already processed this exact caption recently
-      // Use a combination of participantId, text, and a time window to prevent duplicates
-      const captionKey = `${participantId}_${text.trim().substring(0, 100)}`;
-      const now = Date.now();
-      
-      // Ensure _processedCaptions is always a Map (not a Set from previous code)
-      if (!window._processedCaptions || !(window._processedCaptions instanceof Map)) {
-        window._processedCaptions = new Map(); // Use Map to store timestamp
-      }
-      
-      // Clean old entries (older than 2 seconds)
-      const twoSecondsAgo = now - 2000;
-      for (const [key, time] of window._processedCaptions.entries()) {
-        if (time < twoSecondsAgo) {
-          window._processedCaptions.delete(key);
-        }
-      }
-      
-      // Check if we've seen this exact caption in the last 2 seconds
-      const lastProcessed = window._processedCaptions.get(captionKey);
-      if (lastProcessed && (now - lastProcessed) < 2000) {
-        // Already processed this caption recently - skip to avoid duplicates
+
+      const {
+        participantId,
+        participantName,
+        text,
+        isFinal,
+        timestamp,
+        participantRole: roleFromSocket
+      } = data;
+
+      if (!participantId || !text) {
         return;
       }
-      
-      // Mark as processed with current timestamp
-      window._processedCaptions.set(captionKey, now);
-      
-      // Log when we actually process captions (not when disabled)
+
+      const newText = text.trim();
+      if (!newText) {
+        return;
+      }
+
+      const newTimestamp = timestamp || new Date().toISOString();
+      const timestampMs = new Date(newTimestamp).getTime();
+      const isFinalCaption = isFinal !== false;
+
+      // Deduplicate identical *final* lines only (streaming partials may repeat text)
+      if (isFinalCaption) {
+        const captionDedupeKey = `${participantId}_${newText.substring(0, 100)}`;
+        const now = Date.now();
+        if (!window._processedCaptions || !(window._processedCaptions instanceof Map)) {
+          window._processedCaptions = new Map();
+        }
+        const twoSecondsAgo = now - 2000;
+        for (const [key, time] of window._processedCaptions.entries()) {
+          if (time < twoSecondsAgo) {
+            window._processedCaptions.delete(key);
+          }
+        }
+        const lastProcessed = window._processedCaptions.get(captionDedupeKey);
+        if (lastProcessed && (now - lastProcessed) < 2000) {
+          return;
+        }
+        window._processedCaptions.set(captionDedupeKey, now);
+      }
+
       if (!window._lastCaptionLog || Date.now() - window._lastCaptionLog > 2000) {
         console.log('🔔 caption-transcription event received:', data);
         console.log('✅ Processing caption - isCaptionEnabledRef.current =', isCaptionEnabledRef.current);
         window._lastCaptionLog = Date.now();
       }
-      
-      if (!participantId || !text) {
-        return;
-      }
 
-      // Always process and store captions, but only display if CC is enabled
-      // This ensures captions are available when user enables CC
-      const newText = text.trim();
-      const newTimestamp = timestamp || new Date().toISOString();
-      const timestampMs = new Date(newTimestamp).getTime();
-      
-      // Check if speaker has been silent for more than 2 seconds (should create new line)
-      let shouldCreateNewLine = false;
-      const speakerHistory = captionHistoryBySpeakerRef.current.get(participantId) || [];
-      
-      if (speakerHistory.length > 0) {
-        const lastEntry = speakerHistory[speakerHistory.length - 1];
-        const lastTimestampMs = new Date(lastEntry.timestamp).getTime();
-        const timeSinceLastSpeech = timestampMs - lastTimestampMs;
-        
-        // If more than 2 seconds passed and this is a final transcript, create new line
-        if (timeSinceLastSpeech > 2000 && isFinal && lastEntry.isFinal) {
-          shouldCreateNewLine = true;
-        }
-      }
-      
-      // Add new entry to history (update ref synchronously)
-      const updatedHistory = [...speakerHistory, {
-        text: newText,
-        timestamp: newTimestamp,
-        isFinal: isFinal !== false
-      }].slice(-10); // Keep last 10 entries per speaker
-      
-      captionHistoryBySpeakerRef.current.set(participantId, updatedHistory);
+      const ownerId = String(participantId);
+      const resolvedRole =
+        roleFromSocket != null && String(roleFromSocket).trim() !== ''
+          ? formatRoleLabel(normalizeRoleKey(roleFromSocket))
+          : getParticipantRole(ownerId);
+      const liveKey = `${LIVE_CAPTION_KEY_PREFIX}${ownerId}`;
 
-      // Update remote captions map with OTHER participant's transcript
-      // This ensures OTHER users' captions show up on YOUR screen
-      setRemoteCaptions(prev => {
-        const newMap = new Map(prev);
-        const participantRole = getParticipantRole(participantId);
-        
-        // If creating new line, use a unique key by appending timestamp
-        // Otherwise, update the existing entry for this participant
-        const captionKey = shouldCreateNewLine 
-          ? `${participantId}_${timestampMs}` 
-          : participantId;
-        
-        // Remove old entries for this participant to prevent duplicates
-        // Keep only entries that are for new lines (have timestamp in key)
-        if (!shouldCreateNewLine) {
-          // Remove all old entries for this participant (including new line entries)
-          for (const [key, caption] of newMap.entries()) {
-            const keyParticipantId = key.includes('_') 
-              ? key.split('_').slice(0, -1).join('_') 
-              : key;
-            if (keyParticipantId === participantId && key !== captionKey) {
-              newMap.delete(key);
-            }
-          }
-        } else {
-          // When creating new line, keep the most recent old entry but remove others
-          // Find the most recent entry for this participant
-          let mostRecentKey = null;
-          let mostRecentTime = 0;
-          for (const [key, caption] of newMap.entries()) {
-            const keyParticipantId = key.includes('_') 
-              ? key.split('_').slice(0, -1).join('_') 
-              : key;
-            if (keyParticipantId === participantId) {
-              const captionTime = new Date(caption.timestamp || 0).getTime();
-              if (captionTime > mostRecentTime) {
-                mostRecentTime = captionTime;
-                mostRecentKey = key;
-              }
-            }
-          }
-          // Remove all entries except the most recent one (which we'll keep)
-          for (const [key] of newMap.entries()) {
-            const keyParticipantId = key.includes('_') 
-              ? key.split('_').slice(0, -1).join('_') 
-              : key;
-            if (keyParticipantId === participantId && key !== mostRecentKey && key !== captionKey) {
-              newMap.delete(key);
-            }
-          }
-        }
-        
-        // Only update if text actually changed (avoid unnecessary re-renders)
-        const existing = newMap.get(captionKey);
-        if (!existing || existing.text !== newText) {
-          const captionData = {
-            text: newText,
-            speaker: participantName || 'Participant',
-            role: participantRole,
-            timestamp: newTimestamp,
-            isFinal: isFinal !== false,
-            captionKey: captionKey // Store unique key for new lines
-          };
-          newMap.set(captionKey, captionData);
-          // Reset logged captions so new caption will be logged
-          window._lastLoggedCaptions = null;
-        } else {
-          // Text is same, but update timestamp and isFinal status
-          newMap.set(captionKey, {
-            ...existing,
-            timestamp: newTimestamp,
-            isFinal: isFinal !== false
-          });
-        }
-        return newMap;
-      });
-      
-      // Don't force re-render with setCaptionText - it causes unnecessary renders
-      // The remoteCaptions state update is enough to trigger a re-render
+      if (isFinalCaption) {
+        const rowKey = `${ownerId}_${timestampMs}_${Math.random().toString(36).slice(2, 11)}`;
+        // Merge fragments: if the most recent final entry from this speaker arrived
+        // within 5 seconds, append text rather than creating a new row. This turns
+        // chunk-boundary fragments ("And we are working on" + "something") into one line.
+        const MERGE_WINDOW_MS = 5000;
+        setRemoteCaptions(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(liveKey);
 
-      // Clear this participant's caption after 15 seconds if final (longer timeout to keep captions visible)
-      // Only clear if CC is enabled (to avoid unnecessary state updates)
-      if (isFinal && isCaptionEnabledRef.current) {
-        setTimeout(() => {
-          if (isCaptionEnabledRef.current) {
-            setRemoteCaptions(prev => {
-              const newMap = new Map(prev);
-              // Clear all caption entries for this participant (including new line entries)
-              for (const [key, caption] of newMap.entries()) {
-                const keyParticipantId = key.includes('_') 
-                  ? key.split('_').slice(0, -1).join('_') 
-                  : key;
-                if (keyParticipantId === participantId && caption.timestamp === newTimestamp) {
-                  newMap.delete(key);
+          let mergeKey = null;
+          let mergeEntry = null;
+          for (const [k, v] of newMap.entries()) {
+            if (
+              v.ownerId === ownerId &&
+              v.isFinal &&
+              !k.startsWith(LIVE_CAPTION_KEY_PREFIX)
+            ) {
+              const age = timestampMs - new Date(v.timestamp || 0).getTime();
+              if (age >= 0 && age <= MERGE_WINDOW_MS) {
+                if (!mergeEntry || new Date(v.timestamp).getTime() > new Date(mergeEntry.timestamp).getTime()) {
+                  mergeKey = k;
+                  mergeEntry = v;
                 }
               }
-              return newMap;
+            }
+          }
+
+          if (mergeKey && mergeEntry) {
+            newMap.set(mergeKey, {
+              ...mergeEntry,
+              text: `${mergeEntry.text} ${newText}`.trim(),
+              timestamp: newTimestamp
+            });
+          } else {
+            newMap.set(rowKey, {
+              text: newText,
+              speaker: participantName || 'Participant',
+              role: resolvedRole,
+              ownerId,
+              timestamp: newTimestamp,
+              isFinal: true
             });
           }
-        }, 15000); // Increased from 5 to 15 seconds
+          window._lastLoggedCaptions = null;
+          return trimCaptionsMap(newMap, MAX_CAPTION_MAP_ENTRIES);
+        });
+
+        if (CAPTION_AUTO_CLEAR_MS > 0 && isCaptionEnabledRef.current) {
+          const clearKey = rowKey;
+          setTimeout(() => {
+            if (isCaptionEnabledRef.current) {
+              setRemoteCaptions(prev => {
+                const nextMap = new Map(prev);
+                nextMap.delete(clearKey);
+                return nextMap;
+              });
+            }
+          }, CAPTION_AUTO_CLEAR_MS);
+        }
+      } else {
+        setRemoteCaptions(prev => {
+          const newMap = new Map(prev);
+          const existing = newMap.get(liveKey);
+          const nextRow = {
+            text: newText,
+            speaker: participantName || 'Participant',
+            role: resolvedRole,
+            ownerId,
+            timestamp: newTimestamp,
+            isFinal: false
+          };
+          if (!existing || existing.text !== newText) {
+            newMap.set(liveKey, nextRow);
+            window._lastLoggedCaptions = null;
+          } else {
+            newMap.set(liveKey, { ...existing, ...nextRow });
+          }
+          return trimCaptionsMap(newMap, MAX_CAPTION_MAP_ENTRIES);
+        });
       }
-  }, [isCaptionEnabled, getParticipantRole]); // Include isCaptionEnabled for debugging, but use ref for actual check
+  }, [getParticipantRole]);
 
   // Socket event listeners
   useEffect(() => {
@@ -682,7 +681,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setError(null);
 
       // Use provided call data
-      setCallInfo(data);
+      setCallInfo(normalizeCallData(data));
       setChatMessages((data.chatMessages || []).map(normalizeIncomingChatMessage));
 
       // Validate and clean device preferences before using them
@@ -824,7 +823,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       // Get call details
       const callDetails = await videoCallService.joinCall(callId);
-      setCallInfo(callDetails);
+      setCallInfo(normalizeCallData(callDetails));
       setChatMessages((callDetails.chatMessages || []).map(normalizeIncomingChatMessage));
 
       // Validate and clean device preferences before using them
@@ -1013,7 +1012,20 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const handleCallInvitation = (data) => {
     // Handle incoming call invitation for job seekers
     if (user.role === 'JobSeeker') {
-      setInviteData(data);
+      const normalizedInviteData = normalizeCallData({
+        ...data,
+        id: data.id || data.callId,
+        callId: data.callId || data.id,
+        recruiterName: data.recruiterName || data.recruiter?.name || 'Recruiter',
+        boothName: data.boothName || data.booth?.company || data.booth?.name || 'Booth',
+        eventName: data.eventName || data.event?.name || 'Event',
+        participants: {
+          recruiter: data.recruiter || null,
+          jobSeeker: { _id: user?._id || user?.id, id: user?._id || user?.id, name: user?.name, role: 'jobseeker' },
+          interpreters: []
+        }
+      });
+      setInviteData(normalizedInviteData);
       setShowInviteModal(true);
       setLoading(false);
 
@@ -1032,7 +1044,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const handleAcceptInvitation = async () => {
     if (inviteData) {
-      setCallInfo(inviteData);
+      const normalizedInviteData = normalizeCallData(inviteData);
+      setCallInfo(normalizedInviteData);
       setShowInviteModal(false);
       setInviteData(null);
 
@@ -1040,7 +1053,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       speak("Joining the call now. Please wait while we connect you.");
 
       // Initialize call with the invitation data
-      await initializeCallWithData(inviteData);
+      await initializeCallWithData(normalizedInviteData);
     }
   };
 
@@ -1072,7 +1085,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           (i.interpreter?._id || i.interpreter?.id || i._id || i.id) === (data.interpreter._id || data.interpreter.id)
         );
         if (!exists) {
-          return {
+          return normalizeCallData({
             ...prev,
             participants: {
               ...prev.participants,
@@ -1085,7 +1098,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
                 }
               ]
             }
-          };
+          });
         }
         return prev;
       });
@@ -1499,6 +1512,54 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }, 10000); // Check every 10 seconds
   };
 
+  const stopLocalAudioStreaming = useCallback(() => {
+    if (localAudioCaptureRef.current) {
+      try {
+        localAudioCaptureRef.current.stopCapture();
+      } catch (error) {
+        console.warn('Error stopping local caption audio capture:', error);
+      } finally {
+        localAudioCaptureRef.current = null;
+      }
+    }
+  }, []);
+
+  const startLocalAudioStreaming = useCallback(async () => {
+    if (!socket || !callInfo || !roomRef.current || !isAudioEnabled) {
+      return;
+    }
+
+    const localAudioTrack = roomRef.current?.localParticipant?.audioTracks?.values?.()?.next?.()?.value?.track
+      || localTracks.find(track => track.kind === 'audio');
+    if (!localAudioTrack) {
+      return;
+    }
+
+    if (localAudioCaptureRef.current?.isCapturing) {
+      return;
+    }
+
+    const resolvedCallId = callInfo.id || callInfo.callId || callInfo._id;
+    const resolvedRoomName = callInfo.roomName || callInfo.connectionKey;
+    if (!resolvedCallId || !resolvedRoomName) {
+      return;
+    }
+
+    const localParticipantId = user?._id || user?.id || 'local';
+    const localParticipantName = user?.name || 'You';
+    const capture = new AudioCapture(
+      socket,
+      resolvedCallId,
+      resolvedRoomName,
+      String(localParticipantId),
+      localParticipantName
+    );
+    const started = await capture.startCapture(localAudioTrack);
+    if (started) {
+      localAudioCaptureRef.current = capture;
+    }
+  }, [socket, callInfo, localTracks, user, isAudioEnabled]);
+
   const toggleAudio = useCallback(() => {
     const audioTrack = localTracks.find(track => track.kind === 'audio');
     if (!audioTrack) return;
@@ -1507,31 +1568,13 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // Mute: disable the track (stops transmission)
       audioTrack.disable();
       setIsAudioEnabled(false);
-
-      // When muted, stop Syncfusion SpeechToText (no point capturing if mic is off)
-      // But keep captions enabled to receive other users' captions via socket
-      if (speechToTextRef.current) {
-        console.log('🔇 Muted - Stopping Syncfusion SpeechToText (no mic input)');
-        console.log('📝 You will still receive OTHER users\' captions via socket');
-        try {
-          // Syncfusion component handles stop internally
-          if (speechToTextRef.current && typeof speechToTextRef.current.stop === 'function') {
-            speechToTextRef.current.stop();
-          }
-        } catch (e) {
-          console.warn('⚠️ Error stopping Syncfusion SpeechToText:', e);
-        }
-      }
+      stopLocalAudioStreaming();
     } else {
       // Unmute: enable the track (resumes transmission)
       audioTrack.enable();
       setIsAudioEnabled(true);
-
-      // When unmuted, Syncfusion SpeechToText will resume automatically
-      // Transcription always runs when mic is enabled (regardless of display toggle)
-      console.log('🔊 Unmuted - Syncfusion SpeechToText will resume capturing YOUR speech');
     }
-  }, [localTracks, isAudioEnabled, user, callInfo]);
+  }, [localTracks, isAudioEnabled, stopLocalAudioStreaming]);
 
   const toggleVideo = useCallback(() => {
     const videoTrack = localTracks.find(track => track.kind === 'video');
@@ -1547,6 +1590,22 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       setIsVideoEnabled(true);
     }
   }, [localTracks, isVideoEnabled]);
+
+  useEffect(() => {
+    if (!roomRef.current || !socket || !callInfo) {
+      return;
+    }
+
+    if (!isAudioEnabled) {
+      stopLocalAudioStreaming();
+      return;
+    }
+
+    startLocalAudioStreaming();
+    return () => {
+      stopLocalAudioStreaming();
+    };
+  }, [room, socket, callInfo, isAudioEnabled, startLocalAudioStreaming, stopLocalAudioStreaming]);
 
   // Handle Syncfusion SpeechToText transcriptChanged event
   const handleTranscriptChanged = useCallback((args) => {
@@ -1678,7 +1737,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           isFinal: isFinal
         });
       }
-      return newMap;
+      return trimCaptionsMap(newMap, MAX_CAPTION_MAP_ENTRIES);
     });
 
     // Always broadcast YOUR caption to other participants via socket
@@ -1787,25 +1846,23 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           speaker: localName
         }]);
 
-        // Clear caption after 15 seconds of inactivity (longer timeout to keep captions visible)
-        // This allows users to read the captions and keeps them visible during natural speech pauses
-        if (captionClearTimeoutRef.current) {
-          clearTimeout(captionClearTimeoutRef.current);
-        }
-        captionClearTimeoutRef.current = setTimeout(() => {
-          if (isCaptionEnabledRef.current) {
-            setRemoteCaptions(prev => {
-              const newMap = new Map(prev);
-              const existing = newMap.get(localId);
-              // Only clear if this is still the same caption (not overwritten by newer speech)
-              if (existing && existing.timestamp === timestamp) {
-                console.log('🧹 Clearing old caption after 15 seconds of inactivity');
-                newMap.delete(localId);
-              }
-              return newMap;
-            });
+        if (CAPTION_AUTO_CLEAR_MS > 0) {
+          if (captionClearTimeoutRef.current) {
+            clearTimeout(captionClearTimeoutRef.current);
           }
-        }, 15000); // Increased from 5 to 15 seconds
+          captionClearTimeoutRef.current = setTimeout(() => {
+            if (isCaptionEnabledRef.current) {
+              setRemoteCaptions(prev => {
+                const newMap = new Map(prev);
+                const existingCaption = newMap.get(localId);
+                if (existingCaption && existingCaption.timestamp === timestamp) {
+                  newMap.delete(localId);
+                }
+                return newMap;
+              });
+            }
+          }, CAPTION_AUTO_CLEAR_MS);
+        }
       }
     }
   }, [user, socket, callInfo]);
@@ -1842,8 +1899,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         return;
       }
 
-      // Check if Web Speech API is supported (required for Syncfusion)
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      // Browser speech is optional fallback only; primary captions stream from Twilio audio.
+      if (useBrowserSpeechFallback && !('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
         return;
       }
@@ -2116,6 +2173,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   // Auto-start Syncfusion SpeechToText component when mic is enabled
   // Transcription always runs (regardless of subtitle display toggle) so others can see your captions
   useEffect(() => {
+    if (!useBrowserSpeechFallback) {
+      return undefined;
+    }
+
     // Check actual audio track state
     const audioTrack = localTracks.find(track => track.kind === 'audio');
     const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
@@ -2391,6 +2452,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     // Syncfusion component will clean up automatically when unmounted
     isCaptionEnabledRef.current = false;
+    stopLocalAudioStreaming();
 
     // Stop all local tracks (only if not already stopped)
     if (!wasAlreadyCleaning) {
@@ -2442,6 +2504,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     setRoom(null);
     setParticipants(new Map());
+    setRemoteCaptions(new Map());
+    setCaptionHistory([]);
+    setCaptionText('');
+    isCaptionEnabledRef.current = false;
+    setIsCaptionEnabled(false);
   };
 
   const cleanup = () => {
@@ -2467,6 +2534,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     // Syncfusion component will clean up automatically when unmounted
     isCaptionEnabledRef.current = false;
+    stopLocalAudioStreaming();
 
     // Stop all local tracks first (before unpublishing)
     localTracks.forEach(track => {
@@ -2543,6 +2611,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     setRoom(null);
     setParticipants(new Map());
+    setRemoteCaptions(new Map());
+    setCaptionHistory([]);
+    setCaptionText('');
+    isCaptionEnabledRef.current = false;
+    setIsCaptionEnabled(false);
 
     console.log('✅ Video call cleanup complete - all tracks stopped');
   };
@@ -2728,16 +2801,17 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           )}
         </div>
 
-        {/* Local Video - Small box in bottom right */}
-        {room && (
-          <div className="local-video-overlay" role="region" aria-label="Your video">
-            <VideoParticipant
-              participant={room.localParticipant}
-              isLocal={true}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Local Video - Small box in bottom left, above footer */}
+      {room && (
+        <div className="local-video-overlay" role="region" aria-label="Your video">
+          <VideoParticipant
+            participant={room.localParticipant}
+            isLocal={true}
+          />
+        </div>
+      )}
 
       {/* Side Panels */}
       {isChatOpen && (
@@ -2770,7 +2844,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       {/* Syncfusion SpeechToText Component - Must be visible (but off-screen) for microphone access */}
       {/* Always render when mic is enabled (regardless of subtitle display toggle) */}
       {/* This ensures transcription always runs so others can see your captions */}
-      {(() => {
+      {useBrowserSpeechFallback && (() => {
         const audioTrack = localTracks.find(track => track.kind === 'audio');
         const actualAudioEnabled = audioTrack ? audioTrack.isEnabled : isAudioEnabled;
         
@@ -2862,7 +2936,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               
               {/* Lines Options */}
               <div className="caption-settings-section">
-                <label className="caption-settings-label">Lines</label>
+                <label className="caption-settings-label">Panel height</label>
                 <div className="caption-lines-options">
                   {[1, 2, 3, 4, 5].map(num => (
                     <button
@@ -2959,14 +3033,14 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
                 return timeA - timeB; // Oldest first
               });
               
-              // Limit to maximum N most recent captions based on user setting
-              const allCaptionsToDisplay = deduplicatedCaptions.slice(-captionLines);
+              // Show a scrollable transcript: keep many recent rows (not just captionLines)
+              const allCaptionsToDisplay = deduplicatedCaptions.slice(-MAX_CAPTION_TRANSCRIPT_ROWS);
 
               if (allCaptionsToDisplay.length > 0) {
                 // Display each participant's caption separately
                 // Each participant gets their own caption line with alternating colors
                 return allCaptionsToDisplay.map((caption, index) => {
-                  const roleDisplay = caption.role || 'Participant';
+                  const roleDisplay = formatRoleLabel(caption.role || 'Participant');
                   
                   // Determine speaker color class based on role
                   let speakerColorClass = 'caption-speaker-default';
@@ -3001,6 +3075,16 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               }
             })()}
           </div>
+          {!isAutoScrolling && showScrollDown && (
+            <button
+              type="button"
+              className="caption-jump-latest-btn"
+              onClick={scrollToBottom}
+              aria-label="Jump to latest captions"
+            >
+              Jump to latest
+            </button>
+          )}
         </div>
       )}
 

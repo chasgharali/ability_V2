@@ -19,3 +19,6 @@ client/.env
 
 all.logs
 error.logs
+
+# Local MongoDB dumps (mongodump)
+db-backups/

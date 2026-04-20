@@ -6,8 +6,10 @@
  * server via Socket.IO.
  */
 
-const SAMPLE_RATE = 16000; // Deepgram recommended sample rate
+const SAMPLE_RATE = 16000; // Target sample rate
 const BUFFER_SIZE = 4096;  // Audio processing buffer size
+/** RMS level below which a buffer is considered silence (0–1 range). */
+const SILENCE_THRESHOLD = 0.003;
 
 /**
  * AudioCapture class - handles audio capture and streaming for one participant
@@ -132,8 +134,16 @@ export class AudioCapture {
     try {
       // Get audio data from input buffer (mono)
       const inputData = event.inputBuffer.getChannelData(0);
-      
-      // Convert Float32Array to Int16Array (16-bit PCM for Deepgram)
+
+      // Skip silent frames to avoid sending blank audio to the server.
+      let sumSq = 0;
+      for (let i = 0; i < inputData.length; i++) {
+        sumSq += inputData[i] * inputData[i];
+      }
+      const rms = Math.sqrt(sumSq / inputData.length);
+      if (rms < SILENCE_THRESHOLD) return;
+
+      // Convert Float32Array to Int16Array (16-bit PCM)
       const int16Data = this.float32ToInt16(inputData);
       
       // Convert to array for Socket.IO transmission

@@ -9,6 +9,7 @@ const Message = require('../models/Message');
 const logger = require('../utils/logger');
 const liveStatsStore = require('../utils/liveStatsStore');
 const deepgramService = require('../services/deepgramService');
+const openaiCaptionService = require('../services/openaiCaptionService');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 /**
@@ -22,6 +23,16 @@ function participantRefToId(ref) {
     } catch {
         return '';
     }
+}
+
+/** Normalized caption role for the client (recruiter | jobseeker | interpreter), or null to let the client infer. */
+function captionParticipantRoleFromUser(user) {
+    if (!user || !user.role) return null;
+    const r = String(user.role).trim().toLowerCase();
+    if (r === 'recruiter') return 'recruiter';
+    if (r === 'jobseeker') return 'jobseeker';
+    if (r === 'interpreter' || r === 'globalinterpreter') return 'interpreter';
+    return null;
 }
 
 /**
@@ -59,6 +70,23 @@ const getIO = () => {
         throw new Error('Socket.IO has not been initialized yet');
     }
     return _io;
+};
+
+const getCaptionService = () => {
+    const provider = (process.env.CAPTION_PROVIDER || 'openai').toLowerCase();
+    if (provider === 'deepgram' && deepgramService.isAvailable()) {
+        return { service: deepgramService, provider: 'deepgram' };
+    }
+
+    if (openaiCaptionService.isAvailable()) {
+        return { service: openaiCaptionService, provider: 'openai' };
+    }
+
+    if (deepgramService.isAvailable()) {
+        return { service: deepgramService, provider: 'deepgram' };
+    }
+
+    return { service: null, provider: provider };
 };
 
 const socketHandler = (io) => {
@@ -516,21 +544,21 @@ const socketHandler = (io) => {
 
                 // Start new transcription session
                 if (isStart) {
-                    if (!deepgramService.isAvailable()) {
-                        logger.error('❌ Deepgram service not available - DEEPGRAM_API_KEY not configured in server .env file');
-                        logger.error('   To enable captions, add DEEPGRAM_API_KEY=your-api-key to server/.env and restart server');
+                    const { service: captionService, provider } = getCaptionService();
+                    if (!captionService) {
+                        logger.error('❌ No caption service available - configure OPENAI_API_KEY or DEEPGRAM_API_KEY');
                         socket.emit('caption-error', { 
                             message: 'Caption service not configured. Please contact administrator.',
                             code: 'SERVICE_UNAVAILABLE',
-                            details: 'DEEPGRAM_API_KEY not set in server configuration'
+                            details: 'OPENAI_API_KEY and DEEPGRAM_API_KEY are not configured'
                         });
                         return;
                     }
                     
-                    logger.info(`🎤 Starting Deepgram transcription for ${participantName} (callId: ${callId}, roomName: ${roomName})`);
+                    logger.info(`🎤 Starting ${provider} transcription for ${participantName} (callId: ${callId}, roomName: ${roomName})`);
 
                     try {
-                        await deepgramService.startTranscription(
+                        await captionService.startTranscription(
                             connectionKey,
                             callId,
                             roomName,
@@ -546,6 +574,10 @@ const socketHandler = (io) => {
                                     timestamp: transcription.timestamp,
                                     confidence: transcription.confidence
                                 };
+                                const captionRole = captionParticipantRoleFromUser(socket.user);
+                                if (captionRole) {
+                                    captionData.participantRole = captionRole;
+                                }
 
                                 // Use existing room format for broadcasting
                                 const fullRoomName = `call_${roomName}`;
@@ -564,10 +596,11 @@ const socketHandler = (io) => {
 
                         socket.emit('caption-started', { 
                             connectionKey,
+                            provider,
                             message: 'Caption transcription started' 
                         });
 
-                        logger.info(`🎤 Caption transcription started for ${participantName} in call ${callId}`);
+                        logger.info(`🎤 Caption transcription started (${provider}) for ${participantName} in call ${callId}`);
                     } catch (error) {
                         logger.error('Failed to start caption transcription:', error);
                         socket.emit('caption-error', { 
@@ -580,7 +613,10 @@ const socketHandler = (io) => {
 
                 // End transcription session
                 if (isEnd) {
-                    deepgramService.stopTranscription(connectionKey);
+                    const { service: captionService } = getCaptionService();
+                    if (captionService) {
+                        await captionService.stopTranscription(connectionKey);
+                    }
                     socket.emit('caption-stopped', { 
                         connectionKey,
                         message: 'Caption transcription stopped' 
@@ -629,10 +665,14 @@ const socketHandler = (io) => {
                         logger.debug(`📤 Received ${socket._audioChunkCount} audio chunks from ${participantName}`);
                     }
 
-                    const sent = deepgramService.sendAudio(connectionKey, audioBuffer);
+                    const { service: captionService, provider } = getCaptionService();
+                    if (!captionService) {
+                        return;
+                    }
+
+                    const sent = captionService.sendAudio(connectionKey, audioBuffer);
                     if (!sent) {
-                        logger.warn(`⚠️ Failed to send audio chunk ${socket._audioChunkCount} to Deepgram for ${participantName} (connectionKey: ${connectionKey})`);
-                        logger.warn(`   Check if Deepgram WebSocket is open and connection is active`);
+                        logger.warn(`⚠️ Failed to send audio chunk ${socket._audioChunkCount} to ${provider} caption service for ${participantName} (connectionKey: ${connectionKey})`);
                     }
                 } else {
                     logger.debug(`No audio chunk in data for ${participantName}`);
@@ -650,7 +690,8 @@ const socketHandler = (io) => {
             try {
                 const { callId } = data;
                 if (callId) {
-                    deepgramService.stopAllForCall(callId);
+                    const { service: captionService } = getCaptionService();
+                    captionService?.stopAllForCall(callId);
                     logger.info(`Stopped all captions for call ${callId}`);
                 }
             } catch (error) {
@@ -679,7 +720,11 @@ const socketHandler = (io) => {
                     isFinal: isFinal !== false,
                     timestamp: timestamp || new Date().toISOString()
                 };
-                
+                const captionRole = captionParticipantRoleFromUser(socket.user);
+                if (captionRole) {
+                    captionData.participantRole = captionRole;
+                }
+
                 // Find the room name format used for this call
                 const fullRoomName = `call_${roomName}`;
                 const videoCallRoomName = `video-call-${callId}`;
@@ -1238,8 +1283,11 @@ const socketHandler = (io) => {
                 // Stop any active caption transcriptions for this user
                 if (socket.currentVideoCallId) {
                     const connectionKey = `${socket.currentVideoCallId}_${socket.userId}`;
-                    deepgramService.stopTranscription(connectionKey);
-                    logger.info(`Stopped caption transcription for disconnected user ${socket.user.email}`);
+                    const { service: captionService } = getCaptionService();
+                    if (captionService) {
+                        await captionService.stopTranscription(connectionKey);
+                        logger.info(`Stopped caption transcription for disconnected user ${socket.user.email}`);
+                    }
                 }
 
                 // Update participant status in video call
