@@ -1,0 +1,736 @@
+/* ============================================================
+   Resume Builder — component styles
+   ============================================================ */
+
+.resume-builder {
+  width: 100%;
+}
+
+.rb-subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+/* ---- List toolbar ---- */
+.rb-list-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.rb-loading,
+.rb-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.rb-empty p { margin-bottom: 1rem; }
+
+/* ---- Resume cards grid ---- */
+.rb-resume-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.rb-resume-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.25rem;
+  background: #fff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: box-shadow 0.15s;
+}
+
+.rb-resume-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.rb-resume-card.rb-default {
+  border-color: #111827;
+}
+
+.rb-default-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #111827;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+
+.rb-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #111827;
+  padding-right: 3rem;
+}
+
+.rb-card-meta {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.rb-ai-badge {
+  color: #6d28d9;
+  font-size: 0.75rem;
+}
+
+.rb-card-preview {
+  font-size: 0.85rem;
+  color: #4b5563;
+  min-height: 2.5rem;
+}
+
+.rb-card-summary {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.rb-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.rb-delete-btn {
+  color: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+/* ---- Editor top bar ---- */
+.rb-editor-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 0 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.25rem;
+}
+
+.rb-title-input {
+  flex: 1;
+  min-width: 180px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.45rem 0.75rem;
+  color: #111827;
+  background: #fff;
+}
+
+.rb-title-input:focus {
+  outline: 2px solid #111827;
+  outline-offset: 1px;
+}
+
+.rb-topbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ---- Editor layout ---- */
+.rb-editor-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Tabs ---- */
+.rb-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rb-tab {
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  box-shadow: none !important;
+  outline-offset: -2px;
+}
+
+.rb-tab:hover,
+.rb-tab:focus {
+  color: #111827;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.rb-tab.active,
+.rb-tab.active:hover,
+.rb-tab.active:focus {
+  color: #111827;
+  border-bottom-color: #111827;
+  font-weight: 600;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ---- Fieldsets ---- */
+.rb-fieldset {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #fafafa;
+}
+
+.rb-fieldset legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  padding: 0 0.4rem;
+}
+
+/* ---- Form rows ---- */
+.rb-form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.rb-field {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rb-field label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.rb-field input,
+.rb-field textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.9rem;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.rb-field input:focus,
+.rb-field textarea:focus {
+  outline: 2px solid #111827;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.rb-field input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.rb-field-check {
+  justify-content: flex-end;
+  padding-bottom: 4px;
+}
+
+.rb-field-check label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.rb-textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  color: #111827;
+  background: #fff;
+  font-family: inherit;
+}
+
+.rb-textarea:focus {
+  outline: 2px solid #111827;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* ---- AI helpers ---- */
+.rb-ai-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 0.5rem;
+}
+
+.rb-ai-row label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.rb-ai-btn {
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #7c3aed;
+  background: #f5f3ff;
+  color: #7c3aed;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.rb-ai-btn:hover:not(:disabled) {
+  background: #ede9fe;
+}
+
+.rb-ai-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Dynamic list items ---- */
+.rb-list-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  background: #fff;
+}
+
+.rb-list-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #374151;
+}
+
+.rb-remove-btn {
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid #dc2626;
+  background: none;
+  color: #dc2626;
+  cursor: pointer;
+}
+
+.rb-remove-btn:hover {
+  background: #fef2f2;
+}
+
+/* ---- Bullet points ---- */
+.rb-bullets-section {
+  margin-top: 0.5rem;
+}
+
+.rb-bullet-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.rb-bullet-row input {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.88rem;
+  color: #111827;
+}
+
+.rb-bullet-row input:focus {
+  outline: 2px solid #111827;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.rb-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rb-icon-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.rb-add-btn {
+  font-size: 0.82rem;
+  padding: 4px 12px;
+  border: 1px dashed #9ca3af;
+  background: none;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.rb-add-btn:hover {
+  background: #f9fafb;
+  border-color: #6b7280;
+}
+
+/* ---- Tags ---- */
+.rb-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.rb-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.83rem;
+  font-weight: 500;
+}
+
+.rb-tag-remove {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.rb-tag-remove:hover {
+  color: #dc2626;
+}
+
+.rb-tag-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rb-tag-input-row input {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.rb-tag-input-row input:focus {
+  outline: 2px solid #111827;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* ---- Editor footer ---- */
+.rb-editor-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ---- Preview toolbar ---- */
+.rb-preview-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 0 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   Resume Document (print view)
+   ============================================================ */
+.rb-print-area {
+  padding: 0 0 2rem;
+}
+
+.rb-resume-doc {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-family: 'Georgia', serif;
+  font-size: 0.95rem;
+  color: #111;
+  line-height: 1.55;
+}
+
+.rb-doc-header {
+  text-align: center;
+  border-bottom: 2px solid #111;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.rb-doc-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rb-doc-contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1.25rem;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.rb-doc-section {
+  margin-bottom: 1.25rem;
+}
+
+.rb-doc-section h2 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid #888;
+  padding-bottom: 2px;
+  margin-bottom: 0.6rem;
+  color: #111;
+}
+
+.rb-doc-section p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.rb-doc-section ul {
+  margin: 0.3rem 0 0 1.2rem;
+  padding: 0;
+}
+
+.rb-doc-section ul li {
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.rb-doc-entry {
+  margin-bottom: 0.8rem;
+}
+
+.rb-doc-entry-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.rb-doc-entry-header strong {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.rb-doc-entry-header span {
+  font-size: 0.88rem;
+  color: #444;
+}
+
+.rb-doc-dates {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #555;
+  font-style: italic;
+}
+
+/* ============================================================
+   Resume selection widget (used in RegistrationWizard)
+   ============================================================ */
+.rb-select-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+  background: #fafafa;
+}
+
+.rb-select-section h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rb-select-section p {
+  margin: 0 0 1rem;
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.rb-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rb-select-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.rb-select-item:hover {
+  border-color: #9ca3af;
+}
+
+.rb-select-item.selected {
+  border-color: #111827;
+  background: #f9fafb;
+}
+
+.rb-select-item input[type="radio"] {
+  flex-shrink: 0;
+}
+
+.rb-select-item-info {
+  flex: 1;
+}
+
+.rb-select-item-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #111827;
+}
+
+.rb-select-item-meta {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.rb-select-none {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #fff;
+  color: #6b7280;
+  font-size: 0.88rem;
+  transition: border-color 0.15s;
+}
+
+.rb-select-none.selected {
+  border-color: #111827;
+}
+
+.rb-select-link {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.rb-select-link a {
+  color: #111827;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+/* ============================================================
+   Print media — show only the resume document
+   ============================================================ */
+@media print {
+  body * { visibility: hidden !important; }
+  .rb-print-area,
+  .rb-print-area * { visibility: visible !important; }
+  .rb-print-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0;
+  }
+  .rb-resume-doc {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: 100%;
+    padding: 1.5cm 2cm;
+    font-size: 10pt;
+  }
+  .rb-doc-header h1 { font-size: 18pt; }
+  .rb-doc-section h2 { font-size: 9pt; }
+  .no-print { display: none !important; }
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 600px) {
+  .rb-editor-topbar { flex-direction: column; align-items: stretch; }
+  .rb-title-input { font-size: 1rem; }
+  .rb-topbar-actions { flex-direction: column; }
+  .rb-form-row { flex-direction: column; }
+  .rb-resume-grid { grid-template-columns: 1fr; }
+  .rb-resume-doc { padding: 1rem; }
+}

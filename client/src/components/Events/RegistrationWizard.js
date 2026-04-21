@@ -11,6 +11,7 @@ import SurveyForm from '../Dashboard/SurveyForm';
 import { useAuth } from '../../contexts/AuthContext';
 import MyAccountInline from '../Account/MyAccountInline';
 import { termsConditionsAPI } from '../../services/termsConditions';
+import ResumeSelectWidget from '../Dashboard/ResumeBuilder/ResumeSelectWidget';
 
 export default function RegistrationWizard() {
   const { slug } = useParams();
@@ -32,6 +33,8 @@ export default function RegistrationWizard() {
   const [validationErrors, setValidationErrors] = useState({});
   const [currentFormData, setCurrentFormData] = useState(null);
   const [step1FormData, setStep1FormData] = useState(null);
+  const [selectedResumeId, setSelectedResumeId] = useState(null);
+  const [resumeSource, setResumeSource] = useState('upload'); // 'upload' | 'saved'
   const navigate = useNavigate();
   const location = useLocation();
   const liveRef = useRef(null);
@@ -61,6 +64,8 @@ export default function RegistrationWizard() {
   };
 
   useEffect(() => {
+    if (loading) return;
+    if (!user) return;
     (async () => {
       try {
         const res = await getEventBySlug(slug);
@@ -123,11 +128,13 @@ export default function RegistrationWizard() {
             console.warn('Failed to fetch active terms:', error);
           }
         }
+      } catch (err) {
+        console.error('Failed to load event:', err);
       } finally {
         setFetching(false);
       }
     })();
-  }, [slug, user]);
+  }, [slug, user, loading]);
 
   useEffect(() => {
     if (loading) return;
@@ -217,12 +224,15 @@ export default function RegistrationWizard() {
       }
     });
 
-    // Check if resume is uploaded (check both form data and user object)
+    // Check resume: either an uploaded file OR a selected saved resume satisfies the requirement
     const hasResumeInForm = currentFormData.hasResume || currentFormData.resumeUrl;
     const hasResumeInUser = user?.resumeUrl;
+    const hasSelectedResume = resumeSource === 'saved' && !!selectedResumeId;
 
-    if (!hasResumeInForm && !hasResumeInUser) {
-      errors.resume = 'Resume upload is required';
+    if (!hasResumeInForm && !hasResumeInUser && !hasSelectedResume) {
+      errors.resume = resumeSource === 'saved'
+        ? 'Please select a saved resume or switch to upload a file'
+        : 'Resume upload is required';
       isValid = false;
     }
 
@@ -339,8 +349,8 @@ export default function RegistrationWizard() {
         subscribeAnnouncements: announcementsOptIn
       });
 
-      // Register for the event
-      await registerForEvent(slug);
+      // Register for the event (optionally attach a resume from Resume Builder)
+      await registerForEvent(slug, { resumeId: selectedResumeId || undefined });
 
       // Navigate to registered list
       navigate('/events/registered', { replace: true });
@@ -580,6 +590,27 @@ export default function RegistrationWizard() {
                 )}
                 <EditProfileResume
                   embedded
+                  resumeOptional={resumeSource === 'saved'}
+                  resumeTopSlot={
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.55rem 1rem', border: `2px solid ${resumeSource === 'upload' ? '#111827' : '#e5e7eb'}`, borderRadius: 8, background: resumeSource === 'upload' ? '#f9fafb' : '#fff', fontWeight: resumeSource === 'upload' ? 600 : 400, fontSize: '0.9rem' }}>
+                          <input type="radio" name="resumeSource" value="upload" checked={resumeSource === 'upload'} onChange={() => setResumeSource('upload')} />
+                          Upload a File
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.55rem 1rem', border: `2px solid ${resumeSource === 'saved' ? '#111827' : '#e5e7eb'}`, borderRadius: 8, background: resumeSource === 'saved' ? '#f9fafb' : '#fff', fontWeight: resumeSource === 'saved' ? 600 : 400, fontSize: '0.9rem' }}>
+                          <input type="radio" name="resumeSource" value="saved" checked={resumeSource === 'saved'} onChange={() => setResumeSource('saved')} />
+                          Use a Saved Resume
+                        </label>
+                      </div>
+                      {resumeSource === 'saved' && (
+                        <ResumeSelectWidget
+                          selectedResumeId={selectedResumeId}
+                          onChange={setSelectedResumeId}
+                        />
+                      )}
+                    </div>
+                  }
                   onValidationChange={() => validateStep2()}
                   onFormDataChange={setCurrentFormData}
                   onDone={next}

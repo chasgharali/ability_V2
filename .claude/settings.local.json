@@ -7,7 +7,15 @@
       "Bash(which:*)",
       "Bash(pandoc:*)",
       "Bash(npm list:*)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(node server/migrations/fix-registered-jobseeker-per-event.js)",
+      "Bash(pkill -f \"nodemon\\\\|node server\")",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(xargs kill *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('/Users/asgharali/Desktop/Ability/ability_V2/server/services/pdfResumeService.js'\\); console.log\\('pdfResumeService loads OK'\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

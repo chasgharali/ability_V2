@@ -35,6 +35,7 @@ function getSidebarKeyFromPath(pathname, role) {
       if (pathname.startsWith('/dashboard/delete-account')) return 'delete-account';
       if (pathname.startsWith('/dashboard/edit-profile')) return 'edit-profile';
       if (pathname.startsWith('/dashboard/view-profile')) return 'view-profile';
+      if (pathname.startsWith('/dashboard/resume-builder')) return 'resume-builder';
       return 'my-account';
     }
     if (
@@ -75,7 +76,7 @@ function getSidebarKeyFromPath(pathname, role) {
   return undefined;
 }
 
-const JOBSEEKER_ACCOUNT_KEYS = new Set(['my-account', 'survey', 'delete-account', 'edit-profile', 'view-profile']);
+const JOBSEEKER_ACCOUNT_KEYS = new Set(['my-account', 'survey', 'delete-account', 'edit-profile', 'view-profile', 'resume-builder']);
 
 export default function AdminSidebar({ active = 'booths' }) {
   const navigate = useNavigate();
@@ -466,6 +467,8 @@ export default function AdminSidebar({ active = 'booths' }) {
                   onClick={(e) => { handleItemClick('/dashboard/edit-profile', e); closeMobileMenu(); }}>Edit Profile & Resume</button>
                 <button type="button" className={itemClass('view-profile')}
                   onClick={(e) => { handleItemClick('/dashboard/view-profile', e); closeMobileMenu(); }}>View My Profile</button>
+                <button type="button" className={itemClass('resume-builder')}
+                  onClick={(e) => { handleItemClick('/dashboard/resume-builder', e); closeMobileMenu(); }}>Resume Builder</button>
               </div>
             )}
           </div>

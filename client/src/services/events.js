@@ -66,8 +66,9 @@ export async function listMyEventRegistrations() {
   return res.data;
 }
 
-export async function registerForEvent(idOrSlug) {
-  const res = await axios.post(`/api/events/${encodeURIComponent(idOrSlug)}/register`, {}, { headers: authHeaders() });
+export async function registerForEvent(idOrSlug, { resumeId } = {}) {
+  const body = resumeId ? { resumeId } : {};
+  const res = await axios.post(`/api/events/${encodeURIComponent(idOrSlug)}/register`, body, { headers: authHeaders() });
   return res.data;
 }
 

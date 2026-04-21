@@ -4,6 +4,7 @@ import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import { openResumeInNewTab } from '../../utils/resumeViewer';
 import filterIcon from '../../assets/filter.png';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
@@ -132,6 +133,7 @@ export default function JobSeekerManagement() {
   // Verify email confirmation dialog
   const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
   const [showMassUpload, setShowMassUpload] = useState(false);
+
 
   // WCAG 1.3.1 / 2.4.3 — aria-hide background when any modal is open
   useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen || verifyEmailOpen || showMassUpload);
@@ -1219,14 +1221,13 @@ export default function JobSeekerManagement() {
               <p className="profile-location">{js.phone || '09239320093'}</p>
               <p className="profile-location">{[js.city, js.state, js.country].filter(Boolean).join(', ') || 'denver, Colorado, US'}</p>
               {js.resumeUrl && (
-                <a 
-                  href={js.resumeUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
                   className="btn-resume"
+                  onClick={() => openResumeInNewTab(null, js.resumeUrl)}
                 >
-                  📄 View Complete Resume
-                </a>
+                  View Resume
+                </button>
               )}
             </div>
           </div>

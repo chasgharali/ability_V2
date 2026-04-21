@@ -17,6 +17,7 @@ import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
 import filterIcon from '../../assets/filter.png';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
+import { openResumeInNewTab } from '../../utils/resumeViewer';
 import JSZip from 'jszip';
 import {
     EXPERIENCE_LEVEL_LIST,
@@ -2001,10 +2002,15 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
                                         <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
-                                        <ColumnDirective 
-                                            headerText='Actions' 
-                                            width='200' 
-                                            allowSorting={false} 
+                                        <ColumnDirective field='jobSeekerResumeUrl' headerText='Resume' width='120' textAlign='Center' allowFiltering={false} template={(props) => (
+                                            props.jobSeekerResumeUrl
+                                                ? <button type="button" className="btn-view-resume-inline" onClick={() => openResumeInNewTab(null, props.jobSeekerResumeUrl)}>View</button>
+                                                : <span style={{ color: '#9ca3af' }}>—</span>
+                                        )} />
+                                        <ColumnDirective
+                                            headerText='Actions'
+                                            width='200'
+                                            allowSorting={false}
                                             allowFiltering={false}
                                             template={actionsTemplate}
                                             showInColumnChooser={true}
@@ -2206,6 +2212,7 @@ const JobSeekerInterests = () => {
                 }}
                 jobSeeker={selectedJobSeekerForModal}
             />
+
 
             {/* Bulk Delete confirm modal */}
             <DialogComponent

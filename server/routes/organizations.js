@@ -562,6 +562,7 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
         const registrations = await RegisteredJobSeeker.find({ _id: { $in: validIds } })
             .populate('jobSeekerId', '-hashedPassword -refreshTokens -legacyPassword -survey')
             .populate('eventId', 'name slug start')
+            .populate('resumeId', 'title')
             .sort(sortObj);
 
         const total = totalCountResult?.[0]?.total || 0;

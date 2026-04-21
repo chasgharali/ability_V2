@@ -3,7 +3,7 @@ const { body, validationResult } = require('express-validator');
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { extractS3KeyFromUrl, encodeKeyForPath } = require('../utils/mediaUrl');
 
@@ -378,6 +378,33 @@ router.get('/stream', authenticateTokenFromHeaderOrQuery, async (req, res) => {
             error: 'Failed to stream file',
             message: 'An error occurred while preparing the stream'
         });
+    }
+});
+
+/**
+ * GET /api/uploads/admin/resume-url?url=<s3-url>
+ * Admin endpoint to generate a fresh presigned download URL for any resume file.
+ * Accepts the stored S3 URL and returns a short-lived signed URL.
+ */
+router.get('/admin/resume-url', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Support', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { url } = req.query;
+        if (!url || typeof url !== 'string') {
+            return res.status(400).json({ error: 'Missing url query param' });
+        }
+        const key = extractS3KeyFromUrl(url) || url;
+        if (!key || (!key.startsWith('resume/') && !key.startsWith('resumes/'))) {
+            return res.status(400).json({ error: 'Invalid resume key' });
+        }
+        const signedUrl = s3.getSignedUrl('getObject', {
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Expires: 900 // 15 minutes
+        });
+        return res.json({ url: signedUrl });
+    } catch (error) {
+        logger.error('Admin resume presign error:', error);
+        return res.status(500).json({ error: 'Failed to generate resume URL' });
     }
 });
 

@@ -4,6 +4,7 @@ import '../Dashboard/Dashboard.css';
 import './MeetingRecords.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import { openResumeInNewTab } from '../../utils/resumeViewer';
 import filterIcon from '../../assets/filter.png';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
@@ -637,14 +638,14 @@ export default function MeetingRecords() {
                     };
                     
                     return {
-                        ...r, 
+                        ...r,
                         id: r._id || r.id,
                         eventName: getFieldName(r.eventId),
                         boothName: getFieldName(r.boothId),
                         recruiterName: getFieldName(r.recruiterId),
                         jobSeekerName: getFieldName(r.jobseekerId),
                         jobSeekerEmail: getFieldEmail(r.jobseekerId),
-                        jobSeekerResumeUrl: getFieldResumeUrl(r.jobseekerId),
+                        jobSeekerResumeUrl: r.registeredResumeUrl || getFieldResumeUrl(r.jobseekerId),
                         jobSeekerCity: getFieldCity(r.jobseekerId),
                         interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
                         messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
@@ -1308,7 +1309,7 @@ export default function MeetingRecords() {
                 jobSeekerLanguages: profile?.languages || [],
                 jobSeekerClearance: profile?.clearance || '',
                 jobSeekerVeteranStatus: profile?.veteranStatus || '',
-                jobSeekerResumeUrl: getFieldResumeUrl(jobSeeker),
+                jobSeekerResumeUrl: r.registeredResumeUrl || getFieldResumeUrl(jobSeeker),
             interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
             messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
             };
@@ -1991,8 +1992,13 @@ export default function MeetingRecords() {
                                     <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} type='string' textAlign='Center' />
                                     <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
                                     <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} textAlign='Center' />
-                                    <ColumnDirective 
-                                        headerText='Actions' 
+                                    <ColumnDirective field='jobSeekerResumeUrl' headerText='Resume' width='120' textAlign='Center' allowFiltering={false} template={(props) => (
+                                        props.jobSeekerResumeUrl
+                                            ? <button type="button" className="btn-view-resume-inline" onClick={() => openResumeInNewTab(null, props.jobSeekerResumeUrl)}>View</button>
+                                            : <span style={{ color: '#9ca3af' }}>—</span>
+                                    )} />
+                                    <ColumnDirective
+                                        headerText='Actions'
                                         width='280' 
                                         allowSorting={false} 
                                         allowFiltering={false}
@@ -2213,6 +2219,7 @@ export default function MeetingRecords() {
                 }}
                 jobSeeker={selectedJobSeekerForModal}
             />
+
         </div>
     );
 }

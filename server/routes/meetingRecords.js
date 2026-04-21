@@ -6,6 +6,7 @@ const BoothQueue = require('../models/BoothQueue');
 const User = require('../models/User');
 const Event = require('../models/Event');
 const Booth = require('../models/Booth');
+const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const {
     getWorkLevelLabel,
@@ -307,6 +308,34 @@ router.get('/', authenticateToken, async (req, res) => {
             finalCount = totalRecords;
         }
         
+        // Merge event-specific registered resume URL into each record
+        try {
+            const pairs = processedRecords
+                .filter(r => r.jobseekerId && r.eventId)
+                .map(r => ({
+                    jobSeekerId: r.jobseekerId._id || r.jobseekerId,
+                    eventId: r.eventId._id || r.eventId
+                }));
+
+            if (pairs.length) {
+                const orConditions = pairs.map(p => ({ jobSeekerId: p.jobSeekerId, eventId: p.eventId }));
+                const regDocs = await RegisteredJobSeeker.find({ $or: orConditions }).select('jobSeekerId eventId resumeUrl').lean();
+                const regMap = {};
+                regDocs.forEach(d => {
+                    const k = `${d.jobSeekerId}_${d.eventId}`;
+                    regMap[k] = d.resumeUrl || null;
+                });
+                processedRecords = processedRecords.map(r => {
+                    const jsId = r.jobseekerId?._id || r.jobseekerId;
+                    const evId = r.eventId?._id || r.eventId;
+                    const regResumeUrl = regMap[`${jsId}_${evId}`] || null;
+                    return regResumeUrl ? { ...r, registeredResumeUrl: regResumeUrl } : r;
+                });
+            }
+        } catch (e) {
+            // best-effort; don't break the response
+        }
+
         res.json({
             meetingRecords: processedRecords,
             pagination: {

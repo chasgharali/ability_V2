@@ -9,6 +9,7 @@ import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { LANGUAGE_LIST, SECURITY_CLEARANCE_LIST, MILITARY_EXPERIENCE_LIST, EDUCATION_LEVEL_LIST, EXPERIENCE_LEVEL_LIST, JOB_CATEGORY_LIST, JOB_TYPE_LIST } from '../../constants/options';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
+import { listResumes, setDefaultResume } from '../../services/resumes';
 
 // Using centralized job categories for Primary Job Experience
 // Using centralized EXPERIENCE_LEVEL_LIST for work levels
@@ -25,7 +26,7 @@ function getNameInitials(displayName) {
   return parts[0].slice(0, 2).toUpperCase();
 }
 
-export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev, embedded }) {
+export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev, embedded, resumeOptional, resumeTopSlot }) {
   // Standalone page uses h1 → h2; embedded wizard uses h3 → h4 (avoid skipped levels in either context)
   const ProfileSectionHeading = embedded ? 'h4' : 'h2';
   const CameraDialogHeading = embedded ? 'h4' : 'h2';
@@ -50,6 +51,11 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const [resumeFileName, setResumeFileName] = useState('');
   const [resumeUrl, setResumeUrl] = useState('');
   const [resumeKey, setResumeKey] = useState('');
+  const [resumeTab, setResumeTab] = useState(() => localStorage.getItem('resumeTabPref') || 'upload');
+  const [builderResumes, setBuilderResumes] = useState([]);
+  const [builderLoading, setBuilderLoading] = useState(false);
+  const [settingDefault, setSettingDefault] = useState(null);
+  const [keywordInput, setKeywordInput] = useState('');
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
   const [avatarKey, setAvatarKey] = useState('');
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
@@ -238,6 +244,33 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       });
     }
   }, [form, resumeUrl, resumeFileName, onFormDataChange]);
+
+  const loadBuilderResumes = useCallback(async () => {
+    setBuilderLoading(true);
+    try {
+      const data = await listResumes();
+      setBuilderResumes(data?.resumes || data || []);
+    } catch { /* non-fatal */ } finally {
+      setBuilderLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadBuilderResumes(); }, [loadBuilderResumes]);
+
+  const handleSetDefault = async (id) => {
+    setSettingDefault(id);
+    try {
+      await setDefaultResume(id);
+      await loadBuilderResumes();
+      setResumeTab('builder');
+      localStorage.setItem('resumeTabPref', 'builder');
+      showToast('Resume set as profile resume');
+    } catch {
+      showToast('Failed to set resume', 'error');
+    } finally {
+      setSettingDefault(null);
+    }
+  };
 
   // Prefill from backend on mount
   useEffect(() => {
@@ -628,34 +661,96 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
       <div className="upload-row">
         <div className="upload-card">
-          <ProfileSectionHeading>Upload your resume (required)</ProfileSectionHeading>
-          <p className="muted">Accepted file types: PDF and DOC (PDF preferred)</p>
-          <div className="upload-actions">
-            <input
-              ref={resumeInputRef}
-              type="file"
-              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadToS3(f, 'resume');
-              }}
-            />
-            <button
-              type="button"
-              className="update-button"
-              onClick={() => resumeInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? 'Uploading…' : 'Choose file to upload'}
-            </button>
-            <button type="button" className="update-button" onClick={deleteResume} disabled={!resumeKey}>Delete</button>
-          </div>
-          {resumeFileName && (
-            <div className="muted" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <span>File Attached: {resumeFileName}</span>
-              {resumeUrl && (
-                <a href={resumeUrl} target="_blank" rel="noreferrer" className="update-button" style={{ padding: '0.25rem 0.5rem' }}>View</a>
+          <ProfileSectionHeading>Resume</ProfileSectionHeading>
+          {resumeTopSlot}
+          {/* Tab toggle — only in standalone (not embedded in wizard which has its own source selector) */}
+          {!resumeOptional && !resumeTopSlot && (
+            <div style={{ display: 'flex', gap: '0', marginBottom: '1rem', border: '1px solid #d1d5db', borderRadius: '6px', overflow: 'hidden', width: 'fit-content' }}>
+              <button
+                type="button"
+                onClick={() => { setResumeTab('upload'); localStorage.setItem('resumeTabPref', 'upload'); }}
+                style={{ padding: '6px 14px', fontSize: '13px', border: 'none', cursor: 'pointer', background: resumeTab === 'upload' ? '#1f2937' : '#f9fafb', color: resumeTab === 'upload' ? '#fff' : '#374151', fontWeight: resumeTab === 'upload' ? 600 : 400 }}
+              >
+                Upload File
+              </button>
+              <button
+                type="button"
+                onClick={() => { setResumeTab('builder'); localStorage.setItem('resumeTabPref', 'builder'); }}
+                style={{ padding: '6px 14px', fontSize: '13px', border: 'none', borderLeft: '1px solid #d1d5db', cursor: 'pointer', background: resumeTab === 'builder' ? '#1f2937' : '#f9fafb', color: resumeTab === 'builder' ? '#fff' : '#374151', fontWeight: resumeTab === 'builder' ? 600 : 400 }}
+              >
+                From Resume Builder
+              </button>
+            </div>
+          )}
+          {/* Upload UI — shown when upload tab is active, or when embedded in wizard with resumeSource='upload' (resumeOptional=false) */}
+          {!resumeOptional && (resumeTopSlot || resumeTab === 'upload') && (
+            <>
+              <p className="muted">Accepted file types: PDF and DOC (PDF preferred)</p>
+              <div className="upload-actions">
+                <input
+                  ref={resumeInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  hidden
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) uploadToS3(f, 'resume');
+                  }}
+                />
+                <button
+                  type="button"
+                  className="update-button"
+                  onClick={() => resumeInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? 'Uploading…' : 'Choose file to upload'}
+                </button>
+                <button type="button" className="update-button" onClick={deleteResume} disabled={!resumeKey}>Delete</button>
+              </div>
+              {resumeFileName && (
+                <div className="muted" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span>File Attached: {resumeFileName}</span>
+                  {resumeUrl && (
+                    <a href={resumeUrl} target="_blank" rel="noreferrer" className="update-button" style={{ padding: '0.25rem 0.5rem' }}>View</a>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+          {/* Builder list — only in standalone mode when builder tab is active */}
+          {!resumeOptional && !resumeTopSlot && resumeTab === 'builder' && (
+            <div>
+              <p className="muted" style={{ marginBottom: '0.75rem' }}>Select a resume from your Resume Builder to use as your profile resume.</p>
+              {builderLoading ? (
+                <p className="muted">Loading resumes…</p>
+              ) : builderResumes.length === 0 ? (
+                <p className="muted">No resumes found. Create one in the <strong>Resume Builder</strong> section.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {builderResumes.map(r => (
+                    <div key={r._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: `1px solid ${r.isDefault ? '#1f2937' : '#e5e7eb'}`, borderRadius: '6px', background: r.isDefault ? '#f3f4f6' : '#fff' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: r.isDefault ? 600 : 400, color: '#111827' }}>
+                          {r.title || 'Untitled Resume'}
+                        </span>
+                        {r.isDefault && (
+                          <span style={{ fontSize: '11px', background: '#1f2937', color: '#fff', borderRadius: '999px', padding: '1px 8px' }}>Profile Resume</span>
+                        )}
+                      </div>
+                      {!r.isDefault && (
+                        <button
+                          type="button"
+                          className="update-button"
+                          style={{ padding: '4px 10px', fontSize: '12px' }}
+                          disabled={settingDefault === r._id}
+                          onClick={() => handleSetDefault(r._id)}
+                        >
+                          {settingDefault === r._id ? 'Setting…' : 'Use as Profile Resume'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -822,8 +917,59 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         </div>
 
         <div className="form-group">
-          <label htmlFor="keywords">* Keywords</label>
-          <input id="keywords" name="keywords" value={form.keywords} onChange={onChange} placeholder="Your skills, job titles, certifications, etc." />
+          <label htmlFor="keyword-input">* Keywords <span style={{ fontWeight: 'normal', fontSize: '0.85em', color: 'var(--text-secondary, #6b7280)' }}>(press Enter or comma to add each keyword)</span></label>
+          {(() => {
+            const tags = form.keywords ? form.keywords.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const addTag = (raw) => {
+              const val = raw.trim().replace(/,$/, '').trim();
+              if (!val || tags.includes(val)) return;
+              const next = [...tags, val].join(', ');
+              setForm(prev => ({ ...prev, keywords: next }));
+              if (onValidationChange) setTimeout(onValidationChange, 0);
+            };
+            const removeTag = (tag) => {
+              const next = tags.filter(t => t !== tag).join(', ');
+              setForm(prev => ({ ...prev, keywords: next }));
+              if (onValidationChange) setTimeout(onValidationChange, 0);
+            };
+            return (
+              <div
+                role="presentation"
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#fff', cursor: 'text', minHeight: '42px' }}
+                onClick={() => document.getElementById('keyword-input')?.focus()}
+                onKeyDown={() => document.getElementById('keyword-input')?.focus()}
+              >
+                {tags.map(tag => (
+                  <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#1f2937', color: '#f9fafb', borderRadius: '4px', padding: '2px 8px', fontSize: '14px', fontWeight: 500 }}>
+                    {tag}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${tag}`}
+                      onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontWeight: 700, fontSize: '12px', lineHeight: 1, padding: '0 1px' }}
+                    >×</button>
+                  </span>
+                ))}
+                <input
+                  id="keyword-input"
+                  value={keywordInput}
+                  onChange={e => setKeywordInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
+                      addTag(keywordInput);
+                      setKeywordInput('');
+                    } else if (e.key === 'Backspace' && !keywordInput && tags.length) {
+                      removeTag(tags[tags.length - 1]);
+                    }
+                  }}
+                  onBlur={() => { if (keywordInput.trim()) { addTag(keywordInput); setKeywordInput(''); } }}
+                  placeholder={tags.length === 0 ? 'Your skills, job titles, certifications, etc.' : ''}
+                  style={{ border: 'none', outline: 'none', flex: 1, minWidth: '140px', fontSize: '14px', padding: '2px 0', background: 'transparent' }}
+                />
+              </div>
+            );
+          })()}
         </div>
 
         <div className="form-group">

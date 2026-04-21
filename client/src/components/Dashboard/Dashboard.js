@@ -38,6 +38,7 @@ import './Dashboard.css';
 import SurveyForm from './SurveyForm';
 import EditProfileResume from './EditProfileResume';
 import ViewProfile from './ViewProfile';
+import ResumeBuilder from './ResumeBuilder/ResumeBuilder';
 import InterpreterDashboard from './InterpreterDashboard';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
@@ -175,6 +176,8 @@ const Dashboard = () => {
             setActiveSection('view-profile');
         } else if (location.pathname.endsWith('/delete-account')) {
             setActiveSection('delete-account');
+        } else if (location.pathname.includes('/resume-builder')) {
+            setActiveSection('resume-builder');
         } else {
             setActiveSection('my-account');
         }
@@ -604,6 +607,13 @@ const Dashboard = () => {
                         </ErrorBoundary>
                     );
                 }
+                if (activeSection === 'resume-builder') {
+                    return (
+                        <ErrorBoundary>
+                            <ResumeBuilder />
+                        </ErrorBoundary>
+                    );
+                }
                 if (activeSection === 'delete-account') {
                     const deleteWarning = getMessage('delete-account', 'warning') || '';
                     return (
@@ -800,6 +810,7 @@ const Dashboard = () => {
                         'survey': 'Survey',
                         'edit-profile': 'Edit Profile & Resume',
                         'view-profile': 'View My Profile',
+                        'resume-builder': 'Resume Builder',
                         'delete-account': 'Delete My Account',
                     };
                     return `${pageTitleMap[activeSection] || 'Dashboard'} - abilityconnect`;
@@ -830,7 +841,8 @@ const Dashboard = () => {
                         activeSection === 'survey' ? 'survey' :
                             activeSection === 'delete-account' ? 'delete-account' :
                                 activeSection === 'edit-profile' ? 'edit-profile' :
-                                    activeSection === 'view-profile' ? 'view-profile' : 'my-account'
+                                    activeSection === 'view-profile' ? 'view-profile' :
+                                        activeSection === 'resume-builder' ? 'resume-builder' : 'my-account'
                     ) : (
                         activeSection === 'manage-booths' ? 'booths' :
                             activeSection === 'branding' ? 'branding' :

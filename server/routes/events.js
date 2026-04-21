@@ -5,8 +5,10 @@ const Booth = require('../models/Booth');
 const { authenticateToken, requireRole, requireResourceAccess } = require('../middleware/auth');
 const Organization = require('../models/Organization');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
+const Resume = require('../models/Resume');
 const logger = require('../utils/logger');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
+const { generateAndUploadResumePdf } = require('../services/pdfResumeService');
 
 const router = express.Router();
 
@@ -1066,11 +1068,29 @@ router.post('/:id/register', authenticateToken, async (req, res) => {
         }
         if (!event) return res.status(404).json({ error: 'Event not found' });
 
+        const { resumeId } = req.body || {};
+
+        // If a saved resume was selected, generate a PDF and upload to S3
+        let generatedResumeUrl = null;
+        if (resumeId) {
+            try {
+                const resumeDoc = await Resume.findOne({ _id: resumeId, userId: user._id });
+                if (resumeDoc) {
+                    generatedResumeUrl = await generateAndUploadResumePdf(resumeDoc, user._id);
+                }
+            } catch (e) {
+                logger.warn('Failed to generate resume PDF for registration:', e.message);
+            }
+        }
+
         // Initialize metadata.registeredEvents
         const reg = (user.metadata && user.metadata.registeredEvents) || [];
         const exists = reg.some(r => (r.id && r.id.toString() === event._id.toString()) || (r.slug && r.slug === event.slug));
         if (!exists) {
-            const next = [...reg, { id: event._id, slug: event.slug, name: event.name, registeredAt: new Date() }];
+            const entry = { id: event._id, slug: event.slug, name: event.name, registeredAt: new Date() };
+            if (resumeId) entry.resumeId = resumeId;
+            if (generatedResumeUrl) entry.generatedResumeUrl = generatedResumeUrl;
+            const next = [...reg, entry];
             user.metadata = { ...(user.metadata || {}), registeredEvents: next };
             await user.save();
             // best-effort stat increment
@@ -1082,7 +1102,7 @@ router.post('/:id/register', authenticateToken, async (req, res) => {
             // Auto-register as org member if event belongs to an org
             if (event.organizationId) {
                 try {
-                    await RegisteredJobSeeker.registerWithOrg(event.organizationId, user._id, event._id);
+                    await RegisteredJobSeeker.registerWithOrg(event.organizationId, user._id, event._id, resumeId || null, generatedResumeUrl || null);
                 } catch (e) {
                     logger.warn('Failed to create RegisteredJobSeeker record:', e.message);
                 }

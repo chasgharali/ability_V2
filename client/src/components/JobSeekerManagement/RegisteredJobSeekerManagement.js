@@ -7,6 +7,7 @@ import MassUploadModal from '../UserManagement/MassUploadModal';
 import AdminJobSeekerEditor, { mapJobSeekerUserToAdminEditRow } from './AdminJobSeekerEditor';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import { openResumeInNewTab } from '../../utils/resumeViewer';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, ExcelExport, Freeze } from '@syncfusion/ej2-react-grids';
@@ -67,13 +68,14 @@ export default function RegisteredJobSeekerManagement() {
   const searchInputRef = useRef(null);
 
   const loadEventsData = useCallback(async () => {
+    if (!orgId) return;
     try {
-      const res = await listEvents({ page: 1, limit: 200 });
+      const res = await listEvents({ page: 1, limit: 200, organizationId: orgId });
       setEvents(res.events || []);
     } catch (e) {
       console.error('Failed to load events', e);
     }
-  }, []);
+  }, [orgId]);
 
   useEffect(() => {
     loadEventsData();
@@ -149,6 +151,9 @@ export default function RegisteredJobSeekerManagement() {
           lastLogin: js.lastLogin,
           createdAt: js.createdAt,
           resumeUrl: js.resumeUrl || null,
+          registrationResumeUrl: reg.resumeUrl || null,
+          resumeTitle: reg.resumeId?.title || null,
+          resumeIdValue: reg.resumeId?._id ? String(reg.resumeId._id) : null,
           registeredEvent: reg.eventId?.name,
           registeredAt: reg.registeredAt,
           jobSeekerId: js,
@@ -393,8 +398,8 @@ export default function RegisteredJobSeekerManagement() {
               <p className="profile-email">{js.email}</p>
               <p className="profile-location">{js.phoneNumber || 'Not provided'}</p>
               <p className="profile-location">{[js.city, js.state, js.country].filter(Boolean).join(', ') || 'Not provided'}</p>
-              {js.resumeUrl && (
-                <a href={js.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn-resume">View Resume</a>
+              {(reg?.resumeUrl || js.resumeUrl) && (
+                <button type="button" className="btn-resume" onClick={() => openResumeInNewTab(null, reg?.resumeUrl || js.resumeUrl)}>View Resume</button>
               )}
             </div>
           </div>
@@ -423,6 +428,22 @@ export default function RegisteredJobSeekerManagement() {
               <div className="profile-field"><label>Registered At:</label><span>{reg?.registeredAt ? new Date(reg.registeredAt).toLocaleDateString() : '—'}</span></div>
               <div className="profile-field"><label>Event:</label><span>{reg?.eventId?.name || '—'}</span></div>
               <div className="profile-field"><label>Event Date:</label><span>{reg?.eventId?.start ? new Date(reg.eventId.start).toLocaleDateString() : '—'}</span></div>
+              <div className="profile-field">
+                <label>Resume Used:</label>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span>{reg?.resumeId?.title || (js?.resumeUrl || reg?.resumeUrl ? 'Uploaded File' : '—')}</span>
+                  {(reg?.resumeUrl || reg?.resumeId?._id || js?.resumeUrl) && (
+                    <button
+                      type="button"
+                      className="btn-resume"
+                      onClick={() => openResumeInNewTab(
+                        reg?.resumeUrl ? null : (reg?.resumeId?._id ? String(reg.resumeId._id) : null),
+                        reg?.resumeUrl || js?.resumeUrl || null
+                      )}
+                    >View Resume</button>
+                  )}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -675,6 +696,21 @@ export default function RegisteredJobSeekerManagement() {
               />
               <ColumnDirective field="emailVerified" headerText="Email Verified" width="120" textAlign="Center" template={emailVerifiedTemplate} />
               <ColumnDirective field="registeredEvent" headerText="Registered Event" width="200" allowFiltering={true} />
+              <ColumnDirective field="resumeTitle" headerText="Resume Used" width="220" allowFiltering={true} template={(props) => (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>{props.resumeTitle || (props.registrationResumeUrl || props.resumeUrl ? 'Uploaded File' : '—')}</span>
+                  {(props.registrationResumeUrl || props.resumeIdValue || props.resumeUrl) && (
+                    <button
+                      type="button"
+                      className="btn-view-resume-inline"
+                      onClick={() => openResumeInNewTab(
+                        props.registrationResumeUrl ? null : props.resumeIdValue,
+                        props.registrationResumeUrl || props.resumeUrl
+                      )}
+                    >View</button>
+                  )}
+                </span>
+              )} />
               <ColumnDirective field="registeredAt" headerText="Registered Date" width="140" template={registeredAtTemplate} />
               <ColumnDirective field="lastLogin" headerText="Last Login" width="140" template={lastLoginTemplate} />
               <ColumnDirective headerText="Actions" width="160" allowSorting={false} allowFiltering={false} template={actionsTemplate} />

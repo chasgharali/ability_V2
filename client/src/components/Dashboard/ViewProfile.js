@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaLinkedin } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { listResumes } from '../../services/resumes';
 import './Dashboard.css';
 import {
   JOB_CATEGORY_LIST,
@@ -23,11 +25,13 @@ function getNameInitials(displayName) {
 
 export default function ViewProfile() {
   const { getMessage } = useRoleMessages();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
+  const [builderResumes, setBuilderResumes] = useState([]);
   const profileNotice = getMessage('view-profile', 'profile-notice') || '';
 
   const getToken = () => localStorage.getItem('token');
@@ -55,6 +59,7 @@ export default function ViewProfile() {
       }
     };
     run();
+    listResumes().then(data => setBuilderResumes(data?.resumes || data || [])).catch(() => {});
   }, []);
 
   const avatarUrl = user?.avatarUrl || '';
@@ -188,23 +193,35 @@ export default function ViewProfile() {
                   LinkedIn
                 </a>
               )}
-              {resumeUrl ? (
-                <a 
-                  href={resumeUrl} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="profile-btn profile-btn-primary"
-                  aria-describedby="resume-help"
-                >
-                  <span className="btn-icon">📄</span>
-                  View Complete Resume
-                </a>
-              ) : (
-                <div className="profile-btn profile-btn-disabled" aria-label="No resume uploaded">
-                  <span className="btn-icon">📄</span>
-                  No Resume Available
-                </div>
-              )}
+              {(() => {
+                const defaultBuilderResume = builderResumes.find(r => r.isDefault) || builderResumes[0];
+                if (resumeUrl) {
+                  return (
+                    <a href={resumeUrl} target="_blank" rel="noreferrer" className="profile-btn profile-btn-primary" aria-describedby="resume-help">
+                      <span className="btn-icon">📄</span>
+                      View Uploaded Resume
+                    </a>
+                  );
+                }
+                if (defaultBuilderResume) {
+                  return (
+                    <button
+                      type="button"
+                      className="profile-btn profile-btn-primary"
+                      onClick={() => navigate('/dashboard/resume-builder', { state: { openResumeId: defaultBuilderResume._id } })}
+                    >
+                      <span className="btn-icon">📄</span>
+                      {defaultBuilderResume.title || 'View Resume'}
+                    </button>
+                  );
+                }
+                return (
+                  <div className="profile-btn profile-btn-disabled" aria-label="No resume uploaded">
+                    <span className="btn-icon">📄</span>
+                    No Resume Available
+                  </div>
+                );
+              })()}
               <p id="resume-help" className="sr-only">Opens resume in a new tab</p>
             </div>
           </div>
@@ -215,81 +232,144 @@ export default function ViewProfile() {
           <h2 id="profile-details-heading" className="section-title">Professional Details</h2>
           
           <div className="profile-details-grid">
-            <div className="profile-detail-card">
-              <div className="detail-header">
-                <h3 className="detail-title">Professional Summary</h3>
-              </div>
-              <div className="detail-content">
-                <div className="detail-item">
-                  <label className="detail-label">Professional Headline</label>
-                  <div className="detail-value">{headline || <span className="empty-state">No headline provided</span>}</div>
+            {(headline || keywords) && (
+              <div className="profile-detail-card">
+                <div className="detail-header">
+                  <h3 className="detail-title">Professional Summary</h3>
                 </div>
-                <div className="detail-item">
-                  <label className="detail-label">Keywords & Skills</label>
-                  <div className="detail-value">{keywords || <span className="empty-state">No keywords specified</span>}</div>
+                <div className="detail-content">
+                  {headline && (
+                    <div className="detail-item">
+                      <label className="detail-label">Professional Headline</label>
+                      <div className="detail-value">{headline}</div>
+                    </div>
+                  )}
+                  {keywords && (
+                    <div className="detail-item">
+                      <label className="detail-label">Keywords & Skills</label>
+                      <div className="detail-value">{keywords}</div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="profile-detail-card">
-              <div className="detail-header">
-                <h3 className="detail-title">Experience & Employment</h3>
+            {(primaryExperienceNames.length > 0 || employmentTypeNames.length > 0 || (workLevel && mapValue(workLevel, EXP_MAP) !== workLevel)) && (
+              <div className="profile-detail-card">
+                <div className="detail-header">
+                  <h3 className="detail-title">Experience & Employment</h3>
+                </div>
+                <div className="detail-content">
+                  {primaryExperienceNames.length > 0 && (
+                    <div className="detail-item">
+                      <label className="detail-label">Primary Job Experience</label>
+                      <div className="detail-value"><Chips items={primaryExperienceNames} /></div>
+                    </div>
+                  )}
+                  {employmentTypeNames.length > 0 && (
+                    <div className="detail-item">
+                      <label className="detail-label">Employment Types</label>
+                      <div className="detail-value"><Chips items={employmentTypeNames} /></div>
+                    </div>
+                  )}
+                  {workLevel && mapValue(workLevel, EXP_MAP) !== workLevel && (
+                    <div className="detail-item">
+                      <label className="detail-label">Experience Level</label>
+                      <div className="detail-value">{mapValue(workLevel, EXP_MAP)}</div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="detail-content">
-                <div className="detail-item">
-                  <label className="detail-label">Primary Job Experience</label>
-                  <div className="detail-value">
-                    {primaryExperienceNames.length ? <Chips items={primaryExperienceNames} /> : <span className="empty-state">No experience specified</span>}
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <label className="detail-label">Employment Types</label>
-                  <div className="detail-value">
-                    {employmentTypeNames.length ? <Chips items={employmentTypeNames} /> : <span className="empty-state">No employment types specified</span>}
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <label className="detail-label">Experience Level</label>
-                  <div className="detail-value">{mapValue(workLevel, EXP_MAP) === workLevel ? <span className="empty-state">Not specified</span> : mapValue(workLevel, EXP_MAP)}</div>
-                </div>
-              </div>
-            </div>
+            )}
 
-            <div className="profile-detail-card">
-              <div className="detail-header">
-                <h3 className="detail-title">Education & Qualifications</h3>
-              </div>
-              <div className="detail-content">
-                <div className="detail-item">
-                  <label className="detail-label">Highest Education Level</label>
-                  <div className="detail-value">{mapValue(educationLevel, EDU_MAP) === educationLevel ? <span className="empty-state">Not specified</span> : mapValue(educationLevel, EDU_MAP)}</div>
+            {((educationLevel && mapValue(educationLevel, EDU_MAP) !== educationLevel) || (clearance && mapValue(clearance, CLEAR_MAP) !== clearance)) && (
+              <div className="profile-detail-card">
+                <div className="detail-header">
+                  <h3 className="detail-title">Education & Qualifications</h3>
                 </div>
-                <div className="detail-item">
-                  <label className="detail-label">Security Clearance</label>
-                  <div className="detail-value">{mapValue(clearance, CLEAR_MAP) === clearance ? <span className="empty-state">None</span> : mapValue(clearance, CLEAR_MAP)}</div>
+                <div className="detail-content">
+                  {educationLevel && mapValue(educationLevel, EDU_MAP) !== educationLevel && (
+                    <div className="detail-item">
+                      <label className="detail-label">Highest Education Level</label>
+                      <div className="detail-value">{mapValue(educationLevel, EDU_MAP)}</div>
+                    </div>
+                  )}
+                  {clearance && mapValue(clearance, CLEAR_MAP) !== clearance && (
+                    <div className="detail-item">
+                      <label className="detail-label">Security Clearance</label>
+                      <div className="detail-value">{mapValue(clearance, CLEAR_MAP)}</div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="profile-detail-card">
-              <div className="detail-header">
-                <h3 className="detail-title">Additional Information</h3>
-              </div>
-              <div className="detail-content">
-                <div className="detail-item">
-                  <label className="detail-label">Languages</label>
-                  <div className="detail-value">
-                    {languageNames.length ? <Chips items={languageNames} /> : <span className="empty-state">No languages specified</span>}
-                  </div>
+            {(languageNames.length > 0 || (veteranStatus && mapValue(veteranStatus, VET_MAP) !== veteranStatus)) && (
+              <div className="profile-detail-card">
+                <div className="detail-header">
+                  <h3 className="detail-title">Additional Information</h3>
                 </div>
-                <div className="detail-item">
-                  <label className="detail-label">Veteran/Military Status</label>
-                  <div className="detail-value">{mapValue(veteranStatus, VET_MAP) === veteranStatus ? <span className="empty-state">Not specified</span> : mapValue(veteranStatus, VET_MAP)}</div>
+                <div className="detail-content">
+                  {languageNames.length > 0 && (
+                    <div className="detail-item">
+                      <label className="detail-label">Languages</label>
+                      <div className="detail-value"><Chips items={languageNames} /></div>
+                    </div>
+                  )}
+                  {veteranStatus && mapValue(veteranStatus, VET_MAP) !== veteranStatus && (
+                    <div className="detail-item">
+                      <label className="detail-label">Veteran/Military Status</label>
+                      <div className="detail-value">{mapValue(veteranStatus, VET_MAP)}</div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
+
+            {!headline && !keywords && !primaryExperienceNames.length && !employmentTypeNames.length && !languageNames.length && (
+              <div className="profile-detail-card" style={{ gridColumn: '1 / -1' }}>
+                <div className="detail-content" style={{ textAlign: 'center', padding: '24px', color: '#9ca3af' }}>
+                  <p style={{ margin: 0 }}>Professional details not yet added. <button type="button" className="profile-btn profile-btn-outline" style={{ marginLeft: 8, padding: '4px 12px', fontSize: '13px' }} onClick={() => navigate('/dashboard/edit-profile')}>Edit Profile</button></p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
+
+        {/* Resume Builder Resumes */}
+        {builderResumes.length > 0 && (
+          <section className="profile-details-section" aria-labelledby="resumes-heading">
+            <h2 id="resumes-heading" className="section-title">My Resumes</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {builderResumes.map(r => (
+                <div key={r._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: `1px solid ${r.isDefault ? '#1d4ed8' : '#e5e7eb'}`, borderRadius: '8px', background: r.isDefault ? '#eff6ff' : '#fff' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '20px' }}>📄</span>
+                    <div>
+                      <div style={{ fontWeight: r.isDefault ? 600 : 400, fontSize: '14px', color: r.isDefault ? '#1d4ed8' : '#111827' }}>
+                        {r.title || 'Untitled Resume'}
+                      </div>
+                      {r.lastAiGenerated && (
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>AI generated</div>
+                      )}
+                    </div>
+                    {r.isDefault && (
+                      <span style={{ fontSize: '11px', background: '#1d4ed8', color: '#fff', borderRadius: '999px', padding: '2px 8px' }}>Profile Resume</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="profile-btn profile-btn-outline"
+                    style={{ padding: '6px 14px', fontSize: '13px' }}
+                    onClick={() => navigate('/dashboard/resume-builder', { state: { openResumeId: r._id } })}
+                  >
+                    View / Edit
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

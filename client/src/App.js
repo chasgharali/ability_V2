@@ -158,6 +158,7 @@ function App() {
                                     <Route path="/dashboard/edit-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/dashboard/view-profile" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/dashboard/delete-account" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                                    <Route path="/dashboard/resume-builder" element={<RequireAuth><Dashboard /></RequireAuth>} />
                                     <Route path="/boothmanagement" element={<RequireAuth><RequireRole allowedRoles={['Admin', 'AdminEvent', 'GlobalSupport']}><BoothManagement /></RequireRole></RequireAuth>} />
                                     <Route path="/boothmanagement/template-editor" element={<RequireAuth><RequireRole allowedRoles={['Admin', 'AdminEvent', 'GlobalSupport']}><EmployerPageTemplateEditor /></RequireRole></RequireAuth>} />
                                     <Route path="/eventmanagement" element={<RequireAuth><EventManagement /></RequireAuth>} />
