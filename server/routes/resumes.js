@@ -1,9 +1,41 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const axios = require('axios');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const Resume = require('../models/Resume');
 const openaiResumeService = require('../services/openaiResumeService');
 const logger = require('../utils/logger');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    cb(null, allowed.includes(file.mimetype));
+  }
+});
+
+async function extractTextFromBuffer(buffer, mimetype) {
+  if (mimetype === 'application/pdf') {
+    const pdfParse = require('pdf-parse');
+    const data = await pdfParse(buffer);
+    return data.text || '';
+  }
+  if (
+    mimetype === 'application/msword' ||
+    mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ) {
+    const mammoth = require('mammoth');
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value || '';
+  }
+  throw new Error('Unsupported file type');
+}
 
 /**
  * GET /api/resumes
@@ -239,6 +271,95 @@ router.post('/:id/suggest', authenticateToken, async (req, res) => {
       return res.status(503).json({ error: 'AI service not available. Check OPENAI_API_KEY.' });
     }
     res.status(500).json({ error: 'Failed to get content suggestion' });
+  }
+});
+
+/**
+ * POST /api/resumes/parse-upload
+ * Upload a PDF/DOC/DOCX resume file, parse it with AI, create a new Resume doc
+ */
+router.post('/parse-upload', authenticateToken, upload.single('resume'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const text = await extractTextFromBuffer(req.file.buffer, req.file.mimetype);
+    if (!text.trim()) return res.status(422).json({ error: 'Could not extract text from file' });
+
+    const user = req.user;
+    const parsed = await openaiResumeService.parseResumeFromText(text, {
+      name: user.name,
+      email: user.email,
+      phone: user.phoneNumber
+    });
+
+    const resumeCount = await Resume.countDocuments({ userId: user._id });
+    const title = req.body.title || (req.file.originalname.replace(/\.[^.]+$/, '') || `Parsed Resume ${resumeCount + 1}`);
+    const resume = await Resume.create({
+      userId: user._id,
+      organizationId: user.organizationId || null,
+      title,
+      content: parsed,
+      isDefault: resumeCount === 0,
+      lastAiGenerated: new Date()
+    });
+
+    res.status(201).json({ resume });
+  } catch (error) {
+    logger.error('Parse upload resume error:', error);
+    if (error.message?.includes('API key')) {
+      return res.status(503).json({ error: 'AI service not available. Check OPENAI_API_KEY.' });
+    }
+    res.status(500).json({ error: 'Failed to parse resume' });
+  }
+});
+
+/**
+ * POST /api/resumes/parse-from-url
+ * Fetch an already-uploaded resume file from S3/URL, parse it with AI, create a new Resume doc
+ * Body: { url, title }
+ */
+router.post('/parse-from-url', authenticateToken, async (req, res) => {
+  try {
+    const { url, title } = req.body;
+    if (!url) return res.status(400).json({ error: 'url is required' });
+
+    const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 15000 });
+    const buffer = Buffer.from(response.data);
+    const contentType = response.headers['content-type'] || '';
+    let mimetype = 'application/pdf';
+    if (contentType.includes('msword') || url.toLowerCase().endsWith('.doc')) {
+      mimetype = 'application/msword';
+    } else if (contentType.includes('wordprocessingml') || url.toLowerCase().endsWith('.docx')) {
+      mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    }
+
+    const text = await extractTextFromBuffer(buffer, mimetype);
+    if (!text.trim()) return res.status(422).json({ error: 'Could not extract text from file' });
+
+    const user = req.user;
+    const parsed = await openaiResumeService.parseResumeFromText(text, {
+      name: user.name,
+      email: user.email,
+      phone: user.phoneNumber
+    });
+
+    const resumeCount = await Resume.countDocuments({ userId: user._id });
+    const resume = await Resume.create({
+      userId: user._id,
+      organizationId: user.organizationId || null,
+      title: title || `Parsed Resume ${resumeCount + 1}`,
+      content: parsed,
+      isDefault: resumeCount === 0,
+      lastAiGenerated: new Date()
+    });
+
+    res.status(201).json({ resume });
+  } catch (error) {
+    logger.error('Parse from URL resume error:', error);
+    if (error.message?.includes('API key')) {
+      return res.status(503).json({ error: 'AI service not available. Check OPENAI_API_KEY.' });
+    }
+    res.status(500).json({ error: 'Failed to parse resume from URL' });
   }
 });
 

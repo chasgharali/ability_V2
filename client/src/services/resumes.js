@@ -61,3 +61,18 @@ export async function suggestResumeContent(id, section, currentContent, context)
   );
   return res.data;
 }
+
+export async function parseResumeFromFile(file, title) {
+  const formData = new FormData();
+  formData.append('resume', file);
+  if (title) formData.append('title', title);
+  const res = await axios.post('/api/resumes/parse-upload', formData, {
+    headers: { ...authHeaders(), 'Content-Type': 'multipart/form-data' }
+  });
+  return res.data;
+}
+
+export async function parseResumeFromUrl(url, title) {
+  const res = await axios.post('/api/resumes/parse-from-url', { url, title }, { headers: authHeaders() });
+  return res.data;
+}

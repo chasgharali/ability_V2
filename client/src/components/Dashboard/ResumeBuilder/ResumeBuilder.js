@@ -9,7 +9,9 @@ import {
   deleteResume,
   setDefaultResume,
   generateResumeFromProfile,
-  suggestResumeContent
+  suggestResumeContent,
+  parseResumeFromFile,
+  parseResumeFromUrl
 } from '../../../services/resumes';
 import './ResumeBuilder.css';
 
@@ -60,6 +62,8 @@ export default function ResumeBuilder() {
   const [skillInput, setSkillInput] = useState('');
   const [awardInput, setAwardInput] = useState('');
   const [langInput, setLangInput] = useState('');
+  const [parsing, setParsing] = useState(false);
+  const fileInputRef = useRef(null);
   const printRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -170,6 +174,43 @@ export default function ResumeBuilder() {
       return null;
     } finally {
       setAiLoading('');
+    }
+  };
+
+  const handleParseFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setParsing(true);
+    try {
+      const data = await parseResumeFromFile(file, file.name.replace(/\.[^.]+$/, ''));
+      setEditing({ ...data.resume });
+      setActiveTab('personal');
+      setView('edit');
+      await load();
+      showToast('Resume parsed and ready to edit', { type: 'success' });
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to parse resume', { type: 'error' });
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handleParseFromUploadedResume = async () => {
+    const resumeUrl = user?.resumeUrl;
+    if (!resumeUrl) return;
+    setParsing(true);
+    try {
+      const data = await parseResumeFromUrl(resumeUrl, 'Parsed from Profile Resume');
+      setEditing({ ...data.resume });
+      setActiveTab('personal');
+      setView('edit');
+      await load();
+      showToast('Profile resume parsed and ready to edit', { type: 'success' });
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to parse resume', { type: 'error' });
+    } finally {
+      setParsing(false);
     }
   };
 
@@ -400,11 +441,27 @@ export default function ResumeBuilder() {
             >
               {aiLoading === 'generate' ? 'Generating…' : '✨ Generate from Profile'}
             </button>
+            <button
+              className="ajf-btn ajf-btn-outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={parsing}
+              title="Upload a new resume file to parse (replaces current content)"
+            >
+              {parsing ? 'Parsing…' : '⬆ Upload File'}
+            </button>
             <button className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
             <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving}>
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            style={{ display: 'none' }}
+            onChange={handleParseFile}
+            aria-label="Upload resume file to parse"
+          />
         </div>
 
         <div className="rb-editor-layout">
@@ -782,7 +839,33 @@ export default function ResumeBuilder() {
         <p className="rb-subtitle">Create multiple AI-powered resumes. Select one during event registration.</p>
 
         <div className="rb-list-toolbar">
-          <button className="ajf-btn ajf-btn-dark" onClick={handleCreate}>+ New Resume</button>
+          <button className="ajf-btn ajf-btn-dark" onClick={handleCreate} disabled={parsing}>+ New Resume</button>
+          <button
+            className="ajf-btn ajf-btn-outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={parsing}
+            title="Upload a PDF or Word resume to parse and edit"
+          >
+            {parsing ? 'Parsing…' : '⬆ Upload & Parse Resume'}
+          </button>
+          {user?.resumeUrl && (
+            <button
+              className="ajf-btn ajf-btn-outline"
+              onClick={handleParseFromUploadedResume}
+              disabled={parsing}
+              title="Parse your already-uploaded profile resume and import it into the editor"
+            >
+              {parsing ? 'Parsing…' : '↙ Import Uploaded Resume'}
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            style={{ display: 'none' }}
+            onChange={handleParseFile}
+            aria-label="Upload resume file to parse"
+          />
         </div>
 
         {loading && <div className="rb-loading">Loading resumes…</div>}

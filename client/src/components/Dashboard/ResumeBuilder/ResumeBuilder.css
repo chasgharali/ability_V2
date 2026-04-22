@@ -699,28 +699,96 @@
 /* ============================================================
    Print media — show only the resume document
    ============================================================ */
+@page {
+  size: letter portrait;
+  margin: 1.5cm 2cm;
+}
+
 @media print {
-  body * { visibility: hidden !important; }
-  .rb-print-area,
-  .rb-print-area * { visibility: visible !important; }
+  /* ── Step 1: Reset page chrome ── */
+  html, body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ── Step 2: Remove UI chrome from layout entirely (display:none
+     takes them out of flow so they leave no blank space) ── */
+  .dashboard-header,
+  .admin-header,
+  .dashboard-sidebar,
+  .rb-preview-toolbar,
+  .rb-editor-topbar,
+  .rb-tabs,
+  .no-print {
+    display: none !important;
+  }
+
+  /* ── Step 3: Reset layout containers to full-width block
+     so the main area fills the whole page width ── */
+  .dashboard,
+  .dashboard-layout,
+  .dashboard-main,
+  .resume-builder,
   .rb-print-area {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 0;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    float: none !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
+
+  /* ── Step 4: Hide everything that's still in the DOM (visibility
+     trick — hidden elements keep their layout space, but since
+     the chrome is already display:none that space is gone) ── */
+  body * { visibility: hidden !important; }
+
+  /* ── Step 5: Show only the resume document ── */
+  .rb-resume-doc,
+  .rb-resume-doc * {
+    visibility: visible !important;
+  }
+
+  /* ── Step 6: Resume doc — stay in NORMAL FLOW (position:static)
+     so content paginates across multiple printed pages.
+     position:absolute/fixed breaks pagination and causes 1-page cutoff. ── */
   .rb-resume-doc {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    max-width: 100%;
-    padding: 1.5cm 2cm;
-    font-size: 10pt;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 10pt !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #111 !important;
   }
-  .rb-doc-header h1 { font-size: 18pt; }
-  .rb-doc-section h2 { font-size: 9pt; }
-  .no-print { display: none !important; }
+
+  /* ── Typography scaling ── */
+  .rb-doc-header h1 { font-size: 18pt !important; }
+  .rb-doc-section h2 { font-size: 9pt !important; }
+
+  /* ── Prevent sections from splitting mid-page ── */
+  .rb-doc-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .rb-doc-entry,
+  .rb-exp-entry,
+  .rb-edu-entry,
+  .rb-cert-entry {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
 }
 
 /* ============================================================

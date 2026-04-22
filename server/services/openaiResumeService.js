@@ -84,6 +84,84 @@ Return exactly this JSON structure:
     }
   }
 
+  async parseResumeFromText(text, userInfo = {}) {
+    if (!this.available) throw new Error('OpenAI API key not configured');
+
+    const systemPrompt = `You are an expert resume parser. Extract structured resume data from raw resume text.
+Return ONLY valid JSON — no markdown, no code fences, no extra text.`;
+
+    const userPrompt = `Parse this resume text and extract all information into a structured format.
+
+Resume Text:
+${text.substring(0, 8000)}
+
+User's known info (use as fallback if not found in resume):
+- Name: ${userInfo.name || ''}
+- Email: ${userInfo.email || ''}
+- Phone: ${userInfo.phone || ''}
+
+Return exactly this JSON structure (use empty strings/arrays for missing fields):
+{
+  "name": "Full Name",
+  "email": "email@example.com",
+  "phone": "phone number",
+  "location": "City, State",
+  "linkedIn": "linkedin URL if present",
+  "website": "portfolio/website URL if present",
+  "summary": "professional summary or objective",
+  "skills": ["skill1", "skill2"],
+  "languages": ["language1"],
+  "experience": [
+    {
+      "company": "Company Name",
+      "title": "Job Title",
+      "location": "City, State",
+      "startDate": "MM/YYYY",
+      "endDate": "MM/YYYY or Present",
+      "current": false,
+      "bullets": ["achievement or responsibility"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "School Name",
+      "degree": "Degree Type",
+      "field": "Field of Study",
+      "graduationDate": "YYYY",
+      "gpa": ""
+    }
+  ],
+  "certifications": [
+    { "name": "Certification Name", "issuer": "Issuer", "date": "MM/YYYY" }
+  ],
+  "awards": ["award description"],
+  "customSections": [
+    { "title": "Section Title", "content": "Full text content of the section" }
+  ]
+}
+
+IMPORTANT: Any sections in the resume that do not fit into the above fields (e.g. Military Service, Volunteer Work, Publications, Additional Information, Highlights of Qualifications, References, etc.) MUST be captured as entries in "customSections". Do NOT omit any section from the resume. For each custom section, put the section heading as "title" and all its content (including sub-headings and bullet points as plain text) as "content".`;
+
+    const response = await this.client.chat.completions.create({
+      model: process.env.OPENAI_RESUME_MODEL || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      response_format: { type: 'json_object' },
+      max_tokens: 4000,
+      temperature: 0.2
+    });
+
+    const responseText = response.choices[0]?.message?.content || '{}';
+    try {
+      return JSON.parse(responseText);
+    } catch {
+      logger.error('Failed to parse OpenAI parseResumeFromText response:', responseText);
+      throw new Error('AI returned invalid JSON');
+    }
+  }
+
   async suggestContent(section, currentContent, context) {
     if (!this.available) throw new Error('OpenAI API key not configured');
 
