@@ -98,6 +98,37 @@ export async function removeUserFromOrg(orgId, userId) {
   return res.data;
 }
 
+// Get AI parse status (parsed vs unparsed registered job seekers)
+export async function getJobSeekerParseStatus(orgId) {
+  const res = await axios.get(`/api/organizations/${orgId}/job-seekers/parse-status`, {
+    headers: authHeaders(),
+    timeout: 15000
+  });
+  return res.data;
+}
+
+// Trigger batch parsing of unprocessed job seeker profiles (fire-and-forget on server)
+export async function triggerBatchParse(orgId) {
+  const res = await axios.post(`/api/organizations/${orgId}/job-seekers/parse-resumes`, {}, {
+    headers: authHeaders(),
+    timeout: 15000
+  });
+  return res.data;
+}
+
+// Run AI natural language search across registered job seekers
+export async function aiSearchJobSeekers(orgId, query, params = {}) {
+  const res = await axios.post(`/api/organizations/${orgId}/job-seekers/ai-search`, {
+    query,
+    page: params.page || 1,
+    limit: params.limit || 20
+  }, {
+    headers: authHeaders(),
+    timeout: 30000
+  });
+  return res.data;
+}
+
 // Upload organization logo image to S3 via dedicated org endpoint
 export async function uploadOrganizationLogo(orgId, file) {
   const formData = new FormData();

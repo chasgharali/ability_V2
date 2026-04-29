@@ -191,6 +191,33 @@ const userSchema = new mongoose.Schema({
         importedAt: { type: Date, default: null },
         importedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
     },
+    // AI-parsed profile for advanced job seeker search
+    // Populated by jobSeekerSearchService — combines resume, profile metadata, survey, and event history
+    aiProfile: {
+        parsedAt: { type: Date, default: null },
+        parseSource: { type: String, default: '' },
+        // Professional
+        currentTitle: { type: String, default: '' },
+        yearsOfExperience: { type: Number, default: null },
+        skills: [{ type: String }],
+        industries: [{ type: String }],
+        educationLevel: { type: String, default: '' },
+        workLanguages: [{ type: String }],
+        summary: { type: String, default: '' },
+        // From profile metadata
+        headline: { type: String, default: '' },
+        keywords: [{ type: String }],
+        employmentTypes: [{ type: String }],
+        workLevel: { type: String, default: '' },
+        // From survey — disabilities and accessibility
+        disabilities: [{ type: String }],
+        accessibilityNeeds: [{ type: String }],
+        // From event registrations
+        totalEventsRegistered: { type: Number, default: 0 },
+        eventNames: [{ type: String }],
+        // Combined text blob for fallback regex matching
+        searchableText: { type: String, default: '' }
+    },
     // Refresh tokens for JWT management
     // NOTE: Do NOT use 'expires' on array subdocuments - MongoDB TTL indexes
     // work at the document level, which would delete the entire User document!

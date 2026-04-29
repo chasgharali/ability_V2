@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { listRegisteredJobSeekers } from '../../services/organizations';
 import { listEvents } from '../../services/events';
 import MassUploadModal from '../UserManagement/MassUploadModal';
+import AdvancedJobSeekerSearch from './AdvancedJobSeekerSearch';
 import AdminJobSeekerEditor, { mapJobSeekerUserToAdminEditRow } from './AdminJobSeekerEditor';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
@@ -61,6 +62,7 @@ export default function RegisteredJobSeekerManagement() {
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [zipLoading, setZipLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('list');
   const selectionUpdateRef = useRef(false);
 
   const pageSize = 10;
@@ -535,6 +537,34 @@ export default function RegisteredJobSeekerManagement() {
         </div>
       </div>
 
+      {/* Tab switcher */}
+      <div className="rjsm-tab-bar" role="tablist" aria-label="Job seeker view mode">
+        <button
+          role="tab"
+          aria-selected={activeTab === 'list'}
+          className={`rjsm-tab-btn${activeTab === 'list' ? ' rjsm-tab-btn--active' : ''}`}
+          onClick={() => setActiveTab('list')}
+        >
+          All Job Seekers
+        </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'ai-search'}
+          className={`rjsm-tab-btn${activeTab === 'ai-search' ? ' rjsm-tab-btn--active' : ''}`}
+          onClick={() => setActiveTab('ai-search')}
+        >
+          ✦ AI Search
+        </button>
+      </div>
+
+      {activeTab === 'ai-search' ? (
+        <div style={{ padding: '0 20px' }}>
+          <AdvancedJobSeekerSearch orgId={orgId} />
+        </div>
+      ) : null}
+
+      {activeTab === 'list' && (
+      <>
       <div className="jsm-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ width: '200px', flexShrink: 0 }}>
           <DropDownListComponent
@@ -744,6 +774,8 @@ export default function RegisteredJobSeekerManagement() {
           </div>
         </div>
       </div>
+      </>
+      )} {/* end activeTab === 'list' */}
     </div>
   );
 

@@ -392,7 +392,28 @@ router.get('/admin/resume-url', authenticateToken, requireRole(['SuperAdmin', 'A
         if (!url || typeof url !== 'string') {
             return res.status(400).json({ error: 'Missing url query param' });
         }
-        const key = extractS3KeyFromUrl(url) || url;
+        let key = extractS3KeyFromUrl(url) || url;
+
+        // Support internal stream URLs such as /api/uploads/stream?key=resume/...
+        if (typeof key === 'string' && key.startsWith('/api/uploads/stream')) {
+            try {
+                const parsed = new URL(key, 'http://localhost');
+                key = parsed.searchParams.get('key') || key;
+            } catch (_e) {
+                // keep original key fallback
+            }
+        }
+
+        // Support internal public-style paths by stripping known prefixes.
+        if (typeof key === 'string' && key.startsWith('/api/uploads/public/')) {
+            key = decodeURIComponent(key.replace('/api/uploads/public/', ''));
+        }
+
+        // If key still looks like a path, trim leading slashes.
+        if (typeof key === 'string') {
+            key = key.replace(/^\/+/, '');
+        }
+
         if (!key || (!key.startsWith('resume/') && !key.startsWith('resumes/'))) {
             return res.status(400).json({ error: 'Invalid resume key' });
         }

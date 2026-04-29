@@ -15,7 +15,10 @@
       "Bash(xargs kill *)",
       "Bash(npm install *)",
       "Bash(node -e \"require\\('/Users/asgharali/Desktop/Ability/ability_V2/server/services/pdfResumeService.js'\\); console.log\\('pdfResumeService loads OK'\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(pkill -f \"nodemon\")",
+      "Bash(pkill -f \"node server\")",
+      "Bash(echo \"Server starting PID $!\")"
     ]
   }
 }

@@ -12,6 +12,7 @@ const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { authenticateToken, requireRole, requireSuperAdmin, requireOrgAccess } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl');
+const jobSeekerSearchService = require('../services/jobSeekerSearchService');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -576,6 +577,89 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
     } catch (error) {
         logger.error('Error listing org job seekers:', error);
         res.status(500).json({ error: 'Failed to fetch registered job seekers' });
+    }
+});
+
+/**
+ * GET /api/organizations/:id/job-seekers/parse-status
+ * Returns counts of parsed vs unparsed registered job seekers for the org.
+ */
+router.get('/:id/job-seekers/parse-status', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) return res.status(400).json({ error: 'Invalid organization ID' });
+        if (req.user.role !== 'SuperAdmin' && req.orgId?.toString() !== id) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        const status = await jobSeekerSearchService.getParseStatus(id);
+        res.json(status);
+    } catch (error) {
+        logger.error('Error getting parse status:', error);
+        res.status(500).json({ error: 'Failed to get parse status' });
+    }
+});
+
+/**
+ * POST /api/organizations/:id/job-seekers/parse-resumes
+ * Triggers background batch parsing of all unprocessed job seeker profiles for the org.
+ * Returns immediately; parsing runs asynchronously.
+ */
+router.post('/:id/job-seekers/parse-resumes', authenticateToken, requireRole(['SuperAdmin', 'Admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) return res.status(400).json({ error: 'Invalid organization ID' });
+        if (req.user.role !== 'SuperAdmin' && req.orgId?.toString() !== id) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Get current unparsed count to return in response
+        const status = await jobSeekerSearchService.getParseStatus(id);
+        if (status.unparsed === 0) {
+            return res.json({ message: 'All profiles already parsed', ...status });
+        }
+
+        // Fire-and-forget — the client polls parse-status for progress
+        jobSeekerSearchService.batchParseProfiles(id).then(result => {
+            logger.info(`jobSeekerSearch batch complete for org ${id}: processed=${result.processed} skipped=${result.skipped} errors=${result.errors} total=${result.total}`);
+        }).catch(e => {
+            logger.error(`jobSeekerSearch batch error for org ${id}:`, e.message);
+        });
+
+        res.json({ message: 'Parsing started', queued: status.unparsed, ...status });
+    } catch (error) {
+        logger.error('Error starting batch parse:', error);
+        res.status(500).json({ error: 'Failed to start batch parsing' });
+    }
+});
+
+/**
+ * POST /api/organizations/:id/job-seekers/ai-search
+ * Natural language search across registered job seekers using parsed aiProfile data.
+ * Body: { query, page, limit }
+ */
+router.post('/:id/job-seekers/ai-search', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) return res.status(400).json({ error: 'Invalid organization ID' });
+        if (req.user.role !== 'SuperAdmin' && req.orgId?.toString() !== id) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const { query, page = 1, limit = 20 } = req.body;
+        if (!query?.trim()) return res.status(400).json({ error: 'query is required' });
+
+        const result = await jobSeekerSearchService.aiSearch(query, id, {
+            page: parseInt(page) || 1,
+            limit: Math.min(parseInt(limit) || 20, 100)
+        });
+
+        res.json(result);
+    } catch (error) {
+        logger.error('Error in ai-search:', error);
+        if (error.message?.includes('OPENAI_API_KEY')) {
+            return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
+        }
+        res.status(500).json({ error: 'AI search failed' });
     }
 });
 

@@ -9,6 +9,7 @@ const Resume = require('../models/Resume');
 const logger = require('../utils/logger');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 const { generateAndUploadResumePdf } = require('../services/pdfResumeService');
+const { parseRegistrationProfile } = require('../services/jobSeekerSearchService');
 
 const router = express.Router();
 
@@ -1100,12 +1101,26 @@ router.post('/:id/register', authenticateToken, async (req, res) => {
             } catch (e) { logger.warn('Failed to increment event registration stat:', e); }
 
             // Auto-register as org member if event belongs to an org
+            let registeredRow = null;
             if (event.organizationId) {
                 try {
-                    await RegisteredJobSeeker.registerWithOrg(event.organizationId, user._id, event._id, resumeId || null, generatedResumeUrl || null);
+                    registeredRow = await RegisteredJobSeeker.registerWithOrg(
+                        event.organizationId,
+                        user._id,
+                        event._id,
+                        resumeId || null,
+                        generatedResumeUrl || null
+                    );
                 } catch (e) {
                     logger.warn('Failed to create RegisteredJobSeeker record:', e.message);
                 }
+            }
+
+            // Fire-and-forget: parse this specific registration context (event+resume)
+            if (registeredRow?._id) {
+                parseRegistrationProfile(registeredRow._id).catch(e =>
+                    logger.warn('Auto-parse registration profile after registration failed:', e.message)
+                );
             }
         }
 

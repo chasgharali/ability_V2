@@ -27,6 +27,36 @@ const registeredJobSeekerSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // AI-parsed profile for this specific registration context (event + resume).
+    aiProfile: {
+        parsedAt: { type: Date, default: null },
+        parseSource: { type: String, default: '' },
+        currentTitle: { type: String, default: '' },
+        yearsOfExperience: { type: Number, default: null },
+        skills: [{ type: String }],
+        industries: [{ type: String }],
+        educationLevel: { type: String, default: '' },
+        workLanguages: [{ type: String }],
+        summary: { type: String, default: '' },
+        headline: { type: String, default: '' },
+        keywords: [{ type: String }],
+        employmentTypes: [{ type: String }],
+        workLevel: { type: String, default: '' },
+        disabilities: [{ type: String }],
+        accessibilityNeeds: [{ type: String }],
+        totalEventsRegistered: { type: Number, default: 0 },
+        eventNames: [{ type: String }],
+        searchableText: { type: String, default: '' }
+    },
+    // Convenience fields for registration-level indexing status/provenance
+    aiIndexedAt: {
+        type: Date,
+        default: null
+    },
+    aiParseSource: {
+        type: String,
+        default: ''
+    },
     registeredAt: {
         type: Date,
         default: Date.now
@@ -43,6 +73,7 @@ registeredJobSeekerSchema.index({ organizationId: 1 });
 registeredJobSeekerSchema.index({ jobSeekerId: 1 });
 registeredJobSeekerSchema.index({ eventId: 1 });
 registeredJobSeekerSchema.index({ registeredAt: -1 });
+registeredJobSeekerSchema.index({ organizationId: 1, aiIndexedAt: 1 });
 
 // Static: register a job seeker for a specific event (upsert — idempotent per org+jobSeeker+event)
 registeredJobSeekerSchema.statics.registerWithOrg = async function (organizationId, jobSeekerId, eventId, resumeId = null, resumeUrl = null) {

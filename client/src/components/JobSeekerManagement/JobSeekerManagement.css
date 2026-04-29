@@ -48,6 +48,47 @@
   min-height: 32px !important;
 }
 
+/* ── AI Search tab bar ─────────────────────────────────────────────────────── */
+.rjsm-tab-bar {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 20px;
+}
+
+.rjsm-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+  outline: none;
+  border-radius: 6px 6px 0 0;
+}
+
+.rjsm-tab-btn:hover {
+  color: #111111;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.rjsm-tab-btn:focus-visible {
+  outline: 2px solid #111111;
+  outline-offset: -2px;
+}
+
+.rjsm-tab-btn--active {
+  color: #111111;
+  border-bottom-color: #111111;
+  font-weight: 700;
+}
+
 /* Danger buttons - Red for delete actions */
 .e-btn.e-danger,
 .e-btn.e-outline.e-danger {
