@@ -27,7 +27,9 @@ const registeredJobSeekerSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    // AI-parsed profile for this specific registration context (event + resume).
+    // DEPRECATED — see notes on User.aiProfile. Search now lives in the
+    // ParsedResume collection (one doc per user). Disability / accessibility
+    // fields removed from this subschema; do not re-introduce them.
     aiProfile: {
         parsedAt: { type: Date, default: null },
         parseSource: { type: String, default: '' },
@@ -42,13 +44,13 @@ const registeredJobSeekerSchema = new mongoose.Schema({
         keywords: [{ type: String }],
         employmentTypes: [{ type: String }],
         workLevel: { type: String, default: '' },
-        disabilities: [{ type: String }],
-        accessibilityNeeds: [{ type: String }],
         totalEventsRegistered: { type: Number, default: 0 },
         eventNames: [{ type: String }],
         searchableText: { type: String, default: '' }
     },
-    // Convenience fields for registration-level indexing status/provenance
+    // Convenience fields for registration-level indexing status/provenance.
+    // Kept for backward compatibility with existing rows; new search code
+    // reads from `ParsedResume.parsedAt` instead.
     aiIndexedAt: {
         type: Date,
         default: null

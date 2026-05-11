@@ -2051,4 +2051,79 @@ router.post('/:id/verify-email', authenticateToken, requireRole(['SuperAdmin', '
     }
 });
 
+// ─── SuperAdmin global AI search across job seekers ──────────────────────────
+// Uses the same aiSearchService as the org-scoped endpoint, but with a global
+// scope (no organizationIds filter). SuperAdmin only — every other role must
+// search through their org-scoped endpoint.
+
+const resumeParserService = require('../services/resumeParserService');
+const aiSearchService = require('../services/aiSearchService');
+
+/**
+ * GET /api/users/job-seekers/parse-status
+ * SuperAdmin: count of parsed vs unparsed JobSeekers across the entire system.
+ */
+router.get('/job-seekers/parse-status', authenticateToken, requireRole(['SuperAdmin']), async (req, res) => {
+    try {
+        const status = await resumeParserService.getParseStatus({});
+        res.json(status);
+    } catch (error) {
+        logger.error('Global parse-status error:', error);
+        res.status(500).json({ error: 'Failed to get parse status' });
+    }
+});
+
+/**
+ * POST /api/users/job-seekers/parse-resumes
+ * SuperAdmin: kick off a global batch parse. Fire-and-forget; client polls
+ * /job-seekers/parse-status for progress.
+ */
+router.post('/job-seekers/parse-resumes', authenticateToken, requireRole(['SuperAdmin']), async (req, res) => {
+    try {
+        const force = req.body?.force === true;
+        const status = await resumeParserService.getParseStatus({});
+        if (status.unparsed === 0 && !force) {
+            return res.json({ message: 'All profiles already parsed', ...status });
+        }
+        resumeParserService.batchParse({ force })
+            .then(r => logger.info(`resumeParser global batch complete: processed=${r.processed} skipped=${r.skipped} errors=${r.errors}`))
+            .catch(e => logger.error(`resumeParser global batch error: ${e.message}`));
+        res.json({ message: 'Parsing started', queued: status.unparsed, ...status });
+    } catch (error) {
+        logger.error('Global batch parse error:', error);
+        res.status(500).json({ error: 'Failed to start batch parsing' });
+    }
+});
+
+/**
+ * POST /api/users/job-seekers/ai-search
+ * SuperAdmin: natural language search across ALL job seekers system-wide.
+ * Body: { query, page, limit }
+ */
+router.post('/job-seekers/ai-search', authenticateToken, requireRole(['SuperAdmin']), async (req, res) => {
+    try {
+        const { query, page = 1, limit = 20 } = req.body;
+        if (!query?.trim()) return res.status(400).json({ error: 'query is required' });
+
+        const result = await aiSearchService.search(query, { kind: 'global' }, {
+            page: parseInt(page) || 1,
+            limit: Math.min(parseInt(limit) || 20, 100)
+        });
+        res.json(result);
+    } catch (error) {
+        if (error.code === 'SENSITIVE_QUERY') {
+            return res.status(400).json({
+                error: error.message,
+                code: 'SENSITIVE_QUERY',
+                term: error.term
+            });
+        }
+        if (error.code === 'OPENAI_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
+        }
+        logger.error('Global ai-search error:', error);
+        res.status(500).json({ error: 'AI search failed' });
+    }
+});
+
 module.exports = router;

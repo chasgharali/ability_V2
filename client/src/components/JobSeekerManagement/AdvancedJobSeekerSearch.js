@@ -2,14 +2,53 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getJobSeekerParseStatus,
   triggerBatchParse,
-  aiSearchJobSeekers
+  aiSearchJobSeekers,
+  getGlobalParseStatus,
+  triggerGlobalBatchParse,
+  aiSearchJobSeekersGlobal,
+  aiSearchMeetingRecords
 } from '../../services/organizations';
 import { openResumeInNewTab } from '../../utils/resumeViewer';
 import './AdvancedJobSeekerSearch.css';
 
 const POLL_INTERVAL_MS = 4000;
 
-export default function AdvancedJobSeekerSearch({ orgId }) {
+/**
+ * Adapter that picks the right backend endpoints based on `mode`.
+ *   - 'org'      → org-scoped (Admin / AdminEvent)
+ *   - 'global'   → SuperAdmin global jobseekers
+ *   - 'meeting'  → Admin / Recruiter meeting records
+ *
+ * Meeting mode does not expose parse controls — parsing is done elsewhere.
+ */
+function getApi(mode, orgId) {
+  if (mode === 'global') {
+    return {
+      supportsParse: true,
+      getStatus: () => getGlobalParseStatus(),
+      triggerParse: () => triggerGlobalBatchParse(false),
+      runSearch: (q, p) => aiSearchJobSeekersGlobal(q, p)
+    };
+  }
+  if (mode === 'meeting') {
+    return {
+      supportsParse: false,
+      getStatus: null,
+      triggerParse: null,
+      runSearch: (q, p) => aiSearchMeetingRecords(q, p)
+    };
+  }
+  // 'org' (default)
+  return {
+    supportsParse: true,
+    getStatus: () => getJobSeekerParseStatus(orgId),
+    triggerParse: () => triggerBatchParse(orgId),
+    runSearch: (q, p) => aiSearchJobSeekers(orgId, q, p)
+  };
+}
+
+export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
+  const api = getApi(mode, orgId);
   const [parseStatus, setParseStatus] = useState(null);
   const [isParsing, setIsParsing] = useState(false);
   const [parseError, setParseError] = useState('');
@@ -28,14 +67,15 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
   const textareaRef = useRef(null);
 
   const loadParseStatus = useCallback(async () => {
-    if (!orgId) return;
+    if (!api.supportsParse) return;
+    if (mode === 'org' && !orgId) return;
     try {
-      const s = await getJobSeekerParseStatus(orgId);
+      const s = await api.getStatus();
       setParseStatus(s);
     } catch (e) {
       // non-fatal — status banner is informational only
     }
-  }, [orgId]);
+  }, [api, mode, orgId]);
 
   useEffect(() => {
     loadParseStatus();
@@ -43,13 +83,13 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
 
   // Poll parse status while a batch is running
   useEffect(() => {
-    if (!isParsing) {
+    if (!isParsing || !api.supportsParse) {
       clearInterval(pollRef.current);
       return;
     }
     pollRef.current = setInterval(async () => {
       try {
-        const s = await getJobSeekerParseStatus(orgId);
+        const s = await api.getStatus();
         setParseStatus(s);
         if (s.unparsed === 0) {
           setIsParsing(false);
@@ -60,14 +100,14 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
       }
     }, POLL_INTERVAL_MS);
     return () => clearInterval(pollRef.current);
-  }, [isParsing, orgId]);
+  }, [isParsing, api]);
 
   const handleParse = async () => {
+    if (!api.supportsParse) return;
     setParseError('');
     setIsParsing(true);
     try {
-      await triggerBatchParse(orgId);
-      // Refresh status immediately; polling will update further
+      await api.triggerParse();
       await loadParseStatus();
     } catch (e) {
       setParseError(e.response?.data?.error || 'Failed to start parsing');
@@ -80,7 +120,7 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
     setIsSearching(true);
     setSearchError('');
     try {
-      const res = await aiSearchJobSeekers(orgId, searchQuery, { page: searchPage, limit: 20 });
+      const res = await api.runSearch(searchQuery, { page: searchPage, limit: 20 });
       setResults(res.results || []);
       setCriteria(res.criteria || null);
       setTotal(res.total || 0);
@@ -88,11 +128,21 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
       setPage(searchPage);
       setLastQuery(searchQuery);
     } catch (e) {
-      setSearchError(e.response?.data?.error || 'Search failed. Please try again.');
+      const data = e.response?.data;
+      // Surface the privacy guardrail clearly to the user.
+      if (data?.code === 'SENSITIVE_QUERY') {
+        setSearchError(
+          `That search isn't allowed. AI search can only filter by role, ` +
+          `skills, location, education and work level — not by disability, ` +
+          `accessibility, race, gender, age, or other protected attributes.`
+        );
+      } else {
+        setSearchError(data?.error || 'Search failed. Please try again.');
+      }
     } finally {
       setIsSearching(false);
     }
-  }, [orgId]);
+  }, [api]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -113,12 +163,15 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
     runSearch(lastQuery, newPage);
   };
 
+  // Examples are intentionally limited to role / skills / location / level.
+  // The backend rejects disability, accessibility, race, gender, and age
+  // filters (see SENSITIVE_QUERY_PATTERNS in aiSearchService.js).
   const exampleQueries = [
-    'security guard in Denver with ADHD',
-    'software developer with visual impairment',
+    'developer from Pakistan with 10 years of experience',
+    'senior security guard in Denver',
     'bilingual customer service in Texas',
     'warehouse worker entry level',
-    'nurse with hearing impairment needing ASL'
+    'registered nurse with 5+ years in California'
   ];
 
   const applyExample = (ex) => {
@@ -225,7 +278,7 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
           </div>
           <h2 className="ai-search-title">Advanced AI Search</h2>
           <p className="ai-search-subtitle">
-            Describe who you&rsquo;re looking for in plain English — search across resumes, profiles, disabilities, and event history.
+            Describe the role, skills, experience, or location in plain English. We search across parsed resumes and public profile fields. Disability, accessibility, and other protected attributes are never indexed or searchable.
           </p>
         </div>
 
@@ -311,32 +364,49 @@ export default function AdvancedJobSeekerSearch({ orgId }) {
         </div>
       )}
 
-      {/* Interpreted Criteria */}
-      {criteria && Object.keys(criteria).length > 0 && (
+      {/* Interpreted Criteria — only non-sensitive structured filters */}
+      {criteria && (
+        criteria.location?.city ||
+        criteria.location?.state ||
+        criteria.location?.country ||
+        criteria.educationLevel ||
+        criteria.workLevel ||
+        criteria.minYearsExperience != null ||
+        criteria.maxYearsExperience != null ||
+        criteria.employmentTypes?.length ||
+        criteria.languages?.length ||
+        criteria.roleKeywords?.length ||
+        criteria.skillKeywords?.length
+      ) && (
         <div className="ai-criteria-box" aria-label="How AI interpreted your query">
           <p className="ai-criteria-label">AI interpreted your query as:</p>
           <div className="ai-criteria-tags">
+            {criteria.roleKeywords?.map(r => (
+              <span key={`role-${r}`} className="ai-tag ai-tag--title">💼 {r}</span>
+            ))}
+            {criteria.skillKeywords?.map(s => (
+              <span key={`skill-${s}`} className="ai-tag ai-tag--skill">🔧 {s}</span>
+            ))}
             {criteria.location?.city && (
               <span className="ai-tag ai-tag--location">📍 {criteria.location.city}{criteria.location.state ? `, ${criteria.location.state}` : ''}</span>
             )}
-            {criteria.titles?.map(t => (
-              <span key={t} className="ai-tag ai-tag--title">💼 {t}</span>
+            {criteria.location?.country && !criteria.location?.city && (
+              <span className="ai-tag ai-tag--location">🌍 {criteria.location.country}</span>
+            )}
+            {criteria.educationLevel && (
+              <span className="ai-tag">🎓 {criteria.educationLevel}</span>
+            )}
+            {criteria.workLevel && (
+              <span className="ai-tag">📊 {criteria.workLevel}</span>
+            )}
+            {criteria.minYearsExperience != null && (
+              <span className="ai-tag">⏱ {criteria.minYearsExperience}+ years</span>
+            )}
+            {criteria.employmentTypes?.map(et => (
+              <span key={et} className="ai-tag">{et}</span>
             ))}
-            {criteria.disabilities?.map(d => (
-              <span key={d} className="ai-tag ai-tag--disability">♿ {d}</span>
-            ))}
-            {criteria.skills?.map(s => (
-              <span key={s} className="ai-tag ai-tag--skill">🔧 {s}</span>
-            ))}
-            {criteria.accessibilityNeeds?.map(a => (
-              <span key={a} className="ai-tag ai-tag--access">🤝 {a}</span>
-            ))}
-            {criteria.keywords?.filter(k =>
-              !criteria.titles?.includes(k) &&
-              !criteria.skills?.includes(k) &&
-              !criteria.disabilities?.includes(k)
-            ).map(k => (
-              <span key={k} className="ai-tag">{k}</span>
+            {criteria.languages?.map(l => (
+              <span key={l} className="ai-tag">🗣 {l}</span>
             ))}
           </div>
         </div>
@@ -465,27 +535,10 @@ function JobSeekerCard({ jobSeeker }) {
           </div>
         )}
 
-        {ai.disabilities?.length > 0 && (
-          <div className="ai-card-section">
-            <span className="ai-card-section-label">Disclosed conditions</span>
-            <div className="ai-card-tags">
-              {ai.disabilities.map(d => (
-                <span key={d} className="ai-mini-tag ai-mini-tag--disability">{d}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {ai.accessibilityNeeds?.length > 0 && (
-          <div className="ai-card-section">
-            <span className="ai-card-section-label">Accessibility needs</span>
-            <div className="ai-card-tags">
-              {ai.accessibilityNeeds.map(a => (
-                <span key={a} className="ai-mini-tag ai-mini-tag--access">{a}</span>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Note: disability and accessibility data is intentionally not
+            displayed in search results. Recruiters/admins access that
+            information only through consented disclosure flows
+            (interpreter requests, etc.), never via AI search. */}
 
         <div className="ai-card-details">
           {ai.educationLevel && (

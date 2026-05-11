@@ -9,7 +9,7 @@ const Resume = require('../models/Resume');
 const logger = require('../utils/logger');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 const { generateAndUploadResumePdf } = require('../services/pdfResumeService');
-const { parseRegistrationProfile } = require('../services/jobSeekerSearchService');
+const { parseResumeForUser } = require('../services/resumeParserService');
 
 const router = express.Router();
 
@@ -1116,11 +1116,14 @@ router.post('/:id/register', authenticateToken, async (req, res) => {
                 }
             }
 
-            // Fire-and-forget: parse this specific registration context (event+resume)
+            // Fire-and-forget: re-parse the user's resume so the search index
+            // reflects this new registration's resume + org membership.
+            // Triggered on every registration where the seeker uploaded a new
+            // resume OR selected a saved one — the parser is idempotent and
+            // skips re-embedding when the input hash hasn't changed.
             if (registeredRow?._id) {
-                parseRegistrationProfile(registeredRow._id).catch(e =>
-                    logger.warn('Auto-parse registration profile after registration failed:', e.message)
-                );
+                parseResumeForUser(user._id, { force: !!resumeId || !!generatedResumeUrl })
+                    .catch(e => logger.warn('Auto-parse resume after registration failed:', e.message));
             }
         }
 

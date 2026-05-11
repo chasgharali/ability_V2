@@ -129,6 +129,48 @@ export async function aiSearchJobSeekers(orgId, query, params = {}) {
   return res.data;
 }
 
+// ── SuperAdmin global AI search ────────────────────────────────────────────
+export async function getGlobalParseStatus() {
+  const res = await axios.get(`/api/users/job-seekers/parse-status`, {
+    headers: authHeaders(),
+    timeout: 15000
+  });
+  return res.data;
+}
+
+export async function triggerGlobalBatchParse(force = false) {
+  const res = await axios.post(`/api/users/job-seekers/parse-resumes`, { force }, {
+    headers: authHeaders(),
+    timeout: 15000
+  });
+  return res.data;
+}
+
+export async function aiSearchJobSeekersGlobal(query, params = {}) {
+  const res = await axios.post(`/api/users/job-seekers/ai-search`, {
+    query,
+    page: params.page || 1,
+    limit: params.limit || 20
+  }, {
+    headers: authHeaders(),
+    timeout: 30000
+  });
+  return res.data;
+}
+
+// ── Admin / Recruiter meeting-records AI search ────────────────────────────
+export async function aiSearchMeetingRecords(query, params = {}) {
+  const res = await axios.post(`/api/meeting-records/ai-search`, {
+    query,
+    page: params.page || 1,
+    limit: params.limit || 20
+  }, {
+    headers: authHeaders(),
+    timeout: 30000
+  });
+  return res.data;
+}
+
 // Upload organization logo image to S3 via dedicated org endpoint
 export async function uploadOrganizationLogo(orgId, file) {
   const formData = new FormData();

@@ -359,6 +359,91 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
+// ─── AI search across job seekers in this user's visible meeting records ────
+//
+// Recruiters: scoped to job seekers whose meetings happened at their booth.
+// Admins/GlobalSupport: scoped to job seekers whose meetings happened in their org.
+// SuperAdmin: global (no scope).
+//
+// Returns the same shape as the org / global ai-search endpoints, plus a list
+// of meetingRecordIds per job seeker so the UI can deep-link straight to a
+// specific record.
+router.post('/ai-search', authenticateToken, async (req, res) => {
+    try {
+        const logger = require('../utils/logger');
+        const aiSearchService = require('../services/aiSearchService');
+
+        const { query, page = 1, limit = 20 } = req.body || {};
+        if (!query?.trim()) return res.status(400).json({ error: 'query is required' });
+
+        if (!ensureOrgContext(req, res)) return;
+
+        // Build the same scope as the listing endpoint.
+        let recordScope = await buildMeetingOrgScope(req);
+        if (req.user.role === 'Recruiter') {
+            const recruiter = await User.findById(req.user._id).select('assignedBooth');
+            const recruiterBoothId = recruiter?.assignedBooth?._id || recruiter?.assignedBooth;
+            if (recruiterBoothId) {
+                recordScope.boothId = recruiterBoothId;
+            } else {
+                recordScope.recruiterId = req.user._id;
+            }
+        } else if (!['Admin', 'GlobalSupport', 'SuperAdmin'].includes(req.user.role)) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        // Collect the set of job-seeker IDs visible to this user.
+        const visibleRecords = await MeetingRecord.find(recordScope)
+            .select('jobseekerId _id')
+            .lean();
+        const userIds = Array.from(new Set(
+            visibleRecords.map(r => String(r.jobseekerId)).filter(Boolean)
+        ));
+
+        if (userIds.length === 0) {
+            return res.json({ results: [], total: 0, criteria: {}, page: 1, totalPages: 0 });
+        }
+
+        const scope = isSuperAdmin(req)
+            ? { kind: 'global' }
+            : { kind: 'users', userIds };
+
+        const result = await aiSearchService.search(query, scope, {
+            page: parseInt(page) || 1,
+            limit: Math.min(parseInt(limit) || 20, 100)
+        });
+
+        // Annotate each result with the meeting-record IDs that link to them
+        // so the UI can navigate from the search result to the specific call.
+        const recordsByUser = new Map();
+        for (const r of visibleRecords) {
+            const k = String(r.jobseekerId);
+            if (!recordsByUser.has(k)) recordsByUser.set(k, []);
+            recordsByUser.get(k).push(r._id);
+        }
+        result.results = result.results.map(r => ({
+            ...r,
+            meetingRecordIds: recordsByUser.get(String(r._id)) || []
+        }));
+
+        res.json(result);
+    } catch (error) {
+        if (error.code === 'SENSITIVE_QUERY') {
+            return res.status(400).json({
+                error: error.message,
+                code: 'SENSITIVE_QUERY',
+                term: error.term
+            });
+        }
+        if (error.code === 'OPENAI_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
+        }
+        const logger = require('../utils/logger');
+        logger.error('Meeting records ai-search error:', error);
+        res.status(500).json({ error: 'AI search failed' });
+    }
+});
+
 // Get single meeting record
 router.get('/:id', authenticateToken, async (req, res) => {
     try {

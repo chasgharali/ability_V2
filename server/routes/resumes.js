@@ -5,7 +5,20 @@ const axios = require('axios');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const Resume = require('../models/Resume');
 const openaiResumeService = require('../services/openaiResumeService');
+const { parseResumeForUser } = require('../services/resumeParserService');
 const logger = require('../utils/logger');
+
+/**
+ * Fire-and-forget: re-build the AI search projection for this user after a
+ * resume mutation. We pass `force: true` because we know the source content
+ * just changed, but the parser still does a hash check internally so this is
+ * cheap if nothing actually changed.
+ */
+function triggerSearchReparse(userId) {
+    if (!userId) return;
+    parseResumeForUser(userId, { force: true })
+        .catch(e => logger.warn(`resumeParser auto-reparse failed for user ${userId}: ${e.message}`));
+}
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -96,6 +109,7 @@ router.post('/', authenticateToken, async (req, res) => {
       isDefault: resumeCount === 0
     });
 
+    triggerSearchReparse(user._id);
     res.status(201).json({ resume });
   } catch (error) {
     logger.error('Create resume error:', error);
@@ -147,6 +161,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     if (content !== undefined) resume.content = content;
     await resume.save();
 
+    triggerSearchReparse(req.user._id);
     res.json({ resume });
   } catch (error) {
     logger.error('Update resume error:', error);
@@ -240,6 +255,7 @@ router.post('/:id/generate', authenticateToken, async (req, res) => {
     resume.lastAiGenerated = new Date();
     await resume.save();
 
+    triggerSearchReparse(req.user._id);
     res.json({ resume, generated });
   } catch (error) {
     logger.error('Generate resume error:', error);
@@ -303,6 +319,7 @@ router.post('/parse-upload', authenticateToken, upload.single('resume'), async (
       lastAiGenerated: new Date()
     });
 
+    triggerSearchReparse(user._id);
     res.status(201).json({ resume });
   } catch (error) {
     logger.error('Parse upload resume error:', error);
@@ -353,6 +370,7 @@ router.post('/parse-from-url', authenticateToken, async (req, res) => {
       lastAiGenerated: new Date()
     });
 
+    triggerSearchReparse(user._id);
     res.status(201).json({ resume });
   } catch (error) {
     logger.error('Parse from URL resume error:', error);

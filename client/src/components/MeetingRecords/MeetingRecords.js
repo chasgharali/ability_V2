@@ -20,6 +20,7 @@ import { listEvents } from '../../services/events';
 import { listBooths } from '../../services/booths';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
+import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import JSZip from 'jszip';
 import {
     EXPERIENCE_LEVEL_LIST,
@@ -1742,6 +1743,15 @@ export default function MeetingRecords() {
                             {infoBannerMessage && (
                                 <div className="info-banner" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
                                     <span>{infoBannerMessage}</span>
+                                </div>
+                            )}
+                            {/* Advanced AI Search — Admin / Recruiter / GlobalSupport.
+                                Scoped to job seekers visible in this user's meeting records.
+                                Disability/accessibility/protected attributes are never indexed
+                                or searchable here (see aiSearchService.js). */}
+                            {['Admin', 'GlobalSupport', 'AdminEvent', 'Recruiter'].includes(user?.role) && (
+                                <div style={{ margin: '1rem 0 1.5rem 0' }}>
+                                    <AdvancedJobSeekerSearch mode="meeting" />
                                 </div>
                             )}
                             <div className="header-actions">

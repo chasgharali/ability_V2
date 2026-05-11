@@ -256,6 +256,14 @@ router.post('/complete', authenticateToken, [
         if (fileType === 'resume') {
             const User = require('../models/User');
             await User.findByIdAndUpdate(user._id, { resumeUrl: downloadUrl });
+            // Fire-and-forget: re-parse so AI search picks up the new resume.
+            try {
+                const { parseResumeForUser } = require('../services/resumeParserService');
+                parseResumeForUser(user._id, { force: true })
+                    .catch(e => logger.warn(`resumeParser auto-reparse after upload failed: ${e.message}`));
+            } catch (e) {
+                logger.warn(`resumeParser trigger error: ${e.message}`);
+            }
         }
 
         logger.info(`File upload confirmed for user ${user.email}: ${fileKey}`);

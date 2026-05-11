@@ -12,7 +12,8 @@ const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { authenticateToken, requireRole, requireSuperAdmin, requireOrgAccess } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl');
-const jobSeekerSearchService = require('../services/jobSeekerSearchService');
+const resumeParserService = require('../services/resumeParserService');
+const aiSearchService = require('../services/aiSearchService');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -591,7 +592,7 @@ router.get('/:id/job-seekers/parse-status', authenticateToken, requireRole(['Sup
         if (req.user.role !== 'SuperAdmin' && req.orgId?.toString() !== id) {
             return res.status(403).json({ error: 'Access denied' });
         }
-        const status = await jobSeekerSearchService.getParseStatus(id);
+        const status = await resumeParserService.getParseStatus({ orgId: id });
         res.json(status);
     } catch (error) {
         logger.error('Error getting parse status:', error);
@@ -612,17 +613,18 @@ router.post('/:id/job-seekers/parse-resumes', authenticateToken, requireRole(['S
             return res.status(403).json({ error: 'Access denied' });
         }
 
-        // Get current unparsed count to return in response
-        const status = await jobSeekerSearchService.getParseStatus(id);
-        if (status.unparsed === 0) {
+        const force = req.body?.force === true;
+
+        const status = await resumeParserService.getParseStatus({ orgId: id });
+        if (status.unparsed === 0 && !force) {
             return res.json({ message: 'All profiles already parsed', ...status });
         }
 
-        // Fire-and-forget — the client polls parse-status for progress
-        jobSeekerSearchService.batchParseProfiles(id).then(result => {
-            logger.info(`jobSeekerSearch batch complete for org ${id}: processed=${result.processed} skipped=${result.skipped} errors=${result.errors} total=${result.total}`);
+        // Fire-and-forget — the client polls parse-status for progress.
+        resumeParserService.batchParse({ orgId: id, force }).then(result => {
+            logger.info(`resumeParser batch complete for org ${id}: processed=${result.processed} skipped=${result.skipped} errors=${result.errors} total=${result.total}`);
         }).catch(e => {
-            logger.error(`jobSeekerSearch batch error for org ${id}:`, e.message);
+            logger.error(`resumeParser batch error for org ${id}:`, e.message);
         });
 
         res.json({ message: 'Parsing started', queued: status.unparsed, ...status });
@@ -648,17 +650,28 @@ router.post('/:id/job-seekers/ai-search', authenticateToken, requireRole(['Super
         const { query, page = 1, limit = 20 } = req.body;
         if (!query?.trim()) return res.status(400).json({ error: 'query is required' });
 
-        const result = await jobSeekerSearchService.aiSearch(query, id, {
-            page: parseInt(page) || 1,
-            limit: Math.min(parseInt(limit) || 20, 100)
-        });
+        const result = await aiSearchService.search(
+            query,
+            { kind: 'org', orgId: id },
+            {
+                page: parseInt(page) || 1,
+                limit: Math.min(parseInt(limit) || 20, 100)
+            }
+        );
 
         res.json(result);
     } catch (error) {
-        logger.error('Error in ai-search:', error);
-        if (error.message?.includes('OPENAI_API_KEY')) {
+        if (error.code === 'SENSITIVE_QUERY') {
+            return res.status(400).json({
+                error: error.message,
+                code: 'SENSITIVE_QUERY',
+                term: error.term
+            });
+        }
+        if (error.code === 'OPENAI_NOT_CONFIGURED' || error.message?.includes('OPENAI_API_KEY')) {
             return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
         }
+        logger.error('Error in ai-search:', error);
         res.status(500).json({ error: 'AI search failed' });
     }
 });

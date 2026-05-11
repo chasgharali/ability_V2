@@ -191,12 +191,22 @@ const userSchema = new mongoose.Schema({
         importedAt: { type: Date, default: null },
         importedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
     },
-    // AI-parsed profile for advanced job seeker search
-    // Populated by jobSeekerSearchService — combines resume, profile metadata, survey, and event history
+    // DEPRECATED — superseded by the ParsedResume collection.
+    //
+    // The previous design copied AI-parsed search data onto every User
+    // document, including survey/disability/accessibility fields. That
+    // violated the privacy contract (see docs/skills/ai-search/SKILL.md).
+    //
+    // Search now lives in `ParsedResume` keyed by userId, which has a
+    // strict allowlist of non-sensitive fields and a hard schema-level
+    // block on disability / accessibility / race / gender fields.
+    //
+    // This stub is kept (with the sensitive fields removed) only so legacy
+    // documents in production don't trip Mongoose strict-mode warnings.
+    // Do NOT write to it. Read from ParsedResume instead.
     aiProfile: {
         parsedAt: { type: Date, default: null },
         parseSource: { type: String, default: '' },
-        // Professional
         currentTitle: { type: String, default: '' },
         yearsOfExperience: { type: Number, default: null },
         skills: [{ type: String }],
@@ -204,18 +214,12 @@ const userSchema = new mongoose.Schema({
         educationLevel: { type: String, default: '' },
         workLanguages: [{ type: String }],
         summary: { type: String, default: '' },
-        // From profile metadata
         headline: { type: String, default: '' },
         keywords: [{ type: String }],
         employmentTypes: [{ type: String }],
         workLevel: { type: String, default: '' },
-        // From survey — disabilities and accessibility
-        disabilities: [{ type: String }],
-        accessibilityNeeds: [{ type: String }],
-        // From event registrations
         totalEventsRegistered: { type: Number, default: 0 },
         eventNames: [{ type: String }],
-        // Combined text blob for fallback regex matching
         searchableText: { type: String, default: '' }
     },
     // Refresh tokens for JWT management
