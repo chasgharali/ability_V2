@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { MdPerson, MdBusiness } from 'react-icons/md';
+import PublicBrandHeader from '../Layout/PublicBrandHeader';
 import './LandingPage.css';
 
 const LandingPage = () => {
@@ -17,6 +18,7 @@ const LandingPage = () => {
                 <title>Choose Your Login Type - abilityconnect</title>
             </Helmet>
             <a href="#landing-options" className="skip-link">Skip to login options</a>
+            <PublicBrandHeader />
             <main className="landing-page-container" id="landing-options" tabIndex={-1} aria-label="main content">
                 <div className="landing-card">
                     <h1 className="landing-title">Choose Your Login Type</h1>
@@ -38,10 +40,6 @@ const LandingPage = () => {
                             </button>
                         </div>
                     </div>
-                </div>
-
-                <div className="landing-branding">
-                    <p>powered by abilityCONNECT.online</p>
                 </div>
             </main>
         </>

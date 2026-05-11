@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import PublicBrandHeader from '../Layout/PublicBrandHeader';
 import './ResetPassword.css';
 
 const ResetPassword = () => {
@@ -131,43 +132,51 @@ const ResetPassword = () => {
 
     if (tokenValid === null) {
         return (
-            <div className="reset-password-container">
-                <div className="reset-password-card">
-                    <div style={{ textAlign: 'center', padding: '2rem' }}>
-                        Loading...
+            <>
+                <PublicBrandHeader />
+                <div className="reset-password-container">
+                    <div className="reset-password-card">
+                        <div style={{ textAlign: 'center', padding: '2rem' }}>
+                            Loading...
+                        </div>
                     </div>
                 </div>
-            </div>
+            </>
         );
     }
 
     if (tokenValid === false && !token) {
         return (
-            <div className="reset-password-container">
-                <div className="reset-password-card">
-                    <Link to="/login" className="reset-password-back-link" aria-label="Back to login page">
-                        <span className="back-arrow">←</span>
-                        Back to Login
-                    </Link>
-                    <div className="reset-password-form-container">
-                        <h1 className="reset-password-title">Invalid Reset Link</h1>
-                        <div className="reset-password-error-message" role="alert" aria-live="polite">
-                            {error || 'Invalid or missing reset token. Please request a new password reset link.'}
-                        </div>
-                        <Link to="/forgot-password" className="reset-password-request-link">
-                            Request New Reset Link
+            <>
+                <PublicBrandHeader />
+                <div className="reset-password-container">
+                    <div className="reset-password-card">
+                        <Link to="/login" className="reset-password-back-link" aria-label="Back to login page">
+                            <span className="back-arrow">←</span>
+                            Back to Login
                         </Link>
+                        <div className="reset-password-form-container">
+                            <h1 className="reset-password-title">Invalid Reset Link</h1>
+                            <div className="reset-password-error-message" role="alert" aria-live="polite">
+                                {error || 'Invalid or missing reset token. Please request a new password reset link.'}
+                            </div>
+                            <Link to="/forgot-password" className="reset-password-request-link">
+                                Request New Reset Link
+                            </Link>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="reset-password-container">
+        <>
             <a href="#reset-password-form" className="skip-link" onClick={handleSkipToForm}>
                 Skip to reset password form
             </a>
+            <PublicBrandHeader />
+            <div className="reset-password-container">
             <div className="reset-password-card">
                 {/* Back to Login Link */}
                 <Link to="/login" className="reset-password-back-link" aria-label="Back to login page">
@@ -285,12 +294,8 @@ const ResetPassword = () => {
                     )}
                 </div>
             </div>
-
-            {/* Branding */}
-            <div className="reset-password-branding">
-                <p>powered by abilityCONNECT.online</p>
             </div>
-        </div>
+        </>
     );
 };
 

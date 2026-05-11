@@ -31,6 +31,8 @@
 /* Auth and landing pages manage their own spacing against the fixed footer. */
 .App:has(.login-container),
 .App:has(.register-container),
+.App:has(.forgot-password-container),
+.App:has(.reset-password-container),
 .App:has(.landing-page-container) {
     padding-bottom: 0;
 }
@@ -38,6 +40,8 @@
 /* Make footer feel visually integrated with auth / landing gradient backgrounds. */
 .App:has(.login-container) .app-footer,
 .App:has(.register-container) .app-footer,
+.App:has(.forgot-password-container) .app-footer,
+.App:has(.reset-password-container) .app-footer,
 .App:has(.landing-page-container) .app-footer,
 .App:has(.dashboard) .app-footer {
     background: rgba(17, 24, 39, 0.95);

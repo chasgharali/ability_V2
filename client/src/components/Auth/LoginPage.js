@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import PublicBrandHeader from '../Layout/PublicBrandHeader';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -169,6 +170,7 @@ const LoginPage = () => {
             <title>{userType === 'jobseeker' ? 'Job Seeker Login' : 'Company & Staff Login'} - abilityconnect</title>
         </Helmet>
         <a href="#main-content" className="skip-link">Skip to main content</a>
+        <PublicBrandHeader />
         <main id="main-content" className="login-container" aria-label="main content">
             <div className="login-card">
                 {/* Back to Landing Link */}
@@ -327,11 +329,6 @@ const LoginPage = () => {
                         </div>
                     )}
                 </div>
-            </div>
-
-            {/* Branding */}
-            <div className="login-branding">
-                <p>powered by abilityCONNECT.online</p>
             </div>
         </main>
         </>

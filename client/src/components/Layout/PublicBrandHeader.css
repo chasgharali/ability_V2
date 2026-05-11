@@ -1,0 +1,37 @@
+:root {
+    --public-brand-header-height: 58px;
+}
+
+.public-brand-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1100;
+    background: #ffffff;
+    color: #111827;
+    padding: 0.75rem 1.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.public-brand-header-inner {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.public-brand-logo {
+    height: 40px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.public-brand-logo-text {
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    color: #111827;
+}

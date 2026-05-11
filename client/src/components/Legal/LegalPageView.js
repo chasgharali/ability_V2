@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { legalPagesAPI } from '../../services/legalPages';
-import settingsAPI from '../../services/settings';
+import PublicBrandHeader from '../Layout/PublicBrandHeader';
 import './Legal.css';
 
 const PAGE_LABELS = {
@@ -12,8 +12,6 @@ const LegalPageView = ({ type }) => {
     const [page, setPage] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [brandingLogo, setBrandingLogo] = useState('');
-    const [brandingLogoAlt, setBrandingLogoAlt] = useState('ABILITY Job Fair');
     const pageLabel = PAGE_LABELS[type] || type;
 
     const load = useCallback(async () => {
@@ -37,41 +35,10 @@ const LegalPageView = ({ type }) => {
         load();
     }, [load]);
 
-    useEffect(() => {
-        const fetchBranding = async () => {
-            try {
-                const logoRes = await settingsAPI.getSetting('branding_logo');
-                if (logoRes.success && logoRes.value) {
-                    setBrandingLogo(logoRes.value);
-                }
-                const altRes = await settingsAPI.getSetting('branding_logo_alt');
-                if (altRes.success && altRes.value) {
-                    setBrandingLogoAlt(altRes.value);
-                }
-            } catch {
-                // Keep defaults
-            }
-        };
-        fetchBranding();
-    }, []);
-
     return (
         <div className="legal-view-wrapper">
             <a href="#legal-main" className="skip-link">Skip to main content</a>
-
-            <header className="legal-view-header" role="banner">
-                <div className="legal-view-header-inner">
-                    {brandingLogo ? (
-                        <img
-                            src={brandingLogo}
-                            alt={brandingLogoAlt}
-                            className="legal-view-logo"
-                        />
-                    ) : (
-                        <span className="legal-view-logo-text">{brandingLogoAlt}</span>
-                    )}
-                </div>
-            </header>
+            <PublicBrandHeader />
 
             <main id="legal-main" className="legal-view-main" tabIndex={-1} aria-label={pageLabel}>
                 {loading && (

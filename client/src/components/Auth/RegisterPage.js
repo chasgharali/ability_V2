@@ -7,6 +7,7 @@ import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { countryCodes } from './countryCodes';
 import { legalPagesAPI } from '../../services/legalPages';
+import PublicBrandHeader from '../Layout/PublicBrandHeader';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -304,13 +305,16 @@ const RegisterPage = () => {
     // Show loading while checking authentication
     if (loading) {
         return (
-            <div className="register-container">
-                <div className="register-card">
-                    <div style={{ textAlign: 'center', padding: '2rem' }}>
-                        Loading...
+            <>
+                <PublicBrandHeader />
+                <div className="register-container">
+                    <div className="register-card">
+                        <div style={{ textAlign: 'center', padding: '2rem' }}>
+                            Loading...
+                        </div>
                     </div>
                 </div>
-            </div>
+            </>
         );
     }
 
@@ -320,10 +324,12 @@ const RegisterPage = () => {
     }
 
     return (
-        <div className="register-container">
+        <>
             <a href="#register-form" className="skip-link" onClick={handleSkipToForm}>
                 Skip to registration form
             </a>
+            <PublicBrandHeader />
+            <div className="register-container">
             <div className="register-card">
                 {/* Back to Landing Link */}
                 <Link to="/" className="register-back-link" aria-label="Back to landing page">
@@ -726,12 +732,8 @@ const RegisterPage = () => {
                     </div>
                 </div>
             )}
-
-            {/* Branding */}
-            <div className="register-branding">
-                <p>powered by abilityCONNECT.online</p>
             </div>
-        </div>
+        </>
     );
 };
 

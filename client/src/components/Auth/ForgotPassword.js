@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { MdEmail } from 'react-icons/md';
+import PublicBrandHeader from '../Layout/PublicBrandHeader';
 import './ForgotPassword.css';
 
 const ForgotPassword = () => {
@@ -85,10 +86,12 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="forgot-password-container">
+        <>
             <a href="#forgot-password-form" className="skip-link" onClick={handleSkipToForm}>
                 Skip to forgot password form
             </a>
+            <PublicBrandHeader />
+            <div className="forgot-password-container">
             <div className="forgot-password-card">
                 {/* Back to Login Link */}
                 <Link to="/login" className="forgot-password-back-link" aria-label="Back to login page">
@@ -165,12 +168,8 @@ const ForgotPassword = () => {
                     )}
                 </div>
             </div>
-
-            {/* Branding */}
-            <div className="forgot-password-branding">
-                <p>powered by abilityCONNECT.online</p>
             </div>
-        </div>
+        </>
     );
 };
 

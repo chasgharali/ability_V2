@@ -17,7 +17,7 @@
     justify-content: center;
     min-height: calc(100vh - var(--app-footer-height, 50px));
     background: radial-gradient(ellipse at center, #4a5568 0%, #1a202c 100%);
-    padding: 1rem 1rem calc(1rem + var(--app-footer-height, 50px));
+    padding: var(--public-brand-header-height, 58px) 1.5rem 2rem;
 }
 
 .login-card {
@@ -195,8 +195,3 @@
     text-decoration: none;
 }
 
-.login-branding {
-    margin-top: 2rem;
-    text-align: center;
-    color: var(--login-secondary-text);
-}

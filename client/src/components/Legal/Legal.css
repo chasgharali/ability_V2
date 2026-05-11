@@ -178,6 +178,7 @@
     flex-direction: column;
     background: #f3f5f7;
     font-family: inherit;
+    padding-top: var(--public-brand-header-height, 58px);
 }
 
 .legal-view-header {

@@ -14,10 +14,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: calc(100vh - var(--app-footer-height, 50px));
     background: radial-gradient(ellipse at center, #4a5568 0%, #1a202c 100%);
-    padding: 2rem 1rem calc(2rem + var(--app-footer-height, 50px));
+    padding: calc(var(--public-brand-header-height, 58px) + 2rem) 1rem calc(2rem + var(--app-footer-height, 50px));
 }
 
 .register-card {
@@ -784,12 +784,6 @@
 
 .register-submit-button:hover {
     background-color: #374151;
-}
-
-.register-branding {
-    margin-top: 2rem;
-    text-align: center;
-    color: var(--register-secondary-text);
 }
 
 /* Accessibility */
