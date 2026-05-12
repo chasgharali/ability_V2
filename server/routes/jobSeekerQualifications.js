@@ -190,6 +190,23 @@ const getLabel = (map, value) => {
     return map[value] || value;
 };
 
+const getProfileFieldValue = (user, fieldPath) => {
+    const profile = user.metadata?.profile || {};
+    const metadata = user.metadata || {};
+
+    const aliases = {
+        educationLevel: [profile.educationLevel, metadata.educationLevel, metadata.education],
+        employmentTypes: [profile.employmentTypes, metadata.employmentTypes, metadata.employmentType],
+        veteranStatus: [profile.veteranStatus, metadata.veteranStatus, metadata.militaryStatus]
+    };
+
+    if (aliases[fieldPath]) {
+        return aliases[fieldPath].find((value) => value !== undefined && value !== null && value !== '');
+    }
+
+    return profile[fieldPath];
+};
+
 /**
  * Resolve job seeker IDs for event filter.
  * - eventId: job seekers who registered for the event (metadata.registeredEvents)
@@ -264,7 +281,6 @@ router.get('/report', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
             let totalResponses = 0;
 
             users.forEach(user => {
-                const profile = user.metadata?.profile;
                 let value;
 
                 // Handle accessibility fields which are directly on user
@@ -272,7 +288,7 @@ router.get('/report', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
                     const accessField = fieldPath.replace('accessibility.', '');
                     value = user[accessField] ? 'Yes' : null;
                 } else {
-                    value = profile ? profile[fieldPath] : null;
+                    value = getProfileFieldValue(user, fieldPath);
                 }
 
                 if (isArray && Array.isArray(value)) {
@@ -477,8 +493,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             const counts = {};
 
             users.forEach(user => {
-                const profile = user.metadata?.profile;
-                let value = profile ? profile[fieldPath] : null;
+                let value = getProfileFieldValue(user, fieldPath);
 
                 if (isArray && Array.isArray(value)) {
                     value.forEach(v => {
