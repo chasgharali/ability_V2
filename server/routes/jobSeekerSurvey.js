@@ -92,7 +92,7 @@ async function getJobSeekerIdsForEvent(req, eventId, boothId) {
  * GET /api/job-seeker-survey
  * Get all job seeker survey data with filtering (for admins)
  */
-router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'SuperAdmin']), async (req, res) => {
     try {
         if (!ensureOrgContext(req, res)) {
             return;
@@ -194,11 +194,12 @@ router.get('/', authenticateToken, requireRole(['Admin', 'GlobalSupport']), asyn
  * GET /api/job-seeker-survey/export/csv
  * Export job seeker survey data as CSV with demographic breakdowns
  */
-router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'SuperAdmin']), async (req, res) => {
     try {
         if (!ensureOrgContext(req, res)) {
             return;
         }
+        const includeDisabilitySection = isSuperAdmin(req);
 
         const {
             eventId,
@@ -238,10 +239,10 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                     value = user.survey?.[field];
                 }
                 
-                if (field === 'race' && Array.isArray(value)) {
+                if ((field === 'race' || field === 'disabilities') && Array.isArray(value)) {
                     value.forEach(v => {
                         if (v && v.trim()) {
-                            const key = toRaceDisplayName(v);
+                            const key = field === 'race' ? toRaceDisplayName(v) : v.trim();
                             counts[key] = (counts[key] || 0) + 1;
                             total++;
                         }
@@ -279,6 +280,9 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             { field: 'genderIdentity', title: 'Gender' },
             { field: 'ageGroup', title: 'Age Group' }
         ];
+        if (includeDisabilitySection) {
+            sections.push({ field: 'disabilities', title: 'Disability Type' });
+        }
 
         const csvLines = [];
         
@@ -341,7 +345,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
  * GET /api/job-seeker-survey/stats
  * Get statistics about survey data with optional filtering
  */
-router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'SuperAdmin']), async (req, res) => {
     try {
         if (!ensureOrgContext(req, res)) {
             return;
@@ -433,11 +437,12 @@ router.get('/stats', authenticateToken, requireRole(['Admin', 'GlobalSupport']),
  * GET /api/job-seeker-survey/breakdown
  * Get demographic breakdown statistics for all filtered records (not paginated)
  */
-router.get('/breakdown', authenticateToken, requireRole(['Admin', 'GlobalSupport']), async (req, res) => {
+router.get('/breakdown', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'SuperAdmin']), async (req, res) => {
     try {
         if (!ensureOrgContext(req, res)) {
             return;
         }
+        const includeDisabilityBreakdown = isSuperAdmin(req);
 
         const { eventId, boothId } = req.query;
 
@@ -468,10 +473,10 @@ router.get('/breakdown', authenticateToken, requireRole(['Admin', 'GlobalSupport
                     value = user.survey?.[field];
                 }
                 
-                if (field === 'race' && Array.isArray(value)) {
+                if ((field === 'race' || field === 'disabilities') && Array.isArray(value)) {
                     value.forEach(v => {
                         if (v && v.trim()) {
-                            const key = toRaceDisplayName(v);
+                            const key = field === 'race' ? toRaceDisplayName(v) : v.trim();
                             counts[key] = (counts[key] || 0) + 1;
                             total++;
                         }
@@ -497,6 +502,9 @@ router.get('/breakdown', authenticateToken, requireRole(['Admin', 'GlobalSupport
             genderIdentity: calculateStats('genderIdentity'),
             ageGroup: calculateStats('ageGroup')
         };
+        if (includeDisabilityBreakdown) {
+            breakdowns.disabilities = calculateStats('disabilities');
+        }
 
         res.json(breakdowns);
 

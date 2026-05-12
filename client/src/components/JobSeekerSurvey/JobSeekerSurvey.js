@@ -13,6 +13,7 @@ import './JobSeekerSurvey.css';
 
 const JobSeekerSurvey = () => {
     const { user, loading } = useAuth();
+    const isSuperAdmin = user?.role === 'SuperAdmin';
     const navigate = useNavigate();
     const toastRef = useRef(null);
     const fetchInProgress = useRef(false);
@@ -22,7 +23,7 @@ const JobSeekerSurvey = () => {
         if (!loading) {
             if (!user) {
                 navigate('/login', { replace: true });
-            } else if (!['Admin', 'GlobalSupport'].includes(user.role)) {
+            } else if (!['Admin', 'GlobalSupport', 'SuperAdmin'].includes(user.role)) {
                 navigate('/dashboard', { replace: true });
             }
         }
@@ -49,7 +50,8 @@ const JobSeekerSurvey = () => {
         country: { counts: [], total: 0 },
         race: { counts: [], total: 0 },
         genderIdentity: { counts: [], total: 0 },
-        ageGroup: { counts: [], total: 0 }
+        ageGroup: { counts: [], total: 0 },
+        disabilities: { counts: [], total: 0 }
     });
 
     // Syncfusion Toast
@@ -68,7 +70,7 @@ const JobSeekerSurvey = () => {
     // Load survey data
     const loadSurveys = useCallback(async () => {
         if (fetchInProgress.current) return;
-        if (!user || !['Admin', 'GlobalSupport'].includes(user.role)) return;
+        if (!user || !['Admin', 'GlobalSupport', 'SuperAdmin'].includes(user.role)) return;
 
         fetchInProgress.current = true;
 
@@ -106,14 +108,15 @@ const JobSeekerSurvey = () => {
     useEffect(() => {
         const loadFilters = async () => {
             try {
+                const ensureArray = (value) => (Array.isArray(value) ? value : []);
                 const [eventsRes, boothsRes] = await Promise.all([
                     fetch('/api/events', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
                     fetch('/api/booths', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
                 ]);
                 const eventsData = await eventsRes.json();
                 const boothsData = await boothsRes.json();
-                setEvents(eventsData.events || eventsData || []);
-                setBooths(boothsData.booths || boothsData || []);
+                setEvents(ensureArray(eventsData?.events || eventsData));
+                setBooths(ensureArray(boothsData?.booths || boothsData));
             } catch (error) {
                 console.error('Error loading filters:', error);
             }
@@ -123,7 +126,7 @@ const JobSeekerSurvey = () => {
 
     // Load surveys when filters change
     useEffect(() => {
-        if (!user || !['Admin', 'GlobalSupport'].includes(user.role)) return;
+        if (!user || !['Admin', 'GlobalSupport', 'SuperAdmin'].includes(user.role)) return;
         // Only load on initial mount
         loadSurveys();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,7 +141,7 @@ const JobSeekerSurvey = () => {
         setSelectedBooth(newBooth);
         
         // Trigger reload with new filters
-        if (user && ['Admin', 'GlobalSupport'].includes(user.role)) {
+        if (user && ['Admin', 'GlobalSupport', 'SuperAdmin'].includes(user.role)) {
             if (fetchInProgress.current) return;
             fetchInProgress.current = true;
 
@@ -180,7 +183,7 @@ const JobSeekerSurvey = () => {
         setSelectedEvent('');
         setSelectedBooth('');
         
-        if (user && ['Admin', 'GlobalSupport'].includes(user.role)) {
+        if (user && ['Admin', 'GlobalSupport', 'SuperAdmin'].includes(user.role)) {
             if (fetchInProgress.current) return;
             fetchInProgress.current = true;
 
@@ -263,7 +266,8 @@ const JobSeekerSurvey = () => {
                 breakdowns.country?.total > 0 ||
                 breakdowns.race?.total > 0 ||
                 breakdowns.genderIdentity?.total > 0 ||
-                breakdowns.ageGroup?.total > 0
+                breakdowns.ageGroup?.total > 0 ||
+                (isSuperAdmin && breakdowns.disabilities?.total > 0)
             );
 
             if (!hasData) {
@@ -292,6 +296,9 @@ const JobSeekerSurvey = () => {
                 { field: 'genderIdentity', title: 'Gender' },
                 { field: 'ageGroup', title: 'Age Group' }
             ];
+            if (isSuperAdmin) {
+                sections.push({ field: 'disabilities', title: 'Disability Type' });
+            }
 
             const csvLines = [];
             
@@ -346,8 +353,10 @@ const JobSeekerSurvey = () => {
         return <div>Loading...</div>;
     }
 
-    const eventOptions = [{ _id: '', name: 'All Events' }, ...events];
-    const boothOptions = [{ _id: '', name: 'All Booths' }, ...(pendingEvent ? booths.filter(b => b.eventId === pendingEvent) : booths)];
+    const safeEvents = Array.isArray(events) ? events : [];
+    const safeBooths = Array.isArray(booths) ? booths : [];
+    const eventOptions = [{ _id: '', name: 'All Events' }, ...safeEvents];
+    const boothOptions = [{ _id: '', name: 'All Booths' }, ...(pendingEvent ? safeBooths.filter(b => b.eventId === pendingEvent) : safeBooths)];
 
     return (
         <div className="dashboard-container">
@@ -469,6 +478,9 @@ const JobSeekerSurvey = () => {
                                         <TabItemDirective header={{ text: 'Race' }} content={() => renderFieldTab('race', 'Race')} />
                                         <TabItemDirective header={{ text: 'Gender' }} content={() => renderFieldTab('genderIdentity', 'Gender')} />
                                         <TabItemDirective header={{ text: 'Age Group' }} content={() => renderFieldTab('ageGroup', 'AgeGroup')} />
+                                        {isSuperAdmin && (
+                                            <TabItemDirective header={{ text: 'Disability Type' }} content={() => renderFieldTab('disabilities', 'Disability Type')} />
+                                        )}
                                     </TabItemsDirective>
                                 </TabComponent>
                             )}

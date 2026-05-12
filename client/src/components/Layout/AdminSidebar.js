@@ -690,6 +690,9 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('org-users')} onClick={() => handleItemClick('/org-users')}>
                   Assign Organization
                 </button>
+                <button className={itemClass('jobseeker-survey')} onClick={() => handleItemClick('/jobseeker-survey')}>
+                  JobSeeker Survey Data
+                </button>
                 <button className={itemClass('branding')} onClick={() => handleItemClick('/branding')}>
                   Branding - Header Logo
                 </button>

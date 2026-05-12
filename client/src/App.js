@@ -182,7 +182,16 @@ function App() {
                                     <Route path="/meeting-records" element={<RequireAuth><MeetingRecords /></RequireAuth>} />
                                     <Route path="/meeting-records/:id" element={<RequireAuth><MeetingRecordDetail /></RequireAuth>} />
                                     <Route path="/jobseeker-interests" element={<RequireAuth><JobSeekerInterests /></RequireAuth>} />
-                                    <Route path="/jobseeker-survey" element={<RequireAuth><JobSeekerSurvey /></RequireAuth>} />
+                                    <Route
+                                        path="/jobseeker-survey"
+                                        element={
+                                            <RequireAuth>
+                                                <RequireRole allowedRoles={['Admin', 'GlobalSupport', 'SuperAdmin']}>
+                                                    <JobSeekerSurvey />
+                                                </RequireRole>
+                                            </RequireAuth>
+                                        }
+                                    />
                                     <Route path="/jobseeker-qualifications" element={<RequireAuth><JobSeekerQualifications /></RequireAuth>} />
                                     {/* Job Seeker event flow */}
                                     <Route path="/events/upcoming" element={<RequireAuth><UpcomingEvents /></RequireAuth>} />
