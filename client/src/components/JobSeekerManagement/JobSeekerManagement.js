@@ -99,6 +99,8 @@ export default function JobSeekerManagement() {
   const [statusFilter, setStatusFilter] = useState(initialFilters.statusFilter);
   const [organizationFilter, setOrganizationFilter] = useState(initialFilters.organizationFilter);
   const [eventFilter, setEventFilter] = useState(initialFilters.eventFilter);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortDir, setSortDir] = useState('desc');
   const [organizations, setOrganizations] = useState([]);
   const [events, setEvents] = useState([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -119,6 +121,8 @@ export default function JobSeekerManagement() {
   const statusFilterRef = useRef('');
   const organizationFilterRef = useRef('');
   const eventFilterRef = useRef('');
+  const sortByRef = useRef('createdAt');
+  const sortDirRef = useRef('desc');
   const eventDropdownRef = useRef(null);
   const currentPageRef = useRef(1);
   const pageSizeRef = useRef(50);
@@ -193,6 +197,18 @@ export default function JobSeekerManagement() {
     }
     return options;
   }, [events]);
+
+  const sortByOptions = useMemo(() => ([
+    { value: 'createdAt', label: 'Sort: Registration Date' },
+    { value: 'name', label: 'Sort: Name' },
+    { value: 'email', label: 'Sort: Email' },
+    { value: 'metadata.profile.educationLevel', label: 'Sort: Qualifications' }
+  ]), []);
+
+  const sortDirectionOptions = useMemo(() => ([
+    { value: 'desc', label: 'Descending' },
+    { value: 'asc', label: 'Ascending' }
+  ]), []);
 
   // Syncfusion Toast - memoized to prevent unnecessary re-renders
   const showToast = useCallback((message, type = 'Success', duration = 3000) => {
@@ -455,7 +471,7 @@ export default function JobSeekerManagement() {
     }
   }, [showToast]);
 
-  const loadJobSeekers = useCallback(async (page, limit, search, isActive, event, organizationId) => {
+  const loadJobSeekers = useCallback(async (page, limit, search, isActive, event, organizationId, sortByOverride, sortDirOverride) => {
     // Prevent multiple simultaneous fetches
     if (loadingJobSeekersRef.current) {
       console.log('LoadJobSeekers already in progress, skipping duplicate call');
@@ -477,6 +493,8 @@ export default function JobSeekerManagement() {
         limit: limit || 50,
         role: 'JobSeeker'
       };
+      params.sortBy = sortByOverride || sortByRef.current || 'createdAt';
+      params.sortDir = sortDirOverride || sortDirRef.current || 'desc';
       
       // Add search parameter if provided
       if (search && search.trim()) {
@@ -530,6 +548,11 @@ export default function JobSeekerManagement() {
           resumeUrl: u.resumeUrl,
           survey: u.survey || {},
           metadata: u.metadata || {},
+          qualificationSummary: [
+            getLabelFromValue(u.metadata?.profile?.educationLevel || u.metadata?.education || u.metadata?.educationLevel, EDUCATION_LEVEL_LIST),
+            getLabelFromValue(u.metadata?.profile?.workLevel || u.metadata?.experienceLevel || u.metadata?.workLevel, EXPERIENCE_LEVEL_LIST),
+            getLabelFromValue(u.metadata?.profile?.clearance || u.metadata?.securityClearance || u.metadata?.clearance, SECURITY_CLEARANCE_LIST)
+          ].filter(Boolean).join(' | '),
           registeredEvents: registeredEvents, // Extract registered events for display
           avatarUrl: u.avatarUrl,
           usesScreenMagnifier: u.usesScreenMagnifier,
@@ -593,6 +616,8 @@ export default function JobSeekerManagement() {
   const isFirstRender = useRef(true);
   const prevSearchFilter = useRef(activeSearchQuery);
   const prevStatusFilter = useRef(statusFilter);
+  const prevSortBy = useRef(sortBy);
+  const prevSortDir = useRef(sortDir);
   const searchTimeoutRef = useRef(null);
 
   // Update refs when filters change
@@ -611,6 +636,14 @@ export default function JobSeekerManagement() {
   useEffect(() => {
     eventFilterRef.current = eventFilter;
   }, [eventFilter]);
+
+  useEffect(() => {
+    sortByRef.current = sortBy;
+  }, [sortBy]);
+
+  useEffect(() => {
+    sortDirRef.current = sortDir;
+  }, [sortDir]);
 
   // Persist filters per-table in sessionStorage so they survive navigation
   useEffect(() => {
@@ -778,6 +811,26 @@ export default function JobSeekerManagement() {
       loadJobSeekersRef.current(1, pageSize, activeSearchQuery || '', statusFilter, eventFilterRef.current);
     }
   }, [statusFilter, pageSize, activeSearchQuery]);
+
+  useEffect(() => {
+    if (isFirstRender.current) return;
+
+    if (prevSortBy.current !== sortBy || prevSortDir.current !== sortDir) {
+      prevSortBy.current = sortBy;
+      prevSortDir.current = sortDir;
+      setCurrentPage(1);
+      loadJobSeekersRef.current(
+        1,
+        pageSize,
+        activeSearchQuery || '',
+        statusFilterRef.current,
+        eventFilterRef.current,
+        organizationFilterRef.current,
+        sortBy,
+        sortDir
+      );
+    }
+  }, [sortBy, sortDir, pageSize, activeSearchQuery]);
 
   const prevOrganizationFilter = useRef(organizationFilter);
   useEffect(() => {
@@ -1622,6 +1675,36 @@ export default function JobSeekerManagement() {
                   Clear
                 </ButtonComponent>
               )}
+              <div style={{ width: '240px', flexShrink: 0 }}>
+                <DropDownListComponent
+                  id="jobseeker-sort-by-dropdown"
+                  dataSource={sortByOptions.map(s => ({ value: s.value, text: s.label }))}
+                  fields={{ value: 'value', text: 'text' }}
+                  value={sortBy}
+                  change={(e) => {
+                    setSortBy(e.value || 'createdAt');
+                  }}
+                  placeholder="Sort by"
+                  cssClass="sort-by-dropdown"
+                  popupHeight="300px"
+                  width="100%"
+                />
+              </div>
+              <div style={{ width: '160px', flexShrink: 0 }}>
+                <DropDownListComponent
+                  id="jobseeker-sort-dir-dropdown"
+                  dataSource={sortDirectionOptions.map(s => ({ value: s.value, text: s.label }))}
+                  fields={{ value: 'value', text: 'text' }}
+                  value={sortDir}
+                  change={(e) => {
+                    setSortDir(e.value || 'desc');
+                  }}
+                  placeholder="Direction"
+                  cssClass="sort-direction-dropdown"
+                  popupHeight="300px"
+                  width="100%"
+                />
+              </div>
               {/* Search Section - Right */}
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
                 <div style={{ marginBottom: 0 }}>
@@ -1842,6 +1925,12 @@ export default function JobSeekerManagement() {
                   width='120' 
                   allowFiltering={true}
                   template={stateTemplate}
+                />
+                <ColumnDirective
+                  field='qualificationSummary'
+                  headerText='Qualifications'
+                  width='300'
+                  allowFiltering={true}
                 />
                 <ColumnDirective 
                   field='statusText' 

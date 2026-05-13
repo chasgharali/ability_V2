@@ -34,6 +34,15 @@ const getLabelFromValue = (value, optionsList) => {
   return option ? option.name : value;
 };
 
+const formatQualificationSummary = (jobSeeker = {}) => {
+  const metadata = jobSeeker.metadata || {};
+  const profile = metadata.profile || {};
+  const education = getLabelFromValue(profile.educationLevel || metadata.educationLevel || metadata.education, EDUCATION_LEVEL_LIST);
+  const experience = getLabelFromValue(profile.workLevel || metadata.workLevel || metadata.experienceLevel, EXPERIENCE_LEVEL_LIST);
+  const clearance = getLabelFromValue(profile.clearance || metadata.clearance || metadata.securityClearance, SECURITY_CLEARANCE_LIST);
+  return [education, experience, clearance].filter(Boolean).join(' | ');
+};
+
 /**
  * OrgAdmin view: shows only job seekers who have registered for this org's events.
  * SuperAdmin sees global JobSeekerManagement instead.
@@ -134,6 +143,18 @@ export default function RegisteredJobSeekerManagement() {
     { value: 'inactive', text: 'Inactive' }
   ]), []);
 
+  const sortByOptions = useMemo(() => ([
+    { value: 'registeredAt', text: 'Sort: Registration Date' },
+    { value: 'name', text: 'Sort: Name' },
+    { value: 'email', text: 'Sort: Email' },
+    { value: 'qualification', text: 'Sort: Qualifications' }
+  ]), []);
+
+  const sortDirectionOptions = useMemo(() => ([
+    { value: 'desc', text: 'Descending' },
+    { value: 'asc', text: 'Ascending' }
+  ]), []);
+
   const flatDataSource = useMemo(() => {
     return (jobSeekers || [])
       // Hide orphan/empty rows when job seeker data is missing.
@@ -158,6 +179,7 @@ export default function RegisteredJobSeekerManagement() {
           resumeIdValue: reg.resumeId?._id ? String(reg.resumeId._id) : null,
           registeredEvent: reg.eventId?.name,
           registeredAt: reg.registeredAt,
+          qualificationSummary: formatQualificationSummary(js),
           jobSeekerId: js,
           registration: reg,
           importStatus: js.importStatus || 'complete',
@@ -598,6 +620,38 @@ export default function RegisteredJobSeekerManagement() {
             width="100%"
           />
         </div>
+        <div style={{ width: '240px', flexShrink: 0 }}>
+          <DropDownListComponent
+            id="rjsm-sort-by"
+            dataSource={sortByOptions}
+            fields={{ value: 'value', text: 'text' }}
+            value={sortBy}
+            change={(e) => {
+              setSortBy(e.value || 'registeredAt');
+              setPage(1);
+            }}
+            placeholder="Sort By"
+            cssClass="sort-by-dropdown"
+            popupHeight="300px"
+            width="100%"
+          />
+        </div>
+        <div style={{ width: '160px', flexShrink: 0 }}>
+          <DropDownListComponent
+            id="rjsm-sort-dir"
+            dataSource={sortDirectionOptions}
+            fields={{ value: 'value', text: 'text' }}
+            value={sortDir}
+            change={(e) => {
+              setSortDir(e.value || 'desc');
+              setPage(1);
+            }}
+            placeholder="Direction"
+            cssClass="sort-direction-dropdown"
+            popupHeight="300px"
+            width="100%"
+          />
+        </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
           <ButtonComponent
             cssClass="e-outline e-primary e-small"
@@ -624,7 +678,7 @@ export default function RegisteredJobSeekerManagement() {
             ref={searchInputRef}
             type="text"
             onKeyDown={(e) => e.key === 'Enter' && triggerSearch()}
-            placeholder="Search by name or email..."
+            placeholder="Search by name, email, or qualifications..."
             className="jsm-search-input-native"
             style={{ width: '300px', padding: '10px 12px', fontSize: '14px', border: '1px solid #d1d5db', borderRadius: '6px', outline: 'none' }}
           />
@@ -726,6 +780,7 @@ export default function RegisteredJobSeekerManagement() {
               />
               <ColumnDirective field="emailVerified" headerText="Email Verified" width="120" textAlign="Center" template={emailVerifiedTemplate} />
               <ColumnDirective field="registeredEvent" headerText="Registered Event" width="200" allowFiltering={true} />
+              <ColumnDirective field="qualificationSummary" headerText="Qualifications" width="280" allowFiltering={true} />
               <ColumnDirective field="resumeTitle" headerText="Resume Used" width="220" allowFiltering={true} template={(props) => (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span>{props.resumeTitle || (props.registrationResumeUrl || props.resumeUrl ? 'Uploaded File' : '—')}</span>

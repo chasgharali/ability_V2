@@ -496,9 +496,21 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
             if (status === 'active') userQuery.isActive = true;
             if (status === 'inactive') userQuery.isActive = false;
             if (hasSearch) {
+                const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const containsRegex = new RegExp(escapedSearch, 'i');
                 userQuery.$or = [
-                    { name: { $regex: search.trim(), $options: 'i' } },
-                    { email: { $regex: search.trim(), $options: 'i' } }
+                    { name: containsRegex },
+                    { email: containsRegex },
+                    { 'metadata.profile.headline': containsRegex },
+                    { 'metadata.profile.keywords': containsRegex },
+                    { 'metadata.profile.workLevel': containsRegex },
+                    { 'metadata.profile.educationLevel': containsRegex },
+                    { 'metadata.profile.clearance': containsRegex },
+                    { 'metadata.profile.veteranStatus': containsRegex },
+                    { 'metadata.profile.workAuthorization': containsRegex },
+                    { 'metadata.profile.employmentTypes': containsRegex },
+                    { 'metadata.profile.languages': containsRegex },
+                    { 'metadata.profile.primaryExperience': containsRegex }
                 ];
             }
             const matchedUsers = await User.find(userQuery).select('_id');
@@ -522,7 +534,17 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
         if (eventId && isValidObjectId(eventId)) aggregateMatch.eventId = new mongoose.Types.ObjectId(eventId);
 
         const usersCollection = User.collection.name;
-        const sortObj = { [sortBy]: sortDir === 'asc' ? 1 : -1 };
+        const sortDirection = sortDir === 'asc' ? 1 : -1;
+        const normalizedSortBy = ['registeredAt', 'name', 'email', 'qualification'].includes(sortBy)
+            ? sortBy
+            : 'registeredAt';
+        const sortFieldMap = {
+            registeredAt: 'registeredAt',
+            name: 'jobSeekerDoc.0.name',
+            email: 'jobSeekerDoc.0.email',
+            qualification: 'qualificationSort'
+        };
+        const aggregateSortField = sortFieldMap[normalizedSortBy] || 'registeredAt';
 
         // Use aggregate for both ID fetch and count so orphaned registrations
         // (where the referenced user was deleted) are excluded consistently.
@@ -540,7 +562,29 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
                     }
                 },
                 { $match: { 'jobSeekerDoc.0': { $exists: true } } },
-                { $sort: sortObj },
+                ...(normalizedSortBy === 'qualification'
+                    ? [{
+                        $addFields: {
+                            qualificationSort: {
+                                $ifNull: [
+                                    '$jobSeekerDoc.0.metadata.profile.educationLevel',
+                                    {
+                                        $ifNull: [
+                                            '$jobSeekerDoc.0.metadata.profile.workLevel',
+                                            {
+                                                $ifNull: [
+                                                    '$jobSeekerDoc.0.metadata.profile.clearance',
+                                                    ''
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }]
+                    : []),
+                { $sort: { [aggregateSortField]: sortDirection } },
                 { $skip: skip },
                 { $limit: limit },
                 { $project: { _id: 1 } }
@@ -565,7 +609,13 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
             .populate('jobSeekerId', '-hashedPassword -refreshTokens -legacyPassword -survey')
             .populate('eventId', 'name slug start')
             .populate('resumeId', 'title')
-            .sort(sortObj);
+            .lean();
+        const registrationOrder = new Map(validIds.map((regId, index) => [String(regId), index]));
+        registrations.sort((a, b) => {
+            const aIndex = registrationOrder.get(String(a._id)) ?? Number.MAX_SAFE_INTEGER;
+            const bIndex = registrationOrder.get(String(b._id)) ?? Number.MAX_SAFE_INTEGER;
+            return aIndex - bIndex;
+        });
 
         const total = totalCountResult?.[0]?.total || 0;
 
