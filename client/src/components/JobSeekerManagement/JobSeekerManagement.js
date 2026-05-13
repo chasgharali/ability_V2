@@ -21,7 +21,6 @@ import { listOrganizations } from '../../services/organizations';
 import { useAuth } from '../../contexts/AuthContext';
 import MassUploadModal from '../UserManagement/MassUploadModal';
 import AdminJobSeekerEditor from './AdminJobSeekerEditor';
-import AdvancedJobSeekerSearch from './AdvancedJobSeekerSearch';
 import { 
   JOB_CATEGORY_LIST, 
   LANGUAGE_LIST, 
@@ -1534,15 +1533,6 @@ export default function JobSeekerManagement() {
                 )}
               </div>
             </div>
-
-            {/* Advanced AI Search — SuperAdmin only (global scope across all
-                organizations). Org-scoped search lives in
-                RegisteredJobSeekerManagement.js for Admin/AdminEvent. */}
-            {user?.role === 'SuperAdmin' && (
-              <div style={{ marginBottom: 16, paddingLeft: '20px', paddingRight: '20px' }}>
-                <AdvancedJobSeekerSearch mode="global" />
-              </div>
-            )}
 
             {/* Filters */}
             <div className="jsm-filters-row" style={{ marginBottom: 12, paddingLeft: '20px', paddingRight: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>

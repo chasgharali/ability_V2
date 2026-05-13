@@ -32,6 +32,7 @@ import TermsConditionsView from './components/TermsConditions/TermsConditionsVie
 import UserManagement from './components/UserManagement/UserManagement';
 import JobSeekerManagement from './components/JobSeekerManagement/JobSeekerManagement';
 import RegisteredJobSeekerManagement from './components/JobSeekerManagement/RegisteredJobSeekerManagement';
+import SuperAdminAISearch from './components/JobSeekerManagement/SuperAdminAISearch';
 import MeetingRecords from './components/MeetingRecords/MeetingRecords';
 import MeetingRecordDetail from './components/MeetingRecords/MeetingRecordDetail';
 import JobSeekerInterests from './components/JobSeekerInterests/JobSeekerInterests';
@@ -216,6 +217,7 @@ function App() {
                                     {/* Organization Management (SuperAdmin) */}
                                     <Route path="/organizations" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><OrganizationManagement /></RequireRole></RequireAuth>} />
                                     <Route path="/org-users" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><UserOrgAssignment /></RequireRole></RequireAuth>} />
+                                    <Route path="/ai-search" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><SuperAdminAISearch /></RequireRole></RequireAuth>} />
                                     {/* Booth Queue Routes */}
                                     <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
                                     <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />

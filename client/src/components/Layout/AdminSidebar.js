@@ -70,6 +70,7 @@ function getSidebarKeyFromPath(pathname, role) {
   if (pathname === '/role-messages' || pathname.startsWith('/role-messages/')) return 'role-messages';
   if (pathname === '/organizations' || pathname.startsWith('/organizations/')) return 'organizations';
   if (pathname === '/org-users' || pathname.startsWith('/org-users/')) return 'org-users';
+  if (pathname === '/ai-search' || pathname.startsWith('/ai-search/')) return 'ai-search';
   if (pathname.startsWith('/legal/terms-of-use/edit')) return 'legal-terms-of-use';
   if (pathname.startsWith('/legal/privacy-policy/edit')) return 'legal-privacy-policy';
 
@@ -689,6 +690,9 @@ export default function AdminSidebar({ active = 'booths' }) {
                 </button>
                 <button className={itemClass('org-users')} onClick={() => handleItemClick('/org-users')}>
                   Assign Organization
+                </button>
+                <button className={itemClass('ai-search')} onClick={() => handleItemClick('/ai-search')}>
+                  AI Search
                 </button>
                 <button className={itemClass('jobseeker-survey')} onClick={() => handleItemClick('/jobseeker-survey')}>
                   JobSeeker Survey Data
