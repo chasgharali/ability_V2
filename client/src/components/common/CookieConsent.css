@@ -58,6 +58,7 @@
 
 .cookie-consent-button-primary:hover {
     background-color: #f3f4f6;
+    color: #111827;
 }
 
 .cookie-consent-button-secondary {
