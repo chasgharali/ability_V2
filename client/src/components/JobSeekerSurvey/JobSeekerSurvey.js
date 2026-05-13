@@ -359,7 +359,7 @@ const JobSeekerSurvey = () => {
     const boothOptions = [{ _id: '', name: 'All Booths' }, ...(pendingEvent ? safeBooths.filter(b => b.eventId === pendingEvent) : safeBooths)];
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard">
             <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
