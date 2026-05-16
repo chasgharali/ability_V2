@@ -4,7 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import CopyToAdminModal from '../UI/CopyToAdminModal';
 import roleMessagesAPI from '../../services/roleMessages';
+import { listUsers } from '../../services/users';
 import { MdAdd, MdEdit, MdDelete, MdSave, MdCancel, MdDone, MdClear } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './RoleMessageManagement.css';
@@ -42,6 +44,9 @@ export default function RoleMessageManagement() {
   const [editForm, setEditForm] = useState({ content: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [copyModalOpen, setCopyModalOpen] = useState(false);
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createForm, setCreateForm] = useState({ role: 'JobSeeker', screen: 'my-account', messageKey: 'welcome', content: '', description: '' });
   const navigate = useNavigate();
@@ -49,15 +54,31 @@ export default function RoleMessageManagement() {
   const { show: showToast } = useToast();
 
   useEffect(() => {
-    if (user && ['Admin', 'GlobalSupport'].includes(user.role)) {
+    if (user && ['SuperAdmin', 'Admin', 'GlobalSupport'].includes(user.role)) {
       fetchMessages();
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchAdminUsers = async () => {
+      if (user?.role !== 'SuperAdmin') return;
+      try {
+        const response = await listUsers({ role: 'Admin', limit: 500, isActive: true });
+        setAdminUsers(response.users || []);
+      } catch (err) {
+        console.error('Error fetching admin users:', err);
+      }
+    };
+    fetchAdminUsers();
+  }, [user?.role]);
 
   const fetchMessages = async () => {
     try {
       setLoading(true);
       setError(null);
+      if (user?.role === 'Admin') {
+        await roleMessagesAPI.syncDefaults();
+      }
       console.log('Fetching role messages...'); // Debug log
       const response = await roleMessagesAPI.getAllMessages();
       console.log('Role messages response:', response); // Debug log
@@ -169,7 +190,8 @@ export default function RoleMessageManagement() {
         createForm.screen,
         createForm.messageKey,
         createForm.content,
-        createForm.description
+        createForm.description,
+        user?.role === 'SuperAdmin'
       );
       await fetchMessages();
       setShowCreateForm(false);
@@ -183,6 +205,61 @@ export default function RoleMessageManagement() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSetDefault = async (id) => {
+    try {
+      await roleMessagesAPI.setDefaultMessage(id);
+      await fetchMessages();
+      showToast('Page instruction marked as default and copied to organization admins.', { type: 'success', duration: 3000 });
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to set default page instruction';
+      showToast(errorMsg, { type: 'error', duration: 4000 });
+    }
+  };
+
+  const handleUnsetDefault = async (id) => {
+    try {
+      await roleMessagesAPI.unsetDefaultMessage(id);
+      await fetchMessages();
+      showToast('Page instruction removed from platform defaults.', { type: 'success', duration: 3000 });
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to unset default page instruction';
+      showToast(errorMsg, { type: 'error', duration: 4000 });
+    }
+  };
+
+  const handleCopyToAdmin = async (targetAdminUserId, overwrite) => {
+    if (!selectedMessageId) return;
+    const selectedAdmin = adminUsers.find((admin) => admin._id === targetAdminUserId);
+    try {
+      await roleMessagesAPI.copyMessageToAdmin(selectedMessageId, targetAdminUserId, overwrite);
+      await fetchMessages();
+      showToast(`Page instruction copied to ${selectedAdmin?.name || selectedAdmin?.email || 'selected admin'}.`, { type: 'success', duration: 3000 });
+      setCopyModalOpen(false);
+      setSelectedMessageId(null);
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to copy page instruction';
+      showToast(errorMsg, { type: 'error', duration: 4000 });
+    }
+  };
+
+  const renderCopyRecipients = (message) => {
+    const recipients = Array.isArray(message.copyRecipients) ? message.copyRecipients : [];
+    if (!recipients.length) return <span className="description-text">-</span>;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        {recipients.slice(0, 2).map((recipient) => (
+          <span key={recipient.adminUserId || recipient.adminEmail} className="role-badge">
+            {recipient.adminName || recipient.adminEmail || 'Admin'}
+          </span>
+        ))}
+        {recipients.length > 2 && (
+          <span className="description-text">+{recipients.length - 2} more</span>
+        )}
+      </div>
+    );
   };
 
   const filteredMessages = messages.filter(msg => {
@@ -215,6 +292,17 @@ export default function RoleMessageManagement() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="role-messages" />
+        <CopyToAdminModal
+          isOpen={copyModalOpen}
+          admins={adminUsers}
+          title="Copy Page Instruction to Admin"
+          description="Select an organization admin and choose whether to overwrite existing copy."
+          onCancel={() => {
+            setCopyModalOpen(false);
+            setSelectedMessageId(null);
+          }}
+          onConfirm={handleCopyToAdmin}
+        />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="bm-header">
             <h1>Page Instructions</h1>
@@ -388,6 +476,8 @@ export default function RoleMessageManagement() {
                       <th>Role</th>
                       <th>Screen</th>
                       <th>Message Key</th>
+                      <th>Template</th>
+                      <th>Sent To Admins</th>
                       <th>Content</th>
                       <th>Description</th>
                       <th>Updated</th>
@@ -400,6 +490,20 @@ export default function RoleMessageManagement() {
                         <td><span className="role-badge">{msg.role}</span></td>
                         <td><span className="screen-badge">{msg.screen}</span></td>
                         <td><span className="key-badge">{msg.messageKey}</span></td>
+                        <td>
+                          {msg.isPlatformDefault ? (
+                            <span className="role-badge">Platform Default</span>
+                          ) : msg.sourceTemplateId ? (
+                            msg.lastSyncedAt ? (
+                              <span className="role-badge">Org Copy</span>
+                            ) : (
+                              <span className="role-badge">Customized</span>
+                            )
+                          ) : (
+                            <span className="description-text">-</span>
+                          )}
+                        </td>
+                        <td>{renderCopyRecipients(msg)}</td>
                         <td>
                           {editingId === msg._id ? (
                             <div className="edit-field-wrapper">
@@ -484,6 +588,33 @@ export default function RoleMessageManagement() {
                                   </>
                                 )}
                               </button>
+                              {user?.role === 'SuperAdmin' && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      if (msg.isPlatformDefault) {
+                                        handleUnsetDefault(msg._id);
+                                      } else {
+                                        handleSetDefault(msg._id);
+                                      }
+                                    }}
+                                    className="action-btn"
+                                    title={msg.isPlatformDefault ? 'Remove default template' : 'Set as default template'}
+                                  >
+                                    {msg.isPlatformDefault ? 'Un-default' : 'Default'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedMessageId(msg._id);
+                                      setCopyModalOpen(true);
+                                    }}
+                                    className="action-btn"
+                                    title="Copy to specific admin"
+                                  >
+                                    Copy
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
                         </td>

@@ -4,7 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
+import CopyToAdminModal from '../UI/CopyToAdminModal';
 import { termsConditionsAPI } from '../../services/termsConditions';
+import { listUsers } from '../../services/users';
 import { MdAdd, MdEdit, MdDelete, MdVisibility, MdCheckCircle, MdCancel } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './TermsConditions.css';
@@ -16,6 +18,9 @@ const TermsConditionsList = () => {
     const [selectedRows, setSelectedRows] = useState([]);
     const [processingIds, setProcessingIds] = useState(new Set());
     const [successMessage, setSuccessMessage] = useState(null);
+    const [adminUsers, setAdminUsers] = useState([]);
+    const [copyModalOpen, setCopyModalOpen] = useState(false);
+    const [selectedTermId, setSelectedTermId] = useState(null);
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -23,6 +28,9 @@ const TermsConditionsList = () => {
     const fetchTerms = async () => {
         try {
             setLoading(true);
+            if (user?.role === 'Admin') {
+                await termsConditionsAPI.syncDefaults();
+            }
             const data = await termsConditionsAPI.getAll();
             setTerms(data.terms || []);
         } catch (err) {
@@ -34,8 +42,23 @@ const TermsConditionsList = () => {
     };
 
     useEffect(() => {
-        fetchTerms();
-    }, []);
+        if (user?.role) {
+            fetchTerms();
+        }
+    }, [user?.role]);
+
+    useEffect(() => {
+        const fetchAdminUsers = async () => {
+            if (user?.role !== 'SuperAdmin') return;
+            try {
+                const response = await listUsers({ role: 'Admin', limit: 500, isActive: true });
+                setAdminUsers(response.users || []);
+            } catch (err) {
+                console.error('Error fetching admin users:', err);
+            }
+        };
+        fetchAdminUsers();
+    }, [user?.role]);
 
     // Handle delete terms
     const handleDelete = async (termId, termTitle) => {
@@ -156,6 +179,64 @@ const TermsConditionsList = () => {
         }
     };
 
+    const handleSetDefault = async (termId) => {
+        try {
+            setError(null);
+            setSuccessMessage(null);
+            await termsConditionsAPI.setDefault(termId);
+            await fetchTerms();
+            setSuccessMessage('Terms marked as default and copied to organization admins.');
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to set default terms');
+        }
+    };
+
+    const handleUnsetDefault = async (termId) => {
+        try {
+            setError(null);
+            setSuccessMessage(null);
+            await termsConditionsAPI.unsetDefault(termId);
+            await fetchTerms();
+            setSuccessMessage('Terms removed from platform defaults.');
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to unset default terms');
+        }
+    };
+
+    const handleCopyToAdmin = async (targetAdminUserId, overwrite) => {
+        if (!selectedTermId) return;
+        const selectedAdmin = adminUsers.find((admin) => admin._id === targetAdminUserId);
+        try {
+            setError(null);
+            setSuccessMessage(null);
+            await termsConditionsAPI.copyToAdmin(selectedTermId, targetAdminUserId, overwrite);
+            await fetchTerms();
+            setSuccessMessage(`Terms copied to ${selectedAdmin?.name || selectedAdmin?.email || 'selected admin'}.`);
+            setCopyModalOpen(false);
+            setSelectedTermId(null);
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to copy terms to admin');
+        }
+    };
+
+    const renderCopyRecipients = (row) => {
+        const recipients = Array.isArray(row.copyRecipients) ? row.copyRecipients : [];
+        if (!recipients.length) return <span className="muted">-</span>;
+
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                {recipients.slice(0, 2).map((recipient) => (
+                    <span key={recipient.adminUserId || recipient.adminEmail} className="role-badge">
+                        {recipient.adminName || recipient.adminEmail || 'Admin'}
+                    </span>
+                ))}
+                {recipients.length > 2 && (
+                    <span className="muted">+{recipients.length - 2} more</span>
+                )}
+            </div>
+        );
+    };
+
     // DataGrid columns configuration
     const columns = [
         {
@@ -182,6 +263,24 @@ const TermsConditionsList = () => {
         {
             key: 'version',
             label: 'Version'
+        },
+        {
+            key: 'templateStatus',
+            label: 'Template',
+            render: (row) => {
+                if (row.isPlatformDefault) return <span className="role-badge">Platform Default</span>;
+                if (row.sourceTemplateId) {
+                    return row.lastSyncedAt
+                        ? <span className="role-badge">Org Copy</span>
+                        : <span className="role-badge">Customized</span>;
+                }
+                return <span className="muted">-</span>;
+            }
+        },
+        {
+            key: 'copyRecipients',
+            label: 'Sent To Admins',
+            render: (row) => renderCopyRecipients(row)
         },
         {
             key: 'contentPreview',
@@ -217,17 +316,17 @@ const TermsConditionsList = () => {
             render: (row) => (
                 <div className="terms-actions">
                     <button
-                        className="action-btn view-btn"
+                        className="action-btn action-btn--icon view-btn"
                         onClick={() => navigate(`/terms-conditions/${row._id}`)}
                         title="View Details"
                         aria-label={`View details for ${row.title}`}
                     >
                         <MdVisibility />
                     </button>
-                    {['Admin', 'AdminEvent'].includes(user?.role) && (
+                    {['Admin', 'AdminEvent', 'SuperAdmin'].includes(user?.role) && (
                         <>
                             <button
-                                className="action-btn edit-btn"
+                                className="action-btn action-btn--icon edit-btn"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/terms-conditions/${row._id}/edit`);
@@ -238,8 +337,43 @@ const TermsConditionsList = () => {
                             >
                                 <MdEdit />
                             </button>
+                            {user?.role === 'SuperAdmin' && (
+                                <>
+                                    <button
+                                        className={`action-btn action-btn--text action-btn--default-toggle ${
+                                            row.isPlatformDefault ? 'action-btn--unset-default' : 'action-btn--set-default'
+                                        }`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (row.isPlatformDefault) {
+                                                handleUnsetDefault(row._id);
+                                            } else {
+                                                handleSetDefault(row._id);
+                                            }
+                                        }}
+                                        title={row.isPlatformDefault ? 'Remove default template' : 'Set as default template'}
+                                        aria-label={`${row.isPlatformDefault ? 'Unset default for' : 'Set default for'} ${row.title}`}
+                                        disabled={processingIds.has(row._id)}
+                                    >
+                                        {row.isPlatformDefault ? 'Un-default' : 'Set Default'}
+                                    </button>
+                                    <button
+                                        className="action-btn action-btn--text"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedTermId(row._id);
+                                            setCopyModalOpen(true);
+                                        }}
+                                        title="Copy to specific admin"
+                                        aria-label={`Copy ${row.title} to specific admin`}
+                                        disabled={processingIds.has(row._id)}
+                                    >
+                                        Copy
+                                    </button>
+                                </>
+                            )}
                             <button
-                                className="action-btn toggle-btn"
+                                className="action-btn action-btn--icon toggle-btn"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleToggleActive(row._id, row.isActive, row.title);
@@ -262,7 +396,7 @@ const TermsConditionsList = () => {
                             </button>
                             {!row.isActive && (
                                 <button
-                                    className="action-btn delete-btn"
+                                    className="action-btn action-btn--icon delete-btn"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleDelete(row._id, row.title);
@@ -311,11 +445,22 @@ const TermsConditionsList = () => {
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="terms-conditions" />
+                <CopyToAdminModal
+                    isOpen={copyModalOpen}
+                    admins={adminUsers}
+                    title="Copy Terms to Admin"
+                    description="Select an organization admin and choose whether to overwrite existing copy."
+                    onCancel={() => {
+                        setCopyModalOpen(false);
+                        setSelectedTermId(null);
+                    }}
+                    onConfirm={handleCopyToAdmin}
+                />
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h1>Terms & Conditions Management</h1>
                         <div className="bm-header-actions">
-                            {['Admin', 'AdminEvent'].includes(user?.role) && (
+                            {['Admin', 'AdminEvent', 'SuperAdmin'].includes(user?.role) && (
                                 <button
                                     onClick={() => navigate('/terms-conditions/create')}
                                     className="dashboard-button"

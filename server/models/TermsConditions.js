@@ -55,6 +55,58 @@ const termsConditionsSchema = new mongoose.Schema({
             type: Date,
             default: null
         }
+    },
+    // SuperAdmin-managed platform default template
+    isPlatformDefault: {
+        type: Boolean,
+        default: false
+    },
+    // Source default template when this term is copied to an organization
+    sourceTemplateId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TermsConditions',
+        default: null
+    },
+    // Last time this record was synced from its source template
+    lastSyncedAt: {
+        type: Date,
+        default: null
+    },
+    // Tracks organization admins this template was explicitly copied to
+    copyRecipients: {
+        type: [{
+            adminUserId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+                required: true
+            },
+            adminName: {
+                type: String,
+                default: ''
+            },
+            adminEmail: {
+                type: String,
+                default: ''
+            },
+            organizationId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Organization',
+                required: true
+            },
+            copiedAt: {
+                type: Date,
+                default: Date.now
+            },
+            lastCopiedAt: {
+                type: Date,
+                default: Date.now
+            },
+            copyCount: {
+                type: Number,
+                default: 1
+            }
+        }],
+        default: []
     }
 }, {
     timestamps: true,
@@ -101,6 +153,10 @@ termsConditionsSchema.methods.getSummary = function () {
         isActive: this.isActive,
         isRequired: this.isRequired,
         usage: this.usage,
+        isPlatformDefault: this.isPlatformDefault,
+        sourceTemplateId: this.sourceTemplateId,
+        lastSyncedAt: this.lastSyncedAt,
+        copyRecipients: this.copyRecipients || [],
         createdAt: this.createdAt,
         updatedAt: this.updatedAt
     };

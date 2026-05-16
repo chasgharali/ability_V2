@@ -1,0 +1,57 @@
+.copy-admin-modal__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+}
+
+.copy-admin-modal__container {
+    background: #fff;
+    width: min(520px, 100%);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+}
+
+.copy-admin-modal__title {
+    margin: 0 0 0.4rem;
+}
+
+.copy-admin-modal__description {
+    margin: 0 0 1rem;
+    color: #555;
+}
+
+.copy-admin-modal__label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.4rem;
+}
+
+.copy-admin-modal__select {
+    width: 100%;
+    min-height: 40px;
+    margin-bottom: 0.9rem;
+}
+
+.copy-admin-modal__checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.copy-admin-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+
+.copy-admin-modal__empty {
+    margin: 0 0 1rem;
+    color: #b42318;
+}

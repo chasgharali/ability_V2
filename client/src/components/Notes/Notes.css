@@ -267,6 +267,12 @@
     color: #28a745;
 }
 
+.action-btn.copy-btn:hover {
+    color: #0d6efd;
+    background: #eff6ff;
+    border-color: #0d6efd;
+}
+
 .action-btn.delete-btn:hover {
     color: #dc3545;
 }

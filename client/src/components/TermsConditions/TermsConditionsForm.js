@@ -385,7 +385,7 @@ const TermsConditionsForm = () => {
                                     </div>
                                 </div>
 
-                                {['Admin', 'AdminEvent'].includes(user?.role) && (
+                                {['SuperAdmin', 'Admin', 'AdminEvent'].includes(user?.role) && (
                                     <div className="terms-form-section">
                                         <h3 className="terms-form-section-title">Activation Settings</h3>
                                         <div className="terms-checkbox-group">

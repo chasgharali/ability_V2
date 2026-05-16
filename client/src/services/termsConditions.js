@@ -54,6 +54,31 @@ export const termsConditionsAPI = {
         const response = await axios.put(`/api/terms-conditions/${id}/deactivate`, {}, { headers: authHeaders() });
         return response.data;
     },
+
+    // Mark terms as default template (SuperAdmin)
+    setDefault: async (id) => {
+        const response = await axios.post(`/api/terms-conditions/${id}/set-default`, {}, { headers: authHeaders() });
+        return response.data;
+    },
+
+    // Remove terms from default template list (SuperAdmin)
+    unsetDefault: async (id) => {
+        const response = await axios.post(`/api/terms-conditions/${id}/unset-default`, {}, { headers: authHeaders() });
+        return response.data;
+    },
+
+    // Copy terms template to a specific admin (SuperAdmin)
+    copyToAdmin: async (id, targetAdminUserId, overwrite = false) => {
+        const response = await axios.post(`/api/terms-conditions/${id}/copy-to-admin`, { targetAdminUserId, overwrite }, { headers: authHeaders() });
+        return response.data;
+    },
+
+    // Sync missing default terms into an organization
+    syncDefaults: async (organizationId = null) => {
+        const payload = organizationId ? { organizationId } : {};
+        const response = await axios.post('/api/terms-conditions/sync-defaults', payload, { headers: authHeaders() });
+        return response.data;
+    },
 };
 
 export default termsConditionsAPI;

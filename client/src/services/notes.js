@@ -42,6 +42,31 @@ export const notesAPI = {
         const response = await axios.delete(`/api/notes/${id}`, { headers: authHeaders() });
         return response.data;
     },
+
+    // Mark note as default template (SuperAdmin)
+    setDefault: async (id) => {
+        const response = await axios.post(`/api/notes/${id}/set-default`, {}, { headers: authHeaders() });
+        return response.data;
+    },
+
+    // Remove note from default template list (SuperAdmin)
+    unsetDefault: async (id) => {
+        const response = await axios.post(`/api/notes/${id}/unset-default`, {}, { headers: authHeaders() });
+        return response.data;
+    },
+
+    // Copy note template to a specific admin (SuperAdmin)
+    copyToAdmin: async (id, targetAdminUserId, overwrite = false) => {
+        const response = await axios.post(`/api/notes/${id}/copy-to-admin`, { targetAdminUserId, overwrite }, { headers: authHeaders() });
+        return response.data;
+    },
+
+    // Sync missing default notes into an organization
+    syncDefaults: async (organizationId = null) => {
+        const payload = organizationId ? { organizationId } : {};
+        const response = await axios.post('/api/notes/sync-defaults', payload, { headers: authHeaders() });
+        return response.data;
+    },
 };
 
 export default notesAPI;

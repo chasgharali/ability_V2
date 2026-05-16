@@ -37,6 +37,58 @@ const roleMessageSchema = new mongoose.Schema({
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  // SuperAdmin-managed platform default template
+  isPlatformDefault: {
+    type: Boolean,
+    default: false
+  },
+  // Source default template when this message is copied to an organization
+  sourceTemplateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RoleMessage',
+    default: null
+  },
+  // Last time this record was synced from its source template
+  lastSyncedAt: {
+    type: Date,
+    default: null
+  },
+  // Tracks organization admins this template was explicitly copied to
+  copyRecipients: {
+    type: [{
+      adminUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      adminName: {
+        type: String,
+        default: ''
+      },
+      adminEmail: {
+        type: String,
+        default: ''
+      },
+      organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true
+      },
+      copiedAt: {
+        type: Date,
+        default: Date.now
+      },
+      lastCopiedAt: {
+        type: Date,
+        default: Date.now
+      },
+      copyCount: {
+        type: Number,
+        default: 1
+      }
+    }],
+    default: []
   }
 }, {
   timestamps: true
@@ -47,7 +99,12 @@ roleMessageSchema.index({ organizationId: 1, role: 1, screen: 1, messageKey: 1 }
 
 // Static method to get messages by role and screen (org-aware: org messages override global)
 roleMessageSchema.statics.getMessages = async function(role, screen = null, organizationId = null) {
-  const query = { role, $or: [{ organizationId: null }, { organizationId: organizationId || null }] };
+  const query = { role };
+  if (organizationId) {
+    query.$or = [{ organizationId: null }, { organizationId }];
+  } else {
+    query.organizationId = null;
+  }
   if (screen) query.screen = screen;
   const messages = await this.find(query);
   const result = {};

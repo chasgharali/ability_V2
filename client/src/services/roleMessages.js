@@ -41,14 +41,15 @@ const roleMessagesAPI = {
   },
 
   // Create or update a role message
-  async setMessage(role, screen, messageKey, content, description = '') {
+  async setMessage(role, screen, messageKey, content, description = '', isPlatformDefault = false) {
     try {
       const response = await axios.post('/api/role-messages', {
         role,
         screen,
         messageKey,
         content,
-        description
+        description,
+        isPlatformDefault
       }, { headers: authHeaders() });
       return response.data;
     } catch (error) {
@@ -78,6 +79,50 @@ const roleMessagesAPI = {
       return response.data;
     } catch (error) {
       console.error('Error deleting role message:', error);
+      throw error;
+    }
+  },
+
+  // Mark a page instruction as default template (SuperAdmin)
+  async setDefaultMessage(id) {
+    try {
+      const response = await axios.post(`/api/role-messages/${id}/set-default`, {}, { headers: authHeaders() });
+      return response.data;
+    } catch (error) {
+      console.error('Error setting default role message:', error);
+      throw error;
+    }
+  },
+
+  // Remove page instruction from default template list (SuperAdmin)
+  async unsetDefaultMessage(id) {
+    try {
+      const response = await axios.post(`/api/role-messages/${id}/unset-default`, {}, { headers: authHeaders() });
+      return response.data;
+    } catch (error) {
+      console.error('Error unsetting default role message:', error);
+      throw error;
+    }
+  },
+
+  // Copy page instruction template to a specific admin (SuperAdmin)
+  async copyMessageToAdmin(id, targetAdminUserId, overwrite = false) {
+    try {
+      const response = await axios.post(`/api/role-messages/${id}/copy-to-admin`, { targetAdminUserId, overwrite }, { headers: authHeaders() });
+      return response.data;
+    } catch (error) {
+      console.error('Error copying role message to admin:', error);
+      throw error;
+    }
+  },
+
+  async syncDefaults(organizationId = null) {
+    try {
+      const payload = organizationId ? { organizationId } : {};
+      const response = await axios.post('/api/role-messages/sync-defaults', payload, { headers: authHeaders() });
+      return response.data;
+    } catch (error) {
+      console.error('Error syncing role message defaults:', error);
       throw error;
     }
   }

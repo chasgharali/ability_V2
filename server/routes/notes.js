@@ -3,8 +3,26 @@ const { body, validationResult } = require('express-validator');
 const Note = require('../models/Note');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const {
+    getTargetAdminUser,
+    cloneNoteTemplateToOrganization,
+    syncMissingNotesForOrganization
+} = require('../services/defaultCopyService');
 
 const router = express.Router();
+
+const dedupeOrgPreferred = (notes = [], orgId = null) => {
+    const map = new Map();
+    notes.forEach((note) => {
+        const templateKey = note.sourceTemplateId ? String(note.sourceTemplateId) : String(note._id);
+        const existing = map.get(templateKey);
+        const isOrgRecord = orgId && note.organizationId && String(note.organizationId) === String(orgId);
+        if (!existing || isOrgRecord) {
+            map.set(templateKey, note);
+        }
+    });
+    return Array.from(map.values());
+};
 
 /**
  * GET /api/notes
@@ -27,8 +45,11 @@ router.get('/', authenticateToken, async (req, res) => {
                 query.$or = [{ organizationId: req.orgId }, { organizationId: null }];
             }
         } else if (user.role === 'Admin' && req.orgId) {
-            // OrgAdmin sees only their org's notes
+            await syncMissingNotesForOrganization({ organizationId: req.orgId, actorId: user._id });
             query.organizationId = req.orgId;
+        } else if (user.role === 'SuperAdmin') {
+            // SuperAdmin manages global templates
+            query.organizationId = null;
         }
 
         // Apply type filter
@@ -42,12 +63,13 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         // Find notes
-        const notes = await Note.find(query)
+        const rows = await Note.find(query)
             .populate('createdBy', 'name email')
             .populate('updatedBy', 'name email')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
+        const notes = (req.orgId && user.role !== 'SuperAdmin') ? dedupeOrgPreferred(rows, req.orgId) : rows;
 
         // Get total count for pagination
         const totalCount = await Note.countDocuments(query);
@@ -91,15 +113,25 @@ router.get('/by-role/:type', authenticateToken, async (req, res) => {
             });
         }
 
-        // Find active notes assigned to user's role
-        const notes = await Note.find({
+        if (req.orgId && ['Admin', 'AdminEvent'].includes(user.role)) {
+            await syncMissingNotesForOrganization({ organizationId: req.orgId, actorId: user._id });
+        }
+
+        const roleQuery = {
             type,
             assignedRoles: user.role,
             isActive: true
-        })
+        };
+        if (req.orgId) {
+            roleQuery.$or = [{ organizationId: req.orgId }, { organizationId: null }];
+        }
+
+        // Find active notes assigned to user's role
+        const rows = await Note.find(roleQuery)
             .populate('createdBy', 'name email')
             .populate('updatedBy', 'name email')
             .sort({ createdAt: -1 });
+        const notes = req.orgId ? dedupeOrgPreferred(rows, req.orgId) : rows;
 
         res.json({
             notes: notes.map(note => ({
@@ -150,6 +182,17 @@ router.get('/:id', authenticateToken, async (req, res) => {
                 message: 'You do not have permission to view this note'
             });
         }
+        if (
+            user.role !== 'SuperAdmin' &&
+            req.orgId &&
+            note.organizationId &&
+            String(note.organizationId) !== String(req.orgId)
+        ) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'You can only view notes from your organization'
+            });
+        }
 
         res.json({
             note: {
@@ -159,6 +202,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
                 type: note.type,
                 assignedRoles: note.assignedRoles,
                 isActive: note.isActive,
+                isPlatformDefault: note.isPlatformDefault,
+                sourceTemplateId: note.sourceTemplateId,
+                lastSyncedAt: note.lastSyncedAt,
                 createdAt: note.createdAt,
                 updatedAt: note.updatedAt,
                 createdBy: note.createdBy,
@@ -178,7 +224,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
  * POST /api/notes
  * Create new note
  */
-router.post('/', authenticateToken, requireRole(['Admin']), [
+router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin']), [
     body('title')
         .trim()
         .isLength({ min: 2, max: 200 })
@@ -199,7 +245,11 @@ router.post('/', authenticateToken, requireRole(['Admin']), [
     body('isActive')
         .optional()
         .isBoolean()
-        .withMessage('isActive must be a boolean value')
+        .withMessage('isActive must be a boolean value'),
+    body('isPlatformDefault')
+        .optional()
+        .isBoolean()
+        .withMessage('isPlatformDefault must be a boolean value')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -212,8 +262,9 @@ router.post('/', authenticateToken, requireRole(['Admin']), [
             });
         }
 
-        const { title, content, type, assignedRoles, isActive = true } = req.body;
+        const { title, content, type, assignedRoles, isActive = true, isPlatformDefault = false } = req.body;
         const { user } = req;
+        const canSetDefault = user.role === 'SuperAdmin';
 
         // Create new note
         const note = new Note({
@@ -222,7 +273,8 @@ router.post('/', authenticateToken, requireRole(['Admin']), [
             type,
             assignedRoles,
             isActive,
-            organizationId: req.orgId || null,
+            organizationId: user.role === 'SuperAdmin' ? null : (req.orgId || null),
+            isPlatformDefault: canSetDefault ? Boolean(isPlatformDefault) : false,
             createdBy: user._id,
             updatedBy: user._id
         });
@@ -248,7 +300,7 @@ router.post('/', authenticateToken, requireRole(['Admin']), [
  * PUT /api/notes/:id
  * Update note
  */
-router.put('/:id', authenticateToken, requireRole(['Admin']), [
+router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin']), [
     body('title')
         .optional()
         .trim()
@@ -274,7 +326,11 @@ router.put('/:id', authenticateToken, requireRole(['Admin']), [
     body('isActive')
         .optional()
         .isBoolean()
-        .withMessage('isActive must be a boolean value')
+        .withMessage('isActive must be a boolean value'),
+    body('isPlatformDefault')
+        .optional()
+        .isBoolean()
+        .withMessage('isPlatformDefault must be a boolean value')
 ], async (req, res) => {
     try {
         // Check for validation errors
@@ -287,7 +343,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin']), [
             });
         }
 
-        const { title, content, type, assignedRoles, isActive } = req.body;
+        const { title, content, type, assignedRoles, isActive, isPlatformDefault } = req.body;
         const { id } = req.params;
         const { user } = req;
 
@@ -298,6 +354,23 @@ router.put('/:id', authenticateToken, requireRole(['Admin']), [
                 message: 'The specified note does not exist'
             });
         }
+        if (
+            user.role === 'Admin' &&
+            req.orgId &&
+            note.organizationId &&
+            String(note.organizationId) !== String(req.orgId)
+        ) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'You can only update notes from your organization'
+            });
+        }
+        if (user.role === 'SuperAdmin' && note.organizationId) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'SuperAdmin can only update global default notes from this section'
+            });
+        }
 
         // Update allowed fields
         if (title !== undefined) note.title = title;
@@ -305,6 +378,9 @@ router.put('/:id', authenticateToken, requireRole(['Admin']), [
         if (type !== undefined) note.type = type;
         if (assignedRoles !== undefined) note.assignedRoles = assignedRoles;
         if (isActive !== undefined) note.isActive = isActive;
+        if (user.role === 'SuperAdmin' && isPlatformDefault !== undefined) {
+            note.isPlatformDefault = isPlatformDefault;
+        }
         note.updatedBy = user._id;
 
         await note.save();
@@ -328,7 +404,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin']), [
  * DELETE /api/notes/:id
  * Delete note
  */
-router.delete('/:id', authenticateToken, requireRole(['Admin']), async (req, res) => {
+router.delete('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin']), async (req, res) => {
     try {
         const { id } = req.params;
         const { user } = req;
@@ -338,6 +414,23 @@ router.delete('/:id', authenticateToken, requireRole(['Admin']), async (req, res
             return res.status(404).json({
                 error: 'Note not found',
                 message: 'The specified note does not exist'
+            });
+        }
+        if (
+            user.role === 'Admin' &&
+            req.orgId &&
+            note.organizationId &&
+            String(note.organizationId) !== String(req.orgId)
+        ) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'You can only delete notes from your organization'
+            });
+        }
+        if (user.role === 'SuperAdmin' && note.organizationId) {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'SuperAdmin can only delete global default notes'
             });
         }
 
@@ -354,6 +447,198 @@ router.delete('/:id', authenticateToken, requireRole(['Admin']), async (req, res
         res.status(500).json({
             error: 'Failed to delete note',
             message: 'An error occurred while deleting the note'
+        });
+    }
+});
+
+/**
+ * POST /api/notes/:id/set-default
+ * SuperAdmin: mark note as default template and auto-copy to organizations
+ */
+router.post('/:id/set-default', authenticateToken, requireRole(['SuperAdmin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const templateNote = await Note.findOne({ _id: id, organizationId: null });
+        if (!templateNote) {
+            return res.status(404).json({
+                error: 'Note not found',
+                message: 'Default template note not found'
+            });
+        }
+
+        templateNote.isPlatformDefault = true;
+        templateNote.updatedBy = req.user._id;
+        await templateNote.save();
+
+        res.json({
+            message: 'Note set as platform default successfully'
+        });
+    } catch (error) {
+        logger.error('Set default note error:', error);
+        res.status(500).json({
+            error: 'Failed to set default note',
+            message: 'An error occurred while setting default note template'
+        });
+    }
+});
+
+/**
+ * POST /api/notes/:id/unset-default
+ * SuperAdmin: remove platform default flag from note template
+ */
+router.post('/:id/unset-default', authenticateToken, requireRole(['SuperAdmin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const templateNote = await Note.findOne({ _id: id, organizationId: null });
+        if (!templateNote) {
+            return res.status(404).json({
+                error: 'Note not found',
+                message: 'Default template note not found'
+            });
+        }
+
+        templateNote.isPlatformDefault = false;
+        templateNote.updatedBy = req.user._id;
+        await templateNote.save();
+
+        res.json({
+            message: 'Note removed from platform defaults'
+        });
+    } catch (error) {
+        logger.error('Unset default note error:', error);
+        res.status(500).json({
+            error: 'Failed to unset default note',
+            message: 'An error occurred while unsetting default note template'
+        });
+    }
+});
+
+/**
+ * POST /api/notes/:id/copy-to-admin
+ * SuperAdmin: copy default note to a specific organization admin
+ */
+router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin']), [
+    body('targetAdminUserId')
+        .trim()
+        .notEmpty()
+        .withMessage('targetAdminUserId is required'),
+    body('overwrite')
+        .optional()
+        .isBoolean()
+        .withMessage('overwrite must be a boolean value')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: errors.array()
+            });
+        }
+
+        const { id } = req.params;
+        const { targetAdminUserId, overwrite = false } = req.body;
+
+        const templateNote = await Note.findOne({ _id: id, organizationId: null });
+        if (!templateNote) {
+            return res.status(404).json({
+                error: 'Note not found',
+                message: 'Default template note not found'
+            });
+        }
+
+        const adminUser = await getTargetAdminUser(targetAdminUserId);
+
+        if (!adminUser) {
+            return res.status(404).json({
+                error: 'Admin not found',
+                message: 'Target admin user not found or has no organization'
+            });
+        }
+
+        const { record: copiedNote } = await cloneNoteTemplateToOrganization({
+            template: templateNote,
+            organizationId: adminUser.organizationId,
+            actorId: req.user._id,
+            overwrite
+        });
+
+        const now = new Date();
+        const recipients = Array.isArray(templateNote.copyRecipients) ? templateNote.copyRecipients : [];
+        const existingIndex = recipients.findIndex(
+            (recipient) => String(recipient.adminUserId) === String(adminUser._id)
+        );
+
+        if (existingIndex >= 0) {
+            recipients[existingIndex].adminName = adminUser.name || recipients[existingIndex].adminName || '';
+            recipients[existingIndex].adminEmail = adminUser.email || recipients[existingIndex].adminEmail || '';
+            recipients[existingIndex].organizationId = adminUser.organizationId;
+            recipients[existingIndex].lastCopiedAt = now;
+            recipients[existingIndex].copyCount = (recipients[existingIndex].copyCount || 0) + 1;
+        } else {
+            recipients.push({
+                adminUserId: adminUser._id,
+                adminName: adminUser.name || '',
+                adminEmail: adminUser.email || '',
+                organizationId: adminUser.organizationId,
+                copiedAt: now,
+                lastCopiedAt: now,
+                copyCount: 1
+            });
+        }
+
+        templateNote.copyRecipients = recipients;
+        templateNote.updatedBy = req.user._id;
+        await templateNote.save();
+
+        res.json({
+            message: `Note copied to ${adminUser.name || adminUser.email} successfully`,
+            note: copiedNote.getSummary()
+        });
+    } catch (error) {
+        logger.error('Copy note to admin error:', error);
+        res.status(500).json({
+            error: 'Failed to copy note',
+            message: 'An error occurred while copying note to selected admin'
+        });
+    }
+});
+
+/**
+ * POST /api/notes/sync-defaults
+ * Materialize missing org copies from platform defaults
+ */
+router.post('/sync-defaults', authenticateToken, requireRole(['SuperAdmin', 'Admin']), async (req, res) => {
+    try {
+        if (!req.orgId && req.user.role !== 'SuperAdmin') {
+            return res.status(400).json({
+                error: 'Organization missing',
+                message: 'Organization context is required to sync defaults'
+            });
+        }
+
+        const organizationId = req.user.role === 'SuperAdmin' ? req.body?.organizationId : req.orgId;
+        if (!organizationId) {
+            return res.status(400).json({
+                error: 'organizationId required',
+                message: 'SuperAdmin must provide organizationId to sync defaults'
+            });
+        }
+
+        const createdCount = await syncMissingNotesForOrganization({
+            organizationId,
+            actorId: req.user._id
+        });
+
+        res.json({
+            message: 'Notes defaults sync completed',
+            createdCount
+        });
+    } catch (error) {
+        logger.error('Sync notes defaults error:', error);
+        res.status(500).json({
+            error: 'Failed to sync note defaults',
+            message: 'An error occurred while syncing note defaults'
         });
     }
 });

@@ -157,7 +157,7 @@ const TermsConditionsView = () => {
                                 <MdArrowBack />
                                 Back to List
                             </button>
-                            {['Admin', 'AdminEvent'].includes(user?.role) && (
+                            {['SuperAdmin', 'Admin', 'AdminEvent'].includes(user?.role) && (
                                 <>
                                     <button
                                         onClick={() => navigate(`/terms-conditions/${id}/edit`)}

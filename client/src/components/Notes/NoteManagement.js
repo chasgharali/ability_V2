@@ -4,7 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
+import CopyToAdminModal from '../UI/CopyToAdminModal';
 import { notesAPI } from '../../services/notes';
+import { listUsers } from '../../services/users';
 import { MdAdd, MdEdit, MdDelete, MdVisibility } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './Notes.css';
@@ -13,7 +15,11 @@ const NoteManagement = () => {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
     const [filterType, setFilterType] = useState('all'); // 'all', 'troubleshooting', 'instruction'
+    const [adminUsers, setAdminUsers] = useState([]);
+    const [copyModalOpen, setCopyModalOpen] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState(null);
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -22,6 +28,9 @@ const NoteManagement = () => {
         try {
             setLoading(true);
             const params = {};
+            if (user?.role === 'Admin') {
+                await notesAPI.syncDefaults();
+            }
             if (filterType !== 'all') {
                 params.type = filterType;
             }
@@ -36,10 +45,23 @@ const NoteManagement = () => {
     };
 
     useEffect(() => {
-        if (user?.role === 'Admin') {
+        if (['Admin', 'SuperAdmin'].includes(user?.role)) {
             fetchNotes();
         }
     }, [filterType, user?.role]);
+
+    useEffect(() => {
+        const fetchAdminUsers = async () => {
+            if (user?.role !== 'SuperAdmin') return;
+            try {
+                const response = await listUsers({ role: 'Admin', limit: 500, isActive: true });
+                setAdminUsers(response.users || []);
+            } catch (err) {
+                console.error('Error fetching admin users:', err);
+            }
+        };
+        fetchAdminUsers();
+    }, [user?.role]);
 
     // Handle delete note
     const handleDelete = async (noteId) => {
@@ -54,6 +76,64 @@ const NoteManagement = () => {
             setError(err.response?.data?.message || err.message || 'Failed to delete note');
             console.error('Error deleting note:', err);
         }
+    };
+
+    const handleSetDefault = async (noteId) => {
+        try {
+            setError(null);
+            setSuccessMessage(null);
+            await notesAPI.setDefault(noteId);
+            await fetchNotes();
+            setSuccessMessage('Note marked as default and copied to organization admins.');
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to set default note');
+        }
+    };
+
+    const handleUnsetDefault = async (noteId) => {
+        try {
+            setError(null);
+            setSuccessMessage(null);
+            await notesAPI.unsetDefault(noteId);
+            await fetchNotes();
+            setSuccessMessage('Note removed from platform defaults.');
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to unset default note');
+        }
+    };
+
+    const handleCopyToAdmin = async (targetAdminUserId, overwrite) => {
+        if (!selectedNoteId) return;
+        const selectedAdmin = adminUsers.find((admin) => admin._id === targetAdminUserId);
+        try {
+            setError(null);
+            setSuccessMessage(null);
+            await notesAPI.copyToAdmin(selectedNoteId, targetAdminUserId, overwrite);
+            await fetchNotes();
+            setSuccessMessage(`Note copied to ${selectedAdmin?.name || selectedAdmin?.email || 'selected admin'}.`);
+            setCopyModalOpen(false);
+            setSelectedNoteId(null);
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to copy note to admin');
+        }
+    };
+
+    const renderCopyRecipients = (row) => {
+        const recipients = Array.isArray(row.copyRecipients) ? row.copyRecipients : [];
+        if (!recipients.length) return <span className="muted">-</span>;
+
+        return (
+            <div className="roles-list">
+                {recipients.slice(0, 2).map((recipient) => (
+                    <span key={recipient.adminUserId || recipient.adminEmail} className="role-badge">
+                        {recipient.adminName || recipient.adminEmail || 'Admin'}
+                    </span>
+                ))}
+                {recipients.length > 2 && (
+                    <span className="muted">+{recipients.length - 2} more</span>
+                )}
+            </div>
+        );
     };
 
     // DataGrid columns configuration
@@ -102,6 +182,24 @@ const NoteManagement = () => {
             )
         },
         {
+            key: 'templateStatus',
+            label: 'Template',
+            render: (row) => {
+                if (row.isPlatformDefault) return <span className="role-badge">Platform Default</span>;
+                if (row.sourceTemplateId) {
+                    return row.lastSyncedAt
+                        ? <span className="role-badge">Org Copy</span>
+                        : <span className="role-badge">Customized</span>;
+                }
+                return <span className="muted">-</span>;
+            }
+        },
+        {
+            key: 'copyRecipients',
+            label: 'Sent To Admins',
+            render: (row) => renderCopyRecipients(row)
+        },
+        {
             key: 'createdAt',
             label: 'Created',
             render: (row) => new Date(row.createdAt).toLocaleDateString()
@@ -124,7 +222,7 @@ const NoteManagement = () => {
                         <MdVisibility aria-hidden="true" />
                         <span>View</span>
                     </button>
-                    {user?.role === 'Admin' && (
+                    {['Admin', 'SuperAdmin'].includes(user?.role) && (
                         <>
                             <button
                                 type="button"
@@ -139,6 +237,37 @@ const NoteManagement = () => {
                                 <MdEdit aria-hidden="true" />
                                 <span>Edit</span>
                             </button>
+                            {user?.role === 'SuperAdmin' && (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="action-btn action-btn--labeled"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (row.isPlatformDefault) {
+                                                handleUnsetDefault(row._id);
+                                            } else {
+                                                handleSetDefault(row._id);
+                                            }
+                                        }}
+                                        title={row.isPlatformDefault ? 'Remove default template' : 'Set as default template'}
+                                    >
+                                        <span>{row.isPlatformDefault ? 'Un-default' : 'Set Default'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="action-btn copy-btn action-btn--labeled"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedNoteId(row._id);
+                                            setCopyModalOpen(true);
+                                        }}
+                                        title="Copy to specific admin"
+                                    >
+                                        <span>Copy</span>
+                                    </button>
+                                </>
+                            )}
                             <button
                                 type="button"
                                 className="action-btn delete-btn"
@@ -173,36 +302,28 @@ const NoteManagement = () => {
         );
     }
 
-    if (error) {
-        return (
-            <div className="dashboard">
-                <a href="#main-content" className="skip-link">Skip to main content</a>
-                <AdminHeader />
-                <div className="dashboard-layout">
-                    <AdminSidebar active="notes" />
-                    <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
-                        <div className="error">
-                            <h3>Error</h3>
-                            <p>{error}</p>
-                            <button onClick={fetchNotes} className="dashboard-button" style={{ width: 'auto' }}>Retry</button>
-                        </div>
-                    </main>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="dashboard">
             <a href="#main-content" className="skip-link">Skip to main content</a>
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="notes" />
+                <CopyToAdminModal
+                    isOpen={copyModalOpen}
+                    admins={adminUsers}
+                    title="Copy Note to Admin"
+                    description="Select an organization admin and choose whether to overwrite existing copy."
+                    onCancel={() => {
+                        setCopyModalOpen(false);
+                        setSelectedNoteId(null);
+                    }}
+                    onConfirm={handleCopyToAdmin}
+                />
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">
                         <h1>Notes Management</h1>
                         <div className="bm-header-actions">
-                            {user?.role === 'Admin' && (
+                            {['Admin', 'SuperAdmin'].includes(user?.role) && (
                                 <>
                                     <select
                                         value={filterType}
@@ -229,6 +350,11 @@ const NoteManagement = () => {
                     </div>
 
                     <div className="dashboard-content-area">
+                        {(error || successMessage) && (
+                            <div className={`terms-message ${error ? 'terms-error-message' : 'terms-success-message'}`} style={{ marginBottom: '1rem' }}>
+                                {error || successMessage}
+                            </div>
+                        )}
                         <DataGrid
                             data={notes}
                             columns={columns}

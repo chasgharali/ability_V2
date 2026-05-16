@@ -697,8 +697,31 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('jobseeker-survey')} onClick={() => handleItemClick('/jobseeker-survey')}>
                   JobSeeker Survey Data
                 </button>
+              </div>
+            )}
+          </div>
+          <div className="sidebar-section">
+            <button
+              className="sidebar-header"
+              onClick={() => setExpanded(s => ({ ...s, configuration: !s.configuration }))}
+              aria-expanded={expanded.configuration}
+            >
+              <span>Configuration</span>
+              {expanded.configuration ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.configuration && (
+              <div className="sidebar-items">
                 <button className={itemClass('branding')} onClick={() => handleItemClick('/branding')}>
                   Branding - Header Logo
+                </button>
+                <button className={itemClass('terms-conditions')} onClick={() => handleItemClick('/terms-conditions')}>
+                  Terms & Conditions
+                </button>
+                <button className={itemClass('notes')} onClick={() => handleItemClick('/notes')}>
+                  Notes Management
+                </button>
+                <button className={itemClass('role-messages')} onClick={() => handleItemClick('/role-messages')}>
+                  Page Instructions
                 </button>
               </div>
             )}

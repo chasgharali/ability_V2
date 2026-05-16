@@ -107,7 +107,7 @@ const NoteView = () => {
                                 <MdArrowBack />
                                 Back to List
                             </button>
-                            {user?.role === 'Admin' && (
+                            {['Admin', 'SuperAdmin'].includes(user?.role) && (
                                 <button
                                     onClick={() => navigate(`/notes/${id}/edit`)}
                                     className="dashboard-button"
