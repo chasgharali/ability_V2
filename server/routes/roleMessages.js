@@ -26,8 +26,12 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
         actorId: req.user._id
       });
       query.organizationId = req.orgId;
+    } else if (req.user.role === 'Admin') {
+      return res.status(400).json({ success: false, error: 'Organization context is required for Admin users' });
+    } else if (req.user.role === 'GlobalSupport') {
+      query.organizationId = req.orgId || null;
     }
-    const messages = await RoleMessage.find(query).populate('updatedBy', 'name email').sort({ role: 1, screen: 1, messageKey: 1 });
+    const messages = await RoleMessage.find(query).populate('updatedBy', 'name email').sort({ role: 1, screen: 1 });
     res.json({ success: true, messages });
   } catch (error) {
     logger.error('Error fetching role messages:', error);
@@ -101,7 +105,6 @@ router.get('/:role/:screen/:messageKey', authenticateToken, async (req, res) => 
 router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSupport']), [
   body('role').isIn(['JobSeeker', 'Recruiter', 'BoothAdmin', 'Admin', 'AdminEvent', 'Support', 'GlobalSupport', 'Interpreter', 'GlobalInterpreter']).withMessage('Invalid role'),
   body('screen').trim().notEmpty().withMessage('Screen is required'),
-  body('messageKey').trim().notEmpty().withMessage('Message key is required'),
   body('content').trim().notEmpty().withMessage('Content is required'),
   body('description').optional().trim(),
   body('isPlatformDefault').optional().isBoolean().withMessage('isPlatformDefault must be a boolean value')
@@ -112,11 +115,10 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { role, screen, messageKey, content, description, isPlatformDefault = false } = req.body;
+    const { role, screen, content, description, isPlatformDefault = false } = req.body;
     const message = await RoleMessage.setMessage(
       role,
       screen,
-      messageKey,
       content,
       req.user.id,
       description || '',
@@ -132,7 +134,7 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
   } catch (error) {
     logger.error('Error saving role message:', error);
     if (error.code === 11000) {
-      return res.status(400).json({ success: false, error: 'Message already exists for this role, screen, and key' });
+      return res.status(400).json({ success: false, error: 'Message already exists for this role and screen' });
     }
     res.status(500).json({ success: false, error: 'Failed to save role message' });
   }

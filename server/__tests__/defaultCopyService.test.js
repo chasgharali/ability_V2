@@ -40,7 +40,8 @@ const {
     getTargetAdminUser,
     cloneNoteTemplateToOrganization,
     cloneTermsTemplateToOrganization,
-    cloneRoleMessageTemplateToOrganization
+    cloneRoleMessageTemplateToOrganization,
+    syncMissingRoleMessagesForOrganization
 } = require('../services/defaultCopyService');
 
 describe('defaultCopyService', () => {
@@ -130,5 +131,43 @@ describe('defaultCopyService', () => {
         expect(result.changed).toBe(true);
         expect(result.record.sourceTemplateId).toBe('tpl-msg');
         expect(result.record.organizationId).toBe('org-1');
+    });
+
+    test('syncMissingRoleMessagesForOrganization creates only missing org copies', async () => {
+        RoleMessage.find.mockResolvedValue([
+            {
+                _id: 'tpl-msg-1',
+                role: 'JobSeeker',
+                screen: 'event-registration',
+                messageKey: 'registration-instruction',
+                content: 'Template 1'
+            },
+            {
+                _id: 'tpl-msg-2',
+                role: 'Recruiter',
+                screen: 'dashboard',
+                messageKey: 'welcome',
+                content: 'Template 2'
+            }
+        ]);
+
+        const existingCopy = {
+            _id: 'existing-copy',
+            save: jest.fn().mockResolvedValue()
+        };
+
+        RoleMessage.findOne
+            .mockResolvedValueOnce(existingCopy)
+            .mockResolvedValueOnce(null);
+
+        const createdCount = await syncMissingRoleMessagesForOrganization({
+            organizationId: 'org-1',
+            actorId: 'actor-1'
+        });
+
+        expect(createdCount).toBe(1);
+        expect(existingCopy.save).not.toHaveBeenCalled();
+        expect(RoleMessage.find).toHaveBeenCalledWith({ organizationId: null, isPlatformDefault: true });
+        expect(RoleMessage).toHaveBeenCalledTimes(1);
     });
 });

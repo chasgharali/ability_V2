@@ -101,8 +101,7 @@ async function cloneRoleMessageTemplateToOrganization({ template, organizationId
             {
                 sourceTemplateId: null,
                 role: template.role,
-                screen: template.screen,
-                messageKey: template.messageKey
+                screen: template.screen
             }
         ]
     });
@@ -115,7 +114,6 @@ async function cloneRoleMessageTemplateToOrganization({ template, organizationId
         existing = new RoleMessage({
             role: template.role,
             screen: template.screen,
-            messageKey: template.messageKey,
             content: template.content,
             description: template.description || '',
             organizationId,

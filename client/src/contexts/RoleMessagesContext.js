@@ -3,52 +3,81 @@ import { useAuth } from './AuthContext';
 import roleMessagesAPI from '../services/roleMessages';
 
 const RoleMessagesContext = createContext(null);
+const ELEVATED_ROLES = new Set(['SuperAdmin', 'Admin', 'GlobalSupport', 'AdminEvent']);
+const SCREEN_ROLE_MAP = {
+  'my-account': 'JobSeeker',
+  'delete-account': 'JobSeeker',
+  'edit-profile': 'JobSeeker',
+  'view-profile': 'JobSeeker',
+  'event-registration': 'JobSeeker',
+  survey: 'JobSeeker',
+  dashboard: 'Recruiter',
+  'meeting-queue': 'Recruiter',
+  'meeting-records': 'Recruiter',
+  'jobseeker-interests': 'Recruiter',
+  'interpreter-dashboard': 'Interpreter',
+  troubleshooting: 'Interpreter',
+  instructions: 'Interpreter'
+};
+
+const normalizeMessages = (payload) => {
+  if (typeof payload === 'object' && payload !== null && !Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload)) {
+    const messagesMap = {};
+    payload.forEach((msg) => {
+      if (!msg.screen) return;
+      if (!messagesMap[msg.screen]) {
+        messagesMap[msg.screen] = {};
+      }
+      messagesMap[msg.screen][msg.messageKey || 'default'] = msg.content;
+    });
+    return messagesMap;
+  }
+
+  return {};
+};
 
 export function RoleMessagesProvider({ children }) {
   const { user } = useAuth();
-  const [messages, setMessages] = useState({});
+  const [messagesByRole, setMessagesByRole] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch all role messages for the current user's role
+  const resolveTargetRole = useCallback((screen, explicitRole) => {
+    if (explicitRole) return explicitRole;
+    if (SCREEN_ROLE_MAP[screen]) return SCREEN_ROLE_MAP[screen];
+    return user?.role || null;
+  }, [user?.role]);
+
+  // Fetch role messages for current user role (and audience roles for elevated users).
   const fetchMessages = useCallback(async () => {
     if (!user?.role) {
-      setMessages({});
+      setMessagesByRole({});
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      const response = await roleMessagesAPI.getMessagesByRole(user.role);
-      if (response.success && response.messages) {
-        // The server's getMessages returns a nested object: { screen: { messageKey: content } }
-        // So response.messages is already in the correct format
-        if (typeof response.messages === 'object' && !Array.isArray(response.messages)) {
-          // Already in nested object format: { screen: { messageKey: content } }
-          setMessages(response.messages);
-        } else if (Array.isArray(response.messages)) {
-          // If it's an array, convert to nested object structure
-          const messagesMap = {};
-          response.messages.forEach(msg => {
-            if (msg.screen && msg.messageKey) {
-              if (!messagesMap[msg.screen]) {
-                messagesMap[msg.screen] = {};
-              }
-              messagesMap[msg.screen][msg.messageKey] = msg.content;
-            }
-          });
-          setMessages(messagesMap);
-        } else {
-          setMessages({});
-        }
-      } else {
-        setMessages({});
-      }
+      const rolesToFetch = ELEVATED_ROLES.has(user.role)
+        ? ['JobSeeker', 'Recruiter', 'Interpreter']
+        : [user.role];
+      const responses = await Promise.all(rolesToFetch.map((role) => roleMessagesAPI.getMessagesByRole(role)));
+      const nextMessagesByRole = {};
+
+      rolesToFetch.forEach((role, index) => {
+        const response = responses[index];
+        nextMessagesByRole[role] = response?.success ? normalizeMessages(response.messages) : {};
+      });
+
+      setMessagesByRole(nextMessagesByRole);
     } catch (err) {
       console.error('Error fetching role messages:', err);
       setError(err);
-      setMessages({});
+      setMessagesByRole({});
     } finally {
       setLoading(false);
     }
@@ -59,10 +88,26 @@ export function RoleMessagesProvider({ children }) {
     fetchMessages();
   }, [fetchMessages]);
 
-  // Get a specific message by screen and messageKey
-  const getMessage = useCallback((screen, messageKey) => {
-    return messages[screen]?.[messageKey] || null;
-  }, [messages]);
+  // Get a specific message by screen and messageKey, with optional role override.
+  const getMessage = useCallback((screen, messageKey, role = null) => {
+    const targetRole = resolveTargetRole(screen, role);
+    if (!targetRole) return null;
+    const screenMessages = messagesByRole[targetRole]?.[screen];
+    if (!screenMessages || typeof screenMessages !== 'object') {
+      return null;
+    }
+
+    if (messageKey && screenMessages[messageKey]) {
+      return screenMessages[messageKey];
+    }
+
+    if (screenMessages.default) {
+      return screenMessages.default;
+    }
+
+    const firstMessage = Object.values(screenMessages)[0];
+    return firstMessage || null;
+  }, [messagesByRole, resolveTargetRole]);
 
   // Refresh messages (useful after admin updates)
   const refreshMessages = useCallback(() => {
@@ -70,7 +115,8 @@ export function RoleMessagesProvider({ children }) {
   }, [fetchMessages]);
 
   const value = {
-    messages,
+    messages: messagesByRole[user?.role] || {},
+    messagesByRole,
     loading,
     error,
     getMessage,

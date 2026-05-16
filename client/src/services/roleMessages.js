@@ -41,12 +41,11 @@ const roleMessagesAPI = {
   },
 
   // Create or update a role message
-  async setMessage(role, screen, messageKey, content, description = '', isPlatformDefault = false) {
+  async setMessage(role, screen, content, description = '', isPlatformDefault = false) {
     try {
       const response = await axios.post('/api/role-messages', {
         role,
         screen,
-        messageKey,
         content,
         description,
         isPlatformDefault

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const DEFAULT_MESSAGE_KEY = 'default';
 
 const roleMessageSchema = new mongoose.Schema({
   role: {
@@ -15,7 +16,7 @@ const roleMessageSchema = new mongoose.Schema({
   },
   messageKey: {
     type: String,
-    required: true,
+    default: DEFAULT_MESSAGE_KEY,
     trim: true
   },
   content: {
@@ -94,8 +95,8 @@ const roleMessageSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index — uniqueness scoped per organization
-roleMessageSchema.index({ organizationId: 1, role: 1, screen: 1, messageKey: 1 }, { unique: true });
+// Compound index — one instruction per role+screen within an organization scope
+roleMessageSchema.index({ organizationId: 1, role: 1, screen: 1 }, { unique: true });
 
 // Static method to get messages by role and screen (org-aware: org messages override global)
 roleMessageSchema.statics.getMessages = async function(role, screen = null, organizationId = null) {
@@ -116,29 +117,32 @@ roleMessageSchema.statics.getMessages = async function(role, screen = null, orga
   });
   sorted.forEach(msg => {
     if (!result[msg.screen]) result[msg.screen] = {};
-    result[msg.screen][msg.messageKey] = msg.content;
+    result[msg.screen][msg.messageKey || DEFAULT_MESSAGE_KEY] = msg.content;
   });
   return result;
 };
 
 // Static method to get a specific message
 roleMessageSchema.statics.getMessage = async function(role, screen, messageKey, organizationId = null) {
-  // Try org-specific first, fall back to global
-  const orgMsg = organizationId ? await this.findOne({ role, screen, messageKey, organizationId }) : null;
+  // Try org-specific first, fall back to global. messageKey is legacy and optional now.
+  const orgMsg = organizationId
+    ? await this.findOne({ role, screen, organizationId }).sort({ updatedAt: -1 })
+    : null;
   if (orgMsg) return orgMsg.content;
-  const globalMsg = await this.findOne({ role, screen, messageKey, organizationId: null });
+  const globalMsg = await this.findOne({ role, screen, organizationId: null }).sort({ updatedAt: -1 });
   return globalMsg ? globalMsg.content : null;
 };
 
 // Static method to set/update a message
-roleMessageSchema.statics.setMessage = async function(role, screen, messageKey, content, userId = null, description = '', organizationId = null) {
+roleMessageSchema.statics.setMessage = async function(role, screen, content, userId = null, description = '', organizationId = null) {
   return await this.findOneAndUpdate(
-    { role, screen, messageKey, organizationId: organizationId || null },
+    { role, screen, organizationId: organizationId || null },
     {
       content: content.trim(),
       updatedBy: userId,
       description: description.trim() || description,
-      organizationId: organizationId || null
+      organizationId: organizationId || null,
+      messageKey: DEFAULT_MESSAGE_KEY
     },
     {
       upsert: true,
@@ -148,5 +152,28 @@ roleMessageSchema.statics.setMessage = async function(role, screen, messageKey, 
   );
 };
 
-module.exports = mongoose.model('RoleMessage', roleMessageSchema);
+roleMessageSchema.statics.dropLegacyIndexes = async function() {
+  const indexNames = ['role_1_screen_1_messageKey_1', 'organizationId_1_role_1_screen_1_messageKey_1'];
+  for (const indexName of indexNames) {
+    try {
+      await this.collection.dropIndex(indexName);
+    } catch (error) {
+      if (error.codeName !== 'IndexNotFound') {
+        throw error;
+      }
+    }
+  }
+};
+
+const RoleMessage = mongoose.model('RoleMessage', roleMessageSchema);
+
+if (mongoose.connection.readyState === 1) {
+  RoleMessage.dropLegacyIndexes().catch(() => {});
+} else {
+  mongoose.connection.once('open', () => {
+    RoleMessage.dropLegacyIndexes().catch(() => {});
+  });
+}
+
+module.exports = RoleMessage;
 

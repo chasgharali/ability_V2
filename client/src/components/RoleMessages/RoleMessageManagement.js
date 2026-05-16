@@ -18,22 +18,6 @@ const SCREENS = {
   'Interpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions']
 };
 
-const MESSAGE_KEYS = {
-  'my-account': ['welcome'],
-  'delete-account': ['warning'],
-  'edit-profile': ['info-banner'],
-  'view-profile': ['profile-notice'],
-  'event-registration': ['registration-instruction'],
-  'survey': ['info-banner'],
-  'dashboard': ['welcome'],
-  'interpreter-dashboard': ['welcome'],
-  'troubleshooting': ['info-banner'],
-  'instructions': ['info-banner'],
-  'meeting-queue': ['info-banner'],
-  'meeting-records': ['info-banner'],
-  'jobseeker-interests': ['info-banner']
-};
-
 export default function RoleMessageManagement() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +32,7 @@ export default function RoleMessageManagement() {
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createForm, setCreateForm] = useState({ role: 'JobSeeker', screen: 'my-account', messageKey: 'welcome', content: '', description: '' });
+  const [createForm, setCreateForm] = useState({ role: 'JobSeeker', screen: 'my-account', content: '', description: '' });
   const navigate = useNavigate();
   const { user } = useAuth();
   const { show: showToast } = useToast();
@@ -63,8 +47,16 @@ export default function RoleMessageManagement() {
     const fetchAdminUsers = async () => {
       if (user?.role !== 'SuperAdmin') return;
       try {
-        const response = await listUsers({ role: 'Admin', limit: 500, isActive: true });
-        setAdminUsers(response.users || []);
+        const [adminsResponse, adminEventsResponse] = await Promise.all([
+          listUsers({ role: 'Admin', limit: 500, isActive: true }),
+          listUsers({ role: 'AdminEvent', limit: 500, isActive: true })
+        ]);
+
+        const mergedUsers = [...(adminsResponse.users || []), ...(adminEventsResponse.users || [])];
+        const uniqueUsers = Array.from(
+          new Map(mergedUsers.map((admin) => [String(admin._id), admin])).values()
+        );
+        setAdminUsers(uniqueUsers);
       } catch (err) {
         console.error('Error fetching admin users:', err);
       }
@@ -79,16 +71,12 @@ export default function RoleMessageManagement() {
       if (user?.role === 'Admin') {
         await roleMessagesAPI.syncDefaults();
       }
-      console.log('Fetching role messages...'); // Debug log
       const response = await roleMessagesAPI.getAllMessages();
-      console.log('Role messages response:', response); // Debug log
       
       if (response && response.success !== false) {
         const messagesArray = response.messages || [];
-        console.log(`Loaded ${messagesArray.length} role messages`); // Debug log
         setMessages(messagesArray);
       } else {
-        console.warn('Unexpected response format:', response);
         setMessages([]);
         if (response && response.error) {
           setError(response.error);
@@ -142,7 +130,7 @@ export default function RoleMessageManagement() {
   const handleDelete = async (id) => {
     const message = messages.find(m => m._id === id);
     const confirmMsg = message 
-      ? `Are you sure you want to delete the message for ${message.role} / ${message.screen} / ${message.messageKey}?`
+      ? `Are you sure you want to delete the message for ${message.role} / ${message.screen}?`
       : 'Are you sure you want to delete this message?';
     
     if (!window.confirm(confirmMsg)) {
@@ -169,17 +157,15 @@ export default function RoleMessageManagement() {
       showToast('Content cannot be empty', { type: 'error', duration: 3000 });
       return;
     }
-    
-    // Check for duplicate message (same role, screen, messageKey)
+    // Check for duplicate message (same role and screen)
     const duplicate = messages.find(
       msg => 
         msg.role === createForm.role && 
-        msg.screen === createForm.screen && 
-        msg.messageKey === createForm.messageKey
+        msg.screen === createForm.screen
     );
     
     if (duplicate) {
-      showToast('A message with this role, screen, and message key already exists. Please edit the existing message instead.', { type: 'error', duration: 4000 });
+      showToast('A message with this role and screen already exists. Please edit the existing message instead.', { type: 'error', duration: 4000 });
       return;
     }
     
@@ -188,14 +174,13 @@ export default function RoleMessageManagement() {
       await roleMessagesAPI.setMessage(
         createForm.role,
         createForm.screen,
-        createForm.messageKey,
         createForm.content,
         createForm.description,
-        user?.role === 'SuperAdmin'
+        false
       );
       await fetchMessages();
       setShowCreateForm(false);
-      setCreateForm({ role: 'JobSeeker', screen: 'my-account', messageKey: 'welcome', content: '', description: '' });
+      setCreateForm({ role: 'JobSeeker', screen: 'my-account', content: '', description: '' });
       showToast('Message created successfully!', { type: 'success', duration: 3000 });
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Failed to create message';
@@ -211,7 +196,7 @@ export default function RoleMessageManagement() {
     try {
       await roleMessagesAPI.setDefaultMessage(id);
       await fetchMessages();
-      showToast('Page instruction marked as default and copied to organization admins.', { type: 'success', duration: 3000 });
+      showToast('Page instruction marked as platform default. Organization copies will be created during sync.', { type: 'success', duration: 3000 });
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Failed to set default page instruction';
       showToast(errorMsg, { type: 'error', duration: 4000 });
@@ -269,7 +254,6 @@ export default function RoleMessageManagement() {
   });
 
   const getAvailableScreens = (role) => SCREENS[role] || [];
-  const getAvailableKeys = (screen) => MESSAGE_KEYS[screen] || [];
 
   if (loading) {
     return (
@@ -295,8 +279,8 @@ export default function RoleMessageManagement() {
         <CopyToAdminModal
           isOpen={copyModalOpen}
           admins={adminUsers}
-          title="Copy Page Instruction to Admin"
-          description="Select an organization admin and choose whether to overwrite existing copy."
+          title="Copy Page Instruction to Organization Admin"
+          description="Select an active Admin or AdminEvent user and choose whether to overwrite existing copy."
           onCancel={() => {
             setCopyModalOpen(false);
             setSelectedMessageId(null);
@@ -389,7 +373,8 @@ export default function RoleMessageManagement() {
                     onChange={(e) => {
                       const newRole = e.target.value;
                       const screens = getAvailableScreens(newRole);
-                      setCreateForm({ ...createForm, role: newRole, screen: screens[0] || '', messageKey: '' });
+                      const firstScreen = screens[0] || '';
+                      setCreateForm({ ...createForm, role: newRole, screen: firstScreen });
                     }}
                     className="dashboard-select"
                   >
@@ -404,25 +389,12 @@ export default function RoleMessageManagement() {
                     value={createForm.screen}
                     onChange={(e) => {
                       const newScreen = e.target.value;
-                      const keys = getAvailableKeys(newScreen);
-                      setCreateForm({ ...createForm, screen: newScreen, messageKey: keys[0] || '' });
+                      setCreateForm({ ...createForm, screen: newScreen });
                     }}
                     className="dashboard-select"
                   >
                     {getAvailableScreens(createForm.role).map(screen => (
                       <option key={screen} value={screen}>{screen}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Message Key</label>
-                  <select
-                    value={createForm.messageKey}
-                    onChange={(e) => setCreateForm({ ...createForm, messageKey: e.target.value })}
-                    className="dashboard-select"
-                  >
-                    {getAvailableKeys(createForm.screen).map(key => (
-                      <option key={key} value={key}>{key}</option>
                     ))}
                   </select>
                 </div>
@@ -475,7 +447,6 @@ export default function RoleMessageManagement() {
                     <tr>
                       <th>Role</th>
                       <th>Screen</th>
-                      <th>Message Key</th>
                       <th>Template</th>
                       <th>Sent To Admins</th>
                       <th>Content</th>
@@ -489,7 +460,6 @@ export default function RoleMessageManagement() {
                       <tr key={msg._id} className={editingId === msg._id ? 'editing-row' : ''}>
                         <td><span className="role-badge">{msg.role}</span></td>
                         <td><span className="screen-badge">{msg.screen}</span></td>
-                        <td><span className="key-badge">{msg.messageKey}</span></td>
                         <td>
                           {msg.isPlatformDefault ? (
                             <span className="role-badge">Platform Default</span>

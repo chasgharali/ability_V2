@@ -5,7 +5,7 @@ export default function CopyToAdminModal({
     isOpen,
     admins = [],
     title = 'Copy to Admin',
-    description = 'Select organization admin and confirm copy.',
+    description = 'Select organization admin user and confirm copy.',
     onCancel,
     onConfirm
 }) {
@@ -32,10 +32,10 @@ export default function CopyToAdminModal({
                 <p className="copy-admin-modal__description">{description}</p>
 
                 {adminOptions.length === 0 ? (
-                    <p className="copy-admin-modal__empty">No organization admins available.</p>
+                    <p className="copy-admin-modal__empty">No active Admin or AdminEvent users available.</p>
                 ) : (
                     <>
-                        <label htmlFor="copy-admin-select" className="copy-admin-modal__label">Organization Admin</label>
+                        <label htmlFor="copy-admin-select" className="copy-admin-modal__label">Organization Admin User</label>
                         <select
                             id="copy-admin-select"
                             className="copy-admin-modal__select"
