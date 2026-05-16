@@ -91,8 +91,6 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
   // Get metadata from jobSeeker object - check multiple possible locations
   // Note: metadata.profile contains the job seeker profile information
   const metadata = currentJobSeeker.metadata?.profile || currentJobSeeker.metadata || currentJobSeeker.jobSeekerProfile || {};
-  const profile = currentJobSeeker.jobSeekerProfile || currentJobSeeker.metadata?.profile || {};
-  
   // Helper function to format arrays
   const formatArray = (arr) => {
     if (!arr) return null;
@@ -136,6 +134,20 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
     ].filter(Boolean);
     return locationParts.length > 0 ? locationParts.join(', ') : null;
   };
+
+  const primaryJob = metadata.primaryJob || metadata.primaryJobTitle || metadata.primaryRole || metadata.currentJobTitle;
+  const hasExperienceOrSkills = Boolean(
+    metadata.experience ||
+    metadata.yearsOfExperience ||
+    metadata.currentJobTitle ||
+    metadata.currentEmployer ||
+    metadata.employmentTypes ||
+    primaryJob ||
+    metadata.skills ||
+    metadata.keywords
+  );
+  const skills = ensureArray(metadata.skills || metadata.keywords);
+  const educationValues = ensureArray(metadata.education);
 
   return (
     <div className="profile-panel" role="dialog" aria-labelledby="profile-title" aria-modal="true">
@@ -197,8 +209,33 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
           
           <div className="basic-info">
             <h2 className="profile-name">{getDisplayName()}</h2>
-            {metadata.professionalHeadline && (
-              <p className="professional-headline">{metadata.professionalHeadline}</p>
+            {(currentJobSeeker.linkedInUrl || currentJobSeeker.resumeUrl) && (
+              <div className="profile-top-actions">
+                {currentJobSeeker.linkedInUrl && (
+                  <a
+                    href={currentJobSeeker.linkedInUrl.startsWith('http') ? currentJobSeeker.linkedInUrl : `https://${currentJobSeeker.linkedInUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="resume-link compact"
+                    aria-label="View LinkedIn profile (opens in new tab)"
+                  >
+                    <FaLinkedin size={16} aria-hidden="true" />
+                    LinkedIn
+                  </a>
+                )}
+                {currentJobSeeker.resumeUrl && (
+                  <a
+                    href={currentJobSeeker.resumeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="resume-link compact"
+                    aria-label="View job seeker's resume (opens in new tab)"
+                  >
+                    <FiFileText size={16} aria-hidden="true" />
+                    Resume
+                  </a>
+                )}
+              </div>
             )}
             <div className="contact-info">
               <p className="profile-email">
@@ -217,9 +254,65 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
                   <span>{getLocationString()}</span>
                 </p>
               )}
+              {(metadata.professionalHeadline || metadata.headline) && (
+                <p className="professional-headline">
+                  {metadata.professionalHeadline || metadata.headline}
+                </p>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Keywords + Experience */}
+        {hasExperienceOrSkills && (
+          <div className="profile-section">
+            <h3 className="section-title">
+              <FiAward size={18} aria-hidden="true" />
+              Keywords (Skills & Experience)
+            </h3>
+            {skills.length > 0 && (
+              <div className="skills-list" role="list" aria-label="Skills and expertise">
+                {skills.map((skill, index) => (
+                  <span key={index} className="skill-tag" role="listitem">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="info-grid compact-grid">
+              {primaryJob && (
+                <div className="info-card">
+                  <strong>Primary Job:</strong>
+                  <span>{primaryJob}</span>
+                </div>
+              )}
+              {metadata.yearsOfExperience && (
+                <div className="info-card">
+                  <strong>Years of Experience:</strong>
+                  <span>{metadata.yearsOfExperience}</span>
+                </div>
+              )}
+              {metadata.currentEmployer && (
+                <div className="info-card">
+                  <strong>Current Employer:</strong>
+                  <span>{metadata.currentEmployer}</span>
+                </div>
+              )}
+              {metadata.employmentTypes && (
+                <div className="info-card full-width">
+                  <strong>Employment Types:</strong>
+                  <span>{Array.isArray(metadata.employmentTypes) ? metadata.employmentTypes.join(', ') : metadata.employmentTypes}</span>
+                </div>
+              )}
+              {metadata.experience && (
+                <div className="info-card full-width">
+                  <strong>Experience:</strong>
+                  <span>{formatArray(metadata.experience) || metadata.experience}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Professional Summary */}
         {(metadata.professionalSummary || metadata.summary) && (
@@ -234,62 +327,6 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
           </div>
         )}
 
-        {/* Experience */}
-        {(metadata.experience || metadata.yearsOfExperience || metadata.currentJobTitle || metadata.currentEmployer || metadata.employmentTypes) && (
-          <div className="profile-section">
-            <h3 className="section-title">
-              <FiBriefcase size={18} aria-hidden="true" />
-              Experience & Employment
-            </h3>
-            <div className="info-grid">
-              {metadata.yearsOfExperience && (
-                <div className="info-card">
-                  <strong>Years of Experience:</strong>
-                  <span>{metadata.yearsOfExperience}</span>
-                </div>
-              )}
-              {metadata.currentJobTitle && (
-                <div className="info-card">
-                  <strong>Current Job Title:</strong>
-                  <span>{metadata.currentJobTitle}</span>
-                </div>
-              )}
-              {metadata.currentEmployer && (
-                <div className="info-card">
-                  <strong>Current Employer:</strong>
-                  <span>{metadata.currentEmployer}</span>
-                </div>
-              )}
-              {metadata.employmentTypes && (
-                <div className="info-card">
-                  <strong>Employment Types:</strong>
-                  <span>{Array.isArray(metadata.employmentTypes) ? metadata.employmentTypes.join(', ') : metadata.employmentTypes}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Skills */}
-        {(metadata.skills || metadata.keywords) && (() => {
-          const skills = ensureArray(metadata.skills || metadata.keywords);
-          return skills.length > 0 ? (
-            <div className="profile-section">
-              <h3 className="section-title">
-                <FiAward size={18} aria-hidden="true" />
-                Skills & Expertise
-              </h3>
-              <div className="skills-list" role="list" aria-label="Skills and expertise">
-                {skills.map((skill, index) => (
-                  <span key={index} className="skill-tag" role="listitem">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null;
-        })()}
-
         {/* Education */}
         {(metadata.education || metadata.highestEducation || metadata.fieldOfStudy || metadata.certifications) && (
           <div className="profile-section">
@@ -302,6 +339,12 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
                 <div className="info-card">
                   <strong>Highest Education:</strong>
                   <span>{metadata.highestEducation}</span>
+                </div>
+              )}
+              {educationValues.length > 0 && (
+                <div className="info-card full-width">
+                  <strong>Education:</strong>
+                  <span>{educationValues.join(', ')}</span>
                 </div>
               )}
               {metadata.fieldOfStudy && (
@@ -404,41 +447,8 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
           </div>
         )}
 
-        {/* LinkedIn & Resume Links */}
-        {(currentJobSeeker.linkedInUrl || currentJobSeeker.resumeUrl) && (
-          <div className="profile-section">
-            <div className="resume-section" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-              {currentJobSeeker.linkedInUrl && (
-                <a 
-                  href={currentJobSeeker.linkedInUrl.startsWith('http') ? currentJobSeeker.linkedInUrl : `https://${currentJobSeeker.linkedInUrl}`}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="resume-link"
-                  aria-label="View LinkedIn profile (opens in new tab)"
-                >
-                  <FaLinkedin size={18} aria-hidden="true" />
-                  LinkedIn
-                </a>
-              )}
-              {currentJobSeeker.resumeUrl && (
-                <a 
-                  href={currentJobSeeker.resumeUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="resume-link"
-                  aria-label="View job seeker's resume (opens in new tab)"
-                >
-                  <FiFileText size={18} aria-hidden="true" />
-                  View Resume
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-        
-
         {/* No Information Available */}
-        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !metadata.skills && !metadata.keywords && !metadata.experience && !metadata.yearsOfExperience && !currentJobSeeker.resumeUrl && !currentJobSeeker.linkedInUrl && (
+        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !metadata.skills && !metadata.keywords && !metadata.experience && !metadata.yearsOfExperience && !metadata.education && !metadata.highestEducation && !currentJobSeeker.resumeUrl && !currentJobSeeker.linkedInUrl && (
           <div className="profile-section">
             <div className="no-additional-info">
               <FiFileText size={48} aria-hidden="true" />

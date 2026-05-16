@@ -161,7 +161,7 @@
   transition: transform 0.3s ease;
 }
 
-.sidebar-header {
+.waiting-sidebar-left .sidebar-header {
   text-align: center;
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
@@ -177,28 +177,28 @@
 .waiting-sidebar-left .sidebar-header:hover,
 .waiting-sidebar-left .sidebar-header:focus,
 .waiting-sidebar-left .sidebar-header:active,
-.sidebar-header:hover,
-.sidebar-header:focus,
-.sidebar-header:active {
+.waiting-sidebar-left .sidebar-header:hover,
+.waiting-sidebar-left .sidebar-header:focus,
+.waiting-sidebar-left .sidebar-header:active {
   background: transparent !important;
   background-color: transparent !important;
   outline: none !important;
 }
 
-.sidebar-header .booth-logo-section {
+.waiting-sidebar-left .sidebar-header .booth-logo-section {
   margin-bottom: 1rem;
 }
 
-.sidebar-header .event-info {
+.waiting-sidebar-left .sidebar-header .event-info {
   text-align: center;
 }
 
-.sidebar-header .event-title {
+.waiting-sidebar-left .sidebar-header .event-title {
   font-size: 1.125rem;
   margin-bottom: 0.25rem;
 }
 
-.sidebar-header .booth-subtitle {
+.waiting-sidebar-left .sidebar-header .booth-subtitle {
   font-size: 0.875rem;
   color: #6b7280;
 }
@@ -444,7 +444,7 @@
   overflow-y: auto;
 }
 
-.sidebar-header {
+.waiting-sidebar-left .sidebar-header {
   display: flex;
   align-items: center;
   gap: 1rem;

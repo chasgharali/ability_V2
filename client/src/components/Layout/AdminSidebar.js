@@ -372,6 +372,7 @@ export default function AdminSidebar({ active = 'booths' }) {
     const regDetailMatch = path.match(/^\/events\/registered\/([^/]+)$/);
     const eventMatch = path.match(/^\/event\/([^/]+)(?:\/register)?$/);
     return {
+      myAccount: path === '/dashboard' || path === '/dashboard/my-account' || path === '/dashboard/my-account/',
       registeredList: path === '/events/registered',
       registeredSlug: regDetailMatch ? decodeURIComponent(regDetailMatch[1]) : null,
       upcomingList: path === '/events/upcoming',
@@ -451,10 +452,11 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button
               type="button"
-              className={`sidebar-header ${JOBSEEKER_ACCOUNT_KEYS.has(effectiveActive) ? 'active' : ''}`}
+              className={`sidebar-header ${(JOBSEEKER_ACCOUNT_KEYS.has(effectiveActive) || jobSeekerPathActive?.myAccount) ? 'active' : ''}`}
               onClick={(e) => { handleItemClick('/dashboard/my-account', e); closeMobileMenu(); }}
               aria-label="Go to My Account"
               aria-expanded={expanded['my-account']}
+              aria-current={jobSeekerPathActive?.myAccount ? 'page' : undefined}
             >
               <span>My Account</span>
               <span
