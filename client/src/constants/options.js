@@ -370,7 +370,7 @@ export const JOB_CATEGORY_LIST = [
 
 export const LANGUAGE_LIST = [
   { name: 'English', value: 'english' },
-  { name: 'ASL/Sign Language', value: 'asl_sign_language' },
+  { name: 'Sign Language', value: 'asl_sign_language' },
   { name: 'Albanian', value: 'albanian' },
   { name: 'Afrikaans', value: 'akrikaans' },
   { name: 'Arabic', value: 'arabic' },

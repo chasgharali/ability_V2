@@ -733,7 +733,7 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                     checked={editForm.needsASL}
                     onChange={(e) => setEditField('needsASL', e.target.checked)}
                   />
-                  <span>ASL Interpreter</span>
+                  <span>Sign Language Interpreter</span>
                 </label>
                 <label className="jsm-checkbox-label">
                   <input

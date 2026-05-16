@@ -63,7 +63,7 @@ const VETERAN_STATUS_MAP = {
 
 const LANGUAGE_MAP = {
   'english': 'English',
-  'asl_sign_language': 'ASL/Sign Language',
+  'asl_sign_language': 'Sign Language',
   'albanian': 'Albanian',
   'akrikaans': 'Afrikaans',
   'arabic': 'Arabic',

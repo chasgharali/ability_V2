@@ -1412,7 +1412,7 @@ export default function JobSeekerManagement() {
                 <span>{js.usesScreenReader ? 'Yes' : 'No'}</span>
               </div>
               <div className="profile-field">
-                <label>ASL Interpreter:</label>
+                <label>Sign Language Interpreter:</label>
                 <span>{js.needsASL ? 'Yes' : 'No'}</span>
               </div>
               <div className="profile-field">

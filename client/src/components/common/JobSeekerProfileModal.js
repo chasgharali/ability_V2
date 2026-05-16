@@ -321,7 +321,7 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
                     <p>{js.usesScreenReader ? 'Yes' : 'No'}</p>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">ASL INTERPRETER</span>
+                    <span className="detail-label">SIGN LANGUAGE INTERPRETER</span>
                     <p>{js.needsASL ? 'Yes' : 'No'}</p>
                   </div>
                   <div className="detail-item">

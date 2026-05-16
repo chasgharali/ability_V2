@@ -507,7 +507,7 @@ export default function RegisteredJobSeekerManagement() {
             <div className="profile-grid">
               <div className="profile-field"><label>Screen Magnifier:</label><span>{js.usesScreenMagnifier ? 'Yes' : 'No'}</span></div>
               <div className="profile-field"><label>Screen Reader:</label><span>{js.usesScreenReader ? 'Yes' : 'No'}</span></div>
-              <div className="profile-field"><label>ASL Interpreter:</label><span>{js.needsASL ? 'Yes' : 'No'}</span></div>
+              <div className="profile-field"><label>Sign Language Interpreter:</label><span>{js.needsASL ? 'Yes' : 'No'}</span></div>
               <div className="profile-field"><label>Captions:</label><span>{js.needsCaptions ? 'Yes' : 'No'}</span></div>
               <div className="profile-field"><label>Other:</label><span>{js.needsOther ? 'Yes' : 'No'}</span></div>
             </div>

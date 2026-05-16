@@ -95,7 +95,7 @@ const EMPLOYMENT_TYPE_MAP = {
 
 const LANGUAGE_MAP = {
     'english': 'English',
-    'asl_sign_language': 'ASL/Sign Language',
+    'asl_sign_language': 'Sign Language',
     'albanian': 'Albanian',
     'akrikaans': 'Afrikaans',
     'arabic': 'Arabic',
@@ -313,7 +313,7 @@ router.get('/report', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
             const accessibilityFields = [
                 { field: 'usesScreenMagnifier', label: 'Screen Magnifier' },
                 { field: 'usesScreenReader', label: 'Screen Reader' },
-                { field: 'needsASL', label: 'ASL Interpreter' },
+                { field: 'needsASL', label: 'Sign Language Interpreter' },
                 { field: 'needsCaptions', label: 'Captions' },
                 { field: 'needsOther', label: 'Other Accommodations' }
             ];
@@ -504,7 +504,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             const accessibilityFields = [
                 { field: 'usesScreenMagnifier', label: 'Screen Magnifier' },
                 { field: 'usesScreenReader', label: 'Screen Reader' },
-                { field: 'needsASL', label: 'ASL Interpreter' },
+                { field: 'needsASL', label: 'Sign Language Interpreter' },
                 { field: 'needsCaptions', label: 'Captions' },
                 { field: 'needsOther', label: 'Other Accommodations' }
             ];

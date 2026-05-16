@@ -328,7 +328,7 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
               Accessibility Needs
             </h3>
             <div className="accessibility-badges" role="list" aria-label="Accessibility accommodations needed">
-              {currentJobSeeker.needsASL && <span className="accessibility-badge" role="listitem">ASL Interpreter</span>}
+              {currentJobSeeker.needsASL && <span className="accessibility-badge" role="listitem">Sign Language Interpreter</span>}
               {currentJobSeeker.needsCaptions && <span className="accessibility-badge" role="listitem">Captions</span>}
               {currentJobSeeker.usesScreenReader && <span className="accessibility-badge" role="listitem">Screen Reader</span>}
               {currentJobSeeker.usesScreenMagnifier && <span className="accessibility-badge" role="listitem">Screen Magnifier</span>}
