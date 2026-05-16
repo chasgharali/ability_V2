@@ -12,7 +12,6 @@ const {
     getWorkLevelLabel,
     getEducationLevelLabel,
     getEmploymentTypesLabel,
-    getClearanceLabel,
     getVeteranStatusLabel
 } = require('../utils/profileFieldLabels');
 
@@ -194,7 +193,6 @@ router.get('/', authenticateToken, async (req, res) => {
                         { 'metadata.profile.keywords': searchRegex },
                         { 'metadata.profile.workLevel': searchRegex },
                         { 'metadata.profile.educationLevel': searchRegex },
-                        { 'metadata.profile.clearance': searchRegex },
                         { 'metadata.profile.veteranStatus': searchRegex },
                         { 'metadata.profile.employmentTypes': searchRegex },
                         { 'metadata.profile.languages': searchRegex }
@@ -959,7 +957,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             'Highest Education Level',
             'Employment Types',
             'Language(s)',
-            'Security Clearance',
             'Veteran/Military Status',
             'Resume Link',
             'Interpreter',
@@ -1024,7 +1021,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             const languages = (profile && Array.isArray(profile.languages)) 
                 ? profile.languages.filter(Boolean).join('; ') 
                 : '';
-            const clearanceLabel = getClearanceLabel(profile && profile.clearance);
             const veteranStatusLabel = getVeteranStatusLabel(profile && profile.veteranStatus);
             
             // Interpreter can be null, so handle it specially
@@ -1108,7 +1104,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
                 escapeCSV(educationLevelLabel),
                 escapeCSV(employmentTypesLabel),
                 escapeCSV(languages),
-                escapeCSV(clearanceLabel),
                 escapeCSV(veteranStatusLabel),
                 escapeCSV(jobSeekerResumeUrl),
                 escapeCSV(interpreterName),

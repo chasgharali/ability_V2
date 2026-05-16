@@ -203,7 +203,6 @@ router.get('/me', authenticateToken, async (req, res) => {
                 educationLevel: resumeData.highestEducationLevel || null,
                 languages: resumeData.languages || [],
                 employmentTypes: resumeData.employmentTypes || [],
-                clearance: resumeData.securityClearance || null,
                 veteranStatus: resumeData.veteranStatus || resumeData.militaryStatus || null
             };
 
@@ -259,7 +258,6 @@ router.put('/me', authenticateToken, [
     body('profile.educationLevel').optional().isString(),
     body('profile.languages').optional().isArray().withMessage('Languages must be array'),
     body('profile.employmentTypes').optional().isArray().withMessage('Employment types must be array'),
-    body('profile.clearance').optional().isString(),
     body('profile.veteranStatus').optional().isString()
 ], async (req, res) => {
     try {
@@ -312,7 +310,6 @@ router.put('/me', authenticateToken, [
                     ...(profile.educationLevel !== undefined ? { educationLevel: profile.educationLevel } : {}),
                     ...(profile.languages !== undefined ? { languages: profile.languages } : {}),
                     ...(profile.employmentTypes !== undefined ? { employmentTypes: profile.employmentTypes } : {}),
-                    ...(profile.clearance !== undefined ? { clearance: profile.clearance } : {}),
                     ...(profile.veteranStatus !== undefined ? { veteranStatus: profile.veteranStatus } : {}),
                     updatedAt: new Date()
                 }
@@ -721,7 +718,6 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
                 { 'metadata.profile.keywords': containsRegex },
                 { 'metadata.profile.workLevel': containsRegex },
                 { 'metadata.profile.educationLevel': containsRegex },
-                { 'metadata.profile.clearance': containsRegex },
                 { 'metadata.profile.veteranStatus': containsRegex },
                 { 'metadata.profile.workAuthorization': containsRegex },
                 
@@ -1235,7 +1231,6 @@ router.put('/:id([0-9a-fA-F]{24})', authenticateToken, requireRole(['SuperAdmin'
     body('profile.educationLevel').optional().isString(),
     body('profile.languages').optional().isArray().withMessage('Languages must be array'),
     body('profile.employmentTypes').optional().isArray().withMessage('Employment types must be array'),
-    body('profile.clearance').optional().isString(),
     body('profile.workAuthorization').optional().isString(),
     body('profile.veteranStatus').optional().isString()
 ], async (req, res) => {
@@ -1376,7 +1371,6 @@ router.put('/:id([0-9a-fA-F]{24})', authenticateToken, requireRole(['SuperAdmin'
                     ...(profile.educationLevel !== undefined ? { educationLevel: profile.educationLevel } : {}),
                     ...(profile.languages !== undefined ? { languages: profile.languages } : {}),
                     ...(profile.employmentTypes !== undefined ? { employmentTypes: profile.employmentTypes } : {}),
-                    ...(profile.clearance !== undefined ? { clearance: profile.clearance } : {}),
                     ...(profile.workAuthorization !== undefined ? { workAuthorization: profile.workAuthorization } : {}),
                     ...(profile.veteranStatus !== undefined ? { veteranStatus: profile.veteranStatus } : {}),
                     updatedAt: new Date()

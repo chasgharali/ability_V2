@@ -23,7 +23,6 @@ import {
     EXPERIENCE_LEVEL_LIST,
     EDUCATION_LEVEL_LIST,
     JOB_TYPE_LIST,
-    SECURITY_CLEARANCE_LIST,
     MILITARY_EXPERIENCE_LIST,
     LANGUAGE_LIST
 } from '../../constants/options';
@@ -750,7 +749,6 @@ const JobSeekerInterests = () => {
                 jobSeekerEducationLevel: profile?.educationLevel || '',
                 jobSeekerEmploymentTypes: profile?.employmentTypes || [],
                 jobSeekerLanguages: profile?.languages || [],
-                jobSeekerClearance: profile?.clearance || '',
                 jobSeekerVeteranStatus: profile?.veteranStatus || '',
                 jobSeekerResumeUrl: r.jobSeeker?.resumeUrl || '',
                 boothName: r.booth?.name || (r.legacyBoothId ? 'Legacy Booth' : ''),
@@ -820,7 +818,6 @@ const JobSeekerInterests = () => {
             'Highest Education Level',
             'Employment Types',
             'Language(s)',
-            'Security Clearance',
             'Veteran/Military Status',
             'Resume Link',
             'Interest Level',
@@ -913,7 +910,6 @@ const JobSeekerInterests = () => {
             const workLevelLabel = getLabelFromValue(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST);
             const educationLevelLabel = getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST);
             const employmentTypesLabel = getLabelFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST);
-            const clearanceLabel = getLabelFromValue(profile?.clearance || '', SECURITY_CLEARANCE_LIST);
             const veteranStatusLabel = getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST);
             const languagesDisplay = getLabelFromValues(profile?.languages || [], LANGUAGE_LIST);
             const resumeUrl = interest.jobSeeker?.resumeUrl || '';
@@ -933,7 +929,6 @@ const JobSeekerInterests = () => {
                 escapeCSV(educationLevelLabel),
                 escapeCSV(employmentTypesLabel),
                 escapeCSV(languagesDisplay),
-                escapeCSV(clearanceLabel),
                 escapeCSV(veteranStatusLabel),
                 escapeCSV(resumeUrl),
                 escapeCSV(interest.interestLevel || ''),
@@ -1708,16 +1703,6 @@ const JobSeekerInterests = () => {
         );
     }, []);
 
-    const securityClearanceTemplate = useCallback((props) => {
-        const row = props;
-        const clearance = row.jobSeekerClearance || '';
-        return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                {clearance || 'N/A'}
-            </div>
-        );
-    }, []);
-
     const veteranStatusTemplate = useCallback((props) => {
         const row = props;
         const veteranStatus = row.jobSeekerVeteranStatus || '';
@@ -1997,7 +1982,6 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} visible={true} />
-                                        <ColumnDirective field='jobSeekerClearance' headerText='Security Clearance' width='180' clipMode='EllipsisWithTooltip' template={securityClearanceTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerVeteranStatus' headerText='Veteran/Military Status' width='200' clipMode='EllipsisWithTooltip' template={veteranStatusTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />

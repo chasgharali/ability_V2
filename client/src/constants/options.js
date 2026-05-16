@@ -8,8 +8,8 @@ export const MILITARY_EXPERIENCE_LIST = [
   { name: 'National Guard', value: 'national_guard' },
   { name: 'Inactive Reserve', value: 'inactive_reserve' },
   { name: 'Inactive National Guard', value: 'inactive_national_guard' },
-  { name: 'US Retired Military Veteran', value: 'retired_military' },
-  { name: 'US Veteran', value: 'us_veteran' }
+  { name: 'Retired Military Veteran', value: 'retired_military' },
+  { name: 'Veteran', value: 'us_veteran' }
 ];
 
 export const WORK_AUTHORIZE_LIST = [

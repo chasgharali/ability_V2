@@ -23,12 +23,9 @@ const connectDB = async () => {
             logger.info('MongoDB reconnected');
         });
 
-        // Graceful shutdown
-        process.on('SIGINT', async () => {
-            await mongoose.connection.close();
-            logger.info('MongoDB connection closed through app termination');
-            process.exit(0);
-        });
+        // Server-level shutdown is handled in server/index.js.
+        // Keep connection setup here to avoid duplicate signal handlers
+        // racing each other and attempting to close an already closed topology.
 
     } catch (error) {
         logger.error('MongoDB connection failed:', error);

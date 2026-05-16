@@ -9,7 +9,6 @@ import {
   EXPERIENCE_LEVEL_LIST,
   EDUCATION_LEVEL_LIST,
   LANGUAGE_LIST,
-  SECURITY_CLEARANCE_LIST,
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
@@ -100,7 +99,6 @@ export default function ViewProfile() {
   const workLevel = profile?.workLevel || '';
   const educationLevel = profile?.educationLevel || '';
   const languages = Array.isArray(profile?.languages) ? profile.languages : [];
-  const clearance = profile?.clearance || '';
   const veteranStatus = profile?.veteranStatus || '';
 
   // Build value->name maps from centralized options
@@ -110,7 +108,6 @@ export default function ViewProfile() {
   const EXP_MAP = toMap(EXPERIENCE_LEVEL_LIST);
   const EDU_MAP = toMap(EDUCATION_LEVEL_LIST);
   const LANG_MAP = toMap(LANGUAGE_LIST);
-  const CLEAR_MAP = toMap(SECURITY_CLEARANCE_LIST);
   const VET_MAP = toMap(MILITARY_EXPERIENCE_LIST);
 
   const mapValue = (val, map) => map[val] || val || '—';
@@ -282,7 +279,7 @@ export default function ViewProfile() {
               </div>
             )}
 
-            {((educationLevel && mapValue(educationLevel, EDU_MAP) !== educationLevel) || (clearance && mapValue(clearance, CLEAR_MAP) !== clearance)) && (
+            {(educationLevel && mapValue(educationLevel, EDU_MAP) !== educationLevel) && (
               <div className="profile-detail-card">
                 <div className="detail-header">
                   <h3 className="detail-title">Education & Qualifications</h3>
@@ -292,12 +289,6 @@ export default function ViewProfile() {
                     <div className="detail-item">
                       <label className="detail-label">Highest Education Level</label>
                       <div className="detail-value">{mapValue(educationLevel, EDU_MAP)}</div>
-                    </div>
-                  )}
-                  {clearance && mapValue(clearance, CLEAR_MAP) !== clearance && (
-                    <div className="detail-item">
-                      <label className="detail-label">Security Clearance</label>
-                      <div className="detail-value">{mapValue(clearance, CLEAR_MAP)}</div>
                     </div>
                   )}
                 </div>

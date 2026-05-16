@@ -32,7 +32,7 @@ import TermsConditionsView from './components/TermsConditions/TermsConditionsVie
 import UserManagement from './components/UserManagement/UserManagement';
 import JobSeekerManagement from './components/JobSeekerManagement/JobSeekerManagement';
 import RegisteredJobSeekerManagement from './components/JobSeekerManagement/RegisteredJobSeekerManagement';
-import SuperAdminAISearch from './components/JobSeekerManagement/SuperAdminAISearch';
+import AISearchPage from './components/JobSeekerManagement/AISearchPage';
 import MeetingRecords from './components/MeetingRecords/MeetingRecords';
 import MeetingRecordDetail from './components/MeetingRecords/MeetingRecordDetail';
 import JobSeekerInterests from './components/JobSeekerInterests/JobSeekerInterests';
@@ -54,6 +54,7 @@ import NoteViewUser from './components/Notes/NoteViewUser';
 import RoleMessageManagement from './components/RoleMessages/RoleMessageManagement';
 import OrganizationManagement from './components/OrganizationManagement/OrganizationManagement';
 import UserOrgAssignment from './components/UserManagement/UserOrgAssignment';
+import RecruiterProfileEditor from './components/Profile/RecruiterProfileEditor';
 import CookieConsent from './components/common/CookieConsent';
 import LegalPageEditor from './components/Legal/LegalPageEditor';
 import LegalPageView from './components/Legal/LegalPageView';
@@ -182,6 +183,14 @@ function App() {
                                     } />
                                     <Route path="/meeting-records" element={<RequireAuth><MeetingRecords /></RequireAuth>} />
                                     <Route path="/meeting-records/:id" element={<RequireAuth><MeetingRecordDetail /></RequireAuth>} />
+                                    <Route
+                                        path="/recruiter-ai-search"
+                                        element={
+                                            <RequireAuth>
+                                                <Navigate to="/ai-search" replace />
+                                            </RequireAuth>
+                                        }
+                                    />
                                     <Route path="/jobseeker-interests" element={<RequireAuth><JobSeekerInterests /></RequireAuth>} />
                                     <Route
                                         path="/jobseeker-survey"
@@ -217,7 +226,26 @@ function App() {
                                     {/* Organization Management (SuperAdmin) */}
                                     <Route path="/organizations" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><OrganizationManagement /></RequireRole></RequireAuth>} />
                                     <Route path="/org-users" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><UserOrgAssignment /></RequireRole></RequireAuth>} />
-                                    <Route path="/ai-search" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><SuperAdminAISearch /></RequireRole></RequireAuth>} />
+                                    <Route
+                                        path="/ai-search"
+                                        element={
+                                            <RequireAuth>
+                                                <RequireRole allowedRoles={['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport', 'Recruiter']}>
+                                                    <AISearchPage />
+                                                </RequireRole>
+                                            </RequireAuth>
+                                        }
+                                    />
+                                    <Route
+                                        path="/recruiter-profile"
+                                        element={
+                                            <RequireAuth>
+                                                <RequireRole allowedRoles={['Recruiter', 'BoothAdmin']}>
+                                                    <RecruiterProfileEditor />
+                                                </RequireRole>
+                                            </RequireAuth>
+                                        }
+                                    />
                                     {/* Booth Queue Routes */}
                                     <Route path="/queue/:inviteSlug" element={<RequireAuth><QueueInviteResolver /></RequireAuth>} />
                                     <Route path="/booth-queue/:eventSlug/:boothId/entry" element={<RequireAuth><BoothQueueEntry /></RequireAuth>} />

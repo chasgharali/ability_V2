@@ -7,7 +7,6 @@ const {
     getWorkLevelLabel,
     getEducationLevelLabel,
     getEmploymentTypesLabel,
-    getClearanceLabel,
     getVeteranStatusLabel,
     getLanguagesLabel
 } = require('../utils/profileFieldLabels');
@@ -1211,7 +1210,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             'Highest Education Level',
             'Employment Types',
             'Language(s)',
-            'Security Clearance',
             'Veteran/Military Status',
             'Resume Link',
             'Interest Level',
@@ -1391,7 +1389,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             const educationLevelLabel = getEducationLevelLabel(profile && profile.educationLevel);
             const employmentTypesLabel = getEmploymentTypesLabel(profile && profile.employmentTypes);
             const languages = getLanguagesLabel(profile && profile.languages);
-            const clearanceLabel = getClearanceLabel(profile && profile.clearance);
             const veteranStatusLabel = getVeteranStatusLabel(profile && profile.veteranStatus);
             const resumeUrl = (jobSeekerData && typeof jobSeekerData === 'object' && jobSeekerData.resumeUrl)
                 ? String(jobSeekerData.resumeUrl).trim()
@@ -1526,7 +1523,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                 escapeCSV(educationLevelLabel),
                 escapeCSV(employmentTypesLabel),
                 escapeCSV(languages),
-                escapeCSV(clearanceLabel),
                 escapeCSV(veteranStatusLabel),
                 escapeCSV(resumeUrl),
                 escapeCSV(interestLevel),

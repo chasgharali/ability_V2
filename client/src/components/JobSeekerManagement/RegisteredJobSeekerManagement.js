@@ -24,7 +24,6 @@ import {
   JOB_TYPE_LIST,
   EXPERIENCE_LEVEL_LIST,
   EDUCATION_LEVEL_LIST,
-  SECURITY_CLEARANCE_LIST,
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 
@@ -39,8 +38,7 @@ const formatQualificationSummary = (jobSeeker = {}) => {
   const profile = metadata.profile || {};
   const education = getLabelFromValue(profile.educationLevel || metadata.educationLevel || metadata.education, EDUCATION_LEVEL_LIST);
   const experience = getLabelFromValue(profile.workLevel || metadata.workLevel || metadata.experienceLevel, EXPERIENCE_LEVEL_LIST);
-  const clearance = getLabelFromValue(profile.clearance || metadata.clearance || metadata.securityClearance, SECURITY_CLEARANCE_LIST);
-  return [education, experience, clearance].filter(Boolean).join(' | ');
+  return [education, experience].filter(Boolean).join(' | ');
 };
 
 /**
@@ -492,7 +490,6 @@ export default function RegisteredJobSeekerManagement() {
             <h3>Education & Qualifications</h3>
             <div className="profile-grid">
               <div className="profile-field"><label>Education Level:</label><span>{getLabelFromValue(profile.educationLevel || metadata.education || metadata.educationLevel, EDUCATION_LEVEL_LIST)}</span></div>
-              <div className="profile-field"><label>Security Clearance:</label><span>{getLabelFromValue(profile.clearance || metadata.securityClearance || metadata.clearance, SECURITY_CLEARANCE_LIST)}</span></div>
             </div>
           </div>
 

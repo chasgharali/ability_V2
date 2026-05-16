@@ -15,7 +15,6 @@ import {
   JOB_TYPE_LIST,
   EXPERIENCE_LEVEL_LIST,
   EDUCATION_LEVEL_LIST,
-  SECURITY_CLEARANCE_LIST,
   MILITARY_EXPERIENCE_LIST,
   COUNTRY_OF_ORIGIN_LIST
 } from '../../constants/options';
@@ -80,7 +79,6 @@ function buildEditFormFromRow(row) {
             : [],
     workLevel: profile.workLevel || metadata.experienceLevel || metadata.workLevel || '',
     educationLevel: profile.educationLevel || metadata.education || metadata.educationLevel || '',
-    clearance: profile.clearance || metadata.securityClearance || metadata.clearance || '',
     languages: Array.isArray(profile.languages)
       ? profile.languages
       : profile.languages
@@ -296,7 +294,6 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
               : undefined,
           workLevel: editForm.workLevel || undefined,
           educationLevel: editForm.educationLevel || undefined,
-          clearance: editForm.clearance || undefined,
           languages: editForm.languages && editForm.languages.length > 0 ? editForm.languages : undefined,
           workAuthorization: editForm.workAuthorization || undefined,
           veteranStatus: editForm.veteranStatus || undefined
@@ -650,24 +647,6 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                 >
                   <option value="">Select education level</option>
                   {EDUCATION_LEVEL_LIST.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="jsm-form-field-wrapper">
-                <label className="jsm-field-label" htmlFor={`${idPrefix}clearance`}>
-                  Security Clearance
-                </label>
-                <select
-                  id={`${idPrefix}clearance`}
-                  className="jsm-select"
-                  value={editForm.clearance || ''}
-                  onChange={(e) => setEditField('clearance', e.target.value)}
-                >
-                  <option value="">Select security clearance</option>
-                  {SECURITY_CLEARANCE_LIST.map((item) => (
                     <option key={item.value} value={item.value}>
                       {item.name}
                     </option>

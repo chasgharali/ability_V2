@@ -19,12 +19,18 @@ function getSidebarKeyFromPath(pathname, role) {
   if (pathname.startsWith('/meeting-records')) {
     return 'meeting-records';
   }
+  if (pathname === '/recruiter-ai-search' || pathname.startsWith('/recruiter-ai-search/')) {
+    return 'ai-search';
+  }
   if (pathname === '/jobseeker-interests' || pathname.startsWith('/jobseeker-interests/')) {
     if (role === 'Recruiter' || role === 'BoothAdmin') return 'interests';
     return 'jobseeker-interests';
   }
   if (pathname === '/analytics' || pathname.startsWith('/analytics/')) {
     return 'analytics';
+  }
+  if (pathname === '/recruiter-profile' || pathname.startsWith('/recruiter-profile/')) {
+    return 'recruiter-profile';
   }
   if (pathname === '/troubleshooting') return 'troubleshooting';
   if (pathname === '/instructions') return 'instructions';
@@ -87,6 +93,7 @@ export default function AdminSidebar({ active = 'booths' }) {
   const menuNavHandledRef = useRef('');
   const [expanded, setExpanded] = useState({
     admin: true,
+    profile: true,
     tools: true,
     configuration: true,
     'my-account': true,
@@ -640,11 +647,28 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>
                   Meeting Records
                 </button>
+                <button className={itemClass('ai-search')} onClick={() => handleItemClick('/ai-search')}>
+                  AI Search
+                </button>
                 <button className={itemClass('interests')} onClick={() => handleItemClick('/jobseeker-interests')}>
                   JobSeeker Interests
                 </button>
                 <button className={itemClass('analytics')} onClick={() => handleItemClick('/analytics')}>
                   Report
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="sidebar-section">
+            <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, profile: !s.profile }))} aria-expanded={expanded.profile}>
+              <span>Profile</span>
+              {expanded.profile ? <MdExpandLess /> : <MdExpandMore />}
+            </button>
+            {expanded.profile && (
+              <div className="sidebar-items">
+                <button className={itemClass('recruiter-profile')} onClick={() => handleItemClick('/recruiter-profile')}>
+                  Profile Editor
                 </button>
               </div>
             )}

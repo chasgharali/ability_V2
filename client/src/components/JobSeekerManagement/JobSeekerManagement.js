@@ -27,7 +27,6 @@ import {
   JOB_TYPE_LIST, 
   EXPERIENCE_LEVEL_LIST, 
   EDUCATION_LEVEL_LIST, 
-  SECURITY_CLEARANCE_LIST,
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 
@@ -550,8 +549,7 @@ export default function JobSeekerManagement() {
           metadata: u.metadata || {},
           qualificationSummary: [
             getLabelFromValue(u.metadata?.profile?.educationLevel || u.metadata?.education || u.metadata?.educationLevel, EDUCATION_LEVEL_LIST),
-            getLabelFromValue(u.metadata?.profile?.workLevel || u.metadata?.experienceLevel || u.metadata?.workLevel, EXPERIENCE_LEVEL_LIST),
-            getLabelFromValue(u.metadata?.profile?.clearance || u.metadata?.securityClearance || u.metadata?.clearance, SECURITY_CLEARANCE_LIST)
+            getLabelFromValue(u.metadata?.profile?.workLevel || u.metadata?.experienceLevel || u.metadata?.workLevel, EXPERIENCE_LEVEL_LIST)
           ].filter(Boolean).join(' | '),
           registeredEvents: registeredEvents, // Extract registered events for display
           avatarUrl: u.avatarUrl,
@@ -1373,10 +1371,6 @@ export default function JobSeekerManagement() {
               <div className="profile-field">
                 <label>Highest Education Level:</label>
                 <span>{getLabelFromValue(profile.educationLevel || metadata.education || metadata.educationLevel, EDUCATION_LEVEL_LIST)}</span>
-              </div>
-              <div className="profile-field">
-                <label>Security Clearance:</label>
-                <span>{getLabelFromValue(profile.clearance || metadata.securityClearance || metadata.clearance, SECURITY_CLEARANCE_LIST)}</span>
               </div>
             </div>
           </div>

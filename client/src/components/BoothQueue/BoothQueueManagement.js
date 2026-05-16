@@ -19,7 +19,6 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import {
   MILITARY_EXPERIENCE_LIST,
-  SECURITY_CLEARANCE_LIST,
   JOB_CATEGORY_LIST,
   LANGUAGE_LIST,
   JOB_TYPE_LIST,
@@ -910,12 +909,6 @@ export default function BoothQueueManagement() {
                             </dd>
                           </div>
                         )}
-                        {displayEvent.timezone && (
-                          <div className="queue-event-card-meta-item">
-                            <dt>Timezone</dt>
-                            <dd>{displayEvent.timezone}</dd>
-                          </div>
-                        )}
                         {displayEvent.status && (
                           <div className="queue-event-card-meta-item">
                             <dt>Status</dt>
@@ -1335,10 +1328,6 @@ export default function BoothQueueManagement() {
                       <div className="detail-item">
                         <span className="detail-label">HIGHEST EDUCATION LEVEL</span>
                         <p>{getLabel(EDUCATION_LEVEL_LIST, js?.metadata?.profile?.educationLevel)}</p>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">SECURITY CLEARANCE</span>
-                        <p>{getLabel(SECURITY_CLEARANCE_LIST, js?.metadata?.profile?.clearance)}</p>
                       </div>
                     </div>
                   </div>

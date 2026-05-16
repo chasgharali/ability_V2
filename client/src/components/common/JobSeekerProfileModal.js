@@ -7,7 +7,6 @@ import {
   JOB_TYPE_LIST,
   EXPERIENCE_LEVEL_LIST,
   EDUCATION_LEVEL_LIST,
-  SECURITY_CLEARANCE_LIST,
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 import './JobSeekerProfileModal.css';
@@ -273,15 +272,6 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
                       metadata.education || 
                       metadata.educationLevel, 
                       EDUCATION_LEVEL_LIST
-                    )}</p>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">SECURITY CLEARANCE</span>
-                    <p>{getLabelFromValue(
-                      profile.clearance || 
-                      metadata.securityClearance || 
-                      metadata.clearance, 
-                      SECURITY_CLEARANCE_LIST
                     )}</p>
                   </div>
                 </div>

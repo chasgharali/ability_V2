@@ -6,7 +6,7 @@ import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-buttons/styles/material.css';
 import '@syncfusion/ej2-inputs/styles/material.css';
 import '@syncfusion/ej2-react-dropdowns/styles/material.css';
-import { LANGUAGE_LIST, SECURITY_CLEARANCE_LIST, MILITARY_EXPERIENCE_LIST, EDUCATION_LEVEL_LIST, EXPERIENCE_LEVEL_LIST, JOB_CATEGORY_LIST, JOB_TYPE_LIST } from '../../constants/options';
+import { LANGUAGE_LIST, MILITARY_EXPERIENCE_LIST, EDUCATION_LEVEL_LIST, EXPERIENCE_LEVEL_LIST, JOB_CATEGORY_LIST, JOB_TYPE_LIST } from '../../constants/options';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { listResumes, setDefaultResume } from '../../services/resumes';
@@ -41,7 +41,6 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     educationLevel: '',
     languages: [],
     employmentTypes: [], // multi-select
-    clearance: '',
     veteranStatus: ''
   });
   const infoBannerMessage = getMessage('edit-profile', 'info-banner') || '';
@@ -288,7 +287,6 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           educationLevel: prof.educationLevel || '',
           languages: Array.isArray(prof.languages) ? prof.languages : [],
           employmentTypes: Array.isArray(prof.employmentTypes) ? prof.employmentTypes : [],
-          clearance: prof.clearance || '',
           veteranStatus: prof.veteranStatus || ''
         }));
 
@@ -569,7 +567,6 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           educationLevel: form.educationLevel,
           languages: form.languages,
           employmentTypes: form.employmentTypes,
-          clearance: form.clearance,
           veteranStatus: form.veteranStatus
         }
       };
@@ -1081,15 +1078,6 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         </div>
 
         <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="clearance">Security Clearance</label>
-            <select id="clearance" name="clearance" value={form.clearance} onChange={onChange}>
-              <option value="">Select</option>
-              {SECURITY_CLEARANCE_LIST.map(o => (
-                <option key={o.value} value={o.value}>{o.name}</option>
-              ))}
-            </select>
-          </div>
           <div className="form-group">
             <label htmlFor="veteranStatus">Veteran/Military Status</label>
             <select id="veteranStatus" name="veteranStatus" value={form.veteranStatus} onChange={onChange}>

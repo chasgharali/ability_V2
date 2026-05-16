@@ -93,20 +93,6 @@ const EMPLOYMENT_TYPE_MAP = {
     'volunteer': 'Volunteer'
 };
 
-const SECURITY_CLEARANCE_MAP = {
-    'none': 'None',
-    'active_confidential': 'Active - Confidential',
-    'active_secret': 'Active - Secret',
-    'active_top_secret': 'Active - Top Secret',
-    'active_top_secret_sci': 'Active TS/SCI',
-    'active_sci_sap': 'Active - SCI / SAP',
-    'inactive_confidential': 'Inactive - Confidential',
-    'inactive_secret': 'Inactive - Secret',
-    'inactive_top_secret': 'Inactive - Top Secret',
-    'inactive_sci_sap': 'Inactive - SCI/SAP',
-    'inactive_top_secret_sci': 'Inactive TS/SCI'
-};
-
 const LANGUAGE_MAP = {
     'english': 'English',
     'asl_sign_language': 'ASL/Sign Language',
@@ -180,8 +166,8 @@ const VETERAN_STATUS_MAP = {
     'national_guard': 'National Guard',
     'inactive_reserve': 'Inactive Reserve',
     'inactive_national_guard': 'Inactive National Guard',
-    'retired_military': 'US Retired Military Veteran',
-    'us_veteran': 'US Veteran'
+    'retired_military': 'Retired Military Veteran',
+    'us_veteran': 'Veteran'
 };
 
 // Helper functions
@@ -377,10 +363,6 @@ router.get('/report', authenticateToken, requireRole(['Admin', 'GlobalSupport'])
                     title: 'Experience Level',
                     ...calculateStats('workLevel', EXPERIENCE_LEVEL_MAP)
                 },
-                clearance: {
-                    title: 'Security Clearance',
-                    ...calculateStats('clearance', SECURITY_CLEARANCE_MAP)
-                },
                 languages: {
                     title: 'Languages',
                     ...calculateStats('languages', LANGUAGE_MAP, true)
@@ -546,7 +528,6 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             { title: 'Primary Job Functions', data: calculateStats('primaryExperience', JOB_CATEGORY_MAP, true) },
             { title: 'Employment Types', data: calculateStats('employmentTypes', EMPLOYMENT_TYPE_MAP, true) },
             { title: 'Experience Level', data: calculateStats('workLevel', EXPERIENCE_LEVEL_MAP) },
-            { title: 'Security Clearance', data: calculateStats('clearance', SECURITY_CLEARANCE_MAP) },
             { title: 'Languages', data: calculateStats('languages', LANGUAGE_MAP, true) },
             { title: 'Veteran/Military Status', data: calculateStats('veteranStatus', VETERAN_STATUS_MAP) },
             { title: 'Accessibility Needs', data: calculateAccessibilityStats() }

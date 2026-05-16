@@ -355,7 +355,7 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
         )}
 
         {/* Additional Information */}
-        {(metadata.additionalInfo || metadata.workAuthorization || metadata.securityClearance || metadata.willingToRelocate !== undefined || metadata.desiredSalary || metadata.availableStartDate || metadata.preferredJobTypes || metadata.preferredLocations) && (
+        {(metadata.additionalInfo || metadata.workAuthorization || metadata.willingToRelocate !== undefined || metadata.desiredSalary || metadata.availableStartDate || metadata.preferredJobTypes || metadata.preferredLocations) && (
           <div className="profile-section">
             <h3 className="section-title">
               <FiFileText size={18} aria-hidden="true" />
@@ -366,12 +366,6 @@ const JobSeekerProfile = ({ jobSeeker, onClose }) => {
                 <div className="info-card">
                   <strong>Work Authorization:</strong>
                   <span>{metadata.workAuthorization}</span>
-                </div>
-              )}
-              {metadata.securityClearance && (
-                <div className="info-card">
-                  <strong>Security Clearance:</strong>
-                  <span>{metadata.securityClearance}</span>
                 </div>
               )}
               {metadata.willingToRelocate !== undefined && (

@@ -226,7 +226,6 @@ const JobSeekerQualifications = () => {
         { key: 'primaryExperience', header: 'Primary Job Functions' },
         { key: 'employmentTypes', header: 'Employment Types' },
         { key: 'workLevel', header: 'Experience Level' },
-        { key: 'clearance', header: 'Security Clearance' },
         { key: 'languages', header: 'Languages' },
         { key: 'veteranStatus', header: 'Veteran/Military Status' },
         { key: 'accessibilityNeeds', header: 'Accessibility Needs' }

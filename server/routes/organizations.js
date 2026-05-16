@@ -505,7 +505,6 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
                     { 'metadata.profile.keywords': containsRegex },
                     { 'metadata.profile.workLevel': containsRegex },
                     { 'metadata.profile.educationLevel': containsRegex },
-                    { 'metadata.profile.clearance': containsRegex },
                     { 'metadata.profile.veteranStatus': containsRegex },
                     { 'metadata.profile.workAuthorization': containsRegex },
                     { 'metadata.profile.employmentTypes': containsRegex },
@@ -571,12 +570,7 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
                                     {
                                         $ifNull: [
                                             '$jobSeekerDoc.0.metadata.profile.workLevel',
-                                            {
-                                                $ifNull: [
-                                                    '$jobSeekerDoc.0.metadata.profile.clearance',
-                                                    ''
-                                                ]
-                                            }
+                                            ''
                                         ]
                                     }
                                 ]

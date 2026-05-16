@@ -57,8 +57,8 @@ const VETERAN_STATUS_MAP = {
   'national_guard': 'National Guard',
   'inactive_reserve': 'Inactive Reserve',
   'inactive_national_guard': 'Inactive National Guard',
-  'retired_military': 'US Retired Military Veteran',
-  'us_veteran': 'US Veteran'
+  'retired_military': 'Retired Military Veteran',
+  'us_veteran': 'Veteran'
 };
 
 const LANGUAGE_MAP = {
