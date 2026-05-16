@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const Booth = require('../models/Booth');
+const Event = require('../models/Event');
 const Organization = require('../models/Organization');
 const ImportRun = require('../models/ImportRun');
 const logger = require('../utils/logger');
@@ -46,6 +47,101 @@ const emitImportEvent = (req, eventName, payload = {}) => {
     const targetId = req.user?._id?.toString?.();
     if (!io || !targetId) return;
     io.to(`user:${targetId}`).emit(eventName, payload);
+};
+
+const BULK_ASSIGN_ELIGIBLE_ROLES = ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalSupport', 'GlobalInterpreter'];
+const BOOTH_REQUIRED_ROLES = ['Recruiter', 'BoothAdmin', 'Support'];
+const BOOTH_OPTIONAL_ROLES = ['Interpreter'];
+const STAFF_EVENT_ROLES = ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'];
+const GLOBAL_EVENT_ROLES = ['GlobalSupport', 'GlobalInterpreter'];
+
+const createValidationError = (error, message) => {
+    const validationError = new Error(message);
+    validationError.status = 400;
+    validationError.error = error;
+    return validationError;
+};
+
+const validateAndNormalizeBulkAssignments = async (targetUser, { effectiveRole, assignedBooth, assignedEvents }) => {
+    if (!BULK_ASSIGN_ELIGIBLE_ROLES.includes(effectiveRole)) {
+        // Silently ignore booth/event assignments for incompatible roles in bulk updates.
+        return false;
+    }
+
+    if (assignedBooth !== undefined) {
+        if (BOOTH_REQUIRED_ROLES.includes(effectiveRole)) {
+            if (!assignedBooth) {
+                throw createValidationError(
+                    'Validation failed',
+                    'Assigned booth is required for recruiters, booth admins, and booth support'
+                );
+            }
+            if (!mongoose.Types.ObjectId.isValid(assignedBooth)) {
+                throw createValidationError('Invalid booth', 'Assigned booth does not exist');
+            }
+            const boothExists = await Booth.findById(assignedBooth).select('_id');
+            if (!boothExists) {
+                throw createValidationError('Invalid booth', 'Assigned booth does not exist');
+            }
+            targetUser.assignedBooth = assignedBooth;
+        } else if (BOOTH_OPTIONAL_ROLES.includes(effectiveRole)) {
+            if (assignedBooth === null || assignedBooth === '') {
+                targetUser.assignedBooth = null;
+            } else {
+                if (!mongoose.Types.ObjectId.isValid(assignedBooth)) {
+                    throw createValidationError('Invalid booth', 'Assigned booth does not exist');
+                }
+                const boothExists = await Booth.findById(assignedBooth).select('_id');
+                if (!boothExists) {
+                    throw createValidationError('Invalid booth', 'Assigned booth does not exist');
+                }
+                targetUser.assignedBooth = assignedBooth;
+            }
+        } else {
+            targetUser.assignedBooth = null;
+        }
+    } else if (BOOTH_REQUIRED_ROLES.includes(effectiveRole) && !targetUser.assignedBooth) {
+        throw createValidationError(
+            'Validation failed',
+            'Assigned booth is required for recruiters, booth admins, and booth support'
+        );
+    }
+
+    if (assignedEvents !== undefined) {
+        if (!Array.isArray(assignedEvents)) {
+            throw createValidationError('Validation failed', 'assignedEvents must be an array');
+        }
+
+        const validEvents = [];
+        for (const eventId of assignedEvents) {
+            if (!mongoose.Types.ObjectId.isValid(eventId)) {
+                throw createValidationError('Invalid event', 'One or more assigned events do not exist');
+            }
+            const eventExists = await Event.findById(eventId).select('_id');
+            if (!eventExists) {
+                throw createValidationError('Invalid event', 'One or more assigned events do not exist');
+            }
+            validEvents.push(eventId);
+        }
+
+        if (STAFF_EVENT_ROLES.includes(effectiveRole)) {
+            if (targetUser.assignedBooth) {
+                const booth = await Booth.findById(targetUser.assignedBooth).select('events eventId');
+                const boothEventIds = (booth?.events || []).map((e) => e.toString());
+                if (booth?.eventId) {
+                    boothEventIds.push(booth.eventId.toString());
+                }
+                targetUser.assignedEvents = validEvents.filter((eventId) => boothEventIds.includes(eventId.toString()));
+            } else {
+                targetUser.assignedEvents = validEvents;
+            }
+        } else if (GLOBAL_EVENT_ROLES.includes(effectiveRole)) {
+            targetUser.assignedEvents = effectiveRole === 'GlobalSupport' ? validEvents.slice(0, 1) : validEvents;
+        } else {
+            targetUser.assignedEvents = [];
+        }
+    }
+    return true;
 };
 
 /**
@@ -1037,7 +1133,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
  * PUT /api/users/:id
  * Update user details (Admin/GlobalSupport only)
  */
-router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport']), [
+router.put('/:id([0-9a-fA-F]{24})', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport']), [
     body('name')
         .optional()
         .trim()
@@ -1913,17 +2009,26 @@ router.put('/bulk-update', authenticateToken, requireRole(['SuperAdmin', 'Admin'
             query.organizationId = req.orgId;
         }
 
-        const affectsImportReadiness = updateFields.role !== undefined || updateFields.assignedBooth !== undefined;
+        const includesAssignmentFields = updateFields.assignedBooth !== undefined || updateFields.assignedEvents !== undefined;
+        const affectsImportReadiness = updateFields.role !== undefined || updateFields.assignedBooth !== undefined || updateFields.assignedEvents !== undefined;
         let result = null;
         if (affectsImportReadiness) {
             const usersToUpdate = await User.find(query);
+
             let modifiedCount = 0;
             for (const target of usersToUpdate) {
                 if (updateFields.isActive !== undefined) target.isActive = updateFields.isActive;
-                if (updateFields.assignedEvents !== undefined) target.assignedEvents = updateFields.assignedEvents;
-                if (updateFields.assignedBooth !== undefined) target.assignedBooth = updateFields.assignedBooth;
                 if (updateFields.role !== undefined) target.role = updateFields.role;
                 if (updateFields.organizationId !== undefined) target.organizationId = updateFields.organizationId;
+
+                if (includesAssignmentFields) {
+                    await validateAndNormalizeBulkAssignments(target, {
+                        effectiveRole: target.role,
+                        assignedBooth: updateFields.assignedBooth,
+                        assignedEvents: updateFields.assignedEvents
+                    });
+                }
+
                 target.refreshImportReadiness();
                 await target.save();
                 modifiedCount += 1;
@@ -1941,6 +2046,12 @@ router.put('/bulk-update', authenticateToken, requireRole(['SuperAdmin', 'Admin'
             modifiedCount: result.modifiedCount
         });
     } catch (error) {
+        if (error.status === 400) {
+            return res.status(400).json({
+                error: error.error || 'Validation failed',
+                message: error.message
+            });
+        }
         logger.error('Bulk update users error:', error);
         res.status(500).json({ error: 'Failed to bulk update users', message: error.message });
     }

@@ -114,6 +114,13 @@ export async function bulkDeleteUsers(userIds) {
   return res.data;
 }
 
+export async function bulkUpdateUsers(userIds, updates) {
+  const res = await axios.put('/api/users/bulk-update', { userIds, updates }, {
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
 // Bulk delete job seekers (uses same endpoint but specifically for JobSeeker role)
 export async function bulkDeleteJobSeekers(jobSeekerIds) {
   const res = await axios.delete('/api/users/bulk-delete', {

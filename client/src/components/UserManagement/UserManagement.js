@@ -12,27 +12,22 @@ import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input, Select, MultiSelect } from '../UI/FormComponents';
-import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, deleteUserPermanently, bulkDeleteUsers } from '../../services/users';
+import { listUsers, createUser, updateUser, deactivateUser, reactivateUser, deleteUserPermanently, bulkDeleteUsers, bulkUpdateUsers } from '../../services/users';
 import { listBooths, getBoothEvents } from '../../services/booths';
 import { listEvents } from '../../services/events';
 import { listOrganizations, assignUserToOrg, removeUserFromOrg } from '../../services/organizations';
 import { JOB_CATEGORY_LIST } from '../../constants/options';
 import MassUploadModal from './MassUploadModal';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
-
-function authHeaders() {
-  const token = localStorage.getItem('token');
-  return { Authorization: `Bearer ${token}` };
-}
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === 'SuperAdmin';
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [showMassUpload, setShowMassUpload] = useState(false);
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
-  const [bulkUpdateFields, setBulkUpdateFields] = useState({ isActive: '' });
+  const [bulkUpdateFields, setBulkUpdateFields] = useState({ assignedBooth: '', assignedEvents: [] });
+  const [bulkBoothEventOptions, setBulkBoothEventOptions] = useState([]);
   const [orgFilter, setOrgFilter] = useState('');
   const [orgsList, setOrgsList] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
@@ -151,6 +146,23 @@ export default function UserManagement() {
   }, [isSuperAdmin]);
   // Hide JobSeeker from filter and create lists
   const roleOptionsNoJobSeeker = useMemo(() => roleOptionsAll.filter(r => r.value !== 'JobSeeker'), [roleOptionsAll]);
+  const bulkAssignableRoles = useMemo(
+    () => new Set(['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalSupport', 'GlobalInterpreter']),
+    []
+  );
+  const selectedUserRecords = useMemo(
+    () => users.filter((u) => selectedUsers.includes(u.id)),
+    [users, selectedUsers]
+  );
+  const bulkIneligibleUsers = useMemo(
+    () => selectedUserRecords.filter((u) => !bulkAssignableRoles.has(u.role)),
+    [selectedUserRecords, bulkAssignableRoles]
+  );
+  const bulkIneligibleRoles = useMemo(
+    () => Array.from(new Set(bulkIneligibleUsers.map((u) => u.role))),
+    [bulkIneligibleUsers]
+  );
+  const isBulkSelectionEligible = bulkIneligibleUsers.length === 0;
 
   const getEmptyFormState = () => ({
     firstName: '',
@@ -310,17 +322,21 @@ export default function UserManagement() {
     const ids = [...selectedUsersRef.current];
     if (!ids.length) return;
     const updates = {};
-    if (bulkUpdateFields.isActive !== '') updates.isActive = bulkUpdateFields.isActive === 'true';
+    if (bulkUpdateFields.assignedBooth) updates.assignedBooth = bulkUpdateFields.assignedBooth;
+    if (Array.isArray(bulkUpdateFields.assignedEvents) && bulkUpdateFields.assignedEvents.length > 0) {
+      updates.assignedEvents = bulkUpdateFields.assignedEvents;
+    }
     if (Object.keys(updates).length === 0) {
       showToast('Select at least one field to update', 'Warning');
       return;
     }
     try {
       setBulkUpdating(true);
-      await axios.put('/api/users/bulk-update', { userIds: ids, updates }, { headers: authHeaders() });
+      await bulkUpdateUsers(ids, updates);
       showToast(`Updated ${ids.length} user(s) successfully`, 'Success');
       setShowBulkUpdate(false);
-      setBulkUpdateFields({ isActive: '' });
+      setBulkUpdateFields({ assignedBooth: '', assignedEvents: [] });
+      setBulkBoothEventOptions([]);
       setSelectedUsers([]);
       selectedUsersRef.current = [];
       if (gridRef.current && typeof gridRef.current.clearSelection === 'function') {
@@ -335,6 +351,26 @@ export default function UserManagement() {
     } finally {
       setBulkUpdating(false);
     }
+  };
+
+  const handleOpenBulkUpdateModal = async () => {
+    if (selectedUsers.length === 0) {
+      showToast('Please select users to update', 'Warning');
+      return;
+    }
+
+    // In list mode, proactively load modal options so booth/event selectors are always populated.
+    const orgIdForBulkOptions = isSuperAdmin ? (orgFilter || '') : '';
+    await loadBoothsAndEvents(orgIdForBulkOptions);
+
+    if (!isBulkSelectionEligible && bulkIneligibleRoles.length > 0) {
+      showToast(
+        `Booth/event updates for roles ${bulkIneligibleRoles.join(', ')} will be ignored automatically.`,
+        'Warning',
+        5000
+      );
+    }
+    setShowBulkUpdate(true);
   };
 
   const confirmBulkDelete = async () => {
@@ -575,7 +611,9 @@ export default function UserManagement() {
       setBoothOptions((boothRes?.booths || []).map(b => ({ value: b._id, label: b.name })));
       setEventOptions((eventRes?.events || []).map(e => ({ value: e._id, label: e.name })));
     } catch (e) {
-      // Non-blocking
+      // Non-blocking, but clear stale options so modal doesn't show old org data.
+      setBoothOptions([]);
+      setEventOptions([]);
     }
   };
 
@@ -619,6 +657,22 @@ export default function UserManagement() {
     };
     fetchBoothEventsForRole();
   }, [form.boothId, form.role]);
+
+  useEffect(() => {
+    const fetchBulkBoothEvents = async () => {
+      if (!showBulkUpdate || !bulkUpdateFields.assignedBooth) {
+        setBulkBoothEventOptions([]);
+        return;
+      }
+      try {
+        const events = await getBoothEvents(bulkUpdateFields.assignedBooth);
+        setBulkBoothEventOptions(events.map((event) => ({ value: event._id, label: event.name })));
+      } catch (error) {
+        setBulkBoothEventOptions([]);
+      }
+    };
+    fetchBulkBoothEvents();
+  }, [showBulkUpdate, bulkUpdateFields.assignedBooth]);
 
   // Cleanup selection RAF on unmount
   useEffect(() => {
@@ -1058,7 +1112,7 @@ export default function UserManagement() {
                     {selectedUsers.length > 0 && (
                       <ButtonComponent
                         cssClass="e-warning"
-                        onClick={() => setShowBulkUpdate(true)}
+                        onClick={handleOpenBulkUpdateModal}
                         aria-label={`Bulk update ${selectedUsers.length} users`}
                       >
                         Update Selected ({selectedUsers.length})
@@ -1950,21 +2004,38 @@ export default function UserManagement() {
             </p>
 
             <label style={{ display: 'block', marginBottom: 16 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 6 }}>Account Status</span>
+              <span style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 6 }}>Assigned Booth</span>
               <select
-                value={bulkUpdateFields.isActive}
-                onChange={e => setBulkUpdateFields(f => ({ ...f, isActive: e.target.value }))}
+                value={bulkUpdateFields.assignedBooth}
+                onChange={e => setBulkUpdateFields(f => ({ ...f, assignedBooth: e.target.value, assignedEvents: [] }))}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
               >
                 <option value="">— No Change —</option>
-                <option value="true">Active</option>
-                <option value="false">Deactivated</option>
+                {boothOptions.map((booth) => (
+                  <option key={booth.value} value={booth.value}>{booth.label}</option>
+                ))}
               </select>
             </label>
 
+            <MultiSelect
+              label="Assigned Events"
+              value={bulkUpdateFields.assignedEvents}
+              onChange={(e) => setBulkUpdateFields((f) => ({ ...f, assignedEvents: e.target.value || [] }))}
+              options={bulkUpdateFields.assignedBooth ? bulkBoothEventOptions : eventOptions}
+              placeholder="Select one or more events"
+              name="bulkAssignedEvents"
+            />
+            <p style={{ margin: '0 0 6px', color: '#666', fontSize: 12 }}>
+              You can select multiple events.
+            </p>
+
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
               <button
-                onClick={() => { setShowBulkUpdate(false); setBulkUpdateFields({ isActive: '' }); }}
+                onClick={() => {
+                  setShowBulkUpdate(false);
+                  setBulkUpdateFields({ assignedBooth: '', assignedEvents: [] });
+                  setBulkBoothEventOptions([]);
+                }}
                 style={{ padding: '9px 20px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontWeight: 500 }}
               >
                 Cancel
