@@ -1,8 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { FiX, FiUser, FiMail, FiPhone, FiMapPin, FiFileText, FiAward, FiBriefcase, FiGlobe, FiCalendar, FiDollarSign, FiCheckCircle, FiLoader } from 'react-icons/fi';
+import { FiX, FiUser, FiMail, FiPhone, FiMapPin, FiFileText, FiAward, FiBriefcase, FiCalendar, FiDollarSign, FiLoader } from 'react-icons/fi';
 import { FaLinkedin } from 'react-icons/fa';
 import { getUser } from '../../services/users';
+import { openResumeInNewTab } from '../../utils/resumeViewer';
+import { getResolvedResumeRefs } from '../../utils/jobSeekerResume';
+import {
+  JOB_CATEGORY_LIST,
+  JOB_TYPE_LIST,
+  EXPERIENCE_LEVEL_LIST,
+  EDUCATION_LEVEL_LIST,
+  LANGUAGE_LIST,
+  MILITARY_EXPERIENCE_LIST
+} from '../../constants/options';
 import './JobSeekerProfileCall.css';
+
+const parseMetadata = (raw) => {
+  if (!raw) return {};
+  if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
+const getLabelFromValue = (value, optionsList) => {
+  if (!value) return 'Not specified';
+  const option = optionsList.find((opt) => opt.value === value);
+  return option ? option.name : value;
+};
+
+const getLabelsFromValues = (values, optionsList) => {
+  if (!values || values.length === 0) return [];
+  return values.map((value) => getLabelFromValue(value, optionsList));
+};
 
 const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
   const [fullJobSeekerData, setFullJobSeekerData] = useState(jobSeeker);
@@ -36,6 +71,10 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
           const response = await getUser(userId);
           // API returns {user: {...}}, extract the user object
           const completeData = response.user || response;
+          // Resume-builder resumes come back on the top-level response
+          if (response.resolvedResume) {
+            completeData.resolvedResume = response.resolvedResume;
+          }
           setFullJobSeekerData(completeData);
           setError(null);
         } catch (err) {
@@ -88,9 +127,22 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
   // Use the full data if available, fallback to original
   const currentJobSeeker = fullJobSeekerData || jobSeeker;
   
-  // Get metadata from jobSeeker object - check multiple possible locations
-  // Note: metadata.profile contains the job seeker profile information
-  const metadata = currentJobSeeker.metadata?.profile || currentJobSeeker.metadata || currentJobSeeker.jobSeekerProfile || {};
+  const parsedMetadata = parseMetadata(currentJobSeeker.metadata);
+  const metadata = {
+    ...parsedMetadata,
+    ...(currentJobSeeker.jobSeekerProfile && typeof currentJobSeeker.jobSeekerProfile === 'object'
+      ? currentJobSeeker.jobSeekerProfile
+      : {})
+  };
+  const profile = (
+    parsedMetadata.profile &&
+    typeof parsedMetadata.profile === 'object' &&
+    !Array.isArray(parsedMetadata.profile)
+  )
+    ? parsedMetadata.profile
+    : {};
+  const { resumeId, resumeUrl, hasResume } = getResolvedResumeRefs(currentJobSeeker, metadata);
+
   // Helper function to format arrays
   const formatArray = (arr) => {
     if (!arr) return null;
@@ -148,6 +200,39 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
   );
   const skills = ensureArray(metadata.skills || metadata.keywords);
   const educationValues = ensureArray(metadata.education);
+  const jobExperienceValues = ensureArray(
+    profile.primaryExperience || metadata.primaryExperience || metadata.primaryJobExperience || metadata.primaryJob
+  );
+  const employmentTypeValues = ensureArray(
+    profile.employmentTypes || metadata.employmentTypes || metadata.employmentType || metadata.preferredJobTypes
+  );
+  const languageValues = ensureArray(profile.languages || metadata.languages || currentJobSeeker.languages);
+  const experienceLevel = getLabelFromValue(
+    profile.workLevel || metadata.workLevel || metadata.experienceLevel,
+    EXPERIENCE_LEVEL_LIST
+  );
+  const educationLevel = getLabelFromValue(
+    profile.educationLevel || metadata.educationLevel || metadata.highestEducation,
+    EDUCATION_LEVEL_LIST
+  );
+  const veteranStatus = getLabelFromValue(
+    profile.veteranStatus || metadata.veteranStatus || metadata.militaryStatus,
+    MILITARY_EXPERIENCE_LIST
+  );
+  const hasCareerSnapshot = Boolean(
+    jobExperienceValues.length > 0 ||
+    employmentTypeValues.length > 0 ||
+    languageValues.length > 0 ||
+    profile.workLevel ||
+    metadata.workLevel ||
+    metadata.experienceLevel ||
+    profile.educationLevel ||
+    metadata.educationLevel ||
+    metadata.highestEducation ||
+    profile.veteranStatus ||
+    metadata.veteranStatus ||
+    metadata.militaryStatus
+  );
 
   return (
     <div className="profile-panel-call" role="dialog" aria-labelledby="profile-title" aria-modal="true">
@@ -208,7 +293,7 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
             </div>
             <div className="profile-header-info">
               <h2 className="profile-name">{getDisplayName()}</h2>
-              {(currentJobSeeker.linkedInUrl || currentJobSeeker.resumeUrl) && (
+              {(currentJobSeeker.linkedInUrl || hasResume) && (
                 <div className="profile-top-actions">
                   {currentJobSeeker.linkedInUrl && (
                     <a
@@ -222,17 +307,16 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
                       LinkedIn
                     </a>
                   )}
-                  {currentJobSeeker.resumeUrl && (
-                    <a
-                      href={currentJobSeeker.resumeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {hasResume && (
+                    <button
+                      type="button"
                       className="resume-link compact"
-                      aria-label="View job seeker's resume (opens in new tab)"
+                      onClick={() => openResumeInNewTab(resumeId, resumeUrl)}
+                      aria-label="View job seeker resume"
                     >
                       <FiFileText size={16} aria-hidden="true" />
                       Resume
-                    </a>
+                    </button>
                   )}
                 </div>
               )}
@@ -256,9 +340,9 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
                   <span>{getLocationString()}</span>
                 </p>
               )}
-              {(metadata.professionalHeadline || metadata.headline) && (
+              {(profile.headline || metadata.professionalHeadline || metadata.headline) && (
                 <p className="professional-headline">
-                  {metadata.professionalHeadline || metadata.headline}
+                  {profile.headline || metadata.professionalHeadline || metadata.headline}
                 </p>
               )}
             </div>
@@ -365,46 +449,44 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
           </div>
         )}
 
-        {/* Accessibility Needs */}
-        {(currentJobSeeker.needsASL || currentJobSeeker.needsCaptions || currentJobSeeker.usesScreenReader || currentJobSeeker.usesScreenMagnifier || currentJobSeeker.needsOther) && (
+        {/* Career Snapshot */}
+        {hasCareerSnapshot && (
           <div className="profile-section">
             <h3 className="section-title">
-              <FiCheckCircle size={18} aria-hidden="true" />
-              Accessibility Needs
+              <FiBriefcase size={18} aria-hidden="true" />
+              Career Snapshot
             </h3>
-            <div className="accessibility-badges">
-              {currentJobSeeker.needsASL && (
-                <span className="accessibility-badge">ASL Required</span>
+            <div className="info-grid compact-grid">
+              {jobExperienceValues.length > 0 && (
+                <div className="info-card full-width">
+                  <strong>Job Experience:</strong>
+                  <span>{getLabelsFromValues(jobExperienceValues, JOB_CATEGORY_LIST).join(', ')}</span>
+                </div>
               )}
-              {currentJobSeeker.needsCaptions && (
-                <span className="accessibility-badge">Captions Required</span>
+              <div className="info-card">
+                <strong>Experience Level:</strong>
+                <span>{experienceLevel}</span>
+              </div>
+              <div className="info-card">
+                <strong>Education:</strong>
+                <span>{educationLevel}</span>
+              </div>
+              {employmentTypeValues.length > 0 && (
+                <div className="info-card full-width">
+                  <strong>Employment Types:</strong>
+                  <span>{getLabelsFromValues(employmentTypeValues, JOB_TYPE_LIST).join(', ')}</span>
+                </div>
               )}
-              {currentJobSeeker.usesScreenReader && (
-                <span className="accessibility-badge">Screen Reader</span>
+              {languageValues.length > 0 && (
+                <div className="info-card full-width">
+                  <strong>Language:</strong>
+                  <span>{getLabelsFromValues(languageValues, LANGUAGE_LIST).join(', ')}</span>
+                </div>
               )}
-              {currentJobSeeker.usesScreenMagnifier && (
-                <span className="accessibility-badge">Screen Magnifier</span>
-              )}
-              {currentJobSeeker.needsOther && (
-                <span className="accessibility-badge">Other Needs</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Languages */}
-        {metadata.languages && metadata.languages.length > 0 && (
-          <div className="profile-section">
-            <h3 className="section-title">
-              <FiGlobe size={18} aria-hidden="true" />
-              Languages
-            </h3>
-            <div className="languages-badges">
-              {metadata.languages.map((lang, index) => (
-                <span key={index} className="language-badge">
-                  {typeof lang === 'string' ? lang : lang.name}
-                </span>
-              ))}
+              <div className="info-card">
+                <strong>Veteran Status:</strong>
+                <span>{veteranStatus}</span>
+              </div>
             </div>
           </div>
         )}
@@ -454,7 +536,7 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
         )}
 
         {/* No Information Available */}
-        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !metadata.skills && !metadata.keywords && !metadata.experience && !metadata.yearsOfExperience && !metadata.education && !metadata.highestEducation && !currentJobSeeker.resumeUrl && !currentJobSeeker.linkedInUrl && (
+        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !metadata.skills && !metadata.keywords && !metadata.experience && !metadata.yearsOfExperience && !metadata.education && !metadata.highestEducation && !hasCareerSnapshot && !hasResume && !currentJobSeeker.linkedInUrl && (
           <div className="profile-section">
             <div className="no-additional-info">
               <FiFileText size={48} aria-hidden="true" />
