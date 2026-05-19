@@ -1034,7 +1034,12 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 .sidebar-section {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-section:last-child {
+    border-bottom: none;
 }
 
 .sidebar-header {
@@ -1042,7 +1047,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     background: none;
     border: none;
     color: #ffffff;
-    padding: 0.75rem 1.5rem;
+    padding: 0.85rem 1.5rem;
     text-align: left;
     font-weight: 600;
     cursor: pointer;
@@ -1067,6 +1072,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     background: #ffffff;
     color: #000000;
     font-weight: 600;
+    border-bottom: 3px solid #000000;
 }
 
 .sidebar-header.active:hover,
@@ -1091,6 +1097,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
 
 .sidebar-items {
     background: #1a1a1a;
+    padding-bottom: 0.5rem;
 }
 
 /* Empty state inside sidebar lists (e.g., no registrations/upcoming events) */

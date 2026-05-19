@@ -629,7 +629,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, admin: !s.admin }))} aria-expanded={expanded.admin}>
               <span>Recruiter</span>
-              {expanded.admin ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.admin ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.admin && (
               <div className="sidebar-items">
@@ -664,7 +664,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, profile: !s.profile }))} aria-expanded={expanded.profile}>
               <span>Profile</span>
-              {expanded.profile ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.profile ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.profile && (
               <div className="sidebar-items">
@@ -678,7 +678,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, tools: !s.tools }))} aria-expanded={expanded.tools}>
               <span>Tools</span>
-              {expanded.tools ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.tools ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.tools && (
               <div className="sidebar-items">
@@ -700,7 +700,7 @@ export default function AdminSidebar({ active = 'booths' }) {
               aria-expanded={expanded.superadmin !== false}
             >
               <span>Platform</span>
-              {expanded.superadmin !== false ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.superadmin !== false ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.superadmin !== false && (
               <div className="sidebar-items">
@@ -732,7 +732,7 @@ export default function AdminSidebar({ active = 'booths' }) {
               aria-expanded={expanded.configuration}
             >
               <span>Configuration</span>
-              {expanded.configuration ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.configuration ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.configuration && (
               <div className="sidebar-items">
@@ -761,7 +761,7 @@ export default function AdminSidebar({ active = 'booths' }) {
               aria-expanded={expanded.footer !== false}
             >
               <span>Footer</span>
-              {expanded.footer !== false ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.footer !== false ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.footer !== false && (
               <div className="sidebar-items">
@@ -786,7 +786,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, admin: !s.admin }))} aria-expanded={expanded.admin}>
               <span>Administration</span>
-              {expanded.admin ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.admin ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.admin && (
               <div className="sidebar-items">
@@ -805,7 +805,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, configuration: !s.configuration }))} aria-expanded={expanded.configuration}>
               <span>Configuration</span>
-              {expanded.configuration ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.configuration ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.configuration && (
               <div className="sidebar-items">
@@ -821,7 +821,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           <div className="sidebar-section">
             <button className="sidebar-header" onClick={() => setExpanded(s => ({ ...s, tools: !s.tools }))} aria-expanded={expanded.tools}>
               <span>Tools</span>
-              {expanded.tools ? <MdExpandLess /> : <MdExpandMore />}
+              {expanded.tools ? <MdExpandLess aria-hidden="true" /> : <MdExpandMore aria-hidden="true" />}
             </button>
             {expanded.tools && (
               <div className="sidebar-items">
@@ -847,7 +847,7 @@ export default function AdminSidebar({ active = 'booths' }) {
         onClick={closeMobileMenu}
         aria-hidden="true"
       />
-      <nav id="primary-navigation" className={`dashboard-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+      <nav id="primary-navigation" className={`dashboard-sidebar ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Main navigation">
         <button
           className="mobile-menu-toggle nav-landmark-toggle"
           onClick={toggleMobileMenu}
@@ -855,7 +855,7 @@ export default function AdminSidebar({ active = 'booths' }) {
           aria-expanded={mobileOpen}
           aria-controls="primary-navigation"
         >
-          {mobileOpen ? <MdClose /> : <MdMenu />}
+          {mobileOpen ? <MdClose aria-hidden="true" /> : <MdMenu aria-hidden="true" />}
         </button>
         {renderSidebarContent()}
       </nav>
