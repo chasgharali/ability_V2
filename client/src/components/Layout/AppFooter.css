@@ -36,7 +36,7 @@ html.theme-high-contrast .app-footer {
 .app-footer {
     background: var(--footer-bg);
     color: var(--footer-text);
-    padding: 0.9rem 2rem;
+    padding: 0.9rem var(--public-page-padding-x, 2rem);
     position: fixed;
     left: 0;
     right: 0;
@@ -60,7 +60,7 @@ html.theme-high-contrast .app-footer {
 }
 
 .app-footer-inner {
-    max-width: 1400px;
+    max-width: var(--public-page-max-width, 1400px);
     margin: 0 auto;
     display: flex;
     align-items: center;

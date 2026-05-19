@@ -4,6 +4,9 @@ const Settings = require('../models/Settings');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl');
 
+const SUPERADMIN_ONLY_SETTING_KEYS = new Set(['footer_text']);
+const FOOTER_TEXT_MAX_LENGTH = 200;
+
 function normalizeBrandingLogoValue(value) {
   if (typeof value !== 'string') return value;
   const trimmed = value.trim();
@@ -18,6 +21,20 @@ function normalizeBrandingLogoValue(value) {
   }
 
   return toStablePublicImageUrl(trimmed);
+}
+
+function sanitizeFooterTextValue(value) {
+  if (typeof value !== 'string') {
+    return { error: 'Footer text must be a string' };
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return { error: 'Footer text cannot be empty' };
+  }
+  if (trimmed.length > FOOTER_TEXT_MAX_LENGTH) {
+    return { error: `Footer text must be ${FOOTER_TEXT_MAX_LENGTH} characters or fewer` };
+  }
+  return { value: trimmed };
 }
 
 // @route   GET /api/settings
@@ -80,6 +97,13 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Supe
         error: 'Key and value are required' 
       });
     }
+
+    if (SUPERADMIN_ONLY_SETTING_KEYS.has(key) && req.user.role !== 'SuperAdmin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only SuperAdmin can update this setting'
+      });
+    }
     
     let sanitizedValue = value;
     if (key === 'branding_logo') {
@@ -96,6 +120,16 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Supe
           error: 'Branding logo must be uploaded to S3 via the image uploader'
         });
       }
+    }
+    if (key === 'footer_text') {
+      const footerResult = sanitizeFooterTextValue(value);
+      if (footerResult.error) {
+        return res.status(400).json({
+          success: false,
+          error: footerResult.error
+        });
+      }
+      sanitizedValue = footerResult.value;
     }
 
     const setting = await Settings.setSetting(
@@ -128,6 +162,14 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Supe
 router.delete('/:key', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'SuperAdmin']), async (req, res) => {
   try {
     const { key } = req.params;
+
+    if (SUPERADMIN_ONLY_SETTING_KEYS.has(key) && req.user.role !== 'SuperAdmin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only SuperAdmin can delete this setting'
+      });
+    }
+
     const result = await Settings.deleteOne({ key });
     
     if (result.deletedCount === 0) {

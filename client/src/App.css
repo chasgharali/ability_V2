@@ -2,6 +2,8 @@
 
 :root {
     --app-footer-height: 50px;
+    --public-page-max-width: 1400px;
+    --public-page-padding-x: 2rem;
 }
 
 .App {

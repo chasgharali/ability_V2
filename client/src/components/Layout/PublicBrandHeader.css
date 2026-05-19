@@ -10,12 +10,12 @@
     z-index: 1100;
     background: #ffffff;
     color: #111827;
-    padding: 0.75rem 1.75rem;
+    padding: 0.75rem var(--public-page-padding-x, 2rem);
     border-bottom: 1px solid #e5e7eb;
 }
 
 .public-brand-header-inner {
-    max-width: 980px;
+    max-width: var(--public-page-max-width, 1400px);
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -34,4 +34,10 @@
     font-size: 1.1rem;
     letter-spacing: 0.02em;
     color: #111827;
+}
+
+@media (max-width: 480px) {
+    .public-brand-header-inner {
+        justify-content: center;
+    }
 }

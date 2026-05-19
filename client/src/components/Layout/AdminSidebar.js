@@ -79,6 +79,7 @@ function getSidebarKeyFromPath(pathname, role) {
   if (pathname === '/ai-search' || pathname.startsWith('/ai-search/')) return 'ai-search';
   if (pathname.startsWith('/legal/terms-of-use/edit')) return 'legal-terms-of-use';
   if (pathname.startsWith('/legal/privacy-policy/edit')) return 'legal-privacy-policy';
+  if (pathname === '/footer-text' || pathname.startsWith('/footer-text/')) return 'footer-text';
 
   return undefined;
 }
@@ -760,6 +761,9 @@ export default function AdminSidebar({ active = 'booths' }) {
             </button>
             {expanded.footer !== false && (
               <div className="sidebar-items">
+                <button className={itemClass('footer-text')} onClick={() => handleItemClick('/footer-text')}>
+                  Copyright Text
+                </button>
                 <button className={itemClass('legal-terms-of-use')} onClick={() => handleItemClick('/legal/terms-of-use/edit')}>
                   Terms of Use
                 </button>
