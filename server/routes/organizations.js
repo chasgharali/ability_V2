@@ -501,6 +501,10 @@ router.get('/:id/job-seekers', authenticateToken, requireRole(['SuperAdmin', 'Ad
                 userQuery.$or = [
                     { name: containsRegex },
                     { email: containsRegex },
+                    { phoneNumber: containsRegex },
+                    { city: containsRegex },
+                    { state: containsRegex },
+                    { country: containsRegex },
                     { 'metadata.profile.headline': containsRegex },
                     { 'metadata.profile.keywords': containsRegex },
                     { 'metadata.profile.workLevel': containsRegex },
@@ -714,6 +718,14 @@ router.post('/:id/job-seekers/ai-search', authenticateToken, requireRole(['Super
         }
         if (error.code === 'OPENAI_NOT_CONFIGURED' || error.message?.includes('OPENAI_API_KEY')) {
             return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
+        }
+        if (error.code === 'AI_SEARCH_BACKEND_UNAVAILABLE') {
+            logger.error('AI search backend unavailable (org scope):', error.details || error.message);
+            return res.status(503).json({
+                error: 'AI search temporarily unavailable — search index backend is not ready',
+                code: 'AI_SEARCH_BACKEND_UNAVAILABLE',
+                message: 'Run `npm run ai-search:index-health` on the server to verify Mongo and Atlas vector indexes.'
+            });
         }
         logger.error('Error in ai-search:', error);
         res.status(500).json({ error: 'AI search failed' });

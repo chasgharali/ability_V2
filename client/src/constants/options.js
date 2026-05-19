@@ -468,7 +468,7 @@ export const EDUCATION_LEVEL_LIST = [
 ];
 
 export const INTERPRETER_CATEGORIES = [
-  { label: 'ASL (American Sign Language)', value: 'ASL' },
+  { label: 'Sign Language', value: 'ASL' },
   { label: 'Spanish', value: 'Spanish' },
   { label: 'French', value: 'French' },
   { label: 'German', value: 'German' },

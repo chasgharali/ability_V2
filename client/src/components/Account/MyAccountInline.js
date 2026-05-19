@@ -591,7 +591,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                 />
                 <span className="checkbox-custom"></span>
                 <span className="checkbox-text">
-                  <strong>American Sign Language (ASL)</strong>
+                  <strong>Sign Language</strong>
                   <small>Sign language interpretation services</small>
                 </span>
               </label>

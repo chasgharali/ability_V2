@@ -2226,6 +2226,14 @@ router.post('/job-seekers/ai-search', authenticateToken, requireRole(['SuperAdmi
         if (error.code === 'OPENAI_NOT_CONFIGURED') {
             return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
         }
+        if (error.code === 'AI_SEARCH_BACKEND_UNAVAILABLE') {
+            logger.error('AI search backend unavailable (global scope):', error.details || error.message);
+            return res.status(503).json({
+                error: 'AI search temporarily unavailable — search index backend is not ready',
+                code: 'AI_SEARCH_BACKEND_UNAVAILABLE',
+                message: 'Run `npm run ai-search:index-health` on the server to verify Mongo and Atlas vector indexes.'
+            });
+        }
         logger.error('Global ai-search error:', error);
         res.status(500).json({ error: 'AI search failed' });
     }

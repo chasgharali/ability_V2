@@ -105,9 +105,11 @@ const connectRedis = async () => {
 /**
  * Get Redis client instance
  */
-const getRedisClient = () => {
+const getRedisClient = (opts = {}) => {
     if (!redisClient) {
-        logger.warn('Redis client not available');
+        if (!opts.silent) {
+            logger.warn('Redis client not available');
+        }
         return null;
     }
     return redisClient;

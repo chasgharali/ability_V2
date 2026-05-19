@@ -7,6 +7,9 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const Booth = require('../models/Booth');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
+const aiSearchService = require('../services/aiSearchService');
+const logger = require('../utils/logger');
+const { buildCacheKey, getCachedJson, setCachedJson } = require('../utils/searchCache');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const {
     getWorkLevelLabel,
@@ -16,6 +19,7 @@ const {
 } = require('../utils/profileFieldLabels');
 
 const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
+const MEETING_AI_CACHE_TTL_SECONDS = parseInt(process.env.MEETING_AI_CACHE_TTL_SECONDS || '120', 10);
 
 const ensureOrgContext = (req, res) => {
     if (!isSuperAdmin(req) && !req.orgId) {
@@ -357,26 +361,104 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-// ─── AI search across job seekers in this user's visible meeting records ────
-//
-// Recruiters: scoped to job seekers whose meetings happened at their booth.
-// Admins/GlobalSupport: scoped to job seekers whose meetings happened in their org.
-// SuperAdmin: global (no scope).
-//
-// Returns the same shape as the org / global ai-search endpoints, plus a list
-// of meetingRecordIds per job seeker so the UI can deep-link straight to a
-// specific record.
+const getMeetingSearchSnippet = (meetingRecord, searchRegex) => {
+    const strengthText = Array.isArray(meetingRecord.feedback?.strengths) ? meetingRecord.feedback.strengths.join(' ') : '';
+    const improvementText = Array.isArray(meetingRecord.feedback?.areasForImprovement) ? meetingRecord.feedback.areasForImprovement.join(' ') : '';
+    const messageText = Array.isArray(meetingRecord.jobSeekerMessages)
+        ? meetingRecord.jobSeekerMessages.map(msg => msg?.content).filter(Boolean).join(' ')
+        : '';
+    const chatText = Array.isArray(meetingRecord.chatMessages)
+        ? meetingRecord.chatMessages.map(msg => msg?.message).filter(Boolean).join(' ')
+        : '';
+    const transcriptText = Array.isArray(meetingRecord.attachments)
+        ? meetingRecord.attachments.map(item => item?.transcript).filter(Boolean).join(' ')
+        : '';
+
+    const snippetCandidates = [
+        { label: 'Recruiter feedback', value: meetingRecord.recruiterFeedback },
+        { label: 'Feedback notes', value: meetingRecord.feedback?.notes },
+        { label: 'Strengths', value: strengthText },
+        { label: 'Areas to improve', value: improvementText },
+        { label: 'Messages', value: messageText },
+        { label: 'Chat', value: chatText },
+        { label: 'Transcript', value: transcriptText }
+    ];
+
+    for (const candidate of snippetCandidates) {
+        if (candidate.value && searchRegex.test(candidate.value)) {
+            return {
+                label: candidate.label,
+                text: String(candidate.value).slice(0, 280)
+            };
+        }
+    }
+
+    return {
+        label: 'Status',
+        text: meetingRecord.status || 'No searchable notes available'
+    };
+};
+
+const getMeetingRatingSearchConditions = (queryText) => {
+    if (!queryText) return [];
+    const normalized = String(queryText).toLowerCase();
+    const hasRatingContext = /\b(rating|ratings|rated|score|scores|star|stars)\b/.test(normalized);
+    const conditions = [];
+
+    // Explicit numeric intent: "rating 4", "4 stars", "score 2/5", etc.
+    const explicitRatings = new Set();
+    const numericPatterns = [
+        /\b([1-5])\s*(?:\/\s*5)?\s*(?:star|stars|rating|ratings|score|scores)\b/g,
+        /\b(?:rating|ratings|score|scores)\s*(?:of|is|=|:)?\s*([1-5])(?:\s*\/\s*5)?\b/g
+    ];
+
+    numericPatterns.forEach((pattern) => {
+        let match;
+        while ((match = pattern.exec(normalized)) !== null) {
+            explicitRatings.add(Number(match[1]));
+        }
+    });
+
+    if (explicitRatings.size > 0) {
+        const ratings = Array.from(explicitRatings).filter((n) => n >= 1 && n <= 5);
+        if (ratings.length > 0) {
+            conditions.push({ recruiterRating: { $in: ratings } });
+            conditions.push({ 'feedback.rating': { $in: ratings } });
+            return conditions;
+        }
+    }
+
+    if (!hasRatingContext) return [];
+
+    const lowIntent = /\b(low|poor|bad|weak|negative|disappoint(?:ed|ing)?)\b/.test(normalized);
+    const mediumIntent = /\b(medium|average|fair|moderate|okay|ok)\b/.test(normalized);
+    const highIntent = /\b(high|good|great|excellent|strong|top|best|outstanding)\b/.test(normalized);
+
+    if (lowIntent && !mediumIntent && !highIntent) {
+        conditions.push({ recruiterRating: { $gte: 1, $lte: 2 } });
+        conditions.push({ 'feedback.rating': { $gte: 1, $lte: 2 } });
+    } else if (mediumIntent && !lowIntent && !highIntent) {
+        conditions.push({ recruiterRating: 3 });
+        conditions.push({ 'feedback.rating': 3 });
+    } else if (highIntent && !lowIntent && !mediumIntent) {
+        conditions.push({ recruiterRating: { $gte: 4, $lte: 5 } });
+        conditions.push({ 'feedback.rating': { $gte: 4, $lte: 5 } });
+    }
+
+    return conditions;
+};
+
+// ─── AI search across meeting records only ──────────────────────────────────
 router.post('/ai-search', authenticateToken, async (req, res) => {
     try {
-        const logger = require('../utils/logger');
-        const aiSearchService = require('../services/aiSearchService');
-
         const { query, page = 1, limit = 20 } = req.body || {};
-        if (!query?.trim()) return res.status(400).json({ error: 'query is required' });
+        const queryText = query?.trim();
 
+        if (!queryText) {
+            return res.status(400).json({ error: 'query is required' });
+        }
         if (!ensureOrgContext(req, res)) return;
 
-        // Build the same scope as the listing endpoint.
         let recordScope = await buildMeetingOrgScope(req);
         if (req.user.role === 'Recruiter') {
             const recruiter = await User.findById(req.user._id).select('assignedBooth');
@@ -386,46 +468,232 @@ router.post('/ai-search', authenticateToken, async (req, res) => {
             } else {
                 recordScope.recruiterId = req.user._id;
             }
-        } else if (!['Admin', 'GlobalSupport', 'SuperAdmin'].includes(req.user.role)) {
+        } else if (!['Admin', 'AdminEvent', 'GlobalSupport', 'SuperAdmin'].includes(req.user.role)) {
             return res.status(403).json({ error: 'Access denied' });
         }
 
-        // Collect the set of job-seeker IDs visible to this user.
-        const visibleRecords = await MeetingRecord.find(recordScope)
-            .select('jobseekerId _id')
-            .lean();
-        const userIds = Array.from(new Set(
-            visibleRecords.map(r => String(r.jobseekerId)).filter(Boolean)
-        ));
+        const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+        const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+        const meetingSearchCacheKey = buildCacheKey('meetingAiSearch:result', {
+            query: queryText,
+            userId: String(req.user?._id || ''),
+            role: req.user?.role || '',
+            orgId: String(req.orgId || ''),
+            page: parsedPage,
+            limit: parsedLimit
+        });
+        const cachedResponse = await getCachedJson(meetingSearchCacheKey);
+        if (cachedResponse) {
+            return res.json(cachedResponse);
+        }
+        const escapedSearch = queryText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(escapedSearch, 'i');
+        const orgScopedFilter = !isSuperAdmin(req) ? { organizationId: req.orgId } : {};
 
-        if (userIds.length === 0) {
-            return res.json({ results: [], total: 0, criteria: {}, page: 1, totalPages: 0 });
+        const [matchingUsers, matchingEvents, matchingBooths] = await Promise.all([
+            User.find({
+                ...orgScopedFilter,
+                $or: [
+                    { name: searchRegex },
+                    { email: searchRegex },
+                    { phoneNumber: searchRegex },
+                    { city: searchRegex },
+                    { state: searchRegex },
+                    { country: searchRegex }
+                ]
+            }).select('_id').lean(),
+            Event.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean(),
+            Booth.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean()
+        ]);
+
+        const userIds = matchingUsers.map(item => item._id);
+        const eventIds = matchingEvents.map(item => item._id);
+        const boothIds = matchingBooths.map(item => item._id);
+
+        const searchConditions = [
+            { recruiterFeedback: searchRegex },
+            { 'feedback.notes': searchRegex },
+            { 'feedback.strengths': searchRegex },
+            { 'feedback.areasForImprovement': searchRegex },
+            { 'jobSeekerMessages.content': searchRegex },
+            { 'chatMessages.message': searchRegex },
+            { 'attachments.transcript': searchRegex },
+            { status: searchRegex }
+        ];
+        const ratingSearchConditions = getMeetingRatingSearchConditions(queryText);
+        if (ratingSearchConditions.length > 0) {
+            searchConditions.push(...ratingSearchConditions);
         }
 
-        const scope = isSuperAdmin(req)
-            ? { kind: 'global' }
-            : { kind: 'users', userIds };
+        if (userIds.length > 0) {
+            searchConditions.push({ recruiterId: { $in: userIds } });
+            searchConditions.push({ jobseekerId: { $in: userIds } });
+            searchConditions.push({ interpreterId: { $in: userIds } });
+        }
+        if (eventIds.length > 0) {
+            searchConditions.push({ eventId: { $in: eventIds } });
+        }
+        if (boothIds.length > 0) {
+            searchConditions.push({ boothId: { $in: boothIds } });
+        }
 
-        const result = await aiSearchService.search(query, scope, {
-            page: parseInt(page) || 1,
-            limit: Math.min(parseInt(limit) || 20, 100)
+        const textQuery = { $and: [recordScope, { $or: searchConditions }] };
+        const visibleUserIds = await MeetingRecord.distinct('jobseekerId', recordScope);
+
+        const [rows, semantic] = await Promise.all([
+            MeetingRecord.find(textQuery)
+                .populate('eventId', 'name')
+                .populate('boothId', 'name')
+                .populate('recruiterId', 'name email')
+                .populate('jobseekerId', 'name email phoneNumber city state country')
+                .populate('interpreterId', 'name email')
+                .sort({ startTime: -1 })
+                .lean(),
+            visibleUserIds.length > 0
+                ? aiSearchService.search(
+                    queryText,
+                    { kind: 'users', userIds: visibleUserIds },
+                    {
+                        page: 1,
+                        // Pull a larger pool, then merge and paginate.
+                        limit: 200,
+                        candidatePoolSize: 400
+                    }
+                )
+                : { results: [], total: 0, criteria: {} }
+        ]);
+
+        const meetingResults = rows.map(record => {
+            const snippet = getMeetingSearchSnippet(record, searchRegex);
+            return {
+                _id: record._id,
+                meetingRecordId: record._id,
+                event: record.eventId || null,
+                booth: record.boothId || null,
+                recruiter: record.recruiterId || null,
+                jobSeeker: record.jobseekerId || null,
+                interpreter: record.interpreterId || null,
+                status: record.status || null,
+                startTime: record.startTime || null,
+                endTime: record.endTime || null,
+                duration: record.duration || null,
+                recruiterRating: record.recruiterRating ?? null,
+                feedbackRating: record.feedback?.rating ?? null,
+                snippetLabel: snippet.label,
+                snippetText: snippet.text,
+                semanticEvidence: semanticEvidenceMap.get(String(record.jobseekerId?._id || record.jobseekerId || '')) || null,
+                _hybridScore: 1
+            };
         });
 
-        // Annotate each result with the meeting-record IDs that link to them
-        // so the UI can navigate from the search result to the specific call.
-        const recordsByUser = new Map();
-        for (const r of visibleRecords) {
-            const k = String(r.jobseekerId);
-            if (!recordsByUser.has(k)) recordsByUser.set(k, []);
-            recordsByUser.get(k).push(r._id);
-        }
-        result.results = result.results.map(r => ({
-            ...r,
-            meetingRecordIds: recordsByUser.get(String(r._id)) || []
-        }));
+        const semanticUserIds = (semantic.results || [])
+            .map(item => item?._id)
+            .filter(Boolean);
+        const semanticScoreMap = new Map(
+            (semantic.results || []).map(item => [String(item._id), Number(item._searchScore) || 0])
+        );
+        const semanticEvidenceMap = new Map(
+            (semantic.results || []).map(item => [String(item?._id || ''), item?.aiProfile?.ragEvidence || null])
+        );
 
-        res.json(result);
+        let semanticMeetingRows = [];
+        if (semanticUserIds.length > 0) {
+            const semanticRecords = await MeetingRecord.find({
+                $and: [
+                    recordScope,
+                    { jobseekerId: { $in: semanticUserIds } }
+                ]
+            })
+                .populate('eventId', 'name')
+                .populate('boothId', 'name')
+                .populate('recruiterId', 'name email')
+                .populate('jobseekerId', 'name email phoneNumber city state country')
+                .populate('interpreterId', 'name email')
+                .sort({ startTime: -1 })
+                .lean();
+
+            const seenByUser = new Set();
+            semanticMeetingRows = semanticRecords.filter(record => {
+                const userId = String(record.jobseekerId?._id || record.jobseekerId || '');
+                if (!userId || seenByUser.has(userId)) return false;
+                seenByUser.add(userId);
+                return true;
+            }).map(record => {
+                const userId = String(record.jobseekerId?._id || record.jobseekerId || '');
+                const semanticScore = semanticScoreMap.get(userId) || 0;
+                const semanticEvidence = semanticEvidenceMap.get(userId) || null;
+                return {
+                    _id: record._id,
+                    meetingRecordId: record._id,
+                    event: record.eventId || null,
+                    booth: record.boothId || null,
+                    recruiter: record.recruiterId || null,
+                    jobSeeker: record.jobseekerId || null,
+                    interpreter: record.interpreterId || null,
+                    status: record.status || null,
+                    startTime: record.startTime || null,
+                    endTime: record.endTime || null,
+                    duration: record.duration || null,
+                    recruiterRating: record.recruiterRating ?? null,
+                    feedbackRating: record.feedback?.rating ?? null,
+                    snippetLabel: 'Profile / Resume match',
+                    snippetText: semanticEvidence || 'Matched by AI profile and resume content.',
+                    semanticEvidence,
+                    _hybridScore: semanticScore * 0.9
+                };
+            });
+        }
+
+        const mergedMap = new Map();
+        for (const row of meetingResults) {
+            mergedMap.set(String(row.meetingRecordId), row);
+        }
+        for (const row of semanticMeetingRows) {
+            const key = String(row.meetingRecordId);
+            const existing = mergedMap.get(key);
+            if (!existing) {
+                mergedMap.set(key, row);
+                continue;
+            }
+            mergedMap.set(key, {
+                ...existing,
+                _hybridScore: Math.max(existing._hybridScore || 0, row._hybridScore || 0),
+                snippetLabel: existing.snippetLabel || row.snippetLabel,
+                snippetText: existing.snippetText || row.snippetText,
+                semanticEvidence: existing.semanticEvidence || row.semanticEvidence || null
+            });
+        }
+
+        const mergedResults = Array.from(mergedMap.values())
+            .sort((a, b) => {
+                const scoreDiff = (b._hybridScore || 0) - (a._hybridScore || 0);
+                if (scoreDiff !== 0) return scoreDiff;
+                return new Date(b.startTime || 0) - new Date(a.startTime || 0);
+            });
+
+        const total = mergedResults.length;
+        const pageStart = (parsedPage - 1) * parsedLimit;
+        const paged = mergedResults.slice(pageStart, pageStart + parsedLimit)
+            .map(({ _hybridScore, ...rest }) => rest);
+
+        logger.info(
+            `meetingRecords ai-search hybrid query="${queryText}" textMatches=${meetingResults.length} ` +
+            `semanticUsers=${semanticUserIds.length} merged=${mergedResults.length}`
+        );
+
+        const responsePayload = {
+            resultType: 'meetingRecords',
+            query: queryText,
+            criteria: semantic.criteria || {},
+            results: paged,
+            total,
+            page: parsedPage,
+            totalPages: Math.max(1, Math.ceil(total / parsedLimit))
+        };
+        await setCachedJson(meetingSearchCacheKey, responsePayload, MEETING_AI_CACHE_TTL_SECONDS);
+        res.json(responsePayload);
     } catch (error) {
+        logger.error('Meeting records ai-search error:', error);
         if (error.code === 'SENSITIVE_QUERY') {
             return res.status(400).json({
                 error: error.message,
@@ -436,8 +704,13 @@ router.post('/ai-search', authenticateToken, async (req, res) => {
         if (error.code === 'OPENAI_NOT_CONFIGURED') {
             return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
         }
-        const logger = require('../utils/logger');
-        logger.error('Meeting records ai-search error:', error);
+        if (error.code === 'AI_SEARCH_BACKEND_UNAVAILABLE') {
+            return res.status(503).json({
+                error: 'AI search temporarily unavailable — search index backend is not ready',
+                code: 'AI_SEARCH_BACKEND_UNAVAILABLE',
+                message: 'Run `npm run ai-search:index-health` on the server to verify Mongo and Atlas vector indexes.'
+            });
+        }
         res.status(500).json({ error: 'AI search failed' });
     }
 });

@@ -4,6 +4,10 @@
   flex-direction: column;
   gap: 20px;
   padding: 0 0 48px;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
 }
 
 /* ── Parse Status Banner ────────────────────────────────────────────────────── */
@@ -286,6 +290,9 @@
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .ai-search-panel-hero {
@@ -618,6 +625,9 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .ai-results-header {
@@ -789,6 +799,25 @@
   border-radius: 12px;
   border-left: 4px solid #e2e8f0;
   font-style: italic;
+}
+
+.ai-card-summary--detail {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: initial;
+  max-height: 168px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 10px;
+}
+
+.ai-card-summary--detail::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-card-summary--detail::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
 }
 
 /* ── Card Meta Sections ─────────────────────────────────────────────────────── */

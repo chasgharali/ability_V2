@@ -148,6 +148,14 @@ export default function MeetingRecords() {
 
     // Resume export state
     const [isExportingResumes, setIsExportingResumes] = useState(false);
+    const [activeTab, setActiveTab] = useState('list');
+    const supportsMeetingAiTab = ['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role);
+
+    useEffect(() => {
+        if (!supportsMeetingAiTab && activeTab !== 'list') {
+            setActiveTab('list');
+        }
+    }, [supportsMeetingAiTab, activeTab]);
 
     // Load search query from sessionStorage on mount (per-table persistence for search)
     const loadSearchQueryFromSession = () => {
@@ -1730,13 +1738,27 @@ export default function MeetingRecords() {
                                     <span>{infoBannerMessage}</span>
                                 </div>
                             )}
-                            {/* Advanced AI Search remains available for admin roles here.
-                                Recruiters access it from a dedicated sidebar tab. */}
-                            {['Admin', 'GlobalSupport', 'AdminEvent'].includes(user?.role) && (
-                                <div style={{ margin: '1rem 0 1.5rem 0' }}>
-                                    <AdvancedJobSeekerSearch mode="meeting" />
+                            {supportsMeetingAiTab && (
+                                <div className="mr-tab-bar" role="tablist" aria-label="Meeting records view mode">
+                                    <button
+                                        role="tab"
+                                        aria-selected={activeTab === 'list'}
+                                        className={`mr-tab-btn${activeTab === 'list' ? ' mr-tab-btn--active' : ''}`}
+                                        onClick={() => setActiveTab('list')}
+                                    >
+                                        All Meeting Records
+                                    </button>
+                                    <button
+                                        role="tab"
+                                        aria-selected={activeTab === 'ai-search'}
+                                        className={`mr-tab-btn${activeTab === 'ai-search' ? ' mr-tab-btn--active' : ''}`}
+                                        onClick={() => setActiveTab('ai-search')}
+                                    >
+                                        ✦ AI Search
+                                    </button>
                                 </div>
                             )}
+                            {(!supportsMeetingAiTab || activeTab === 'list') && (
                             <div className="header-actions">
                                 {['Admin', 'GlobalSupport', 'AdminEvent', 'Recruiter'].includes(user?.role) && (
                                     <>
@@ -1783,7 +1805,17 @@ export default function MeetingRecords() {
                                     Export CSV
                                 </ButtonComponent>
                             </div>
+                            )}
                         </div>
+
+                        {supportsMeetingAiTab && activeTab === 'ai-search' && (
+                            <div className="mr-ai-tab-content">
+                                <AdvancedJobSeekerSearch mode="meeting" />
+                            </div>
+                        )}
+
+                        {(!supportsMeetingAiTab || activeTab === 'list') && (
+                        <>
 
                         {/* Statistics Cards */}
                         <div className="stats-grid">
@@ -2150,6 +2182,8 @@ export default function MeetingRecords() {
                                 </div>
                             )}
                         </div>
+                        </>
+                        )}
                         </div>
                     </div>
                 </main>

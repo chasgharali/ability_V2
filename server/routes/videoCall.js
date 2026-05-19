@@ -3,10 +3,56 @@ const router = express.Router();
 const VideoCall = require('../models/VideoCall');
 const BoothQueue = require('../models/BoothQueue');
 const User = require('../models/User');
+const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { generateAccessToken, createOrGetRoom, endRoom, getRoomParticipants } = require('../config/twilio');
 const { authenticateToken: auth } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const liveStatsStore = require('../utils/liveStatsStore');
+
+const resolveObjectId = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (value._id) return String(value._id);
+  if (value.id) return String(value.id);
+  return String(value);
+};
+
+const toPlainUser = (userDoc) => {
+  if (!userDoc) return null;
+  if (typeof userDoc.toObject === 'function') return userDoc.toObject();
+  return { ...userDoc };
+};
+
+const withRegistrationResume = async (jobSeekerDoc, eventValue) => {
+  const plainJobSeeker = toPlainUser(jobSeekerDoc);
+  if (!plainJobSeeker) return plainJobSeeker;
+
+  const hasUserResumeUrl = typeof plainJobSeeker.resumeUrl === 'string' && plainJobSeeker.resumeUrl.trim();
+  if (hasUserResumeUrl) return plainJobSeeker;
+
+  const jobSeekerId = resolveObjectId(plainJobSeeker._id || plainJobSeeker.id);
+  const eventId = resolveObjectId(eventValue);
+  if (!jobSeekerId || !eventId) return plainJobSeeker;
+
+  const registration = await RegisteredJobSeeker.findOne({
+    jobSeekerId,
+    eventId
+  })
+    .select('resumeId resumeUrl')
+    .lean();
+
+  if (!registration) return plainJobSeeker;
+
+  if (registration.resumeUrl) {
+    plainJobSeeker.resumeUrl = registration.resumeUrl;
+  }
+
+  if (registration.resumeId) {
+    plainJobSeeker.selectedResumeId = registration.resumeId;
+  }
+
+  return plainJobSeeker;
+};
 
 /**
  * POST /api/video-call/create
@@ -314,6 +360,11 @@ router.post('/join', auth, async (req, res) => {
     // Add participant to call record
     await videoCall.addParticipant(userId, userRole, null);
 
+    const enrichedJobSeeker = await withRegistrationResume(
+      videoCall.jobSeeker,
+      videoCall.event || videoCall.queueEntry?.event
+    );
+
     res.json({
       success: true,
       callId: videoCall._id,
@@ -324,7 +375,7 @@ router.post('/join', auth, async (req, res) => {
       event: videoCall.event,
       participants: {
         recruiter: videoCall.recruiter,
-        jobSeeker: videoCall.jobSeeker,
+        jobSeeker: enrichedJobSeeker,
         interpreters: videoCall.interpreters
       },
       chatMessages: videoCall.chatMessages,
@@ -926,6 +977,11 @@ router.get('/active', auth, async (req, res) => {
     const identity = `${userRole}_${userId}`;
     const accessToken = generateAccessToken(identity, activeCall.roomName);
 
+    const enrichedJobSeeker = await withRegistrationResume(
+      activeCall.jobSeeker,
+      activeCall.event || activeCall.queueEntry?.event
+    );
+
     res.json({
       activeCall: {
         id: activeCall._id,
@@ -936,7 +992,7 @@ router.get('/active', auth, async (req, res) => {
         event: activeCall.event,
         participants: {
           recruiter: activeCall.recruiter,
-          jobSeeker: activeCall.jobSeeker,
+          jobSeeker: enrichedJobSeeker,
           interpreters: activeCall.interpreters
         },
         chatMessages: activeCall.chatMessages,
@@ -994,10 +1050,16 @@ router.get('/by-queue/:queueEntryId', auth, async (req, res) => {
       );
     }
 
+    const enrichedJobSeeker = await withRegistrationResume(
+      videoCall.jobSeeker,
+      videoCall.event || videoCall.queueEntry?.event
+    );
+
     res.json({
       success: true,
       videoCall: {
         ...videoCall.toObject(),
+        jobSeeker: enrichedJobSeeker,
         jobSeekerToken: accessToken
       }
     });
@@ -1036,8 +1098,16 @@ router.get('/:callId', auth, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized access to call' });
     }
 
+    const enrichedJobSeeker = await withRegistrationResume(
+      videoCall.jobSeeker,
+      videoCall.event || videoCall.queueEntry?.event
+    );
+
+    const callPayload = videoCall.toObject();
+    callPayload.jobSeeker = enrichedJobSeeker;
+
     res.json({
-      call: videoCall
+      call: callPayload
     });
 
   } catch (error) {

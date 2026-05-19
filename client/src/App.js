@@ -187,7 +187,7 @@ function App() {
                                         path="/recruiter-ai-search"
                                         element={
                                             <RequireAuth>
-                                                <Navigate to="/ai-search" replace />
+                                                <Navigate to="/meeting-records" replace />
                                             </RequireAuth>
                                         }
                                     />
@@ -230,7 +230,7 @@ function App() {
                                         path="/ai-search"
                                         element={
                                             <RequireAuth>
-                                                <RequireRole allowedRoles={['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport', 'Recruiter']}>
+                                                <RequireRole allowedRoles={['SuperAdmin', 'Admin', 'AdminEvent', 'GlobalSupport']}>
                                                     <AISearchPage />
                                                 </RequireRole>
                                             </RequireAuth>

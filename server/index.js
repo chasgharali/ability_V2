@@ -14,6 +14,7 @@ const { connectRedis } = require('./config/redis');
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 const Settings = require('./models/Settings');
+const { checkAiSearchIndexHealth } = require('./utils/aiSearchIndexHealth');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -263,6 +264,26 @@ const startServer = async () => {
                 await Settings.normalizeLegacyIndexes(logger);
             } catch (indexError) {
                 logger.error('Settings index normalization failed:', indexError);
+            }
+
+            // Non-fatal health check for AI search indexes.
+            const runAiSearchHealthCheck = process.env.AI_SEARCH_INDEX_HEALTHCHECK_ON_BOOT !== 'false';
+            if (runAiSearchHealthCheck) {
+                try {
+                    const health = await checkAiSearchIndexHealth({
+                        logger,
+                        syncMongoIndexes: process.env.AI_SEARCH_SYNC_INDEXES_ON_BOOT === 'true'
+                    });
+                    if (health.ok) {
+                        logger.info('AI search index health check passed');
+                    } else {
+                        logger.warn(
+                            `AI search index health check found issues: ${JSON.stringify(health)}`
+                        );
+                    }
+                } catch (aiIndexError) {
+                    logger.warn(`AI search index health check failed: ${aiIndexError.message}`);
+                }
             }
         }
 
