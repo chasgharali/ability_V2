@@ -32,12 +32,19 @@ jest.mock('../models/User', () => ({
     findOne: jest.fn()
 }));
 
+jest.mock('../models/Organization', () => ({
+    findOne: jest.fn()
+}));
+
 const Note = require('../models/Note');
 const TermsConditions = require('../models/TermsConditions');
 const RoleMessage = require('../models/RoleMessage');
 const User = require('../models/User');
+const Organization = require('../models/Organization');
 const {
     getTargetAdminUser,
+    getTargetOrganization,
+    upsertOrganizationCopyRecipient,
     cloneNoteTemplateToOrganization,
     cloneTermsTemplateToOrganization,
     cloneRoleMessageTemplateToOrganization,
@@ -61,6 +68,29 @@ describe('defaultCopyService', () => {
             isActive: true,
             organizationId: { $ne: null }
         });
+    });
+
+    test('getTargetOrganization filters to active organizations', async () => {
+        const selectMock = jest.fn().mockResolvedValue({ _id: 'org-1', name: 'Acme Corp' });
+        Organization.findOne.mockReturnValue({ select: selectMock });
+
+        await getTargetOrganization('org-1');
+
+        expect(Organization.findOne).toHaveBeenCalledWith({
+            _id: 'org-1',
+            isActive: { $ne: false }
+        });
+    });
+
+    test('upsertOrganizationCopyRecipient adds and updates organization recipients', () => {
+        const organization = { _id: 'org-1', name: 'Acme Corp' };
+        const firstPass = upsertOrganizationCopyRecipient([], organization);
+        expect(firstPass).toHaveLength(1);
+        expect(firstPass[0].organizationName).toBe('Acme Corp');
+
+        const secondPass = upsertOrganizationCopyRecipient(firstPass, organization);
+        expect(secondPass).toHaveLength(1);
+        expect(secondPass[0].copyCount).toBe(2);
     });
 
     test('cloneNoteTemplateToOrganization does not overwrite existing copy by default', async () => {

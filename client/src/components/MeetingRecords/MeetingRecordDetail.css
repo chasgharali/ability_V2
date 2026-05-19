@@ -493,3 +493,19 @@
         padding: 6px 12px;
     }
 }
+
+.btn-view-resume-inline {
+    background: #1f2937;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-view-resume-inline:hover {
+    background: #374151;
+}

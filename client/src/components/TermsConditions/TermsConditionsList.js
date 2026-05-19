@@ -4,9 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import DataGrid from '../UI/DataGrid';
-import CopyToAdminModal from '../UI/CopyToAdminModal';
+import CopyToOrganizationModal from '../UI/CopyToOrganizationModal';
 import { termsConditionsAPI } from '../../services/termsConditions';
-import { listUsers } from '../../services/users';
+import { listOrganizations } from '../../services/organizations';
 import { MdAdd, MdEdit, MdDelete, MdVisibility, MdCheckCircle, MdCancel } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './TermsConditions.css';
@@ -18,7 +18,7 @@ const TermsConditionsList = () => {
     const [selectedRows, setSelectedRows] = useState([]);
     const [processingIds, setProcessingIds] = useState(new Set());
     const [successMessage, setSuccessMessage] = useState(null);
-    const [adminUsers, setAdminUsers] = useState([]);
+    const [organizations, setOrganizations] = useState([]);
     const [copyModalOpen, setCopyModalOpen] = useState(false);
     const [selectedTermId, setSelectedTermId] = useState(null);
     const navigate = useNavigate();
@@ -48,16 +48,16 @@ const TermsConditionsList = () => {
     }, [user?.role]);
 
     useEffect(() => {
-        const fetchAdminUsers = async () => {
+        const fetchOrganizations = async () => {
             if (user?.role !== 'SuperAdmin') return;
             try {
-                const response = await listUsers({ role: 'Admin', limit: 500, isActive: true });
-                setAdminUsers(response.users || []);
+                const response = await listOrganizations({ limit: 100, isActive: 'true' });
+                setOrganizations(response.organizations || []);
             } catch (err) {
-                console.error('Error fetching admin users:', err);
+                console.error('Error fetching organizations:', err);
             }
         };
-        fetchAdminUsers();
+        fetchOrganizations();
     }, [user?.role]);
 
     // Handle delete terms
@@ -185,7 +185,7 @@ const TermsConditionsList = () => {
             setSuccessMessage(null);
             await termsConditionsAPI.setDefault(termId);
             await fetchTerms();
-            setSuccessMessage('Terms marked as default and copied to organization admins.');
+            setSuccessMessage('Terms marked as default and copied to organizations.');
         } catch (err) {
             setError(err.response?.data?.message || err.message || 'Failed to set default terms');
         }
@@ -203,21 +203,24 @@ const TermsConditionsList = () => {
         }
     };
 
-    const handleCopyToAdmin = async (targetAdminUserId, overwrite) => {
+    const handleCopyToOrganization = async (targetOrganizationId, overwrite) => {
         if (!selectedTermId) return;
-        const selectedAdmin = adminUsers.find((admin) => admin._id === targetAdminUserId);
+        const selectedOrganization = organizations.find((org) => org._id === targetOrganizationId);
         try {
             setError(null);
             setSuccessMessage(null);
-            await termsConditionsAPI.copyToAdmin(selectedTermId, targetAdminUserId, overwrite);
+            await termsConditionsAPI.copyToOrganization(selectedTermId, targetOrganizationId, overwrite);
             await fetchTerms();
-            setSuccessMessage(`Terms copied to ${selectedAdmin?.name || selectedAdmin?.email || 'selected admin'}.`);
+            setSuccessMessage(`Terms copied to ${selectedOrganization?.name || 'selected organization'}.`);
             setCopyModalOpen(false);
             setSelectedTermId(null);
         } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Failed to copy terms to admin');
+            setError(err.response?.data?.message || err.message || 'Failed to copy terms to organization');
         }
     };
+
+    const getCopyRecipientLabel = (recipient) =>
+        recipient.organizationName || recipient.adminName || recipient.adminEmail || 'Organization';
 
     const renderCopyRecipients = (row) => {
         const recipients = Array.isArray(row.copyRecipients) ? row.copyRecipients : [];
@@ -226,8 +229,8 @@ const TermsConditionsList = () => {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {recipients.slice(0, 2).map((recipient) => (
-                    <span key={recipient.adminUserId || recipient.adminEmail} className="role-badge">
-                        {recipient.adminName || recipient.adminEmail || 'Admin'}
+                    <span key={recipient.organizationId || recipient.adminUserId || recipient.adminEmail} className="role-badge">
+                        {getCopyRecipientLabel(recipient)}
                     </span>
                 ))}
                 {recipients.length > 2 && (
@@ -279,7 +282,7 @@ const TermsConditionsList = () => {
         },
         {
             key: 'copyRecipients',
-            label: 'Sent To Admins',
+            label: 'Sent To Organizations',
             render: (row) => renderCopyRecipients(row)
         },
         {
@@ -364,8 +367,8 @@ const TermsConditionsList = () => {
                                             setSelectedTermId(row._id);
                                             setCopyModalOpen(true);
                                         }}
-                                        title="Copy to specific admin"
-                                        aria-label={`Copy ${row.title} to specific admin`}
+                                        title="Copy to organization"
+                                        aria-label={`Copy ${row.title} to organization`}
                                         disabled={processingIds.has(row._id)}
                                     >
                                         Copy
@@ -445,16 +448,16 @@ const TermsConditionsList = () => {
             <AdminHeader />
             <div className="dashboard-layout">
                 <AdminSidebar active="terms-conditions" />
-                <CopyToAdminModal
+                <CopyToOrganizationModal
                     isOpen={copyModalOpen}
-                    admins={adminUsers}
-                    title="Copy Terms to Admin"
-                    description="Select an organization admin and choose whether to overwrite existing copy."
+                    organizations={organizations}
+                    title="Copy Terms to Organization"
+                    description="Select an organization and choose whether to overwrite existing copy."
                     onCancel={() => {
                         setCopyModalOpen(false);
                         setSelectedTermId(null);
                     }}
-                    onConfirm={handleCopyToAdmin}
+                    onConfirm={handleCopyToOrganization}
                 />
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="bm-header">

@@ -145,6 +145,7 @@ export default function MeetingRecords() {
     // Job Seeker Profile Modal state
     const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
     const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
+    const [selectedEventIdForModal, setSelectedEventIdForModal] = useState(null);
 
     // Resume export state
     const [isExportingResumes, setIsExportingResumes] = useState(false);
@@ -653,7 +654,8 @@ export default function MeetingRecords() {
                         recruiterName: getFieldName(r.recruiterId),
                         jobSeekerName: getFieldName(r.jobseekerId),
                         jobSeekerEmail: getFieldEmail(r.jobseekerId),
-                        jobSeekerResumeUrl: r.registeredResumeUrl || getFieldResumeUrl(r.jobseekerId),
+                        jobSeekerResumeId: r.jobSeekerResumeId || r.resolvedResume?.resumeId || '',
+                        jobSeekerResumeUrl: r.jobSeekerResumeUrl || r.registeredResumeUrl || r.resolvedResume?.resumeUrl || getFieldResumeUrl(r.jobseekerId),
                         jobSeekerCity: getFieldCity(r.jobseekerId),
                         interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
                         messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
@@ -1313,7 +1315,8 @@ export default function MeetingRecords() {
                 jobSeekerEmploymentTypes: profile?.employmentTypes || [],
                 jobSeekerLanguages: profile?.languages || [],
                 jobSeekerVeteranStatus: profile?.veteranStatus || '',
-                jobSeekerResumeUrl: r.registeredResumeUrl || getFieldResumeUrl(jobSeeker),
+                jobSeekerResumeId: r.jobSeekerResumeId || r.resolvedResume?.resumeId || '',
+                jobSeekerResumeUrl: r.jobSeekerResumeUrl || r.registeredResumeUrl || r.resolvedResume?.resumeUrl || getFieldResumeUrl(jobSeeker),
             interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
             messagesCount: Array.isArray(r.jobSeekerMessages) ? r.jobSeekerMessages.length : 0
             };
@@ -1695,16 +1698,27 @@ export default function MeetingRecords() {
                     <ButtonComponent 
                         cssClass="e-outline e-primary e-small" 
                         onClick={() => {
-                            // Handle both object (populated) and string (ID) cases
                             const jobSeeker = typeof jobSeekerData === 'object' ? jobSeekerData : { _id: jobSeekerData };
-                            setSelectedJobSeekerForModal(jobSeeker);
-                            setShowJobSeekerModal(true);
+                            window.setTimeout(() => {
+                                setSelectedJobSeekerForModal(jobSeeker);
+                                setSelectedEventIdForModal(row.eventId?._id || row.eventId || null);
+                                setShowJobSeekerModal(true);
+                            }, 0);
                         }}
                         aria-label="View job seeker details"
                     >
                         View Job Seeker Detail
                     </ButtonComponent>
                 )}
+                {(row.jobSeekerResumeId || row.jobSeekerResumeUrl) ? (
+                    <ButtonComponent
+                        cssClass="e-outline e-primary e-small"
+                        onClick={() => openResumeInNewTab(row.jobSeekerResumeId || null, row.jobSeekerResumeUrl || null)}
+                        aria-label="View job seeker resume"
+                    >
+                        View Resume
+                    </ButtonComponent>
+                ) : null}
             </div>
         );
     }, [navigate, setSelectedJobSeekerForModal, setShowJobSeekerModal]);
@@ -2017,8 +2031,8 @@ export default function MeetingRecords() {
                                     <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
                                     <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerResumeUrl' headerText='Resume' width='120' textAlign='Center' allowFiltering={false} template={(props) => (
-                                        props.jobSeekerResumeUrl
-                                            ? <button type="button" className="btn-view-resume-inline" onClick={() => openResumeInNewTab(null, props.jobSeekerResumeUrl)}>View</button>
+                                        (props.jobSeekerResumeId || props.jobSeekerResumeUrl)
+                                            ? <button type="button" className="btn-view-resume-inline" onClick={() => openResumeInNewTab(props.jobSeekerResumeId || null, props.jobSeekerResumeUrl || null)}>View</button>
                                             : <span style={{ color: '#9ca3af' }}>—</span>
                                     )} />
                                     <ColumnDirective
@@ -2189,12 +2203,12 @@ export default function MeetingRecords() {
                 </main>
             </div>
 
-            {/* Bulk Delete Confirm Modal - Syncfusion DialogComponent */}
+            {confirmDeleteOpen && (
             <DialogComponent
                 width="450px"
                 isModal={true}
                 showCloseIcon={true}
-                visible={confirmDeleteOpen}
+                visible={true}
                 header="Delete Meeting Records"
                 closeOnEscape={true}
                 close={cancelBulkDelete}
@@ -2226,6 +2240,7 @@ export default function MeetingRecords() {
                     Are you sure you want to delete <strong>{selectedRecords.length}</strong> meeting record(s)? This action cannot be undone.
                 </p>
             </DialogComponent>
+            )}
 
             {/* Syncfusion ToastComponent */}
             <ToastComponent 
@@ -2236,15 +2251,18 @@ export default function MeetingRecords() {
                 newestOnTop={true}
             />
 
-            {/* Job Seeker Profile Modal */}
-            <JobSeekerProfileModal
-                isOpen={showJobSeekerModal}
-                onClose={() => {
-                    setShowJobSeekerModal(false);
-                    setSelectedJobSeekerForModal(null);
-                }}
-                jobSeeker={selectedJobSeekerForModal}
-            />
+            {showJobSeekerModal && selectedJobSeekerForModal && (
+                <JobSeekerProfileModal
+                    isOpen
+                    onClose={() => {
+                        setShowJobSeekerModal(false);
+                        setSelectedJobSeekerForModal(null);
+                        setSelectedEventIdForModal(null);
+                    }}
+                    jobSeeker={selectedJobSeekerForModal}
+                    eventId={selectedEventIdForModal}
+                />
+            )}
 
         </div>
     );

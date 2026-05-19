@@ -6,7 +6,24 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 const Resume = require('../models/Resume');
 const openaiResumeService = require('../services/openaiResumeService');
 const { parseResumeForUser } = require('../services/resumeParserService');
+const {
+  getResumeBuilderStatus,
+  assertCanCreateResume,
+  assertCanUpdateResume,
+  incrementUpdateCount
+} = require('../services/resumeBuilderLimits');
+const { resolveJobSeekerResume } = require('../services/jobSeekerResumeResolver');
 const logger = require('../utils/logger');
+
+const ADMIN_RESUME_ROLES = ['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Support', 'GlobalSupport'];
+
+function sendLimitError(res, err) {
+  return res.status(err.status || 403).json({
+    error: err.code || 'LIMIT_REACHED',
+    message: err.message,
+    ...err.payload
+  });
+}
 
 /**
  * Fire-and-forget: re-build the AI search projection for this user after a
@@ -56,13 +73,38 @@ async function extractTextFromBuffer(buffer, mimetype) {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const resumes = await Resume.find({ userId: req.user._id })
-      .sort({ isDefault: -1, updatedAt: -1 })
-      .lean();
-    res.json({ resumes });
+    const [resumes, limitStatus] = await Promise.all([
+      Resume.find({ userId: req.user._id })
+        .sort({ isDefault: -1, updatedAt: -1 })
+        .lean(),
+      getResumeBuilderStatus(req.user._id)
+    ]);
+    res.json({
+      resumes,
+      limits: limitStatus.limits,
+      usage: limitStatus.usage,
+      resumesRemaining: limitStatus.resumesRemaining,
+      updatesRemaining: limitStatus.updatesRemaining,
+      canCreateResume: limitStatus.canCreateResume,
+      canUpdateResume: limitStatus.canUpdateResume
+    });
   } catch (error) {
     logger.error('List resumes error:', error);
     res.status(500).json({ error: 'Failed to retrieve resumes' });
+  }
+});
+
+/**
+ * GET /api/resumes/limits
+ * Current resume-builder limits and usage for the authenticated user
+ */
+router.get('/limits', authenticateToken, async (req, res) => {
+  try {
+    const status = await getResumeBuilderStatus(req.user._id);
+    res.json(status);
+  } catch (error) {
+    logger.error('Get resume limits error:', error);
+    res.status(500).json({ error: 'Failed to retrieve resume limits' });
   }
 });
 
@@ -72,6 +114,7 @@ router.get('/', authenticateToken, async (req, res) => {
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
+    await assertCanCreateResume(req.user._id);
     const { title, content, fromProfile } = req.body;
     const user = req.user;
 
@@ -110,10 +153,28 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     triggerSearchReparse(user._id);
-    res.status(201).json({ resume });
+    const limitStatus = await getResumeBuilderStatus(user._id);
+    res.status(201).json({ resume, ...limitStatus });
   } catch (error) {
+    if (error.status === 403) return sendLimitError(res, error);
     logger.error('Create resume error:', error);
     res.status(500).json({ error: 'Failed to create resume' });
+  }
+});
+
+/**
+ * GET /api/resumes/admin/user/:userId
+ * Resolve best resume for a job seeker (upload, registration, or builder default)
+ */
+router.get('/admin/user/:userId', authenticateToken, requireRole(ADMIN_RESUME_ROLES), async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { eventId } = req.query;
+    const resolved = await resolveJobSeekerResume(userId, { eventId: eventId || null });
+    res.json({ resolvedResume: resolved });
+  } catch (error) {
+    logger.error('Admin resolve user resume error:', error);
+    res.status(500).json({ error: 'Failed to resolve resume' });
   }
 });
 
@@ -121,7 +182,7 @@ router.post('/', authenticateToken, async (req, res) => {
  * GET /api/resumes/admin/:id
  * Get any resume by ID — admin/recruiter access (no ownership check)
  */
-router.get('/admin/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Support', 'GlobalSupport']), async (req, res) => {
+router.get('/admin/:id', authenticateToken, requireRole(ADMIN_RESUME_ROLES), async (req, res) => {
   try {
     const resume = await Resume.findById(req.params.id).lean();
     if (!resume) return res.status(404).json({ error: 'Resume not found' });
@@ -153,6 +214,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
  */
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
+    await assertCanUpdateResume(req.user._id);
     const { title, content } = req.body;
     const resume = await Resume.findOne({ _id: req.params.id, userId: req.user._id });
     if (!resume) return res.status(404).json({ error: 'Resume not found' });
@@ -160,10 +222,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
     if (title !== undefined) resume.title = title;
     if (content !== undefined) resume.content = content;
     await resume.save();
+    await incrementUpdateCount(req.user._id);
 
     triggerSearchReparse(req.user._id);
-    res.json({ resume });
+    const limitStatus = await getResumeBuilderStatus(req.user._id);
+    res.json({ resume, ...limitStatus });
   } catch (error) {
+    if (error.status === 403) return sendLimitError(res, error);
     logger.error('Update resume error:', error);
     res.status(500).json({ error: 'Failed to update resume' });
   }
@@ -220,6 +285,7 @@ router.post('/:id/set-default', authenticateToken, async (req, res) => {
  */
 router.post('/:id/generate', authenticateToken, async (req, res) => {
   try {
+    await assertCanUpdateResume(req.user._id);
     const resume = await Resume.findOne({ _id: req.params.id, userId: req.user._id });
     if (!resume) return res.status(404).json({ error: 'Resume not found' });
 
@@ -254,10 +320,13 @@ router.post('/:id/generate', authenticateToken, async (req, res) => {
     };
     resume.lastAiGenerated = new Date();
     await resume.save();
+    await incrementUpdateCount(req.user._id);
 
     triggerSearchReparse(req.user._id);
-    res.json({ resume, generated });
+    const limitStatus = await getResumeBuilderStatus(req.user._id);
+    res.json({ resume, generated, ...limitStatus });
   } catch (error) {
+    if (error.status === 403) return sendLimitError(res, error);
     logger.error('Generate resume error:', error);
     if (error.message?.includes('API key')) {
       return res.status(503).json({ error: 'AI service not available. Check OPENAI_API_KEY.' });
@@ -296,6 +365,7 @@ router.post('/:id/suggest', authenticateToken, async (req, res) => {
  */
 router.post('/parse-upload', authenticateToken, upload.single('resume'), async (req, res) => {
   try {
+    await assertCanCreateResume(req.user._id);
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     const text = await extractTextFromBuffer(req.file.buffer, req.file.mimetype);
@@ -320,8 +390,10 @@ router.post('/parse-upload', authenticateToken, upload.single('resume'), async (
     });
 
     triggerSearchReparse(user._id);
-    res.status(201).json({ resume });
+    const limitStatus = await getResumeBuilderStatus(user._id);
+    res.status(201).json({ resume, ...limitStatus });
   } catch (error) {
+    if (error.status === 403) return sendLimitError(res, error);
     logger.error('Parse upload resume error:', error);
     if (error.message?.includes('API key')) {
       return res.status(503).json({ error: 'AI service not available. Check OPENAI_API_KEY.' });
@@ -337,6 +409,7 @@ router.post('/parse-upload', authenticateToken, upload.single('resume'), async (
  */
 router.post('/parse-from-url', authenticateToken, async (req, res) => {
   try {
+    await assertCanCreateResume(req.user._id);
     const { url, title } = req.body;
     if (!url) return res.status(400).json({ error: 'url is required' });
 
@@ -371,8 +444,10 @@ router.post('/parse-from-url', authenticateToken, async (req, res) => {
     });
 
     triggerSearchReparse(user._id);
-    res.status(201).json({ resume });
+    const limitStatus = await getResumeBuilderStatus(user._id);
+    res.status(201).json({ resume, ...limitStatus });
   } catch (error) {
+    if (error.status === 403) return sendLimitError(res, error);
     logger.error('Parse from URL resume error:', error);
     if (error.message?.includes('API key')) {
       return res.status(503).json({ error: 'AI service not available. Check OPENAI_API_KEY.' });

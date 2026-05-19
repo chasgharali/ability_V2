@@ -59,6 +59,7 @@ import CookieConsent from './components/common/CookieConsent';
 import LegalPageEditor from './components/Legal/LegalPageEditor';
 import LegalPageView from './components/Legal/LegalPageView';
 import FooterTextEditor from './components/Footer/FooterTextEditor';
+import ResumeBuilderLimitsEditor from './components/ResumeBuilder/ResumeBuilderLimitsEditor';
 import AppFooter from './components/Layout/AppFooter';
 import './App.css';
 
@@ -258,6 +259,7 @@ function App() {
                                     <Route path="/legal/privacy-policy" element={<LegalPageView type="privacy-policy" />} />
                                     {/* Legal Pages — SuperAdmin editor */}
                                     <Route path="/footer-text" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><FooterTextEditor /></RequireRole></RequireAuth>} />
+                                    <Route path="/resume-builder-limits" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><ResumeBuilderLimitsEditor /></RequireRole></RequireAuth>} />
                                     <Route path="/legal/terms-of-use/edit" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><LegalPageEditor type="terms-of-use" /></RequireRole></RequireAuth>} />
                                     <Route path="/legal/privacy-policy/edit" element={<RequireAuth><RequireRole allowedRoles={['SuperAdmin']}><LegalPageEditor type="privacy-policy" /></RequireRole></RequireAuth>} />
                                 </Routes>

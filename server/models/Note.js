@@ -72,13 +72,22 @@ const noteSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    // Tracks organization admins this template was explicitly copied to
+    // Tracks organizations this template was explicitly copied to
     copyRecipients: {
         type: [{
+            organizationId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Organization',
+                required: true
+            },
+            organizationName: {
+                type: String,
+                default: ''
+            },
             adminUserId: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'User',
-                required: true
+                default: null
             },
             adminName: {
                 type: String,
@@ -87,11 +96,6 @@ const noteSchema = new mongoose.Schema({
             adminEmail: {
                 type: String,
                 default: ''
-            },
-            organizationId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Organization',
-                required: true
             },
             copiedAt: {
                 type: Date,

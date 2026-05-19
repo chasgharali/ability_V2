@@ -4,7 +4,8 @@ const RoleMessage = require('../models/RoleMessage');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const {
-  getTargetAdminUser,
+  getTargetOrganization,
+  upsertOrganizationCopyRecipient,
   cloneRoleMessageTemplateToOrganization,
   syncMissingRoleMessagesForOrganization
 } = require('../services/defaultCopyService');
@@ -263,11 +264,11 @@ router.post('/:id/unset-default', authenticateToken, requireRole(['SuperAdmin'])
 });
 
 /**
- * POST /api/role-messages/:id/copy-to-admin
- * SuperAdmin: copy page instruction template to a specific organization admin
+ * POST /api/role-messages/:id/copy-to-organization
+ * SuperAdmin: copy page instruction template to a specific organization
  */
-router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin']), [
-  body('targetAdminUserId').trim().notEmpty().withMessage('targetAdminUserId is required'),
+router.post('/:id/copy-to-organization', authenticateToken, requireRole(['SuperAdmin']), [
+  body('targetOrganizationId').trim().notEmpty().withMessage('targetOrganizationId is required'),
   body('overwrite').optional().isBoolean().withMessage('overwrite must be a boolean value')
 ], async (req, res) => {
   try {
@@ -277,61 +278,37 @@ router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin'])
     }
 
     const { id } = req.params;
-    const { targetAdminUserId, overwrite = false } = req.body;
+    const { targetOrganizationId, overwrite = false } = req.body;
     const templateMessage = await RoleMessage.findOne({ _id: id, organizationId: null });
     if (!templateMessage) {
       return res.status(404).json({ success: false, error: 'Default template message not found' });
     }
 
-    const adminUser = await getTargetAdminUser(targetAdminUserId);
+    const organization = await getTargetOrganization(targetOrganizationId);
 
-    if (!adminUser) {
-      return res.status(404).json({ success: false, error: 'Target admin user not found' });
+    if (!organization) {
+      return res.status(404).json({ success: false, error: 'Target organization not found' });
     }
 
     const { record: copiedMessage } = await cloneRoleMessageTemplateToOrganization({
       template: templateMessage,
-      organizationId: adminUser.organizationId,
+      organizationId: organization._id,
       actorId: req.user._id,
       overwrite
     });
 
-    const now = new Date();
-    const recipients = Array.isArray(templateMessage.copyRecipients) ? templateMessage.copyRecipients : [];
-    const existingIndex = recipients.findIndex(
-      (recipient) => String(recipient.adminUserId) === String(adminUser._id)
-    );
-
-    if (existingIndex >= 0) {
-      recipients[existingIndex].adminName = adminUser.name || recipients[existingIndex].adminName || '';
-      recipients[existingIndex].adminEmail = adminUser.email || recipients[existingIndex].adminEmail || '';
-      recipients[existingIndex].organizationId = adminUser.organizationId;
-      recipients[existingIndex].lastCopiedAt = now;
-      recipients[existingIndex].copyCount = (recipients[existingIndex].copyCount || 0) + 1;
-    } else {
-      recipients.push({
-        adminUserId: adminUser._id,
-        adminName: adminUser.name || '',
-        adminEmail: adminUser.email || '',
-        organizationId: adminUser.organizationId,
-        copiedAt: now,
-        lastCopiedAt: now,
-        copyCount: 1
-      });
-    }
-
-    templateMessage.copyRecipients = recipients;
+    templateMessage.copyRecipients = upsertOrganizationCopyRecipient(templateMessage.copyRecipients, organization);
     templateMessage.updatedBy = req.user._id;
     await templateMessage.save();
 
     res.json({
       success: true,
-      message: `Page instruction copied to ${adminUser.name || adminUser.email} successfully`,
+      message: `Page instruction copied to ${organization.name || 'organization'} successfully`,
       copiedMessage
     });
   } catch (error) {
-    logger.error('Error copying role message to admin:', error);
-    res.status(500).json({ success: false, error: 'Failed to copy page instruction to selected admin' });
+    logger.error('Error copying role message to organization:', error);
+    res.status(500).json({ success: false, error: 'Failed to copy page instruction to selected organization' });
   }
 });
 

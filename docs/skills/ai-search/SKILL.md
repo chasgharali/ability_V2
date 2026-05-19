@@ -72,6 +72,7 @@ skill / role / location matching only.
    SuperAdmin search      ──────►   aiSearchService                  │
    Recruiter/Admin        ──────►              │
    meeting-records search           │           │
+   job-seeker-interests search      │           │
                                     └───────────┘
 ```
 
@@ -96,6 +97,7 @@ skill / role / location matching only.
 | `POST /api/users/job-seekers/parse-resumes` | SuperAdmin | Global |
 | `POST /api/users/job-seekers/ai-search` | SuperAdmin | Global |
 | `POST /api/meeting-records/ai-search` | Admin / GlobalSupport / Recruiter / SuperAdmin | Visible meeting records |
+| `POST /api/job-seeker-interests/ai-search` | Admin / GlobalSupport / Recruiter | Visible job seeker interests |
 
 ### Client component
 
@@ -107,6 +109,9 @@ shared by all three UIs via a `mode` prop:
 - `mode="meeting"` — used in `MeetingRecords.js` (no parse controls; the
   parsing happens elsewhere). Returned results include `meetingRecordIds`
   so the UI can deep-link to a specific call.
+- `mode="interests"` — used in `JobSeekerInterests.js` (no parse controls).
+  Returned results are interest rows with booth/event/company context; the
+  parent page opens `JobSeekerProfileModal` via `onViewJobSeeker`.
 
 ---
 

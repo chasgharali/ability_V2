@@ -7,6 +7,7 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import { useAuth } from '../../contexts/AuthContext';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
+import { openResumeInNewTab } from '../../utils/resumeViewer';
 
 export default function MeetingRecordDetail() {
     const { id } = useParams();
@@ -242,6 +243,23 @@ export default function MeetingRecordDetail() {
                                                     ? `${meetingRecord.jobseekerId.city}, ${meetingRecord.jobseekerId.state}`
                                                     : 'N/A'
                                             }</p>
+                                            {(() => {
+                                                const resumeId = meetingRecord.jobSeekerResumeId || meetingRecord.resolvedResume?.resumeId;
+                                                const resumeUrl = meetingRecord.jobSeekerResumeUrl || meetingRecord.resolvedResume?.resumeUrl || meetingRecord.jobseekerId?.resumeUrl;
+                                                if (!resumeId && !resumeUrl) return null;
+                                                return (
+                                                    <p style={{ marginTop: '12px' }}>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-view-resume-inline"
+                                                            onClick={() => openResumeInNewTab(resumeId || null, resumeUrl || null)}
+                                                            aria-label={`View resume for ${meetingRecord.jobseekerId?.name || 'job seeker'}`}
+                                                        >
+                                                            View Resume
+                                                        </button>
+                                                    </p>
+                                                );
+                                            })()}
                                         </article>
                                         {meetingRecord.interpreterId && (
                                             <article className="participant-card" role="listitem">

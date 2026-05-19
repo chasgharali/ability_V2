@@ -4,7 +4,8 @@ const TermsConditions = require('../models/TermsConditions');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const {
-    getTargetAdminUser,
+    getTargetOrganization,
+    upsertOrganizationCopyRecipient,
     cloneTermsTemplateToOrganization,
     syncMissingTermsForOrganization
 } = require('../services/defaultCopyService');
@@ -647,14 +648,14 @@ router.post('/:id/unset-default', authenticateToken, requireRole(['SuperAdmin'])
 });
 
 /**
- * POST /api/terms-conditions/:id/copy-to-admin
- * SuperAdmin: copy terms template to a specific organization admin
+ * POST /api/terms-conditions/:id/copy-to-organization
+ * SuperAdmin: copy terms template to a specific organization
  */
-router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin']), [
-    body('targetAdminUserId')
+router.post('/:id/copy-to-organization', authenticateToken, requireRole(['SuperAdmin']), [
+    body('targetOrganizationId')
         .trim()
         .notEmpty()
-        .withMessage('targetAdminUserId is required'),
+        .withMessage('targetOrganizationId is required'),
     body('overwrite')
         .optional()
         .isBoolean()
@@ -670,7 +671,7 @@ router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin'])
         }
 
         const { id } = req.params;
-        const { targetAdminUserId, overwrite = false } = req.body;
+        const { targetOrganizationId, overwrite = false } = req.body;
         const templateTerms = await TermsConditions.findOne({ _id: id, organizationId: null });
         if (!templateTerms) {
             return res.status(404).json({
@@ -679,59 +680,35 @@ router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin'])
             });
         }
 
-        const adminUser = await getTargetAdminUser(targetAdminUserId);
+        const organization = await getTargetOrganization(targetOrganizationId);
 
-        if (!adminUser) {
+        if (!organization) {
             return res.status(404).json({
-                error: 'Admin not found',
-                message: 'Target admin user not found or has no organization'
+                error: 'Organization not found',
+                message: 'Target organization not found or is inactive'
             });
         }
 
         const { record: copiedTerms } = await cloneTermsTemplateToOrganization({
             template: templateTerms,
-            organizationId: adminUser.organizationId,
+            organizationId: organization._id,
             actorId: req.user._id,
             overwrite
         });
 
-        const now = new Date();
-        const recipients = Array.isArray(templateTerms.copyRecipients) ? templateTerms.copyRecipients : [];
-        const existingIndex = recipients.findIndex(
-            (recipient) => String(recipient.adminUserId) === String(adminUser._id)
-        );
-
-        if (existingIndex >= 0) {
-            recipients[existingIndex].adminName = adminUser.name || recipients[existingIndex].adminName || '';
-            recipients[existingIndex].adminEmail = adminUser.email || recipients[existingIndex].adminEmail || '';
-            recipients[existingIndex].organizationId = adminUser.organizationId;
-            recipients[existingIndex].lastCopiedAt = now;
-            recipients[existingIndex].copyCount = (recipients[existingIndex].copyCount || 0) + 1;
-        } else {
-            recipients.push({
-                adminUserId: adminUser._id,
-                adminName: adminUser.name || '',
-                adminEmail: adminUser.email || '',
-                organizationId: adminUser.organizationId,
-                copiedAt: now,
-                lastCopiedAt: now,
-                copyCount: 1
-            });
-        }
-
-        templateTerms.copyRecipients = recipients;
+        templateTerms.copyRecipients = upsertOrganizationCopyRecipient(templateTerms.copyRecipients, organization);
         templateTerms.updatedBy = req.user._id;
         await templateTerms.save();
 
         res.json({
-            message: `Terms copied to ${adminUser.name || adminUser.email} successfully`,
+            message: `Terms copied to ${organization.name || 'organization'} successfully`,
             terms: copiedTerms.getSummary()
         });
     } catch (error) {
-        logger.error('Copy terms to admin error:', error);
+        logger.error('Copy terms to organization error:', error);
         res.status(500).json({
             error: 'Failed to copy terms',
-            message: 'An error occurred while copying terms to selected admin'
+            message: 'An error occurred while copying terms to selected organization'
         });
     }
 });

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FaLinkedin } from 'react-icons/fa';
 import { getUser } from '../../services/users';
+import { openResumeInNewTab } from '../../utils/resumeViewer';
+import { getResolvedResumeRefs } from '../../utils/jobSeekerResume';
 import {
   JOB_CATEGORY_LIST,
   LANGUAGE_LIST,
@@ -11,7 +14,42 @@ import {
 } from '../../constants/options';
 import './JobSeekerProfileModal.css';
 
-export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
+function parseMetadata(raw) {
+  if (!raw) return {};
+  if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+function ensureArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    return value.split(/[,;|]/).map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function resolveJobSeekerId(jobSeeker) {
+  if (!jobSeeker) return null;
+  const candidates = [
+    jobSeeker._id,
+    jobSeeker.jobSeeker?._id,
+    jobSeeker.jobSeekerId,
+    typeof jobSeeker.jobSeeker === 'string' ? jobSeeker.jobSeeker : null
+  ];
+  const id = candidates.find(Boolean);
+  return id ? String(id) : null;
+}
+
+export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker, eventId }) {
   const [fullJobSeekerData, setFullJobSeekerData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,11 +73,7 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
       setError(null);
 
       try {
-        // Get job seeker ID from different possible structures
-        const jobSeekerId = jobSeeker._id || 
-                           jobSeeker.jobSeeker?._id || 
-                           jobSeeker.jobSeekerId ||
-                           (typeof jobSeeker.jobSeeker === 'string' ? jobSeeker.jobSeeker : null);
+        const jobSeekerId = resolveJobSeekerId(jobSeeker);
 
         if (!jobSeekerId) {
           // If we have basic data, use it directly
@@ -49,8 +83,11 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
         }
 
         // Fetch complete user data
-        const response = await getUser(jobSeekerId);
+        const response = await getUser(jobSeekerId, { eventId });
         const userData = response.user || response;
+        if (response.resolvedResume) {
+          userData.resolvedResume = response.resolvedResume;
+        }
         setFullJobSeekerData(userData);
       } catch (err) {
         console.error('Error fetching job seeker data:', err);
@@ -63,7 +100,7 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
     };
 
     fetchFullData();
-  }, [isOpen, jobSeeker]);
+  }, [isOpen, jobSeeker, eventId]);
 
   // Handle keyboard events - must be before early returns
   useEffect(() => {
@@ -81,14 +118,49 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !jobSeeker) return null;
 
   // Use full data if available, otherwise use provided data
   const js = fullJobSeekerData || jobSeeker?.jobSeeker || jobSeeker;
-  if (!js) return null;
 
-  const metadata = js.metadata || {};
+  if (!js) {
+    const loadingOverlay = (
+      <div
+        className="modal-overlay job-seeker-profile-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-busy="true"
+        aria-label="Loading job seeker profile"
+      >
+        <div className="modal-content job-seeker-profile-modal">
+          <div className="profile-loading">
+            <div className="loading-spinner" />
+            <p>Loading profile details...</p>
+          </div>
+        </div>
+      </div>
+    );
+    return typeof document !== 'undefined'
+      ? createPortal(loadingOverlay, document.body)
+      : null;
+  }
+
+  const metadata = parseMetadata(js.metadata);
   const profile = metadata.profile || {};
+  const employmentTypes = ensureArray(
+    profile.employmentTypes || metadata.employmentTypes || metadata.employmentType
+  );
+  const languages = ensureArray(profile.languages || metadata.languages || js.languages);
+  const { resumeId, resumeUrl, hasResume, title: resumeTitle } = getResolvedResumeRefs(js, metadata);
   const firstName = js.firstName || js.name?.split(' ')[0] || '';
   const lastName = js.lastName || js.name?.split(' ').slice(1).join(' ') || '';
   const fullName = js.name || `${firstName} ${lastName}`.trim() || 'Unknown';
@@ -98,8 +170,8 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
   const state = js.state || '';
   const country = js.country || 'US';
 
-  return (
-    <div 
+  const modalContent = (
+    <div
       className="modal-overlay job-seeker-profile-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -176,18 +248,18 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
                     LinkedIn
                   </a>
                 )}
-                {js.resumeUrl ? (
-                  <a
-                    href={js.resumeUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                {hasResume ? (
+                  <button
+                    type="button"
                     className="btn-resume"
+                    onClick={() => openResumeInNewTab(resumeId, resumeUrl)}
+                    aria-label={`View resume for ${fullName}`}
                   >
-                    📄 View Complete Resume
-                  </a>
+                    {resumeTitle || 'View Complete Resume'}
+                  </button>
                 ) : (
-                  <button className="btn-resume" disabled>
-                    📄 No Resume Available
+                  <button type="button" className="btn-resume" disabled>
+                    No Resume Available
                   </button>
                 )}
               </div>
@@ -238,15 +310,15 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
                   <div className="detail-item">
                     <span className="detail-label">EMPLOYMENT TYPES</span>
                     <div className="tags">
-                      {(profile.employmentTypes || metadata.employmentTypes || metadata.employmentType) ? 
-                        (Array.isArray(profile.employmentTypes) ? profile.employmentTypes : 
-                         Array.isArray(metadata.employmentTypes) ? metadata.employmentTypes : 
-                         Array.isArray(metadata.employmentType) ? metadata.employmentType : 
-                         [profile.employmentTypes || metadata.employmentTypes || metadata.employmentType]).map((type, index) => (
+                      {employmentTypes.length > 0 ? (
+                        employmentTypes.map((type, index) => (
                           <span key={index} className="tag">
                             {getLabelFromValue(type, JOB_TYPE_LIST)}
                           </span>
-                        )) : <span>Not provided</span>}
+                        ))
+                      ) : (
+                        <span>Not provided</span>
+                      )}
                     </div>
                   </div>
                   <div className="detail-item">
@@ -284,12 +356,15 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
                   <div className="detail-item">
                     <span className="detail-label">LANGUAGES</span>
                     <div className="tags">
-                      {(profile.languages || metadata.languages || js.languages) ? 
-                        (profile.languages || metadata.languages || js.languages).map((lang, index) => (
+                      {languages.length > 0 ? (
+                        languages.map((lang, index) => (
                           <span key={index} className="tag">
                             {getLabelFromValue(lang, LANGUAGE_LIST)}
                           </span>
-                        )) : <span>Not provided</span>}
+                        ))
+                      ) : (
+                        <span>Not provided</span>
+                      )}
                     </div>
                   </div>
                   <div className="detail-item">
@@ -371,5 +446,10 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker }) {
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+  return null;
 }
 

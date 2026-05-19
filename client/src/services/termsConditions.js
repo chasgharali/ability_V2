@@ -67,9 +67,9 @@ export const termsConditionsAPI = {
         return response.data;
     },
 
-    // Copy terms template to a specific admin (SuperAdmin)
-    copyToAdmin: async (id, targetAdminUserId, overwrite = false) => {
-        const response = await axios.post(`/api/terms-conditions/${id}/copy-to-admin`, { targetAdminUserId, overwrite }, { headers: authHeaders() });
+    // Copy terms template to a specific organization (SuperAdmin)
+    copyToOrganization: async (id, targetOrganizationId, overwrite = false) => {
+        const response = await axios.post(`/api/terms-conditions/${id}/copy-to-organization`, { targetOrganizationId, overwrite }, { headers: authHeaders() });
         return response.data;
     },
 

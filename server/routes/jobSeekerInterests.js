@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const JobSeekerInterest = require('../models/JobSeekerInterest');
+const aiSearchService = require('../services/aiSearchService');
+const { buildCacheKey, getCachedJson, setCachedJson } = require('../utils/searchCache');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const {
@@ -10,6 +12,11 @@ const {
     getVeteranStatusLabel,
     getLanguagesLabel
 } = require('../utils/profileFieldLabels');
+const {
+    batchResolveJobSeekerResumes,
+    pairKey,
+    EMPTY_RESUME
+} = require('../services/jobSeekerResumeResolver');
 
 const router = express.Router();
 
@@ -19,6 +26,30 @@ const User = require('../models/User');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 
 const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
+const INTERESTS_AI_CACHE_TTL_SECONDS = parseInt(process.env.INTERESTS_AI_CACHE_TTL_SECONDS || '120', 10);
+
+const INTEREST_POPULATE = [
+    {
+        path: 'jobSeeker',
+        select: 'name email phoneNumber city state country resumeUrl metadata',
+        options: { strictPopulate: false }
+    },
+    {
+        path: 'event',
+        select: 'name slug',
+        options: { strictPopulate: false }
+    },
+    {
+        path: 'booth',
+        select: 'name description',
+        options: { strictPopulate: false }
+    },
+    {
+        path: 'recruiter',
+        select: 'name email',
+        options: { strictPopulate: false }
+    }
+];
 
 const ensureOrgContext = (req, res) => {
     if (!isSuperAdmin(req) && !req.orgId) {
@@ -43,6 +74,199 @@ const hasRegisteredEventInMetadata = (user, eventId) => {
     return registrations.some((registration) => (
         registration?.id && String(registration.id) === eventIdString
     ));
+};
+
+/**
+ * Build MongoDB scope for list + AI search (role, org, booth, event, recruiter filters).
+ * @returns {{ query: object, isEmpty: boolean }}
+ */
+const buildInterestScope = async (req, filters = {}) => {
+    const { eventId, boothId, recruiterId } = filters;
+    let query = { isInterested: true };
+    if (!isSuperAdmin(req)) {
+        query.organizationId = req.orgId;
+    }
+
+    if (req.user.role === 'Recruiter') {
+        const recruiter = await User.findById(req.user._id).select('assignedBooth assignedEvents');
+        const boothIds = new Set();
+
+        if (recruiter && recruiter.assignedBooth) {
+            const assignedBoothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
+            boothIds.add(assignedBoothId.toString());
+        }
+
+        const adminBooths = await Booth.find({
+            administrators: req.user._id,
+            ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
+        }).select('_id');
+
+        adminBooths.forEach((booth) => {
+            boothIds.add(booth._id.toString());
+        });
+
+        const boothIdsArray = Array.from(boothIds)
+            .filter((id) => id && mongoose.Types.ObjectId.isValid(id))
+            .map((id) => new mongoose.Types.ObjectId(id));
+
+        if (boothIdsArray.length === 0) {
+            return { query, isEmpty: true };
+        }
+
+        query.booth = { $in: boothIdsArray };
+
+        const assignedEvents = recruiter?.assignedEvents || [];
+        if (assignedEvents.length > 0) {
+            const eventIdsArray = assignedEvents
+                .filter((id) => id && mongoose.Types.ObjectId.isValid(id.toString()))
+                .map((id) => new mongoose.Types.ObjectId(id.toString()));
+
+            if (eventIdsArray.length > 0) {
+                query.event = { $in: eventIdsArray };
+            }
+        }
+    } else if (['Admin', 'GlobalSupport'].includes(req.user.role) && recruiterId) {
+        const recruiter = await User.findById(recruiterId).select('assignedBooth');
+        const boothIds = new Set();
+
+        if (recruiter && recruiter.assignedBooth) {
+            const assignedBoothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
+            boothIds.add(assignedBoothId.toString());
+        }
+
+        const adminBooths = await Booth.find({
+            administrators: recruiterId,
+            ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
+        }).select('_id');
+
+        adminBooths.forEach((booth) => {
+            boothIds.add(booth._id.toString());
+        });
+
+        const boothIdsArray = Array.from(boothIds)
+            .filter((id) => id && mongoose.Types.ObjectId.isValid(id))
+            .map((id) => new mongoose.Types.ObjectId(id));
+
+        query.booth = { $in: boothIdsArray };
+    }
+
+    if (eventId) {
+        const cleanEventId = eventId.toString().replace(/^legacy_/, '');
+        if (mongoose.Types.ObjectId.isValid(cleanEventId)) {
+            query.event = cleanEventId;
+        } else {
+            query.legacyEventId = cleanEventId;
+        }
+    }
+
+    if (boothId) {
+        if (req.user.role === 'Recruiter' && query.booth && query.booth.$in) {
+            const requestedBoothId = boothId.toString();
+            const allowedBoothIds = query.booth.$in.map((id) => id.toString());
+            if (!allowedBoothIds.includes(requestedBoothId)) {
+                return { query, isEmpty: true };
+            }
+            query.booth = new mongoose.Types.ObjectId(requestedBoothId);
+        } else {
+            query.booth = boothId;
+        }
+    }
+
+    return { query, isEmpty: false };
+};
+
+const getInterestSearchSnippet = (interest, searchRegex) => {
+    const snippetCandidates = [
+        { label: 'Notes', value: interest.notes },
+        { label: 'Company', value: interest.company },
+        { label: 'Interest level', value: interest.interestLevel }
+    ];
+
+    for (const candidate of snippetCandidates) {
+        if (candidate.value && searchRegex.test(String(candidate.value))) {
+            return {
+                label: candidate.label,
+                text: String(candidate.value).slice(0, 280)
+            };
+        }
+    }
+
+    return {
+        label: 'Company',
+        text: interest.company || 'No searchable notes available'
+    };
+};
+
+async function attachResolvedResumesToInterests(interests) {
+    if (!interests?.length) return;
+
+    const pairs = [];
+    interests.forEach((interest) => {
+        const js = interest.jobSeeker;
+        if (!js || typeof js !== 'object') return;
+        const userId = js._id || js.id;
+        if (!userId) return;
+        const eventId = interest.event?._id || interest.event || interest.eventId;
+        pairs.push({ userId, eventId, userResumeUrl: js.resumeUrl });
+    });
+
+    if (!pairs.length) return;
+
+    const resolvedMap = await batchResolveJobSeekerResumes(pairs);
+    interests.forEach((interest) => {
+        const js = interest.jobSeeker;
+        if (!js || typeof js !== 'object') return;
+        const userId = js._id || js.id;
+        if (!userId) return;
+        const eventId = interest.event?._id || interest.event || interest.eventId;
+        js.resolvedResume = resolvedMap.get(pairKey(userId, eventId)) || { ...EMPTY_RESUME };
+    });
+}
+
+async function attachResolvedResumesToAiResults(results) {
+    if (!results?.length) return;
+    const pairs = results.map((row) => {
+        const js = row.jobSeeker;
+        if (!js || typeof js !== 'object') return null;
+        const userId = js._id || js.id;
+        if (!userId) return null;
+        const eventId = row.event?._id || row.event;
+        return { userId, eventId, userResumeUrl: js.resumeUrl };
+    }).filter(Boolean);
+
+    if (!pairs.length) return;
+
+    const resolvedMap = await batchResolveJobSeekerResumes(pairs);
+    results.forEach((row) => {
+        const js = row.jobSeeker;
+        if (!js || typeof js !== 'object') return;
+        const userId = js._id || js.id;
+        if (!userId) return;
+        const eventId = row.event?._id || row.event;
+        js.resolvedResume = resolvedMap.get(pairKey(userId, eventId)) || { ...EMPTY_RESUME };
+    });
+}
+
+const mapInterestForAiResult = (interest, searchRegex, semanticEvidenceMap, hybridScore) => {
+    const snippet = getInterestSearchSnippet(interest, searchRegex);
+    const jobSeekerId = String(interest.jobSeeker?._id || interest.jobSeeker || '');
+
+    return {
+        _id: interest._id,
+        interestId: interest._id,
+        jobSeeker: interest.jobSeeker,
+        event: interest.event,
+        booth: interest.booth,
+        company: interest.company,
+        interestLevel: interest.interestLevel,
+        notes: interest.notes,
+        isInterested: interest.isInterested,
+        createdAt: interest.createdAt,
+        snippetLabel: snippet.label,
+        snippetText: snippet.text,
+        semanticEvidence: semanticEvidenceMap.get(jobSeekerId) || null,
+        _hybridScore: hybridScore
+    };
 };
 
 /**
@@ -211,136 +435,19 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             return;
         }
 
-        // Build query based on user role and filters
-        let query = { isInterested: true };
-        if (!isSuperAdmin(req)) {
-            query.organizationId = req.orgId;
-        }
-
-        // Role-based filtering
-        if (req.user.role === 'Recruiter') {
-            // Recruiters can only see interests for their booths
-            // Check both assignedBooth field on User AND administrators array on Booth
-            // Get the recruiter's assigned booth and events directly from User model
-            const recruiter = await User.findById(req.user._id).select('assignedBooth assignedEvents');
-            const boothIds = new Set();
-            
-            // Add assigned booth if it exists
-            if (recruiter && recruiter.assignedBooth) {
-                const boothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
-                boothIds.add(boothId.toString());
-                console.log('Recruiter has assignedBooth:', boothId);
-            }
-            
-            // Also check booths where recruiter is in administrators array
-            const adminBooths = await Booth.find({
-                administrators: req.user._id,
-                ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
-            }).select('_id');
-            
-            adminBooths.forEach(booth => {
-                boothIds.add(booth._id.toString());
+        const { query, isEmpty } = await buildInterestScope(req, { eventId, boothId, recruiterId });
+        if (isEmpty) {
+            console.log('Interest scope is empty for user:', req.user.role, req.user._id);
+            return res.json({
+                interests: [],
+                pagination: {
+                    currentPage: parseInt(page, 10) || 1,
+                    totalPages: 0,
+                    totalInterests: 0,
+                    hasNext: false,
+                    hasPrev: (parseInt(page, 10) || 1) > 1
+                }
             });
-            
-            const boothIdsArray = Array.from(boothIds)
-                .filter(id => id && mongoose.Types.ObjectId.isValid(id))
-                .map(id => new mongoose.Types.ObjectId(id));
-            console.log('Recruiter booths found:', boothIdsArray.length, 'IDs:', boothIdsArray);
-
-            // If recruiter has no booths, return empty result
-            if (boothIdsArray.length === 0) {
-                console.log('Recruiter has no assigned booths, returning empty result');
-                return res.json({
-                    interests: [],
-                    pagination: {
-                        currentPage: 1,
-                        totalPages: 0,
-                        totalInterests: 0,
-                        hasNext: false,
-                        hasPrev: false
-                    }
-                });
-            }
-
-            query.booth = { $in: boothIdsArray };
-            
-            // Also filter by recruiter's assigned events if they have any
-            const assignedEvents = recruiter?.assignedEvents || [];
-            if (assignedEvents.length > 0) {
-                // Filter to only show interests for events the recruiter is assigned to
-                const eventIdsArray = assignedEvents
-                    .filter(id => id && mongoose.Types.ObjectId.isValid(id.toString()))
-                    .map(id => new mongoose.Types.ObjectId(id.toString()));
-                
-                if (eventIdsArray.length > 0) {
-                    query.event = { $in: eventIdsArray };
-                    console.log('Recruiter filtering by assigned events:', eventIdsArray.length);
-                }
-            }
-        } else if (['Admin', 'GlobalSupport'].includes(req.user.role)) {
-            // Admins can filter by recruiter or see all
-            if (recruiterId) {
-                // Get the recruiter's assigned booth directly from User model
-                const recruiter = await User.findById(recruiterId).select('assignedBooth');
-                const boothIds = new Set();
-                
-                // Add assigned booth if it exists
-                if (recruiter && recruiter.assignedBooth) {
-                    const boothId = recruiter.assignedBooth._id || recruiter.assignedBooth;
-                    boothIds.add(boothId.toString());
-                }
-                
-                // Also check booths where recruiter is in administrators array
-                const adminBooths = await Booth.find({
-                    administrators: recruiterId,
-                    ...(isSuperAdmin(req) ? {} : { organizationId: req.orgId })
-                }).select('_id');
-                
-                adminBooths.forEach(booth => {
-                    boothIds.add(booth._id.toString());
-                });
-                
-                const boothIdsArray = Array.from(boothIds)
-                .filter(id => id && mongoose.Types.ObjectId.isValid(id))
-                .map(id => new mongoose.Types.ObjectId(id));
-                query.booth = { $in: boothIdsArray };
-            }
-        }
-        if (eventId) {
-            // Strip "legacy_" prefix if present (client sends "legacy_<id>" format)
-            const cleanEventId = eventId.toString().replace(/^legacy_/, '');
-            
-            // Check if it's a legacy event ID (not a valid ObjectId format)
-            if (mongoose.Types.ObjectId.isValid(cleanEventId)) {
-                // Regular event ID
-                query.event = cleanEventId;
-                console.log('📅 Filtering by regular event ID:', cleanEventId);
-            } else {
-                // Legacy event ID - search by legacyEventId field
-                query.legacyEventId = cleanEventId;
-                console.log('📅 Filtering by legacy event ID:', cleanEventId);
-            }
-        }
-        if (boothId) {
-            if (req.user.role === 'Recruiter' && query.booth && query.booth.$in) {
-                const requestedBoothId = boothId.toString();
-                const allowedBoothIds = query.booth.$in.map(id => id.toString());
-                if (!allowedBoothIds.includes(requestedBoothId)) {
-                    return res.json({
-                        interests: [],
-                        pagination: {
-                            currentPage: parseInt(page),
-                            totalPages: 0,
-                            totalInterests: 0,
-                            hasNext: false,
-                            hasPrev: parseInt(page) > 1
-                        }
-                    });
-                }
-                query.booth = new mongoose.Types.ObjectId(requestedBoothId);
-            } else {
-                query.booth = boothId;
-            }
         }
 
         // Sort options
@@ -423,26 +530,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         // Fetch with pagination using optimized query
         const skip = (page - 1) * limit;
         const interests = await JobSeekerInterest.find(finalQuery)
-            .populate({
-                path: 'jobSeeker',
-                select: 'name email phoneNumber city state country resumeUrl metadata',
-                options: { strictPopulate: false }
-            })
-            .populate({
-                path: 'event',
-                select: 'name slug',
-                options: { strictPopulate: false }
-            })
-            .populate({
-                path: 'booth',
-                select: 'name description',
-                options: { strictPopulate: false }
-            })
-            .populate({
-                path: 'recruiter',
-                select: 'name email',
-                options: { strictPopulate: false }
-            })
+            .populate(INTEREST_POPULATE)
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit))
@@ -602,6 +690,8 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             }
         }
 
+        await attachResolvedResumesToInterests(interests);
+
         res.json({
             interests,
             pagination: {
@@ -619,6 +709,232 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
             error: 'Failed to retrieve interests',
             message: 'An error occurred while retrieving interests'
         });
+    }
+});
+
+// ─── AI search across job seeker interests ───────────────────────────────────
+router.post('/ai-search', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSupport']), async (req, res) => {
+    try {
+        const { query, page = 1, limit = 20 } = req.body || {};
+        const queryText = query?.trim();
+
+        if (!queryText) {
+            return res.status(400).json({ error: 'query is required' });
+        }
+        if (!ensureOrgContext(req, res)) return;
+
+        const { query: interestScope, isEmpty } = await buildInterestScope(req, {});
+        if (isEmpty) {
+            return res.json({
+                resultType: 'jobSeekerInterests',
+                query: queryText,
+                criteria: {},
+                results: [],
+                total: 0,
+                page: 1,
+                totalPages: 0
+            });
+        }
+
+        const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+        const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+        const interestsSearchCacheKey = buildCacheKey('interestsAiSearch:result', {
+            query: queryText,
+            userId: String(req.user?._id || ''),
+            role: req.user?.role || '',
+            orgId: String(req.orgId || ''),
+            page: parsedPage,
+            limit: parsedLimit
+        });
+        const cachedResponse = await getCachedJson(interestsSearchCacheKey);
+        if (cachedResponse) {
+            return res.json(cachedResponse);
+        }
+
+        const escapedSearch = queryText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(escapedSearch, 'i');
+        const orgScopedFilter = !isSuperAdmin(req) ? { organizationId: req.orgId } : {};
+
+        const [matchingUsers, matchingEvents, matchingBooths] = await Promise.all([
+            User.find({
+                ...orgScopedFilter,
+                $or: [
+                    { name: searchRegex },
+                    { email: searchRegex },
+                    { phoneNumber: searchRegex },
+                    { city: searchRegex },
+                    { state: searchRegex },
+                    { country: searchRegex },
+                    { 'metadata.profile.headline': searchRegex },
+                    { 'metadata.profile.keywords': searchRegex }
+                ]
+            }).select('_id legacyId').lean(),
+            Event.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean(),
+            Booth.find({ ...orgScopedFilter, name: searchRegex }).select('_id').lean()
+        ]);
+
+        const userIds = matchingUsers.map((item) => item._id);
+        const legacyUserIds = matchingUsers.map((item) => item.legacyId).filter(Boolean);
+        const eventIds = matchingEvents.map((item) => item._id);
+        const boothIds = matchingBooths.map((item) => item._id);
+
+        const searchConditions = [
+            { company: searchRegex },
+            { interestLevel: searchRegex },
+            { notes: searchRegex }
+        ];
+
+        if (userIds.length > 0) {
+            searchConditions.push({ jobSeeker: { $in: userIds } });
+        }
+        if (legacyUserIds.length > 0) {
+            searchConditions.push({ legacyJobSeekerId: { $in: legacyUserIds } });
+        }
+        if (eventIds.length > 0) {
+            searchConditions.push({ event: { $in: eventIds } });
+        }
+        if (boothIds.length > 0) {
+            searchConditions.push({ booth: { $in: boothIds } });
+        }
+
+        const textQuery = { $and: [interestScope, { $or: searchConditions }] };
+        const visibleJobSeekerIds = await JobSeekerInterest.distinct('jobSeeker', interestScope);
+
+        const semanticEvidenceMap = new Map();
+        const semanticScoreMap = new Map();
+
+        const [textRows, semantic] = await Promise.all([
+            JobSeekerInterest.find(textQuery)
+                .populate(INTEREST_POPULATE)
+                .sort({ createdAt: -1 })
+                .lean(),
+            visibleJobSeekerIds.length > 0
+                ? aiSearchService.search(
+                    queryText,
+                    { kind: 'users', userIds: visibleJobSeekerIds },
+                    {
+                        page: 1,
+                        limit: 200,
+                        candidatePoolSize: 400
+                    }
+                )
+                : { results: [], total: 0, criteria: {} }
+        ]);
+
+        (semantic.results || []).forEach((item) => {
+            const userId = String(item?._id || '');
+            if (!userId) return;
+            semanticScoreMap.set(userId, Number(item._searchScore) || 0);
+            semanticEvidenceMap.set(userId, item?.aiProfile?.ragEvidence || null);
+        });
+
+        const textResults = textRows.map((interest) =>
+            mapInterestForAiResult(interest, searchRegex, semanticEvidenceMap, 1)
+        );
+
+        const semanticUserIds = (semantic.results || [])
+            .map((item) => item?._id)
+            .filter(Boolean);
+
+        let semanticInterestRows = [];
+        if (semanticUserIds.length > 0) {
+            const semanticInterests = await JobSeekerInterest.find({
+                $and: [
+                    interestScope,
+                    { jobSeeker: { $in: semanticUserIds } }
+                ]
+            })
+                .populate(INTEREST_POPULATE)
+                .sort({ createdAt: -1 })
+                .lean();
+
+            semanticInterestRows = semanticInterests.map((interest) => {
+                const userId = String(interest.jobSeeker?._id || interest.jobSeeker || '');
+                const semanticScore = semanticScoreMap.get(userId) || 0;
+                const row = mapInterestForAiResult(
+                    interest,
+                    searchRegex,
+                    semanticEvidenceMap,
+                    semanticScore * 0.9
+                );
+                if (!row.snippetText || row.snippetLabel === 'Company') {
+                    row.snippetLabel = 'Profile / Resume match';
+                    row.snippetText = row.semanticEvidence || 'Matched by AI profile and resume content.';
+                }
+                return row;
+            });
+        }
+
+        const mergedMap = new Map();
+        for (const row of textResults) {
+            mergedMap.set(String(row.interestId), row);
+        }
+        for (const row of semanticInterestRows) {
+            const key = String(row.interestId);
+            const existing = mergedMap.get(key);
+            if (!existing) {
+                mergedMap.set(key, row);
+                continue;
+            }
+            mergedMap.set(key, {
+                ...existing,
+                _hybridScore: Math.max(existing._hybridScore || 0, row._hybridScore || 0),
+                snippetLabel: existing.snippetLabel || row.snippetLabel,
+                snippetText: existing.snippetText || row.snippetText,
+                semanticEvidence: existing.semanticEvidence || row.semanticEvidence || null
+            });
+        }
+
+        const mergedResults = Array.from(mergedMap.values())
+            .sort((a, b) => {
+                const scoreDiff = (b._hybridScore || 0) - (a._hybridScore || 0);
+                if (scoreDiff !== 0) return scoreDiff;
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
+
+        const total = mergedResults.length;
+        const pageStart = (parsedPage - 1) * parsedLimit;
+        const paged = mergedResults.slice(pageStart, pageStart + parsedLimit)
+            .map(({ _hybridScore, ...rest }) => rest);
+
+        logger.info(
+            `jobSeekerInterests ai-search hybrid query="${queryText}" textMatches=${textResults.length} ` +
+            `semanticUsers=${semanticUserIds.length} merged=${mergedResults.length}`
+        );
+
+        await attachResolvedResumesToAiResults(paged);
+
+        const responsePayload = {
+            resultType: 'jobSeekerInterests',
+            query: queryText,
+            criteria: semantic.criteria || {},
+            results: paged,
+            total,
+            page: parsedPage,
+            totalPages: Math.max(1, Math.ceil(total / parsedLimit))
+        };
+        await setCachedJson(interestsSearchCacheKey, responsePayload, INTERESTS_AI_CACHE_TTL_SECONDS);
+        res.json(responsePayload);
+    } catch (error) {
+        logger.error('Job seeker interests ai-search error:', error);
+        if (error.code === 'SENSITIVE_QUERY') {
+            return res.status(400).json({
+                error: error.message,
+                code: 'SENSITIVE_QUERY',
+                term: error.term
+            });
+        }
+        if (error.code === 'OPENAI_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI search not available — OpenAI API key not configured' });
+        }
+        if (error.code === 'AI_SEARCH_BACKEND_UNAVAILABLE') {
+            return res.status(503).json({
+                error: 'AI search temporarily unavailable — search index backend is not ready',
+                code: 'AI_SEARCH_BACKEND_UNAVAILABLE',
+                message: 'Run `npm run ai-search:index-health` on the server to verify Mongo and Atlas vector indexes.'
+            });
+        }
+        res.status(500).json({ error: 'AI search failed' });
     }
 });
 
@@ -642,6 +958,7 @@ router.get('/booth/:boothId', authenticateToken, requireRole(['Recruiter', 'Admi
         }
 
         const interests = await JobSeekerInterest.getBoothInterests(boothId);
+        await attachResolvedResumesToInterests(interests);
 
         res.json({
             success: true,

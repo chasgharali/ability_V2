@@ -6,6 +6,18 @@ function authHeaders() {
   return { Authorization: `Bearer ${token}` };
 }
 
+export async function aiSearchJobSeekerInterests(query, params = {}) {
+    const response = await axios.post('/api/job-seeker-interests/ai-search', {
+        query,
+        page: params.page || 1,
+        limit: params.limit || 20
+    }, {
+        headers: authHeaders(),
+        timeout: 30000
+    });
+    return response.data;
+}
+
 export const jobSeekerInterestsAPI = {
     // Get all job seeker interests with filtering (for admins/recruiters)
     getInterests: async (filters = {}) => {

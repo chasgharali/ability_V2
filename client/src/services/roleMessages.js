@@ -104,13 +104,13 @@ const roleMessagesAPI = {
     }
   },
 
-  // Copy page instruction template to a specific admin (SuperAdmin)
-  async copyMessageToAdmin(id, targetAdminUserId, overwrite = false) {
+  // Copy page instruction template to a specific organization (SuperAdmin)
+  async copyMessageToOrganization(id, targetOrganizationId, overwrite = false) {
     try {
-      const response = await axios.post(`/api/role-messages/${id}/copy-to-admin`, { targetAdminUserId, overwrite }, { headers: authHeaders() });
+      const response = await axios.post(`/api/role-messages/${id}/copy-to-organization`, { targetOrganizationId, overwrite }, { headers: authHeaders() });
       return response.data;
     } catch (error) {
-      console.error('Error copying role message to admin:', error);
+      console.error('Error copying role message to organization:', error);
       throw error;
     }
   },

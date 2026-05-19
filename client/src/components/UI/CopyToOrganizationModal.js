@@ -1,49 +1,49 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './CopyToAdminModal.css';
 
-export default function CopyToAdminModal({
+export default function CopyToOrganizationModal({
     isOpen,
-    admins = [],
-    title = 'Copy to Admin',
-    description = 'Select organization admin user and confirm copy.',
+    organizations = [],
+    title = 'Copy to Organization',
+    description = 'Select an organization and choose whether to overwrite existing copy.',
     onCancel,
     onConfirm
 }) {
-    const [selectedAdminId, setSelectedAdminId] = useState('');
+    const [selectedOrganizationId, setSelectedOrganizationId] = useState('');
     const [overwrite, setOverwrite] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
-        setSelectedAdminId('');
+        setSelectedOrganizationId('');
         setOverwrite(false);
     }, [isOpen]);
 
-    const adminOptions = useMemo(() => admins.map((admin) => ({
-        value: admin._id,
-        label: `${admin.name || admin.email} (${admin.email})`
-    })), [admins]);
+    const organizationOptions = useMemo(() => organizations.map((org) => ({
+        value: org._id,
+        label: org.name || org.slug || 'Unnamed organization'
+    })), [organizations]);
 
     if (!isOpen) return null;
 
     return (
-        <div className="copy-admin-modal__overlay" role="dialog" aria-modal="true" aria-labelledby="copy-admin-title">
+        <div className="copy-admin-modal__overlay" role="dialog" aria-modal="true" aria-labelledby="copy-org-title">
             <div className="copy-admin-modal__container">
-                <h3 id="copy-admin-title" className="copy-admin-modal__title">{title}</h3>
+                <h3 id="copy-org-title" className="copy-admin-modal__title">{title}</h3>
                 <p className="copy-admin-modal__description">{description}</p>
 
-                {adminOptions.length === 0 ? (
-                    <p className="copy-admin-modal__empty">No active Admin or AdminEvent users available.</p>
+                {organizationOptions.length === 0 ? (
+                    <p className="copy-admin-modal__empty">No active organizations available.</p>
                 ) : (
                     <>
-                        <label htmlFor="copy-admin-select" className="copy-admin-modal__label">Organization Admin User</label>
+                        <label htmlFor="copy-org-select" className="copy-admin-modal__label">Organization</label>
                         <select
-                            id="copy-admin-select"
+                            id="copy-org-select"
                             className="copy-admin-modal__select"
-                            value={selectedAdminId}
-                            onChange={(e) => setSelectedAdminId(e.target.value)}
+                            value={selectedOrganizationId}
+                            onChange={(e) => setSelectedOrganizationId(e.target.value)}
                         >
-                            <option value="">Select admin</option>
-                            {adminOptions.map((option) => (
+                            <option value="">Select organization</option>
+                            {organizationOptions.map((option) => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                         </select>
@@ -64,8 +64,8 @@ export default function CopyToAdminModal({
                     <button
                         type="button"
                         className="dashboard-button"
-                        disabled={!selectedAdminId}
-                        onClick={() => onConfirm(selectedAdminId, overwrite)}
+                        disabled={!selectedOrganizationId}
+                        onClick={() => onConfirm(selectedOrganizationId, overwrite)}
                     >
                         Copy
                     </button>

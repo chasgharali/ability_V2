@@ -17,6 +17,7 @@ import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
 import filterIcon from '../../assets/filter.png';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
+import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import { openResumeInNewTab } from '../../utils/resumeViewer';
 import JSZip from 'jszip';
 import {
@@ -246,6 +247,24 @@ const JobSeekerInterests = () => {
     // Job Seeker Profile Modal state
     const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
     const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
+    const [selectedEventIdForModal, setSelectedEventIdForModal] = useState(null);
+    const [activeTab, setActiveTab] = useState('list');
+    const supportsInterestsAiTab = ['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role);
+
+    useEffect(() => {
+        if (!supportsInterestsAiTab && activeTab !== 'list') {
+            setActiveTab('list');
+        }
+    }, [supportsInterestsAiTab, activeTab]);
+
+    const handleViewJobSeekerFromAi = useCallback((jobSeeker, eventId) => {
+        // Defer past Syncfusion sibling reconciliation (see InterpreterCategories form modal comment)
+        window.requestAnimationFrame(() => {
+            setSelectedJobSeekerForModal(jobSeeker);
+            setSelectedEventIdForModal(eventId || null);
+            setShowJobSeekerModal(true);
+        });
+    }, []);
 
     // Resume export state
     const [isExportingResumes, setIsExportingResumes] = useState(false);
@@ -750,7 +769,8 @@ const JobSeekerInterests = () => {
                 jobSeekerEmploymentTypes: profile?.employmentTypes || [],
                 jobSeekerLanguages: profile?.languages || [],
                 jobSeekerVeteranStatus: profile?.veteranStatus || '',
-                jobSeekerResumeUrl: r.jobSeeker?.resumeUrl || '',
+                jobSeekerResumeId: r.jobSeeker?.resolvedResume?.resumeId || '',
+                jobSeekerResumeUrl: r.jobSeeker?.resolvedResume?.resumeUrl || r.jobSeeker?.resumeUrl || '',
                 boothName: r.booth?.name || (r.legacyBoothId ? 'Legacy Booth' : ''),
                 boothCompany: r.booth?.company || '',
                 eventName: r.event?.name || (r.legacyEventId ? 'Legacy Event' : ''),
@@ -1533,18 +1553,35 @@ const JobSeekerInterests = () => {
             return <div style={{ padding: '8px 0', color: '#999' }}>N/A</div>;
         }
         
+        const resumeId = row.jobSeekerResumeId || row.jobSeeker?.resolvedResume?.resumeId || '';
+        const resumeUrl = row.jobSeekerResumeUrl || row.jobSeeker?.resolvedResume?.resumeUrl || row.jobSeeker?.resumeUrl || '';
+        const hasResume = !!(resumeId || resumeUrl);
+        const eventIdForModal = row.event?._id || row.event || null;
+
         return (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <ButtonComponent 
                     cssClass="e-primary e-small" 
                     onClick={() => {
-                        setSelectedJobSeekerForModal(jobSeekerData);
-                        setShowJobSeekerModal(true);
+                        window.setTimeout(() => {
+                            setSelectedJobSeekerForModal(jobSeekerData);
+                            setSelectedEventIdForModal(eventIdForModal);
+                            setShowJobSeekerModal(true);
+                        }, 0);
                     }}
                     aria-label="View job seeker details"
                 >
                     View Job Seeker Detail
                 </ButtonComponent>
+                {hasResume ? (
+                    <ButtonComponent
+                        cssClass="e-outline e-primary e-small"
+                        onClick={() => openResumeInNewTab(resumeId || null, resumeUrl || null)}
+                        aria-label="View job seeker resume"
+                    >
+                        View Resume
+                    </ButtonComponent>
+                ) : null}
             </div>
         );
     }, []); // setState functions are stable, no need to include in dependencies
@@ -1758,6 +1795,29 @@ const JobSeekerInterests = () => {
                                         <span>{infoBannerMessage}</span>
                                     </div>
                                 )}
+                                {supportsInterestsAiTab && (
+                                    <div className="jsi-tab-bar" role="tablist" aria-label="Job seeker interests view mode">
+                                        <button
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={activeTab === 'list'}
+                                            className={`jsi-tab-btn${activeTab === 'list' ? ' jsi-tab-btn--active' : ''}`}
+                                            onClick={() => setActiveTab('list')}
+                                        >
+                                            All Job Seeker Interests
+                                        </button>
+                                        <button
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={activeTab === 'ai-search'}
+                                            className={`jsi-tab-btn${activeTab === 'ai-search' ? ' jsi-tab-btn--active' : ''}`}
+                                            onClick={() => setActiveTab('ai-search')}
+                                        >
+                                            ✦ AI Search
+                                        </button>
+                                    </div>
+                                )}
+                                {(!supportsInterestsAiTab || activeTab === 'list') && (
                                 <div className="header-actions" style={{ marginTop: '1rem', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                                     {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && selectedInterests.length > 0 && (
                                         <>
@@ -1815,8 +1875,20 @@ const JobSeekerInterests = () => {
                                         {isExportingResumes ? 'Exporting Resumes...' : 'Export Resumes'}
                                     </ButtonComponent>
                                 </div>
+                                )}
                             </div>
 
+                            {supportsInterestsAiTab && activeTab === 'ai-search' && (
+                                <div className="jsi-ai-tab-content">
+                                    <AdvancedJobSeekerSearch
+                                        mode="interests"
+                                        onViewJobSeeker={handleViewJobSeekerFromAi}
+                                    />
+                                </div>
+                            )}
+
+                            {(!supportsInterestsAiTab || activeTab === 'list') && (
+                            <>
                             {/* Statistics Cards */}
                             <div className="stats-grid">
                                 <div className="stat-card">
@@ -1986,11 +2058,13 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
                                         <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='jobSeekerResumeUrl' headerText='Resume' width='120' textAlign='Center' allowFiltering={false} template={(props) => (
-                                            props.jobSeekerResumeUrl
-                                                ? <button type="button" className="btn-view-resume-inline" onClick={() => openResumeInNewTab(null, props.jobSeekerResumeUrl)}>View</button>
-                                                : <span style={{ color: '#9ca3af' }}>—</span>
-                                        )} />
+                                        <ColumnDirective field='jobSeekerResumeUrl' headerText='Resume' width='120' textAlign='Center' allowFiltering={false} template={(props) => {
+                                            const rid = props.jobSeekerResumeId || props.jobSeeker?.resolvedResume?.resumeId;
+                                            const rurl = props.jobSeekerResumeUrl || props.jobSeeker?.resolvedResume?.resumeUrl;
+                                            return (rid || rurl)
+                                                ? <button type="button" className="btn-view-resume-inline" onClick={() => openResumeInNewTab(rid || null, rurl || null)}>View</button>
+                                                : <span style={{ color: '#9ca3af' }}>—</span>;
+                                        }} />
                                         <ColumnDirective
                                             headerText='Actions'
                                             width='200'
@@ -2133,18 +2207,20 @@ const JobSeekerInterests = () => {
                                     </div>
                                 )}
                             </div>
+                            </>
+                            )}
                         </div>
                     </div>
                 </main>
             </div>
 
-            {/* Bulk Delete confirm modal - Syncfusion DialogComponent */}
-            {['Admin', 'GlobalSupport'].includes(user?.role) && (
+            {/* Bulk Delete confirm modal - mount only when open (Syncfusion portal DOM) */}
+            {confirmBulkDeleteOpen && ['Admin', 'GlobalSupport'].includes(user?.role) && (
                 <DialogComponent
                     width="450px"
                     isModal={true}
                     showCloseIcon={true}
-                    visible={confirmBulkDeleteOpen}
+                    visible={true}
                     header="Bulk Delete Interests"
                     closeOnEscape={true}
                     close={cancelBulkDelete}
@@ -2187,23 +2263,12 @@ const JobSeekerInterests = () => {
                 newestOnTop={true}
             />
 
-            {/* Job Seeker Profile Modal */}
-            <JobSeekerProfileModal
-                isOpen={showJobSeekerModal}
-                onClose={() => {
-                    setShowJobSeekerModal(false);
-                    setSelectedJobSeekerForModal(null);
-                }}
-                jobSeeker={selectedJobSeekerForModal}
-            />
-
-
-            {/* Bulk Delete confirm modal */}
+            {confirmBulkDeleteOpen && (
             <DialogComponent
                 width="500px"
                 isModal={true}
                 showCloseIcon={true}
-                visible={confirmBulkDeleteOpen}
+                visible={true}
                 header="Delete Multiple Interests"
                 closeOnEscape={true}
                 close={cancelBulkDelete}
@@ -2237,6 +2302,20 @@ const JobSeekerInterests = () => {
                     This action cannot be undone.
                 </p>
             </DialogComponent>
+            )}
+
+            {showJobSeekerModal && selectedJobSeekerForModal && (
+                <JobSeekerProfileModal
+                    isOpen
+                    onClose={() => {
+                        setShowJobSeekerModal(false);
+                        setSelectedJobSeekerForModal(null);
+                        setSelectedEventIdForModal(null);
+                    }}
+                    jobSeeker={selectedJobSeekerForModal}
+                    eventId={selectedEventIdForModal}
+                />
+            )}
         </div>
     );
 };

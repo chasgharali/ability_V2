@@ -9,7 +9,9 @@ import {
   aiSearchJobSeekersGlobal,
   aiSearchMeetingRecords
 } from '../../services/organizations';
+import { aiSearchJobSeekerInterests } from '../../services/jobSeekerInterests';
 import { openResumeInNewTab } from '../../utils/resumeViewer';
+import { getResolvedResumeRefs } from '../../utils/jobSeekerResume';
 import './AdvancedJobSeekerSearch.css';
 
 const POLL_INTERVAL_MS = 4000;
@@ -18,9 +20,10 @@ const POLL_INTERVAL_MS = 4000;
  * Adapter that picks the right backend endpoints based on `mode`.
  *   - 'org'      → org-scoped (Admin / AdminEvent)
  *   - 'global'   → SuperAdmin global jobseekers
- *   - 'meeting'  → Admin / Recruiter meeting records
+ *   - 'meeting'   → Admin / Recruiter meeting records
+ *   - 'interests' → Admin / Recruiter job seeker interests
  *
- * Meeting mode does not expose parse controls — parsing is done elsewhere.
+ * Meeting and interests modes do not expose parse controls — parsing is done elsewhere.
  */
 function getApi(mode, orgId) {
   if (mode === 'global') {
@@ -39,6 +42,14 @@ function getApi(mode, orgId) {
       runSearch: (q, p) => aiSearchMeetingRecords(q, p)
     };
   }
+  if (mode === 'interests') {
+    return {
+      supportsParse: false,
+      getStatus: null,
+      triggerParse: null,
+      runSearch: (q, p) => aiSearchJobSeekerInterests(q, p)
+    };
+  }
   // 'org' (default)
   return {
     supportsParse: true,
@@ -48,7 +59,7 @@ function getApi(mode, orgId) {
   };
 }
 
-export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
+export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJobSeeker }) {
   const navigate = useNavigate();
   const api = getApi(mode, orgId);
   const [parseStatus, setParseStatus] = useState(null);
@@ -59,7 +70,6 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [results, setResults] = useState(null);
-  const [criteria, setCriteria] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -124,7 +134,6 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
     try {
       const res = await api.runSearch(searchQuery, { page: searchPage, limit: 20 });
       setResults(res.results || []);
-      setCriteria(res.criteria || null);
       setTotal(res.total || 0);
       setTotalPages(res.totalPages || 1);
       setPage(searchPage);
@@ -175,13 +184,21 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
       'chat messages discussing warehouse entry-level roles',
       'records with transcript notes about nursing experience'
     ]
-    : [
-      'developer from New York with 10 years of experience',
-      'senior security guard in Denver',
-      'bilingual customer service in Texas',
-      'warehouse worker entry level',
-      'registered nurse with 5+ years in California'
-    ];
+    : mode === 'interests'
+      ? [
+        'job seekers interested in software engineering booths',
+        'high interest level with notes mentioning remote work',
+        'interests expressed for healthcare companies',
+        'React developer interested in technology employers',
+        'entry level candidates with notes about customer service'
+      ]
+      : [
+        'developer from New York with 10 years of experience',
+        'senior security guard in Denver',
+        'bilingual customer service in Texas',
+        'warehouse worker entry level',
+        'registered nurse with 5+ years in California'
+      ];
 
   const applyExample = (ex) => {
     setQuery(ex);
@@ -289,7 +306,9 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
           <p className="ai-search-subtitle">
             {mode === 'meeting'
               ? 'Describe interview outcomes, notes, chat messages, status, role, skills, or location. We combine meeting-record content with AI profile/resume matching for job seekers visible to your role.'
-              : 'Describe the role, skills, experience, or location in plain English. We search across parsed resumes and public profile fields. Disability, accessibility, and other protected attributes are never indexed or searchable.'
+              : mode === 'interests'
+                ? 'Describe booth interests, company names, notes, role, skills, or location. We combine interest records with AI profile/resume matching for job seekers visible to your role.'
+                : 'Describe the role, skills, experience, or location in plain English. We search across parsed resumes and public profile fields. Disability, accessibility, and other protected attributes are never indexed or searchable.'
             }
           </p>
         </div>
@@ -307,7 +326,9 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
                 onKeyDown={handleKeyDown}
                 placeholder={mode === 'meeting'
                   ? 'e.g. React developer from Tidewater with strong recruiter feedback'
-                  : 'e.g. senior security guard in Denver with 5+ years experience'
+                  : mode === 'interests'
+                    ? 'e.g. software engineers interested in remote-friendly employers'
+                    : 'e.g. senior security guard in Denver with 5+ years experience'
                 }
                 rows={3}
                 aria-describedby="ai-search-hint"
@@ -341,7 +362,7 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
                 <button
                   type="button"
                   className="ai-search-btn ai-search-btn--clear"
-                  onClick={() => { setResults(null); setQuery(''); setCriteria(null); setLastQuery(''); }}
+                  onClick={() => { setResults(null); setQuery(''); setLastQuery(''); }}
                   aria-label="Clear search results"
                 >
                   Clear results
@@ -379,54 +400,6 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
         </div>
       )}
 
-      {/* Interpreted Criteria — only non-sensitive structured filters */}
-      {criteria && (
-        criteria.location?.city ||
-        criteria.location?.state ||
-        criteria.location?.country ||
-        criteria.educationLevel ||
-        criteria.workLevel ||
-        criteria.minYearsExperience != null ||
-        criteria.maxYearsExperience != null ||
-        criteria.employmentTypes?.length ||
-        criteria.languages?.length ||
-        criteria.roleKeywords?.length ||
-        criteria.skillKeywords?.length
-      ) && (
-        <div className="ai-criteria-box" aria-label="How AI interpreted your query">
-          <p className="ai-criteria-label">AI interpreted your query as:</p>
-          <div className="ai-criteria-tags">
-            {criteria.roleKeywords?.map(r => (
-              <span key={`role-${r}`} className="ai-tag ai-tag--title">💼 {r}</span>
-            ))}
-            {criteria.skillKeywords?.map(s => (
-              <span key={`skill-${s}`} className="ai-tag ai-tag--skill">🔧 {s}</span>
-            ))}
-            {criteria.location?.city && (
-              <span className="ai-tag ai-tag--location">📍 {criteria.location.city}{criteria.location.state ? `, ${criteria.location.state}` : ''}</span>
-            )}
-            {criteria.location?.country && !criteria.location?.city && (
-              <span className="ai-tag ai-tag--location">🌍 {criteria.location.country}</span>
-            )}
-            {criteria.educationLevel && (
-              <span className="ai-tag">🎓 {criteria.educationLevel}</span>
-            )}
-            {criteria.workLevel && (
-              <span className="ai-tag">📊 {criteria.workLevel}</span>
-            )}
-            {criteria.minYearsExperience != null && (
-              <span className="ai-tag">⏱ {criteria.minYearsExperience}+ years</span>
-            )}
-            {criteria.employmentTypes?.map(et => (
-              <span key={et} className="ai-tag">{et}</span>
-            ))}
-            {criteria.languages?.map(l => (
-              <span key={l} className="ai-tag">🗣 {l}</span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Results */}
       {results !== null && (
         <div className="ai-results-section">
@@ -436,7 +409,9 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
                 ? 'No results found'
                 : mode === 'meeting'
                   ? `${total} meeting record${total !== 1 ? 's' : ''} found`
-                  : `${total} job seeker${total !== 1 ? 's' : ''} found`
+                  : mode === 'interests'
+                    ? `${total} interest${total !== 1 ? 's' : ''} found`
+                    : `${total} job seeker${total !== 1 ? 's' : ''} found`
               }
             </h3>
             {total > 0 && (
@@ -451,7 +426,9 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
               <p>
                 {mode === 'meeting'
                   ? 'No meeting records matched your search. Try broader terms based on notes, feedback, participants, or status.'
-                  : 'No job seekers matched your search. Try broader terms or check that profiles have been indexed.'
+                  : mode === 'interests'
+                    ? 'No job seeker interests matched your search. Try broader terms based on company, notes, booth, or profile skills.'
+                    : 'No job seekers matched your search. Try broader terms or check that profiles have been indexed.'
                 }
               </p>
             </div>
@@ -467,7 +444,15 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
                     onViewDetails={(meetingRecordId) => navigate(`/meeting-records/${meetingRecordId}`)}
                   />
                 )
-                : <JobSeekerCard key={result._id} jobSeeker={result} />
+                : mode === 'interests'
+                  ? (
+                    <JobSeekerInterestCard
+                      key={result.interestId || result._id}
+                      interest={result}
+                      onViewJobSeeker={onViewJobSeeker}
+                    />
+                  )
+                  : <JobSeekerCard key={result._id} jobSeeker={result} />
             ))}
           </div>
 
@@ -498,6 +483,88 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org' }) {
   );
 }
 
+function JobSeekerInterestCard({ interest, onViewJobSeeker }) {
+  const jobSeekerName = interest.jobSeeker?.name || 'N/A';
+  const eventName = interest.event?.name || 'N/A';
+  const boothName = interest.booth?.name || 'N/A';
+  const company = interest.company || 'N/A';
+  const dateExpressed = interest.createdAt
+    ? new Date(interest.createdAt).toLocaleString()
+    : 'N/A';
+
+  let metadata = interest.jobSeeker?.metadata;
+  if (typeof metadata === 'string') {
+    try { metadata = JSON.parse(metadata); } catch { metadata = {}; }
+  }
+  const { resumeId, resumeUrl, hasResume } = getResolvedResumeRefs(interest.jobSeeker, metadata);
+
+  const handleViewJobSeeker = () => {
+    if (!interest.jobSeeker || !onViewJobSeeker) return;
+    onViewJobSeeker(interest.jobSeeker, interest.event?._id || interest.event);
+  };
+
+  const handleViewResume = () => {
+    if (hasResume) openResumeInNewTab(resumeId || null, resumeUrl || null);
+  };
+
+  return (
+    <article className="ai-result-card" role="listitem">
+      <div className="ai-card-header">
+        <div className="ai-card-identity">
+          <h4 className="ai-card-name">{jobSeekerName}</h4>
+          <p className="ai-card-title">{eventName} · {boothName}</p>
+          <p className="ai-card-location">Company: {company}</p>
+        </div>
+        <div className="ai-card-badges">
+          {interest.interestLevel && (
+            <span className="ai-badge ai-badge--events">{interest.interestLevel} interest</span>
+          )}
+        </div>
+      </div>
+
+      <div className="ai-card-meta">
+        <div className="ai-card-details">
+          <span className="ai-detail-chip">Expressed: {dateExpressed}</span>
+        </div>
+      </div>
+
+      {interest.snippetText && (
+        <p className="ai-card-summary ai-card-summary--detail">
+          <strong>{interest.snippetLabel || 'Notes'}:</strong> {interest.snippetText}
+        </p>
+      )}
+      {interest.semanticEvidence && interest.semanticEvidence !== interest.snippetText && (
+        <p className="ai-card-summary ai-card-summary--detail">
+          <strong>Profile evidence:</strong> {interest.semanticEvidence}
+        </p>
+      )}
+
+      <div className="ai-card-footer">
+        {onViewJobSeeker && interest.jobSeeker && (
+          <button
+            type="button"
+            className="ai-resume-btn"
+            onClick={handleViewJobSeeker}
+            aria-label={`View job seeker details for ${jobSeekerName}`}
+          >
+            View Job Seeker Detail
+          </button>
+        )}
+        {hasResume && (
+          <button
+            type="button"
+            className="ai-resume-btn"
+            onClick={handleViewResume}
+            aria-label={`View resume for ${jobSeekerName}`}
+          >
+            View Resume
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
 function MeetingRecordCard({ meetingRecord, onViewDetails }) {
   const jobSeekerName = meetingRecord.jobSeeker?.name || 'N/A';
   const recruiterName = meetingRecord.recruiter?.name || 'N/A';
@@ -506,6 +573,10 @@ function MeetingRecordCard({ meetingRecord, onViewDetails }) {
   const formattedStart = meetingRecord.startTime ? new Date(meetingRecord.startTime).toLocaleString() : 'N/A';
   const duration = Number.isFinite(meetingRecord.duration) ? `${meetingRecord.duration}m` : 'N/A';
   const rating = meetingRecord.recruiterRating ?? meetingRecord.feedbackRating ?? null;
+
+  const resumeId = meetingRecord.jobSeekerResumeId || meetingRecord.resolvedResume?.resumeId || null;
+  const resumeUrl = meetingRecord.jobSeekerResumeUrl || meetingRecord.resolvedResume?.resumeUrl || meetingRecord.jobSeeker?.resumeUrl || null;
+  const hasResume = !!(resumeId || resumeUrl);
 
   return (
     <article className="ai-result-card" role="listitem">
@@ -545,12 +616,23 @@ function MeetingRecordCard({ meetingRecord, onViewDetails }) {
 
       <div className="ai-card-footer">
         <button
+          type="button"
           className="ai-resume-btn"
           onClick={() => onViewDetails(meetingRecord.meetingRecordId || meetingRecord._id)}
           aria-label={`View details for meeting record of ${jobSeekerName}`}
         >
           View Details
         </button>
+        {hasResume && (
+          <button
+            type="button"
+            className="ai-resume-btn"
+            onClick={() => openResumeInNewTab(resumeId || null, resumeUrl || null)}
+            aria-label={`View resume for ${jobSeekerName}`}
+          >
+            View Resume
+          </button>
+        )}
       </div>
     </article>
   );
@@ -563,18 +645,11 @@ function JobSeekerCard({ jobSeeker }) {
     ? `${ai.totalEventsRegistered} event${ai.totalEventsRegistered !== 1 ? 's' : ''}`
     : null;
 
-  const registrations = Array.isArray(jobSeeker.registrations) ? jobSeeker.registrations : [];
-
-  // Deterministic priority:
-  // 1) any registration resumeId (resume builder doc)
-  // 2) any registration resumeUrl (uploaded/generated file)
-  // 3) user-level resumeUrl
-  const regWithResumeId = registrations.find(r => r?.resumeId?._id || r?.resumeId);
-  const resumeId = regWithResumeId?.resumeId?._id || regWithResumeId?.resumeId || null;
-
-  const regWithResumeUrl = registrations.find(r => r?.resumeUrl);
-  const resumeUrl = regWithResumeUrl?.resumeUrl || jobSeeker.resumeUrl || null;
-  const hasResume = !!(resumeId || resumeUrl);
+  let metadata = jobSeeker.metadata;
+  if (typeof metadata === 'string') {
+    try { metadata = JSON.parse(metadata); } catch { metadata = {}; }
+  }
+  const { resumeId, resumeUrl, hasResume } = getResolvedResumeRefs(jobSeeker, metadata);
 
   const handleViewResume = () => {
     if (hasResume) openResumeInNewTab(resumeId, resumeUrl);

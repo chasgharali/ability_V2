@@ -2,6 +2,7 @@ const Note = require('../models/Note');
 const TermsConditions = require('../models/TermsConditions');
 const RoleMessage = require('../models/RoleMessage');
 const User = require('../models/User');
+const Organization = require('../models/Organization');
 
 const ADMIN_ROLES = ['Admin', 'AdminEvent'];
 
@@ -14,6 +15,37 @@ async function getTargetAdminUser(targetAdminUserId) {
     }).select('_id name email role organizationId');
 
     return targetAdmin;
+}
+
+async function getTargetOrganization(targetOrganizationId) {
+    return Organization.findOne({
+        _id: targetOrganizationId,
+        isActive: { $ne: false }
+    }).select('_id name slug');
+}
+
+function upsertOrganizationCopyRecipient(recipients, organization) {
+    const now = new Date();
+    const list = Array.isArray(recipients) ? recipients : [];
+    const existingIndex = list.findIndex(
+        (recipient) => String(recipient.organizationId) === String(organization._id)
+    );
+
+    if (existingIndex >= 0) {
+        list[existingIndex].organizationName = organization.name || list[existingIndex].organizationName || '';
+        list[existingIndex].lastCopiedAt = now;
+        list[existingIndex].copyCount = (list[existingIndex].copyCount || 0) + 1;
+    } else {
+        list.push({
+            organizationId: organization._id,
+            organizationName: organization.name || '',
+            copiedAt: now,
+            lastCopiedAt: now,
+            copyCount: 1
+        });
+    }
+
+    return list;
 }
 
 async function cloneNoteTemplateToOrganization({ template, organizationId, actorId, overwrite = false }) {
@@ -161,6 +193,8 @@ async function syncMissingRoleMessagesForOrganization({ organizationId, actorId 
 module.exports = {
     ADMIN_ROLES,
     getTargetAdminUser,
+    getTargetOrganization,
+    upsertOrganizationCopyRecipient,
     cloneNoteTemplateToOrganization,
     cloneTermsTemplateToOrganization,
     cloneRoleMessageTemplateToOrganization,

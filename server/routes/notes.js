@@ -4,7 +4,8 @@ const Note = require('../models/Note');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const {
-    getTargetAdminUser,
+    getTargetOrganization,
+    upsertOrganizationCopyRecipient,
     cloneNoteTemplateToOrganization,
     syncMissingNotesForOrganization
 } = require('../services/defaultCopyService');
@@ -514,14 +515,14 @@ router.post('/:id/unset-default', authenticateToken, requireRole(['SuperAdmin'])
 });
 
 /**
- * POST /api/notes/:id/copy-to-admin
- * SuperAdmin: copy default note to a specific organization admin
+ * POST /api/notes/:id/copy-to-organization
+ * SuperAdmin: copy default note to a specific organization
  */
-router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin']), [
-    body('targetAdminUserId')
+router.post('/:id/copy-to-organization', authenticateToken, requireRole(['SuperAdmin']), [
+    body('targetOrganizationId')
         .trim()
         .notEmpty()
-        .withMessage('targetAdminUserId is required'),
+        .withMessage('targetOrganizationId is required'),
     body('overwrite')
         .optional()
         .isBoolean()
@@ -537,7 +538,7 @@ router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin'])
         }
 
         const { id } = req.params;
-        const { targetAdminUserId, overwrite = false } = req.body;
+        const { targetOrganizationId, overwrite = false } = req.body;
 
         const templateNote = await Note.findOne({ _id: id, organizationId: null });
         if (!templateNote) {
@@ -547,59 +548,35 @@ router.post('/:id/copy-to-admin', authenticateToken, requireRole(['SuperAdmin'])
             });
         }
 
-        const adminUser = await getTargetAdminUser(targetAdminUserId);
+        const organization = await getTargetOrganization(targetOrganizationId);
 
-        if (!adminUser) {
+        if (!organization) {
             return res.status(404).json({
-                error: 'Admin not found',
-                message: 'Target admin user not found or has no organization'
+                error: 'Organization not found',
+                message: 'Target organization not found or is inactive'
             });
         }
 
         const { record: copiedNote } = await cloneNoteTemplateToOrganization({
             template: templateNote,
-            organizationId: adminUser.organizationId,
+            organizationId: organization._id,
             actorId: req.user._id,
             overwrite
         });
 
-        const now = new Date();
-        const recipients = Array.isArray(templateNote.copyRecipients) ? templateNote.copyRecipients : [];
-        const existingIndex = recipients.findIndex(
-            (recipient) => String(recipient.adminUserId) === String(adminUser._id)
-        );
-
-        if (existingIndex >= 0) {
-            recipients[existingIndex].adminName = adminUser.name || recipients[existingIndex].adminName || '';
-            recipients[existingIndex].adminEmail = adminUser.email || recipients[existingIndex].adminEmail || '';
-            recipients[existingIndex].organizationId = adminUser.organizationId;
-            recipients[existingIndex].lastCopiedAt = now;
-            recipients[existingIndex].copyCount = (recipients[existingIndex].copyCount || 0) + 1;
-        } else {
-            recipients.push({
-                adminUserId: adminUser._id,
-                adminName: adminUser.name || '',
-                adminEmail: adminUser.email || '',
-                organizationId: adminUser.organizationId,
-                copiedAt: now,
-                lastCopiedAt: now,
-                copyCount: 1
-            });
-        }
-
-        templateNote.copyRecipients = recipients;
+        templateNote.copyRecipients = upsertOrganizationCopyRecipient(templateNote.copyRecipients, organization);
         templateNote.updatedBy = req.user._id;
         await templateNote.save();
 
         res.json({
-            message: `Note copied to ${adminUser.name || adminUser.email} successfully`,
+            message: `Note copied to ${organization.name || 'organization'} successfully`,
             note: copiedNote.getSummary()
         });
     } catch (error) {
-        logger.error('Copy note to admin error:', error);
+        logger.error('Copy note to organization error:', error);
         res.status(500).json({
             error: 'Failed to copy note',
-            message: 'An error occurred while copying note to selected admin'
+            message: 'An error occurred while copying note to selected organization'
         });
     }
 });

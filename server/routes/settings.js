@@ -4,8 +4,19 @@ const Settings = require('../models/Settings');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl');
 
-const SUPERADMIN_ONLY_SETTING_KEYS = new Set(['footer_text']);
+const {
+  SETTING_MAX_RESUMES,
+  SETTING_MAX_UPDATES,
+  validateLimitSettingValue
+} = require('../services/resumeBuilderLimits');
+
+const SUPERADMIN_ONLY_SETTING_KEYS = new Set([
+  'footer_text',
+  SETTING_MAX_RESUMES,
+  SETTING_MAX_UPDATES
+]);
 const FOOTER_TEXT_MAX_LENGTH = 200;
+const RESUME_BUILDER_LIMIT_KEYS = new Set([SETTING_MAX_RESUMES, SETTING_MAX_UPDATES]);
 
 function normalizeBrandingLogoValue(value) {
   if (typeof value !== 'string') return value;
@@ -130,6 +141,16 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Supe
         });
       }
       sanitizedValue = footerResult.value;
+    }
+    if (RESUME_BUILDER_LIMIT_KEYS.has(key)) {
+      const limitResult = validateLimitSettingValue(value);
+      if (limitResult.error) {
+        return res.status(400).json({
+          success: false,
+          error: limitResult.error
+        });
+      }
+      sanitizedValue = limitResult.value;
     }
 
     const setting = await Settings.setSetting(

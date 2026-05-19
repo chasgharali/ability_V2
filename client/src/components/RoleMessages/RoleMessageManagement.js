@@ -4,9 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
-import CopyToAdminModal from '../UI/CopyToAdminModal';
+import CopyToOrganizationModal from '../UI/CopyToOrganizationModal';
 import roleMessagesAPI from '../../services/roleMessages';
-import { listUsers } from '../../services/users';
+import { listOrganizations } from '../../services/organizations';
 import { MdAdd, MdEdit, MdDelete, MdSave, MdCancel, MdDone, MdClear } from 'react-icons/md';
 import '../Dashboard/Dashboard.css';
 import './RoleMessageManagement.css';
@@ -28,7 +28,7 @@ export default function RoleMessageManagement() {
   const [editForm, setEditForm] = useState({ content: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const [adminUsers, setAdminUsers] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -44,24 +44,16 @@ export default function RoleMessageManagement() {
   }, [user]);
 
   useEffect(() => {
-    const fetchAdminUsers = async () => {
+    const fetchOrganizations = async () => {
       if (user?.role !== 'SuperAdmin') return;
       try {
-        const [adminsResponse, adminEventsResponse] = await Promise.all([
-          listUsers({ role: 'Admin', limit: 500, isActive: true }),
-          listUsers({ role: 'AdminEvent', limit: 500, isActive: true })
-        ]);
-
-        const mergedUsers = [...(adminsResponse.users || []), ...(adminEventsResponse.users || [])];
-        const uniqueUsers = Array.from(
-          new Map(mergedUsers.map((admin) => [String(admin._id), admin])).values()
-        );
-        setAdminUsers(uniqueUsers);
+        const response = await listOrganizations({ limit: 100, isActive: 'true' });
+        setOrganizations(response.organizations || []);
       } catch (err) {
-        console.error('Error fetching admin users:', err);
+        console.error('Error fetching organizations:', err);
       }
     };
-    fetchAdminUsers();
+    fetchOrganizations();
   }, [user?.role]);
 
   const fetchMessages = async () => {
@@ -214,13 +206,13 @@ export default function RoleMessageManagement() {
     }
   };
 
-  const handleCopyToAdmin = async (targetAdminUserId, overwrite) => {
+  const handleCopyToOrganization = async (targetOrganizationId, overwrite) => {
     if (!selectedMessageId) return;
-    const selectedAdmin = adminUsers.find((admin) => admin._id === targetAdminUserId);
+    const selectedOrganization = organizations.find((org) => org._id === targetOrganizationId);
     try {
-      await roleMessagesAPI.copyMessageToAdmin(selectedMessageId, targetAdminUserId, overwrite);
+      await roleMessagesAPI.copyMessageToOrganization(selectedMessageId, targetOrganizationId, overwrite);
       await fetchMessages();
-      showToast(`Page instruction copied to ${selectedAdmin?.name || selectedAdmin?.email || 'selected admin'}.`, { type: 'success', duration: 3000 });
+      showToast(`Page instruction copied to ${selectedOrganization?.name || 'selected organization'}.`, { type: 'success', duration: 3000 });
       setCopyModalOpen(false);
       setSelectedMessageId(null);
     } catch (err) {
@@ -229,6 +221,9 @@ export default function RoleMessageManagement() {
     }
   };
 
+  const getCopyRecipientLabel = (recipient) =>
+    recipient.organizationName || recipient.adminName || recipient.adminEmail || 'Organization';
+
   const renderCopyRecipients = (message) => {
     const recipients = Array.isArray(message.copyRecipients) ? message.copyRecipients : [];
     if (!recipients.length) return <span className="description-text">-</span>;
@@ -236,8 +231,8 @@ export default function RoleMessageManagement() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
         {recipients.slice(0, 2).map((recipient) => (
-          <span key={recipient.adminUserId || recipient.adminEmail} className="role-badge">
-            {recipient.adminName || recipient.adminEmail || 'Admin'}
+          <span key={recipient.organizationId || recipient.adminUserId || recipient.adminEmail} className="role-badge">
+            {getCopyRecipientLabel(recipient)}
           </span>
         ))}
         {recipients.length > 2 && (
@@ -276,16 +271,16 @@ export default function RoleMessageManagement() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="role-messages" />
-        <CopyToAdminModal
+        <CopyToOrganizationModal
           isOpen={copyModalOpen}
-          admins={adminUsers}
-          title="Copy Page Instruction to Organization Admin"
-          description="Select an active Admin or AdminEvent user and choose whether to overwrite existing copy."
+          organizations={organizations}
+          title="Copy Page Instruction to Organization"
+          description="Select an organization and choose whether to overwrite existing copy."
           onCancel={() => {
             setCopyModalOpen(false);
             setSelectedMessageId(null);
           }}
-          onConfirm={handleCopyToAdmin}
+          onConfirm={handleCopyToOrganization}
         />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="bm-header">
@@ -448,7 +443,7 @@ export default function RoleMessageManagement() {
                       <th>Role</th>
                       <th>Screen</th>
                       <th>Template</th>
-                      <th>Sent To Admins</th>
+                      <th>Sent To Organizations</th>
                       <th>Content</th>
                       <th>Description</th>
                       <th>Updated</th>
@@ -579,7 +574,7 @@ export default function RoleMessageManagement() {
                                       setCopyModalOpen(true);
                                     }}
                                     className="action-btn"
-                                    title="Copy to specific admin"
+                                    title="Copy to organization"
                                   >
                                     Copy
                                   </button>

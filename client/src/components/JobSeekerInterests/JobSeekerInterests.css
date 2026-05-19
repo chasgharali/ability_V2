@@ -285,6 +285,50 @@
 /* Note: ColumnChooser dialog styling is already in EventManagement.css 
    and will apply globally since it uses global selectors */
 
+.jsi-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 16px;
+  flex-wrap: wrap;
+}
+
+.jsi-tab-btn {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.jsi-tab-btn:hover {
+  border-color: #111111;
+}
+
+.jsi-tab-btn--active {
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
+}
+
+.jsi-ai-tab-content {
+  width: 100%;
+  max-width: 100%;
+  margin: 1rem 0 1.5rem;
+  display: block;
+}
+
+.jsi-ai-tab-content .ai-search-container,
+.jsi-ai-tab-content .ai-search-panel,
+.jsi-ai-tab-content .ai-results-section {
+  width: 100%;
+  max-width: 100%;
+}
+
 .jobseeker-interests-container {
     padding: 15px;
     max-width: 100%;

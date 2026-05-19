@@ -10,6 +10,7 @@ const ImportRun = require('../models/ImportRun');
 const logger = require('../utils/logger');
 const mongoose = require('mongoose');
 const { randomUUID } = require('crypto');
+const { resolveJobSeekerResume } = require('../services/jobSeekerResumeResolver');
 
 const router = express.Router();
 
@@ -1113,9 +1114,19 @@ router.get('/:id', authenticateToken, async (req, res) => {
             });
         }
 
-        res.json({
-            user: targetUser.getPublicProfile()
-        });
+        const payload = { user: targetUser.getPublicProfile() };
+
+        const isStaffViewer = id !== user._id.toString() &&
+            ['SuperAdmin', 'Admin', 'GlobalSupport', 'Recruiter', 'BoothAdmin'].includes(user.role);
+        if (isStaffViewer && targetUser.role === 'JobSeeker') {
+            const eventId = req.query.eventId || null;
+            payload.resolvedResume = await resolveJobSeekerResume(targetUser._id, {
+                eventId,
+                userResumeUrl: targetUser.resumeUrl
+            });
+        }
+
+        res.json(payload);
     } catch (error) {
         logger.error('Get user error:', error);
         res.status(500).json({

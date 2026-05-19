@@ -80,6 +80,7 @@ function getSidebarKeyFromPath(pathname, role) {
   if (pathname.startsWith('/legal/terms-of-use/edit')) return 'legal-terms-of-use';
   if (pathname.startsWith('/legal/privacy-policy/edit')) return 'legal-privacy-policy';
   if (pathname === '/footer-text' || pathname.startsWith('/footer-text/')) return 'footer-text';
+  if (pathname === '/resume-builder-limits' || pathname.startsWith('/resume-builder-limits/')) return 'resume-builder-limits';
 
   return undefined;
 }
@@ -746,6 +747,9 @@ export default function AdminSidebar({ active = 'booths' }) {
                 </button>
                 <button className={itemClass('role-messages')} onClick={() => handleItemClick('/role-messages')}>
                   Page Instructions
+                </button>
+                <button className={itemClass('resume-builder-limits')} onClick={() => handleItemClick('/resume-builder-limits')}>
+                  Resume Builder Limits
                 </button>
               </div>
             )}

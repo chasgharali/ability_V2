@@ -11,7 +11,8 @@ import {
   generateResumeFromProfile,
   suggestResumeContent,
   parseResumeFromFile,
-  parseResumeFromUrl
+  parseResumeFromUrl,
+  applyLimitStatusFromResponse
 } from '../../../services/resumes';
 import './ResumeBuilder.css';
 
@@ -63,14 +64,21 @@ export default function ResumeBuilder() {
   const [awardInput, setAwardInput] = useState('');
   const [langInput, setLangInput] = useState('');
   const [parsing, setParsing] = useState(false);
+  const [limitStatus, setLimitStatus] = useState(null);
   const fileInputRef = useRef(null);
   const printRef = useRef(null);
+
+  const showLimitError = (err, fallback) => {
+    showToast(err?.response?.data?.message || err?.response?.data?.error || fallback, { type: 'error' });
+    applyLimitStatusFromResponse(err?.response?.data, setLimitStatus);
+  };
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       const data = await listResumes();
       setResumes(data.resumes || []);
+      applyLimitStatusFromResponse(data, setLimitStatus);
     } catch {
       showToast('Failed to load resumes', { type: 'error' });
     } finally {
@@ -102,8 +110,8 @@ export default function ResumeBuilder() {
       setActiveTab('personal');
       setView('edit');
       await load();
-    } catch {
-      showToast('Failed to create resume', { type: 'error' });
+    } catch (err) {
+      showLimitError(err, 'Failed to create resume');
     }
   };
 
@@ -139,11 +147,12 @@ export default function ResumeBuilder() {
     if (!editing) return;
     setSaving(true);
     try {
-      await updateResume(editing._id, { title: editing.title, content: editing.content });
+      const data = await updateResume(editing._id, { title: editing.title, content: editing.content });
       showToast('Resume saved', { type: 'success' });
+      applyLimitStatusFromResponse(data, setLimitStatus);
       await load();
-    } catch {
-      showToast('Failed to save resume', { type: 'error' });
+    } catch (err) {
+      showLimitError(err, 'Failed to save resume');
     } finally {
       setSaving(false);
     }
@@ -155,9 +164,10 @@ export default function ResumeBuilder() {
     try {
       const data = await generateResumeFromProfile(editing._id);
       setEditing(prev => ({ ...prev, content: data.resume.content }));
+      applyLimitStatusFromResponse(data, setLimitStatus);
       showToast('Resume filled from your profile', { type: 'success' });
     } catch (e) {
-      showToast(e?.response?.data?.error || 'AI generation failed', { type: 'error' });
+      showLimitError(e, 'AI generation failed');
     } finally {
       setAiLoading('');
     }
@@ -190,7 +200,7 @@ export default function ResumeBuilder() {
       await load();
       showToast('Resume parsed and ready to edit', { type: 'success' });
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Failed to parse resume', { type: 'error' });
+      showLimitError(err, 'Failed to parse resume');
     } finally {
       setParsing(false);
     }
@@ -208,10 +218,29 @@ export default function ResumeBuilder() {
       await load();
       showToast('Profile resume parsed and ready to edit', { type: 'success' });
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Failed to parse resume', { type: 'error' });
+      showLimitError(err, 'Failed to parse resume');
     } finally {
       setParsing(false);
     }
+  };
+
+  const canCreateResume = limitStatus?.canCreateResume !== false;
+  const canUpdateResume = limitStatus?.canUpdateResume !== false;
+
+  const renderLimitBanner = () => {
+    if (!limitStatus?.limits) return null;
+    const { limits, usage, resumesRemaining, updatesRemaining } = limitStatus;
+    const resumeLine = limits.maxResumes > 0
+      ? `Resumes: ${usage.resumeCount} of ${limits.maxResumes} used${resumesRemaining === 0 ? ' (limit reached)' : ` (${resumesRemaining} remaining)`}`
+      : `Resumes: ${usage.resumeCount} (unlimited)`;
+    const updateLine = limits.maxUpdates > 0
+      ? `Updates: ${usage.updateCount} of ${limits.maxUpdates} used${updatesRemaining === 0 ? ' (limit reached)' : ` (${updatesRemaining} remaining)`}`
+      : `Updates: ${usage.updateCount} (unlimited)`;
+    return (
+      <div className="rb-limit-banner" role="status" aria-live="polite">
+        <p><strong>Your limits:</strong> {resumeLine}. {updateLine}.</p>
+      </div>
+    );
   };
 
   const setContent = (patch) => {
@@ -423,6 +452,7 @@ export default function ResumeBuilder() {
 
     return (
       <div className="resume-builder">
+        {renderLimitBanner()}
         <div className="rb-editor-topbar">
           <button className="ajf-btn ajf-btn-outline" onClick={() => setView('list')}>← All Resumes</button>
           <input
@@ -436,7 +466,7 @@ export default function ResumeBuilder() {
             <button
               className="ajf-btn ajf-btn-outline"
               onClick={handleGenerateFromProfile}
-              disabled={aiLoading === 'generate'}
+              disabled={aiLoading === 'generate' || !canUpdateResume}
               title="Fill resume sections using AI based on your profile"
             >
               {aiLoading === 'generate' ? 'Generating…' : '✨ Generate from Profile'}
@@ -450,7 +480,7 @@ export default function ResumeBuilder() {
               {parsing ? 'Parsing…' : '⬆ Upload File'}
             </button>
             <button className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
-            <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving}>
+            <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving || !canUpdateResume}>
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
@@ -822,7 +852,7 @@ export default function ResumeBuilder() {
         </div>
 
         <div className="rb-editor-footer">
-          <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving}>
+          <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving || !canUpdateResume}>
             {saving ? 'Saving…' : 'Save Resume'}
           </button>
           <button className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
@@ -836,14 +866,15 @@ export default function ResumeBuilder() {
     <div className="resume-builder">
       <div className="dashboard-content">
         <h1>Resume Builder</h1>
-        <p className="rb-subtitle">Create multiple AI-powered resumes. Select one during event registration.</p>
+        <p className="rb-subtitle">Build an AI-powered resume to share with recruiters during event registration.</p>
+        {renderLimitBanner()}
 
         <div className="rb-list-toolbar">
-          <button className="ajf-btn ajf-btn-dark" onClick={handleCreate} disabled={parsing}>+ New Resume</button>
+          <button className="ajf-btn ajf-btn-dark" onClick={handleCreate} disabled={parsing || !canCreateResume}>+ New Resume</button>
           <button
             className="ajf-btn ajf-btn-outline"
             onClick={() => fileInputRef.current?.click()}
-            disabled={parsing}
+            disabled={parsing || !canCreateResume}
             title="Upload a PDF or Word resume to parse and edit"
           >
             {parsing ? 'Parsing…' : '⬆ Upload & Parse Resume'}
@@ -852,7 +883,7 @@ export default function ResumeBuilder() {
             <button
               className="ajf-btn ajf-btn-outline"
               onClick={handleParseFromUploadedResume}
-              disabled={parsing}
+              disabled={parsing || !canCreateResume}
               title="Parse your already-uploaded profile resume and import it into the editor"
             >
               {parsing ? 'Parsing…' : '↙ Import Uploaded Resume'}

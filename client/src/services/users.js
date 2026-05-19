@@ -67,8 +67,10 @@ export async function listUsers({ page = 1, limit = 50, search, role, isActive, 
   return res.data;
 }
 
-export async function getUser(id) {
-  const res = await axios.get(`/api/users/${id}`, { headers: authHeaders() });
+export async function getUser(id, { eventId } = {}) {
+  const params = {};
+  if (eventId) params.eventId = eventId;
+  const res = await axios.get(`/api/users/${id}`, { headers: authHeaders(), params });
   return res.data;
 }
 

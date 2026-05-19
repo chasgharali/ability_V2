@@ -17,6 +17,11 @@ const {
     getEmploymentTypesLabel,
     getVeteranStatusLabel
 } = require('../utils/profileFieldLabels');
+const {
+    resolveJobSeekerResume,
+    batchResolveJobSeekerResumes,
+    pairKey
+} = require('../services/jobSeekerResumeResolver');
 
 const isSuperAdmin = (req) => req.user?.role === 'SuperAdmin';
 const MEETING_AI_CACHE_TTL_SECONDS = parseInt(process.env.MEETING_AI_CACHE_TTL_SECONDS || '120', 10);
@@ -310,28 +315,31 @@ router.get('/', authenticateToken, async (req, res) => {
             finalCount = totalRecords;
         }
         
-        // Merge event-specific registered resume URL into each record
+        // Resolve resume (upload, registration, or default builder) per record
         try {
-            const pairs = processedRecords
-                .filter(r => r.jobseekerId && r.eventId)
-                .map(r => ({
-                    jobSeekerId: r.jobseekerId._id || r.jobseekerId,
-                    eventId: r.eventId._id || r.eventId
+            const resolvePairs = processedRecords
+                .filter((r) => r.jobseekerId)
+                .map((r) => ({
+                    userId: r.jobseekerId._id || r.jobseekerId,
+                    eventId: r.eventId?._id || r.eventId,
+                    userResumeUrl: r.jobseekerId?.resumeUrl
                 }));
 
-            if (pairs.length) {
-                const orConditions = pairs.map(p => ({ jobSeekerId: p.jobSeekerId, eventId: p.eventId }));
-                const regDocs = await RegisteredJobSeeker.find({ $or: orConditions }).select('jobSeekerId eventId resumeUrl').lean();
-                const regMap = {};
-                regDocs.forEach(d => {
-                    const k = `${d.jobSeekerId}_${d.eventId}`;
-                    regMap[k] = d.resumeUrl || null;
-                });
-                processedRecords = processedRecords.map(r => {
+            if (resolvePairs.length) {
+                const resolvedMap = await batchResolveJobSeekerResumes(resolvePairs);
+                processedRecords = processedRecords.map((r) => {
                     const jsId = r.jobseekerId?._id || r.jobseekerId;
+                    if (!jsId) return r;
                     const evId = r.eventId?._id || r.eventId;
-                    const regResumeUrl = regMap[`${jsId}_${evId}`] || null;
-                    return regResumeUrl ? { ...r, registeredResumeUrl: regResumeUrl } : r;
+                    const resolved = resolvedMap.get(pairKey(jsId, evId));
+                    if (!resolved) return r;
+                    return {
+                        ...r,
+                        jobSeekerResumeId: resolved.resumeId,
+                        jobSeekerResumeUrl: resolved.resumeUrl,
+                        registeredResumeUrl: resolved.resumeUrl,
+                        resolvedResume: resolved
+                    };
                 });
             }
         } catch (e) {
@@ -673,8 +681,36 @@ router.post('/ai-search', authenticateToken, async (req, res) => {
 
         const total = mergedResults.length;
         const pageStart = (parsedPage - 1) * parsedLimit;
-        const paged = mergedResults.slice(pageStart, pageStart + parsedLimit)
+        let paged = mergedResults.slice(pageStart, pageStart + parsedLimit)
             .map(({ _hybridScore, ...rest }) => rest);
+
+        try {
+            const resolvePairs = paged
+                .filter((r) => r.jobSeeker)
+                .map((r) => ({
+                    userId: r.jobSeeker._id || r.jobSeeker,
+                    eventId: r.event?._id || r.event,
+                    userResumeUrl: r.jobSeeker.resumeUrl
+                }));
+            if (resolvePairs.length) {
+                const resolvedMap = await batchResolveJobSeekerResumes(resolvePairs);
+                paged = paged.map((r) => {
+                    const jsId = r.jobSeeker?._id || r.jobSeeker;
+                    if (!jsId) return r;
+                    const evId = r.event?._id || r.event;
+                    const resolved = resolvedMap.get(pairKey(jsId, evId));
+                    if (!resolved) return r;
+                    return {
+                        ...r,
+                        jobSeekerResumeId: resolved.resumeId,
+                        jobSeekerResumeUrl: resolved.resumeUrl,
+                        resolvedResume: resolved
+                    };
+                });
+            }
+        } catch (e) {
+            // best-effort; don't break search response
+        }
 
         logger.info(
             `meetingRecords ai-search hybrid query="${queryText}" textMatches=${meetingResults.length} ` +
@@ -771,6 +807,21 @@ router.get('/:id', authenticateToken, async (req, res) => {
         const recordObj = meetingRecord.toObject();
         if (!recordObj.duration && recordObj.startTime && recordObj.endTime) {
             recordObj.duration = Math.round((new Date(recordObj.endTime) - new Date(recordObj.startTime)) / (1000 * 60));
+        }
+
+        if (recordObj.jobseekerId) {
+            const jsId = recordObj.jobseekerId._id || recordObj.jobseekerId;
+            const evId = recordObj.eventId?._id || recordObj.eventId;
+            const resolved = await resolveJobSeekerResume(jsId, {
+                eventId: evId,
+                userResumeUrl: recordObj.jobseekerId.resumeUrl
+            });
+            recordObj.resolvedResume = resolved;
+            recordObj.jobSeekerResumeId = resolved.resumeId;
+            recordObj.jobSeekerResumeUrl = resolved.resumeUrl;
+            if (resolved.resumeUrl && !recordObj.jobseekerId.resumeUrl) {
+                recordObj.jobseekerId.resumeUrl = resolved.resumeUrl;
+            }
         }
 
         res.json(recordObj);

@@ -111,6 +111,13 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     // JobSeeker specific fields
+    resumeBuilderUsage: {
+        updateCount: {
+            type: Number,
+            default: 0,
+            min: 0
+        }
+    },
     resumeUrl: {
         type: String,
         default: null

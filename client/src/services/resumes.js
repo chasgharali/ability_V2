@@ -10,6 +10,25 @@ export async function listResumes() {
   return res.data;
 }
 
+export async function getResumeBuilderLimits() {
+  const res = await axios.get('/api/resumes/limits', { headers: authHeaders() });
+  return res.data;
+}
+
+export function applyLimitStatusFromResponse(data, setLimitStatus) {
+  if (!data || !setLimitStatus) return;
+  if (data.limits && data.usage) {
+    setLimitStatus({
+      limits: data.limits,
+      usage: data.usage,
+      resumesRemaining: data.resumesRemaining,
+      updatesRemaining: data.updatesRemaining,
+      canCreateResume: data.canCreateResume,
+      canUpdateResume: data.canUpdateResume
+    });
+  }
+}
+
 export async function createResume(payload) {
   const res = await axios.post('/api/resumes', payload, { headers: authHeaders() });
   return res.data;

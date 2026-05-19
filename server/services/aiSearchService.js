@@ -884,6 +884,12 @@ function buildHybridScore(doc, filters) {
     return score;
 }
 
+const {
+    batchResolveJobSeekerResumes,
+    pairKey,
+    EMPTY_RESUME
+} = require('./jobSeekerResumeResolver');
+
 // ─── Hydration: attach user + registrations to results ───────────────────────
 
 async function hydrateResults(parsedDocs, scope) {
@@ -910,7 +916,7 @@ async function hydrateResults(parsedDocs, scope) {
         regMap.get(k).push(r);
     }
 
-    return parsedDocs
+    const hydrated = parsedDocs
         .map(d => {
             const user = userMap.get(String(d.userId));
             if (!user) return null;
@@ -938,6 +944,16 @@ async function hydrateResults(parsedDocs, scope) {
             };
         })
         .filter(Boolean);
+
+    if (hydrated.length) {
+        const pairs = hydrated.map((u) => ({ userId: u._id, userResumeUrl: u.resumeUrl }));
+        const resolvedMap = await batchResolveJobSeekerResumes(pairs);
+        hydrated.forEach((u) => {
+            u.resolvedResume = resolvedMap.get(pairKey(u._id, '')) || { ...EMPTY_RESUME };
+        });
+    }
+
+    return hydrated;
 }
 
 // ─── Public entry point ──────────────────────────────────────────────────────
