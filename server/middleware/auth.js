@@ -66,6 +66,14 @@ const authenticateToken = async (req, res, next) => {
             });
         }
 
+        if (user.role === 'JobSeeker' && user.emailVerified !== true) {
+            return res.status(403).json({
+                error: 'Email not verified',
+                message: 'Please verify your email before continuing.',
+                requiresVerification: true
+            });
+        }
+
         // Block org-scoped users when their organization is inactive.
         if (
             ORG_SCOPED_ROLES.includes(user.role) &&
@@ -398,6 +406,14 @@ const validateRefreshToken = async (req, res, next) => {
             return res.status(401).json({
                 error: 'Account deactivated',
                 message: 'Your account has been deactivated'
+            });
+        }
+
+        if (user.role === 'JobSeeker' && user.emailVerified !== true) {
+            return res.status(403).json({
+                error: 'Email not verified',
+                message: 'Please verify your email before continuing.',
+                requiresVerification: true
             });
         }
 

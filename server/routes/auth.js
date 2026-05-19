@@ -387,26 +387,11 @@ router.post('/register', optionalAuth, [
             // Don't fail registration if email fails, but log the error
         }
 
-        // Generate tokens
-        const { accessToken, refreshToken } = generateTokens(user);
-
-        // Store refresh token
-        user.refreshTokens.push({ token: refreshToken });
-        await user.save();
-
-        // Update last login
-        user.lastLogin = new Date();
-        await user.save();
-
         logger.info(`New user registered: ${email} with role: ${role}`);
 
         res.status(201).json({
-            message: 'User registered successfully. Check your email to verify your address.',
-            user: user.getPublicProfile(),
-            tokens: {
-                accessToken,
-                refreshToken
-            }
+            message: 'User registered successfully. Please verify your email before logging in.',
+            user: user.getPublicProfile()
         });
     } catch (error) {
         logger.error('Registration error:', error);
@@ -522,6 +507,15 @@ router.post('/login', [
             return res.status(401).json({
                 error: 'Incorrect password',
                 message: 'Incorrect password.'
+            });
+        }
+
+        // Enforce email verification before allowing JobSeeker login.
+        if (user.role === 'JobSeeker' && user.emailVerified !== true) {
+            return res.status(403).json({
+                error: 'Email not verified',
+                message: 'Please verify your email before logging in.',
+                requiresVerification: true
             });
         }
 

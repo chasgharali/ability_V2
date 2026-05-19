@@ -6004,3 +6004,78 @@
 2026-03-31 18:19:22:1922 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 69217b85a664a77e2f75b9f1[39m
 2026-03-31 18:19:22:1922 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 69217b85a664a77e2f75b9f1[39m
 2026-03-31 18:19:22:1922 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 69217b85a664a77e2f75b9f1[39m
+2026-05-19 16:56:10:5610 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-19 16:56:10:5610 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-19 16:56:10:5610 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-19 16:56:13:5613 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-05-19 16:56:13:5613 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-19 16:56:14:5614 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-19 16:56:14:5614 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-19 16:56:14:5614 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-19 16:56:17:5617 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-05-19 16:56:17:5617 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-19 16:56:23:5623 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-19 16:56:24:5624 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-19 16:56:24:5624 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-19 16:56:25:5625 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-19 16:56:25:5625 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-05-19 16:56:25:5625 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-05-19 16:56:26:5626 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: client namespace disconnect[39m
+2026-05-19 16:56:26:5626 [32minfo[39m: [32mFound 16 total users matching query, returning 16 for page 1[39m
+2026-05-19 16:56:26:5626 [32minfo[39m: [32mQuery returned 16 users out of 16 total matching query[39m
+2026-05-19 16:56:26:5626 [32minfo[39m: [32mStats - Active: 16, Inactive: 0, Verified: 12[39m
+2026-05-19 16:56:26:5626 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-05-19 16:56:28:5628 [32minfo[39m: [32mUser new.verify.js@yopmail.com connected via socket[39m
+2026-05-19 16:56:29:5629 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-19 16:56:29:5629 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 2 users[39m
+2026-05-19 16:56:29:5629 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 2 users[39m
+2026-05-19 16:59:44:5944 [32minfo[39m: [32mUser new.verify.js@yopmail.com disconnected: transport close[39m
+2026-05-19 17:00:47:047 [32minfo[39m: [32mUser logged in: new.verify.js@yopmail.com[39m
+2026-05-19 17:00:47:047 [32minfo[39m: [32mUser new.verify.js@yopmail.com connected via socket[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:26:726 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:29:729 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:29:729 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:29:729 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:29:729 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:07:29:729 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-19 17:16:22:1622 [32minfo[39m: [32mUser superadmin@abilityconnect.online disconnected: transport close[39m
+2026-05-19 17:16:24:1624 [32minfo[39m: [32mGet users request - role: JobSeeker, isActive: undefined, search: undefined, eventId: undefined, orgFilter: undefined, requestedBy: superadmin@abilityconnect.online (SuperAdmin)[39m
+2026-05-19 17:16:24:1624 [32minfo[39m: [32mUser superadmin@abilityconnect.online connected via socket[39m
+2026-05-19 17:16:24:1624 [32minfo[39m: [32mFound 16 total users matching query, returning 16 for page 1[39m
+2026-05-19 17:16:24:1624 [32minfo[39m: [32mQuery returned 16 users out of 16 total matching query[39m
+2026-05-19 17:16:25:1625 [32minfo[39m: [32mStats - Active: 16, Inactive: 0, Verified: 13[39m
+2026-05-19 17:17:36:1736 [32minfo[39m: [32mUser profile updated: new.verify.js@yopmail.com[39m
+2026-05-19 17:17:36:1736 [32minfo[39m: [32mUser new.verify.js@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-19 17:17:37:1737 [32minfo[39m: [32mUser new.verify.js@yopmail.com connected via socket[39m
+2026-05-19 17:17:48:1748 [32minfo[39m: [32mresumeParser: parsed user 6a0c4f43c9b2f2ecbe4bee80 — title="", skills=0, embedding=yes, source=resume-builder[39m
+2026-05-19 17:18:36:1836 [32minfo[39m: [32mresumeParser: parsed user 6a0c4f43c9b2f2ecbe4bee80 — title="Project Manager", skills=3, embedding=yes, source=resume-builder[39m
+2026-05-19 17:19:12:1912 [32minfo[39m: [32mresumeParser: parsed user 6a0c4f43c9b2f2ecbe4bee80 — title="Project Manager", skills=3, embedding=yes, source=resume-builder[39m
+2026-05-19 17:19:30:1930 [32minfo[39m: [32mUser profile updated: new.verify.js@yopmail.com[39m
+2026-05-19 17:19:30:1930 [32minfo[39m: [32mUser new.verify.js@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-19 17:19:30:1930 [32minfo[39m: [32mUser new.verify.js@yopmail.com connected via socket[39m
+2026-05-19 17:19:43:1943 [32minfo[39m: [32mPresigned URL generated for user new.verify.js@yopmail.com: avatar/avatar.jpg[39m
+2026-05-19 17:19:46:1946 [32minfo[39m: [32mFile upload confirmed for user new.verify.js@yopmail.com: avatar/6a0c4f43c9b2f2ecbe4bee80/avatar.jpg[39m
+2026-05-19 17:21:06:216 [32minfo[39m: [32mSelf profile updated: new.verify.js@yopmail.com[39m
+2026-05-19 17:21:20:2120 [32minfo[39m: [32mSurvey updated for user: new.verify.js@yopmail.com[39m
+2026-05-19 17:21:23:2123 [32minfo[39m: [32mSurvey updated for user: new.verify.js@yopmail.com[39m
+2026-05-19 17:21:24:2124 [32minfo[39m: [32mSurvey updated for user: new.verify.js@yopmail.com[39m
+2026-05-19 17:21:31:2131 [32minfo[39m: [32mSurvey updated for user: new.verify.js@yopmail.com[39m
+2026-05-19 17:21:31:2131 [32minfo[39m: [32mUser profile updated: new.verify.js@yopmail.com[39m
+2026-05-19 17:21:31:2131 [32minfo[39m: [32mUser new.verify.js@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-19 17:21:32:2132 [32minfo[39m: [32mUser new.verify.js@yopmail.com connected via socket[39m
+2026-05-19 17:21:39:2139 [32minfo[39m: [32mresumeParser: parsed user 6a0c4f43c9b2f2ecbe4bee80 — title="Project Manager", skills=3, embedding=yes, source=resume-builder[39m

@@ -243,9 +243,6 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password, loginType) => {
         try {
             setError(null);
-            console.log("pooo");
-            console.log("Making request to:", '/api/auth/login');
-            console.log("Request data:", { email, password, loginType });
             const response = await axios.post('/api/auth/login', {
                 email,
                 password,
@@ -261,6 +258,7 @@ export const AuthProvider = ({ children }) => {
             const status = error.response?.status;
             const data = error.response?.data || {};
             let errorMessage;
+            let errorCode;
 
             if (status === undefined) {
                 // Network error or no response from server
@@ -276,6 +274,9 @@ export const AuthProvider = ({ children }) => {
                 } else {
                     errorMessage = data?.message || 'Invalid email or password';
                 }
+            } else if (status === 403 && data?.error === 'Email not verified') {
+                errorMessage = data?.message || 'Please verify your email before logging in.';
+                errorCode = 'EMAIL_NOT_VERIFIED';
             } else if (status === 403 && (data?.error === 'Role not allowed' || /Please use the (Company|Job) Seeker login/i.test(data?.message || ''))) {
                 errorMessage = data?.message || 'This account type is not allowed on the selected login. Try the other login tab.';
             } else if (status === 403 && data?.error === 'OrganizationInactive') {
@@ -287,19 +288,14 @@ export const AuthProvider = ({ children }) => {
             }
             
             setError(errorMessage);
-            return { success: false, error: errorMessage };
+            return { success: false, error: errorMessage, errorCode };
         }
     };
 
     const register = async (userData) => {
         try {
             setError(null);
-            const response = await axios.post('/api/auth/register', userData);
-
-            const { tokens, user } = response.data;
-            localStorage.setItem('token', tokens.accessToken);
-            localStorage.setItem('refreshToken', tokens.refreshToken);
-            setUser(withAuthContext(user, response.data.authContext));
+            await axios.post('/api/auth/register', userData);
             return { success: true };
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Registration failed';

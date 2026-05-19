@@ -853,6 +853,30 @@ const Dashboard = () => {
                 )} />
 
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                    {user?.role === 'JobSeeker' && user?.emailVerified === false && (
+                        <div
+                            role="alert"
+                            aria-live="polite"
+                            style={{
+                                background: '#fffbeb',
+                                border: '1px solid #fcd34d',
+                                borderRadius: 8,
+                                padding: '10px 16px',
+                                margin: '0 0 16px 0',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                flexWrap: 'wrap',
+                                gap: '8px',
+                                fontSize: '0.9rem',
+                                color: '#92400e'
+                            }}
+                        >
+                            <span>
+                                <strong>Verify your email</strong> — please check your inbox and click the verification link to secure your account.
+                            </span>
+                        </div>
+                    )}
                     {(user?.role !== 'JobSeeker' && activeSection === 'branding') ? (
                         <div className="dashboard-content">
                             <h1>Branding – Header Logo</h1>

@@ -131,6 +131,17 @@ const LoginPage = () => {
                 }
             } else {
                 isLoggingInRef.current = false;
+                if (result.errorCode === 'EMAIL_NOT_VERIFIED') {
+                    navigate('/verify-email-sent', {
+                        replace: true,
+                        state: {
+                            email: formData.email,
+                            redirectPath,
+                            isBlockingVerification: true
+                        }
+                    });
+                    return;
+                }
                 setError(result.error || 'Invalid email or password');
             }
         } catch (err) {

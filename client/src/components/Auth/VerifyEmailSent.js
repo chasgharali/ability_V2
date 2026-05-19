@@ -6,6 +6,7 @@ export default function VerifyEmailSent() {
   const location = useLocation();
   const email = location.state?.email || '';
   const redirectPath = location.state?.redirectPath;
+  const isBlockingVerification = location.state?.isBlockingVerification === true;
 
   // Announce page load to screen readers
   useEffect(() => {
@@ -16,7 +17,7 @@ export default function VerifyEmailSent() {
     }
 
     // Announce the page content to screen readers
-    const announcement = `Email verification sent. Please check your email${email ? ` at ${email}` : ''} to confirm your account.`;
+    const announcement = `Email verification required. A link has been sent${email ? ` to ${email}` : ''}. Please verify your email before logging in.`;
     
     // Create a live region announcement
     const liveRegion = document.createElement('div');
@@ -112,7 +113,7 @@ export default function VerifyEmailSent() {
           style={{ marginBottom: '0.5rem', color: '#111827' }}
           tabIndex="-1"
         >
-          Email Verification Sent - ABILITY Job Fair Portal
+          Email Verification Required - ABILITY Job Fair Portal
         </h1>
 
         <div
@@ -131,16 +132,15 @@ export default function VerifyEmailSent() {
           }}
         >
           <p style={{ margin: 0 }}>
-            <strong>Next Step:</strong> Please check your email
+            A verification link has been sent to your email
             {email && (
               <span>
                 {' '}at <span className="email-address" aria-label={`Email address: ${email}`}>{email}</span>
               </span>
-            )} to confirm your account.
+            )}.
           </p>
           <p style={{ margin: '8px 0 0 0' }}>
-            <strong>Important:</strong> If you do not receive a confirmation email, please check your spam or junk folder. 
-            The email may take several minutes to arrive.
+            <strong>{isBlockingVerification ? 'Login is blocked until email verification is complete.' : 'Please verify your email before logging in.'}</strong> If you do not see the email, check your spam or junk folder.
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export default function VerifyEmailSent() {
         </div>
 
         <nav 
-          style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem' }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem' }}
           aria-label="Navigation options"
         >
           <Link
@@ -183,6 +183,9 @@ export default function VerifyEmailSent() {
           >
             Back to Login
           </Link>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: '#6b7280' }}>
+            After verification, return and log in with your email and password.
+          </p>
         </nav>
 
         {/* Hidden live region for screen reader announcements */}
