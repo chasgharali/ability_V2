@@ -221,7 +221,7 @@ export default function UserOrgAssignment() {
               {loading ? (
                 <p style={{ textAlign: 'center', color: '#666' }}>Loading users...</p>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
+                <div className="org-users-table-scroll" data-dual-scroll-target="true" style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                       <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #ddd' }}>

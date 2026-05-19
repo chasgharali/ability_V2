@@ -60,6 +60,7 @@ import LegalPageEditor from './components/Legal/LegalPageEditor';
 import LegalPageView from './components/Legal/LegalPageView';
 import FooterTextEditor from './components/Footer/FooterTextEditor';
 import ResumeBuilderLimitsEditor from './components/ResumeBuilder/ResumeBuilderLimitsEditor';
+import DualHorizontalScrollManager from './components/UI/DualHorizontalScrollManager';
 import AppFooter from './components/Layout/AppFooter';
 import './App.css';
 
@@ -85,6 +86,7 @@ const AppLayout = ({ children }) => {
 
             {/* Show ChatPanel for authenticated users with chat-enabled roles */}
             {showChat && <ChatPanel />}
+            <DualHorizontalScrollManager />
 
             <CookieConsent />
             <AccessibilityAnnouncer />

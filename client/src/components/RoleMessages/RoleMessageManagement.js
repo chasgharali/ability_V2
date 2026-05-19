@@ -425,7 +425,7 @@ export default function RoleMessageManagement() {
             )}
 
             {/* Messages List */}
-            <div className="role-messages-list">
+            <div className="role-messages-list" data-dual-scroll-target="true">
               {filteredMessages.length === 0 ? (
                 <div style={{ marginTop: '2rem', padding: '2rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                   <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>No Messages Found</h3>

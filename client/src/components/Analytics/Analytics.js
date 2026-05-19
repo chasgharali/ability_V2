@@ -443,24 +443,26 @@ export default function Analytics() {
                                                     {overview.users.byRole && (
                                                         <div className="role-breakdown">
                                                             <h3>Users by Role</h3>
-                                                            <table className="data-table">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>Role</th>
-                                                                        <th>Total</th>
-                                                                        <th>Active</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {Object.entries(overview.users.byRole).map(([role, stats]) => (
-                                                                        <tr key={role}>
-                                                                            <td>{role}</td>
-                                                                            <td>{stats.total}</td>
-                                                                            <td>{stats.active}</td>
+                                                            <div className="table-scroll-wrap" data-dual-scroll-target="true">
+                                                                <table className="data-table">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Role</th>
+                                                                            <th>Total</th>
+                                                                            <th>Active</th>
                                                                         </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {Object.entries(overview.users.byRole).map(([role, stats]) => (
+                                                                            <tr key={role}>
+                                                                                <td>{role}</td>
+                                                                                <td>{stats.total}</td>
+                                                                                <td>{stats.active}</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -474,7 +476,7 @@ export default function Analytics() {
                                             {reportData?.booths && reportData.booths.length > 0 ? (
                                                 <>
                                                     <h2>Report</h2>
-                                                    <div className="booth-report-table">
+                                                    <div className="booth-report-table" data-dual-scroll-target="true">
                                                         <table className="data-table">
                                                         <thead>
                                                             <tr>
@@ -573,26 +575,28 @@ export default function Analytics() {
                                                 <div className="live-stats-section">
                                                     <h2>Online Users</h2>
                                                     {liveStats.onlineUsers?.users?.length ? (
-                                                        <table className="data-table live-stats-table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Name</th>
-                                                                    <th>Role</th>
-                                                                    <th>Booth</th>
-                                                                    <th>Last Online</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {liveStats.onlineUsers.users.map(user => (
-                                                                    <tr key={user.userId}>
-                                                                        <td>{user.name || 'Unknown'}</td>
-                                                                        <td>{user.role}</td>
-                                                                        <td>{user.boothName || '—'}</td>
-                                                                        <td>{formatDateTime(user.lastOnline || user.connectedAt)}</td>
+                                                        <div className="table-scroll-wrap" data-dual-scroll-target="true">
+                                                            <table className="data-table live-stats-table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Role</th>
+                                                                        <th>Booth</th>
+                                                                        <th>Last Online</th>
                                                                     </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {liveStats.onlineUsers.users.map(user => (
+                                                                        <tr key={user.userId}>
+                                                                            <td>{user.name || 'Unknown'}</td>
+                                                                            <td>{user.role}</td>
+                                                                            <td>{user.boothName || '—'}</td>
+                                                                            <td>{formatDateTime(user.lastOnline || user.connectedAt)}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     ) : (
                                                         <div className="analytics-empty-state">
                                                             <p>No users are currently online.</p>
@@ -603,28 +607,30 @@ export default function Analytics() {
                                                 <div className="live-stats-section">
                                                     <h2>Users in Calls</h2>
                                                     {liveStats.calls?.meetings?.length ? (
-                                                        <table className="data-table live-stats-table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Job Seeker</th>
-                                                                    <th>Recruiter</th>
-                                                                    <th>Interpreter</th>
-                                                                    <th>Booth</th>
-                                                                    <th>Joined</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {liveStats.calls.meetings.map(meeting => (
-                                                                    <tr key={meeting.sessionId}>
-                                                                        <td>{meeting.jobSeeker || '—'}</td>
-                                                                        <td>{meeting.recruiter || '—'}</td>
-                                                                        <td>{meeting.interpreter || '—'}</td>
-                                                                        <td>{meeting.boothName || '—'}</td>
-                                                                        <td>{formatDateTime(meeting.joinedAt)}</td>
+                                                        <div className="table-scroll-wrap" data-dual-scroll-target="true">
+                                                            <table className="data-table live-stats-table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Job Seeker</th>
+                                                                        <th>Recruiter</th>
+                                                                        <th>Interpreter</th>
+                                                                        <th>Booth</th>
+                                                                        <th>Joined</th>
                                                                     </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {liveStats.calls.meetings.map(meeting => (
+                                                                        <tr key={meeting.sessionId}>
+                                                                            <td>{meeting.jobSeeker || '—'}</td>
+                                                                            <td>{meeting.recruiter || '—'}</td>
+                                                                            <td>{meeting.interpreter || '—'}</td>
+                                                                            <td>{meeting.boothName || '—'}</td>
+                                                                            <td>{formatDateTime(meeting.joinedAt)}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     ) : (
                                                         <div className="analytics-empty-state">
                                                             <p>No active call participants.</p>
@@ -635,28 +641,30 @@ export default function Analytics() {
                                                 <div className="live-stats-section">
                                                     <h2>Job Seekers Waiting</h2>
                                                     {liveStats.queue?.entries?.length ? (
-                                                        <table className="data-table live-stats-table">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Job Seeker</th>
-                                                                    <th>Booth</th>
-                                                                    <th>Event</th>
-                                                                    <th>Status</th>
-                                                                    <th>Joined</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {liveStats.queue.entries.map(entry => (
-                                                                    <tr key={entry.id}>
-                                                                        <td>{entry.jobSeeker?.name || 'Unknown'}</td>
-                                                                        <td>{entry.boothName || '—'}</td>
-                                                                        <td>{entry.eventName || '—'}</td>
-                                                                        <td>{entry.status}</td>
-                                                                        <td>{formatDateTime(entry.joinedAt)}</td>
+                                                        <div className="table-scroll-wrap" data-dual-scroll-target="true">
+                                                            <table className="data-table live-stats-table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Job Seeker</th>
+                                                                        <th>Booth</th>
+                                                                        <th>Event</th>
+                                                                        <th>Status</th>
+                                                                        <th>Joined</th>
                                                                     </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {liveStats.queue.entries.map(entry => (
+                                                                        <tr key={entry.id}>
+                                                                            <td>{entry.jobSeeker?.name || 'Unknown'}</td>
+                                                                            <td>{entry.boothName || '—'}</td>
+                                                                            <td>{entry.eventName || '—'}</td>
+                                                                            <td>{entry.status}</td>
+                                                                            <td>{formatDateTime(entry.joinedAt)}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     ) : (
                                                         <div className="analytics-empty-state">
                                                             <p>No job seekers currently waiting in queue.</p>

@@ -130,39 +130,41 @@ const JobSeekerQualifications = () => {
         return (
             <div style={{ padding: '20px' }}>
                 <h3 style={{ marginBottom: '16px' }}>Distribution of '{title}'</h3>
-                <table className="qualifications-table">
-                    <thead>
-                        <tr>
-                            <th>{title}</th>
-                            <th style={{ textAlign: 'right' }}>Count</th>
-                            <th style={{ textAlign: 'right' }}>% of Total Job Seekers</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data && data.length > 0 ? (
-                            <>
-                                {data.map((item, idx) => (
-                                    <tr key={idx} className={idx % 2 === 0 ? '' : 'alt-row'}>
-                                        <td>{item.name}</td>
-                                        <td style={{ textAlign: 'right' }}>{item.count}</td>
-                                        <td style={{ textAlign: 'right' }}>{item.percentage}%</td>
-                                    </tr>
-                                ))}
-                                <tr className="total-row">
-                                    <td>Total Responses</td>
-                                    <td style={{ textAlign: 'right' }}>{totalResponses}</td>
-                                    <td style={{ textAlign: 'right' }}>-</td>
-                                </tr>
-                            </>
-                        ) : (
+                <div className="qualifications-table-scroll" data-dual-scroll-target="true">
+                    <table className="qualifications-table">
+                        <thead>
                             <tr>
-                                <td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
-                                    No data available for this category
-                                </td>
+                                <th>{title}</th>
+                                <th style={{ textAlign: 'right' }}>Count</th>
+                                <th style={{ textAlign: 'right' }}>% of Total Job Seekers</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {data && data.length > 0 ? (
+                                <>
+                                    {data.map((item, idx) => (
+                                        <tr key={idx} className={idx % 2 === 0 ? '' : 'alt-row'}>
+                                            <td>{item.name}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.count}</td>
+                                            <td style={{ textAlign: 'right' }}>{item.percentage}%</td>
+                                        </tr>
+                                    ))}
+                                    <tr className="total-row">
+                                        <td>Total Responses</td>
+                                        <td style={{ textAlign: 'right' }}>{totalResponses}</td>
+                                        <td style={{ textAlign: 'right' }}>-</td>
+                                    </tr>
+                                </>
+                            ) : (
+                                <tr>
+                                    <td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                                        No data available for this category
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
                 <div style={{ marginTop: '12px', fontSize: '14px', color: '#6b7280' }}>
                     Total Job Seekers: {totalUsers}
                 </div>

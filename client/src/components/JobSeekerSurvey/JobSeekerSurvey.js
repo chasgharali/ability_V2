@@ -226,31 +226,33 @@ const JobSeekerSurvey = () => {
         return (
             <div style={{ padding: '20px' }}>
                 <h3 style={{ marginBottom: '16px' }}>Distribution of '{title}'</h3>
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
-                    <thead>
-                        <tr style={{ backgroundColor: '#f3f4f6' }}>
-                            <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: 600 }}>{title}</th>
-                            <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #e5e7eb', fontWeight: 600 }}>Count of {title}</th>
-                            <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #e5e7eb', fontWeight: 600 }}>% of {title}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {counts.map(([name, count], idx) => (
-                            <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
-                                <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb' }}>{name}</td>
-                                <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>{count}</td>
-                                <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>
-                                    {total > 0 ? ((count / total) * 100).toFixed(2) : 0}%
-                                </td>
+                <div data-dual-scroll-target="true" style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
+                        <thead>
+                            <tr style={{ backgroundColor: '#f3f4f6' }}>
+                                <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #e5e7eb', fontWeight: 600 }}>{title}</th>
+                                <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #e5e7eb', fontWeight: 600 }}>Count of {title}</th>
+                                <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #e5e7eb', fontWeight: 600 }}>% of {title}</th>
                             </tr>
-                        ))}
-                        <tr style={{ backgroundColor: '#f3f4f6', fontWeight: 600 }}>
-                            <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb' }}>Grand Total</td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>{total}</td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>100.00%</td>
-                        </tr>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {counts.map(([name, count], idx) => (
+                                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                                    <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb' }}>{name}</td>
+                                    <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>{count}</td>
+                                    <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>
+                                        {total > 0 ? ((count / total) * 100).toFixed(2) : 0}%
+                                    </td>
+                                </tr>
+                            ))}
+                            <tr style={{ backgroundColor: '#f3f4f6', fontWeight: 600 }}>
+                                <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb' }}>Grand Total</td>
+                                <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>{total}</td>
+                                <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #e5e7eb' }}>100.00%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     };

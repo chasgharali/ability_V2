@@ -148,8 +148,15 @@
 /* Qualifications Table */
 .qualifications-table {
     width: 100%;
+    min-width: 760px;
     border-collapse: collapse;
     border: 1px solid #e5e7eb;
+}
+
+.qualifications-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .qualifications-table thead tr {
