@@ -17,6 +17,8 @@ import { listResumes, setDefaultResume } from '../../services/resumes';
 // Use centralized JOB_TYPE_LIST for employment types
 const VETERAN_STATUS = ['None', 'Veteran', 'Active Duty', 'Reservist', 'Military Spouse'];
 
+const parseKeywordTags = (keywords) => (keywords ? keywords.split(',').map(s => s.trim()).filter(Boolean) : []);
+
 function getNameInitials(displayName) {
   if (!displayName || !String(displayName).trim()) return '?';
   const parts = String(displayName).trim().split(/\s+/);
@@ -55,6 +57,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const [builderLoading, setBuilderLoading] = useState(false);
   const [settingDefault, setSettingDefault] = useState(null);
   const [keywordInput, setKeywordInput] = useState('');
+  const [keywordAnnouncement, setKeywordAnnouncement] = useState('');
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
   const [avatarKey, setAvatarKey] = useState('');
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
@@ -74,6 +77,61 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const cameraCancelButtonRef = useRef(null);
   const cameraTriggerRef = useRef(null);
   const returnFocusRef = useRef(null);
+  const keywordInputRef = useRef(null);
+  const keywordChipButtonRefs = useRef([]);
+  const keywordLiveTimerRef = useRef(null);
+
+  const keywordTags = parseKeywordTags(form.keywords);
+
+  const announceKeywordChange = useCallback((message) => {
+    if (keywordLiveTimerRef.current) {
+      clearTimeout(keywordLiveTimerRef.current);
+    }
+    setKeywordAnnouncement(message);
+    keywordLiveTimerRef.current = setTimeout(() => {
+      setKeywordAnnouncement('');
+      keywordLiveTimerRef.current = null;
+    }, 1200);
+  }, []);
+
+  const focusKeywordInput = useCallback(() => {
+    keywordInputRef.current?.focus();
+  }, []);
+
+  const focusKeywordChipByIndex = useCallback((index) => {
+    const node = keywordChipButtonRefs.current[index];
+    if (node && typeof node.focus === 'function') {
+      node.focus();
+      return true;
+    }
+    return false;
+  }, []);
+
+  const addKeywordTag = useCallback((raw) => {
+    const value = raw.trim().replace(/,$/, '').trim();
+    if (!value) return false;
+    if (keywordTags.includes(value)) {
+      announceKeywordChange(`${value} is already in your keywords.`);
+      return false;
+    }
+
+    const nextTags = [...keywordTags, value];
+    setForm(prev => ({ ...prev, keywords: nextTags.join(', ') }));
+    announceKeywordChange(`Added keyword ${value}. ${nextTags.length} total keywords.`);
+    if (onValidationChange) setTimeout(onValidationChange, 0);
+    return true;
+  }, [announceKeywordChange, keywordTags, onValidationChange]);
+
+  const removeKeywordTagByIndex = useCallback((index) => {
+    if (index < 0 || index >= keywordTags.length) return false;
+
+    const removedKeyword = keywordTags[index];
+    const nextTags = keywordTags.filter((_, idx) => idx !== index);
+    setForm(prev => ({ ...prev, keywords: nextTags.join(', ') }));
+    announceKeywordChange(`Removed keyword ${removedKeyword}. ${nextTags.length} total keywords.`);
+    if (onValidationChange) setTimeout(onValidationChange, 0);
+    return true;
+  }, [announceKeywordChange, keywordTags, onValidationChange]);
 
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
@@ -342,6 +400,14 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       }
     };
   }, [pendingAvatarPreview]);
+
+  useEffect(() => {
+    return () => {
+      if (keywordLiveTimerRef.current) {
+        clearTimeout(keywordLiveTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setAvatarImageError(false);
@@ -914,59 +980,126 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         </div>
 
         <div className="form-group">
-          <label htmlFor="keyword-input">* Keywords <span style={{ fontWeight: 'normal', fontSize: '0.85em', color: 'var(--text-secondary, #6b7280)' }}>(press Enter or comma to add each keyword)</span></label>
-          {(() => {
-            const tags = form.keywords ? form.keywords.split(',').map(s => s.trim()).filter(Boolean) : [];
-            const addTag = (raw) => {
-              const val = raw.trim().replace(/,$/, '').trim();
-              if (!val || tags.includes(val)) return;
-              const next = [...tags, val].join(', ');
-              setForm(prev => ({ ...prev, keywords: next }));
-              if (onValidationChange) setTimeout(onValidationChange, 0);
-            };
-            const removeTag = (tag) => {
-              const next = tags.filter(t => t !== tag).join(', ');
-              setForm(prev => ({ ...prev, keywords: next }));
-              if (onValidationChange) setTimeout(onValidationChange, 0);
-            };
-            return (
+          <label id="keyword-input-label" htmlFor="keyword-input">* Keywords</label>
+          <div id="keyword-input-instructions" className="field-help">
+            Add job skills, job titles, certifications, and tools. Press Enter or comma to add a keyword. Use left and right arrow keys to move between added keywords, then press Backspace or Delete to remove one.
+          </div>
+          <div
+            role="group"
+            aria-label="Keywords input area"
+            aria-describedby="keyword-input-instructions keyword-input-status"
+            style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#fff', cursor: 'text', minHeight: '42px' }}
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                focusKeywordInput();
+              }
+            }}
+          >
+            {keywordTags.length > 0 && (
               <div
-                role="presentation"
-                style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#fff', cursor: 'text', minHeight: '42px' }}
-                onClick={() => document.getElementById('keyword-input')?.focus()}
-                onKeyDown={() => document.getElementById('keyword-input')?.focus()}
+                role="list"
+                aria-label="Added keywords"
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}
               >
-                {tags.map(tag => (
-                  <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#1f2937', color: '#f9fafb', borderRadius: '4px', padding: '2px 8px', fontSize: '14px', fontWeight: 500 }}>
+                {keywordTags.map((tag, index) => (
+                  <span
+                    key={tag}
+                    role="listitem"
+                    aria-label={`Keyword ${tag}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: '#1f2937', color: '#f9fafb', borderRadius: '4px', padding: '2px 8px', fontSize: '14px', fontWeight: 500 }}
+                  >
                     {tag}
                     <button
                       type="button"
                       aria-label={`Remove ${tag}`}
-                      onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
+                      data-keyword-chip-button="true"
+                      ref={(node) => {
+                        keywordChipButtonRefs.current[index] = node;
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const removed = removeKeywordTagByIndex(index);
+                        if (!removed) return;
+                        setTimeout(() => {
+                          const nextIndex = Math.min(index, keywordTags.length - 2);
+                          if (!focusKeywordChipByIndex(nextIndex)) {
+                            focusKeywordInput();
+                          }
+                        }, 0);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          if (!focusKeywordChipByIndex(index - 1)) {
+                            focusKeywordInput();
+                          }
+                          return;
+                        }
+                        if (e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          if (!focusKeywordChipByIndex(index + 1)) {
+                            focusKeywordInput();
+                          }
+                          return;
+                        }
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          focusKeywordInput();
+                          return;
+                        }
+                        if (e.key === 'Backspace' || e.key === 'Delete') {
+                          e.preventDefault();
+                          const removed = removeKeywordTagByIndex(index);
+                          if (!removed) return;
+                          setTimeout(() => {
+                            const nextIndex = Math.min(index, keywordTags.length - 2);
+                            if (!focusKeywordChipByIndex(nextIndex)) {
+                              focusKeywordInput();
+                            }
+                          }, 0);
+                        }
+                      }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d1d5db', fontWeight: 700, fontSize: '12px', lineHeight: 1, padding: '0 1px' }}
                     >×</button>
                   </span>
                 ))}
-                <input
-                  id="keyword-input"
-                  value={keywordInput}
-                  onChange={e => setKeywordInput(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ',') {
-                      e.preventDefault();
-                      addTag(keywordInput);
-                      setKeywordInput('');
-                    } else if (e.key === 'Backspace' && !keywordInput && tags.length) {
-                      removeTag(tags[tags.length - 1]);
-                    }
-                  }}
-                  onBlur={() => { if (keywordInput.trim()) { addTag(keywordInput); setKeywordInput(''); } }}
-                  placeholder={tags.length === 0 ? 'Your skills, job titles, certifications, etc.' : ''}
-                  style={{ border: 'none', outline: 'none', flex: 1, minWidth: '140px', fontSize: '14px', padding: '2px 0', background: 'transparent' }}
-                />
               </div>
-            );
-          })()}
+            )}
+            <input
+              id="keyword-input"
+              name="keywords"
+              ref={keywordInputRef}
+              value={keywordInput}
+              aria-required="true"
+              aria-describedby="keyword-input-instructions keyword-input-status"
+              onChange={e => setKeywordInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ',') {
+                  e.preventDefault();
+                  const added = addKeywordTag(keywordInput);
+                  if (added) setKeywordInput('');
+                } else if (e.key === 'Backspace' && !keywordInput && keywordTags.length) {
+                  e.preventDefault();
+                  removeKeywordTagByIndex(keywordTags.length - 1);
+                } else if (e.key === 'ArrowLeft' && !keywordInput && keywordTags.length) {
+                  e.preventDefault();
+                  focusKeywordChipByIndex(keywordTags.length - 1);
+                }
+              }}
+              onBlur={(e) => {
+                if (e.relatedTarget?.dataset?.keywordChipButton === 'true') return;
+                if (keywordInput.trim()) {
+                  const added = addKeywordTag(keywordInput);
+                  if (added) setKeywordInput('');
+                }
+              }}
+              placeholder={keywordTags.length === 0 ? 'Your skills, job titles, certifications, etc.' : ''}
+              style={{ border: 'none', outline: 'none', flex: 1, minWidth: '140px', fontSize: '14px', padding: '2px 0', background: 'transparent' }}
+            />
+          </div>
+          <span id="keyword-input-status" className="sr-only" aria-live="polite" aria-atomic="true">
+            {keywordAnnouncement || `${keywordTags.length} keywords added.`}
+          </span>
         </div>
 
         <div className="form-group">
