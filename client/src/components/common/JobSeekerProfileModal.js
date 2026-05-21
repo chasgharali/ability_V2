@@ -383,33 +383,6 @@ export default function JobSeekerProfileModal({ isOpen, onClose, jobSeeker, even
                 </div>
               </div>
 
-              {/* Accessibility Needs */}
-              <div className="detail-section">
-                <h4>Accessibility Needs</h4>
-                <div className="detail-content">
-                  <div className="detail-item">
-                    <span className="detail-label">SCREEN MAGNIFIER</span>
-                    <p>{js.usesScreenMagnifier ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">SCREEN READER</span>
-                    <p>{js.usesScreenReader ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">SIGN LANGUAGE INTERPRETER</span>
-                    <p>{js.needsASL ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">CAPTIONS</span>
-                    <p>{js.needsCaptions ? 'Yes' : 'No'}</p>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">OTHER ACCOMMODATIONS</span>
-                    <p>{js.needsOther ? 'Yes' : 'No'}</p>
-                  </div>
-                </div>
-              </div>
-
               {/* Account Details */}
               <div className="detail-section">
                 <h4>Account Details</h4>

@@ -1,48 +1,49 @@
 .meeting-detail-container {
-    padding: 24px;
-    max-width: 1400px;
+    padding: 16px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
-.page-header {
-    margin-bottom: 30px;
+.meeting-detail-header {
+    margin-bottom: 16px;
 }
 
-.header-left {
+.meeting-detail-header-left {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
 }
 
 .btn-back {
     background: #6c757d;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.3s ease;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     margin: 0;
     align-self: flex-start;
 }
 
 .btn-back:hover {
     background: #5a6268;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
+    box-shadow: none;
+    transform: none;
 }
 
 .btn-back:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: none;
+    box-shadow: none;
 }
 
 .btn-back:focus {
@@ -50,42 +51,54 @@
     outline-offset: 2px;
 }
 
-.page-header h1 {
+.meeting-detail-header h1 {
     color: #333;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 600;
     margin: 0;
+    text-align: center;
 }
 
 .meeting-detail-content {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
+}
+
+.meeting-detail-top-sections {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.meeting-detail-top-sections > .detail-section {
+    align-self: start;
 }
 
 /* Detail Sections */
 .detail-section {
     background: white;
-    padding: 24px;
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border: 1px solid #e5e7eb;
 }
 
 .detail-section h2 {
-    margin: 0 0 20px 0;
+    margin: 0 0 12px 0;
     color: #1f2937;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 12px;
+    padding-bottom: 8px;
 }
 
 /* Detail Grid */
 .detail-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+    gap: 12px;
 }
 
 @media (max-width: 1024px) {
@@ -104,7 +117,8 @@
 .detail-item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
+    min-width: 0;
 }
 
 .detail-item label {
@@ -117,7 +131,7 @@
 
 .detail-item span {
     color: #1f2937;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     word-break: break-all;
     overflow-wrap: break-word;
@@ -164,56 +178,74 @@
 }
 
 /* Participants Grid */
-.participants-grid {
+.mr-detail-participants-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+    align-items: start;
 }
 
-.participant-card {
+.mr-detail-participant-card {
     background: #f9fafb;
-    padding: 16px 20px;
+    padding: 12px 14px;
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    height: auto;
+    min-height: 0;
 }
 
-.participant-card h3 {
-    margin: 0 0 8px 0;
+.mr-detail-participant-card h3 {
+    margin: 0 0 4px 0;
     color: #1f2937;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    line-height: 1.2;
 }
 
-.participant-card p {
-    margin: 0;
+.mr-detail-participant-row {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    column-gap: 8px;
+    align-items: baseline;
     color: #4b5563;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.35;
 }
 
-.participant-card strong {
+.mr-detail-participant-label {
     color: #374151;
-    font-weight: 500;
-    min-width: 70px;
-    display: inline-block;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.mr-detail-participant-row--resume {
+    align-items: center;
+}
+
+.mr-detail-participant-row--resume .btn-view-resume-inline {
+    justify-self: start;
+    width: auto;
+    min-width: 72px;
 }
 
 /* Rating and Feedback */
 .rating-feedback-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
 }
 
 .rating-display {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .rating-display label {
@@ -243,7 +275,7 @@
 .feedback-display {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .feedback-display label {
@@ -256,11 +288,11 @@
 
 .feedback-text {
     background: #f8f9fa;
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
     border-left: 4px solid #333;
     color: #333;
-    line-height: 1.6;
+    line-height: 1.45;
     white-space: pre-wrap;
 }
 
@@ -268,17 +300,17 @@
 .messages-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .message-item {
     background: #f9fafb;
-    padding: 16px;
+    padding: 12px;
     border-radius: 8px;
     border-left: 3px solid #10b981;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .message-header {
@@ -353,17 +385,17 @@
 .chat-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    max-height: 400px;
+    gap: 8px;
+    max-height: 300px;
     overflow-y: auto;
-    padding: 10px;
+    padding: 8px;
     background: #f8f9fa;
     border-radius: 8px;
 }
 
 .chat-message {
     background: white;
-    padding: 12px;
+    padding: 10px;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -437,16 +469,21 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .meeting-detail-container {
-        padding: 16px;
+        padding: 12px;
     }
     
-    .participants-grid {
+    .mr-detail-participants-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 8px;
+    }
+
+    .meeting-detail-top-sections {
+        grid-template-columns: 1fr;
+        gap: 8px;
     }
     
     .detail-section {
-        padding: 20px;
+        padding: 12px;
     }
     
     .detail-section h2 {
@@ -464,15 +501,15 @@
 
 @media (max-width: 480px) {
     .meeting-detail-container {
-        padding: 12px;
+        padding: 10px;
     }
     
-    .page-header h1 {
-        font-size: 22px;
+    .meeting-detail-header h1 {
+        font-size: 20px;
     }
     
     .detail-section {
-        padding: 16px;
+        padding: 10px;
     }
     
     .detail-section h2 {
@@ -480,17 +517,21 @@
         margin-bottom: 16px;
     }
     
-    .participant-card {
-        padding: 14px 16px;
+    .mr-detail-participant-card {
+        padding: 10px 12px;
     }
     
     .message-item {
-        padding: 14px;
+        padding: 10px;
     }
     
     .btn-back {
-        font-size: 14px;
-        padding: 6px 12px;
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    .mr-detail-participant-row {
+        grid-template-columns: 70px 1fr;
     }
 }
 
@@ -499,8 +540,8 @@
     color: #fff;
     border: none;
     border-radius: 4px;
-    padding: 6px 12px;
-    font-size: 0.875rem;
+    padding: 4px 10px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;

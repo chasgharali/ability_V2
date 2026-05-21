@@ -23,9 +23,11 @@ import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import JSZip from 'jszip';
 import {
+    JOB_CATEGORY_LIST,
     EXPERIENCE_LEVEL_LIST,
     EDUCATION_LEVEL_LIST,
     JOB_TYPE_LIST,
+    LANGUAGE_LIST,
     MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 export default function MeetingRecords() {
@@ -757,6 +759,7 @@ export default function MeetingRecords() {
             'Location',
             'Headline',
             'Keywords',
+            'Primary Job Experience',
             'Work Experience Level',
             'Highest Education Level',
             'Employment Types',
@@ -863,12 +866,14 @@ export default function MeetingRecords() {
                 const profile = (jobSeeker && jobSeeker.metadata && jobSeeker.metadata.profile) ? jobSeeker.metadata.profile : null;
                 const headline = profile && profile.headline ? String(profile.headline).trim() : '';
                 const keywords = profile && profile.keywords ? String(profile.keywords).trim() : '';
+                const primaryJobExperience = Array.isArray(profile?.primaryExperience)
+                    ? profile.primaryExperience.find(Boolean) || ''
+                    : profile?.primaryExperience || '';
+                const primaryJobExperienceLabel = getLabelFromValue(primaryJobExperience, JOB_CATEGORY_LIST);
                 const workLevelLabel = getLabelFromValue(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST);
                 const educationLevelLabel = getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST);
                 const employmentTypesLabel = getLabelFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST);
-                const languagesDisplay = (profile && Array.isArray(profile.languages)) 
-                    ? profile.languages.filter(Boolean).join('; ') 
-                    : '';
+                const languagesDisplay = getLabelFromValues(profile?.languages || [], LANGUAGE_LIST);
                 const veteranStatusLabel = getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST);
                 
                 const interpreterName = (record.interpreterId && typeof record.interpreterId === 'object' && record.interpreterId.name) 
@@ -899,6 +904,7 @@ export default function MeetingRecords() {
                     escapeCSV(location),
                     escapeCSV(headline),
                     escapeCSV(keywords),
+                    escapeCSV(primaryJobExperienceLabel),
                     escapeCSV(workLevelLabel),
                     escapeCSV(educationLevelLabel),
                     escapeCSV(employmentTypesLabel),
@@ -1277,6 +1283,13 @@ export default function MeetingRecords() {
             return null;
         };
 
+        const getLabelsArrayFromValues = (values, optionsList) => {
+            if (!Array.isArray(values)) return [];
+            return values
+                .map((value) => getLabelFromValue(value, optionsList))
+                .filter((value) => value && value !== 'Not provided');
+        };
+
         // Helper to split name
         const splitName = (name) => {
             if (!name) return { firstName: '', lastName: '' };
@@ -1310,11 +1323,30 @@ export default function MeetingRecords() {
                 jobSeekerCountry: (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.country) ? jobSeeker.country : '',
                 jobSeekerHeadline: profile?.headline || '',
                 jobSeekerKeywords: profile?.keywords || '',
-                jobSeekerWorkLevel: profile?.workLevel || '',
-                jobSeekerEducationLevel: profile?.educationLevel || '',
-                jobSeekerEmploymentTypes: profile?.employmentTypes || [],
-                jobSeekerLanguages: profile?.languages || [],
-                jobSeekerVeteranStatus: profile?.veteranStatus || '',
+                jobSeekerPrimaryExperience: getLabelFromValue(
+                    Array.isArray(profile?.primaryExperience)
+                        ? profile.primaryExperience.find(Boolean) || ''
+                        : profile?.primaryExperience || '',
+                    JOB_CATEGORY_LIST
+                ) === 'Not provided'
+                    ? ''
+                    : getLabelFromValue(
+                        Array.isArray(profile?.primaryExperience)
+                            ? profile.primaryExperience.find(Boolean) || ''
+                            : profile?.primaryExperience || '',
+                        JOB_CATEGORY_LIST
+                    ),
+                jobSeekerWorkLevel: getLabelFromValue(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST) === 'Not provided'
+                    ? ''
+                    : getLabelFromValue(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST),
+                jobSeekerEducationLevel: getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST) === 'Not provided'
+                    ? ''
+                    : getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST),
+                jobSeekerEmploymentTypes: getLabelsArrayFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST),
+                jobSeekerLanguages: getLabelsArrayFromValues(profile?.languages || [], LANGUAGE_LIST),
+                jobSeekerVeteranStatus: getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST) === 'Not provided'
+                    ? ''
+                    : getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST),
                 jobSeekerResumeId: r.jobSeekerResumeId || r.resolvedResume?.resumeId || '',
                 jobSeekerResumeUrl: r.jobSeekerResumeUrl || r.registeredResumeUrl || r.resolvedResume?.resumeUrl || getFieldResumeUrl(jobSeeker),
             interpreterName: r.interpreterId ? getFieldName(r.interpreterId) : 'None',
@@ -1573,27 +1605,6 @@ export default function MeetingRecords() {
         );
     }, []);
 
-    // Template functions for job seeker data columns
-    const firstNameTemplate = useCallback((props) => {
-        const row = props;
-        const firstName = row.jobSeekerFirstName || '';
-        return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                {firstName || 'N/A'}
-            </div>
-        );
-    }, []);
-
-    const lastNameTemplate = useCallback((props) => {
-        const row = props;
-        const lastName = row.jobSeekerLastName || '';
-        return (
-            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                {lastName || 'N/A'}
-            </div>
-        );
-    }, []);
-
     const phoneTemplate = useCallback((props) => {
         const row = props;
         const phone = row.jobSeekerPhone || '';
@@ -1620,6 +1631,16 @@ export default function MeetingRecords() {
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {keywords || 'N/A'}
+            </div>
+        );
+    }, []);
+
+    const primaryJobExperienceTemplate = useCallback((props) => {
+        const row = props;
+        const primaryExperience = row.jobSeekerPrimaryExperience || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {primaryExperience || 'N/A'}
             </div>
         );
     }, []);
@@ -1705,9 +1726,9 @@ export default function MeetingRecords() {
                                 setShowJobSeekerModal(true);
                             }, 0);
                         }}
-                        aria-label="View job seeker details"
+                        aria-label="View job seeker profile"
                     >
-                        View Job Seeker Detail
+                        View Job Seeker Profile
                     </ButtonComponent>
                 )}
                 {(row.jobSeekerResumeId || row.jobSeekerResumeUrl) ? (
@@ -2006,18 +2027,14 @@ export default function MeetingRecords() {
                                             freeze='Left'
                                         />
                                     )}
-                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} textAlign='Center' freeze='Left' />
+                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} textAlign='Center' freeze='Left' />
                                     <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} textAlign='Center' />
-                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} textAlign='Center' />
-                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} textAlign='Center' />
-                                    <ColumnDirective field='jobSeekerFirstName' headerText='Firstname' width='150' clipMode='EllipsisWithTooltip' template={firstNameTemplate} allowFiltering={true} visible={true} textAlign='Center' />
-                                    <ColumnDirective field='jobSeekerLastName' headerText='Lastname' width='150' clipMode='EllipsisWithTooltip' template={lastNameTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerEmail' headerText='Job Seeker Email' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerEmailTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerPhone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' template={phoneTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerHeadline' headerText='Headline' width='200' clipMode='EllipsisWithTooltip' template={headlineTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerKeywords' headerText='Keywords' width='200' clipMode='EllipsisWithTooltip' template={keywordsTemplate} allowFiltering={true} visible={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerPrimaryExperience' headerText='Primary Job Experience' width='210' clipMode='EllipsisWithTooltip' template={primaryJobExperienceTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerWorkLevel' headerText='Work Experience Level' width='180' clipMode='EllipsisWithTooltip' template={workExperienceLevelTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={true} textAlign='Center' />
@@ -2030,11 +2047,9 @@ export default function MeetingRecords() {
                                     <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} type='string' textAlign='Center' />
                                     <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
                                     <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} textAlign='Center' />
-                                    <ColumnDirective field='jobSeekerResumeUrl' headerText='Resume' width='120' textAlign='Center' allowFiltering={false} template={(props) => (
-                                        (props.jobSeekerResumeId || props.jobSeekerResumeUrl)
-                                            ? <button type="button" className="btn-view-resume-inline" onClick={() => openResumeInNewTab(props.jobSeekerResumeId || null, props.jobSeekerResumeUrl || null)}>View</button>
-                                            : <span style={{ color: '#9ca3af' }}>—</span>
-                                    )} />
+                                    <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='recruiterName' headerText='Recruiter' width='150' clipMode='EllipsisWithTooltip' template={recruiterTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective
                                         headerText='Actions'
                                         width='280' 

@@ -932,24 +932,24 @@
   padding: 6px 0;
 }
 
-/* Panel height presets: floors high enough for several wrapped caption rows before scroll */
-.caption-size-small.caption-lines-1 .caption-content { max-height: min(26vh, 160px); }
-.caption-size-small.caption-lines-2 .caption-content { max-height: min(34vh, 260px); }
-.caption-size-small.caption-lines-3 .caption-content { max-height: min(38vh, 300px); }
-.caption-size-small.caption-lines-4 .caption-content { max-height: min(40vh, 340px); }
-.caption-size-small.caption-lines-5 .caption-content { max-height: min(42vh, 380px); }
+/* Panel height presets: lock each option to exact visible transcript rows (1-5). */
+.caption-size-small.caption-lines-1 .caption-content { height: 40px; min-height: 40px; max-height: 40px; }
+.caption-size-small.caption-lines-2 .caption-content { height: 70px; min-height: 70px; max-height: 70px; }
+.caption-size-small.caption-lines-3 .caption-content { height: 100px; min-height: 100px; max-height: 100px; }
+.caption-size-small.caption-lines-4 .caption-content { height: 130px; min-height: 130px; max-height: 130px; }
+.caption-size-small.caption-lines-5 .caption-content { height: 160px; min-height: 160px; max-height: 160px; }
 
-.caption-size-medium.caption-lines-1 .caption-content { max-height: min(28vh, 180px); }
-.caption-size-medium.caption-lines-2 .caption-content { max-height: min(36vh, 320px); }
-.caption-size-medium.caption-lines-3 .caption-content { max-height: min(40vh, 360px); }
-.caption-size-medium.caption-lines-4 .caption-content { max-height: min(44vh, 400px); }
-.caption-size-medium.caption-lines-5 .caption-content { max-height: min(48vh, 440px); }
+.caption-size-medium.caption-lines-1 .caption-content { height: 59px; min-height: 59px; max-height: 59px; }
+.caption-size-medium.caption-lines-2 .caption-content { height: 100px; min-height: 100px; max-height: 100px; }
+.caption-size-medium.caption-lines-3 .caption-content { height: 141px; min-height: 141px; max-height: 141px; }
+.caption-size-medium.caption-lines-4 .caption-content { height: 182px; min-height: 182px; max-height: 182px; }
+.caption-size-medium.caption-lines-5 .caption-content { height: 223px; min-height: 223px; max-height: 223px; }
 
-.caption-size-large.caption-lines-1 .caption-content { max-height: min(30vh, 200px); }
-.caption-size-large.caption-lines-2 .caption-content { max-height: min(40vh, 360px); }
-.caption-size-large.caption-lines-3 .caption-content { max-height: min(46vh, 420px); }
-.caption-size-large.caption-lines-4 .caption-content { max-height: min(50vh, 480px); }
-.caption-size-large.caption-lines-5 .caption-content { max-height: min(54vh, 520px); }
+.caption-size-large.caption-lines-1 .caption-content { height: 82px; min-height: 82px; max-height: 82px; }
+.caption-size-large.caption-lines-2 .caption-content { height: 139px; min-height: 139px; max-height: 139px; }
+.caption-size-large.caption-lines-3 .caption-content { height: 195px; min-height: 195px; max-height: 195px; }
+.caption-size-large.caption-lines-4 .caption-content { height: 252px; min-height: 252px; max-height: 252px; }
+.caption-size-large.caption-lines-5 .caption-content { height: 308px; min-height: 308px; max-height: 308px; }
 
 /* Caption scroll buttons */
 .caption-scroll-buttons {

@@ -18,6 +18,7 @@ export default function MeetingRecordDetail() {
     const [meetingRecord, setMeetingRecord] = useState(null);
     const [loadingData, setLoadingData] = useState(true);
     const [error, setError] = useState(null);
+    const isRecruiter = user?.role === 'Recruiter';
 
     useEffect(() => {
         if (!loading) {
@@ -168,8 +169,8 @@ export default function MeetingRecordDetail() {
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="meeting-detail-container">
-                            <div className="page-header">
-                                <div className="header-left">
+                            <div className="meeting-detail-header">
+                                <div className="meeting-detail-header-left">
                                     <button
                                         className="btn-back"
                                         onClick={() => navigate('/meeting-records')}
@@ -182,94 +183,100 @@ export default function MeetingRecordDetail() {
                             </div>
 
                             <div className="meeting-detail-content">
-                                {/* Basic Information */}
-                                <section className="detail-section" aria-labelledby="meeting-info-heading">
-                                    <h2 id="meeting-info-heading">Meeting Information</h2>
-                                    <div className="detail-grid">
-                                        <div className="detail-item">
-                                            <label>Event</label>
-                                            <span>{meetingRecord.eventId?.name || 'N/A'}</span>
+                                <div className="meeting-detail-top-sections">
+                                    {/* Basic Information */}
+                                    <section className="detail-section" aria-labelledby="meeting-info-heading">
+                                        <h2 id="meeting-info-heading">Meeting Information</h2>
+                                        <div className="detail-grid">
+                                            <div className="detail-item">
+                                                <label>Event</label>
+                                                <span>{meetingRecord.eventId?.name || 'N/A'}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <label>Booth</label>
+                                                <span>{meetingRecord.boothId?.name || 'N/A'}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <label>Status</label>
+                                                <span className={`status-badge status-${meetingRecord.status}`}>
+                                                    {formatStatus(meetingRecord.status)}
+                                                </span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <label>Start Time</label>
+                                                <span>{formatDateTime(meetingRecord.startTime)}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <label>End Time</label>
+                                                <span>{formatDateTime(meetingRecord.endTime)}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <label>Duration</label>
+                                                <span>{formatDuration(meetingRecord.duration)}</span>
+                                            </div>
                                         </div>
-                                        <div className="detail-item">
-                                            <label>Booth</label>
-                                            <span>{meetingRecord.boothId?.name || 'N/A'}</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <label>Start Time</label>
-                                            <span>{formatDateTime(meetingRecord.startTime)}</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <label>End Time</label>
-                                            <span>{formatDateTime(meetingRecord.endTime)}</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <label>Duration</label>
-                                            <span>{formatDuration(meetingRecord.duration)}</span>
-                                        </div>
-                                        <div className="detail-item">
-                                            <label>Status</label>
-                                            <span className={`status-badge status-${meetingRecord.status}`}>
-                                                {formatStatus(meetingRecord.status)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </section>
+                                    </section>
 
-                                {/* Participants */}
-                                <section className="detail-section" aria-labelledby="participants-heading">
-                                    <h2 id="participants-heading">Participants</h2>
-                                    <div className="participants-grid" role="list">
-                                        <article className="participant-card" role="listitem">
-                                            <h3>Recruiter</h3>
-                                            {meetingRecord.status === 'left_with_message' ? (
-                                                <>
-                                                    <p><strong>Name:</strong> All Recruiters in Booth</p>
-                                                    <p><strong>Email:</strong> {meetingRecord.boothId?.name || 'Booth Message'}</p>
-                                                    <p><strong>Note:</strong> This message is visible to all recruiters in the booth</p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <p><strong>Name:</strong> {meetingRecord.recruiterId?.name || 'N/A'}</p>
-                                                    <p><strong>Email:</strong> {meetingRecord.recruiterId?.email || 'N/A'}</p>
-                                                </>
-                                            )}
-                                        </article>
-                                        <article className="participant-card" role="listitem">
-                                            <h3>Job Seeker</h3>
-                                            <p><strong>Name:</strong> {meetingRecord.jobseekerId?.name || 'N/A'}</p>
-                                            <p><strong>Email:</strong> {meetingRecord.jobseekerId?.email || 'N/A'}</p>
-                                            <p><strong>Location:</strong> {
-                                                meetingRecord.jobseekerId?.city && meetingRecord.jobseekerId?.state
-                                                    ? `${meetingRecord.jobseekerId.city}, ${meetingRecord.jobseekerId.state}`
-                                                    : 'N/A'
-                                            }</p>
-                                            {(() => {
-                                                const resumeId = meetingRecord.jobSeekerResumeId || meetingRecord.resolvedResume?.resumeId;
-                                                const resumeUrl = meetingRecord.jobSeekerResumeUrl || meetingRecord.resolvedResume?.resumeUrl || meetingRecord.jobseekerId?.resumeUrl;
-                                                if (!resumeId && !resumeUrl) return null;
-                                                return (
-                                                    <p style={{ marginTop: '12px' }}>
-                                                        <button
-                                                            type="button"
-                                                            className="btn-view-resume-inline"
-                                                            onClick={() => openResumeInNewTab(resumeId || null, resumeUrl || null)}
-                                                            aria-label={`View resume for ${meetingRecord.jobseekerId?.name || 'job seeker'}`}
-                                                        >
-                                                            View Resume
-                                                        </button>
-                                                    </p>
-                                                );
-                                            })()}
-                                        </article>
-                                        {meetingRecord.interpreterId && (
-                                            <article className="participant-card" role="listitem">
-                                                <h3>Interpreter</h3>
-                                                <p><strong>Name:</strong> {meetingRecord.interpreterId.name}</p>
-                                                <p><strong>Email:</strong> {meetingRecord.interpreterId.email}</p>
+                                    {/* Participants */}
+                                    <section className="detail-section" aria-labelledby="participants-heading">
+                                        <h2 id="participants-heading">Participants</h2>
+                                        <div className="mr-detail-participants-grid" role="list">
+                                            <article className="mr-detail-participant-card" role="listitem">
+                                                <h3>Recruiter</h3>
+                                                {meetingRecord.status === 'left_with_message' ? (
+                                                    <>
+                                                        <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Name</span><span>All Recruiters in Booth</span></div>
+                                                        <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Email</span><span>{meetingRecord.boothId?.name || 'Booth Message'}</span></div>
+                                                        <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Note</span><span>This message is visible to all recruiters in the booth</span></div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Name</span><span>{meetingRecord.recruiterId?.name || 'N/A'}</span></div>
+                                                        <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Email</span><span>{meetingRecord.recruiterId?.email || 'N/A'}</span></div>
+                                                    </>
+                                                )}
                                             </article>
-                                        )}
-                                    </div>
-                                </section>
+                                            <article className="mr-detail-participant-card" role="listitem">
+                                                <h3>Job Seeker</h3>
+                                                <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Name</span><span>{meetingRecord.jobseekerId?.name || 'N/A'}</span></div>
+                                                <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Email</span><span>{meetingRecord.jobseekerId?.email || 'N/A'}</span></div>
+                                                <div className="mr-detail-participant-row">
+                                                    <span className="mr-detail-participant-label">Location</span>
+                                                    <span>
+                                                        {meetingRecord.jobseekerId?.city && meetingRecord.jobseekerId?.state
+                                                            ? `${meetingRecord.jobseekerId.city}, ${meetingRecord.jobseekerId.state}`
+                                                            : 'N/A'}
+                                                    </span>
+                                                </div>
+                                                {(() => {
+                                                    const resumeId = meetingRecord.jobSeekerResumeId || meetingRecord.resolvedResume?.resumeId;
+                                                    const resumeUrl = meetingRecord.jobSeekerResumeUrl || meetingRecord.resolvedResume?.resumeUrl || meetingRecord.jobseekerId?.resumeUrl;
+                                                    if (!resumeId && !resumeUrl) return null;
+                                                    return (
+                                                        <div className="mr-detail-participant-row mr-detail-participant-row--resume">
+                                                            <span className="mr-detail-participant-label">Resume</span>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-view-resume-inline"
+                                                                onClick={() => openResumeInNewTab(resumeId || null, resumeUrl || null)}
+                                                                aria-label={`View resume for ${meetingRecord.jobseekerId?.name || 'job seeker'}`}
+                                                            >
+                                                                View
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </article>
+                                            {meetingRecord.interpreterId && (
+                                                <article className="mr-detail-participant-card" role="listitem">
+                                                    <h3>Interpreter</h3>
+                                                    <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Name</span><span>{meetingRecord.interpreterId.name}</span></div>
+                                                    <div className="mr-detail-participant-row"><span className="mr-detail-participant-label">Email</span><span>{meetingRecord.interpreterId.email}</span></div>
+                                                </article>
+                                            )}
+                                        </div>
+                                    </section>
+                                </div>
 
                                 {/* Rating and Feedback */}
                                 {(meetingRecord.recruiterRating || meetingRecord.recruiterFeedback) && (
@@ -372,39 +379,41 @@ export default function MeetingRecordDetail() {
                                 )}
 
                                 {/* Technical Information */}
-                                <div className="detail-section">
-                                    <h2>Technical Information</h2>
-                                    <div className="detail-grid">
-                                        <div className="detail-item">
-                                            <label>Room ID</label>
-                                            <span>{meetingRecord.twilioRoomId || 'N/A'}</span>
+                                {!isRecruiter && (
+                                    <div className="detail-section">
+                                        <h2>Technical Information</h2>
+                                        <div className="detail-grid">
+                                            <div className="detail-item">
+                                                <label>Room ID</label>
+                                                <span>{meetingRecord.twilioRoomId || 'N/A'}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <label>Room SID</label>
+                                                <span>{meetingRecord.twilioRoomSid || 'N/A'}</span>
+                                            </div>
+                                            {meetingRecord.qualityMetrics && (
+                                                <>
+                                                    <div className="detail-item">
+                                                        <label>Connection Quality</label>
+                                                        <span>{meetingRecord.qualityMetrics.connectionQuality || 'N/A'}</span>
+                                                    </div>
+                                                    <div className="detail-item">
+                                                        <label>Audio Quality</label>
+                                                        <span>{meetingRecord.qualityMetrics.audioQuality || 'N/A'}</span>
+                                                    </div>
+                                                    <div className="detail-item">
+                                                        <label>Video Quality</label>
+                                                        <span>{meetingRecord.qualityMetrics.videoQuality || 'N/A'}</span>
+                                                    </div>
+                                                    <div className="detail-item">
+                                                        <label>Dropped Connections</label>
+                                                        <span>{meetingRecord.qualityMetrics.droppedConnections || 0}</span>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
-                                        <div className="detail-item">
-                                            <label>Room SID</label>
-                                            <span>{meetingRecord.twilioRoomSid || 'N/A'}</span>
-                                        </div>
-                                        {meetingRecord.qualityMetrics && (
-                                            <>
-                                                <div className="detail-item">
-                                                    <label>Connection Quality</label>
-                                                    <span>{meetingRecord.qualityMetrics.connectionQuality || 'N/A'}</span>
-                                                </div>
-                                                <div className="detail-item">
-                                                    <label>Audio Quality</label>
-                                                    <span>{meetingRecord.qualityMetrics.audioQuality || 'N/A'}</span>
-                                                </div>
-                                                <div className="detail-item">
-                                                    <label>Video Quality</label>
-                                                    <span>{meetingRecord.qualityMetrics.videoQuality || 'N/A'}</span>
-                                                </div>
-                                                <div className="detail-item">
-                                                    <label>Dropped Connections</label>
-                                                    <span>{meetingRecord.qualityMetrics.droppedConnections || 0}</span>
-                                                </div>
-                                            </>
-                                        )}
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>

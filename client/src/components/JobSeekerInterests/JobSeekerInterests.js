@@ -21,6 +21,7 @@ import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSea
 import { openResumeInNewTab } from '../../utils/resumeViewer';
 import JSZip from 'jszip';
 import {
+    JOB_CATEGORY_LIST,
     EXPERIENCE_LEVEL_LIST,
     EDUCATION_LEVEL_LIST,
     JOB_TYPE_LIST,
@@ -757,6 +758,21 @@ const JobSeekerInterests = () => {
 
             // Get profile
             const profile = getProfile(r.jobSeeker);
+            const getLabelFromValueLocal = (value, optionsList) => {
+                if (value === null || value === undefined || value === '') return '';
+                const s = String(value).trim();
+                const opt = optionsList.find(o => (o.value || '').toString() === s || (o.name || '').toString() === s);
+                return opt ? (opt.name || opt.value || s) : s;
+            };
+            const getLabelsArrayFromValuesLocal = (values, optionsList) => {
+                if (!Array.isArray(values)) return [];
+                return values
+                    .map((value) => getLabelFromValueLocal(value, optionsList))
+                    .filter(Boolean);
+            };
+            const primaryExperienceValue = Array.isArray(profile?.primaryExperience)
+                ? profile.primaryExperience.find(Boolean) || ''
+                : profile?.primaryExperience || '';
 
             return {
                 ...r, 
@@ -772,11 +788,12 @@ const JobSeekerInterests = () => {
                 jobSeekerCountry: r.jobSeeker?.country || '',
                 jobSeekerHeadline: profile?.headline || '',
                 jobSeekerKeywords: profile?.keywords || '',
-                jobSeekerWorkLevel: profile?.workLevel || '',
-                jobSeekerEducationLevel: profile?.educationLevel || '',
-                jobSeekerEmploymentTypes: profile?.employmentTypes || [],
-                jobSeekerLanguages: profile?.languages || [],
-                jobSeekerVeteranStatus: profile?.veteranStatus || '',
+                jobSeekerPrimaryExperience: getLabelFromValueLocal(primaryExperienceValue, JOB_CATEGORY_LIST),
+                jobSeekerWorkLevel: getLabelFromValueLocal(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST),
+                jobSeekerEducationLevel: getLabelFromValueLocal(profile?.educationLevel || '', EDUCATION_LEVEL_LIST),
+                jobSeekerEmploymentTypes: getLabelsArrayFromValuesLocal(profile?.employmentTypes || [], JOB_TYPE_LIST),
+                jobSeekerLanguages: getLabelsArrayFromValuesLocal(profile?.languages || [], LANGUAGE_LIST),
+                jobSeekerVeteranStatus: getLabelFromValueLocal(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST),
                 jobSeekerResumeId: r.jobSeeker?.resolvedResume?.resumeId || '',
                 jobSeekerResumeUrl: r.jobSeeker?.resolvedResume?.resumeUrl || r.jobSeeker?.resumeUrl || '',
                 boothName: r.booth?.name || (r.legacyBoothId ? 'Legacy Booth' : ''),
@@ -842,6 +859,7 @@ const JobSeekerInterests = () => {
             'Location',
             'Headline',
             'Keywords',
+            'Primary Job Experience',
             'Work Experience Level',
             'Highest Education Level',
             'Employment Types',
@@ -935,6 +953,10 @@ const JobSeekerInterests = () => {
             const profile = getProfile(interest.jobSeeker);
             const headline = profile?.headline || '';
             const keywords = profile?.keywords || '';
+            const primaryJobExperience = Array.isArray(profile?.primaryExperience)
+                ? profile.primaryExperience.find(Boolean) || ''
+                : profile?.primaryExperience || '';
+            const primaryJobExperienceLabel = getLabelFromValue(primaryJobExperience, JOB_CATEGORY_LIST);
             const workLevelLabel = getLabelFromValue(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST);
             const educationLevelLabel = getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST);
             const employmentTypesLabel = getLabelFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST);
@@ -953,6 +975,7 @@ const JobSeekerInterests = () => {
                 escapeCSV(location),
                 escapeCSV(headline),
                 escapeCSV(keywords),
+                escapeCSV(primaryJobExperienceLabel),
                 escapeCSV(workLevelLabel),
                 escapeCSV(educationLevelLabel),
                 escapeCSV(employmentTypesLabel),
@@ -1702,6 +1725,16 @@ const JobSeekerInterests = () => {
         );
     }, []);
 
+    const primaryJobExperienceTemplate = useCallback((props) => {
+        const row = props;
+        const primaryJobExperience = row.jobSeekerPrimaryExperience || '';
+        return (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                {primaryJobExperience || 'N/A'}
+            </div>
+        );
+    }, []);
+
     const workExperienceLevelTemplate = useCallback((props) => {
         const row = props;
         const workLevel = row.jobSeekerWorkLevel || '';
@@ -2058,6 +2091,7 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective field='jobSeekerCity' headerText='Location' width='150' clipMode='EllipsisWithTooltip' template={locationTemplate} allowFiltering={true} />
                                         <ColumnDirective field='jobSeekerHeadline' headerText='Headline' width='200' clipMode='EllipsisWithTooltip' template={headlineTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerKeywords' headerText='Keywords' width='200' clipMode='EllipsisWithTooltip' template={keywordsTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerPrimaryExperience' headerText='Primary Job Experience' width='210' clipMode='EllipsisWithTooltip' template={primaryJobExperienceTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerWorkLevel' headerText='Work Experience Level' width='180' clipMode='EllipsisWithTooltip' template={workExperienceLevelTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={true} />
