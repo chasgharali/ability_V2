@@ -149,16 +149,10 @@ export const FocusManager = ({ children }) => {
     );
 };
 
-const focusPageHeadingOrMain = () => {
-    const mainArea = document.getElementById('main-content') || document.getElementById('dashboard-main');
-    const heading = (mainArea || document).querySelector('h1, h2, h3');
-    if (heading) {
-        heading.setAttribute('tabindex', '-1');
-        heading.focus();
-        return true;
-    }
-
-    const mainEl = mainArea || document.querySelector('main');
+const focusPageMainContainer = () => {
+    const mainEl = document.getElementById('main-content')
+        || document.getElementById('dashboard-main')
+        || document.querySelector('main');
     if (mainEl) {
         mainEl.setAttribute('tabindex', '-1');
         mainEl.focus();
@@ -198,11 +192,11 @@ export const GlobalRouteObserver = () => {
         if (previousPathRef.current !== location.pathname) {
             const menuInitiatedNav = isMenuInitiatedNavigation();
             const attemptFocus = () => {
-                // Do NOT call announcePageLoaded here — programmatic focus to <h1>
-                // is the primary page-load indicator. Announcing via live region AND
-                // focusing the h1 causes screen readers to double-announce the heading.
+                // Move focus to the page's main landmark instead of the heading.
+                // This avoids placing visible focus styles on headings while still
+                // giving screen-reader users a reliable post-navigation anchor.
                 if (!menuInitiatedNav) {
-                    focusPageHeadingOrMain();
+                    focusPageMainContainer();
                 }
             };
 

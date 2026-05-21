@@ -105,7 +105,7 @@ export default function RegisteredEvents() {
           <div className="dashboard-content">
             <div className="registered-events-container">
               <header className="registered-events-header">
-                <h1 tabIndex={-1}>My Current Registrations</h1>
+                <h1>My Current Registrations</h1>
                 <p className="subtitle">
                   {filteredEvents.length > 0
                     ? `You are registered for ${filteredEvents.length} ${filteredEvents.length === 1 ? 'event' : 'events'}`

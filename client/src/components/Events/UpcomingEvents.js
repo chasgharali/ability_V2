@@ -119,7 +119,7 @@ export default function UpcomingEvents() {
             <div className="dashboard-content">
             <div className="upcoming-events-container">
               <header className="upcoming-events-header">
-                <h1 tabIndex={-1}>Upcoming Events</h1>
+                <h1>Upcoming Events</h1>
                 <p className="subtitle">
                   {filteredEvents.length > 0
                     ? `${filteredEvents.length} upcoming ${filteredEvents.length === 1 ? 'event' : 'events'} available`

@@ -243,7 +243,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
         {toast.visible && (
           <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
         )}
-        {!embedded && <h1 tabIndex={-1}>Survey – Tell us about yourself</h1>}
+        {!embedded && <h1>Survey – Tell us about yourself</h1>}
       
       {infoBannerMessage && (
         <div className="info-banner">

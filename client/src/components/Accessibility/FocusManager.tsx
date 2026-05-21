@@ -23,12 +23,12 @@ const FocusManager: React.FC = () => {
                 if (skipLink) {
                     skipLink.focus();
                 } else {
-                    const mainArea = document.getElementById('dashboard-main');
-                    const searchRoot = mainArea || document;
-                    const firstHeading = searchRoot.querySelector('h1, h2');
-                    if (firstHeading) {
-                        (firstHeading as HTMLElement).setAttribute('tabindex', '-1');
-                        (firstHeading as HTMLElement).focus();
+                    const mainArea = document.getElementById('main-content')
+                        || document.getElementById('dashboard-main')
+                        || document.querySelector('main');
+                    if (mainArea) {
+                        (mainArea as HTMLElement).setAttribute('tabindex', '-1');
+                        (mainArea as HTMLElement).focus();
                     }
                 }
             }, 350);
