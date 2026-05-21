@@ -181,6 +181,7 @@ export default function BoothManagement() {
 
   const savedSearchQuery = loadSearchQueryFromSession();
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
   const [previewBooth, setPreviewBooth] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rowPendingDelete, setRowPendingDelete] = useState(null);
@@ -887,6 +888,7 @@ export default function BoothManagement() {
   const handleSearch = () => {
     const query = (searchInputRef.current?.value || '').trim();
     setActiveSearchQuery(query);
+    setSearchTriggerNonce((prev) => prev + 1);
     setCurrentPage(1); // Reset to first page when searching
   };
 
@@ -983,7 +985,7 @@ export default function BoothManagement() {
         setLoadingBooths(false);
       }
     }
-  }, [activeSearchQuery, baseUrl]);
+  }, [activeSearchQuery, baseUrl, searchTriggerNonce]);
 
   // Get selected booths from grid
   const getSelectedBoothsFromGrid = useCallback(() => {

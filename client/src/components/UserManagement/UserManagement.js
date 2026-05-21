@@ -72,6 +72,7 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState(loadRoleFilterFromSession);
   const savedSearchQuery = loadSearchQueryFromSession();
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -422,6 +423,7 @@ export default function UserManagement() {
 
   const handleSearch = useCallback(() => {
     setActiveSearchQuery((searchInputRef.current?.value || '').trim());
+    setSearchTriggerNonce((prev) => prev + 1);
     setCurrentPage(1);
   }, []);
 
@@ -571,7 +573,7 @@ export default function UserManagement() {
         setLoading(false);
       }
     }
-  }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker, orgFilter, currentUser]);
+  }, [roleFilter, activeSearchQuery, roleOptionsNoJobSeeker, orgFilter, currentUser, searchTriggerNonce]);
 
   // Memoize paginated data source to ensure grid updates when users change
   const paginatedDataSource = useMemo(() => {

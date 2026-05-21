@@ -72,6 +72,7 @@ export default function JobSeekerManagement() {
 
   const savedSearchQuery = loadSearchQueryFromSession();
   const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
   // Load filters from sessionStorage on mount (per-table persistence)
   const loadFiltersFromSession = () => {
     try {
@@ -116,6 +117,7 @@ export default function JobSeekerManagement() {
   const loadingJobSeekersRef = useRef(false);
   const loadingEventsRef = useRef(false);
   const selectionUpdateRef = useRef(false); // Prevent multiple simultaneous selection updates
+  const pendingLoadArgsRef = useRef(null);
   const searchFilterRef = useRef('');
   const statusFilterRef = useRef('');
   const organizationFilterRef = useRef('');
@@ -473,8 +475,8 @@ export default function JobSeekerManagement() {
   const loadJobSeekers = useCallback(async (page, limit, search, isActive, event, organizationId, sortByOverride, sortDirOverride) => {
     // Prevent multiple simultaneous fetches
     if (loadingJobSeekersRef.current) {
-      console.log('LoadJobSeekers already in progress, skipping duplicate call');
-      // Don't reset loading states here - let the running request handle it
+      pendingLoadArgsRef.current = [page, limit, search, isActive, event, organizationId, sortByOverride, sortDirOverride];
+      console.log('LoadJobSeekers already in progress, queueing latest request');
       return;
     }
     
@@ -607,12 +609,18 @@ export default function JobSeekerManagement() {
       setLoading(false);
       setSearchLoading(false);
       setEventSearchLoading(false);
+      if (pendingLoadArgsRef.current) {
+        const nextArgs = pendingLoadArgsRef.current;
+        pendingLoadArgsRef.current = null;
+        loadJobSeekers(...nextArgs);
+      }
     }
   }, [showToast]);
 
   // Track previous values to detect actual changes
   const isFirstRender = useRef(true);
   const prevSearchFilter = useRef(activeSearchQuery);
+  const prevSearchTriggerNonce = useRef(searchTriggerNonce);
   const prevStatusFilter = useRef(statusFilter);
   const prevSortBy = useRef(sortBy);
   const prevSortDir = useRef(sortDir);
@@ -773,15 +781,16 @@ export default function JobSeekerManagement() {
     // Skip on first render
     if (isFirstRender.current) return;
     
-    // Only trigger if search actually changed
-    if (prevSearchFilter.current !== activeSearchQuery) {
+    // Trigger if query changed OR user explicitly re-ran the same query.
+    if (prevSearchFilter.current !== activeSearchQuery || prevSearchTriggerNonce.current !== searchTriggerNonce) {
       prevSearchFilter.current = activeSearchQuery;
+      prevSearchTriggerNonce.current = searchTriggerNonce;
       setCurrentPage(1);
       
       // Call loadJobSeekers - the searchLoading state is managed by triggerSearch and loadJobSeekers
       loadJobSeekersRef.current(1, pageSize, activeSearchQuery, statusFilterRef.current, eventFilterRef.current);
     }
-  }, [activeSearchQuery, pageSize]);
+  }, [activeSearchQuery, pageSize, searchTriggerNonce]);
 
   // Store loadJobSeekers in ref to avoid dependency issues
   const loadJobSeekersRef = useRef(loadJobSeekers);
@@ -909,12 +918,6 @@ export default function JobSeekerManagement() {
     // Get search value from input ref (uncontrolled input for performance)
     const searchValue = (searchInputRef.current?.value || '').trim();
     
-    // If search value hasn't changed, don't trigger a new search
-    if (searchValue === activeSearchQuery) {
-      console.log('Search value unchanged, skipping search');
-      return;
-    }
-    
     // Set loading state before updating activeSearchQuery
     // This will show "Searching..." immediately
     setSearchLoading(true);
@@ -922,7 +925,8 @@ export default function JobSeekerManagement() {
     // Update activeSearchQuery - this will trigger the useEffect which calls loadJobSeekers
     // Even if a request is in progress, updating this will queue the new search
     setActiveSearchQuery(searchValue);
-  }, [activeSearchQuery]);
+    setSearchTriggerNonce((prev) => prev + 1);
+  }, []);
 
   // No automatic search on typing - search only on button click or Enter key
 

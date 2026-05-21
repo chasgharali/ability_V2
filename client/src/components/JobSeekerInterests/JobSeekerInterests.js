@@ -141,6 +141,7 @@ const JobSeekerInterests = () => {
     const loadingEventsRef = useRef(false);
     const loadingBoothsRef = useRef(false);
     const fetchInProgress = useRef(false);
+    const pendingFetchRequestedRef = useRef(false);
 
     // Load search query from sessionStorage on mount (per-table persistence for search)
     const loadSearchQueryFromSession = () => {
@@ -191,6 +192,7 @@ const JobSeekerInterests = () => {
 
     // Filters
     const [filters, setFilters] = useState(loadFiltersFromSession);
+    const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
     
     const savedSearchQuery = loadSearchQueryFromSession();
     
@@ -340,9 +342,10 @@ const JobSeekerInterests = () => {
             return;
         }
 
-        // Prevent duplicate requests
+        // Prevent duplicate requests; keep the latest intent queued.
         if (fetchInProgress.current) {
-            console.log('Fetch already in progress, skipping...');
+            pendingFetchRequestedRef.current = true;
+            console.log('Fetch already in progress, queueing latest request...');
             return;
         }
 
@@ -431,6 +434,10 @@ const JobSeekerInterests = () => {
             } finally {
                 fetchInProgress.current = false;
                 setLoadingData(false);
+                if (!cancelled && pendingFetchRequestedRef.current) {
+                    pendingFetchRequestedRef.current = false;
+                    fetchAllData();
+                }
             }
         };
 
@@ -439,7 +446,7 @@ const JobSeekerInterests = () => {
         return () => {
             cancelled = true;
         };
-    }, [user, filters]);
+    }, [user, filters, searchTriggerNonce]);
 
     // Load recruiters - only once on mount for Admin/GlobalSupport
     const loadRecruiters = useCallback(async () => {
@@ -636,6 +643,7 @@ const JobSeekerInterests = () => {
             console.log('🔍 Searching for:', query);
             showToast(`Searching for "${query}"...`, 'Info', 1500);
         }
+        setSearchTriggerNonce((prev) => prev + 1);
         setFilters(prev => ({
             ...prev,
             search: query,

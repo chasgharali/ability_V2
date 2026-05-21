@@ -331,11 +331,13 @@ export default function EventManagement() {
     const [statusFilter, setStatusFilter] = useState(loadStatusFilterFromSession);
     const searchInputRef = useRef(null);
     const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
+    const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
     const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
 
     const handleSearch = useCallback(() => {
         const query = (searchInputRef.current?.value || '').trim();
         setActiveSearchQuery(query);
+        setSearchTriggerNonce((prev) => prev + 1);
         setCurrentPage(1); // Reset to first page when searching
     }, []);
 
@@ -487,7 +489,7 @@ export default function EventManagement() {
                 setLoadingList(false);
             }
         }
-    }, [statusFilter, activeSearchQuery, user]);
+    }, [statusFilter, activeSearchQuery, user, searchTriggerNonce]);
 
     const loadTerms = useCallback(async () => {
         try {
