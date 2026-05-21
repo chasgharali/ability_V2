@@ -18,7 +18,7 @@ export default function RegisteredEventDetail() {
   const [fetching, setFetching] = useState(true);
   const [savingInterest, setSavingInterest] = useState({});
   const navigate = useNavigate();
-  const pageHeadingRef = useRef(null);
+  const mainContentRef = useRef(null);
 
   useEffect(() => {
     if (loading) return;
@@ -58,9 +58,9 @@ export default function RegisteredEventDetail() {
   }, [slug, loading, user]);
 
   useEffect(() => {
-    if (!fetching && event && pageHeadingRef.current) {
-      pageHeadingRef.current.setAttribute('tabindex', '-1');
-      pageHeadingRef.current.focus();
+    if (!fetching && event && mainContentRef.current) {
+      mainContentRef.current.setAttribute('tabindex', '-1');
+      mainContentRef.current.focus();
     }
   }, [fetching, event]);
 
@@ -113,14 +113,20 @@ export default function RegisteredEventDetail() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="my-current-registrations" />
-        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main
+          id="main-content"
+          ref={mainContentRef}
+          className="dashboard-main"
+          tabIndex={-1}
+          aria-label="main content"
+        >
           <div className="dashboard-content">
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}
             {!fetching && event && (
               <>
                 {/* Title */}
-                <h1 ref={pageHeadingRef} className="registered-event-title">
+                <h1 className="registered-event-title">
                   You are registered for {event.name}
                 </h1>
 

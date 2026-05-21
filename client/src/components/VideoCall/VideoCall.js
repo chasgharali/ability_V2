@@ -229,6 +229,11 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   // Caption settings panel visibility
   const [showCaptionSettings, setShowCaptionSettings] = useState(false);
 
+  useEffect(() => {
+    const boothName = callInfo?.booth?.name || callData?.booth?.name || 'Company';
+    document.title = `${boothName} Booth Meeting - abilityconnect`;
+  }, [callInfo?.booth?.name, callData?.booth?.name]);
+
   // Refs
   // Cleanup / lifecycle guards
   const isMountedRef = useRef(true);

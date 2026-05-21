@@ -183,9 +183,21 @@
 }
 
 .incall-chat-message.incall-chat-own .incall-chat-message-bubble {
-  background: #007bff;
-  color: white;
+  background: #202020 !important;
+  color: #ffffff !important;
   border-bottom-right-radius: 6px;
+}
+
+/* Keep compatibility with generic "chat-own" naming */
+.chat-own .incall-chat-message-bubble {
+  background: #202020 !important;
+  color: #ffffff !important;
+  border-bottom-right-radius: 6px;
+}
+
+.incall-chat-message.incall-chat-own .incall-chat-message-bubble p,
+.chat-own .incall-chat-message-bubble p {
+  color: #ffffff !important;
 }
 
 .incall-chat-message.incall-chat-other .incall-chat-message-bubble {

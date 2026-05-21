@@ -620,6 +620,17 @@
     box-shadow: 0 2px 8px rgba(26, 26, 26, 0.15);
 }
 
+/* Force outgoing user bubbles to dark theme across Syncfusion variants */
+.syncfusion-chat-wrapper .e-chat-ui .e-message.e-user .e-text,
+.syncfusion-chat-wrapper .e-chat-ui .e-message.e-user .e-message-text,
+.syncfusion-chat-wrapper .e-chat-ui .e-message-item.e-right .e-message-text,
+.syncfusion-chat-wrapper .e-chat-ui .e-message-item.e-right .e-text,
+.syncfusion-chat-wrapper .e-chat-ui .e-right .e-message-text,
+.syncfusion-chat-wrapper .e-chat-ui .e-right .e-text {
+    background: linear-gradient(135deg, #111111 0%, #1f2937 100%) !important;
+    color: #ffffff !important;
+}
+
 .syncfusion-chat-wrapper .e-chat-ui .e-message.e-bot {
     background: #f3f4f6;
     color: #1a1a1a;
@@ -676,15 +687,15 @@
 
 /* Send button in footer */
 .syncfusion-chat-wrapper .e-chat-ui .e-chat-footer .e-btn {
-    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    background: linear-gradient(135deg, #111111 0%, #1f2937 100%) !important;
     color: white !important;
     border-radius: 12px;
     padding: 8px 16px;
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-chat-footer .e-btn:hover {
-    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%) !important;
+    box-shadow: 0 4px 12px rgba(17, 17, 17, 0.35);
     transform: translateY(-1px);
 }
 

@@ -78,6 +78,11 @@ export default function BoothQueueWaiting() {
   const hasLeftQueueRef = useRef(false); // Track if user has left the queue
 
   useEffect(() => {
+    const boothName = booth?.name || 'Company';
+    document.title = `${boothName} Booth Waiting Area - abilityconnect`;
+  }, [booth?.name]);
+
+  useEffect(() => {
     // Reset queueToken when boothId changes to prevent using token from wrong booth
     setQueueToken(location.state?.queueToken || '');
     setQueueEntryId(null);

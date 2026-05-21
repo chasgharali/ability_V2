@@ -46,7 +46,8 @@ export default function RegistrationWizard() {
   // This also handles initial async page load before step content mounts.
   useEffect(() => {
     if (fetching) return;
-    const focusTarget = (isAlreadyRegistered ? pageHeadingRef.current : stepHeadingRef.current) || pageHeadingRef.current;
+    const focusTarget = document.getElementById('main-content')
+      || document.querySelector('main');
     if (focusTarget) {
       focusTarget.setAttribute('tabindex', '-1');
       focusTarget.focus();

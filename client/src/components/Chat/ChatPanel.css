@@ -2,7 +2,7 @@
 .team-chat-panel-toggle {
     position: fixed;
     right: 20px;
-    bottom: calc(var(--app-footer-height, 50px) + 20px);
+    bottom: calc(var(--app-footer-height, 50px) + 8px);
     z-index: 1302;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     color: white;
@@ -168,7 +168,7 @@
 
     .team-chat-panel-toggle {
         right: 16px;
-        bottom: calc(var(--app-footer-height, 50px) + 16px);
+        bottom: calc(var(--app-footer-height, 50px) + 8px);
         padding: 10px 20px;
         font-size: 13px;
     }

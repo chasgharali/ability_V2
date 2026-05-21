@@ -24,6 +24,11 @@ export default function BoothQueueEntry() {
   const [legalLinks, setLegalLinks] = useState({ termsOfUse: null, privacyPolicy: null });
 
   useEffect(() => {
+    const boothName = booth?.name || 'Company';
+    document.title = `${boothName} Booth Entrance - abilityconnect`;
+  }, [booth?.name]);
+
+  useEffect(() => {
     loadData();
   }, [eventSlug, boothId]);
 
