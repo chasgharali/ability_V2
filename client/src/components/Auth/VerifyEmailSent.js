@@ -1,9 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import './Auth.css';
 
 export default function VerifyEmailSent() {
   const location = useLocation();
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
+  const [resendError, setResendError] = useState('');
   const email = location.state?.email || '';
   const redirectPath = location.state?.redirectPath;
   const isBlockingVerification = location.state?.isBlockingVerification === true;
@@ -41,6 +45,28 @@ export default function VerifyEmailSent() {
       }
     };
   }, [email]);
+
+  const handleResendVerification = async () => {
+    if (!email || isResending) {
+      return;
+    }
+
+    setIsResending(true);
+    setResendMessage('');
+    setResendError('');
+
+    try {
+      const response = await axios.post('/api/auth/resend-verification', {
+        email,
+        redirectPath
+      });
+      setResendMessage(response?.data?.message || 'Verification email sent. Please check your inbox.');
+    } catch (error) {
+      setResendError(error?.response?.data?.message || 'Unable to resend verification email right now. Please try again.');
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   return (
     <div className="auth-container" style={{ background: '#eef2f7' }}>
@@ -175,6 +201,27 @@ export default function VerifyEmailSent() {
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem' }}
           aria-label="Navigation options"
         >
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            className="submit-button"
+            style={{ width: 'auto', padding: '0.6rem 1rem' }}
+            disabled={!email || isResending}
+            aria-live="polite"
+            aria-label={email ? 'Resend verification email' : 'Resend verification email unavailable'}
+          >
+            {isResending ? 'Resending...' : 'Resend Verification Email'}
+          </button>
+          {resendMessage && (
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#065f46' }} role="status">
+              {resendMessage}
+            </p>
+          )}
+          {resendError && (
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#b91c1c' }} role="alert">
+              {resendError}
+            </p>
+          )}
           <Link
             to={redirectPath ? `/login?redirect=${encodeURIComponent(redirectPath)}` : '/login'}
             className="submit-button"

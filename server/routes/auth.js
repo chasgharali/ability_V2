@@ -424,6 +424,93 @@ router.post('/register', optionalAuth, [
 });
 
 /**
+ * POST /api/auth/resend-verification
+ * Resend email verification for unverified users
+ */
+router.post('/resend-verification', [
+    body('email')
+        .isEmail()
+        .trim()
+        .withMessage('Please provide a valid email address'),
+    body('redirectPath')
+        .optional({ nullable: true, checkFalsy: true })
+        .isString()
+        .isLength({ max: 1024 })
+        .withMessage('Invalid redirect path')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                message: 'Please check your input data',
+                details: errors.array()
+            });
+        }
+
+        const { email, redirectPath } = req.body;
+        const trimmedEmail = typeof email === 'string' ? email.trim() : email;
+        const normalizedEmailForLookup = normalizeEmailForLookup(trimmedEmail);
+
+        // Find user by exact email first, then normalized lookup (for Gmail dotted variants)
+        let user = await User.findOne({ email: trimmedEmail });
+        if (!user) {
+            const allUsers = await User.find({}).select('email emailVerified emailVerificationToken emailVerificationExpires metadata');
+            user = allUsers.find(u => normalizeEmailForLookup(u.email) === normalizedEmailForLookup) || null;
+        }
+
+        // Return a generic message for privacy, regardless of account existence.
+        if (!user || user.emailVerified === true) {
+            return res.json({
+                message: 'If your account exists and is not yet verified, a new verification email has been sent.'
+            });
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        user.emailVerificationToken = token;
+        user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        if (redirectPath) {
+            user.metadata = {
+                ...(user.metadata || {}),
+                pendingRedirectPath: redirectPath
+            };
+        }
+        await user.save();
+
+        let apiBase = process.env.API_BASE_URL;
+        if (!apiBase) {
+            apiBase = process.env.APP_BASE_URL || process.env.CORS_ORIGIN || `http://localhost:${process.env.PORT || 5000}`;
+        }
+
+        let verifyLink = `${apiBase}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+        if (redirectPath) {
+            verifyLink += `&redirect=${encodeURIComponent(redirectPath)}`;
+        }
+
+        try {
+            const ok = await sendVerificationEmail(user.email, verifyLink);
+            if (!ok) {
+                logger.warn(`Failed to resend verification email to ${user.email}`);
+            } else {
+                logger.info(`Verification email resent successfully to ${user.email}`);
+            }
+        } catch (emailError) {
+            logger.error(`Error resending verification email to ${user.email}:`, emailError);
+        }
+
+        return res.json({
+            message: 'If your account exists and is not yet verified, a new verification email has been sent.'
+        });
+    } catch (error) {
+        logger.error('Resend verification error:', error);
+        return res.status(500).json({
+            error: 'Resend verification failed',
+            message: 'An error occurred while resending the verification email'
+        });
+    }
+});
+
+/**
  * POST /api/auth/login
  * Login user with email and password
  */
