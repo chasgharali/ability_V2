@@ -352,8 +352,9 @@ export default function RegistrationWizard() {
       // Register for the event (optionally attach a resume from Resume Builder)
       await registerForEvent(slug, { resumeId: selectedResumeId || undefined });
 
-      // Navigate to registered list
-      navigate('/events/registered', { replace: true });
+      // Navigate directly to this registration detail view.
+      const registeredEventKey = encodeURIComponent(event?.slug || event?._id || slug);
+      navigate(`/events/registered/${registeredEventKey}`, { replace: true });
     } catch (e) {
       console.error('Registration error:', e);
       // no-op; could surface toast later
