@@ -24,12 +24,17 @@ jest.mock('../../services/resumes', () => ({
 }));
 
 jest.mock('@syncfusion/ej2-react-dropdowns', () => ({
-  MultiSelectComponent: ({ id, 'aria-labelledby': ariaLabelledBy, placeholder }) => (
+  MultiSelectComponent: ({ id, 'aria-labelledby': ariaLabelledBy, 'aria-describedby': ariaDescribedBy, placeholder, value = [], change }) => (
     <input
       id={id}
       aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
       placeholder={placeholder}
-      onChange={() => {}}
+      value={Array.isArray(value) ? value.join(', ') : ''}
+      onChange={(e) => {
+        const values = e.target.value.split(',').map((item) => item.trim()).filter(Boolean);
+        change?.({ value: values });
+      }}
     />
   )
 }));
@@ -75,57 +80,28 @@ describe('EditProfileResume Keywords Accessibility', () => {
     });
   });
 
-  test('supports arrow-key navigation and removal for keyword chips', async () => {
+  test('updates keyword values through Syncfusion MultiSelect change handler', async () => {
     render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
 
     const keywordInput = await screen.findByLabelText('* Keywords');
 
-    fireEvent.change(keywordInput, { target: { value: 'JavaScript' } });
-    fireEvent.keyDown(keywordInput, { key: 'Enter' });
-
-    fireEvent.change(keywordInput, { target: { value: 'React' } });
-    fireEvent.keyDown(keywordInput, { key: 'Enter' });
-
-    await screen.findByRole('button', { name: 'Remove React' });
-    expect(screen.getByRole('button', { name: 'Remove JavaScript' })).not.toBeNull();
-
-    fireEvent.keyDown(keywordInput, { key: 'ArrowLeft' });
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove React' }));
-
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Remove React' }), { key: 'ArrowLeft' });
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove JavaScript' }));
-
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Remove JavaScript' }), { key: 'ArrowRight' });
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove React' }));
-
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Remove React' }), { key: 'Delete' });
+    fireEvent.change(keywordInput, { target: { value: 'JavaScript, React, JavaScript' } });
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Remove React' })).toBeNull();
-    });
-    await waitFor(() => {
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove JavaScript' }));
+      expect(keywordInput.value).toBe('JavaScript, React');
     });
   });
 
-  test('announces keyword add and remove updates in live region', async () => {
+  test('announces keyword count updates in live region', async () => {
     render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
 
     const keywordInput = await screen.findByLabelText('* Keywords');
-    const liveRegion = screen.getByText('0 keywords added.');
+    const liveRegion = screen.getByText('0 keywords selected.');
 
-    fireEvent.change(keywordInput, { target: { value: 'Accessibility' } });
-    fireEvent.keyDown(keywordInput, { key: 'Enter' });
-
-    await waitFor(() => {
-      expect(liveRegion.textContent).toContain('Added keyword Accessibility. 1 total keywords.');
-    });
-
-    fireEvent.keyDown(keywordInput, { key: 'ArrowLeft' });
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Remove Accessibility' }), { key: 'Backspace' });
+    fireEvent.change(keywordInput, { target: { value: 'Accessibility, Screen Reader' } });
 
     await waitFor(() => {
-      expect(liveRegion.textContent).toContain('Removed keyword Accessibility. 0 total keywords.');
+      expect(liveRegion.textContent).toContain('2 keywords selected.');
     });
   });
 });
