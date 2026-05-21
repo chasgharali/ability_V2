@@ -107,8 +107,10 @@
 }
 
 .device-test-modal .modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
   transform: scale(1.05);
 }
 

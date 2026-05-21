@@ -333,7 +333,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
           </div>
         </div>
 
-        <h3>Disability Information</h3>
+        <h2>Disability Information</h2>
         <p className="section-note">Indicate current disability(ies) Check all that apply. If these choices don't apply, use the "other" space below.</p>
         <div style={{ display: 'flex', gap: '0.5rem', margin: '0.25rem 0 0.75rem 0' }}>
           <button type="button" className="update-button" onClick={async () => {

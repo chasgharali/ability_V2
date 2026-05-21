@@ -188,6 +188,14 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
   };
 
   const primaryJob = metadata.primaryJob || metadata.primaryJobTitle || metadata.primaryRole || metadata.currentJobTitle;
+  const skills = ensureArray(
+    metadata.skills ||
+    metadata.keywords ||
+    profile.keywords ||
+    profile.skills ||
+    currentJobSeeker.keywords ||
+    currentJobSeeker.skills
+  );
   const hasExperienceOrSkills = Boolean(
     metadata.experience ||
     metadata.yearsOfExperience ||
@@ -195,10 +203,8 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
     metadata.currentEmployer ||
     metadata.employmentTypes ||
     primaryJob ||
-    metadata.skills ||
-    metadata.keywords
+    skills.length > 0
   );
-  const skills = ensureArray(metadata.skills || metadata.keywords);
   const educationValues = ensureArray(metadata.education);
   const jobExperienceValues = ensureArray(
     profile.primaryExperience || metadata.primaryExperience || metadata.primaryJobExperience || metadata.primaryJob
@@ -233,6 +239,7 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
     metadata.veteranStatus ||
     metadata.militaryStatus
   );
+  const hasSkillsKeywords = skills.length > 0;
 
   return (
     <div className="profile-panel-call" role="dialog" aria-labelledby="profile-title" aria-modal="true">
@@ -536,7 +543,7 @@ const JobSeekerProfileCall = ({ jobSeeker, onClose }) => {
         )}
 
         {/* No Information Available */}
-        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !metadata.skills && !metadata.keywords && !metadata.experience && !metadata.yearsOfExperience && !metadata.education && !metadata.highestEducation && !hasCareerSnapshot && !hasResume && !currentJobSeeker.linkedInUrl && (
+        {!loading && !error && !metadata.professionalSummary && !metadata.summary && !hasSkillsKeywords && !metadata.experience && !metadata.yearsOfExperience && !metadata.education && !metadata.highestEducation && !hasCareerSnapshot && !hasResume && !currentJobSeeker.linkedInUrl && (
           <div className="profile-section">
             <div className="no-additional-info">
               <FiFileText size={48} aria-hidden="true" />
