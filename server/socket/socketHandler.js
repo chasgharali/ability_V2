@@ -1042,6 +1042,45 @@ const socketHandler = (io) => {
         });
 
         /**
+         * Handle job seeker declining an incoming call invitation
+         */
+        socket.on('call-invitation-declined', async (data = {}) => {
+            try {
+                const { callId } = data;
+
+                if (!callId) {
+                    socket.emit('error', { message: 'Call ID is required' });
+                    return;
+                }
+
+                const videoCall = await VideoCall.findById(callId);
+                if (!videoCall) {
+                    socket.emit('error', { message: 'Video call not found' });
+                    return;
+                }
+
+                const isJobSeeker = participantRefToId(videoCall.jobSeeker) === socket.userId;
+                if (!isJobSeeker) {
+                    socket.emit('error', { message: 'Only the invited job seeker can decline this call' });
+                    return;
+                }
+
+                io.to(`call_${videoCall.roomName}`).emit('participant_left_call', {
+                    callId: callId.toString(),
+                    userId: socket.userId,
+                    userName: socket.user.name,
+                    userRole: 'JobSeeker',
+                    reason: 'declined_invitation'
+                });
+
+                logger.info(`Job seeker ${socket.user.email} declined call invitation ${callId}`);
+            } catch (error) {
+                logger.error('Call invitation decline error:', error);
+                socket.emit('error', { message: 'Failed to process call invitation decline' });
+            }
+        });
+
+        /**
          * Handle video call participant status updates
          */
         socket.on('video-participant-status', (data) => {

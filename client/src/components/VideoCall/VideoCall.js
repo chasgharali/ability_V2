@@ -10,6 +10,7 @@ import ChatPanel from './ChatPanel';
 import ParticipantsList from './ParticipantsList';
 import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
+import { ToastContainer, useToast } from '../common/Toast';
 import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
 import { AudioCapture } from '../../utils/audioCapture';
 import {
@@ -126,6 +127,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   const { user } = useAuth();
   const { socket } = useSocket();
+  const { toasts, removeToast, showInfo } = useToast();
 
   // Play a short tone to indicate room join
   const playJoinSound = () => {
@@ -209,6 +211,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const [connectionQuality, setConnectionQuality] = useState('good');
   const [callDuration, setCallDuration] = useState(0);
   const [networkStats, setNetworkStats] = useState({ latency: 0, packetLoss: 0 });
+  const [participantAnnouncement, setParticipantAnnouncement] = useState('');
 
   // Caption state
   const [isCaptionEnabled, setIsCaptionEnabled] = useState(false);
@@ -251,6 +254,13 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const isRestartingSyncfusionRef = useRef(false);
   // Ref to track Syncfusion component listening state
   const syncfusionListeningStateRef = useRef('Inactive');
+  // Prevent duplicate leave notifications/sounds from repeated socket events.
+  const lastLeaveNotificationRef = useRef({ key: '', timestamp: 0 });
+  // TTS reliability refs
+  const ttsVoiceRef = useRef(null);
+  const ttsRetryTimeoutRef = useRef(null);
+  const speechQueueRef = useRef([]);
+  const isSpeechActiveRef = useRef(false);
   // Ref for caption content container (for auto-scrolling)
   const captionContentRef = useRef(null);
   // State for scroll button visibility
@@ -283,11 +293,23 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   useEffect(() => {
     // Trigger voice loading immediately
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoice = voices.find(voice => voice.lang?.toLowerCase().startsWith('en'));
+      ttsVoiceRef.current = englishVoice || voices[0] || null;
+      window.speechSynthesis.onvoiceschanged = () => {
+        const updatedVoices = window.speechSynthesis.getVoices();
+        const updatedEnglishVoice = updatedVoices.find(voice => voice.lang?.toLowerCase().startsWith('en'));
+        ttsVoiceRef.current = updatedEnglishVoice || updatedVoices[0] || null;
+      };
       console.log('✓ Speech synthesis available (VideoCall)');
     } else {
       console.warn('⚠️ Speech synthesis not supported in this browser');
     }
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
   }, []);
 
   // Check scroll position and update scroll button visibility
@@ -962,46 +984,79 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
   // Simple, reliable speech function using native SpeechSynthesis
   const speak = (text) => {
+    // Keep live region updated even when browser TTS fails.
+    setParticipantAnnouncement('');
+    setTimeout(() => setParticipantAnnouncement(text), 30);
+
     try {
       if (!('speechSynthesis' in window)) {
         console.warn('Speech synthesis not supported');
         return;
       }
 
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
+      const synth = window.speechSynthesis;
 
       console.log('🗣️ Speaking:', text);
 
-      // Create utterance
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-      utterance.lang = 'en-US';
+      const speakNextInQueue = () => {
+        if (isSpeechActiveRef.current || speechQueueRef.current.length === 0) {
+          return;
+        }
 
-      // Get voices and set English voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
-      if (englishVoice) {
-        utterance.voice = englishVoice;
+        const nextText = speechQueueRef.current.shift();
+        if (!nextText) return;
+
+        const utterance = new SpeechSynthesisUtterance(nextText);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        utterance.lang = 'en-US';
+        if (ttsVoiceRef.current) {
+          utterance.voice = ttsVoiceRef.current;
+        }
+
+        utterance.onstart = () => {
+          isSpeechActiveRef.current = true;
+          console.log('▶️ Speech started');
+        };
+
+        utterance.onend = () => {
+          isSpeechActiveRef.current = false;
+          console.log('✅ Speech completed');
+          setTimeout(speakNextInQueue, 40);
+        };
+
+        utterance.onerror = (event) => {
+          // "canceled"/"interrupted" often happens when we replace a prior utterance.
+          // Treat it as non-fatal so real TTS issues stand out.
+          if (event.error === 'canceled' || event.error === 'interrupted') {
+            console.debug('Speech utterance replaced:', event.error);
+          } else {
+            console.error('❌ Speech error:', event.error);
+          }
+          isSpeechActiveRef.current = false;
+          setTimeout(speakNextInQueue, 40);
+        };
+
+        synth.speak(utterance);
+        if (synth.paused) {
+          synth.resume();
+        }
+      };
+
+      speechQueueRef.current.push(text);
+      speakNextInQueue();
+
+      // Some browsers occasionally drop queued speech; kick the queue once if idle.
+      if (ttsRetryTimeoutRef.current) {
+        clearTimeout(ttsRetryTimeoutRef.current);
       }
-
-      // Event handlers
-      utterance.onstart = () => {
-        console.log('▶️ Speech started');
-      };
-
-      utterance.onend = () => {
-        console.log('✅ Speech completed');
-      };
-
-      utterance.onerror = (event) => {
-        console.error('❌ Speech error:', event.error);
-      };
-
-      // Speak immediately
-      window.speechSynthesis.speak(utterance);
+      ttsRetryTimeoutRef.current = setTimeout(() => {
+        if (!isSpeechActiveRef.current && !synth.speaking && speechQueueRef.current.length > 0) {
+          console.warn('TTS queue idle, retrying start');
+          speakNextInQueue();
+        }
+      }, 260);
 
     } catch (e) {
       console.error('Speech error:', e);
@@ -1132,9 +1187,34 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const handleParticipantLeftCall = (data) => {
     console.log('🚪 Participant left call event received:', data);
 
+    const leftUserRole = (data.userRole || '').toLowerCase();
+    const isRecruiter =
+      user?.role === 'Recruiter' || callInfo?.userRole === 'recruiter';
+    const isJobSeekerLeaveEvent =
+      leftUserRole === 'jobseeker' ||
+      leftUserRole === 'job seeker';
+
+    if (isRecruiter && isJobSeekerLeaveEvent) {
+      const message = 'Job Seeker left the meeting.';
+      const notificationKey = `${data.callId || ''}:${data.userId || ''}:${data.reason || 'left'}`;
+      const now = Date.now();
+      const isDuplicateNotification =
+        lastLeaveNotificationRef.current.key === notificationKey &&
+        (now - lastLeaveNotificationRef.current.timestamp) < 1500;
+
+      if (isDuplicateNotification) {
+        return;
+      }
+      lastLeaveNotificationRef.current = { key: notificationKey, timestamp: now };
+
+      showInfo(message, 5000);
+      playChatSound();
+      speak(message);
+      return;
+    }
+
     // Announce to remaining participants that someone left
-    const leftUserRole = data.userRole?.toLowerCase() || 'participant';
-    speak(`${leftUserRole} has left the call.`);
+    speak(`${leftUserRole || 'participant'} has left the call.`);
 
     // Update UI - remove participant from participants list
     // The Twilio SDK will automatically handle removing their video/audio tracks
@@ -1879,6 +1959,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       if (captionClearTimeoutRef.current) {
         clearTimeout(captionClearTimeoutRef.current);
         captionClearTimeoutRef.current = null;
+      }
+      if (ttsRetryTimeoutRef.current) {
+        clearTimeout(ttsRetryTimeoutRef.current);
+        ttsRetryTimeoutRef.current = null;
       }
 
       // DO NOT stop SpeechToText - transcription should continue
@@ -2777,7 +2861,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       {/* Main Video Area */}
       <div className="video-main-area" role="region" aria-label="Video participants">
         {/* Screen reader announcements */}
-        <div className="sr-only" aria-live="polite" id="participant-announcements"></div>
+        <div className="sr-only" aria-live="polite" id="participant-announcements">{participantAnnouncement}</div>
 
         {/* All Participants Grid */}
         <div className="participants-grid" role="group" aria-label={`${participants.size} remote participants`}>
@@ -3177,6 +3261,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           onDecline={handleDeclineInvitation}
         />
       )}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };
