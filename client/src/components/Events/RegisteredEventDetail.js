@@ -8,6 +8,7 @@ import './RegisteredEventDetail.css';
 import { getEvent, getEventBooths } from '../../services/events';
 import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { useAuth } from '../../contexts/AuthContext';
+import { announceToScreenReader } from '../Accessibility/FocusManager';
 
 export default function RegisteredEventDetail() {
   const { slug } = useParams();
@@ -57,12 +58,13 @@ export default function RegisteredEventDetail() {
     })();
   }, [slug, loading, user]);
 
+  // Announce the real event title once data loads so JAWS/NVDA speak the
+  // correct page context (GlobalRouteObserver fires before the API call resolves).
   useEffect(() => {
-    if (!fetching && event && mainContentRef.current) {
-      mainContentRef.current.setAttribute('tabindex', '-1');
-      mainContentRef.current.focus();
+    if (event?.name) {
+      announceToScreenReader(`You are registered for ${event.name} - abilityconnect`);
     }
-  }, [fetching, event]);
+  }, [event?.name]);
 
   const handleInterestToggle = async (booth) => {
     if (!event || !user || user.role !== 'JobSeeker') return;
@@ -118,7 +120,7 @@ export default function RegisteredEventDetail() {
           ref={mainContentRef}
           className="dashboard-main"
           tabIndex={-1}
-          aria-label="main content"
+          aria-label={event?.name ? `You are registered for ${event.name} - main content` : 'Registered event - main content'}
         >
           <div className="dashboard-content">
             {fetching && <div>Loading…</div>}

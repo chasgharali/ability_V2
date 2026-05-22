@@ -249,8 +249,8 @@ export default function AdminSidebar({ active = 'booths' }) {
     }
   };
 
-  // After menu-initiated navigation, focus the skip link so Tab order starts
-  // from the top of the page (skip link → header → sidebar → main content).
+  // After menu-initiated navigation, focus a hidden top anchor so the skip link
+  // appears only when users press Tab.
   // GlobalRouteObserver handles this for non-menu navigations; this block
   // handles the menu case where GlobalRouteObserver skips its own focus logic.
   useEffect(() => {
@@ -276,8 +276,8 @@ export default function AdminSidebar({ active = 'booths' }) {
     sessionStorage.removeItem(MENU_NAV_STATE_KEY);
 
     const timer = setTimeout(() => {
-      const skipLink = document.querySelector('.skip-link');
-      if (skipLink) skipLink.focus();
+      const routeAnchor = document.getElementById('route-focus-anchor');
+      if (routeAnchor) routeAnchor.focus();
     }, 150);
 
     return () => clearTimeout(timer);

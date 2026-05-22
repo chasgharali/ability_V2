@@ -6079,3 +6079,871 @@
 2026-05-19 17:21:31:2131 [32minfo[39m: [32mUser new.verify.js@yopmail.com disconnected: client namespace disconnect[39m
 2026-05-19 17:21:32:2132 [32minfo[39m: [32mUser new.verify.js@yopmail.com connected via socket[39m
 2026-05-19 17:21:39:2139 [32minfo[39m: [32mresumeParser: parsed user 6a0c4f43c9b2f2ecbe4bee80 — title="Project Manager", skills=3, embedding=yes, source=resume-builder[39m
+2026-05-21 15:21:16:2116 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-21 15:21:16:2116 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-21 15:21:16:2116 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-21 15:21:19:2119 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-05-21 15:21:19:2119 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mToken cleanup: Removed expired refresh tokens from 2 users[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-21 15:21:24:2124 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 1 users[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:05:225 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:08:228 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:08:228 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:08:228 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:08:228 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-05-21 15:23:00:230 [32minfo[39m: [32mUser logged in: test.devjs@yopmail.com[39m
+2026-05-21 15:23:00:230 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 15:23:19:2319 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:23:19:2319 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:23:19:2319 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:23:34:2334 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:23:36:2336 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:23:36:2336 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:23:36:2336 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:23:36:2336 [32minfo[39m: [32m🎤 First audio chunk received from Recruiter User (size: 8192 bytes)[39m
+2026-05-21 15:23:36:2336 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 15:23:36:2336 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 15:23:36:2336 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 15:23:37:2337 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:23:37:2337 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:23:37:2337 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:23:38:2338 [32minfo[39m: [32m🎤 First audio chunk received from Asghar Ali (size: 8192 bytes)[39m
+2026-05-21 15:23:38:2338 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 15:23:38:2338 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 15:23:38:2338 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 15:23:38:2338 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:23:40:2340 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:23:41:2341 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "啊..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412 and video-call-6a0edd2573f9d61b7c12fe3e)[39m
+2026-05-21 15:23:41:2341 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "啊" (2687ms)[39m
+2026-05-21 15:23:41:2341 [32minfo[39m: [32m📝 Caption broadcast: Asghar Ali -> "Hello...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412 and video-call-6a0edd2573f9d61b7c12fe3e)[39m
+2026-05-21 15:23:41:2341 [37mdebug[39m: [37m[OpenAI Captions] Asghar Ali: "Hello." (1509ms)[39m
+2026-05-21 15:23:42:2342 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:23:47:2347 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:23:48:2348 [32minfo[39m: [32mNot restoring queue entry 6a0edd1673f9d61b7c12fdbe - likely legitimate leave (has active call: true, has ended call: false, has completed meeting: false)[39m
+2026-05-21 15:25:14:2514 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:17:2517 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:17:2517 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:18:2518 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:21:2521 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1515ms)[39m
+2026-05-21 15:25:22:2522 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:23:2523 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (889ms)[39m
+2026-05-21 15:25:24:2524 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:24:2524 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:24:2524 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:25:2525 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:25:2525 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:25:2525 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:26:2526 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:26:2526 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:26:2526 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:26:2526 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:29:2529 [37mdebug[39m: [37m📤 Received 50 audio chunks from Recruiter User[39m
+2026-05-21 15:25:30:2530 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (2744ms)[39m
+2026-05-21 15:25:33:2533 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:33:2533 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (2558ms)[39m
+2026-05-21 15:25:34:2534 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (907ms)[39m
+2026-05-21 15:25:35:2535 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:35:2535 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:35:2535 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:35:2535 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:35:2535 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:35:2535 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:35:2535 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1411ms)[39m
+2026-05-21 15:25:36:2536 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:36:2536 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:36:2536 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:37:2537 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:40:2540 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1093ms)[39m
+2026-05-21 15:25:41:2541 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:43:2543 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:43:2543 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:43:2543 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:44:2544 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:44:2544 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:44:2544 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:45:2545 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:45:2545 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:45:2545 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:45:2545 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:48:2548 [37mdebug[39m: [37m📤 Received 100 audio chunks from Recruiter User[39m
+2026-05-21 15:25:48:2548 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1088ms)[39m
+2026-05-21 15:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:50:2550 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1021ms)[39m
+2026-05-21 15:25:52:2552 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:52:2552 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:52:2552 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:52:2552 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:52:2552 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:52:2552 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:53:2553 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:53:2553 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:25:53:2553 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:25:54:2554 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:25:57:2557 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1242ms)[39m
+2026-05-21 15:25:58:2558 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:26:00:260 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1355ms)[39m
+2026-05-21 15:26:00:260 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:26:00:260 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:26:00:260 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:26:00:260 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:26:00:260 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:26:00:260 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:26:01:261 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (657ms)[39m
+2026-05-21 15:26:01:261 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:26:01:261 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edd2573f9d61b7c12fe3e, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412)[39m
+2026-05-21 15:26:01:261 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:26:02:262 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:26:06:266 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:26:07:267 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edd2573f9d61b7c12fe3e[39m
+2026-05-21 15:26:11:2611 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359011412[39m
+2026-05-21 15:26:38:2638 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-21 15:26:38:2638 [32minfo[39m: [32mStopped caption transcription for disconnected user test.devjs@yopmail.com[39m
+2026-05-21 15:26:40:2640 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 15:26:40:2640 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport error[39m
+2026-05-21 15:26:40:2640 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 15:26:42:2642 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2026-05-21 15:26:42:2642 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport error[39m
+2026-05-21 15:26:42:2642 [32minfo[39m: [32mStopped caption transcription for disconnected user recruiter@ability.com[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 2 users[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:26:44:2644 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:26:48:2648 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:26:48:2648 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:26:48:2648 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:26:48:2648 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:27:00:270 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:27:00:270 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:27:00:270 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:27:11:2711 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359228636[39m
+2026-05-21 15:27:12:2712 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359228636[39m
+2026-05-21 15:27:13:2713 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0eddfe73f9d61b7c1303af, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359228636)[39m
+2026-05-21 15:27:13:2713 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0eddfe73f9d61b7c1303af[39m
+2026-05-21 15:27:13:2713 [32minfo[39m: [32m🎤 First audio chunk received from Recruiter User (size: 8192 bytes)[39m
+2026-05-21 15:27:13:2713 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 15:27:13:2713 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 15:27:13:2713 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 15:27:13:2713 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359228636[39m
+2026-05-21 15:27:14:2714 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0eddfe73f9d61b7c1303af, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359228636)[39m
+2026-05-21 15:27:14:2714 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0eddfe73f9d61b7c1303af[39m
+2026-05-21 15:27:14:2714 [32minfo[39m: [32m🎤 First audio chunk received from Asghar Ali (size: 8192 bytes)[39m
+2026-05-21 15:27:14:2714 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 15:27:14:2714 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 15:27:14:2714 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 15:27:14:2714 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359228636[39m
+2026-05-21 15:27:17:2717 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0eddfe73f9d61b7c1303af[39m
+2026-05-21 15:27:17:2717 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1613ms)[39m
+2026-05-21 15:27:18:2718 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (652ms)[39m
+2026-05-21 15:27:18:2718 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Asghar Ali (1717ms)[39m
+2026-05-21 15:27:19:2719 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0eddfe73f9d61b7c1303af[39m
+2026-05-21 15:27:23:2723 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:31:12:3112 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:31:13:3113 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:31:13:3113 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:31:24:3124 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359481812[39m
+2026-05-21 15:31:26:3126 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edefb73f9d61b7c1305d8, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359481812)[39m
+2026-05-21 15:31:26:3126 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edefb73f9d61b7c1305d8[39m
+2026-05-21 15:31:26:3126 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359481812[39m
+2026-05-21 15:31:27:3127 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edefb73f9d61b7c1305d8[39m
+2026-05-21 15:31:30:3130 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359481812[39m
+2026-05-21 15:31:31:3131 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0edefb73f9d61b7c1305d8, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359481812)[39m
+2026-05-21 15:31:31:3131 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0edefb73f9d61b7c1305d8[39m
+2026-05-21 15:31:32:3132 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359481812[39m
+2026-05-21 15:31:32:3132 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0edefb73f9d61b7c1305d8[39m
+2026-05-21 15:31:36:3136 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:20:3420 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2026-05-21 15:34:20:3420 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport error[39m
+2026-05-21 15:34:20:3420 [32minfo[39m: [32mStopped caption transcription for disconnected user recruiter@ability.com[39m
+2026-05-21 15:34:22:3422 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:34:22:3422 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:34:22:3422 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:22:3422 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:22:3422 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 2 users[39m
+2026-05-21 15:34:23:3423 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2026-05-21 15:34:23:3423 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:34:23:3423 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:23:3423 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:25:3425 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:25:3425 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:25:3425 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:25:3425 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:25:3425 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-21 15:34:25:3425 [32minfo[39m: [32mStopped caption transcription for disconnected user test.devjs@yopmail.com[39m
+2026-05-21 15:34:26:3426 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 15:34:45:3445 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:45:3445 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:45:3445 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:34:59:3459 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:35:01:351 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edfd273f9d61b7c13098f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654)[39m
+2026-05-21 15:35:01:351 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:35:01:351 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:35:02:352 [32minfo[39m: [32m🎤 First audio chunk received from Recruiter User (size: 8192 bytes)[39m
+2026-05-21 15:35:02:352 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 15:35:02:352 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 15:35:02:352 [32minfo[39m: [32m   Sample values (first 5): [46,39,38,37,33][39m
+2026-05-21 15:35:03:353 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:35:06:356 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:35:08:358 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0edfd273f9d61b7c13098f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654)[39m
+2026-05-21 15:35:08:358 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:35:08:358 [32minfo[39m: [32m🎤 First audio chunk received from Asghar Ali (size: 8192 bytes)[39m
+2026-05-21 15:35:08:358 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 15:35:08:358 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 15:35:08:358 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 15:35:08:358 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:35:09:359 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:35:16:3516 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:36:30:3630 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:36:33:3633 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edfd273f9d61b7c13098f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654)[39m
+2026-05-21 15:36:33:3633 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:34:3634 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:36:37:3637 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1268ms)[39m
+2026-05-21 15:36:38:3638 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:36:41:3641 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:41:3641 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edfd273f9d61b7c13098f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654)[39m
+2026-05-21 15:36:41:3641 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:41:3641 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:41:3641 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edfd273f9d61b7c13098f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654)[39m
+2026-05-21 15:36:41:3641 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:42:3642 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1575ms)[39m
+2026-05-21 15:36:42:3642 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:42:3642 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edfd273f9d61b7c13098f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654)[39m
+2026-05-21 15:36:42:3642 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:42:3642 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:36:45:3645 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (812ms)[39m
+2026-05-21 15:36:46:3646 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:36:47:3647 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (671ms)[39m
+2026-05-21 15:36:49:3649 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:50:3650 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1580ms)[39m
+2026-05-21 15:36:50:3650 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0edfd273f9d61b7c13098f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654)[39m
+2026-05-21 15:36:50:3650 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:51:3651 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:36:51:3651 [37mdebug[39m: [37m📤 Received 50 audio chunks from Recruiter User[39m
+2026-05-21 15:36:52:3652 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0edfd273f9d61b7c13098f[39m
+2026-05-21 15:36:55:3655 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359696654[39m
+2026-05-21 15:37:06:376 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2026-05-21 15:37:06:376 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport error[39m
+2026-05-21 15:37:06:376 [32minfo[39m: [32mStopped caption transcription for disconnected user recruiter@ability.com[39m
+2026-05-21 15:37:07:377 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:37:07:377 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:07:377 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:07:377 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:37:07:377 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 2 users[39m
+2026-05-21 15:37:08:378 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2026-05-21 15:37:08:378 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:37:08:378 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:08:378 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:10:3710 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:10:3710 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:10:3710 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:10:3710 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:19:3719 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:20:3720 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:20:3720 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:31:3731 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359847577[39m
+2026-05-21 15:37:32:3732 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0ee06973f9d61b7c130d20, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359847577)[39m
+2026-05-21 15:37:32:3732 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0ee06973f9d61b7c130d20[39m
+2026-05-21 15:37:33:3733 [32minfo[39m: [32m🎤 First audio chunk received from Recruiter User (size: 8192 bytes)[39m
+2026-05-21 15:37:33:3733 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 15:37:33:3733 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 15:37:33:3733 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 15:37:33:3733 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359847577[39m
+2026-05-21 15:37:33:3733 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0ee06973f9d61b7c130d20[39m
+2026-05-21 15:37:36:3736 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359847577[39m
+2026-05-21 15:37:38:3738 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0ee06973f9d61b7c130d20, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359847577)[39m
+2026-05-21 15:37:38:3738 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0ee06973f9d61b7c130d20[39m
+2026-05-21 15:37:38:3738 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779359847577[39m
+2026-05-21 15:37:39:3739 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0ee06973f9d61b7c130d20[39m
+2026-05-21 15:37:42:3742 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:37:43:3743 [32minfo[39m: [32mNot restoring queue entry 6a0edef073f9d61b7c13055f - likely legitimate leave (has active call: false, has ended call: true, has completed meeting: false)[39m
+2026-05-21 15:39:30:3930 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-21 15:39:30:3930 [32minfo[39m: [32mStopped caption transcription for disconnected user test.devjs@yopmail.com[39m
+2026-05-21 15:42:51:4251 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-21 15:42:51:4251 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-21 15:42:51:4251 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-21 15:42:53:4253 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-05-21 15:42:53:4253 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-21 15:42:58:4258 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-21 15:42:58:4258 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-21 15:42:58:4258 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-21 15:42:58:4258 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-21 15:42:58:4258 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-21 15:42:58:4258 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-21 15:42:58:4258 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-21 15:42:59:4259 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-21 15:42:59:4259 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-21 15:43:00:430 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-21 15:43:00:430 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-21 15:43:00:430 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-21 15:43:03:433 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-01.okhfe.mongodb.net[39m
+2026-05-21 15:43:03:433 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-21 15:43:07:437 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-21 15:43:07:437 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-21 15:43:07:437 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-21 15:43:07:437 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-21 15:43:07:437 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-21 15:43:07:437 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-21 15:43:07:437 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-21 15:43:08:438 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-21 15:43:08:438 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-21 15:43:10:4310 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:43:10:4310 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:43:10:4310 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 15:43:10:4310 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 15:43:14:4314 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 15:43:14:4314 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 1 users[39m
+2026-05-21 15:46:36:4636 [32minfo[39m: [32mAttempting to send email to resend.js@maildrop.cc[39m
+2026-05-21 15:46:37:4637 [32minfo[39m: [32mSES verification email sent to resend.js@maildrop.cc: 0100019e4a24f8e7-1d87fae9-5dc3-4e66-ae09-9262d60fed6a-000000[39m
+2026-05-21 15:46:37:4637 [32minfo[39m: [32mVerification email sent successfully to resend.js@maildrop.cc (phoneNumber: provided, subscribeAnnouncements: true)[39m
+2026-05-21 15:46:37:4637 [32minfo[39m: [32mNew user registered: resend.js@maildrop.cc with role: JobSeeker[39m
+2026-05-21 15:46:51:4651 [32minfo[39m: [32mAttempting to send email to resend.js@maildrop.cc[39m
+2026-05-21 15:46:52:4652 [32minfo[39m: [32mSES verification email sent to resend.js@maildrop.cc: 0100019e4a253253-a53cd6d3-1ae4-4632-9858-b10226eb1300-000000[39m
+2026-05-21 15:46:52:4652 [32minfo[39m: [32mVerification email resent successfully to resend.js@maildrop.cc[39m
+2026-05-21 16:11:34:1134 [32minfo[39m: [32mUser logged in: resend.js@maildrop.cc[39m
+2026-05-21 16:11:34:1134 [32minfo[39m: [32mUser resend.js@maildrop.cc connected via socket[39m
+2026-05-21 16:11:35:1135 [32minfo[39m: [32mUser resend.js@maildrop.cc disconnected: client namespace disconnect[39m
+2026-05-21 16:11:42:1142 [32minfo[39m: [32mUser logged in: test.devjs@yopmail.com[39m
+2026-05-21 16:11:42:1142 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 16:12:03:123 [32minfo[39m: [32mUser profile updated: test.devjs@yopmail.com[39m
+2026-05-21 16:12:03:123 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-21 16:12:03:123 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 16:12:27:1227 [32minfo[39m: [32mPresigned URL generated for user test.devjs@yopmail.com: avatar/avatar.jpg[39m
+2026-05-21 16:12:30:1230 [32minfo[39m: [32mFile upload confirmed for user test.devjs@yopmail.com: avatar/6a09b39c1d75c1eb357c8fb3/avatar.jpg[39m
+2026-05-21 16:12:35:1235 [32minfo[39m: [32mSelf profile updated: test.devjs@yopmail.com[39m
+2026-05-21 16:12:41:1241 [32minfo[39m: [32mSurvey updated for user: test.devjs@yopmail.com[39m
+2026-05-21 16:12:42:1242 [32minfo[39m: [32mUser profile updated: test.devjs@yopmail.com[39m
+2026-05-21 16:12:42:1242 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-21 16:12:42:1242 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 16:12:51:1251 [32minfo[39m: [32mresumeParser: parsed user 6a09b39c1d75c1eb357c8fb3 — title="Senior Python Developer", skills=2, embedding=yes, source=resume-builder[39m
+2026-05-21 16:36:20:3620 [32minfo[39m: [32mSelf profile updated: test.devjs@yopmail.com[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:38:4638 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:41:4641 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:41:4641 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:41:4641 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:41:4641 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 17:46:41:4641 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:01:47:147 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:01:48:148 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:01:48:148 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:02:25:225 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368542133[39m
+2026-05-21 18:02:27:227 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0f02609be94af3e26e08c9, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368542133)[39m
+2026-05-21 18:02:27:227 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0f02609be94af3e26e08c9[39m
+2026-05-21 18:02:27:227 [32minfo[39m: [32m🎤 First audio chunk received from Recruiter User (size: 8192 bytes)[39m
+2026-05-21 18:02:27:227 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 18:02:27:227 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 18:02:27:227 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 18:02:28:228 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368542133[39m
+2026-05-21 18:02:28:228 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0f02609be94af3e26e08c9[39m
+2026-05-21 18:02:33:233 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368542133[39m
+2026-05-21 18:02:35:235 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0f02609be94af3e26e08c9, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368542133)[39m
+2026-05-21 18:02:35:235 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0f02609be94af3e26e08c9[39m
+2026-05-21 18:02:35:235 [32minfo[39m: [32m🎤 First audio chunk received from Asghar Ali (size: 8192 bytes)[39m
+2026-05-21 18:02:35:235 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 18:02:35:235 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 18:02:35:235 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 18:02:35:235 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368542133[39m
+2026-05-21 18:02:38:238 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0f02609be94af3e26e08c9[39m
+2026-05-21 18:02:39:239 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Asghar Ali (2348ms)[39m
+2026-05-21 18:02:46:246 [32minfo[39m: [32mUser test.devjs@yopmail.com sent message in video call 6a0f02609be94af3e26e08c9[39m
+2026-05-21 18:02:51:251 [32minfo[39m: [32mUser recruiter@ability.com sent message in video call 6a0f02609be94af3e26e08c9[39m
+2026-05-21 18:05:59:559 [33mwarn[39m: [33mMongoDB disconnected[39m
+2026-05-21 18:06:56:656 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:06:59:659 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:26:726 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:29:729 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:49:749 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2026-05-21 18:07:49:749 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport error[39m
+2026-05-21 18:07:49:749 [32minfo[39m: [32mStopped caption transcription for disconnected user recruiter@ability.com[39m
+2026-05-21 18:07:56:756 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:59:759 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:08:03:83 [31merror[39m: [31mVideo call message error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:08:07:87 [32minfo[39m: [32mMongoDB reconnected[39m
+2026-05-21 18:08:09:89 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-05-21 18:08:12:812 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-21 18:08:12:812 [32minfo[39m: [32mStopped caption transcription for disconnected user test.devjs@yopmail.com[39m
+2026-05-21 18:08:13:813 [32minfo[39m: [32mAuto-removed user test.devjs@yopmail.com from queue for booth 6a0b31e370a2e56cb4ef1df8 due to disconnect[39m
+2026-05-21 18:08:19:819 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-21 18:08:19:819 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-21 18:08:19:819 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-21 18:08:21:821 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-05-21 18:08:21:821 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mToken cleanup: Removed expired refresh tokens from 2 users[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-21 18:08:27:827 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-21 18:08:29:829 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: forced close[39m
+2026-05-21 18:08:32:832 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 18:08:55:855 [32minfo[39m: [32mUser logged in: recruiter@ability.com[39m
+2026-05-21 18:08:56:856 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 18:08:56:856 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:08:56:856 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:08:56:856 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 18:08:56:856 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 1 users[39m
+2026-05-21 18:08:59:859 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:08:59:859 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:08:59:859 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:08:59:859 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:09:13:913 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:09:14:914 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:09:14:914 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:09:41:941 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368978656[39m
+2026-05-21 18:09:43:943 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0f0414a004f0394e7f7f17, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368978656)[39m
+2026-05-21 18:09:43:943 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0f0414a004f0394e7f7f17[39m
+2026-05-21 18:09:43:943 [32minfo[39m: [32m🎤 First audio chunk received from Recruiter User (size: 8192 bytes)[39m
+2026-05-21 18:09:43:943 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 18:09:43:943 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 18:09:43:943 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 18:09:43:943 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368978656[39m
+2026-05-21 18:09:44:944 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0f0414a004f0394e7f7f17[39m
+2026-05-21 18:09:47:947 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368978656[39m
+2026-05-21 18:09:49:949 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0f0414a004f0394e7f7f17, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368978656)[39m
+2026-05-21 18:09:49:949 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0f0414a004f0394e7f7f17[39m
+2026-05-21 18:09:49:949 [32minfo[39m: [32m🎤 First audio chunk received from Asghar Ali (size: 8192 bytes)[39m
+2026-05-21 18:09:49:949 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 18:09:49:949 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 18:09:49:949 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 18:09:49:949 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779368978656[39m
+2026-05-21 18:09:50:950 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0f0414a004f0394e7f7f17[39m
+2026-05-21 18:09:57:957 [32minfo[39m: [32mUser test.devjs@yopmail.com sent message in video call 6a0f0414a004f0394e7f7f17[39m
+2026-05-21 18:10:03:103 [32minfo[39m: [32mUser recruiter@ability.com sent message in video call 6a0f0414a004f0394e7f7f17[39m
+2026-05-21 18:10:05:105 [32minfo[39m: [32mUser recruiter@ability.com sent message in video call 6a0f0414a004f0394e7f7f17[39m
+2026-05-21 18:17:27:1727 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:22:07:227 [32minfo[39m: [32mUser logged in: test.devjs@yopmail.com[39m
+2026-05-21 18:22:08:228 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 18:22:08:228 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:22:10:2210 [32minfo[39m: [32mNot restoring queue entry 6a0f03f9a004f0394e7f7e82 - likely legitimate leave (has active call: false, has ended call: true, has completed meeting: false)[39m
+2026-05-21 18:22:12:2212 [32minfo[39m: [32mNot restoring queue entry 6a0f03f9a004f0394e7f7e82 - likely legitimate leave (has active call: false, has ended call: true, has completed meeting: false)[39m
+2026-05-21 18:22:22:2222 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:22:22:2222 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:22:22:2222 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:23:05:235 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779369782436[39m
+2026-05-21 18:23:07:237 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0f0738a004f0394e7f863f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779369782436)[39m
+2026-05-21 18:23:07:237 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0f0738a004f0394e7f863f[39m
+2026-05-21 18:23:07:237 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779369782436[39m
+2026-05-21 18:23:09:239 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0f0738a004f0394e7f863f[39m
+2026-05-21 18:23:12:2312 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779369782436[39m
+2026-05-21 18:23:13:2313 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0f0738a004f0394e7f863f, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779369782436)[39m
+2026-05-21 18:23:13:2313 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0f0738a004f0394e7f863f[39m
+2026-05-21 18:23:14:2314 [32minfo[39m: [32m🎤 First audio chunk received from Asghar Ali (size: 8192 bytes)[39m
+2026-05-21 18:23:14:2314 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 18:23:14:2314 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 18:23:14:2314 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 18:23:14:2314 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779369782436[39m
+2026-05-21 18:23:15:2315 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0f0738a004f0394e7f863f[39m
+2026-05-21 18:23:23:2323 [32minfo[39m: [32mUser recruiter@ability.com sent message in video call 6a0f0738a004f0394e7f863f[39m
+2026-05-21 18:23:29:2329 [32minfo[39m: [32mUser test.devjs@yopmail.com sent message in video call 6a0f0738a004f0394e7f863f[39m
+2026-05-21 18:25:27:2527 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:38:2538 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-21 18:25:38:2538 [32minfo[39m: [32mStopped caption transcription for disconnected user test.devjs@yopmail.com[39m
+2026-05-21 18:25:40:2540 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 18:25:47:2547 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2026-05-21 18:25:47:2547 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport error[39m
+2026-05-21 18:25:47:2547 [32minfo[39m: [32mStopped caption transcription for disconnected user recruiter@ability.com[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mSending online users list to recruiter@ability.com: 2 users[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com disconnected: client namespace disconnect[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com connected via socket[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:49:2549 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:52:2552 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-21 18:25:52:2552 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:52:2552 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:52:2552 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:52:2552 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 18:25:53:2553 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 18:25:54:2554 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-21 18:25:54:2554 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-21 19:15:28:1528 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:15:28:1528 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:15:28:1528 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:17:15:1715 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:17:15:1715 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:17:15:1715 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:17:15:1715 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:19:16:1916 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:21:16:2116 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:23:16:2316 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:25:16:2516 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:27:16:2716 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:30:02:302 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:32:02:322 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:34:02:342 [37mdebug[39m: [37mHeartbeat received from user test.devjs@yopmail.com for booth 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:35:03:353 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537[39m
+2026-05-21 19:35:05:355 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0f1816a004f0394e7f9223, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537)[39m
+2026-05-21 19:35:05:355 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:35:06:356 [32minfo[39m: [32m🎤 First audio chunk received from Recruiter User (size: 8192 bytes)[39m
+2026-05-21 19:35:06:356 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 19:35:06:356 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 19:35:06:356 [32minfo[39m: [32m   Sample values (first 5): [0,0,0,0,0][39m
+2026-05-21 19:35:06:356 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537[39m
+2026-05-21 19:35:06:356 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:35:12:3512 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537[39m
+2026-05-21 19:35:14:3514 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0f1816a004f0394e7f9223, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537)[39m
+2026-05-21 19:35:14:3514 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:35:14:3514 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537[39m
+2026-05-21 19:35:14:3514 [32minfo[39m: [32m🎤 First audio chunk received from Asghar Ali (size: 8192 bytes)[39m
+2026-05-21 19:35:14:3514 [32minfo[39m: [32m   Original array length: 4096, Buffer size: 8192 bytes[39m
+2026-05-21 19:35:14:3514 [32minfo[39m: [32m   Expected buffer size for Int16: 8192 bytes[39m
+2026-05-21 19:35:14:3514 [32minfo[39m: [32m   Sample values (first 5): [-51,-62,-66,-77,-81][39m
+2026-05-21 19:35:15:3515 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:35:26:3526 [32minfo[39m: [32mUser recruiter@ability.com sent message in video call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:35:35:3535 [32minfo[39m: [32mUser test.devjs@yopmail.com sent message in video call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:35:43:3543 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0f1816a004f0394e7f9223, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537)[39m
+2026-05-21 19:35:43:3543 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:35:48:3548 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Hello, this is......" (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:35:48:3548 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Hello, this is..." (2305ms)[39m
+2026-05-21 19:35:55:3555 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Hello, this is......" (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:35:55:3555 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Hello, this is..." (1835ms)[39m
+2026-05-21 19:35:56:3556 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "This is Des, how are you?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:35:56:3556 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "This is Des, how are you?" (1635ms)[39m
+2026-05-21 19:36:00:360 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Hello, I need a..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:00:360 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Hello, I need a" (891ms)[39m
+2026-05-21 19:36:05:365 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "morning from your side...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:05:365 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "morning from your side." (2105ms)[39m
+2026-05-21 19:36:09:369 [37mdebug[39m: [37m📤 Received 50 audio chunks from Recruiter User[39m
+2026-05-21 19:36:11:3611 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:11:3611 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (1176ms)[39m
+2026-05-21 19:36:15:3615 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:15:3615 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (772ms)[39m
+2026-05-21 19:36:28:3628 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:28:3628 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (1288ms)[39m
+2026-05-21 19:36:42:3642 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:42:3642 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (1734ms)[39m
+2026-05-21 19:36:46:3646 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:46:3646 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (915ms)[39m
+2026-05-21 19:36:49:3649 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:49:3649 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (647ms)[39m
+2026-05-21 19:36:53:3653 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:53:3653 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (985ms)[39m
+2026-05-21 19:36:53:3653 [37mdebug[39m: [37m📤 Received 100 audio chunks from Recruiter User[39m
+2026-05-21 19:36:55:3655 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:55:3655 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (871ms)[39m
+2026-05-21 19:36:58:3658 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:36:58:3658 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (922ms)[39m
+2026-05-21 19:37:04:374 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:04:374 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (751ms)[39m
+2026-05-21 19:37:08:378 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:08:378 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (775ms)[39m
+2026-05-21 19:37:12:3712 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:12:3712 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (672ms)[39m
+2026-05-21 19:37:16:3716 [37mdebug[39m: [37m📤 Received 150 audio chunks from Recruiter User[39m
+2026-05-21 19:37:16:3716 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:16:3716 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (700ms)[39m
+2026-05-21 19:37:25:3725 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:25:3725 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (1118ms)[39m
+2026-05-21 19:37:29:3729 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:29:3729 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (772ms)[39m
+2026-05-21 19:37:37:3737 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:37:3737 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (1073ms)[39m
+2026-05-21 19:37:44:3744 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:44:3744 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (1338ms)[39m
+2026-05-21 19:37:54:3754 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:54:3754 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (1131ms)[39m
+2026-05-21 19:37:57:3757 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Can you hear me?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779374099537 and video-call-6a0f1816a004f0394e7f9223)[39m
+2026-05-21 19:37:57:3757 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Can you hear me?" (634ms)[39m
+2026-05-21 19:37:58:3758 [37mdebug[39m: [37m📤 Received 200 audio chunks from Recruiter User[39m
+2026-05-21 19:38:02:382 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0f1816a004f0394e7f9223[39m
+2026-05-21 19:38:02:382 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:38:17:3817 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 19:38:18:3818 [32minfo[39m: [32mStats query: {"$or":[{"organizationId":"69af21caa5c811ee9f3b3117"},{"$and":[{"$or":[{"organizationId":null},{"organizationId":{"$exists":false}}]},{"eventId":{"$in":["6994b7dc6834ba9ef46f88db","699c98809a280c7a17378b0f"]}}]}],"boothId":"6a0b31e370a2e56cb4ef1df8"}[39m
+2026-05-21 19:38:19:3819 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":21,"completedMeetings":21,"averageDuration":34.57142857142857,"averageRating":3,"totalWithRating":17,"totalWithInterpreter":0}[39m
+2026-05-21 19:48:22:4822 [32minfo[39m: [32mStats query: {"$or":[{"organizationId":"69af21caa5c811ee9f3b3117"},{"$and":[{"$or":[{"organizationId":null},{"organizationId":{"$exists":false}}]},{"eventId":{"$in":["6994b7dc6834ba9ef46f88db","699c98809a280c7a17378b0f"]}}]}],"boothId":"6a0b31e370a2e56cb4ef1df8"}[39m
+2026-05-21 19:48:22:4822 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":21,"completedMeetings":21,"averageDuration":34.57142857142857,"averageRating":3,"totalWithRating":17,"totalWithInterpreter":0}[39m
+2026-05-21 19:54:09:549 [32minfo[39m: [32mStats query: {"$or":[{"organizationId":"69af21caa5c811ee9f3b3117"},{"$and":[{"$or":[{"organizationId":null},{"organizationId":{"$exists":false}}]},{"eventId":{"$in":["6994b7dc6834ba9ef46f88db","699c98809a280c7a17378b0f"]}}]}],"boothId":"6a0b31e370a2e56cb4ef1df8"}[39m
+2026-05-21 19:54:09:549 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":21,"completedMeetings":21,"averageDuration":34.57142857142857,"averageRating":3,"totalWithRating":17,"totalWithInterpreter":0}[39m
+2026-05-21 19:54:29:5429 [32minfo[39m: [32mStats query: {"$or":[{"organizationId":"69af21caa5c811ee9f3b3117"},{"$and":[{"$or":[{"organizationId":null},{"organizationId":{"$exists":false}}]},{"eventId":{"$in":["6994b7dc6834ba9ef46f88db","699c98809a280c7a17378b0f"]}}]}],"boothId":"6a0b31e370a2e56cb4ef1df8"}[39m
+2026-05-21 19:54:29:5429 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":21,"completedMeetings":21,"averageDuration":34.57142857142857,"averageRating":3,"totalWithRating":17,"totalWithInterpreter":0}[39m
+2026-05-21 19:54:32:5432 [32minfo[39m: [32mStats query: {"$or":[{"organizationId":"69af21caa5c811ee9f3b3117"},{"$and":[{"$or":[{"organizationId":null},{"organizationId":{"$exists":false}}]},{"eventId":{"$in":["6994b7dc6834ba9ef46f88db","699c98809a280c7a17378b0f"]}}]}],"boothId":"6a0b31e370a2e56cb4ef1df8"}[39m
+2026-05-21 19:54:32:5432 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":21,"completedMeetings":21,"averageDuration":34.57142857142857,"averageRating":3,"totalWithRating":17,"totalWithInterpreter":0}[39m
+2026-05-21 19:58:35:5835 [32minfo[39m: [32mStats query: {"$or":[{"organizationId":"69af21caa5c811ee9f3b3117"},{"$and":[{"$or":[{"organizationId":null},{"organizationId":{"$exists":false}}]},{"eventId":{"$in":["6994b7dc6834ba9ef46f88db","699c98809a280c7a17378b0f"]}}]}],"boothId":"6a0b31e370a2e56cb4ef1df8"}[39m
+2026-05-21 19:58:36:5836 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":21,"completedMeetings":21,"averageDuration":34.57142857142857,"averageRating":3,"totalWithRating":17,"totalWithInterpreter":0}[39m
+2026-05-21 19:59:16:5916 [32minfo[39m: [32mStats query: {"$or":[{"organizationId":"69af21caa5c811ee9f3b3117"},{"$and":[{"$or":[{"organizationId":null},{"organizationId":{"$exists":false}}]},{"eventId":{"$in":["6994b7dc6834ba9ef46f88db","699c98809a280c7a17378b0f"]}}]}],"boothId":"6a0b31e370a2e56cb4ef1df8"}[39m
+2026-05-21 19:59:16:5916 [32minfo[39m: [32mStats result: {"_id":null,"totalMeetings":21,"completedMeetings":21,"averageDuration":34.57142857142857,"averageRating":3,"totalWithRating":17,"totalWithInterpreter":0}[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:26:026 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:29:029 [32minfo[39m: [32mUser recruiter@ability.com left booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:29:029 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:29:029 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:29:029 [32minfo[39m: [32mUser recruiter@ability.com joined booth management room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:00:29:029 [32minfo[39m: [32mUser recruiter@ability.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:02:33:233 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:02:34:234 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:02:34:234 [32minfo[39m: [32mUser test.devjs@yopmail.com joined booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:02:49:249 [32minfo[39m: [32mUser recruiter@ability.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748[39m
+2026-05-21 20:02:50:250 [32minfo[39m: [32m🎤 Starting openai transcription for Recruiter User (callId: 6a0f1e98a004f0394e7f9fdc, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748)[39m
+2026-05-21 20:02:50:250 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Recruiter User in call 6a0f1e98a004f0394e7f9fdc[39m
+2026-05-21 20:02:51:251 [32minfo[39m: [32mUser recruiter@ability.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748[39m
+2026-05-21 20:02:55:255 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (2046ms)[39m
+2026-05-21 20:02:56:256 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1036ms)[39m
+2026-05-21 20:02:57:257 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1000ms)[39m
+2026-05-21 20:02:59:259 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1086ms)[39m
+2026-05-21 20:03:01:31 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1437ms)[39m
+2026-05-21 20:03:02:32 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (866ms)[39m
+2026-05-21 20:03:03:33 [37mdebug[39m: [37m📤 Received 250 audio chunks from Recruiter User[39m
+2026-05-21 20:03:04:34 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (844ms)[39m
+2026-05-21 20:03:06:36 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (923ms)[39m
+2026-05-21 20:03:08:38 [32minfo[39m: [32mUser test.devjs@yopmail.com left video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748[39m
+2026-05-21 20:03:09:39 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1260ms)[39m
+2026-05-21 20:03:10:310 [32minfo[39m: [32m🎤 Starting openai transcription for Asghar Ali (callId: 6a0f1e98a004f0394e7f9fdc, roomName: booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748)[39m
+2026-05-21 20:03:10:310 [32minfo[39m: [32m🎤 Caption transcription started (openai) for Asghar Ali in call 6a0f1e98a004f0394e7f9fdc[39m
+2026-05-21 20:03:10:310 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (714ms)[39m
+2026-05-21 20:03:10:310 [32minfo[39m: [32mUser test.devjs@yopmail.com joined video call room booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748[39m
+2026-05-21 20:03:13:313 [32minfo[39m: [32m🛑 Caption transcription stopped for Asghar Ali in call 6a0f1e98a004f0394e7f9fdc[39m
+2026-05-21 20:03:18:318 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1650ms)[39m
+2026-05-21 20:03:32:332 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (803ms)[39m
+2026-05-21 20:03:34:334 [37mdebug[39m: [37m📤 Received 300 audio chunks from Recruiter User[39m
+2026-05-21 20:03:34:334 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (865ms)[39m
+2026-05-21 20:03:36:336 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (659ms)[39m
+2026-05-21 20:03:40:340 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1022ms)[39m
+2026-05-21 20:03:42:342 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1521ms)[39m
+2026-05-21 20:03:43:343 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (830ms)[39m
+2026-05-21 20:03:45:345 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (985ms)[39m
+2026-05-21 20:03:47:347 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (627ms)[39m
+2026-05-21 20:03:49:349 [37mdebug[39m: [37m📤 Received 350 audio chunks from Recruiter User[39m
+2026-05-21 20:03:50:350 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (742ms)[39m
+2026-05-21 20:03:52:352 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (716ms)[39m
+2026-05-21 20:03:54:354 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (804ms)[39m
+2026-05-21 20:03:58:358 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (732ms)[39m
+2026-05-21 20:04:00:40 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (756ms)[39m
+2026-05-21 20:04:03:43 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (847ms)[39m
+2026-05-21 20:04:04:44 [37mdebug[39m: [37m📤 Received 400 audio chunks from Recruiter User[39m
+2026-05-21 20:04:05:45 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (861ms)[39m
+2026-05-21 20:04:07:47 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1003ms)[39m
+2026-05-21 20:04:08:48 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (601ms)[39m
+2026-05-21 20:04:10:410 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (662ms)[39m
+2026-05-21 20:04:13:413 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (738ms)[39m
+2026-05-21 20:04:15:415 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (894ms)[39m
+2026-05-21 20:04:17:417 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (859ms)[39m
+2026-05-21 20:04:18:418 [37mdebug[39m: [37m📤 Received 450 audio chunks from Recruiter User[39m
+2026-05-21 20:04:19:419 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (845ms)[39m
+2026-05-21 20:04:23:423 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (2570ms)[39m
+2026-05-21 20:04:24:424 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (679ms)[39m
+2026-05-21 20:04:25:425 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (872ms)[39m
+2026-05-21 20:04:30:430 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1030ms)[39m
+2026-05-21 20:04:34:434 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1120ms)[39m
+2026-05-21 20:04:41:441 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (899ms)[39m
+2026-05-21 20:04:41:441 [37mdebug[39m: [37m📤 Received 500 audio chunks from Recruiter User[39m
+2026-05-21 20:04:43:443 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (634ms)[39m
+2026-05-21 20:04:54:454 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (2152ms)[39m
+2026-05-21 20:05:04:54 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1262ms)[39m
+2026-05-21 20:05:10:510 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (852ms)[39m
+2026-05-21 20:05:20:520 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1219ms)[39m
+2026-05-21 20:05:24:524 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (650ms)[39m
+2026-05-21 20:05:25:525 [37mdebug[39m: [37m📤 Received 550 audio chunks from Recruiter User[39m
+2026-05-21 20:05:27:527 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1482ms)[39m
+2026-05-21 20:05:31:531 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (644ms)[39m
+2026-05-21 20:05:34:534 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (813ms)[39m
+2026-05-21 20:05:39:539 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1709ms)[39m
+2026-05-21 20:05:40:540 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (725ms)[39m
+2026-05-21 20:05:42:542 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (763ms)[39m
+2026-05-21 20:05:46:546 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (966ms)[39m
+2026-05-21 20:05:47:547 [37mdebug[39m: [37m📤 Received 600 audio chunks from Recruiter User[39m
+2026-05-21 20:05:50:550 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (719ms)[39m
+2026-05-21 20:05:57:557 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1413ms)[39m
+2026-05-21 20:06:00:60 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (2550ms)[39m
+2026-05-21 20:06:01:61 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1177ms)[39m
+2026-05-21 20:06:04:64 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1050ms)[39m
+2026-05-21 20:06:08:68 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (987ms)[39m
+2026-05-21 20:06:12:612 [37mdebug[39m: [37m📤 Received 650 audio chunks from Recruiter User[39m
+2026-05-21 20:06:13:613 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1309ms)[39m
+2026-05-21 20:06:16:616 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (934ms)[39m
+2026-05-21 20:06:19:619 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (688ms)[39m
+2026-05-21 20:06:23:623 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (836ms)[39m
+2026-05-21 20:06:26:626 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1168ms)[39m
+2026-05-21 20:06:30:630 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1134ms)[39m
+2026-05-21 20:06:34:634 [37mdebug[39m: [37m📤 Received 700 audio chunks from Recruiter User[39m
+2026-05-21 20:06:34:634 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1630ms)[39m
+2026-05-21 20:06:35:635 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (757ms)[39m
+2026-05-21 20:06:39:639 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1317ms)[39m
+2026-05-21 20:06:44:644 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1021ms)[39m
+2026-05-21 20:06:52:652 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (2277ms)[39m
+2026-05-21 20:06:59:659 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (798ms)[39m
+2026-05-21 20:07:07:77 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (716ms)[39m
+2026-05-21 20:07:10:710 [37mdebug[39m: [37m📤 Received 750 audio chunks from Recruiter User[39m
+2026-05-21 20:07:10:710 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (693ms)[39m
+2026-05-21 20:07:15:715 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (717ms)[39m
+2026-05-21 20:07:20:720 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (943ms)[39m
+2026-05-21 20:07:23:723 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (839ms)[39m
+2026-05-21 20:07:28:728 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (951ms)[39m
+2026-05-21 20:07:30:730 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (701ms)[39m
+2026-05-21 20:07:34:734 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (638ms)[39m
+2026-05-21 20:07:35:735 [37mdebug[39m: [37m📤 Received 800 audio chunks from Recruiter User[39m
+2026-05-21 20:07:37:737 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (654ms)[39m
+2026-05-21 20:07:43:743 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1671ms)[39m
+2026-05-21 20:07:46:746 [37mdebug[39m: [37m[OpenAI Captions] Empty transcript for Recruiter User (1405ms)[39m
+2026-05-21 20:07:47:747 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Plus on the...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:07:47:747 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Plus on the." (810ms)[39m
+2026-05-21 20:07:51:751 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Джанамана...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:07:51:751 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Джанамана." (706ms)[39m
+2026-05-21 20:07:54:754 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Атаганта...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:07:54:754 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Атаганта." (770ms)[39m
+2026-05-21 20:07:56:756 [37mdebug[39m: [37m📤 Received 850 audio chunks from Recruiter User[39m
+2026-05-21 20:07:59:759 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әнәкили...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:07:59:759 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әнәкили." (794ms)[39m
+2026-05-21 20:08:02:82 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әнәкили...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:02:82 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әнәкили." (1181ms)[39m
+2026-05-21 20:08:06:86 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әнәкили...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:06:86 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әнәкили." (1015ms)[39m
+2026-05-21 20:08:10:810 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әнәкили...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:10:810 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әнәкили." (1087ms)[39m
+2026-05-21 20:08:13:813 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әнәкили...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:13:813 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әнәкили." (1381ms)[39m
+2026-05-21 20:08:14:814 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әле, алтай...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:14:814 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әле, алтай." (969ms)[39m
+2026-05-21 20:08:15:815 [37mdebug[39m: [37m📤 Received 900 audio chunks from Recruiter User[39m
+2026-05-21 20:08:16:816 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әлеге алтай...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:16:816 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әлеге алтай." (753ms)[39m
+2026-05-21 20:08:19:819 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әлеге алтай...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:19:819 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әлеге алтай." (1038ms)[39m
+2026-05-21 20:08:23:823 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әлеге алтай...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:23:823 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әлеге алтай." (975ms)[39m
+2026-05-21 20:08:26:826 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әйе, баг...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:26:826 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әйе, баг." (958ms)[39m
+2026-05-21 20:08:31:831 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Әйе, баг...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:31:831 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Әйе, баг." (973ms)[39m
+2026-05-21 20:08:36:836 [37mdebug[39m: [37m📤 Received 950 audio chunks from Recruiter User[39m
+2026-05-21 20:08:42:842 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Кия?..." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:42:842 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Кия?" (7726ms)[39m
+2026-05-21 20:08:43:843 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Сореданек...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:43:843 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Сореданек." (896ms)[39m
+2026-05-21 20:08:44:844 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:44:844 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (749ms)[39m
+2026-05-21 20:08:49:849 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:49:849 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (1212ms)[39m
+2026-05-21 20:08:54:854 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:54:854 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (1248ms)[39m
+2026-05-21 20:08:56:856 [37mdebug[39m: [37m📤 Received 1000 audio chunks from Recruiter User[39m
+2026-05-21 20:08:57:857 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:08:57:857 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (1245ms)[39m
+2026-05-21 20:09:01:91 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:09:01:91 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (1419ms)[39m
+2026-05-21 20:09:08:98 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:09:08:98 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (1483ms)[39m
+2026-05-21 20:09:14:914 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:09:14:914 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (1728ms)[39m
+2026-05-21 20:09:21:921 [32minfo[39m: [32m📝 Caption broadcast: Recruiter User -> "Ок...." (to call_booth_6a0b31e370a2e56cb4ef1df8_6a09b39c1d75c1eb357c8fb3_1779375766748 and video-call-6a0f1e98a004f0394e7f9fdc)[39m
+2026-05-21 20:09:21:921 [37mdebug[39m: [37m[OpenAI Captions] Recruiter User: "Ок." (1346ms)[39m
+2026-05-21 20:09:27:927 [32minfo[39m: [32m🛑 Caption transcription stopped for Recruiter User in call 6a0f1e98a004f0394e7f9fdc[39m
+2026-05-21 20:09:27:927 [32minfo[39m: [32mUser test.devjs@yopmail.com left booth queue room 6a0b31e370a2e56cb4ef1df8[39m
+2026-05-21 20:12:16:1216 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-05-21 20:21:34:2134 [32minfo[39m: [32mUser recruiter@ability.com disconnected: transport close[39m
+2026-05-22 22:34:10:3410 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-22 22:34:10:3410 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-22 22:34:10:3410 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-22 22:34:13:3413 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-05-22 22:34:13:3413 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-22 22:34:19:3419 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-22 22:34:20:3420 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-22 22:50:42:5042 [32minfo[39m: [32mUser logged in: test.devjs@yopmail.com[39m
+2026-05-22 22:52:25:5225 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-22 22:52:25:5225 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-22 22:52:25:5225 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-22 22:52:28:5228 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-05-22 22:52:28:5228 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-22 22:52:34:5234 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-22 22:52:35:5235 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-22 22:53:20:5320 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-22 22:53:20:5320 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-22 22:53:20:5320 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-22 22:53:22:5322 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-02.okhfe.mongodb.net[39m
+2026-05-22 22:53:22:5322 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-22 22:53:22:5322 [32minfo[39m: [32mSIGINT received, shutting down gracefully[39m
+2026-05-22 23:28:21:2821 [32minfo[39m: [32m✅ Deepgram service initialized[39m
+2026-05-22 23:28:21:2821 [32minfo[39m: [32m✅ OpenAI caption service initialized (model: gpt-4o-mini-transcribe)[39m
+2026-05-22 23:28:21:2821 [32minfo[39m: [32m✅ OpenAI resume service initialized[39m
+2026-05-22 23:28:23:2823 [32minfo[39m: [32mMongoDB Connected: cluster-ability-shard-00-00.okhfe.mongodb.net[39m
+2026-05-22 23:28:23:2823 [32minfo[39m: [32mMongoDB connection attempted[39m
+2026-05-22 23:28:28:2828 [32minfo[39m: [32mAI search index health check passed[39m
+2026-05-22 23:28:28:2828 [32minfo[39m: [32mConnected to Redis[39m
+2026-05-22 23:28:28:2828 [32minfo[39m: [32mServer running on localhost:5000 in development mode[39m
+2026-05-22 23:28:28:2828 [32minfo[39m: [32mServer is ready to accept connections[39m
+2026-05-22 23:28:28:2828 [32minfo[39m: [32mAPI endpoints available at http://localhost:5000/api[39m
+2026-05-22 23:28:28:2828 [32minfo[39m: [32mQueue cleanup job started - running every 15 minutes[39m
+2026-05-22 23:28:28:2828 [32minfo[39m: [32mToken cleanup job started - running every 24 hours[39m
+2026-05-22 23:28:29:2829 [32minfo[39m: [32mRedis Client Connected[39m
+2026-05-22 23:28:29:2829 [32minfo[39m: [32mRedis Client Ready[39m
+2026-05-22 23:28:36:2836 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-22 23:32:15:3215 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-22 23:32:16:3216 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-22 23:34:32:3432 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-22 23:34:34:3434 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-22 23:34:34:3434 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-22 23:34:34:3434 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-22 23:34:36:3436 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-22 23:34:37:3437 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-22 23:34:37:3437 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: client namespace disconnect[39m
+2026-05-22 23:34:37:3437 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m
+2026-05-22 23:36:21:3621 [32minfo[39m: [32mUser test.devjs@yopmail.com disconnected: transport close[39m
+2026-05-22 23:36:22:3622 [32minfo[39m: [32mUser test.devjs@yopmail.com connected via socket[39m

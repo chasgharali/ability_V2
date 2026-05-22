@@ -20842,3 +20842,22 @@
 2026-03-31 18:17:03:173 [31merror[39m: [31mAuthentication error: connection <monitor> to 89.194.51.79:27017 timed out[39m
 2026-03-31 18:17:20:1720 [31merror[39m: [31mError handling queue heartbeat: Socket 'secureConnect' timed out after 30069ms (connectTimeoutMS: 30000)[39m
 2026-03-31 18:17:28:1728 [31merror[39m: [31mAuthentication error: Topology is closed[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mAuthentication error: jwt expired[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-05-21 15:22:31:2231 [31merror[39m: [31mRefresh token validation error: jwt expired[39m
+2026-05-21 18:06:56:656 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:06:59:659 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:15:715 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:26:726 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:29:729 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 46556ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:45:745 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:56:756 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:07:59:759 [31merror[39m: [31mAuthentication error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m
+2026-05-21 18:08:03:83 [31merror[39m: [31mVideo call message error: Socket 'secureConnect' timed out after 48304ms (connectTimeoutMS: 30000)[39m

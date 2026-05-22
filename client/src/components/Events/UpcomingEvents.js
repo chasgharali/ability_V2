@@ -115,7 +115,7 @@ export default function UpcomingEvents() {
         <AdminHeader />
         <div className="dashboard-layout">
           <AdminSidebar active="events" />
-          <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
+          <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="Upcoming Events - main content">
             <div className="dashboard-content">
             <div className="upcoming-events-container">
               <header className="upcoming-events-header">

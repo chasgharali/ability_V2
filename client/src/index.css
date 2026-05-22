@@ -51,7 +51,7 @@ main:focus,
     font-weight: 600;
 }
 
-.skip-link:focus {
+.skip-link:focus-visible {
     top: 6px;
 }
 

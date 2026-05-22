@@ -1169,7 +1169,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     z-index: 3000;
 }
 
-.dashboard .skip-link:focus {
+.dashboard .skip-link:focus-visible {
     left: 8px;
     top: 8px;
 }

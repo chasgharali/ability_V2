@@ -772,7 +772,7 @@ body .e-dlg-overlay.e-rte-dialog-overlay {
     font-weight: 600;
 }
 
-.skip-link:focus {
+.skip-link:focus-visible {
     top: 6px;
 }
 

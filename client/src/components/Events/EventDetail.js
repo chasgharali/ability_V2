@@ -7,6 +7,7 @@ import '../Dashboard/Dashboard.css';
 import { getEvent, getEventBooths, listRegisteredEvents } from '../../services/events';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
+import { announceToScreenReader } from '../Accessibility/FocusManager';
 
 export default function EventDetail() {
   const { slug } = useParams();
@@ -77,6 +78,15 @@ export default function EventDetail() {
     })();
   }, [slug, loading]);
 
+  // Announce the real event title once data loads.
+  // GlobalRouteObserver fires at 400 ms (before the API call completes) so the
+  // live region gets the fallback "Event - abilityconnect" title first; this
+  // effect corrects it as soon as the event name is available.
+  useEffect(() => {
+    if (event?.name) {
+      announceToScreenReader(`${event.name} - abilityconnect`);
+    }
+  }, [event?.name]);
 
   if (loading) return null;
 
@@ -89,7 +99,7 @@ export default function EventDetail() {
       <AdminHeader />
       <div className="dashboard-layout">
         <AdminSidebar active="events" />
-        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
+        <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label={event?.name ? `${event.name} - main content` : 'Event details - main content'}>
           <div className="dashboard-content">
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}
