@@ -81,7 +81,8 @@ const AppLayout = ({ children }) => {
     const showChat = user && user.role && chatEnabledRoles.has(user.role.toLowerCase());
 
     return (
-        <div className="App" id="route-focus-anchor" tabIndex={-1}>
+        <div className="App">
+            <div id="route-focus-anchor" className="route-focus-anchor" tabIndex={-1} />
             {children}
 
             {/* Show ChatPanel for authenticated users with chat-enabled roles */}
