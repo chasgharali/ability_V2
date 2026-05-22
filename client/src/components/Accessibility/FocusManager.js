@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const FocusManagerContext = createContext();
@@ -159,48 +159,40 @@ export const announceToScreenReader = (message) => {
     requestAnimationFrame(() => { el.textContent = message; });
 };
 
-// Global route observer:
-// On SPA route change, focus a hidden top anchor so the next Tab lands on the
-// skip link. This prevents the skip link from visually opening on navigation
-// while preserving correct keyboard order for JAWS/NVDA users.
-// Also announces the new page title via a stable aria-live region.
+// Global route observer — placed as the first child of AppLayout so its DOM
+// node precedes the skip link. On route change:
+//   1. Wait 400 ms for Helmet to update document.title
+//   2. Write the page title directly to the live region
+//   3. Focus the live region so JAWS/NVDA read it (announces title, not skip link)
+//   4. User then presses Tab → first natural tabindex element = skip link
+//      (skip link only becomes visible via :focus-visible on that Tab press)
 export const GlobalRouteObserver = () => {
     const location = useLocation();
     const previousPathRef = useRef('');
-    const [announcement, setAnnouncement] = useState('');
-
-    const focusRouteAnchor = useCallback(() => {
-        const routeAnchor = document.getElementById('route-focus-anchor');
-        if (routeAnchor) {
-            routeAnchor.focus();
-        }
-    }, []);
+    const regionRef = useRef(null);
 
     useEffect(() => {
         if (previousPathRef.current === location.pathname) return;
         previousPathRef.current = location.pathname;
 
-        // Focus hidden route anchor so skip link appears only on real Tab key press.
-        // 150 ms gives React time to commit the new route's DOM.
-        const focusTimer = setTimeout(focusRouteAnchor, 150);
-
-        // Announce page title after Helmet has had time to update document.title.
-        const titleTimer = setTimeout(() => {
-            if (document.title) {
-                // Clear first so repeated navigations to the same title re-trigger the announcement.
-                setAnnouncement('');
-                requestAnimationFrame(() => setAnnouncement(document.title));
-            }
+        const timer = setTimeout(() => {
+            const el = regionRef.current;
+            if (!el) return;
+            const title = document.title || '';
+            // Clear then populate in the same animation frame so JAWS/NVDA
+            // always pick up the update, then move focus to the element.
+            el.textContent = '';
+            requestAnimationFrame(() => {
+                el.textContent = title;
+                el.focus();
+            });
         }, 400);
 
-        return () => {
-            clearTimeout(focusTimer);
-            clearTimeout(titleTimer);
-        };
-    }, [location.pathname, focusRouteAnchor]);
+        return () => clearTimeout(timer);
+    }, [location.pathname]);
 
-    // This live region stays mounted for the entire session so JAWS/NVDA
-    // register it on page load and reliably speak subsequent updates.
+    // tabIndex={-1} lets the element receive programmatic focus without
+    // appearing in the natural Tab sequence itself.
     return (
         <div
             role="status"
@@ -208,9 +200,9 @@ export const GlobalRouteObserver = () => {
             aria-atomic="true"
             className="sr-only"
             id="route-announcement"
-        >
-            {announcement}
-        </div>
+            tabIndex={-1}
+            ref={regionRef}
+        />
     );
 };
 

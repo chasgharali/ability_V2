@@ -82,7 +82,8 @@ const AppLayout = ({ children }) => {
 
     return (
         <div className="App">
-            <div id="route-focus-anchor" className="route-focus-anchor" tabIndex={-1} />
+            {/* Must be first in DOM so Tab from the focused live region lands on the skip link */}
+            <GlobalRouteObserver />
             {children}
 
             {/* Show ChatPanel for authenticated users with chat-enabled roles */}
@@ -91,7 +92,6 @@ const AppLayout = ({ children }) => {
 
             <CookieConsent />
             <AccessibilityAnnouncer />
-            <GlobalRouteObserver />
             {!hideFooter && <AppFooter />}
         </div>
     );

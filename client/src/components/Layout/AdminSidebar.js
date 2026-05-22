@@ -249,10 +249,9 @@ export default function AdminSidebar({ active = 'booths' }) {
     }
   };
 
-  // After menu-initiated navigation, focus a hidden top anchor so the skip link
-  // appears only when users press Tab.
-  // GlobalRouteObserver handles this for non-menu navigations; this block
-  // handles the menu case where GlobalRouteObserver skips its own focus logic.
+  // Clean up the menu-navigation marker in sessionStorage after the route
+  // has mounted. GlobalRouteObserver handles focus and title announcement for
+  // all navigations (including menu-initiated), so no focus logic is needed here.
   useEffect(() => {
     const raw = sessionStorage.getItem(MENU_NAV_STATE_KEY);
     if (!raw) return;
@@ -274,13 +273,6 @@ export default function AdminSidebar({ active = 'booths' }) {
     menuNavHandledRef.current = handleKey;
 
     sessionStorage.removeItem(MENU_NAV_STATE_KEY);
-
-    const timer = setTimeout(() => {
-      const routeAnchor = document.getElementById('route-focus-anchor');
-      if (routeAnchor) routeAnchor.focus();
-    }, 150);
-
-    return () => clearTimeout(timer);
   }, [location.pathname, user?.role, upcomingEvents.length, myRegistrations.length]);
 
   /** Path-based active state for JobSeeker (active prop is only used for My Account sub-routes). */
