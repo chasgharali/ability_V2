@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const FocusManagerContext = createContext();
@@ -149,65 +149,58 @@ export const FocusManager = ({ children }) => {
     );
 };
 
-const focusPageMainContainer = () => {
-    const mainEl = document.getElementById('main-content')
-        || document.getElementById('dashboard-main')
-        || document.querySelector('main');
-    if (mainEl) {
-        mainEl.setAttribute('tabindex', '-1');
-        mainEl.focus();
-        return true;
-    }
-
-    return false;
-};
-
 // Global route observer:
-// on SPA route change, announce the new page title and reset focus to a hidden
-// top anchor so the first Tab lands on the skip link.
+// On SPA route change, focus the skip link so the first Tab lands on the header,
+// then the sidebar, then main content (correct DOM order for JAWS/NVDA).
+// Also announces the new page title via a stable aria-live region.
 export const GlobalRouteObserver = () => {
     const location = useLocation();
     const previousPathRef = useRef('');
+    const [announcement, setAnnouncement] = useState('');
 
-    const isMenuInitiatedNavigation = () => {
-        try {
-            const raw = sessionStorage.getItem(MENU_NAV_STATE_KEY);
-            if (!raw) return false;
-            const state = JSON.parse(raw);
-            if (!state || state.source !== 'sidebar-menu') return false;
-            const isMatchingPath = state.path === location.pathname;
-            const isFresh = Date.now() - Number(state.timestamp || 0) < 15000;
-            return isMatchingPath && isFresh;
-        } catch {
-            return false;
+    const focusSkipLink = useCallback(() => {
+        const skipLink = document.querySelector('.skip-link');
+        if (skipLink) {
+            skipLink.focus();
         }
-    };
+    }, []);
 
     useEffect(() => {
-        if (previousPathRef.current === '') {
-            previousPathRef.current = location.pathname;
-            return;
-        }
+        if (previousPathRef.current === location.pathname) return;
+        previousPathRef.current = location.pathname;
 
-        if (previousPathRef.current !== location.pathname) {
-            const menuInitiatedNav = isMenuInitiatedNavigation();
-            const attemptFocus = () => {
-                // Move focus to the page's main landmark instead of the heading.
-                // This avoids placing visible focus styles on headings while still
-                // giving screen-reader users a reliable post-navigation anchor.
-                if (!menuInitiatedNav) {
-                    focusPageMainContainer();
-                }
-            };
+        // Focus skip link so Tab order begins from the top of the page.
+        // 150 ms gives React time to commit the new route's DOM.
+        const focusTimer = setTimeout(focusSkipLink, 150);
 
-            const timers = [120, 420, 900].map((delay) => setTimeout(attemptFocus, delay));
+        // Announce page title after Helmet has had time to update document.title.
+        const titleTimer = setTimeout(() => {
+            if (document.title) {
+                // Clear first so repeated navigations to the same title re-trigger the announcement.
+                setAnnouncement('');
+                requestAnimationFrame(() => setAnnouncement(document.title));
+            }
+        }, 400);
 
-            previousPathRef.current = location.pathname;
-            return () => timers.forEach((timer) => clearTimeout(timer));
-        }
-    }, [location.pathname]);
+        return () => {
+            clearTimeout(focusTimer);
+            clearTimeout(titleTimer);
+        };
+    }, [location.pathname, focusSkipLink]);
 
-    return null;
+    // This live region stays mounted for the entire session so JAWS/NVDA
+    // register it on page load and reliably speak subsequent updates.
+    return (
+        <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="sr-only"
+            id="route-announcement"
+        >
+            {announcement}
+        </div>
+    );
 };
 
 // Backward-compatible export name.

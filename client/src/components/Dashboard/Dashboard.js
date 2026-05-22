@@ -801,20 +801,20 @@ const Dashboard = () => {
         }
     };
 
+    const pageTitleMap = {
+        'my-account': 'My Account',
+        'survey': 'Survey',
+        'edit-profile': 'Edit Profile & Resume',
+        'view-profile': 'View My Profile',
+        'resume-builder': 'Resume Builder',
+        'delete-account': 'Delete My Account',
+    };
+    const currentSectionLabel = pageTitleMap[activeSection] || 'Dashboard';
+
     return (
         <>
             <Helmet>
-                <title>{(() => {
-                    const pageTitleMap = {
-                        'my-account': 'My Account',
-                        'survey': 'Survey',
-                        'edit-profile': 'Edit Profile & Resume',
-                        'view-profile': 'View My Profile',
-                        'resume-builder': 'Resume Builder',
-                        'delete-account': 'Delete My Account',
-                    };
-                    return `${pageTitleMap[activeSection] || 'Dashboard'} - abilityconnect`;
-                })()}</title>
+                <title>{`${currentSectionLabel} - abilityconnect`}</title>
             </Helmet>
             <div className="dashboard">
                 <a href="#main-content" className="skip-link">Skip to main content</a>
@@ -852,7 +852,7 @@ const Dashboard = () => {
                     )
                 )} />
 
-                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
+                <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label={`${currentSectionLabel} - main content`}>
                     {user?.role === 'JobSeeker' && user?.emailVerified === false && (
                         <div
                             role="alert"

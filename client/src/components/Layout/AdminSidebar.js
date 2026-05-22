@@ -171,43 +171,21 @@ export default function AdminSidebar({ active = 'booths' }) {
   const effectiveActive = pathSidebarKey ?? active;
   const itemClass = (key) => `sidebar-item ${effectiveActive === key ? 'active' : ''}`;
 
-  const getSidebarFocusableElements = () => {
-    const sidebar = document.querySelector('.dashboard-sidebar');
-    if (!sidebar) return [];
-    return Array.from(
-      sidebar.querySelectorAll('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')
-    ).filter((el) => el.offsetParent !== null);
-  };
-
-  const markMenuNavigation = (path, triggerElement) => {
-    const focusableElements = getSidebarFocusableElements();
-    const focusedIndex = focusableElements.indexOf(triggerElement);
-    const nextIndex = focusedIndex >= 0
-      ? Math.min(focusedIndex + 1, Math.max(focusableElements.length - 1, 0))
-      : 0;
-
+  const markMenuNavigation = (path) => {
     const state = {
       source: 'sidebar-menu',
       path,
-      timestamp: Date.now(),
-      focusedIndex,
-      nextIndex
+      timestamp: Date.now()
     };
     sessionStorage.setItem(MENU_NAV_STATE_KEY, JSON.stringify(state));
   };
 
   const handleItemClick = (path, event) => {
-    const triggerElement = event?.currentTarget || document.activeElement;
-    if (triggerElement && triggerElement instanceof HTMLElement) {
-      markMenuNavigation(path, triggerElement);
-    }
+    markMenuNavigation(path);
     navigate(path);
-    // Close mobile menu when item is clicked
     if (window.innerWidth <= 1024) {
       document.body.classList.remove('sidebar-open');
     }
-    // Focus stays on the activated menu item so keyboard users can continue
-    // tabbing through the menu. Use the skip link to jump to the page heading.
   };
 
   // Special handler for the permanent demo event: fetch its first booth and
@@ -229,17 +207,10 @@ export default function AdminSidebar({ active = 'booths' }) {
       const boothId = typeof firstBooth === 'string' ? firstBooth : firstBooth?._id || null;
 
       if (slug && boothId) {
-        const triggerElement = document.activeElement;
-        if (triggerElement && triggerElement instanceof HTMLElement) {
-          markMenuNavigation(`/booth-queue/${encodeURIComponent(slug)}/${encodeURIComponent(boothId)}/entry`, triggerElement);
-        }
+        markMenuNavigation(`/booth-queue/${encodeURIComponent(slug)}/${encodeURIComponent(boothId)}/entry`);
         navigate(`/booth-queue/${encodeURIComponent(slug)}/${encodeURIComponent(boothId)}/entry`);
       } else {
-        // Fallback: just open the event detail page if queue info isn't available
-        const triggerElement = document.activeElement;
-        if (triggerElement && triggerElement instanceof HTMLElement) {
-          markMenuNavigation(`/event/${encodeURIComponent(slug)}`, triggerElement);
-        }
+        markMenuNavigation(`/event/${encodeURIComponent(slug)}`);
         navigate(`/event/${encodeURIComponent(slug)}`);
       }
 
@@ -247,11 +218,7 @@ export default function AdminSidebar({ active = 'booths' }) {
         document.body.classList.remove('sidebar-open');
       }
     } catch (e) {
-      // On any error, fall back to the standard event page so the user isn't stuck
-      const triggerElement = document.activeElement;
-      if (triggerElement && triggerElement instanceof HTMLElement) {
-        markMenuNavigation('/event/demonstration', triggerElement);
-      }
+      markMenuNavigation('/event/demonstration');
       navigate('/event/demonstration');
       if (window.innerWidth <= 1024) {
         document.body.classList.remove('sidebar-open');
@@ -282,6 +249,10 @@ export default function AdminSidebar({ active = 'booths' }) {
     }
   };
 
+  // After menu-initiated navigation, focus the skip link so Tab order starts
+  // from the top of the page (skip link → header → sidebar → main content).
+  // GlobalRouteObserver handles this for non-menu navigations; this block
+  // handles the menu case where GlobalRouteObserver skips its own focus logic.
   useEffect(() => {
     const raw = sessionStorage.getItem(MENU_NAV_STATE_KEY);
     if (!raw) return;
@@ -302,69 +273,14 @@ export default function AdminSidebar({ active = 'booths' }) {
     if (menuNavHandledRef.current === handleKey) return;
     menuNavHandledRef.current = handleKey;
 
-    let focusedElement = null;
-    let onFirstTabFromMenu = null;
-    let onSkipLinkTab = null;
-    let cleanupSkipLinkListeners = null;
+    sessionStorage.removeItem(MENU_NAV_STATE_KEY);
 
-    const setup = () => {
-      const focusableElements = getSidebarFocusableElements();
-      if (!focusableElements.length) return;
+    const timer = setTimeout(() => {
+      const skipLink = document.querySelector('.skip-link');
+      if (skipLink) skipLink.focus();
+    }, 150);
 
-      const focusedIndex = Number.isInteger(state.focusedIndex) ? state.focusedIndex : 0;
-      const nextIndex = Number.isInteger(state.nextIndex) ? state.nextIndex : Math.min(focusedIndex + 1, focusableElements.length - 1);
-      const safeFocusedIndex = Math.max(0, Math.min(focusedIndex, focusableElements.length - 1));
-      const safeNextIndex = Math.max(0, Math.min(nextIndex, focusableElements.length - 1));
-      focusedElement = focusableElements[safeFocusedIndex];
-      const resumeIndex = safeNextIndex;
-
-      if (!focusedElement) return;
-      focusedElement.focus();
-
-      onFirstTabFromMenu = (e) => {
-        if (e.key !== 'Tab' || e.shiftKey) return;
-        const skipLink = document.querySelector('.skip-link');
-        if (!skipLink) return;
-
-        e.preventDefault();
-        focusedElement.removeEventListener('keydown', onFirstTabFromMenu);
-
-        onSkipLinkTab = (evt) => {
-          if (evt.key !== 'Tab' || evt.shiftKey) return;
-          evt.preventDefault();
-          const latestFocusable = getSidebarFocusableElements();
-          const resumeTarget = latestFocusable[resumeIndex] || latestFocusable[0] || focusedElement;
-          if (resumeTarget && typeof resumeTarget.focus === 'function') {
-            resumeTarget.focus();
-          }
-          cleanupSkipLinkListeners?.();
-        };
-
-        const onSkipLinkActivate = () => cleanupSkipLinkListeners?.();
-
-        cleanupSkipLinkListeners = () => {
-          skipLink.removeEventListener('keydown', onSkipLinkTab);
-          skipLink.removeEventListener('click', onSkipLinkActivate);
-          cleanupSkipLinkListeners = null;
-        };
-
-        skipLink.addEventListener('keydown', onSkipLinkTab);
-        skipLink.addEventListener('click', onSkipLinkActivate, { once: true });
-        skipLink.focus();
-      };
-
-      focusedElement.addEventListener('keydown', onFirstTabFromMenu);
-      sessionStorage.removeItem(MENU_NAV_STATE_KEY);
-    };
-
-    const timer = setTimeout(setup, 0);
-    return () => {
-      clearTimeout(timer);
-      if (focusedElement && onFirstTabFromMenu) {
-        focusedElement.removeEventListener('keydown', onFirstTabFromMenu);
-      }
-      cleanupSkipLinkListeners?.();
-    };
+    return () => clearTimeout(timer);
   }, [location.pathname, user?.role, upcomingEvents.length, myRegistrations.length]);
 
   /** Path-based active state for JobSeeker (active prop is only used for My Account sub-routes). */
