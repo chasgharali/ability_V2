@@ -12,7 +12,7 @@ const ses = new AWS.SES({ apiVersion: '2010-12-01' });
 
 async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
-  const subject = 'welcome to abilityconnect.online, please verify your email address';
+  const subject = 'Welcome to AbilityConnect.online, Please Verify Your Email Address';
 
   const fallbackLink = appVerifyLink || verifyLink;
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
@@ -24,7 +24,7 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
     <div style="${containerStyle}">
       <div style="${cardStyle}">
         <div style="${contentStyle}">
-          <p style="margin:0 0 8px 0; color:#111">welcome to abilityconnect.online, please verify your email address</p>
+          <p style="margin:0 0 8px 0; color:#111">Welcome to AbilityConnect.online, Please Verify Your Email Address</p>
           <p style="margin:12px 0">Please click the button below to verify your email address:</p>
           <p style="margin:18px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="${buttonStyle}">Verify Email</a></p>
           <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
@@ -34,7 +34,7 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
       </div>
     </div>
   `;
-  const text = `Welcome to abilityconnect.online, please verify your email address\n\nVerify Email: ${verifyLink}\n\nIf the button above doesn't work, use this link: ${fallbackLink}\n\nAttention: Chrome browser is required. Please copy the link into Chrome if it is not your default browser.`;
+  const text = `Welcome to AbilityConnect.online, Please Verify Your Email Address\n\nVerify Email: ${verifyLink}\n\nIf the button above doesn't work, use this link: ${fallbackLink}\n\nAttention: Chrome browser is required. Please copy the link into Chrome if it is not your default browser.`;
 
   const params = {
     Destination: { ToAddresses: [toEmail] },
