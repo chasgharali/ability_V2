@@ -161,11 +161,14 @@ export const announceToScreenReader = (message) => {
 
 // Global route observer — placed as the first child of AppLayout so its DOM
 // node precedes the skip link. On route change:
-//   1. Wait 400 ms for Helmet to update document.title
-//   2. Write the page title directly to the live region
-//   3. Focus the live region so JAWS/NVDA read it (announces title, not skip link)
-//   4. User then presses Tab → first natural tabindex element = skip link
-//      (skip link only becomes visible via :focus-visible on that Tab press)
+//   1. Scroll to top (including dashboard's own scroll container).
+//   2. After 400 ms (Helmet/React settle), focus #route-announcement while it
+//      is EMPTY so JAWS/NVDA don't read stale content on the focus event.
+//   3. In the next animation frame, write the new page title so the live region
+//      announces it via aria-live — no focus-read, no old-title prefix.
+//   4. Because #route-announcement is the first DOM child of AppLayout (before
+//      the skip link), pressing Tab after focus lands on the skip link, which
+//      then becomes visible via :focus-visible.
 export const GlobalRouteObserver = () => {
     const location = useLocation();
     const previousPathRef = useRef('');
@@ -179,29 +182,26 @@ export const GlobalRouteObserver = () => {
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
-        // Also reset the dashboard main area which is its own scroll container
-        // (overflow-y: auto on .dashboard-main makes window.scrollTo insufficient).
         const mainContent = document.getElementById('main-content');
         if (mainContent) mainContent.scrollTop = 0;
 
         const timer = setTimeout(() => {
             const el = regionRef.current;
             if (!el) return;
-            const title = document.title || '';
-            // Clear then populate in the same animation frame so JAWS/NVDA
-            // always pick up the update, then move focus to the element.
+            // Clear first — focus an empty element so JAWS/NVDA read nothing
+            // on focus (prevents the old document-title being spoken).
             el.textContent = '';
+            el.focus({ preventScroll: true });
+            // Set the new title AFTER focus in the next frame.  The aria-live
+            // region announces it without re-triggering a focus read.
             requestAnimationFrame(() => {
-                el.textContent = title;
-                el.focus();
+                el.textContent = document.title || '';
             });
         }, 400);
 
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
-    // tabIndex={-1} lets the element receive programmatic focus without
-    // appearing in the natural Tab sequence itself.
     return (
         <div
             role="status"
