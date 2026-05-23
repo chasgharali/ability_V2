@@ -179,6 +179,10 @@ export const GlobalRouteObserver = () => {
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+        // Also reset the dashboard main area which is its own scroll container
+        // (overflow-y: auto on .dashboard-main makes window.scrollTo insufficient).
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) mainContent.scrollTop = 0;
 
         const timer = setTimeout(() => {
             const el = regionRef.current;
