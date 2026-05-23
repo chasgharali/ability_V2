@@ -175,6 +175,11 @@ export const GlobalRouteObserver = () => {
         if (previousPathRef.current === location.pathname) return;
         previousPathRef.current = location.pathname;
 
+        // Always start each new route at the top of the page.
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
         const timer = setTimeout(() => {
             const el = regionRef.current;
             if (!el) return;

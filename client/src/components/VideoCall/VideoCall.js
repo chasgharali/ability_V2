@@ -2839,7 +2839,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
             </button>
           )}
 
-          <div className="call-duration" aria-live="polite" aria-label={`Call duration: ${Math.floor(callDuration / 60)} minutes ${callDuration % 60} seconds`}>
+          <div className="call-duration" aria-label={`Call duration: ${Math.floor(callDuration / 60)} minutes ${callDuration % 60} seconds`}>
             <span className="duration-label" aria-hidden="true">Duration:</span>
             <span className="duration-time">
               {String(Math.floor(callDuration / 60)).padStart(2, '0')}:
@@ -3223,7 +3223,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         );
       })()}
 
-      <footer className="video-call-footer">
+      <footer id="call-controls" className="video-call-footer" tabIndex={-1}>
         <CallControls
           isAudioEnabled={isAudioEnabled}
           isVideoEnabled={isVideoEnabled}

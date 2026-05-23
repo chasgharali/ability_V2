@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../../contexts/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdPerson, MdPhone } from 'react-icons/md';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
@@ -325,11 +326,14 @@ const RegisterPage = () => {
 
     return (
         <>
-            <a href="#register-form" className="skip-link" onClick={handleSkipToForm}>
+            <Helmet>
+                <title>Create Job Seeker Account - abilityconnect</title>
+            </Helmet>
+            <a href="#main-content" className="skip-link">
                 Skip to registration form
             </a>
             <PublicBrandHeader />
-            <div className="register-container">
+            <main id="main-content" className="register-container" tabIndex={-1} aria-label="Create Job Seeker Account form">
             <div className="register-card">
                 {/* Back to Landing Link */}
                 <Link to="/" className="register-back-link" aria-label="Back to landing page">
@@ -732,7 +736,7 @@ const RegisterPage = () => {
                     </div>
                 </div>
             )}
-            </div>
+            </main>
         </>
     );
 };

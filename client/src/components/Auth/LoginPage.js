@@ -160,7 +160,7 @@ const LoginPage = () => {
     // Show loading while checking authentication
     if (loading) {
         return (
-            <main className="login-container" aria-label="main content">
+            <main id="main-content" className="login-container" tabIndex={-1} aria-label="Login form">
                 <div className="login-card">
                     <div style={{ textAlign: 'center', padding: '2rem' }}>
                         Loading...
@@ -182,7 +182,7 @@ const LoginPage = () => {
         </Helmet>
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <PublicBrandHeader />
-        <main id="main-content" className="login-container" aria-label="main content">
+        <main id="main-content" className="login-container" tabIndex={-1} aria-label={userType === 'jobseeker' ? 'Job Seeker Login form' : 'Company and Staff Login form'}>
             <div className="login-card">
                 {/* Back to Landing Link */}
                 <Link to="/" className="login-back-link" aria-label="Back to landing page">

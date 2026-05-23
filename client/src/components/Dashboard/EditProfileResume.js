@@ -890,15 +890,14 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         <div className="form-group">
           <div className="label-with-counter">
             <label htmlFor="headline">* Your Headline</label>
-            <span 
+            <span
+              id="headline-counter"
               className={`char-counter ${
                 form.headline.length > 150 ? 'char-counter-over' :
                 form.headline.length >= 145 ? 'char-counter-danger' :
                 form.headline.length >= 140 ? 'char-counter-warning' :
                 form.headline.length > 130 ? 'char-counter-caution' : ''
               }`}
-              aria-live="polite"
-              aria-atomic="true"
             >
               {form.headline.length}/150 characters
             </span>
@@ -910,10 +909,10 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
             onChange={onChange} 
             placeholder="Make a brief statement about yourself" 
             maxLength={150}
-            aria-describedby="headline-hint"
+            aria-describedby="headline-hint headline-counter"
           />
           <span id="headline-hint" className="visually-hidden">
-            Maximum 150 characters. Currently {form.headline.length} of 150 characters used.
+            Maximum 150 characters.
           </span>
         </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
@@ -77,10 +78,6 @@ export default function BoothQueueWaiting() {
   const announcementCounterRef = useRef(0);
   const hasLeftQueueRef = useRef(false); // Track if user has left the queue
 
-  useEffect(() => {
-    const boothName = booth?.name || 'Company';
-    document.title = `${boothName} Booth Waiting Area - abilityconnect`;
-  }, [booth?.name]);
 
   useEffect(() => {
     // Reset queueToken when boothId changes to prevent using token from wrong booth
@@ -1097,6 +1094,10 @@ export default function BoothQueueWaiting() {
       {/* Global header with event branding */}
       <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} brandingLogoAlt={event?.logoAltText || ''} hideMenuToggle={true} />
 
+      <Helmet>
+        <title>{`${booth?.name || 'Waiting Area'} - abilityconnect`}</title>
+      </Helmet>
+
       {/* Skip to main content link for screen readers */}
       <a href="#main-content" className="skip-link sr-only sr-only-focusable">
         Skip to main content
@@ -1233,7 +1234,7 @@ export default function BoothQueueWaiting() {
         </div>
 
         {/* Main content */}
-        <div className={`waiting-main${isEmployerPageMode ? ' employer-mode' : ''}`}>
+        <main id="main-content" className={`waiting-main${isEmployerPageMode ? ' employer-mode' : ''}`} tabIndex={-1} aria-label="Queue waiting area - main content">
           {/* Mobile toggle for queue panel - only shows action buttons */}
           <button
             className="mobile-toggle-btn"
@@ -1345,7 +1346,7 @@ export default function BoothQueueWaiting() {
               ))}
             </div>
           )}
-        </div>
+        </main>
 
         {/* Removed old right sidebar */}
       </div>
