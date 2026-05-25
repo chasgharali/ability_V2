@@ -20,7 +20,7 @@ export default function BoothQueueWaiting() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { socket } = useSocket();
+  const { socket, connected: socketConnected } = useSocket();
   const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
 
   const [event, setEvent] = useState(null);
@@ -77,6 +77,50 @@ export default function BoothQueueWaiting() {
   const recordedChunksRef = useRef([]);
   const announcementCounterRef = useRef(0);
   const hasLeftQueueRef = useRef(false); // Track if user has left the queue
+  const isInCallRef = useRef(false); // Ref to avoid stale closure in interval callbacks
+
+  // Keep ref in sync with state so interval callbacks always see the latest value
+  useEffect(() => {
+    isInCallRef.current = isInCall;
+  }, [isInCall]);
+
+  const tryRestoreActiveCall = async (queueData) => {
+    // Socket invites can be missed if the user is temporarily disconnected.
+    // If backend says they're already in_meeting, recover the call via queue entry.
+    // Use isInCallRef.current (not isInCall state) to avoid stale closure in interval callbacks.
+    if (!queueData || queueData.status !== 'in_meeting' || isInCallRef.current) return;
+    const queueEntryId = queueData.queueEntry?._id;
+    if (!queueEntryId) return;
+
+    try {
+      const videoCallRes = await axios.get(`/api/video-call/by-queue/${queueEntryId}`);
+      if (videoCallRes.data?.success && videoCallRes.data.videoCall) {
+        const callData = videoCallRes.data.videoCall;
+        // Mark as in-call immediately via ref to prevent duplicate recovery attempts
+        isInCallRef.current = true;
+        setCallInvitation({
+          id: callData._id || callData.id,
+          roomName: callData.roomName,
+          accessToken: callData.jobSeekerToken || callData.accessToken,
+          userRole: 'jobseeker',
+          booth: queueData.queueEntry.booth,
+          event: queueData.queueEntry.event,
+          participants: {
+            recruiter: callData.recruiter,
+            jobSeeker: user
+          },
+          metadata: {
+            interpreterRequested: !!queueData.queueEntry.interpreterCategory,
+            interpreterCategory: queueData.queueEntry.interpreterCategory
+          }
+        });
+        setIsInCall(true);
+      }
+    } catch (callErr) {
+      // Keep waiting UI if recovery call is not ready yet.
+      console.error('Error restoring video call from queue status:', callErr);
+    }
+  };
 
 
   useEffect(() => {
@@ -134,7 +178,7 @@ export default function BoothQueueWaiting() {
   }, [socket, boothId, user?._id]);
 
   useEffect(() => {
-    if (!socket || !socket.connected) return;
+    if (!socket || !socketConnected) return;
 
     socket.on('queue-position-updated', handleQueueUpdate);
     socket.on('queue-serving-updated', handleServingUpdate);
@@ -154,7 +198,8 @@ export default function BoothQueueWaiting() {
       socket.off('queue-updated', handleQueueUpdated);
       socket.off('queue_left', handleQueueUpdated);
     };
-  }, [socket?.connected]);
+  // socketConnected is a React state from SocketContext (reliable), unlike socket?.connected (mutable property)
+  }, [socketConnected]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Heartbeat to keep connection alive and detect if user is still active
   useEffect(() => {
@@ -187,6 +232,7 @@ export default function BoothQueueWaiting() {
           setPeopleAhead(queueData.peopleAhead ?? 0);
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
+          await tryRestoreActiveCall(queueData);
           try {
             localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -249,38 +295,7 @@ export default function BoothQueueWaiting() {
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
           setUnreadCount(queueData.unreadMessages || 0);
-          
-          // Check if user is in a meeting - if so, fetch call data and show call interface
-          if (queueData.status === 'in_meeting' && queueData.queueEntry?.meetingId) {
-            try {
-              // Fetch video call data to join the meeting
-              const videoCallRes = await axios.get(`/api/video-call/by-queue/${queueData.queueEntry._id}`);
-              if (videoCallRes.data?.success && videoCallRes.data.videoCall) {
-                const callData = videoCallRes.data.videoCall;
-                // Set up call invitation data to show call interface
-                setCallInvitation({
-                  id: callData._id || callData.id,
-                  roomName: callData.roomName,
-                  accessToken: callData.jobSeekerToken || callData.accessToken,
-                  userRole: 'jobseeker',
-                  booth: queueData.queueEntry.booth,
-                  event: queueData.queueEntry.event,
-                  participants: {
-                    recruiter: callData.recruiter,
-                    jobSeeker: user
-                  },
-                  metadata: {
-                    interpreterRequested: !!queueData.queueEntry.interpreterCategory,
-                    interpreterCategory: queueData.queueEntry.interpreterCategory
-                  }
-                });
-                setIsInCall(true);
-              }
-            } catch (callErr) {
-              console.error('Error fetching video call data:', callErr);
-              // If we can't fetch call data, user might need to wait for invitation
-            }
-          }
+          await tryRestoreActiveCall(queueData);
           
           try {
             localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
@@ -346,6 +361,7 @@ export default function BoothQueueWaiting() {
         setWaitingCount(queueData.waitingCount ?? 0);
         setQueueToken(queueData.token);
         setQueueEntryId(queueData.queueEntry?._id);
+        await tryRestoreActiveCall(queueData);
         try {
           localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
           localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -459,7 +475,7 @@ export default function BoothQueueWaiting() {
     }
   };
 
-  const enumerateDevicesAndShowModal = async () => {
+  const enumerateDevicesAndShowModal = async (inviteData) => {
     try {
       // Request permissions so device labels are available
       await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -479,8 +495,9 @@ export default function BoothQueueWaiting() {
       setShowInviteModal(true);
     } catch (err) {
       console.error('Failed to enumerate devices:', err);
-      // Fallback: proceed without modal
-      handleAcceptInvite();
+      // Fallback: proceed without modal — pass inviteData directly because React
+      // state (pendingInvitation) may not have updated yet in this closure.
+      handleAcceptInviteWithData(inviteData);
     }
   };
 
@@ -554,15 +571,17 @@ export default function BoothQueueWaiting() {
     const eventName = event?.name || data?.event?.name || '';
     const message = `You are invited to join a video call${boothName ? ` at ${boothName}` : ''}${eventName ? ` for ${eventName}` : ''}.`;
     speak(message);
-    enumerateDevicesAndShowModal();
+    // Pass data directly so the error-fallback path can accept the invite even
+    // before React processes the setPendingInvitation state update.
+    enumerateDevicesAndShowModal(data);
   };
 
-  const handleAcceptInvite = () => {
-    if (!pendingInvitation) return;
+  // Core logic: accepts an invite given explicit data (avoids stale state closure issues)
+  const handleAcceptInviteWithData = (data) => {
+    if (!data) return;
     if (selectedAudioId) localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
     if (selectedVideoId) localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
-    // Build callData for VideoCall
-    const data = pendingInvitation;
+    isInCallRef.current = true;
     setCallInvitation({
       id: data.callId,
       roomName: data.roomName,
@@ -583,12 +602,19 @@ export default function BoothQueueWaiting() {
     setIsInCall(true);
   };
 
+  const handleAcceptInvite = () => {
+    // pendingInvitation is set via setPendingInvitation before the modal is shown,
+    // so by the time the user clicks Accept it is always populated.
+    handleAcceptInviteWithData(pendingInvitation);
+  };
+
   const handleDeclineInvite = () => {
     setShowInviteModal(false);
     setPendingInvitation(null);
   };
 
   const handleCallEnd = () => {
+    isInCallRef.current = false;
     setCallInvitation(null);
     setIsInCall(false);
     // Backend already removes queue entry on call end; navigate away

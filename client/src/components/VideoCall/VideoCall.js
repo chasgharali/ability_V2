@@ -60,6 +60,15 @@ function parseCaptionOwnerId(captionKey, caption) {
   return captionKey.slice(0, u);
 }
 
+function isCaptionTimestampRowKey(captionKey) {
+  if (typeof captionKey !== 'string' || captionKey.startsWith(LIVE_CAPTION_KEY_PREFIX)) {
+    return false;
+  }
+  // Final caption rows are keyed as "<participantId>_<timestampMs>_<random>".
+  // Treat these as separate transcript rows, unlike live interim keys.
+  return /_\d{10,}_/.test(captionKey);
+}
+
 function trimCaptionsMap(map, maxEntries) {
   if (map.size <= maxEntries) return map;
   const entries = [...map.entries()].sort(
@@ -3054,10 +3063,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               // Support multiple caption entries per participant for new lines after pauses
               remoteCaptions.forEach((caption, captionKey) => {
                 if (caption && caption.text && caption.text.trim()) {
-                  // Extract participant ID from captionKey (might be "participantId" or "participantId_timestamp")
-                  const participantId = captionKey.includes('_') 
-                    ? captionKey.split('_').slice(0, -1).join('_') 
-                    : captionKey;
+                  const participantId = parseCaptionOwnerId(captionKey, caption) || String(captionKey);
                   
                   // Use role from caption if available, otherwise get it
                   const role = caption.role || getParticipantRole(participantId) || 'Participant';
@@ -3081,7 +3087,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               
               // First pass: collect all captions and find the latest for each participant
               allCaptions.forEach(caption => {
-                const isNewLineEntry = caption.id.includes('_') && caption.id.split('_').length > 1;
+                const isNewLineEntry = isCaptionTimestampRowKey(caption.id);
                 const textKey = `${caption.participantId}_${caption.text.trim()}`;
                 
                 // Skip if we've already seen this exact text from this participant (duplicate)

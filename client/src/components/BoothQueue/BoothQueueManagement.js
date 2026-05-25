@@ -337,15 +337,26 @@ export default function BoothQueueManagement() {
     return true;
   };
 
-  const handleQueueUpdate = (data) => {
-    if (data.boothId === boothId || data.booth === boothId) {
-      // Filter socket events by assigned events for recruiters
-      if (data.queueEntry && !shouldProcessQueueEntry(data.queueEntry)) {
-        console.log('Ignoring queue update for event not in assigned events');
-        return;
-      }
-      loadQueueData();
+  const normalizeId = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      return value._id?.toString?.() || value.id?.toString?.() || value.toString?.() || '';
     }
+    return String(value);
+  };
+
+  const handleQueueUpdate = (data) => {
+    const targetBoothId = normalizeId(boothId || recruiterBooth?._id);
+    const eventBoothId = normalizeId(data?.boothId || data?.booth || data?.queueEntry?.booth);
+    if (!targetBoothId || !eventBoothId || targetBoothId !== eventBoothId) return;
+
+    // Filter socket events by assigned events for recruiters
+    if (data.queueEntry && !shouldProcessQueueEntry(data.queueEntry)) {
+      console.log('Ignoring queue update for event not in assigned events');
+      return;
+    }
+    loadQueueData();
   };
 
   const loadQueueData = async () => {
