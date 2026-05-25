@@ -1836,6 +1836,24 @@ body.sidebar-open .mobile-menu-toggle:hover {
     outline-offset: 2px;
 }
 
+/* Resume Builder settings toggle should not inherit text-input sizing */
+.rb-settings-ai-toggle {
+    width: fit-content;
+}
+
+.rb-settings-ai-toggle input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid #9ca3af !important;
+    border-radius: 3px;
+    flex: 0 0 auto;
+    appearance: auto;
+    -webkit-appearance: checkbox;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .dashboard-header-content {

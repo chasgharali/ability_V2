@@ -7,13 +7,16 @@ const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl'
 const {
   SETTING_MAX_RESUMES,
   SETTING_MAX_UPDATES,
-  validateLimitSettingValue
+  SETTING_AI_ENABLED,
+  validateLimitSettingValue,
+  validateAiEnabledSettingValue
 } = require('../services/resumeBuilderLimits');
 
 const SUPERADMIN_ONLY_SETTING_KEYS = new Set([
   'footer_text',
   SETTING_MAX_RESUMES,
-  SETTING_MAX_UPDATES
+  SETTING_MAX_UPDATES,
+  SETTING_AI_ENABLED
 ]);
 const FOOTER_TEXT_MAX_LENGTH = 200;
 const RESUME_BUILDER_LIMIT_KEYS = new Set([SETTING_MAX_RESUMES, SETTING_MAX_UPDATES]);
@@ -151,6 +154,16 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Supe
         });
       }
       sanitizedValue = limitResult.value;
+    }
+    if (key === SETTING_AI_ENABLED) {
+      const aiEnabledResult = validateAiEnabledSettingValue(value);
+      if (aiEnabledResult.error) {
+        return res.status(400).json({
+          success: false,
+          error: aiEnabledResult.error
+        });
+      }
+      sanitizedValue = aiEnabledResult.value;
     }
 
     const setting = await Settings.setSetting(

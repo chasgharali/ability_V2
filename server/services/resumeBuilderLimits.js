@@ -4,9 +4,11 @@ const User = require('../models/User');
 
 const SETTING_MAX_RESUMES = 'resume_builder_max_resumes';
 const SETTING_MAX_UPDATES = 'resume_builder_max_updates';
+const SETTING_AI_ENABLED = 'resume_builder_ai_enabled';
 
-const DEFAULT_MAX_RESUMES = 1;
+const DEFAULT_MAX_RESUMES = 2;
 const DEFAULT_MAX_UPDATES = 3;
+const DEFAULT_AI_ENABLED = false;
 
 function parseLimit(value, defaultValue) {
   if (value === null || value === undefined) return defaultValue;
@@ -15,14 +17,27 @@ function parseLimit(value, defaultValue) {
   return n;
 }
 
+function parseBoolean(value, defaultValue) {
+  if (value === null || value === undefined) return defaultValue;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+  }
+  return defaultValue;
+}
+
 async function getResumeBuilderLimits() {
-  const [maxResumesRaw, maxUpdatesRaw] = await Promise.all([
+  const [maxResumesRaw, maxUpdatesRaw, aiEnabledRaw] = await Promise.all([
     Settings.getSetting(SETTING_MAX_RESUMES),
-    Settings.getSetting(SETTING_MAX_UPDATES)
+    Settings.getSetting(SETTING_MAX_UPDATES),
+    Settings.getSetting(SETTING_AI_ENABLED)
   ]);
   return {
     maxResumes: parseLimit(maxResumesRaw, DEFAULT_MAX_RESUMES),
-    maxUpdates: parseLimit(maxUpdatesRaw, DEFAULT_MAX_UPDATES)
+    maxUpdates: parseLimit(maxUpdatesRaw, DEFAULT_MAX_UPDATES),
+    aiEnabled: parseBoolean(aiEnabledRaw, DEFAULT_AI_ENABLED)
   };
 }
 
@@ -122,15 +137,30 @@ function validateLimitSettingValue(value) {
   return { value: n };
 }
 
+function validateAiEnabledSettingValue(value) {
+  if (typeof value === 'boolean') {
+    return { value };
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return { value: true };
+    if (normalized === 'false') return { value: false };
+  }
+  return { error: 'Value must be a boolean (true/false)' };
+}
+
 module.exports = {
   SETTING_MAX_RESUMES,
   SETTING_MAX_UPDATES,
+  SETTING_AI_ENABLED,
   DEFAULT_MAX_RESUMES,
   DEFAULT_MAX_UPDATES,
+  DEFAULT_AI_ENABLED,
   getResumeBuilderLimits,
   getResumeBuilderStatus,
   incrementUpdateCount,
   assertCanCreateResume,
   assertCanUpdateResume,
-  validateLimitSettingValue
+  validateLimitSettingValue,
+  validateAiEnabledSettingValue
 };

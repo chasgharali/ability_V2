@@ -6,8 +6,10 @@ import '../Dashboard/Dashboard.css';
 
 const SETTING_MAX_RESUMES = 'resume_builder_max_resumes';
 const SETTING_MAX_UPDATES = 'resume_builder_max_updates';
-const DEFAULT_MAX_RESUMES = 1;
+const SETTING_AI_ENABLED = 'resume_builder_ai_enabled';
+const DEFAULT_MAX_RESUMES = 2;
 const DEFAULT_MAX_UPDATES = 3;
+const DEFAULT_AI_ENABLED = false;
 
 function parseLimit(value, defaultValue) {
   if (value === null || value === undefined) return defaultValue;
@@ -16,9 +18,21 @@ function parseLimit(value, defaultValue) {
   return n;
 }
 
+function parseBoolean(value, defaultValue) {
+  if (value === null || value === undefined) return defaultValue;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+  }
+  return defaultValue;
+}
+
 export default function ResumeBuilderLimitsEditor() {
   const [maxResumes, setMaxResumes] = useState(String(DEFAULT_MAX_RESUMES));
   const [maxUpdates, setMaxUpdates] = useState(String(DEFAULT_MAX_UPDATES));
+  const [aiEnabled, setAiEnabled] = useState(DEFAULT_AI_ENABLED);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,12 +44,14 @@ export default function ResumeBuilderLimitsEditor() {
   const loadLimits = async () => {
     try {
       setLoading(true);
-      const [resumesRes, updatesRes] = await Promise.all([
+      const [resumesRes, updatesRes, aiEnabledRes] = await Promise.all([
         settingsAPI.getSetting(SETTING_MAX_RESUMES).catch(() => null),
-        settingsAPI.getSetting(SETTING_MAX_UPDATES).catch(() => null)
+        settingsAPI.getSetting(SETTING_MAX_UPDATES).catch(() => null),
+        settingsAPI.getSetting(SETTING_AI_ENABLED).catch(() => null)
       ]);
       setMaxResumes(String(parseLimit(resumesRes?.value, DEFAULT_MAX_RESUMES)));
       setMaxUpdates(String(parseLimit(updatesRes?.value, DEFAULT_MAX_UPDATES)));
+      setAiEnabled(parseBoolean(aiEnabledRes?.value, DEFAULT_AI_ENABLED));
     } finally {
       setLoading(false);
     }
@@ -72,14 +88,19 @@ export default function ResumeBuilderLimitsEditor() {
           SETTING_MAX_UPDATES,
           updates,
           'Maximum saves/AI generations each job seeker can make (0 = unlimited)'
+        ),
+        settingsAPI.setSetting(
+          SETTING_AI_ENABLED,
+          aiEnabled,
+          'Enable or disable Resume Builder AI features for all job seekers'
         )
       ]);
       setMaxResumes(String(resumes));
       setMaxUpdates(String(updates));
-      showMessage('Resume Builder limits saved.');
+      showMessage('Resume Builder settings saved.');
     } catch (error) {
       console.error('Failed to save resume builder limits:', error);
-      showMessage(error.response?.data?.error || 'Failed to save limits.');
+      showMessage(error.response?.data?.error || 'Failed to save settings.');
     } finally {
       setSaving(false);
     }
@@ -90,14 +111,16 @@ export default function ResumeBuilderLimitsEditor() {
       setSaving(true);
       await Promise.all([
         settingsAPI.deleteSetting(SETTING_MAX_RESUMES).catch(() => {}),
-        settingsAPI.deleteSetting(SETTING_MAX_UPDATES).catch(() => {})
+        settingsAPI.deleteSetting(SETTING_MAX_UPDATES).catch(() => {}),
+        settingsAPI.deleteSetting(SETTING_AI_ENABLED).catch(() => {})
       ]);
       setMaxResumes(String(DEFAULT_MAX_RESUMES));
       setMaxUpdates(String(DEFAULT_MAX_UPDATES));
-      showMessage('Limits reset to defaults (1 resume, 3 updates).');
+      setAiEnabled(DEFAULT_AI_ENABLED);
+      showMessage('Settings reset to defaults (2 resumes, 3 updates, AI off).');
     } catch (error) {
       console.error('Failed to reset resume builder limits:', error);
-      showMessage('Failed to reset limits.');
+      showMessage('Failed to reset settings.');
     } finally {
       setSaving(false);
     }
@@ -111,7 +134,7 @@ export default function ResumeBuilderLimitsEditor() {
         <AdminSidebar active="resume-builder-limits" />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
-            <h1>Resume Builder Limits</h1>
+            <h1>Resume Builder Settings</h1>
             {message && (
               <div
                 className="alert-box"
@@ -128,8 +151,9 @@ export default function ResumeBuilderLimitsEditor() {
             >
               <p>
                 Control how many resumes each job seeker can create and how many times they can save
-                or run AI generation. Set a value to <strong>0</strong> for unlimited.
-                Defaults when not configured: <strong>1 resume</strong> and <strong>3 updates</strong>.
+                their resume. You can also enable or disable Resume Builder AI features globally.
+                Set a value to <strong>0</strong> for unlimited.
+                Defaults when not configured: <strong>2 resumes</strong>, <strong>3 updates</strong>, and <strong>AI off</strong>.
               </p>
             </div>
             <div className="upload-card" style={{ maxWidth: 480 }}>
@@ -163,7 +187,26 @@ export default function ResumeBuilderLimitsEditor() {
                   style={{ width: '100%' }}
                 />
                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
-                  Each save or &quot;Fill from profile&quot; AI action counts as one update.
+                  Each save or &quot;Generate from Profile&quot; action counts as one update.
+                </p>
+              </div>
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label
+                  htmlFor="resumeBuilderAiEnabled"
+                  className="rb-settings-ai-toggle"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', fontWeight: 500, cursor: loading || saving ? 'default' : 'pointer' }}
+                >
+                  <input
+                    id="resumeBuilderAiEnabled"
+                    type="checkbox"
+                    checked={aiEnabled}
+                    onChange={(e) => setAiEnabled(e.target.checked)}
+                    disabled={loading || saving}
+                  />
+                  Enable Resume Builder AI features
+                </label>
+                <p style={{ margin: '0.5rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                  Controls AI generation, AI suggestions, and AI resume parsing in Resume Builder.
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>

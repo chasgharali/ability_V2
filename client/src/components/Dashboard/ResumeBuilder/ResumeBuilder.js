@@ -160,6 +160,10 @@ export default function ResumeBuilder() {
 
   const handleGenerateFromProfile = async () => {
     if (!editing) return;
+    if (!aiEnabled) {
+      showToast('Resume Builder AI is currently disabled by the platform administrator.', { type: 'error' });
+      return;
+    }
     setAiLoading('generate');
     try {
       const data = await generateResumeFromProfile(editing._id);
@@ -175,12 +179,17 @@ export default function ResumeBuilder() {
 
   const handleAiSuggest = async (section, currentContent, context) => {
     if (!editing) return null;
+    if (!aiEnabled) {
+      showToast('Resume Builder AI is currently disabled by the platform administrator.', { type: 'error' });
+      return null;
+    }
     setAiLoading(section);
     try {
       const data = await suggestResumeContent(editing._id, section, currentContent, context);
       return data.suggestion;
     } catch (e) {
-      showToast(e?.response?.data?.error || 'AI suggestion failed', { type: 'error' });
+      showToast(e?.response?.data?.message || e?.response?.data?.error || 'AI suggestion failed', { type: 'error' });
+      applyLimitStatusFromResponse(e?.response?.data, setLimitStatus);
       return null;
     } finally {
       setAiLoading('');
@@ -190,6 +199,11 @@ export default function ResumeBuilder() {
   const handleParseFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!aiEnabled) {
+      showToast('Resume Builder AI is currently disabled by the platform administrator.', { type: 'error' });
+      e.target.value = '';
+      return;
+    }
     e.target.value = '';
     setParsing(true);
     try {
@@ -209,6 +223,10 @@ export default function ResumeBuilder() {
   const handleParseFromUploadedResume = async () => {
     const resumeUrl = user?.resumeUrl;
     if (!resumeUrl) return;
+    if (!aiEnabled) {
+      showToast('Resume Builder AI is currently disabled by the platform administrator.', { type: 'error' });
+      return;
+    }
     setParsing(true);
     try {
       const data = await parseResumeFromUrl(resumeUrl, 'Parsed from Profile Resume');
@@ -226,6 +244,7 @@ export default function ResumeBuilder() {
 
   const canCreateResume = limitStatus?.canCreateResume !== false;
   const canUpdateResume = limitStatus?.canUpdateResume !== false;
+  const aiEnabled = limitStatus?.limits?.aiEnabled === true;
 
   const renderLimitBanner = () => {
     if (!limitStatus?.limits) return null;
@@ -463,22 +482,26 @@ export default function ResumeBuilder() {
             maxLength={100}
           />
           <div className="rb-topbar-actions">
-            <button
-              className="ajf-btn ajf-btn-outline"
-              onClick={handleGenerateFromProfile}
-              disabled={aiLoading === 'generate' || !canUpdateResume}
-              title="Fill resume sections using AI based on your profile"
-            >
-              {aiLoading === 'generate' ? 'Generating…' : '✨ Generate from Profile'}
-            </button>
-            <button
-              className="ajf-btn ajf-btn-outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={parsing}
-              title="Upload a new resume file to parse (replaces current content)"
-            >
-              {parsing ? 'Parsing…' : '⬆ Upload File'}
-            </button>
+            {aiEnabled && (
+              <button
+                className="ajf-btn ajf-btn-outline"
+                onClick={handleGenerateFromProfile}
+                disabled={aiLoading === 'generate' || !canUpdateResume}
+                title="Fill resume sections using AI based on your profile"
+              >
+                {aiLoading === 'generate' ? 'Generating…' : '✨ Generate from Profile'}
+              </button>
+            )}
+            {aiEnabled && (
+              <button
+                className="ajf-btn ajf-btn-outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={parsing}
+                title="Upload a new resume file to parse (replaces current content)"
+              >
+                {parsing ? 'Parsing…' : '⬆ Upload File'}
+              </button>
+            )}
             <button className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
             <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving || !canUpdateResume}>
               {saving ? 'Saving…' : 'Save'}
@@ -551,17 +574,19 @@ export default function ResumeBuilder() {
                 <legend>Professional Summary</legend>
                 <div className="rb-ai-row">
                   <label htmlFor="rb-summary">Summary</label>
-                  <button
-                    type="button"
-                    className="rb-ai-btn"
-                    disabled={!!aiLoading}
-                    onClick={async () => {
-                      const result = await handleAiSuggest('summary', c.summary, `Headline: ${user?.metadata?.profile?.headline || ''}`);
-                      if (result?.suggestion) setContent({ summary: result.suggestion });
-                    }}
-                  >
-                    {aiLoading === 'summary' ? '…' : '✨ AI Improve'}
-                  </button>
+                  {aiEnabled && (
+                    <button
+                      type="button"
+                      className="rb-ai-btn"
+                      disabled={!!aiLoading}
+                      onClick={async () => {
+                        const result = await handleAiSuggest('summary', c.summary, `Headline: ${user?.metadata?.profile?.headline || ''}`);
+                        if (result?.suggestion) setContent({ summary: result.suggestion });
+                      }}
+                    >
+                      {aiLoading === 'summary' ? '…' : '✨ AI Improve'}
+                    </button>
+                  )}
                 </div>
                 <textarea
                   id="rb-summary"
@@ -623,21 +648,23 @@ export default function ResumeBuilder() {
                     <div className="rb-bullets-section">
                       <div className="rb-ai-row">
                         <label>Bullet Points</label>
-                        <button
-                          type="button"
-                          className="rb-ai-btn"
-                          disabled={!!aiLoading}
-                          onClick={async () => {
-                            const result = await handleAiSuggest(
-                              'experience_bullets',
-                              exp.bullets,
-                              `${exp.title} at ${exp.company}`
-                            );
-                            if (result?.bullets) setExperience(idx, { bullets: result.bullets });
-                          }}
-                        >
-                          {aiLoading === 'experience_bullets' ? '…' : '✨ AI Improve'}
-                        </button>
+                        {aiEnabled && (
+                          <button
+                            type="button"
+                            className="rb-ai-btn"
+                            disabled={!!aiLoading}
+                            onClick={async () => {
+                              const result = await handleAiSuggest(
+                                'experience_bullets',
+                                exp.bullets,
+                                `${exp.title} at ${exp.company}`
+                              );
+                              if (result?.bullets) setExperience(idx, { bullets: result.bullets });
+                            }}
+                          >
+                            {aiLoading === 'experience_bullets' ? '…' : '✨ AI Improve'}
+                          </button>
+                        )}
                       </div>
                       {(exp.bullets || ['']).map((b, bIdx) => (
                         <div key={bIdx} className="rb-bullet-row">
@@ -713,25 +740,27 @@ export default function ResumeBuilder() {
                 <legend>Skills</legend>
                 <div className="rb-ai-row" style={{ marginBottom: 8 }}>
                   <span>Current skills</span>
-                  <button
-                    type="button"
-                    className="rb-ai-btn"
-                    disabled={!!aiLoading}
-                    onClick={async () => {
-                      const result = await handleAiSuggest(
-                        'skills',
-                        c.skills,
-                        user?.metadata?.profile?.headline || ''
-                      );
-                      if (result?.suggestedSkills) {
-                        const merged = [...new Set([...(c.skills || []), ...result.suggestedSkills])];
-                        setContent({ skills: merged });
-                        showToast(`Added ${result.suggestedSkills.length} suggested skills`, { type: 'success' });
-                      }
-                    }}
-                  >
-                    {aiLoading === 'skills' ? '…' : '✨ AI Suggest Skills'}
-                  </button>
+                  {aiEnabled && (
+                    <button
+                      type="button"
+                      className="rb-ai-btn"
+                      disabled={!!aiLoading}
+                      onClick={async () => {
+                        const result = await handleAiSuggest(
+                          'skills',
+                          c.skills,
+                          user?.metadata?.profile?.headline || ''
+                        );
+                        if (result?.suggestedSkills) {
+                          const merged = [...new Set([...(c.skills || []), ...result.suggestedSkills])];
+                          setContent({ skills: merged });
+                          showToast(`Added ${result.suggestedSkills.length} suggested skills`, { type: 'success' });
+                        }
+                      }}
+                    >
+                      {aiLoading === 'skills' ? '…' : '✨ AI Suggest Skills'}
+                    </button>
+                  )}
                 </div>
                 <div className="rb-tags">
                   {(c.skills || []).map((s, i) => (
@@ -866,20 +895,26 @@ export default function ResumeBuilder() {
     <div className="resume-builder">
       <div className="dashboard-content">
         <h1>Resume Builder</h1>
-        <p className="rb-subtitle">Build an AI-powered resume to share with recruiters during event registration.</p>
+        <p className="rb-subtitle">
+          {aiEnabled
+            ? 'Build an AI-powered resume to share with recruiters during event registration.'
+            : 'Build a resume to share with recruiters during event registration.'}
+        </p>
         {renderLimitBanner()}
 
         <div className="rb-list-toolbar">
           <button className="ajf-btn ajf-btn-dark" onClick={handleCreate} disabled={parsing || !canCreateResume}>+ New Resume</button>
-          <button
-            className="ajf-btn ajf-btn-outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={parsing || !canCreateResume}
-            title="Upload a PDF or Word resume to parse and edit"
-          >
-            {parsing ? 'Parsing…' : '⬆ Upload & Parse Resume'}
-          </button>
-          {user?.resumeUrl && (
+          {aiEnabled && (
+            <button
+              className="ajf-btn ajf-btn-outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={parsing || !canCreateResume}
+              title="Upload a PDF or Word resume to parse and edit"
+            >
+              {parsing ? 'Parsing…' : '⬆ Upload & Parse Resume'}
+            </button>
+          )}
+          {aiEnabled && user?.resumeUrl && (
             <button
               className="ajf-btn ajf-btn-outline"
               onClick={handleParseFromUploadedResume}
@@ -914,7 +949,7 @@ export default function ResumeBuilder() {
               <div className="rb-card-title">{r.title || 'Untitled Resume'}</div>
               <div className="rb-card-meta">
                 Updated {new Date(r.updatedAt).toLocaleDateString()}
-                {r.lastAiGenerated && (
+                {aiEnabled && r.lastAiGenerated && (
                   <span className="rb-ai-badge"> · AI-generated</span>
                 )}
               </div>

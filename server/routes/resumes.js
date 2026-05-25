@@ -7,6 +7,7 @@ const Resume = require('../models/Resume');
 const openaiResumeService = require('../services/openaiResumeService');
 const { parseResumeForUser } = require('../services/resumeParserService');
 const {
+  getResumeBuilderLimits,
   getResumeBuilderStatus,
   assertCanCreateResume,
   assertCanUpdateResume,
@@ -23,6 +24,18 @@ function sendLimitError(res, err) {
     message: err.message,
     ...err.payload
   });
+}
+
+async function assertResumeBuilderAiEnabled(userId) {
+  const limits = await getResumeBuilderLimits();
+  if (limits.aiEnabled) return;
+
+  const status = await getResumeBuilderStatus(userId);
+  const err = new Error('Resume Builder AI features are currently disabled by the platform administrator.');
+  err.status = 403;
+  err.code = 'AI_FEATURE_DISABLED';
+  err.payload = status;
+  throw err;
 }
 
 /**
@@ -285,6 +298,7 @@ router.post('/:id/set-default', authenticateToken, async (req, res) => {
  */
 router.post('/:id/generate', authenticateToken, async (req, res) => {
   try {
+    await assertResumeBuilderAiEnabled(req.user._id);
     await assertCanUpdateResume(req.user._id);
     const resume = await Resume.findOne({ _id: req.params.id, userId: req.user._id });
     if (!resume) return res.status(404).json({ error: 'Resume not found' });
@@ -342,6 +356,7 @@ router.post('/:id/generate', authenticateToken, async (req, res) => {
  */
 router.post('/:id/suggest', authenticateToken, async (req, res) => {
   try {
+    await assertResumeBuilderAiEnabled(req.user._id);
     const resume = await Resume.findOne({ _id: req.params.id, userId: req.user._id });
     if (!resume) return res.status(404).json({ error: 'Resume not found' });
 
@@ -365,6 +380,7 @@ router.post('/:id/suggest', authenticateToken, async (req, res) => {
  */
 router.post('/parse-upload', authenticateToken, upload.single('resume'), async (req, res) => {
   try {
+    await assertResumeBuilderAiEnabled(req.user._id);
     await assertCanCreateResume(req.user._id);
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -409,6 +425,7 @@ router.post('/parse-upload', authenticateToken, upload.single('resume'), async (
  */
 router.post('/parse-from-url', authenticateToken, async (req, res) => {
   try {
+    await assertResumeBuilderAiEnabled(req.user._id);
     await assertCanCreateResume(req.user._id);
     const { url, title } = req.body;
     if (!url) return res.status(400).json({ error: 'url is required' });

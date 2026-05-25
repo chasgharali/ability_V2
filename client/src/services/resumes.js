@@ -20,6 +20,7 @@ export function applyLimitStatusFromResponse(data, setLimitStatus) {
   if (data.limits && data.usage) {
     setLimitStatus({
       limits: data.limits,
+      aiEnabled: data.limits.aiEnabled === true,
       usage: data.usage,
       resumesRemaining: data.resumesRemaining,
       updatesRemaining: data.updatesRemaining,
