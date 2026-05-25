@@ -85,9 +85,8 @@ export const validateAndCleanDevicePreferences = async () => {
  */
 export const createMediaConstraints = (audioDeviceId, videoDeviceId) => {
   const videoConstraints = {
-    width: 1280,
-    height: 720,
-    frameRate: 30,
+    // Avoid forcing 16:9 capture; let browser choose native camera aspect ratio.
+    frameRate: { ideal: 24, max: 30 },
     facingMode: 'user',
     ...(videoDeviceId ? { deviceId: { ideal: videoDeviceId } } : {})
   };
@@ -111,9 +110,8 @@ export const createMediaConstraints = (audioDeviceId, videoDeviceId) => {
  */
 export const createExactMediaConstraints = (audioDeviceId, videoDeviceId) => {
   const videoConstraints = {
-    width: 1280,
-    height: 720,
-    frameRate: 30,
+    // Keep exact device selection, but avoid hardcoded dimensions that can crop portrait streams.
+    frameRate: { ideal: 24, max: 30 },
     facingMode: 'user',
     ...(videoDeviceId ? { deviceId: { exact: videoDeviceId } } : {})
   };

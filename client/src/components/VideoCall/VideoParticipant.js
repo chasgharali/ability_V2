@@ -98,6 +98,8 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
 
   // Attach video track after element mounts
   useEffect(() => {
+    let removeVideoMetricListeners = () => {};
+
     if (videoTrack && videoRef.current && videoTrack.attach) {
       try {
         const attachedElements = videoTrack.attach(videoRef.current);
@@ -105,26 +107,41 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
         // Ensure the video element has the correct styles after attachment
         if (videoRef.current) {
           const applyVideoStyles = () => {
-            videoRef.current.style.width = '100%';
-            videoRef.current.style.height = '100%';
-            // Use 'contain' for remote participants to maintain aspect ratio and fill width
-            // Use 'cover' for local participant to fill the container
-            videoRef.current.style.objectFit = isLocal ? 'cover' : 'contain';
-            videoRef.current.style.position = 'absolute';
-            videoRef.current.style.top = '0';
-            videoRef.current.style.left = '0';
-            videoRef.current.style.maxWidth = isLocal ? 'none' : '100%';
-            videoRef.current.style.maxHeight = 'none';
-            videoRef.current.style.minWidth = '100%';
-            videoRef.current.style.minHeight = '100%';
+            const videoEl = videoRef.current;
+            if (!videoEl) return;
+
+            videoEl.style.setProperty('width', '100%', 'important');
+            videoEl.style.setProperty('height', '100%', 'important');
+            // Keep full frame visible for all participants (no stream cropping).
+            videoEl.style.setProperty('object-fit', 'contain', 'important');
+            videoEl.style.setProperty('object-position', 'center', 'important');
+            videoEl.style.setProperty('position', 'absolute', 'important');
+            videoEl.style.setProperty('top', '0', 'important');
+            videoEl.style.setProperty('left', '0', 'important');
+            videoEl.style.setProperty('max-width', '100%', 'important');
+            videoEl.style.setProperty('max-height', '100%', 'important');
+            videoEl.style.setProperty('min-width', '0', 'important');
+            videoEl.style.setProperty('min-height', '0', 'important');
           };
+
+          const handleVideoMetricsChange = () => applyVideoStyles();
           
           // Apply styles immediately
           applyVideoStyles();
+          videoRef.current.addEventListener('loadedmetadata', handleVideoMetricsChange);
+          videoRef.current.addEventListener('resize', handleVideoMetricsChange);
           
           // Also apply styles after a short delay in case Twilio overrides them
           setTimeout(applyVideoStyles, 100);
           setTimeout(applyVideoStyles, 500);
+          setTimeout(applyVideoStyles, 1000);
+
+          removeVideoMetricListeners = () => {
+            if (videoRef.current) {
+              videoRef.current.removeEventListener('loadedmetadata', handleVideoMetricsChange);
+              videoRef.current.removeEventListener('resize', handleVideoMetricsChange);
+            }
+          };
         }
         
       } catch (error) {
@@ -132,6 +149,8 @@ const VideoParticipant = ({ participant, isLocal = false }) => {
       }
     }
     return () => {
+      removeVideoMetricListeners();
+
       if (videoTrack && videoTrack.detach) {
         try {
           const els = videoTrack.detach();

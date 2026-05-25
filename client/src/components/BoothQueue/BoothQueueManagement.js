@@ -108,7 +108,6 @@ export default function BoothQueueManagement() {
     }
     loadData();
     joinSocketRoom();
-    // Don't check for active calls automatically - only when recruiter creates one
 
     return () => {
       if (socket) {
@@ -151,20 +150,7 @@ export default function BoothQueueManagement() {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [socket, boothId, recruiterBooth?._id, user]);
-
-  // Check for active video call
-  const checkActiveCall = async () => {
-    try {
-      const response = await videoCallService.getActiveCall();
-      if (response.activeCall) {
-        setActiveCall(response.activeCall);
-        setIsInCall(true);
-      }
-    } catch (error) {
-      console.error('Error checking active call:', error);
-    }
-  };
+  }, [socket, boothId, recruiterBooth?._id, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!socket || !socket.connected) {
@@ -642,9 +628,18 @@ export default function BoothQueueManagement() {
 
   const handleCallEnd = async (endData = {}) => {
     const declinedByJobSeeker = endData?.reason === 'declined_invitation';
+    const recruiterDisconnected = endData?.reason === 'recruiter_disconnected';
 
     if (declinedByJobSeeker) {
       showInfo('Job seeker declined the call invitation and remains in queue.');
+      setActiveCall(null);
+      setIsInCall(false);
+      loadData();
+      return;
+    }
+
+    if (recruiterDisconnected) {
+      showInfo('Call ended after recruiter disconnected. Job seeker returned to queue.');
       setActiveCall(null);
       setIsInCall(false);
       loadData();

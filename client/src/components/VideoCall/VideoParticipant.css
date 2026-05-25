@@ -4,10 +4,8 @@
   background: #333;
   border-radius: 10px;
   overflow: hidden;
-  min-height: 300px;
-  /* Increased minimum height */
+  min-height: 0;
   height: 100%;
-  /* Take full available height */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,19 +37,19 @@
 .video-participant.remote {
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 100% !important;
+  min-width: 0 !important;
 }
 
 .video-participant.remote .video-container {
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 100% !important;
+  min-width: 0 !important;
 }
 
 .video-participant.remote .participant-video {
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 100% !important;
+  min-width: 0 !important;
   object-fit: contain !important;
   object-position: center !important;
 }
@@ -60,7 +58,7 @@
 .video-participant.remote video {
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 100% !important;
+  min-width: 0 !important;
   object-fit: contain !important;
 }
 
@@ -73,7 +71,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px !important;
+  min-height: 0 !important;
   overflow: hidden !important;
 }
 
@@ -82,8 +80,8 @@
   height: 100% !important;
   object-fit: contain !important;
   object-position: center !important;
-  min-width: 100% !important;
-  min-height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   max-width: 100% !important;
   max-height: 100% !important;
   position: absolute !important;

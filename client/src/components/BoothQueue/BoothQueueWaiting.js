@@ -619,11 +619,19 @@ export default function BoothQueueWaiting() {
     refreshQueueStatus();
   };
 
-  const handleCallEnd = () => {
+  const handleCallEnd = async (endData = {}) => {
     isInCallRef.current = false;
     setCallInvitation(null);
     setIsInCall(false);
-    // Backend already removes queue entry on call end; navigate away
+
+    // Recruiter refresh/disconnect should return job seeker to waiting queue view.
+    if (endData?.reason === 'recruiter_disconnected') {
+      showInfo('Recruiter disconnected. You were returned to the waiting queue.');
+      await refreshQueueStatus();
+      return;
+    }
+
+    // For ended/removed outcomes, navigate back to event details.
     navigate(`/events/registered/${eventSlug}`);
   };
 

@@ -65,6 +65,58 @@ function socketSafeUser(user) {
  * @param {Object} io - Socket.IO server instance
  */
 let _io = null;
+const handleRecruiterDisconnectCleanup = async ({ io, callId, recruiterId }) => {
+    try {
+        const callIdStr = String(callId);
+        const recruiterIdStr = String(recruiterId);
+
+        const videoCall = await VideoCall.findById(callIdStr);
+        if (!videoCall || videoCall.status !== 'active') {
+            return;
+        }
+
+        if (participantRefToId(videoCall.recruiter) !== recruiterIdStr) {
+            return;
+        }
+
+        await videoCall.endCall();
+
+        const queueEntry = await BoothQueue.findById(videoCall.queueEntry)
+            .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
+            .populate('interpreterCategory', 'name code');
+
+        if (queueEntry && ['invited', 'in_meeting'].includes(queueEntry.status)) {
+            queueEntry.status = 'waiting';
+            queueEntry.lastActivity = new Date();
+            await queueEntry.save();
+
+            const queueUpdateData = {
+                boothId: String(queueEntry.booth),
+                action: 'status_changed',
+                queueEntry: queueEntry.toJSON()
+            };
+
+            io.to(`booth_${queueEntry.booth}`).emit('queue-updated', queueUpdateData);
+            io.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', queueUpdateData);
+        }
+
+        try {
+            await endRoom(videoCall.roomName);
+        } catch (twilioError) {
+            logger.warn(`Failed to end Twilio room ${videoCall.roomName} after recruiter disconnect`, twilioError);
+        }
+
+        io.to(`call_${videoCall.roomName}`).emit('call_ended', {
+            callId: callIdStr,
+            endedBy: recruiterIdStr,
+            reason: 'recruiter_disconnected'
+        });
+
+        logger.info(`Ended call ${callIdStr} immediately after recruiter ${recruiterIdStr} disconnected`);
+    } catch (error) {
+        logger.error('Error handling recruiter disconnect cleanup:', error);
+    }
+};
 
 const getIO = () => {
     if (!_io) {
@@ -1370,6 +1422,18 @@ const socketHandler = (io) => {
                     if (socket.currentVideoCallId) {
                         const videoCall = await VideoCall.findById(socket.currentVideoCallId);
                         if (videoCall) {
+                            const recruiterId = participantRefToId(videoCall.recruiter);
+                            if (socket.userId === recruiterId) {
+                                await handleRecruiterDisconnectCleanup({
+                                    io,
+                                    callId: socket.currentVideoCallId,
+                                    recruiterId
+                                });
+                                socket.currentVideoCallId = null;
+                                socket.currentVideoCallRoom = null;
+                                return;
+                            }
+
                             await videoCall.removeParticipant(socket.userId);
                             
                             // If user is an interpreter, update their status to 'left'

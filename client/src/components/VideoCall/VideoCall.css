@@ -65,11 +65,12 @@
   padding: 1rem 1.5rem;
   background: var(--header-bg);
   color: var(--text-light);
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  /* In-flow at the top of the flex column so the header always reserves its own
+     (dynamic) height. The video area fills what's left — no overlap regardless of
+     how tall the header gets when names stack on mid-size screens. */
+  position: relative;
   z-index: 20;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -192,6 +193,39 @@
   color: var(--text-dark);
 }
 
+/* Mid-size screens: stack names under logos to prevent truncation. */
+@media (max-width: 1280px) and (min-width: 769px) {
+  .header-info {
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .header-names {
+    margin-left: 0;
+    align-items: center;
+    text-align: center;
+  }
+
+  .header-event-name,
+  .header-booth-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 180px;
+    line-height: 1.25;
+  }
+
+  .header-divider {
+    margin: 0 0.25rem;
+  }
+}
+
 /* Responsive Design for Mobile */
 @media (max-width: 768px) {
   .video-call-header {
@@ -259,8 +293,6 @@
   }
 
   .video-main-area {
-    padding-top: 120px;
-    /* More space for stacked mobile header */
     padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -473,13 +505,19 @@
 /* Main Video Area */
 .video-main-area {
   flex: 1;
+  /* min-height:0 + column flex give the grid a flex-driven (definite) height.
+     A percentage height here resolves against a flex-grown parent, which browsers
+     don't reliably treat as definite — that let the remote <video> fall back to its
+     intrinsic (portrait) height and overflow/clip at the bottom. */
+  min-height: 0;
   position: relative;
   display: flex;
+  flex-direction: column;
   background: #000;
   /* Allow absolutely positioned caption panel to extend without clipping */
   overflow: visible;
-  padding-top: 80px;
-  /* Footer is ~100px+ with labels; + safe area on notched iPad/iPhone */
+  /* Header is in-flow now, so no top reservation is needed.
+     Footer is still absolute (~100px+ with labels) + safe area on notched iPad/iPhone. */
   padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -489,11 +527,12 @@
   gap: 15px;
   padding: 15px;
   grid-template-columns: repeat(auto-fit, minmax(min(450px, 100%), 1fr));
-  grid-auto-rows: minmax(400px, 1fr);
-  align-content: center;
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
   justify-content: center;
   width: 100%;
   height: 100%;
+  min-height: 0;
 }
 
 /* No Participants State */

@@ -752,9 +752,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
           // Retry without device constraints
           const fallbackVideoConstraints = {
-            width: 1280,
-            height: 720,
-            frameRate: 30,
+            // Do not force 16:9 dimensions; preserve camera's native framing.
+            frameRate: { ideal: 24, max: 30 },
             facingMode: 'user'
           };
 
@@ -894,9 +893,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
           // Retry without device constraints
           const fallbackVideoConstraints = {
-            width: 1280,
-            height: 720,
-            frameRate: 30,
+            // Do not force 16:9 dimensions; preserve camera's native framing.
+            frameRate: { ideal: 24, max: 30 },
             facingMode: 'user'
           };
 
