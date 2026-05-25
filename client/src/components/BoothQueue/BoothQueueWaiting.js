@@ -1305,31 +1305,41 @@ export default function BoothQueueWaiting() {
 
           {/* Combined booth logo and queue card for mobile - always visible on mobile */}
           <div className="mobile-queue-header" role="region" aria-label="Event and queue information">
-            {/* Booth logo */}
-            <div className="mobile-booth-logo">
-              {booth?.logoUrl ? (
-                <img
-                  src={booth.logoUrl}
-                  alt={`${booth?.name || 'Company'} logo`}
-                  className="booth-logo-modern"
-                />
-              ) : (
-                <div className="booth-logo-modern-placeholder" role="img" aria-label={`${booth?.name || 'Company'} logo placeholder`}>
-                  <span aria-hidden="true">{booth?.name?.[0] || 'C'}</span>
+            {/* Row 1: logo + identity */}
+            <div className="mobile-identity-row">
+              <div className="mobile-booth-logo" aria-hidden="true">
+                {booth?.logoUrl ? (
+                  <img
+                    src={booth.logoUrl}
+                    alt=""
+                    className="booth-logo-modern"
+                  />
+                ) : (
+                  <div className="booth-logo-modern-placeholder" role="img" aria-label={`${booth?.name || 'Company'} logo placeholder`}>
+                    <span aria-hidden="true">{booth?.name?.[0] || 'C'}</span>
+                  </div>
+                )}
+              </div>
+              <div className="mobile-event-info-compact">
+                <h1 className="mobile-event-title" id="event-title-mobile">{event?.name || 'ABILITY Job Fair - Event'}</h1>
+                <p className="mobile-booth-subtitle" id="booth-title-mobile">{booth?.name || 'Company Booth'}</p>
+                {/* Waiting status sits next to the booth name to save vertical space */}
+                <div className="queue-status queue-status-mobile" role="status" aria-live="polite" aria-label="Current queue status">
+                  <span className="status-dot waiting" aria-hidden="true"></span>
+                  <span className="status-text">Waiting in queue</span>
                 </div>
-              )}
+              </div>
             </div>
-            
-            {/* Event and booth name - compact */}
-            <div className="mobile-event-info-compact">
-              <h1 className="mobile-event-title" id="event-title-mobile">{event?.name || 'ABILITY Job Fair - Event'}</h1>
-              <h2 className="mobile-booth-subtitle" id="booth-title-mobile">{booth?.name || 'Company Booth'}</h2>
-            </div>
-            
-            {/* Queue status card - compact */}
+
+            {/* Row 2: Queue status card - horizontal */}
             <div className="queue-numbers queue-numbers-mobile" role="region" aria-label="Queue status information">
               <div className="queue-number-card queue-number-card-mobile" role="status" aria-live="polite">
-                <span className="queue-label" id="total-waiting-label-mobile">Queue status</span>
+                <div className="mqc-label-group">
+                  <span className="queue-label" id="total-waiting-label-mobile">Queue status</span>
+                  <span id="total-waiting-desc-mobile" className="sr-only">
+                    There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you.
+                  </span>
+                </div>
                 <span
                   className="queue-number"
                   aria-labelledby="total-waiting-label-mobile"
@@ -1337,20 +1347,11 @@ export default function BoothQueueWaiting() {
                 >
                   {queuePosition || 0}
                 </span>
-                <span id="total-waiting-desc-mobile" className="sr-only">
-                  There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
-                </span>
                 <p className="queue-helper-text queue-helper-text-mobile">
                   {peopleAhead === 0 ? 'You are next' : `${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead`}
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Queue status indicator for mobile - always visible */}
-          <div className="queue-status queue-status-mobile" role="status" aria-live="polite" aria-label="Current queue status">
-            <span className="status-dot waiting" aria-hidden="true"></span>
-            <span className="status-text">Waiting in queue</span>
           </div>
 
           {/* Waiting message on top of placeholders */}
