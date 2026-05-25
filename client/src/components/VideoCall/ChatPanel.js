@@ -75,20 +75,6 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getRoleColor = (role) => {
-    const normalizedRole = String(role || '').toLowerCase();
-    switch (normalizedRole) {
-      case 'recruiter':
-        return '#007bff';
-      case 'jobseeker':
-        return '#28a745';
-      case 'interpreter':
-        return '#ffc107';
-      default:
-        return '#6c757d';
-    }
-  };
-
   const isOwnMessage = (message) => {
     const currentUserId = String(user?._id || user?.id || '');
     const senderId = String(message?.sender?.id || message?.sender?._id || '');
@@ -159,19 +145,13 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
                     <div className="incall-chat-message-sender">
                       {user?.role === 'JobSeeker' ? (
                         // For job seekers, only show the role
-                        <span 
-                          className="incall-chat-sender-name"
-                          style={{ color: getRoleColor(message.senderRole || message.sender?.role) }}
-                        >
+                        <span className="incall-chat-sender-name">
                           {message.senderRole || message.sender?.role || 'User'}
                         </span>
                       ) : (
                         // For other roles, show name and role
                         <>
-                          <span 
-                            className="incall-chat-sender-name"
-                            style={{ color: getRoleColor(message.senderRole || message.sender?.role) }}
-                          >
+                          <span className="incall-chat-sender-name">
                             {message.sender?.name || 'Unknown'}
                           </span>
                           <span className="incall-chat-sender-role">

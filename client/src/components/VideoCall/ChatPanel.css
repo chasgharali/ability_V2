@@ -156,15 +156,16 @@
 /* Regular Messages */
 .incall-chat-message-sender {
   margin-bottom: 4px;
-  font-size: 0.75rem;
+  font-size: 1rem;
 }
 
 .incall-chat-sender-name {
   font-weight: 600;
+  color: #000;
 }
 
 .incall-chat-sender-role {
-  color: #666;
+  color: #333;
   font-weight: normal;
   margin-left: 4px;
 }

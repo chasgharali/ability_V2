@@ -615,26 +615,44 @@
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-message.e-user {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(26, 26, 26, 0.15);
+    background: transparent;
+    box-shadow: none;
 }
 
-/* Force outgoing user bubbles to dark theme across Syncfusion variants */
-.syncfusion-chat-wrapper .e-chat-ui .e-message.e-user .e-text,
+/* Style only the message bubble container; keep inner text transparent */
 .syncfusion-chat-wrapper .e-chat-ui .e-message.e-user .e-message-text,
 .syncfusion-chat-wrapper .e-chat-ui .e-message-item.e-right .e-message-text,
-.syncfusion-chat-wrapper .e-chat-ui .e-message-item.e-right .e-text,
-.syncfusion-chat-wrapper .e-chat-ui .e-right .e-message-text,
-.syncfusion-chat-wrapper .e-chat-ui .e-right .e-text {
-    background: linear-gradient(135deg, #111111 0%, #1f2937 100%) !important;
-    color: #ffffff !important;
+.syncfusion-chat-wrapper .e-chat-ui .e-right .e-message-text {
+    background: #eef2ff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+}
+
+.syncfusion-chat-wrapper .e-chat-ui .e-message.e-user .e-message-text *,
+.syncfusion-chat-wrapper .e-chat-ui .e-message-item.e-right .e-message-text *,
+.syncfusion-chat-wrapper .e-chat-ui .e-right .e-message-text * {
+    background: transparent !important;
+    color: inherit !important;
 }
 
 .syncfusion-chat-wrapper .e-chat-ui .e-message.e-bot {
-    background: #f3f4f6;
-    color: #1a1a1a;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    background: transparent;
+    box-shadow: none;
+}
+
+.syncfusion-chat-wrapper .e-chat-ui .e-message.e-bot .e-message-text,
+.syncfusion-chat-wrapper .e-chat-ui .e-message-item.e-left .e-message-text,
+.syncfusion-chat-wrapper .e-chat-ui .e-left .e-message-text {
+    background: #f3f4f6 !important;
+    color: #1a1a1a !important;
+    box-shadow: none !important;
+}
+
+.syncfusion-chat-wrapper .e-chat-ui .e-message.e-bot .e-message-text *,
+.syncfusion-chat-wrapper .e-chat-ui .e-message-item.e-left .e-message-text *,
+.syncfusion-chat-wrapper .e-chat-ui .e-left .e-message-text * {
+    background: transparent !important;
+    color: inherit !important;
 }
 
 /* Booth name display for recruiters when viewed by GlobalSupport */
