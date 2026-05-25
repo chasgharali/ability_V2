@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import { uploadAudioToS3, uploadVideoToS3 } from '../../services/uploads';
-import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt, FaBars } from 'react-icons/fa';
+import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 import VideoCall from '../VideoCall/VideoCall';
 import CallInviteModal from '../VideoCall/CallInviteModal';
 import DeviceTestModal from './DeviceTestModal';
@@ -609,8 +609,14 @@ export default function BoothQueueWaiting() {
   };
 
   const handleDeclineInvite = () => {
+    const declinedCallId = pendingInvitation?.callId || pendingInvitation?.id;
+    if (socket && declinedCallId) {
+      socket.emit('call-invitation-declined', { callId: declinedCallId });
+    }
     setShowInviteModal(false);
     setPendingInvitation(null);
+    showInfo('Call invitation declined. You remain in the queue.');
+    refreshQueueStatus();
   };
 
   const handleCallEnd = () => {
@@ -697,10 +703,21 @@ export default function BoothQueueWaiting() {
     }
   };
 
-  const handleReturnToEvent = () => {
-    // Open event page in a new tab without leaving the queue
-    const eventUrl = `/events/registered/${eventSlug}`;
-    window.open(eventUrl, '_blank');
+  const handleReturnToEvent = async () => {
+    // Return to event detail and explicitly leave queue for this booth.
+    hasLeftQueueRef.current = true;
+    if (socket) {
+      socket.emit('leave-booth-queue', { boothId, userId: user._id });
+    }
+    try {
+      await boothQueueAPI.leaveQueue(boothId);
+      showSuccess('You left the queue and returned to the event');
+    } catch (error) {
+      console.error('Error leaving queue while returning to event:', error);
+      showError('Could not leave queue cleanly. Returning to event.');
+    } finally {
+      navigate(`/events/registered/${eventSlug}`);
+    }
   };
 
   const handleExitEvent = async () => {
@@ -1156,6 +1173,18 @@ export default function BoothQueueWaiting() {
           aria-label="Queue options and actions"
           aria-hidden={isMobile && !mobilePanelOpen ? 'true' : 'false'}
         >
+          <div className="mobile-panel-close-row">
+            <button
+              className="mobile-panel-close-btn"
+              onClick={handleMobilePanelClose}
+              aria-label="Close queue options panel"
+              type="button"
+            >
+              <FaTimes aria-hidden="true" />
+              <span className="sr-only">Close queue options panel</span>
+            </button>
+          </div>
+
           {/* Desktop: Show event info and queue status */}
           <div className="sidebar-header sidebar-header-desktop">
             <div className="booth-logo-section">
@@ -1242,7 +1271,7 @@ export default function BoothQueueWaiting() {
             <button
               className="sidebar-action-btn return-btn-alt"
               onClick={handleReturnToEvent}
-              aria-label="Return to main event page in new tab"
+              aria-label="Return to main event page and leave queue"
               type="button"
             >
               <FaArrowLeft aria-hidden="true" /> Return to main event
@@ -1270,7 +1299,7 @@ export default function BoothQueueWaiting() {
             aria-label={mobilePanelOpen ? 'Close queue options panel' : 'Open queue options panel'}
             type="button"
           >
-            <FaBars aria-hidden="true" />
+            {mobilePanelOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
             {mobilePanelOpen ? 'Close Queue Options' : 'Queue Options'}
           </button>
 

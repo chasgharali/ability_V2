@@ -161,6 +161,14 @@
   transition: transform 0.3s ease;
 }
 
+.mobile-panel-close-btn {
+  display: none;
+}
+
+.mobile-panel-close-row {
+  display: none;
+}
+
 .waiting-sidebar-left .sidebar-header {
   text-align: center;
   padding-bottom: 1rem;
@@ -873,6 +881,11 @@
     grid-template-areas: 'sidebar main';
   }
 
+  /* Keep employer waiting content off screen edges on tablet/mobile layouts */
+  .waiting-main.employer-mode {
+    padding: 1rem;
+  }
+
   .content-grid {
     gap: 1rem;
   }
@@ -1118,6 +1131,10 @@
 @media (max-width: 768px) {
   .waiting-main {
     padding: 1rem 1.5rem;
+  }
+
+  .waiting-main.employer-mode {
+    padding: 0.75rem;
   }
 
   .header-content {
@@ -1546,6 +1563,43 @@
     transform: translateY(0);
   }
 
+  .mobile-panel-close-row {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-panel-close-btn {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #9ca3af;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    cursor: pointer;
+  }
+
+  .mobile-panel-close-btn svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: #111827;
+    flex-shrink: 0;
+  }
+
+  .mobile-panel-close-btn:hover {
+    background: #f3f4f6;
+  }
+
+  .mobile-panel-close-btn:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+  }
+
   .mobile-backdrop {
     position: fixed;
     top: 0;
@@ -1791,6 +1845,43 @@
 
   .waiting-sidebar-left.open {
     transform: translateY(0);
+  }
+
+  .mobile-panel-close-row {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-panel-close-btn {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #9ca3af;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    cursor: pointer;
+  }
+
+  .mobile-panel-close-btn svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: #111827;
+    flex-shrink: 0;
+  }
+
+  .mobile-panel-close-btn:hover {
+    background: #f3f4f6;
+  }
+
+  .mobile-panel-close-btn:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
   }
 
 

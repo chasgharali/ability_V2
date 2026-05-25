@@ -640,7 +640,17 @@ export default function BoothQueueManagement() {
     setPendingQueueEntry(null);
   };
 
-  const handleCallEnd = async () => {
+  const handleCallEnd = async (endData = {}) => {
+    const declinedByJobSeeker = endData?.reason === 'declined_invitation';
+
+    if (declinedByJobSeeker) {
+      showInfo('Job seeker declined the call invitation and remains in queue.');
+      setActiveCall(null);
+      setIsInCall(false);
+      loadData();
+      return;
+    }
+
     try {
       // Create meeting record from the video call
       if (activeCall && (activeCall.id || activeCall.callId)) {

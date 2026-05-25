@@ -10,6 +10,7 @@ const logger = require('../utils/logger');
 const liveStatsStore = require('../utils/liveStatsStore');
 const deepgramService = require('../services/deepgramService');
 const openaiCaptionService = require('../services/openaiCaptionService');
+const { endRoom } = require('../config/twilio');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 /**
@@ -1064,6 +1065,41 @@ const socketHandler = (io) => {
                     socket.emit('error', { message: 'Only the invited job seeker can decline this call' });
                     return;
                 }
+
+                // Mark the call as ended so it won't be recovered as active by either side.
+                await videoCall.endCall();
+
+                // Return the job seeker to waiting state so they remain in the queue.
+                const queueEntry = await BoothQueue.findById(videoCall.queueEntry)
+                    .populate('jobSeeker', 'name email avatarUrl resumeUrl linkedInUrl phoneNumber city state metadata')
+                    .populate('interpreterCategory', 'name code');
+
+                if (queueEntry) {
+                    queueEntry.status = 'waiting';
+                    queueEntry.lastActivity = new Date();
+                    await queueEntry.save();
+
+                    const queueUpdateData = {
+                        boothId: String(queueEntry.booth),
+                        action: 'status_changed',
+                        queueEntry: queueEntry.toJSON()
+                    };
+
+                    io.to(`booth_${queueEntry.booth}`).emit('queue-updated', queueUpdateData);
+                    io.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', queueUpdateData);
+                }
+
+                try {
+                    await endRoom(videoCall.roomName);
+                } catch (twilioError) {
+                    logger.warn(`Failed to end Twilio room ${videoCall.roomName} after invite decline`, twilioError);
+                }
+
+                io.to(`call_${videoCall.roomName}`).emit('call_ended', {
+                    callId: callId.toString(),
+                    endedBy: socket.userId,
+                    reason: 'declined_invitation'
+                });
 
                 io.to(`call_${videoCall.roomName}`).emit('participant_left_call', {
                     callId: callId.toString(),
