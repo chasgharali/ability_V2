@@ -19,7 +19,7 @@ import './components/UI/RichTextEditor.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-const syncfusionLicense = process.env.REACT_APP_SYNCFUSION_LICENSE || 'Ngo9BigBOggjHTQxAR8/V1JFaF5cXGRCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWH5fcXRWRWRcWURxX0VWYEg=';
+const syncfusionLicense = process.env.REACT_APP_SYNCFUSION_LICENSE || 'Ngo9BigBOggjHTQxAR8/V1JHaF5cWWdCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdlWXpcdnRRQmdeVUd0XUBWYEo=';
 try {
     registerLicense(syncfusionLicense);
 } catch (err) {

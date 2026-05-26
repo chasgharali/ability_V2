@@ -618,11 +618,23 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
         } else {
             // SuperAdmin/Admin/GlobalSupport - normal behavior
             if (role) {
+                // Admins must never be able to query SuperAdmin users.
+                if (currentUser.role === 'Admin' && role === 'SuperAdmin') {
+                    return res.json({
+                        users: [],
+                        total: 0,
+                        page: parseInt(page),
+                        limit: parseInt(limit),
+                        stats: { active: 0, inactive: 0, verified: 0 }
+                    });
+                }
                 query.role = role;
             } else {
-                // When no role filter is provided, exclude JobSeekers by default
-                // JobSeekers have their own management page
-                query.role = { $nin: ['JobSeeker', 'SuperAdmin'] };
+                // When no role filter is provided, exclude JobSeekers by default.
+                // Admins must also not see SuperAdmin records.
+                query.role = currentUser.role === 'Admin'
+                    ? { $nin: ['JobSeeker', 'SuperAdmin'] }
+                    : { $ne: 'JobSeeker' };
             }
 
             // Org scoping: Admin sees only users in their own organization
