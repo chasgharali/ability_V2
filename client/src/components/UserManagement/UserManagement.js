@@ -432,6 +432,11 @@ export default function UserManagement() {
       searchInputRef.current.value = '';
     }
     setActiveSearchQuery('');
+    // Bump the nonce so loadUsers is always recreated and re-fetches, even when
+    // the active query is already empty (otherwise clearing is a no-op and the
+    // grid keeps showing stale results).
+    setSearchTriggerNonce((prev) => prev + 1);
+    setCurrentPage(1);
     try {
       sessionStorage.removeItem('userManagement_searchQuery');
     } catch (error) {

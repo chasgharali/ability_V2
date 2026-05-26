@@ -1746,6 +1746,12 @@ export default function JobSeekerManagement() {
                         searchInputRef.current.value = '';
                       }
                       setActiveSearchQuery('');
+                      // Bump the nonce so the search-trigger effect always re-fetches,
+                      // even when the prev* refs already match the cleared query. Without
+                      // this, the Clear path advances activeSearchQuery without the nonce,
+                      // letting the guard desync after repeated clear+search cycles and
+                      // silently skip the reload.
+                      setSearchTriggerNonce((prev) => prev + 1);
                       // Clear from sessionStorage
                       try {
                         sessionStorage.removeItem('jobSeekerManagement_searchQuery');

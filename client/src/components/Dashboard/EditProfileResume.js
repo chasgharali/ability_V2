@@ -28,7 +28,16 @@ function getNameInitials(displayName) {
   return parts[0].slice(0, 2).toUpperCase();
 }
 
-export default function EditProfileResume({ onValidationChange, onFormDataChange, onDone, onPrev, embedded, resumeOptional, resumeTopSlot }) {
+export default function EditProfileResume({
+  onValidationChange,
+  onFormDataChange,
+  onDone,
+  onPrev,
+  embedded,
+  resumeOptional,
+  resumeTopSlot,
+  resumeError
+}) {
   // Standalone page uses h1 → h2; embedded wizard uses h3 → h4 (avoid skipped levels in either context)
   const ProfileSectionHeading = embedded ? 'h4' : 'h2';
   const CameraDialogHeading = embedded ? 'h4' : 'h2';
@@ -52,6 +61,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const [resumeFileName, setResumeFileName] = useState('');
   const [resumeUrl, setResumeUrl] = useState('');
   const [resumeKey, setResumeKey] = useState('');
+  const [resumeStatusMessage, setResumeStatusMessage] = useState('');
   const [resumeTab, setResumeTab] = useState(() => localStorage.getItem('resumeTabPref') || 'upload');
   const [builderResumes, setBuilderResumes] = useState([]);
   const [builderLoading, setBuilderLoading] = useState(false);
@@ -88,6 +98,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
     try {
       if (!resumeKey) {
         showToast('No resume found to delete', 'error');
+        setResumeStatusMessage('No resume file is currently attached.');
         return;
       }
       await authFetch(`/api/uploads/${encodeURIComponent(resumeKey)}`, { method: 'DELETE' });
@@ -95,9 +106,11 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       setResumeKey('');
       setResumeUrl('');
       showToast('Resume deleted', 'success');
+      setResumeStatusMessage('Resume file removed.');
       if (resumeInputRef.current) resumeInputRef.current.value = '';
     } catch (e) {
       showToast('Failed to delete resume', 'error');
+      setResumeStatusMessage('Resume delete failed. Please try again.');
     }
   };
 
@@ -328,6 +341,9 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
             const fname = path.split('/').pop();
             if (fname) setResumeFileName(fname);
             setResumeUrl(rUrl);
+            if (fname) {
+              setResumeStatusMessage(`Current attached resume: ${fname}.`);
+            }
           } catch { }
         }
       } catch (e) {
@@ -401,6 +417,9 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
   const uploadToS3 = async (file, fileType) => {
     setUploading(true);
     try {
+      if (fileType === 'resume') {
+        setResumeStatusMessage(`Uploading resume file ${file.name}.`);
+      }
       const presigned = await presign(file, fileType);
       const uploadUrl = presigned?.upload?.url;
       const key = presigned?.upload?.key;
@@ -423,6 +442,7 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
         const completedUrl = complete?.file?.downloadUrl || immediateDownload;
         if (completedUrl) setResumeUrl(completedUrl);
         showToast('Resume uploaded');
+        setResumeStatusMessage(`Resume uploaded successfully: ${file.name}.`);
         // Clear input so selecting the same file again triggers onChange
         if (resumeInputRef.current) resumeInputRef.current.value = '';
       } else if (fileType === 'avatar') {
@@ -438,6 +458,9 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
       console.error('S3 upload error', e);
       const hint = e?.message?.includes('TypeError: Failed to fetch') ? ' (Check S3 CORS and origin http://localhost:3000)' : '';
       showToast((e.message || 'Upload failed') + hint, 'error');
+      if (fileType === 'resume') {
+        setResumeStatusMessage('Resume upload failed. Please try again.');
+      }
     } finally {
       setUploading(false);
     }
@@ -662,7 +685,9 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
 
       <div className="upload-row">
         <div className="upload-card">
-          <ProfileSectionHeading>Resume</ProfileSectionHeading>
+          <ProfileSectionHeading id="resume-section-label">
+            Resume{!resumeOptional ? ' *' : ''}
+          </ProfileSectionHeading>
           {resumeTopSlot}
           {/* Tab toggle — only in standalone (not embedded in wizard which has its own source selector) */}
           {!resumeOptional && !resumeTopSlot && (
@@ -686,10 +711,29 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
           {/* Upload UI — shown when upload tab is active, or when embedded in wizard with resumeSource='upload' (resumeOptional=false) */}
           {!resumeOptional && (resumeTopSlot || resumeTab === 'upload') && (
             <>
-              <p className="muted">Accepted file types: PDF and DOC (PDF preferred)</p>
+              <p id="resume-file-types" className="muted">Accepted file types: PDF and DOC (PDF preferred)</p>
+              <div
+                id="resume-file-status"
+                role="status"
+                aria-live="polite"
+                style={{
+                  position: 'absolute',
+                  width: 1,
+                  height: 1,
+                  padding: 0,
+                  margin: -1,
+                  overflow: 'hidden',
+                  clip: 'rect(0, 0, 0, 0)',
+                  whiteSpace: 'nowrap',
+                  border: 0
+                }}
+              >
+                {resumeStatusMessage}
+              </div>
               <div className="upload-actions">
                 <input
                   ref={resumeInputRef}
+                  id="resume-file-input"
                   type="file"
                   accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   hidden
@@ -703,11 +747,19 @@ export default function EditProfileResume({ onValidationChange, onFormDataChange
                   className="update-button"
                   onClick={() => resumeInputRef.current?.click()}
                   disabled={uploading}
+                  aria-label={uploading ? 'Uploading resume file' : 'Choose resume file to upload'}
+                  aria-describedby={`resume-file-types resume-file-status ${resumeError ? 'resume-upload-error' : ''}`.trim()}
+                  aria-required={!resumeOptional ? 'true' : undefined}
                 >
                   {uploading ? 'Uploading…' : 'Choose file to upload'}
                 </button>
                 <button type="button" className="update-button" onClick={deleteResume} disabled={!resumeKey}>Delete</button>
               </div>
+              {resumeError && (
+                <div id="resume-upload-error" className="field-error" role="alert" aria-live="polite">
+                  {resumeError}
+                </div>
+              )}
               {resumeFileName && (
                 <div className="muted" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <span>File Attached: {resumeFileName}</span>

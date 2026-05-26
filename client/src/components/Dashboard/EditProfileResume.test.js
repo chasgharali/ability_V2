@@ -73,11 +73,8 @@ describe('EditProfileResume Keywords Accessibility', () => {
     const describedBy = keywordInput.getAttribute('aria-describedby') || '';
 
     expect(instructions).not.toBeNull();
-    describedBy.split(' ').forEach((id) => {
-      if (id) {
-        expect(document.getElementById(id)).not.toBeNull();
-      }
-    });
+    expect(describedBy).toContain('keyword-input-instructions');
+    expect(describedBy).toContain('keyword-input-status');
   });
 
   test('updates keyword values through Syncfusion MultiSelect change handler', async () => {
@@ -103,5 +100,37 @@ describe('EditProfileResume Keywords Accessibility', () => {
     await waitFor(() => {
       expect(liveRegion.textContent).toContain('2 keywords selected.');
     });
+  });
+
+  test('wires resume upload button to helper text and status region', async () => {
+    render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
+
+    const uploadButton = await screen.findByRole('button', { name: /choose resume file to upload/i });
+    const uploadHelpText = screen.getByText(/accepted file types: pdf and doc/i);
+    const statusRegion = screen.getByRole('status');
+    const describedBy = uploadButton.getAttribute('aria-describedby') || '';
+
+    expect(uploadButton.getAttribute('aria-required')).toBe('true');
+    expect(uploadHelpText).not.toBeNull();
+    expect(statusRegion).not.toBeNull();
+    expect(describedBy).toContain('resume-file-types');
+    expect(describedBy).toContain('resume-file-status');
+  });
+
+  test('renders inline resume error and marks upload control invalid', async () => {
+    render(
+      <EditProfileResume
+        embedded
+        onValidationChange={jest.fn()}
+        resumeError="Resume upload is required"
+      />
+    );
+
+    const uploadButton = await screen.findByRole('button', { name: /choose resume file to upload/i });
+    const errorMessage = screen.getByText('Resume upload is required');
+    const describedBy = uploadButton.getAttribute('aria-describedby') || '';
+
+    expect(errorMessage.getAttribute('role')).toBe('alert');
+    expect(describedBy).toContain('resume-upload-error');
   });
 });

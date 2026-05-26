@@ -7,10 +7,19 @@ import './ResumeBuilder.css';
  * Props:
  *   selectedResumeId  – currently selected resume _id (or null)
  *   onChange(id|null) – called when selection changes
+ *   description       – optional helper text for this context
+ *   skipLabel         – optional label for selecting no saved resume
  */
-export default function ResumeSelectWidget({ selectedResumeId, onChange }) {
+export default function ResumeSelectWidget({
+  selectedResumeId,
+  onChange,
+  description = 'Select a saved resume to share with recruiters at this event, or skip and use your uploaded resume.',
+  skipLabel = 'Skip — use my uploaded resume file only'
+}) {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const groupLabelId = 'resume-select-widget-title';
+  const groupDescId = 'resume-select-widget-description';
 
   useEffect(() => {
     listResumes()
@@ -19,14 +28,20 @@ export default function ResumeSelectWidget({ selectedResumeId, onChange }) {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="rb-select-section"><p>Loading saved resumes…</p></div>;
+  if (loading) {
+    return (
+      <div className="rb-select-section">
+        <p role="status" aria-live="polite">Loading saved resumes…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="rb-select-section">
-      <h4>Attach a Resume from Resume Builder</h4>
-      <p>Select a saved resume to share with recruiters at this event, or skip and use your uploaded resume.</p>
+      <h4 id={groupLabelId}>Attach a Resume from Resume Builder</h4>
+      <p id={groupDescId}>{description}</p>
 
-      <div className="rb-select-list">
+      <div className="rb-select-list" role="radiogroup" aria-labelledby={groupLabelId} aria-describedby={groupDescId}>
         {resumes.map(r => (
           <label
             key={r._id}
@@ -61,7 +76,7 @@ export default function ResumeSelectWidget({ selectedResumeId, onChange }) {
           checked={!selectedResumeId}
           onChange={() => onChange(null)}
         />
-        Skip — use my uploaded resume file only
+        {skipLabel}
       </label>
 
       {resumes.length === 0 && (

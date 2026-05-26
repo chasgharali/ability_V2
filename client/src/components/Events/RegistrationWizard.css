@@ -78,6 +78,77 @@
   outline-offset: 2px;
 }
 
+.resume-source-wrapper {
+  margin-bottom: 1rem;
+}
+
+.resume-source-group {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.9rem 1rem 1rem;
+  margin: 0;
+}
+
+.resume-source-group:focus {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.resume-source-legend {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  padding: 0 0.25rem;
+}
+
+.resume-source-hint {
+  margin: 0.15rem 0 0.8rem;
+  color: #4b5563;
+  font-size: 0.85rem;
+}
+
+.resume-source-options {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.resume-source-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.resume-source-option:hover {
+  border-color: #9ca3af;
+}
+
+.resume-source-option.selected {
+  border-color: #111827;
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.resume-source-option input[type="radio"] {
+  flex-shrink: 0;
+}
+
+.resume-source-option:focus-within {
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.resume-source-group .field-error {
+  margin-top: 0.75rem;
+}
+
 .wizard-step-number {
   display: inline-flex;
   align-items: center;
@@ -593,6 +664,10 @@
   .announcements-section {
     padding: 1.5rem;
     margin: 1.5rem 0;
+  }
+
+  .resume-source-options {
+    flex-direction: column;
   }
   
   .terms-content-preview {

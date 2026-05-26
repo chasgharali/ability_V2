@@ -41,11 +41,17 @@ export default function RegistrationWizard() {
   const stepHeadingRef = useRef(null);
   const surveyFormRef = useRef(null);
   const pageHeadingRef = useRef(null);
+  const resumeSourceGroupRef = useRef(null);
 
   // Keep keyboard focus aligned with the currently visible registration content.
   // This also handles initial async page load before step content mounts.
   useEffect(() => {
     if (fetching) return;
+    if (stepHeadingRef.current) {
+      stepHeadingRef.current.setAttribute('tabindex', '-1');
+      stepHeadingRef.current.focus();
+      return;
+    }
     const focusTarget = document.getElementById('main-content')
       || document.querySelector('main');
     if (focusTarget) {
@@ -170,6 +176,36 @@ export default function RegistrationWizard() {
       validateStep2();
     }
   }, [currentFormData, step]);
+
+  useEffect(() => {
+    if (!liveRef.current) return;
+    const currentStepErrors = validationErrors[`step${step}`];
+    if (currentStepErrors && Object.keys(currentStepErrors).length > 0) {
+      const errorMessages = Object.values(currentStepErrors).join(', ');
+      liveRef.current.textContent = `Validation errors: ${errorMessages}`;
+    }
+  }, [validationErrors, step]);
+
+  useEffect(() => {
+    if (step === 2 && currentFormData) {
+      validateStep2();
+    }
+  }, [resumeSource, selectedResumeId, step, currentFormData]);
+
+  useEffect(() => {
+    if (step !== 2 || !liveRef.current) return;
+    liveRef.current.textContent = resumeSource === 'saved'
+      ? 'Saved resume selected. Choose a resume from your Resume Builder list.'
+      : 'Upload resume selected. Choose a file from your device to continue.';
+  }, [resumeSource, step]);
+
+  useEffect(() => {
+    if (step !== 2) return;
+    if (validationErrors.step2?.resume && resumeSourceGroupRef.current) {
+      resumeSourceGroupRef.current.setAttribute('tabindex', '-1');
+      resumeSourceGroupRef.current.focus();
+    }
+  }, [validationErrors, step]);
 
 
   // Validation functions for each step
@@ -302,15 +338,6 @@ export default function RegistrationWizard() {
       const mainContent = document.getElementById('dashboard-main') || document.querySelector('.dashboard-main');
       if (mainContent) {
         mainContent.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } else {
-      // Announce validation errors to screen readers
-      if (liveRef.current) {
-        const currentStepErrors = validationErrors[`step${step}`];
-        if (currentStepErrors) {
-          const errorMessages = Object.values(currentStepErrors).join(', ');
-          liveRef.current.textContent = `Validation errors: ${errorMessages}`;
-        }
       }
     }
   };
@@ -594,25 +621,64 @@ export default function RegistrationWizard() {
                   embedded
                   resumeOptional={resumeSource === 'saved'}
                   resumeTopSlot={
-                    <div style={{ marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.55rem 1rem', border: `2px solid ${resumeSource === 'upload' ? '#111827' : '#e5e7eb'}`, borderRadius: 8, background: resumeSource === 'upload' ? '#f9fafb' : '#fff', fontWeight: resumeSource === 'upload' ? 600 : 400, fontSize: '0.9rem' }}>
-                          <input type="radio" name="resumeSource" value="upload" checked={resumeSource === 'upload'} onChange={() => setResumeSource('upload')} />
-                          Upload a File
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.55rem 1rem', border: `2px solid ${resumeSource === 'saved' ? '#111827' : '#e5e7eb'}`, borderRadius: 8, background: resumeSource === 'saved' ? '#f9fafb' : '#fff', fontWeight: resumeSource === 'saved' ? 600 : 400, fontSize: '0.9rem' }}>
-                          <input type="radio" name="resumeSource" value="saved" checked={resumeSource === 'saved'} onChange={() => setResumeSource('saved')} />
-                          Use a Saved Resume
-                        </label>
-                      </div>
+                    <div className="resume-source-wrapper">
+                      <fieldset
+                        ref={resumeSourceGroupRef}
+                        className="resume-source-group"
+                        aria-describedby={`resume-source-hint ${validationErrors.step2?.resume ? 'resume-source-error' : ''}`.trim()}
+                        aria-invalid={validationErrors.step2?.resume ? 'true' : undefined}
+                      >
+                        <legend className="resume-source-legend">How would you like to provide your resume? *</legend>
+                        <p id="resume-source-hint" className="resume-source-hint">
+                          Choose one option. Upload a file or pick a resume from your saved resumes.
+                        </p>
+                        <div className="resume-source-options">
+                          <label className={`resume-source-option ${resumeSource === 'upload' ? 'selected' : ''}`}>
+                            <input
+                              type="radio"
+                              name="resumeSource"
+                              value="upload"
+                              checked={resumeSource === 'upload'}
+                              onChange={() => setResumeSource('upload')}
+                              aria-describedby="resume-source-upload-desc"
+                            />
+                            <span>Upload a File</span>
+                            <span id="resume-source-upload-desc" className="sr-only">
+                              Upload a PDF, DOC, or DOCX file from your device.
+                            </span>
+                          </label>
+                          <label className={`resume-source-option ${resumeSource === 'saved' ? 'selected' : ''}`}>
+                            <input
+                              type="radio"
+                              name="resumeSource"
+                              value="saved"
+                              checked={resumeSource === 'saved'}
+                              onChange={() => setResumeSource('saved')}
+                              aria-describedby="resume-source-saved-desc"
+                            />
+                            <span>Use a Saved Resume</span>
+                            <span id="resume-source-saved-desc" className="sr-only">
+                              Select one of your resumes created in Resume Builder.
+                            </span>
+                          </label>
+                        </div>
+                        {validationErrors.step2?.resume && (
+                          <div id="resume-source-error" className="field-error" role="alert" aria-live="polite">
+                            {validationErrors.step2.resume}
+                          </div>
+                        )}
+                      </fieldset>
                       {resumeSource === 'saved' && (
                         <ResumeSelectWidget
                           selectedResumeId={selectedResumeId}
                           onChange={setSelectedResumeId}
+                          skipLabel="Use no saved resume for this registration"
+                          description="Select a saved resume to share with recruiters at this event."
                         />
                       )}
                     </div>
                   }
+                  resumeError={validationErrors.step2?.resume}
                   onValidationChange={() => validateStep2()}
                   onFormDataChange={setCurrentFormData}
                   onDone={next}
