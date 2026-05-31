@@ -2271,3 +2271,15 @@
   color: #065f46;
   font-weight: 600;
 }
+
+/* Accessibility/readability: keep queue menu text at least 1rem on medium/small screens */
+@media (max-width: 1199px) {
+  .mobile-toggle-btn,
+  .queue-number-card-mobile .queue-label,
+  .queue-helper-text-mobile,
+  .queue-status-mobile,
+  .mobile-identity-row .queue-status-mobile,
+  .sidebar-action-btn {
+    font-size: 1rem !important;
+  }
+}
