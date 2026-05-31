@@ -437,6 +437,9 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
         {message && <div className="alert-box" role="status" aria-live="polite">{message}</div>}
         {error && <div className="alert-box" style={{ background: '#fdecea', borderColor: '#f5c2c7' }} role="alert">{error}</div>}
 
+      <p id="acc-help" className="sr-only">
+        Update your account details, accessibility preferences, and communication settings.
+      </p>
       <form aria-label="Account information form" onSubmit={handleNext} className="account-form" aria-describedby="acc-help">
         <div className="form-row">
           <div className="form-group">
@@ -663,7 +666,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
       {/* Update Email Section */}
       {changePassword && (
         <div className="email-update-section" style={{ marginTop: '3rem' }}>
-          <h3 className="section-title">Update Email Address</h3>
+          <h2 className="section-title">Update Email Address</h2>
           
           {emailMessage && (
             <div className="alert-box" role="status" aria-live="polite">{emailMessage}</div>
@@ -709,7 +712,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
       {/* Update Password Section */}
       {changePassword && (
         <div className="password-update-section" style={{ marginTop: '3rem' }}>
-          <h3 className="section-title">Update Password</h3>
+          <h2 className="section-title">Update Password</h2>
           
           {passwordMessage && (
             <div className="alert-box" role="status" aria-live="polite">{passwordMessage}</div>

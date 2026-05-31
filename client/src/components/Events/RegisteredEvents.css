@@ -87,7 +87,7 @@
     flex: 1;
 }
 
-.event-card-title h3 {
+.event-card-title h2 {
     color: #1f2937;
     font-size: 20px;
     font-weight: 600;
@@ -96,8 +96,8 @@
 }
 
 .registration-status-badge {
-    background: #d1fae5;
-    color: #065f46;
+    background: #dcfce7;
+    color: #14532d;
     padding: 6px 12px;
     border-radius: 16px;
     font-size: 12px;
@@ -242,7 +242,7 @@
     margin-bottom: 16px;
 }
 
-.empty-state h3 {
+.empty-state h2 {
     color: #1f2937;
     font-size: 20px;
     font-weight: 600;

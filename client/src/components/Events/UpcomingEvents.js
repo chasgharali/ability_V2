@@ -162,7 +162,7 @@ export default function UpcomingEvents() {
               {!fetching && filteredEvents.length === 0 && (
                 <div className="empty-state" role="status">
                   <div className="empty-state-icon" aria-hidden="true">📅</div>
-                  <h3>No Matching Events</h3>
+                  <h2>No Matching Events</h2>
                   <p>
                     {events.length === 0
                       ? 'Check back soon for new job fair opportunities.'
@@ -179,7 +179,7 @@ export default function UpcomingEvents() {
                       <li key={evt._id} className="event-card">
                         <div className="event-card-header">
                           <div className="event-card-title">
-                            <h3>{evt.name}</h3>
+                            <h2>{evt.name}</h2>
                           </div>
                           <span 
                             className={`event-status-badge ${status.className}`}

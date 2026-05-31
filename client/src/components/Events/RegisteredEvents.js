@@ -148,7 +148,7 @@ export default function RegisteredEvents() {
               {!fetching && filteredEvents.length === 0 && (
                 <div className="empty-state" role="status">
                   <div className="empty-state-icon" aria-hidden="true">📋</div>
-                  <h3>{events.length === 0 ? 'No Registrations Yet' : 'No Matching Registrations'}</h3>
+                  <h2>{events.length === 0 ? 'No Registrations Yet' : 'No Matching Registrations'}</h2>
                   <p>
                     {events.length === 0
                       ? "You haven't registered for any job fairs. Browse available events to get started."
@@ -174,12 +174,11 @@ export default function RegisteredEvents() {
                       <li key={evt._id} className="event-card">
                         <div className="event-card-header">
                           <div className="event-card-title">
-                            <h3>{evt.name}</h3>
+                            <h2>{evt.name}</h2>
                           </div>
-                          <span 
+                          <span
                             className="registration-status-badge"
-                            style={{ background: `${status.color}15`, color: status.color }}
-                            aria-label={`Event status: ${status.text}`}
+                            aria-label="Registration status: Registered"
                           >
                             ✓ Registered
                           </span>

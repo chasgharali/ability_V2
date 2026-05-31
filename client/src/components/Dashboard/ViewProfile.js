@@ -128,6 +128,7 @@ export default function ViewProfile() {
   const primaryExperienceNames = mapArray(primaryExperience, JOB_CATEGORY_MAP);
   const employmentTypeNames = mapArray(employmentTypes, JOB_TYPE_MAP);
   const languageNames = mapArray(languages, LANG_MAP);
+  const heroContactTextStyle = { color: '#111827', fontWeight: 600 };
 
   return (
     <div className="dashboard-content profile-view">
@@ -171,9 +172,9 @@ export default function ViewProfile() {
             <div className="profile-identity">
               <h2 id="profile-hero-heading" className="profile-name">{name || 'Name not provided'}</h2>
               <div className="profile-contact">
-                <p className="profile-email">{email || 'Email not provided'}</p>
-                {phone && <p className="profile-phone">{phone}</p>}
-                <p className="profile-location">{[location, country].filter(Boolean).join(', ') || 'Location not specified'}</p>
+                <p className="profile-email" style={heroContactTextStyle}>{email || 'Email not provided'}</p>
+                {phone && <p className="profile-phone" style={heroContactTextStyle}>{phone}</p>}
+                <p className="profile-location" style={heroContactTextStyle}>{[location, country].filter(Boolean).join(', ') || 'Location not specified'}</p>
               </div>
             </div>
 
@@ -237,13 +238,13 @@ export default function ViewProfile() {
                 <div className="detail-content">
                   {headline && (
                     <div className="detail-item">
-                      <label className="detail-label">Professional Headline</label>
+                      <h4 className="detail-label">Professional Headline</h4>
                       <div className="detail-value">{headline}</div>
                     </div>
                   )}
                   {keywords && (
                     <div className="detail-item">
-                      <label className="detail-label">Keywords & Skills</label>
+                      <h4 className="detail-label">Keywords & Skills</h4>
                       <div className="detail-value">{keywords}</div>
                     </div>
                   )}
@@ -259,19 +260,19 @@ export default function ViewProfile() {
                 <div className="detail-content">
                   {primaryExperienceNames.length > 0 && (
                     <div className="detail-item">
-                      <label className="detail-label">Primary Job Experience</label>
+                      <h4 className="detail-label">Primary Job Experience</h4>
                       <div className="detail-value"><Chips items={primaryExperienceNames} /></div>
                     </div>
                   )}
                   {employmentTypeNames.length > 0 && (
                     <div className="detail-item">
-                      <label className="detail-label">Employment Types</label>
+                      <h4 className="detail-label">Employment Types</h4>
                       <div className="detail-value"><Chips items={employmentTypeNames} /></div>
                     </div>
                   )}
                   {workLevel && mapValue(workLevel, EXP_MAP) !== workLevel && (
                     <div className="detail-item">
-                      <label className="detail-label">Experience Level</label>
+                      <h4 className="detail-label">Experience Level</h4>
                       <div className="detail-value">{mapValue(workLevel, EXP_MAP)}</div>
                     </div>
                   )}
@@ -287,7 +288,7 @@ export default function ViewProfile() {
                 <div className="detail-content">
                   {educationLevel && mapValue(educationLevel, EDU_MAP) !== educationLevel && (
                     <div className="detail-item">
-                      <label className="detail-label">Highest Education Level</label>
+                      <h4 className="detail-label">Highest Education Level</h4>
                       <div className="detail-value">{mapValue(educationLevel, EDU_MAP)}</div>
                     </div>
                   )}
@@ -303,13 +304,13 @@ export default function ViewProfile() {
                 <div className="detail-content">
                   {languageNames.length > 0 && (
                     <div className="detail-item">
-                      <label className="detail-label">Languages</label>
+                      <h4 className="detail-label">Languages</h4>
                       <div className="detail-value"><Chips items={languageNames} /></div>
                     </div>
                   )}
                   {veteranStatus && mapValue(veteranStatus, VET_MAP) !== veteranStatus && (
                     <div className="detail-item">
-                      <label className="detail-label">Veteran/Military Status</label>
+                      <h4 className="detail-label">Veteran/Military Status</h4>
                       <div className="detail-value">{mapValue(veteranStatus, VET_MAP)}</div>
                     </div>
                   )}
@@ -341,7 +342,7 @@ export default function ViewProfile() {
                         {r.title || 'Untitled Resume'}
                       </div>
                       {r.lastAiGenerated && (
-                        <div style={{ fontSize: '12px', color: '#6b7280' }}>AI generated</div>
+                        <div style={{ fontSize: '12px', color: '#374151', fontWeight: 500 }}>AI generated</div>
                       )}
                     </div>
                     {r.isDefault && (
