@@ -12,7 +12,7 @@ const ses = new AWS.SES({ apiVersion: '2010-12-01' });
 
 async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
-  const subject = 'Welcome to AbilityConnect.online, Please Verify Your Email Address';
+  const subject = 'Welcome to abilityCONNECT.online. Please Verify Your Email Address.';
 
   const fallbackLink = appVerifyLink || verifyLink;
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
@@ -24,7 +24,7 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
     <div style="${containerStyle}">
       <div style="${cardStyle}">
         <div style="${contentStyle}">
-          <p style="margin:0 0 8px 0; color:#111">Welcome to AbilityConnect.online, Please Verify Your Email Address</p>
+          <p style="margin:0 0 8px 0; color:#111">Welcome to abilityCONNECT.online. Please Verify Your Email Address.</p>
           <p style="margin:12px 0">Please click the button below to verify your email address:</p>
           <p style="margin:18px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="${buttonStyle}">Verify Email</a></p>
           <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
@@ -34,7 +34,7 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
       </div>
     </div>
   `;
-  const text = `Welcome to AbilityConnect.online, Please Verify Your Email Address\n\nVerify Email: ${verifyLink}\n\nIf the button above doesn't work, use this link: ${fallbackLink}\n\nAttention: Chrome browser is required. Please copy the link into Chrome if it is not your default browser.`;
+  const text = `Welcome to abilityCONNECT.online. Please Verify Your Email Address.\n\nVerify Email: ${verifyLink}\n\nIf the button above doesn't work, use this link: ${fallbackLink}\n\nAttention: Chrome browser is required. Please copy the link into Chrome if it is not your default browser.`;
 
   const params = {
     Destination: { ToAddresses: [toEmail] },
@@ -99,7 +99,7 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
 
 async function sendPasswordResetEmail(toEmail, resetLink) {
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
-  const subject = 'Reset your password - abilityconnect.com';
+  const subject = 'Reset Your Password - abilityCONNECT.online';
 
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
   const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
@@ -182,7 +182,7 @@ async function sendPasswordResetEmail(toEmail, resetLink) {
 
 async function sendEmailChangeVerificationEmail(toEmail, verifyLink) {
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
-  const subject = 'Verify your new email address - abilityconnect.com';
+  const subject = 'Verify Your New Email Address - abilityCONNECT.online';
 
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
   const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
@@ -265,7 +265,7 @@ async function sendEmailChangeVerificationEmail(toEmail, verifyLink) {
 
 async function sendEmailChangedNotificationOldEmail(oldEmail, newEmail, userName) {
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
-  const subject = 'Your email address has been changed - abilityconnect.com';
+  const subject = 'Your Email Address Has Been Changed - abilityCONNECT.online';
 
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
   const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
@@ -278,11 +278,11 @@ async function sendEmailChangedNotificationOldEmail(oldEmail, newEmail, userName
         <p style="margin:12px 0">Hello ${userName || 'there'},</p>
         <p style="margin:12px 0">Your email address has been changed from <strong>${oldEmail}</strong> to <strong>${newEmail}</strong>.</p>
         <p style="margin:12px 0">If you did not request this change, please contact support immediately.</p>
-        <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityconnect.com</p>
+        <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityCONNECT.online</p>
       </div>
     </div>
   `;
-  const text = `Your email address has been changed\n\nHello ${userName || 'there'},\n\nYour email address has been changed from ${oldEmail} to ${newEmail}.\n\nIf you did not request this change, please contact support immediately.\n\nThis is an automated notification from abilityconnect.com`;
+  const text = `Your email address has been changed\n\nHello ${userName || 'there'},\n\nYour email address has been changed from ${oldEmail} to ${newEmail}.\n\nIf you did not request this change, please contact support immediately.\n\nThis is an automated notification from abilityCONNECT.online`;
 
   const params = {
     Destination: { ToAddresses: [oldEmail] },
@@ -343,7 +343,7 @@ async function sendEmailChangedNotificationOldEmail(oldEmail, newEmail, userName
 
 async function sendEmailChangedNotificationNewEmail(newEmail, userName) {
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
-  const subject = 'Congratulations! Your email address has been updated - abilityconnect.com';
+  const subject = 'Congratulations! Your Email Address Has Been Updated - abilityCONNECT.online';
 
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
   const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
@@ -355,12 +355,12 @@ async function sendEmailChangedNotificationNewEmail(newEmail, userName) {
         <p style="margin:0 0 8px 0; color:#111">Congratulations! Your email address has been updated</p>
         <p style="margin:12px 0">Hello ${userName || 'there'},</p>
         <p style="margin:12px 0">Congratulations! Your email address has been successfully updated to <strong>${newEmail}</strong>.</p>
-        <p style="margin:12px 0">You can now use this email address to log in to your account on abilityconnect.com.</p>
-        <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityconnect.com</p>
+        <p style="margin:12px 0">You can now use this email address to log in to your account on abilityCONNECT.online.</p>
+        <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityCONNECT.online</p>
       </div>
     </div>
   `;
-  const text = `Congratulations! Your email address has been updated\n\nHello ${userName || 'there'},\n\nCongratulations! Your email address has been successfully updated to ${newEmail}.\n\nYou can now use this email address to log in to your account on abilityconnect.com.\n\nThis is an automated notification from abilityconnect.com`;
+  const text = `Congratulations! Your email address has been updated\n\nHello ${userName || 'there'},\n\nCongratulations! Your email address has been successfully updated to ${newEmail}.\n\nYou can now use this email address to log in to your account on abilityCONNECT.online.\n\nThis is an automated notification from abilityCONNECT.online`;
 
   const params = {
     Destination: { ToAddresses: [newEmail] },
