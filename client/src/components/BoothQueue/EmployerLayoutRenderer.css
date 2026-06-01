@@ -12,7 +12,7 @@
 
 /* ---------- Placeholder (empty slot) ---------- */
 .elr-ph {
-  background: #f0efec;
+  background: transparent;
   border: 1.5px dashed #bbb;
   position: relative;
   display: flex;
@@ -57,7 +57,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: #fff;
+  background: transparent;
 }
 
 /* Logo slots should keep full logo visible */
@@ -111,6 +111,59 @@
   justify-content: center;
   z-index: 10;
 }
+
+.elr-img-bottom-actions {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  z-index: 12;
+}
+
+.elr-img-remove-btn {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+.elr-img-fit-switch {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.elr-img-fit-btn {
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.elr-img-fit-btn:last-child {
+  border-right: none;
+}
+
+.elr-img-fit-btn.active {
+  background: rgba(37, 99, 235, 0.75);
+}
 .elr-spinner {
   width: 36px;
   height: 36px;
@@ -162,7 +215,7 @@
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-weight: 700;
   line-height: 1.15;
-  color: inherit;
+  color: var(--elr-heading-color, inherit);
   margin-bottom: 0;
 }
 .elr-wrap .elr-h2 {
@@ -170,7 +223,7 @@
   font-size: clamp(1.2rem, 2.5vw, 1.65rem);
   font-weight: 700;
   line-height: 1.25;
-  color: inherit;
+  color: var(--elr-heading-color, inherit);
   margin-bottom: 0;
 }
 .elr-wrap .elr-h3 {
@@ -178,7 +231,7 @@
   font-size: 1.1rem;
   font-weight: 600;
   font-style: italic;
-  color: inherit;
+  color: var(--elr-heading-color, inherit);
   margin-bottom: 0;
 }
 .elr-wrap .elr-body {
@@ -279,6 +332,14 @@
   width: 16px;
   height: 16px;
   display: block;
+  color: currentColor;
+}
+.elr-social-icon-img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%);
 }
 .elr-social-icon-label {
   font-family: monospace;

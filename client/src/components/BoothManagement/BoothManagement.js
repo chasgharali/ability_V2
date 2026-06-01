@@ -657,15 +657,10 @@ export default function BoothManagement() {
     }
     setBoothSaving(true);
     try {
-      // Require at least one selected event before calling the API
       const selectedEventIds = normalizeIdArray(boothForm.eventIds);
-      if (selectedEventIds.length === 0) {
-        showToast('Please select at least one event', 'Error', 5000);
-        return;
-      }
 
       // Client-side recruiters limit validation per event
-      const exceeded = validateRecruiterLimits(selectedEventIds);
+      const exceeded = selectedEventIds.length > 0 ? validateRecruiterLimits(selectedEventIds) : [];
       if (exceeded.length) {
         if (!editingBoothId) {
           const lines = exceeded.map(x => `• ${x.name}: ${x.existing} + ${x.adding} > ${x.max}`).join('\n');
@@ -1890,7 +1885,7 @@ export default function BoothManagement() {
                 </div>
 
                 <MultiSelect
-                  label="Select Event"
+                  label="Select Event (Optional)"
                   value={boothForm.eventIds}
                   onChange={(e) => setBoothField('eventIds', e.target.value)}
                   options={eventOptions}

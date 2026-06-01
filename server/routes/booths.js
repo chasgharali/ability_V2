@@ -369,8 +369,8 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
     body('richSections').optional().isArray({ max: 3 }),
     body('richSections.*.title').optional().isString().isLength({ min: 1, max: 100 }),
     body('richSections.*.contentHtml').optional().isString().isLength({ min: 0, max: 5000 }),
-    body('eventIds').isArray({ min: 1 }).withMessage('eventIds must be a non-empty array'),
-    body('eventIds.*').isMongoId().withMessage('Each eventId must be a valid id')
+    body('eventIds').optional().isArray().withMessage('eventIds must be an array'),
+    body('eventIds.*').optional().isMongoId().withMessage('Each eventId must be a valid id')
 ], async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -391,13 +391,14 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             employerPageTemplateId,
             employerPageSections = [],
             richSections = [],
-            eventIds
+            eventIds = []
         } = req.body;
         const Event = require('../models/Event');
 
         const validEvents = [];
         const skipped = [];
         let resolvedOrgId = req.orgId || null;
+        const normalizedEventIds = normalizeIdArray(eventIds);
 
         // Check customInviteSlug uniqueness ahead of time (if provided)
         if (customInviteSlug) {
@@ -408,48 +409,50 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
         }
 
         // Validate all events first
-        for (const eid of eventIds) {
-            const ev = await Event.findById(eid);
-            if (!ev) { 
-                skipped.push({ eventId: eid, reason: 'Event not found' }); 
-                continue; 
-            }
-            if (!resolvedOrgId && ev.organizationId) {
-                resolvedOrgId = ev.organizationId;
-            }
-
-            // Enforce booth limit if configured
-            const maxBooths = ev?.limits?.maxBooths || 0; // 0 = unlimited
-            if (maxBooths > 0) {
-                const current = await Booth.countDocuments({ 
-                    $or: [
-                        { eventId: eid },
-                        { events: eid }
-                    ]
-                });
-                if (current >= maxBooths) {
-                    skipped.push({ eventId: eid, reason: 'Limit reached' });
-                    continue;
+        if (normalizedEventIds.length > 0) {
+            for (const eid of normalizedEventIds) {
+                const ev = await Event.findById(eid);
+                if (!ev) { 
+                    skipped.push({ eventId: eid, reason: 'Event not found' }); 
+                    continue; 
                 }
+                if (!resolvedOrgId && ev.organizationId) {
+                    resolvedOrgId = ev.organizationId;
+                }
+
+                // Enforce booth limit if configured
+                const maxBooths = ev?.limits?.maxBooths || 0; // 0 = unlimited
+                if (maxBooths > 0) {
+                    const current = await Booth.countDocuments({ 
+                        $or: [
+                            { eventId: eid },
+                            { events: eid }
+                        ]
+                    });
+                    if (current >= maxBooths) {
+                        skipped.push({ eventId: eid, reason: 'Limit reached' });
+                        continue;
+                    }
+                }
+                validEvents.push(eid);
             }
-            validEvents.push(eid);
-        }
 
-        if (validEvents.length === 0) {
-            return res.status(400).json({
-                error: 'No valid events',
-                message: 'None of the provided events are valid or available',
-                skipped
+            if (validEvents.length === 0) {
+                return res.status(400).json({
+                    error: 'No valid events',
+                    message: 'None of the provided events are valid or available',
+                    skipped
+                });
+            }
+
+            const exceededEvents = await validateRecruiterLimitsForEvents({
+                eventIds: validEvents,
+                requestedRecruiters: recruitersCount || 1,
+                organizationId: resolvedOrgId || null
             });
-        }
-
-        const exceededEvents = await validateRecruiterLimitsForEvents({
-            eventIds: validEvents,
-            requestedRecruiters: recruitersCount || 1,
-            organizationId: resolvedOrgId || null
-        });
-        if (exceededEvents.length > 0) {
-            return res.status(400).json(buildRecruiterLimitErrorResponse(exceededEvents));
+            if (exceededEvents.length > 0) {
+                return res.status(400).json(buildRecruiterLimitErrorResponse(exceededEvents));
+            }
         }
 
         // Enforce org-level limits when applicable
@@ -482,7 +485,7 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
 
         // Create single booth with multiple events
         const booth = await Booth.create({
-            eventId: validEvents[0], // First event for backward compatibility
+            eventId: validEvents[0] || null, // First event for backward compatibility
             events: validEvents, // All events in array
             name,
             description: description || '',

@@ -24,18 +24,19 @@ const SECTION_TITLES = {
 const DEFAULT_CONTENT_DATA = {
   about: {
     logoImageUrl: '', heroImageUrl: '', heroImageAlt: '', brandImage1Url: '', brandImage2Url: '',
-    companyName: '', tagline: '', aboutText: '', bgColor: '', textColor: '',
+    companyName: '', tagline: '', aboutText: '', bgColor: '', headingColor: '', textColor: '',
   },
-  program: { programImageUrl: '', programImageAlt: '', programTitle: '', programText: '', bgColor: '', textColor: '' },
-  video: { videoUrl: '', videoTitle: '', bgColor: '', textColor: '' },
-  gallery: { galleryTitle: 'Life at the Company', images: Array(5).fill(null).map(() => ({ url: '', alt: '' })), bgColor: '', textColor: '' },
-  contact: { primaryBtnText: 'Join Our Talent Community', primaryBtnUrl: '#', secondaryBtnText: 'View Our Open Positions', secondaryBtnUrl: '#', ctaHeadline: 'Ready to explore a career with us?', bgColor: '', textColor: '' },
-  jobs: { jobsList: [], locationsText: '', bgColor: '', textColor: '' },
-  benefits: { benefitsList: [], bgColor: '', textColor: '' },
+  program: { programImageUrl: '', programImageAlt: '', programTitle: '', programText: '', bgColor: '', headingColor: '', textColor: '' },
+  video: { videoUrl: '', videoTitle: '', bgColor: '', headingColor: '', textColor: '' },
+  gallery: { galleryTitle: 'Life at the Company', images: Array(5).fill(null).map(() => ({ url: '', alt: '' })), bgColor: '', headingColor: '', textColor: '' },
+  contact: { primaryBtnText: 'Join Our Talent Community', primaryBtnUrl: '#', secondaryBtnText: 'View Our Open Positions', secondaryBtnUrl: '#', ctaHeadline: 'Ready to explore a career with us?', bgColor: '', headingColor: '', textColor: '' },
+  jobs: { jobsList: [], locationsText: '', bgColor: '', headingColor: '', textColor: '' },
+  benefits: { benefitsList: [], bgColor: '', headingColor: '', textColor: '' },
   social: {
-    links: ['FB', 'IN', 'IG', 'BS', 'TH', 'X'].map((p) => ({ platform: p, url: '' })),
+    links: ['FB', 'IN', 'IG', 'TH', 'YT', 'TT', 'BS', 'X'].map((p) => ({ platform: p, url: '' })),
     copyrightText: '',
     bgColor: '',
+    headingColor: '',
     textColor: '',
   },
 };

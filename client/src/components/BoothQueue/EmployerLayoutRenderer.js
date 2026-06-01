@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 import {
   FaFacebookF,
-  FaHashtag,
   FaInstagram,
   FaLinkedinIn,
   FaTwitter,
+  FaYoutube,
 } from 'react-icons/fa';
 import './EmployerLayoutRenderer.css';
 
@@ -107,6 +107,10 @@ function renderNavLinks(prefix, navItems, linkClassName = '') {
 const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
 const hasAnyImage = (images = []) => Array.isArray(images) && images.some((img) => hasText(img?.url));
 const hasActionLink = (text, url) => hasText(text) && hasText(url) && url.trim() !== '#';
+const IMAGE_FIT_PRESETS = [
+  { label: 'Cover', value: 'cover' },
+  { label: 'Contain', value: 'contain' },
+];
 
 function hasRenderableSectionContent(sectionKey, section) {
   const data = section?.contentData || {};
@@ -143,10 +147,29 @@ function hasRenderableSectionContent(sectionKey, section) {
 }
 
 /** Clickable image zone: shows image or placeholder; in edit mode lets user upload */
-function ImgZone({ sectionKey, fieldName, url, alt, label, className, style, isEditMode, onUploadImage, uploadingFields }) {
+function ImgZone({
+  sectionKey,
+  fieldName,
+  url,
+  alt,
+  label,
+  className,
+  style,
+  isEditMode,
+  onUploadImage,
+  onUpdateField,
+  uploadingFields,
+  resolveFitMode,
+  fitFallback = 'cover',
+}) {
   const inputRef = useRef(null);
   const uploadKey = `${sectionKey}.${fieldName}`;
   const isUploading = uploadingFields.has(uploadKey);
+  const fitFieldName = `${fieldName}__fit`;
+  const resolvedFitMode = resolveFitMode
+    ? resolveFitMode(sectionKey, fieldName, fitFallback)
+    : fitFallback;
+  const activeFitMode = IMAGE_FIT_PRESETS.some((preset) => preset.value === resolvedFitMode) ? resolvedFitMode : 'cover';
 
   // In live view, do not render empty image placeholders.
   if (!isEditMode && !url) {
@@ -167,6 +190,16 @@ function ImgZone({ sectionKey, fieldName, url, alt, label, className, style, isE
     if (file && onUploadImage) onUploadImage(sectionKey, fieldName, file);
     e.target.value = '';
   };
+  const removeImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onUpdateField && onUpdateField(sectionKey, fieldName, '');
+  };
+  const updateFitMode = (e, nextFitMode) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onUpdateField && onUpdateField(sectionKey, fitFieldName, nextFitMode);
+  };
 
   if (url) {
     return (
@@ -179,11 +212,36 @@ function ImgZone({ sectionKey, fieldName, url, alt, label, className, style, isE
         tabIndex={isEditMode ? 0 : undefined}
         aria-label={isEditMode ? `Change ${label} image` : alt || label}
       >
-        <img src={url} alt={alt || label} />
+        <img src={url} alt={alt || label} style={{ objectFit: activeFitMode }} />
         {isEditMode && (
           <div className="elr-img-overlay" aria-hidden="true">
             <div className="elr-img-overlay-icon">✎</div>
             <span className="elr-img-overlay-text">Change image</span>
+          </div>
+        )}
+        {isEditMode && (
+          <div className="elr-img-bottom-actions">
+            <button
+              type="button"
+              className="elr-img-remove-btn"
+              onClick={removeImage}
+              aria-label={`Remove ${label} image`}
+            >
+              Remove
+            </button>
+            <div className="elr-img-fit-switch" role="toolbar" aria-label={`${label} fit mode`}>
+              {IMAGE_FIT_PRESETS.map((preset) => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  className={`elr-img-fit-btn${activeFitMode === preset.value ? ' active' : ''}`}
+                  onClick={(e) => updateFitMode(e, preset.value)}
+                  aria-pressed={activeFitMode === preset.value}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         {isUploading && (
@@ -233,15 +291,10 @@ function ImgZone({ sectionKey, fieldName, url, alt, label, className, style, isE
   );
 }
 
-/** Inline editable text span.
- *  When showColorPicker=true (edit mode only), renders a compact color swatch row
- *  beneath the text so users can set per-paragraph text color.
- *  colorValue / colorFieldName control the stored color (defaults to fieldName + '__color').
- */
-function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagName, isEditMode, onUpdateField, showColorPicker = false, colorValue, colorFieldName }) {
+/** Inline editable text span. */
+function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagName, isEditMode, onUpdateField, colorValue }) {
   const Tag = tagName || 'span';
   const hasValue = hasText(value);
-  const resolvedColorField = colorFieldName || `${fieldName}__color`;
   const appliedColor = colorValue || undefined;
 
   const syncEditableEmptyState = (el) => {
@@ -272,52 +325,7 @@ function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagN
       </Tag>
     );
 
-    if (!showColorPicker) return editableEl;
-
-    return (
-      <div className="elr-txt-wrap">
-        {editableEl}
-        <div className="elr-txt-color-bar" role="toolbar" aria-label={`Text color for ${placeholder || fieldName}`}>
-          <span className="elr-color-bar-label">Color</span>
-          {TEXT_PRESETS.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              className={`elr-color-swatch${appliedColor === p.value ? ' elr-swatch-active' : ''}`}
-              style={{ background: p.value }}
-              title={p.label}
-              onClick={() => onUpdateField && onUpdateField(sectionKey, resolvedColorField, appliedColor === p.value ? '' : p.value)}
-              aria-label={`Text color: ${p.label}`}
-              aria-pressed={appliedColor === p.value}
-            />
-          ))}
-          <label className="elr-color-custom-wrap" title="Custom text color">
-            <span
-              className="elr-color-swatch elr-color-custom-swatch"
-              style={{ background: appliedColor && !TEXT_PRESETS.find((p) => p.value === appliedColor) ? appliedColor : 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
-              aria-hidden="true"
-            />
-            <input
-              type="color"
-              value={appliedColor || '#111827'}
-              onChange={(e) => onUpdateField && onUpdateField(sectionKey, resolvedColorField, e.target.value)}
-              aria-label="Custom text color"
-            />
-          </label>
-          {appliedColor && (
-            <button
-              type="button"
-              className="elr-txt-color-clear"
-              onClick={() => onUpdateField && onUpdateField(sectionKey, resolvedColorField, '')}
-              title="Clear color override"
-              aria-label="Clear text color"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </div>
-    );
+    return editableEl;
   }
 
   if (!hasValue) return null;
@@ -413,6 +421,20 @@ function getDefaultCopyrightText() {
   return `© ${new Date().getFullYear()} Employer. All Rights Reserved.`;
 }
 
+function getSocialPlaceholder(platform) {
+  const placeholders = {
+    FB: 'https://facebook.com/company/...',
+    IN: 'https://linkedin.com/company/...',
+    IG: 'https://instagram.com/company/...',
+    TH: 'https://threads.net/@company',
+    YT: 'https://youtube.com/@company',
+    TT: 'https://tiktok.com/@company',
+    BS: 'https://bsky.app/profile/company.bsky.social',
+    X: 'https://x.com/company',
+  };
+  return placeholders[platform] || 'https://example.com/company';
+}
+
 /* ================================================================
    Section color controls
    ================================================================ */
@@ -441,11 +463,20 @@ function getSectionStyle(data) {
   return s;
 }
 
+function getImageFitMode(sectionData, fieldName, fallback = 'cover') {
+  const raw = sectionData?.[`${fieldName}__fit`];
+  if (IMAGE_FIT_PRESETS.some((preset) => preset.value === raw)) {
+    return raw;
+  }
+  return fallback;
+}
+
 /** Thin color control bar shown at the top of each section in edit mode */
 function ColorBar({ sectionKey, data, onUpdateField }) {
   const bgColor = data?.bgColor || '';
+  const headingColor = data?.headingColor || '';
   const textColor = data?.textColor || '';
-  const hasCustom = bgColor || textColor;
+  const hasCustom = bgColor || headingColor || textColor;
   return (
     <div className="elr-color-bar" role="toolbar" aria-label={`Color settings for ${sectionKey} section`}>
       <span className="elr-color-bar-label">BG</span>
@@ -472,6 +503,35 @@ function ColorBar({ sectionKey, data, onUpdateField }) {
           value={bgColor || '#ffffff'}
           onChange={(e) => onUpdateField(sectionKey, 'bgColor', e.target.value)}
           aria-label="Custom background color"
+        />
+      </label>
+
+      <span className="elr-color-bar-sep" aria-hidden="true" />
+
+      <span className="elr-color-bar-label">Heading</span>
+      {TEXT_PRESETS.map((p) => (
+        <button
+          key={`heading-${p.value}`}
+          type="button"
+          className={`elr-color-swatch${headingColor === p.value ? ' elr-swatch-active' : ''}`}
+          style={{ background: p.value }}
+          title={p.label}
+          onClick={() => onUpdateField(sectionKey, 'headingColor', headingColor === p.value ? '' : p.value)}
+          aria-label={`Heading: ${p.label}`}
+          aria-pressed={headingColor === p.value}
+        />
+      ))}
+      <label className="elr-color-custom-wrap" title="Custom heading color">
+        <span
+          className="elr-color-swatch elr-color-custom-swatch"
+          style={{ background: headingColor && !TEXT_PRESETS.find((p) => p.value === headingColor) ? headingColor : 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
+          aria-hidden="true"
+        />
+        <input
+          type="color"
+          value={headingColor || '#1a1a1a'}
+          onChange={(e) => onUpdateField(sectionKey, 'headingColor', e.target.value)}
+          aria-label="Custom heading color"
         />
       </label>
 
@@ -508,7 +568,11 @@ function ColorBar({ sectionKey, data, onUpdateField }) {
         <button
           type="button"
           className="elr-color-reset"
-          onClick={() => { onUpdateField(sectionKey, 'bgColor', ''); onUpdateField(sectionKey, 'textColor', ''); }}
+          onClick={() => {
+            onUpdateField(sectionKey, 'bgColor', '');
+            onUpdateField(sectionKey, 'headingColor', '');
+            onUpdateField(sectionKey, 'textColor', '');
+          }}
           title="Reset to default colors"
         >
           ↺
@@ -526,11 +590,12 @@ function SecWrap({ sectionKey, cd, isEditMode, onUpdateField, id, className, sty
   const data = cd(sectionKey);
   if (data?.isActive === false) return null;
   const colorStyle = getSectionStyle(data);
+  const headingStyle = data?.headingColor ? { '--elr-heading-color': data.headingColor } : {};
   return (
     <Tag
       id={id}
       className={className}
-      style={{ ...colorStyle, ...(style || {}) }}
+      style={{ ...headingStyle, ...colorStyle, ...(style || {}) }}
       {...rest}
     >
       {isEditMode && (
@@ -653,26 +718,53 @@ function BenefitsList({ sectionKey, benefitsList, isEditMode, onUpdateField }) {
 
 /** Social footer links */
 function SocialFooter({ sectionKey, links, bgColor, textColor, isEditMode, onUpdateField }) {
-  const PLATFORMS = ['FB', 'IN', 'IG', 'BS', 'TH', 'X'];
-  const platformLabels = { FB: 'Facebook', IN: 'LinkedIn', IG: 'Instagram', BS: 'Bluesky', TH: 'Threads', X: 'X (Twitter)' };
-  const safeLinks = Array.isArray(links) ? links : PLATFORMS.map((p) => ({ platform: p, url: '' }));
+  const PLATFORMS = ['FB', 'IN', 'IG', 'TH', 'YT', 'TT', 'BS', 'X'];
+  const platformLabels = {
+    FB: 'Facebook',
+    IN: 'LinkedIn',
+    IG: 'Instagram',
+    TH: 'Threads',
+    YT: 'YouTube',
+    TT: 'TikTok',
+    BS: 'Bluesky',
+    X: 'X (Twitter)',
+  };
+  const linksByPlatform = new Map((Array.isArray(links) ? links : []).map((item) => [item.platform, item]));
+  const safeLinks = PLATFORMS.map((platform) => ({
+    platform,
+    url: linksByPlatform.get(platform)?.url || '',
+  }));
+  const platformImageUrls = {
+    TH: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/threads.svg',
+    TT: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tiktok.svg',
+    BS: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bluesky.svg',
+  };
   const platformIcons = {
     FB: FaFacebookF,
     IN: FaLinkedinIn,
     IG: FaInstagram,
-    BS: FaHashtag,
-    TH: FaHashtag,
+    YT: FaYoutube,
     X: FaTwitter,
   };
 
   const renderPlatformIcon = (platform) => {
+    if (platformImageUrls[platform]) {
+      return (
+        <img
+          src={platformImageUrls[platform]}
+          alt=""
+          className="elr-social-icon-img"
+          aria-hidden="true"
+        />
+      );
+    }
     const Icon = platformIcons[platform];
     if (!Icon) return <span className="elr-social-icon-label">{platform}</span>;
     return <Icon className="elr-social-icon-svg" aria-hidden="true" focusable="false" />;
   };
   const socialIconStyle = {
     background: textColor || '#e8e6e1',
-    color: bgColor || '#555',
+    color: '#111827',
     borderColor: textColor || '#ccc',
   };
 
@@ -693,7 +785,7 @@ function SocialFooter({ sectionKey, links, bgColor, textColor, isEditMode, onUpd
               <input
                 type="url"
                 defaultValue={l.url || ''}
-                placeholder={`https://${l.platform.toLowerCase()}.com/company/...`}
+                placeholder={getSocialPlaceholder(l.platform)}
                 style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: 4, padding: '4px 8px', fontSize: 12 }}
                 onBlur={(e) => {
                   const updated = [...safeLinks];
@@ -853,7 +945,13 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const social = cd('social');
   const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
-  const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const imgProps = {
+    isEditMode,
+    onUploadImage,
+    onUpdateField,
+    uploadingFields,
+    resolveFitMode: (sectionKey, fieldName, fitFallback) => getImageFitMode(cd(sectionKey), fieldName, fitFallback),
+  };
   const orderedMainKeys = navItems
     .map((item) => item.key)
     .filter((key) => ['about', 'program', 'video', 'gallery', 'contact', 'jobs', 'benefits'].includes(key));
@@ -951,7 +1049,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     <>
       {/* Header */}
       <header className="elr-a-header elr-bg-white" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Company Logo · 240 × 100" className="elr-a-logo-zone" {...imgProps} />
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Company Logo · 240 × 100" className="elr-a-logo-zone" fitFallback="contain" {...imgProps} />
         <nav className="elr-a-nav" aria-label="Page sections">
           {renderNavLinks('a', navItems, 'elr-nav-link')}
         </nav>
@@ -999,7 +1097,13 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const social = cd('social');
   const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
-  const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const imgProps = {
+    isEditMode,
+    onUploadImage,
+    onUpdateField,
+    uploadingFields,
+    resolveFitMode: (sectionKey, fieldName, fitFallback) => getImageFitMode(cd(sectionKey), fieldName, fitFallback),
+  };
   const hasAboutDualImages = isEditMode || hasText(about.brandImage1Url) || hasText(about.brandImage2Url);
   const orderedMainKeys = navItems
     .map((item) => item.key)
@@ -1101,7 +1205,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       {/* Header: logo left, nav right */}
       <header className="elr-b-header elr-bg-white" style={getSectionStyle(about)} role="banner">
         <div className="elr-b-logo-col">
-          <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 150 × 80" className="elr-b-logo-zone" {...imgProps} />
+          <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 150 × 80" className="elr-b-logo-zone" fitFallback="contain" {...imgProps} />
         </div>
         <div className="elr-b-nav-col">
           <nav className="elr-b-nav" aria-label="Page sections">
@@ -1151,7 +1255,13 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const social = cd('social');
   const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(5).fill(null);
-  const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const imgProps = {
+    isEditMode,
+    onUploadImage,
+    onUpdateField,
+    uploadingFields,
+    resolveFitMode: (sectionKey, fieldName, fitFallback) => getImageFitMode(cd(sectionKey), fieldName, fitFallback),
+  };
   const hasAboutDualImages = isEditMode || hasText(about.brandImage1Url) || hasText(about.brandImage2Url);
   const orderedMainKeys = navItems
     .map((item) => item.key)
@@ -1267,7 +1377,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     <>
       {/* Header: logo + nav inline */}
       <header className="elr-c-header elr-bg-white" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 110 × 48" className="elr-c-logo-zone" {...imgProps} />
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 110 × 48" className="elr-c-logo-zone" fitFallback="contain" {...imgProps} />
         <nav className="elr-c-nav" aria-label="Page sections">
           {renderNavLinks('c', navItems, 'elr-nav-link')}
         </nav>
@@ -1314,7 +1424,13 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   const social = cd('social');
   const copyrightText = isEditMode ? (social.copyrightText || getDefaultCopyrightText()) : (social.copyrightText || '');
   const galleryImages = Array.isArray(gallery.images) ? gallery.images : Array(4).fill(null);
-  const imgProps = { isEditMode, onUploadImage, uploadingFields };
+  const imgProps = {
+    isEditMode,
+    onUploadImage,
+    onUpdateField,
+    uploadingFields,
+    resolveFitMode: (sectionKey, fieldName, fitFallback) => getImageFitMode(cd(sectionKey), fieldName, fitFallback),
+  };
   const hasAboutDualImages = isEditMode || hasText(about.brandImage1Url) || hasText(about.brandImage2Url);
   const orderedMainKeys = navItems
     .map((item) => item.key)
@@ -1415,7 +1531,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     <>
       {/* Dark header */}
       <header className="elr-d-header" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} {...imgProps} />
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} fitFallback="contain" {...imgProps} />
         <nav className="elr-d-nav" aria-label="Page sections">
           {renderNavLinks('d', navItems)}
         </nav>
