@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
 import './Dashboard.css';
@@ -47,12 +47,14 @@ const COUNTRIES_RAW = [
 // Remove duplicates and sort alphabetically
 const COUNTRIES = Array.from(new Set(COUNTRIES_RAW)).sort((a, b) => a.localeCompare(b));
 
-const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, embedded }, ref) {
+const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, embedded, onSaveSuccess }, ref) {
   const { user } = useAuth();
   const { getMessage } = useRoleMessages();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const [liveAnnouncement, setLiveAnnouncement] = useState('');
+  const announceTimeoutRef = useRef(null);
   const infoBannerMessage = getMessage('survey', 'info-banner') || '';
   const [form, setForm] = useState({
     race: [],
@@ -66,6 +68,24 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast({ visible: false, message: '', type }), 2500);
+  };
+
+  const announceForScreenReader = (message) => {
+    if (announceTimeoutRef.current) {
+      clearTimeout(announceTimeoutRef.current);
+    }
+    // Clear then reset so repeated identical messages are still announced.
+    setLiveAnnouncement('');
+    announceTimeoutRef.current = setTimeout(() => {
+      setLiveAnnouncement(message);
+    }, 30);
+  };
+
+  const focusMainContent = () => {
+    const mainContent = document.getElementById('main-content') || document.querySelector('main');
+    if (!mainContent) return;
+    mainContent.setAttribute('tabindex', '-1');
+    mainContent.focus();
   };
 
   // Always read the latest token from storage
@@ -133,6 +153,14 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
     fetchSurvey();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (announceTimeoutRef.current) {
+        clearTimeout(announceTimeoutRef.current);
+      }
+    };
+  }, []);
+
 
   const persistPartial = async (partial) => {
     try {
@@ -195,7 +223,15 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
       await axios.put('/api/auth/survey', form, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
+      announceForScreenReader('Survey saved');
       if (!embedded) showToast('Survey saved', 'success');
+      if (!embedded) {
+        focusMainContent();
+      }
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+      return true;
     } catch (e) {
       if (e?.response?.status === 401) {
         const refreshed = await tryRefreshToken();
@@ -204,13 +240,22 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
             await axios.put('/api/auth/survey', form, {
               headers: { Authorization: `Bearer ${getToken()}` }
             });
+            announceForScreenReader('Survey saved');
             if (!embedded) showToast('Survey saved', 'success');
+            if (!embedded) {
+              focusMainContent();
+            }
+            if (onSaveSuccess) {
+              onSaveSuccess();
+            }
             setSaving(false);
-            return;
+            return true;
           } catch (_) { }
         }
       }
+      announceForScreenReader('Failed to save survey');
       if (!embedded) showToast('Failed to save survey', 'error');
+      return false;
     } finally {
       setSaving(false);
     }
@@ -240,6 +285,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
         </Helmet>
       )}
       <div className={`dashboard-content survey-page-content${embedded ? ' survey-page-content-embedded' : ''}`}>
+        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{liveAnnouncement}</div>
         {toast.visible && (
           <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
         )}
@@ -276,7 +322,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
                 }
               }}
             />
-            <div className="field-help">Race selection is required</div>
+            <div className="field-help">Race selection is optional</div>
           </div>
           <div className="form-group">
             <label htmlFor="genderIdentity">I identify my gender as </label>
@@ -285,7 +331,6 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
               name="genderIdentity"
               value={form.genderIdentity}
               onChange={onChange}
-              required
               aria-describedby="gender-help"
             >
               <option value="">Select gender</option>
@@ -295,7 +340,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
               <option value="Prefer not to say">Prefer not to say</option>
               <option value="Other">Other</option>
             </select>
-            <div id="gender-help" className="field-help">Gender identity is required</div>
+            <div id="gender-help" className="field-help">Gender identity is optional</div>
           </div>
           <div className="form-group">
             <label htmlFor="ageGroup">Age Group </label>
@@ -304,13 +349,12 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
               name="ageGroup"
               value={form.ageGroup}
               onChange={onChange}
-              required
               aria-describedby="age-help"
             >
               <option value="">Select age group</option>
               {AGE_GROUPS.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
-            <div id="age-help" className="field-help">Age group is required</div>
+            <div id="age-help" className="field-help">Age group is optional</div>
           </div>
         </div>
 
@@ -322,14 +366,13 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
               name="countryOfOrigin"
               value={form.countryOfOrigin}
               onChange={onChange}
-              required
               aria-describedby="country-origin-help"
             >
               {COUNTRIES.map((c, idx) => (
                 <option key={`${c}-${idx}`} value={c}>{c}</option>
               ))}
             </select>
-            <div id="country-origin-help" className="field-help">Country of origin is required</div>
+            <div id="country-origin-help" className="field-help">Country of origin is optional</div>
           </div>
         </div>
 

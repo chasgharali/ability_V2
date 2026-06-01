@@ -11,6 +11,7 @@ const {
 } = require('../services/defaultCopyService');
 
 const router = express.Router();
+const canManageRoleInstructions = (actorRole, targetRole) => actorRole === 'SuperAdmin' || targetRole !== 'JobSeeker';
 
 /**
  * GET /api/role-messages
@@ -31,6 +32,9 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
       return res.status(400).json({ success: false, error: 'Organization context is required for Admin users' });
     } else if (req.user.role === 'GlobalSupport') {
       query.organizationId = req.orgId || null;
+    }
+    if (req.user.role !== 'SuperAdmin') {
+      query.role = { $ne: 'JobSeeker' };
     }
     const messages = await RoleMessage.find(query).populate('updatedBy', 'name email').sort({ role: 1, screen: 1 });
     res.json({ success: true, messages });
@@ -117,6 +121,9 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
     }
 
     const { role, screen, content, description, isPlatformDefault = false } = req.body;
+    if (!canManageRoleInstructions(req.user.role, role)) {
+      return res.status(403).json({ success: false, error: 'Only SuperAdmin can manage JobSeeker instructions' });
+    }
     const message = await RoleMessage.setMessage(
       role,
       screen,
@@ -163,6 +170,9 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'Globa
     if (!existingMessage) {
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
+    if (!canManageRoleInstructions(req.user.role, existingMessage.role)) {
+      return res.status(403).json({ success: false, error: 'Only SuperAdmin can manage JobSeeker instructions' });
+    }
     if (req.user.role === 'SuperAdmin' && existingMessage.organizationId) {
       return res.status(403).json({ success: false, error: 'SuperAdmin can only edit global templates here' });
     }
@@ -198,6 +208,9 @@ router.delete('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'Gl
     const existingMessage = await RoleMessage.findById(id);
     if (!existingMessage) {
       return res.status(404).json({ success: false, error: 'Message not found' });
+    }
+    if (!canManageRoleInstructions(req.user.role, existingMessage.role)) {
+      return res.status(403).json({ success: false, error: 'Only SuperAdmin can manage JobSeeker instructions' });
     }
     if (req.user.role === 'SuperAdmin' && existingMessage.organizationId) {
       return res.status(403).json({ success: false, error: 'SuperAdmin can only delete global templates' });

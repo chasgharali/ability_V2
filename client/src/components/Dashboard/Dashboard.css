@@ -1717,6 +1717,52 @@ body.sidebar-open .mobile-menu-toggle:hover {
     font-size: 0.9rem;
 }
 
+.resume-method-selector {
+    margin-bottom: 0.8rem;
+}
+
+.resume-method-instructions {
+    margin: 0.1rem 0 0.65rem;
+}
+
+.resume-method-toggle {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.resume-method-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem 0.85rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.resume-method-option:hover {
+    border-color: #9ca3af;
+}
+
+.resume-method-option.selected {
+    border-color: #111827;
+    background: #f9fafb;
+    font-weight: 600;
+}
+
+.resume-method-option input[type="radio"] {
+    flex-shrink: 0;
+}
+
+.resume-method-option:focus-within {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+}
+
 .upload-actions {
     display: flex;
     gap: 0.75rem;

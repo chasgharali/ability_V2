@@ -11,6 +11,7 @@ const SCREEN_ROLE_MAP = {
   'view-profile': 'JobSeeker',
   'event-registration': 'JobSeeker',
   survey: 'JobSeeker',
+  'resume-builder': 'JobSeeker',
   dashboard: 'Recruiter',
   'meeting-queue': 'Recruiter',
   'meeting-records': 'Recruiter',

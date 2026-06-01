@@ -13,10 +13,11 @@ import './RoleMessageManagement.css';
 
 const ROLES = ['JobSeeker', 'Recruiter', 'Interpreter'];
 const SCREENS = {
-  'JobSeeker': ['my-account', 'delete-account', 'edit-profile', 'view-profile', 'event-registration', 'survey'],
+  'JobSeeker': ['my-account', 'delete-account', 'edit-profile', 'view-profile', 'event-registration', 'survey', 'resume-builder'],
   'Recruiter': ['dashboard', 'meeting-queue', 'meeting-records', 'jobseeker-interests'],
   'Interpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions']
 };
+const canManageRole = (currentUserRole, targetRole) => currentUserRole === 'SuperAdmin' || targetRole !== 'JobSeeker';
 
 export default function RoleMessageManagement() {
   const [messages, setMessages] = useState([]);
@@ -32,10 +33,11 @@ export default function RoleMessageManagement() {
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createForm, setCreateForm] = useState({ role: 'JobSeeker', screen: 'my-account', content: '', description: '' });
+  const [createForm, setCreateForm] = useState({ role: 'Recruiter', screen: 'dashboard', content: '', description: '' });
   const navigate = useNavigate();
   const { user } = useAuth();
   const { show: showToast } = useToast();
+  const availableRoles = ROLES.filter((role) => canManageRole(user?.role, role));
 
   useEffect(() => {
     if (user && ['SuperAdmin', 'Admin', 'GlobalSupport'].includes(user.role)) {
@@ -55,6 +57,16 @@ export default function RoleMessageManagement() {
     };
     fetchOrganizations();
   }, [user?.role]);
+
+  useEffect(() => {
+    if (!availableRoles.length) return;
+
+    if (!availableRoles.includes(createForm.role)) {
+      const fallbackRole = availableRoles[0];
+      const fallbackScreen = getAvailableScreens(fallbackRole)[0] || '';
+      setCreateForm((prev) => ({ ...prev, role: fallbackRole, screen: fallbackScreen }));
+    }
+  }, [availableRoles, createForm.role]);
 
   const fetchMessages = async () => {
     try {
@@ -145,6 +157,11 @@ export default function RoleMessageManagement() {
   };
 
   const handleCreate = async () => {
+    if (!canManageRole(user?.role, createForm.role)) {
+      showToast('Only Super Admin can manage JobSeeker instructions', { type: 'error', duration: 4000 });
+      return;
+    }
+
     if (!createForm.content.trim()) {
       showToast('Content cannot be empty', { type: 'error', duration: 3000 });
       return;
@@ -172,7 +189,9 @@ export default function RoleMessageManagement() {
       );
       await fetchMessages();
       setShowCreateForm(false);
-      setCreateForm({ role: 'JobSeeker', screen: 'my-account', content: '', description: '' });
+      const fallbackRole = availableRoles[0] || 'Recruiter';
+      const fallbackScreen = getAvailableScreens(fallbackRole)[0] || '';
+      setCreateForm({ role: fallbackRole, screen: fallbackScreen, content: '', description: '' });
       showToast('Message created successfully!', { type: 'success', duration: 3000 });
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Failed to create message';
@@ -242,7 +261,9 @@ export default function RoleMessageManagement() {
     );
   };
 
-  const filteredMessages = messages.filter(msg => {
+  const visibleMessages = messages.filter((msg) => canManageRole(user?.role, msg.role));
+
+  const filteredMessages = visibleMessages.filter(msg => {
     if (filterRole !== 'all' && msg.role !== filterRole) return false;
     if (filterScreen !== 'all' && msg.screen !== filterScreen) return false;
     return true;
@@ -336,7 +357,7 @@ export default function RoleMessageManagement() {
                 className="dashboard-select"
               >
                 <option value="all">All Roles</option>
-                {ROLES.map(role => (
+                {availableRoles.map(role => (
                   <option key={role} value={role}>{role}</option>
                 ))}
               </select>
@@ -347,7 +368,7 @@ export default function RoleMessageManagement() {
               >
                 <option value="all">All Screens</option>
                 {filterRole === 'all' 
-                  ? [...new Set(messages.map(m => m.screen))].map(screen => (
+                  ? [...new Set(visibleMessages.map(m => m.screen))].map(screen => (
                       <option key={screen} value={screen}>{screen}</option>
                     ))
                   : getAvailableScreens(filterRole).map(screen => (
@@ -373,7 +394,7 @@ export default function RoleMessageManagement() {
                     }}
                     className="dashboard-select"
                   >
-                    {ROLES.map(role => (
+                    {availableRoles.map(role => (
                       <option key={role} value={role}>{role}</option>
                     ))}
                   </select>

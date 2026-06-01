@@ -691,21 +691,47 @@ export default function EditProfileResume({
           {resumeTopSlot}
           {/* Tab toggle — only in standalone (not embedded in wizard which has its own source selector) */}
           {!resumeOptional && !resumeTopSlot && (
-            <div style={{ display: 'flex', gap: '0', marginBottom: '1rem', border: '1px solid #d1d5db', borderRadius: '6px', overflow: 'hidden', width: 'fit-content' }}>
-              <button
-                type="button"
-                onClick={() => { setResumeTab('upload'); localStorage.setItem('resumeTabPref', 'upload'); }}
-                style={{ padding: '6px 14px', fontSize: '13px', border: 'none', cursor: 'pointer', background: resumeTab === 'upload' ? '#1f2937' : '#f9fafb', color: resumeTab === 'upload' ? '#fff' : '#374151', fontWeight: resumeTab === 'upload' ? 600 : 400 }}
+            <div className="resume-method-selector">
+              <p id="resume-method-instructions" className="muted resume-method-instructions">
+                Choose the method you would like to add your resume.
+              </p>
+              <div
+                className="resume-method-toggle"
+                role="radiogroup"
+                aria-labelledby="resume-section-label"
+                aria-describedby="resume-method-instructions"
               >
-                Upload File
-              </button>
-              <button
-                type="button"
-                onClick={() => { setResumeTab('builder'); localStorage.setItem('resumeTabPref', 'builder'); }}
-                style={{ padding: '6px 14px', fontSize: '13px', border: 'none', borderLeft: '1px solid #d1d5db', cursor: 'pointer', background: resumeTab === 'builder' ? '#1f2937' : '#f9fafb', color: resumeTab === 'builder' ? '#fff' : '#374151', fontWeight: resumeTab === 'builder' ? 600 : 400 }}
-              >
-                From Resume Builder
-              </button>
+                <label className={`resume-method-option ${resumeTab === 'upload' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="resume-method"
+                    value="upload"
+                    checked={resumeTab === 'upload'}
+                    onChange={() => { setResumeTab('upload'); localStorage.setItem('resumeTabPref', 'upload'); }}
+                    aria-label="Upload Resume from File"
+                    aria-describedby="resume-method-upload-desc"
+                  />
+                  <span>Upload Resume from File</span>
+                  <span id="resume-method-upload-desc" className="sr-only">
+                    Upload a PDF, DOC, or DOCX resume file from your device.
+                  </span>
+                </label>
+                <label className={`resume-method-option ${resumeTab === 'builder' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="resume-method"
+                    value="builder"
+                    checked={resumeTab === 'builder'}
+                    onChange={() => { setResumeTab('builder'); localStorage.setItem('resumeTabPref', 'builder'); }}
+                    aria-label="Add from Resume Builder"
+                    aria-describedby="resume-method-builder-desc"
+                  />
+                  <span>Add from Resume Builder</span>
+                  <span id="resume-method-builder-desc" className="sr-only">
+                    Use a resume created in Resume Builder.
+                  </span>
+                </label>
+              </div>
             </div>
           )}
           {/* Upload UI — shown when upload tab is active, or when embedded in wizard with resumeSource='upload' (resumeOptional=false) */}
@@ -992,9 +1018,9 @@ export default function EditProfileResume({
         </div>
 
         <div className="form-group">
-          <label id="keyword-input-label" htmlFor="keywords">* Keywords</label>
+          <label id="keyword-input-label" htmlFor="keywords">* Keywords (Skills and Experience)</label>
           <div id="keyword-input-instructions" className="field-help">
-            Add job skills, job titles, certifications, and tools. Type a keyword and press Enter to add it. Use arrow keys inside the keywords field to move between selected keywords.
+            To complete this box, enter keywords and press Enter after each keyword entry. To delete an entry, you will need to press Backspace.
           </div>
           <MultiSelectComponent
             id="keywords"

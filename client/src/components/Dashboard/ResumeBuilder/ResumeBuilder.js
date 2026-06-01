@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
+import { useRoleMessages } from '../../../contexts/RoleMessagesContext';
 import {
   listResumes,
   createResume,
@@ -52,6 +53,7 @@ function emptyContent(user) {
 export default function ResumeBuilder() {
   const { user } = useAuth();
   const { show: showToast } = useToast();
+  const { getMessage } = useRoleMessages();
   const location = useLocation();
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +69,7 @@ export default function ResumeBuilder() {
   const [limitStatus, setLimitStatus] = useState(null);
   const fileInputRef = useRef(null);
   const printRef = useRef(null);
+  const infoBannerMessage = getMessage('resume-builder', 'info-banner') || '';
 
   const showLimitError = (err, fallback) => {
     showToast(err?.response?.data?.message || err?.response?.data?.error || fallback, { type: 'error' });
@@ -943,6 +946,11 @@ export default function ResumeBuilder() {
             ? 'Build an AI-powered resume to share with recruiters during event registration.'
             : 'Build a resume to share with recruiters during event registration.'}
         </p>
+        {infoBannerMessage && (
+          <div className="info-banner">
+            <span>{infoBannerMessage}</span>
+          </div>
+        )}
         {renderLimitBanner()}
 
         <div className="rb-list-toolbar" aria-label="Resume actions" role="group">

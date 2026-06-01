@@ -279,27 +279,9 @@ export default function RegistrationWizard() {
   };
 
   const validateStep3 = () => {
-    if (!user || !user.metadata?.survey) return false;
+    if (!user) return false;
     const errors = {};
     let isValid = true;
-
-    // Required fields for step 3: race, gender, age group, country of origin
-    if (!user.metadata.survey.race || user.metadata.survey.race.length === 0) {
-      errors.race = 'Race selection is required';
-      isValid = false;
-    }
-    if (!user.metadata.survey.genderIdentity || user.metadata.survey.genderIdentity.trim() === '') {
-      errors.genderIdentity = 'Gender identity is required';
-      isValid = false;
-    }
-    if (!user.metadata.survey.ageGroup || user.metadata.survey.ageGroup.trim() === '') {
-      errors.ageGroup = 'Age group is required';
-      isValid = false;
-    }
-    if (!user.metadata.survey.countryOfOrigin || user.metadata.survey.countryOfOrigin.trim() === '') {
-      errors.countryOfOrigin = 'Country of origin is required';
-      isValid = false;
-    }
 
     // Check terms acceptance
     if (!allTermsAccepted) {
@@ -363,7 +345,23 @@ export default function RegistrationWizard() {
     if (!allTermsAccepted) return;
     setSaving(true);
     try {
-      await surveyFormRef.current?.save();
+      const surveySaved = await surveyFormRef.current?.save();
+      if (!surveySaved) {
+        return;
+      }
+      if (liveRef.current) {
+        liveRef.current.textContent = '';
+        setTimeout(() => {
+          if (liveRef.current) {
+            liveRef.current.textContent = 'Survey saved. Completing registration.';
+          }
+        }, 30);
+      }
+      const mainContent = document.getElementById('main-content') || document.querySelector('main');
+      if (mainContent) {
+        mainContent.setAttribute('tabindex', '-1');
+        mainContent.focus();
+      }
 
       const termsAcceptanceData = {
         acceptedTerms: termsAccepted,
