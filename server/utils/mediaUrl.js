@@ -11,7 +11,7 @@ function extractS3KeyFromUrl(value, bucketName = '') {
     if (!trimmed) return null;
 
     // Already a raw key
-    if (/^(image|booth-logo|organization-logo|avatar)\//.test(trimmed)) {
+    if (/^(image|booth-logo|organization-logo|avatar|resume|resumes|jobseeker)\//.test(trimmed)) {
         return trimmed;
     }
 

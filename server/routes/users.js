@@ -2257,9 +2257,58 @@ router.post('/job-seekers/ai-search', authenticateToken, requireRole(['SuperAdmi
                 message: 'Run `npm run ai-search:index-health` on the server to verify Mongo and Atlas vector indexes.'
             });
         }
+        if (error.status === 429 || error.code === 'RATE_LIMITED') {
+            return res.status(429).json({
+                error: 'AI search is temporarily busy due to high demand. Please wait a few seconds and try again.',
+                code: 'RATE_LIMITED'
+            });
+        }
         logger.error('Global ai-search error:', error);
         res.status(500).json({ error: 'AI search failed' });
     }
+});
+
+/**
+ * POST /api/users/job-seekers/ai-search/stream
+ * SSE streaming variant of global AI search for SuperAdmin.
+ * Emits stage / criteria / results / error / done events.
+ */
+router.post('/job-seekers/ai-search/stream', authenticateToken, requireRole(['SuperAdmin']), async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const send = (event, data) => {
+        try {
+            res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+        } catch (_) { /* client disconnected */ }
+    };
+
+    try {
+        const { query, page = 1, limit = 20 } = req.body;
+        if (!query?.trim()) {
+            send('error', { error: 'query is required' });
+            return res.end();
+        }
+        await aiSearchService.searchStream(
+            query,
+            { kind: 'global' },
+            { page: parseInt(page) || 1, limit: Math.min(parseInt(limit) || 20, 100) },
+            send
+        );
+        send('done', {});
+    } catch (error) {
+        if (error.code === 'SENSITIVE_QUERY') {
+            send('error', { error: error.message, code: 'SENSITIVE_QUERY', term: error.term });
+        } else if (error.status === 429 || error.code === 'RATE_LIMITED') {
+            send('error', { error: 'AI search is temporarily busy. Please wait a few seconds and try again.', code: 'RATE_LIMITED' });
+        } else {
+            logger.error('Global ai-search stream error:', error);
+            send('error', { error: 'AI search failed' });
+        }
+    }
+    res.end();
 });
 
 module.exports = router;

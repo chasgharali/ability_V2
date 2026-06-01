@@ -100,8 +100,12 @@ export async function openResumeInNewTab(resumeId, resumeUrl) {
       const freshUrl = await getAdminResumeFileUrl(resumeUrl);
       if (win) win.location.href = freshUrl;
     } catch {
-      if (win) win.close();
-      alert('Failed to generate resume download link.');
+      // Fallback to the original URL (can still work if it's already valid).
+      if (win) {
+        win.location.href = resumeUrl;
+      } else {
+        alert('Failed to generate resume download link.');
+      }
     }
   }
 }

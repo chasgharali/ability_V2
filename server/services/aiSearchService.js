@@ -238,11 +238,22 @@ function normalizeCandidateForCache(candidate) {
 // ─── Embedding ────────────────────────────────────────────────────────────────
 
 async function embedQuery(query, client) {
-    const resp = await client.embeddings.create({
-        model: EMBEDDING_MODEL,
-        input: query.slice(0, 4000)
-    });
-    return resp.data[0]?.embedding;
+    const delays = [500, 1500];
+    for (let attempt = 0; ; attempt++) {
+        try {
+            const resp = await client.embeddings.create({
+                model: EMBEDDING_MODEL,
+                input: query.slice(0, 4000)
+            });
+            return resp.data[0]?.embedding;
+        } catch (err) {
+            if (attempt < delays.length && (err.status === 429 || err.status >= 500)) {
+                await new Promise(r => setTimeout(r, delays[attempt]));
+            } else {
+                throw err;
+            }
+        }
+    }
 }
 
 // ─── Vector search (Atlas) with in-Node cosine fallback ──────────────────────
@@ -1118,8 +1129,154 @@ async function search(query, scope, opts = {}) {
     };
 }
 
+/**
+ * searchStream — same pipeline as search() but calls emit() at each stage so
+ * callers can stream progress events to clients via SSE.
+ *
+ * emit(eventName, data) is called with:
+ *   'stage'    { stage: 'analyzing' }
+ *   'criteria' { criteria }
+ *   'stage'    { stage: 'searching' }
+ *   'stage'    { stage: 'ranking', total: N }
+ *   'results'  { results, total, totalPages, page, criteria }
+ */
+async function searchStream(query, scope, opts = {}, emit) {
+    const {
+        page = 1,
+        limit = 20,
+        candidatePoolSize = 200,
+        minScore = 0.35
+    } = opts;
+
+    if (!query || !query.trim()) {
+        emit('results', { results: [], total: 0, criteria: {}, page, totalPages: 0 });
+        return;
+    }
+    const normalizedQuery = query.trim();
+
+    const blocked = findSensitiveTerm(normalizedQuery);
+    if (blocked) {
+        throw new SensitiveQueryError(blocked);
+    }
+
+    emit('stage', { stage: 'analyzing' });
+
+    const client = getClient();
+
+    const queryContextCacheKey = buildCacheKey('aiSearch:queryContext', {
+        query: normalizedQuery,
+        chatModel: CHAT_MODEL,
+        embeddingModel: EMBEDDING_MODEL
+    });
+
+    let queryContext = await getCachedJson(queryContextCacheKey);
+    if (!queryContext) {
+        const [filtersRaw, embedding] = await Promise.all([
+            extractStructuredFilters(normalizedQuery, client),
+            embedQuery(normalizedQuery, client)
+        ]);
+        queryContext = { filtersRaw, embedding };
+        await setCachedJson(queryContextCacheKey, queryContext, QUERY_CONTEXT_CACHE_TTL_SECONDS);
+    }
+
+    const filters = applyQueryLocationHints(sanitizeFilters(queryContext.filtersRaw || {}), normalizedQuery);
+    const embedding = queryContext.embedding;
+
+    emit('criteria', { criteria: filters });
+
+    if (!embedding) {
+        emit('results', { results: [], total: 0, criteria: filters, page, totalPages: 0 });
+        return;
+    }
+
+    emit('stage', { stage: 'searching' });
+
+    const candidateCacheKey = buildCacheKey('aiSearch:candidates', {
+        query: normalizedQuery,
+        scope: normalizeScopeForCache(scope),
+        minScore,
+        candidatePoolSize,
+        rerankerEnabled: LLM_RERANKER_ENABLED,
+        rerankerTopK: LLM_RERANK_TOP_K,
+        pipelineVersion: 2
+    });
+    const cachedCandidates = await getCachedJson(candidateCacheKey);
+
+    let candidates = Array.isArray(cachedCandidates?.candidates)
+        ? cachedCandidates.candidates
+        : null;
+
+    if (!candidates) {
+        const [vectorCandidates, lexicalCandidates] = await Promise.all([
+            runVectorSearch(embedding, scope, candidatePoolSize),
+            textSearchLexical(normalizedQuery, scope, candidatePoolSize)
+                .catch(error => {
+                    logger.warn(`aiSearch: lexical text retrieval unavailable (${error.message})`);
+                    return [];
+                })
+        ]);
+        candidates = fuseRetrievedCandidates(vectorCandidates, lexicalCandidates);
+        if (candidates.length === 0) candidates = vectorCandidates;
+
+        candidates = candidates.filter(c => matchesStructuredFilters(c, filters));
+
+        candidates = candidates.map(c => {
+            const hybridScore = buildHybridScore(c, filters);
+            const lexicalBoost = buildLexicalBoost(normalizedQuery, c);
+            return { ...c, score: hybridScore + lexicalBoost };
+        });
+        candidates.sort((a, b) => b.score - a.score);
+
+        const strictCandidates = candidates.filter(c => c.score >= minScore);
+        if (strictCandidates.length === 0 && filters.roleKeywords.length > 0) {
+            candidates = candidates.filter(c => c.score >= Math.min(minScore, RELAXED_ROLE_QUERY_MIN_SCORE));
+        } else {
+            candidates = strictCandidates;
+        }
+
+        candidates = addChunkEvidenceAndBoost(candidates, normalizedQuery);
+        candidates.sort((a, b) => b.score - a.score);
+
+        emit('stage', { stage: 'ranking', total: candidates.length });
+
+        candidates = await rerankTopCandidatesWithLLM(normalizedQuery, candidates, client);
+        candidates.sort((a, b) => b.score - a.score);
+
+        const normalizedCandidates = candidates.map(normalizeCandidateForCache);
+        await setCachedJson(
+            candidateCacheKey,
+            { candidates: normalizedCandidates },
+            CANDIDATE_CACHE_TTL_SECONDS
+        );
+        candidates = normalizedCandidates;
+    } else {
+        emit('stage', { stage: 'ranking', total: candidates.length });
+    }
+
+    if (candidates.length > 0) {
+        const candidateUserIds = Array.from(
+            new Set(candidates.map(c => String(c.userId)).filter(Boolean))
+        );
+        const existingUsers = await User.find({ _id: { $in: candidateUserIds } })
+            .select('_id')
+            .lean();
+        const existingUserIdSet = new Set(existingUsers.map(u => String(u._id)));
+        candidates = candidates.filter(c => existingUserIdSet.has(String(c.userId)));
+    }
+
+    const total = candidates.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const skip = (page - 1) * limit;
+    const pageDocs = candidates.slice(skip, skip + limit);
+
+    const results = await hydrateResults(pageDocs, scope);
+
+    emit('results', { results, total, page, totalPages, criteria: filters, scope: { kind: scope.kind } });
+}
+
 module.exports = {
     search,
+    searchStream,
     SensitiveQueryError,
     // Exposed for tests / re-use:
     _internal: {

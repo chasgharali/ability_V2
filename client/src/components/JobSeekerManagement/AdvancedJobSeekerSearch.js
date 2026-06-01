@@ -4,9 +4,11 @@ import {
   getJobSeekerParseStatus,
   triggerBatchParse,
   aiSearchJobSeekers,
+  aiSearchJobSeekersStream,
   getGlobalParseStatus,
   triggerGlobalBatchParse,
   aiSearchJobSeekersGlobal,
+  aiSearchJobSeekersGlobalStream,
   aiSearchMeetingRecords
 } from '../../services/organizations';
 import { aiSearchJobSeekerInterests } from '../../services/jobSeekerInterests';
@@ -29,33 +31,41 @@ function getApi(mode, orgId) {
   if (mode === 'global') {
     return {
       supportsParse: true,
+      supportsStream: true,
       getStatus: () => getGlobalParseStatus(),
       triggerParse: () => triggerGlobalBatchParse(false),
-      runSearch: (q, p) => aiSearchJobSeekersGlobal(q, p)
+      runSearch: (q, p) => aiSearchJobSeekersGlobal(q, p),
+      runSearchStream: (q, p) => aiSearchJobSeekersGlobalStream(q, p)
     };
   }
   if (mode === 'meeting') {
     return {
       supportsParse: false,
+      supportsStream: false,
       getStatus: null,
       triggerParse: null,
-      runSearch: (q, p) => aiSearchMeetingRecords(q, p)
+      runSearch: (q, p) => aiSearchMeetingRecords(q, p),
+      runSearchStream: null
     };
   }
   if (mode === 'interests') {
     return {
       supportsParse: false,
+      supportsStream: false,
       getStatus: null,
       triggerParse: null,
-      runSearch: (q, p) => aiSearchJobSeekerInterests(q, p)
+      runSearch: (q, p) => aiSearchJobSeekerInterests(q, p),
+      runSearchStream: null
     };
   }
   // 'org' (default)
   return {
     supportsParse: true,
+    supportsStream: true,
     getStatus: () => getJobSeekerParseStatus(orgId),
     triggerParse: () => triggerBatchParse(orgId),
-    runSearch: (q, p) => aiSearchJobSeekers(orgId, q, p)
+    runSearch: (q, p) => aiSearchJobSeekers(orgId, q, p),
+    runSearchStream: (q, p) => aiSearchJobSeekersStream(orgId, q, p)
   };
 }
 
@@ -75,8 +85,14 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
   const [total, setTotal] = useState(0);
   const [lastQuery, setLastQuery] = useState('');
 
+  // Streaming stage state
+  const [searchStage, setSearchStage] = useState('idle');
+  const [streamedCriteria, setStreamedCriteria] = useState(null);
+  const [streamedTotal, setStreamedTotal] = useState(null);
+
   const pollRef = useRef(null);
   const textareaRef = useRef(null);
+  const streamAbortRef = useRef(false);
 
   const loadParseStatus = useCallback(async () => {
     if (!api.supportsParse) return;
@@ -147,6 +163,8 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
           `skills, location, education and work level — not by disability, ` +
           `accessibility, race, gender, age, or other protected attributes.`
         );
+      } else if (e.response?.status === 429 || data?.code === 'RATE_LIMITED') {
+        setSearchError('AI search is temporarily busy. Please wait a few seconds and try again.');
       } else {
         setSearchError(data?.error || 'Search failed. Please try again.');
       }
@@ -155,12 +173,67 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
     }
   }, [api, mode]);
 
+  const runSearchStream = useCallback(async (searchQuery, searchPage = 1) => {
+    if (!searchQuery?.trim() || !api.supportsStream) return;
+    streamAbortRef.current = false;
+    setIsSearching(true);
+    setSearchError('');
+    setSearchStage('analyzing');
+    setStreamedCriteria(null);
+    setStreamedTotal(null);
+    try {
+      for await (const { event, data } of api.runSearchStream(searchQuery, { page: searchPage, limit: 20 })) {
+        if (streamAbortRef.current) break;
+        if (event === 'stage') {
+          setSearchStage(data.stage);
+          if (data.total != null) setStreamedTotal(data.total);
+        } else if (event === 'criteria') {
+          setStreamedCriteria(data.criteria);
+          setSearchStage('searching');
+        } else if (event === 'results') {
+          setResults(data.results || []);
+          setTotal(data.total || 0);
+          setTotalPages(data.totalPages || 1);
+          setPage(searchPage);
+          setLastQuery(searchQuery);
+          setSearchStage('complete');
+        } else if (event === 'error') {
+          const d = data || {};
+          if (d.code === 'SENSITIVE_QUERY') {
+            setSearchError(
+              `That search isn't allowed. AI search can only filter by role, ` +
+              `skills, location, education and work level — not by disability, ` +
+              `accessibility, race, gender, age, or other protected attributes.`
+            );
+          } else if (d.code === 'RATE_LIMITED') {
+            setSearchError('AI search is temporarily busy. Please wait a few seconds and try again.');
+          } else {
+            setSearchError(d.error || 'Search failed. Please try again.');
+          }
+          break;
+        } else if (event === 'done') {
+          break;
+        }
+      }
+    } catch (e) {
+      if (!streamAbortRef.current) {
+        setSearchError('Search failed. Please try again.');
+      }
+    } finally {
+      setIsSearching(false);
+    }
+  }, [api]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
     setPage(1);
-    runSearch(q, 1);
+    if (api.supportsStream) {
+      runSearchStream(q, 1);
+    } else {
+      runSearch(q, 1);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -171,7 +244,11 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
   };
 
   const handlePageChange = (newPage) => {
-    runSearch(lastQuery, newPage);
+    if (api.supportsStream) {
+      runSearchStream(lastQuery, newPage);
+    } else {
+      runSearch(lastQuery, newPage);
+    }
   };
 
   // Meeting mode examples focus on searchable meeting-record content.
@@ -362,7 +439,7 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
                 <button
                   type="button"
                   className="ai-search-btn ai-search-btn--clear"
-                  onClick={() => { setResults(null); setQuery(''); setLastQuery(''); }}
+                  onClick={() => { streamAbortRef.current = true; setResults(null); setQuery(''); setLastQuery(''); setSearchStage('idle'); setStreamedCriteria(null); setStreamedTotal(null); }}
                   aria-label="Clear search results"
                 >
                   Clear results
@@ -397,6 +474,55 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
       {searchError && (
         <div className="ai-search-error" role="alert">
           <strong>Search error:</strong> {searchError}
+        </div>
+      )}
+
+      {/* Streaming stage indicator */}
+      {isSearching && api.supportsStream && (
+        <div className="ai-stream-stages" role="status" aria-live="polite" aria-label="Search progress">
+          <StreamStage
+            label="Analyzing your query"
+            active={searchStage === 'analyzing'}
+            done={['searching', 'ranking', 'complete'].includes(searchStage)}
+          />
+          {streamedCriteria && (
+            <div className="ai-stream-criteria">
+              {streamedCriteria.roleKeywords?.length > 0 && (
+                <span className="ai-criteria-chip ai-criteria-chip--role">
+                  {streamedCriteria.roleKeywords.join(', ')}
+                </span>
+              )}
+              {streamedCriteria.location && (
+                <span className="ai-criteria-chip ai-criteria-chip--location">
+                  {[streamedCriteria.location.city, streamedCriteria.location.state, streamedCriteria.location.country].filter(Boolean).join(', ')}
+                </span>
+              )}
+              {streamedCriteria.education && (
+                <span className="ai-criteria-chip ai-criteria-chip--education">
+                  {streamedCriteria.education}
+                </span>
+              )}
+              {streamedCriteria.workLevel && (
+                <span className="ai-criteria-chip ai-criteria-chip--level">
+                  {streamedCriteria.workLevel}
+                </span>
+              )}
+            </div>
+          )}
+          <StreamStage
+            label={streamedTotal != null && searchStage !== 'analyzing'
+              ? `Found ${streamedTotal} candidate${streamedTotal !== 1 ? 's' : ''}, ranking results…`
+              : 'Searching profiles…'}
+            active={searchStage === 'searching' || searchStage === 'ranking'}
+            done={searchStage === 'complete'}
+          />
+        </div>
+      )}
+
+      {/* Non-streaming spinner (meeting/interests modes) */}
+      {isSearching && !api.supportsStream && (
+        <div className="ai-stream-stages" role="status" aria-live="polite">
+          <StreamStage label="Searching…" active done={false} />
         </div>
       )}
 
@@ -479,6 +605,15 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function StreamStage({ label, active, done }) {
+  return (
+    <div className={`ai-stream-stage${active ? ' ai-stream-stage--active' : ''}${done ? ' ai-stream-stage--done' : ''}`}>
+      <span className="ai-stream-stage-dot" aria-hidden="true" />
+      <span className="ai-stream-stage-label">{label}</span>
     </div>
   );
 }

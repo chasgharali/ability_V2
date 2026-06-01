@@ -47,6 +47,128 @@ const s3 = new AWS.S3({
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET;
 
+function safeDecode(value) {
+    if (typeof value !== 'string') return value;
+    try {
+        return decodeURIComponent(value);
+    } catch (_e) {
+        return value;
+    }
+}
+
+function isResumeLikeKey(value) {
+    return /^(resume|resumes|jobseeker)\//.test(value || '');
+}
+
+function extractS3Location(value, fallbackBucket = BUCKET_NAME) {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    if (isResumeLikeKey(trimmed)) {
+        return { bucket: fallbackBucket, key: trimmed };
+    }
+
+    let parsed;
+    try {
+        parsed = new URL(trimmed);
+    } catch (_e) {
+        return null;
+    }
+
+    const host = (parsed.hostname || '').toLowerCase();
+    if (!host.includes('amazonaws.com')) return null;
+
+    // Path-style S3 URL: s3.amazonaws.com/<bucket>/<key>
+    if (host === 's3.amazonaws.com' || host.startsWith('s3.') || host.startsWith('s3-')) {
+        const path = safeDecode((parsed.pathname || '').replace(/^\/+/, ''));
+        if (!path) return null;
+        const parts = path.split('/').filter(Boolean);
+        if (parts.length < 2) return null;
+        const bucket = parts.shift();
+        const key = parts.join('/');
+        return { bucket, key };
+    }
+
+    // Virtual-hosted-style URL: <bucket>.s3.<region>.amazonaws.com/<key>
+    let bucket = fallbackBucket;
+    const s3Idx = host.indexOf('.s3');
+    if (s3Idx > 0) {
+        bucket = host.slice(0, s3Idx);
+    }
+
+    const key =
+        extractS3KeyFromUrl(trimmed, bucket) ||
+        extractS3KeyFromUrl(trimmed, fallbackBucket);
+
+    if (!key) return null;
+    return { bucket, key };
+}
+
+/**
+ * Normalize different resume link formats to a raw S3 key:
+ * - direct S3 URL (virtual-hosted or path-style)
+ * - raw key (resume/... or resumes/...)
+ * - /api/uploads/stream?key=...
+ * - /api/uploads/proxy/download?url=<s3-url>
+ * - /api/uploads/admin/resume-url?url=<s3-url>
+ */
+function resolveResumeLocationFromInput(input) {
+    let value = typeof input === 'string' ? input.trim() : '';
+    if (!value) return null;
+    let bucket = BUCKET_NAME;
+
+    // Unwrap up to a few times for nested URLs like resume-url?url=proxy/download?url=s3...
+    for (let i = 0; i < 4; i += 1) {
+        const location = extractS3Location(value, bucket);
+        if (location) {
+            bucket = location.bucket || bucket;
+            value = location.key;
+        }
+
+        if (typeof value === 'string') {
+            value = safeDecode(value).replace(/^\/+/, '');
+        }
+
+        if (isResumeLikeKey(value)) {
+            return { bucket, key: value };
+        }
+
+        let parsed;
+        try {
+            parsed = new URL(value, 'http://localhost');
+        } catch (_e) {
+            return null;
+        }
+
+        const pathname = parsed.pathname || '';
+
+        if (pathname.endsWith('/api/uploads/stream')) {
+            const key = parsed.searchParams.get('key');
+            if (!key) return null;
+            value = key;
+            continue;
+        }
+
+        if (pathname.endsWith('/api/uploads/public') || pathname.includes('/api/uploads/public/')) {
+            const idx = pathname.indexOf('/api/uploads/public/');
+            if (idx >= 0) {
+                value = pathname.slice(idx + '/api/uploads/public/'.length);
+                continue;
+            }
+        }
+
+        if (pathname.endsWith('/api/uploads/proxy/download') || pathname.endsWith('/api/uploads/admin/resume-url')) {
+            const nestedUrl = parsed.searchParams.get('url');
+            if (!nestedUrl) return null;
+            value = nestedUrl;
+            continue;
+        }
+    }
+
+    return null;
+}
+
 /**
  * POST /api/uploads/presign
  * Generate presigned URL for file upload
@@ -400,33 +522,16 @@ router.get('/admin/resume-url', authenticateToken, requireRole(['SuperAdmin', 'A
         if (!url || typeof url !== 'string') {
             return res.status(400).json({ error: 'Missing url query param' });
         }
-        let key = extractS3KeyFromUrl(url) || url;
 
-        // Support internal stream URLs such as /api/uploads/stream?key=resume/...
-        if (typeof key === 'string' && key.startsWith('/api/uploads/stream')) {
-            try {
-                const parsed = new URL(key, 'http://localhost');
-                key = parsed.searchParams.get('key') || key;
-            } catch (_e) {
-                // keep original key fallback
-            }
-        }
+        const location = resolveResumeLocationFromInput(url);
+        const key = location?.key;
+        const bucket = location?.bucket || BUCKET_NAME;
 
-        // Support internal public-style paths by stripping known prefixes.
-        if (typeof key === 'string' && key.startsWith('/api/uploads/public/')) {
-            key = decodeURIComponent(key.replace('/api/uploads/public/', ''));
-        }
-
-        // If key still looks like a path, trim leading slashes.
-        if (typeof key === 'string') {
-            key = key.replace(/^\/+/, '');
-        }
-
-        if (!key || (!key.startsWith('resume/') && !key.startsWith('resumes/'))) {
+        if (!key || !isResumeLikeKey(key)) {
             return res.status(400).json({ error: 'Invalid resume key' });
         }
         const signedUrl = s3.getSignedUrl('getObject', {
-            Bucket: BUCKET_NAME,
+            Bucket: bucket,
             Key: key,
             Expires: 900 // 15 minutes
         });

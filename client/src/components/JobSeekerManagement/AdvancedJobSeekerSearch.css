@@ -790,10 +790,10 @@
   color: #475569;
   margin: 0;
   line-height: 1.6;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: block;
+  overflow: visible;
+  white-space: normal;
+  word-break: break-word;
   background: #f8fafc;
   padding: 12px 16px;
   border-radius: 12px;
@@ -803,21 +803,9 @@
 
 .ai-card-summary--detail {
   display: block;
-  -webkit-line-clamp: unset;
-  -webkit-box-orient: initial;
-  max-height: 168px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 10px;
-}
-
-.ai-card-summary--detail::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ai-card-summary--detail::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
 }
 
 /* ── Card Meta Sections ─────────────────────────────────────────────────────── */
@@ -1027,6 +1015,97 @@
   white-space: nowrap;
   border-width: 0;
 }
+
+/* ── Streaming stage indicator ──────────────────────────────────────────────── */
+.ai-stream-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 24px;
+  margin: 0 0 4px;
+}
+
+.ai-stream-stage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.ai-stream-stage--active {
+  opacity: 1;
+}
+
+.ai-stream-stage--done {
+  opacity: 0.55;
+}
+
+.ai-stream-stage-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary, #6366f1);
+  flex-shrink: 0;
+  transition: background 0.3s ease;
+}
+
+.ai-stream-stage--active .ai-stream-stage-dot {
+  animation: ai-dot-pulse 1.2s ease-in-out infinite;
+}
+
+.ai-stream-stage--done .ai-stream-stage-dot {
+  background: #22c55e;
+  animation: none;
+}
+
+@keyframes ai-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.45); opacity: 0.65; }
+}
+
+.ai-stream-stage-label {
+  font-size: 0.875rem;
+  color: var(--color-text, #374151);
+  font-weight: 500;
+}
+
+.ai-stream-stage--active .ai-stream-stage-label {
+  color: var(--color-primary, #6366f1);
+}
+
+.ai-stream-stage--done .ai-stream-stage-label {
+  color: #22c55e;
+}
+
+/* Criteria chips emitted after query analysis */
+.ai-stream-criteria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 20px;
+  margin-top: -4px;
+}
+
+.ai-criteria-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  animation: ai-chip-pop 0.2s ease-out;
+}
+
+@keyframes ai-chip-pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.ai-criteria-chip--role     { background: #eef2ff; color: #4338ca; }
+.ai-criteria-chip--location { background: #f0fdf4; color: #15803d; }
+.ai-criteria-chip--education{ background: #fef9c3; color: #a16207; }
+.ai-criteria-chip--level    { background: #fdf4ff; color: #7e22ce; }
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {

@@ -158,6 +158,73 @@ export async function aiSearchJobSeekersGlobal(query, params = {}) {
   return res.data;
 }
 
+// ── SSE streaming AI search (org + global) ────────────────────────────────
+
+/**
+ * Reads a ReadableStream of text/event-stream data and yields parsed
+ * { event, data } objects for each SSE event block.
+ */
+async function* parseSseStream(body) {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const blocks = buffer.split('\n\n');
+    buffer = blocks.pop(); // keep incomplete trailing block
+    for (const block of blocks) {
+      if (!block.trim()) continue;
+      let event = 'message';
+      let dataStr = '';
+      for (const line of block.split('\n')) {
+        if (line.startsWith('event:')) event = line.slice(6).trim();
+        else if (line.startsWith('data:')) dataStr += line.slice(5).trim();
+      }
+      try {
+        yield { event, data: JSON.parse(dataStr) };
+      } catch {
+        yield { event, data: dataStr };
+      }
+    }
+  }
+}
+
+export async function* aiSearchJobSeekersStream(orgId, query, params = {}) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`/api/organizations/${orgId}/job-seekers/ai-search/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ query, page: params.page || 1, limit: params.limit || 20 })
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw Object.assign(new Error(err.error || 'Search failed'), { response: { status: response.status, data: err } });
+  }
+  yield* parseSseStream(response.body);
+}
+
+export async function* aiSearchJobSeekersGlobalStream(query, params = {}) {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`/api/users/job-seekers/ai-search/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ query, page: params.page || 1, limit: params.limit || 20 })
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw Object.assign(new Error(err.error || 'Search failed'), { response: { status: response.status, data: err } });
+  }
+  yield* parseSseStream(response.body);
+}
+
 // ── Admin / Recruiter meeting-records AI search ────────────────────────────
 export async function aiSearchMeetingRecords(query, params = {}) {
   const res = await axios.post(`/api/meeting-records/ai-search`, {

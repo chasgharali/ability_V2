@@ -571,6 +571,16 @@ router.post('/ai-search', authenticateToken, async (req, res) => {
                 : { results: [], total: 0, criteria: {} }
         ]);
 
+        const semanticUserIds = (semantic.results || [])
+            .map(item => item?._id)
+            .filter(Boolean);
+        const semanticScoreMap = new Map(
+            (semantic.results || []).map(item => [String(item._id), Number(item._searchScore) || 0])
+        );
+        const semanticEvidenceMap = new Map(
+            (semantic.results || []).map(item => [String(item?._id || ''), item?.aiProfile?.ragEvidence || null])
+        );
+
         const meetingResults = rows.map(record => {
             const snippet = getMeetingSearchSnippet(record, searchRegex);
             return {
@@ -593,16 +603,6 @@ router.post('/ai-search', authenticateToken, async (req, res) => {
                 _hybridScore: 1
             };
         });
-
-        const semanticUserIds = (semantic.results || [])
-            .map(item => item?._id)
-            .filter(Boolean);
-        const semanticScoreMap = new Map(
-            (semantic.results || []).map(item => [String(item._id), Number(item._searchScore) || 0])
-        );
-        const semanticEvidenceMap = new Map(
-            (semantic.results || []).map(item => [String(item?._id || ''), item?.aiProfile?.ragEvidence || null])
-        );
 
         let semanticMeetingRows = [];
         if (semanticUserIds.length > 0) {
