@@ -934,7 +934,7 @@ body.sidebar-open .mobile-menu-toggle:hover {
     background: #1f2937;
     color: #ffffff;
     padding: 1rem 0;
-    overflow-y: hidden !important;
+    overflow-y: auto !important;
     overflow-x: hidden !important;
     position: fixed !important;
     top: 72px !important;
