@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
 import { boothQueueAPI } from '../../services/boothQueue';
 import { legalPagesAPI } from '../../services/legalPages';
+import { announceToScreenReader } from '../Accessibility/FocusManager';
 import './BoothQueueEntry.css';
 import AdminHeader from '../Layout/AdminHeader';
 import '../Dashboard/Dashboard.css';
@@ -25,7 +26,10 @@ export default function BoothQueueEntry() {
 
   useEffect(() => {
     const boothName = booth?.name || 'Company';
-    document.title = `${boothName} Booth Entrance - abilityconnect`;
+    document.title = `${boothName} Entrance Form - abilityconnect`;
+    if (booth?.name) {
+      announceToScreenReader(`${booth.name} entrance form`);
+    }
   }, [booth?.name]);
 
   useEffect(() => {
@@ -194,10 +198,13 @@ export default function BoothQueueEntry() {
   if (loading) {
     return (
       <div className="booth-queue-entry">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading...</p>
-        </div>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+        <main id="main-content" className="booth-queue-main" tabIndex={-1} aria-label="Booth queue entry content">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading...</p>
+          </div>
+        </main>
       </div>
     );
   }
@@ -205,13 +212,16 @@ export default function BoothQueueEntry() {
   if (error && !event) {
     return (
       <div className="booth-queue-entry">
-        <div className="error-container">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button onClick={handleExit} className="btn-exit">
-            Return to Event
-          </button>
-        </div>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+        <main id="main-content" className="booth-queue-main" tabIndex={-1} aria-label="Booth queue entry content">
+          <div className="error-container">
+            <h2>Error</h2>
+            <p>{error}</p>
+            <button onClick={handleExit} className="btn-exit">
+              Return to Event
+            </button>
+          </div>
+        </main>
       </div>
     );
   }
@@ -220,7 +230,56 @@ export default function BoothQueueEntry() {
   if (isBoothExpired) {
     return (
       <div className="booth-queue-entry">
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <AdminHeader brandingLogo={event?.logoUrl || ''} brandingLogoAlt={event?.logoAltText || ''} />
+        <main id="main-content" className="booth-queue-main" tabIndex={-1} aria-label="Booth queue entry content">
+          <div className="entry-modal">
+            <div className="modal-header">
+              <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
+              <div className="company-branding">
+                <div className="company-logo">
+                  {booth?.logoUrl ? (
+                    <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} />
+                  ) : (
+                    <div className="logo-placeholder">
+                      <span className="logo-text">{booth?.name?.[0] || 'C'}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="booth-company-name">{booth?.name || 'Company'}</div>
+              </div>
+            </div>
+            <div className="divider" />
+            <div className="error-container" style={{ 
+              background: '#ffe8e8', 
+              borderColor: '#f5c2c7', 
+              color: '#842029',
+              padding: '1.5rem',
+              borderRadius: '8px',
+              margin: '1rem 0',
+              textAlign: 'center'
+            }}>
+              <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.25rem' }}>Booth Link Expired</h2>
+              <p style={{ margin: 0 }}>{error}</p>
+            </div>
+            <div className="modal-actions">
+              <button onClick={handleExit} className="btn-exit">
+                Return to Event
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="booth-queue-entry">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      {/* Standard header with user status; override branding with event logo */}
+      <AdminHeader brandingLogo={event?.logoUrl || ''} brandingLogoAlt={event?.logoAltText || ''} />
+
+      <main id="main-content" className="booth-queue-main" tabIndex={-1} aria-label="Booth queue entry content">
         <div className="entry-modal">
           <div className="modal-header">
             <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
@@ -234,126 +293,83 @@ export default function BoothQueueEntry() {
                   </div>
                 )}
               </div>
-              <div className="company-name">{booth?.name || 'Company'}</div>
+              <div className="booth-company-name">{booth?.name || 'Company'}</div>
             </div>
           </div>
+  
           <div className="divider" />
-          <div className="error-container" style={{ 
-            background: '#ffe8e8', 
-            borderColor: '#f5c2c7', 
-            color: '#842029',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            margin: '1rem 0',
-            textAlign: 'center'
-          }}>
-            <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.25rem' }}>Booth Link Expired</h2>
-            <p style={{ margin: 0 }}>{error}</p>
+  
+          <div className="interpreter-selection">
+            <label htmlFor="interpreter-select">
+              Choose sign language interpreter for <span className="booth-required-text">Deaf & non-verbal <span className="required-indicator">*</span></span>
+            </label>
+            <select
+              id="interpreter-select"
+              value={selectedInterpreter}
+              onChange={(e) => setSelectedInterpreter(e.target.value)}
+              className="interpreter-dropdown"
+            >
+              <option value="none">none</option>
+              {interpreterCategories.map(category => (
+                <option key={category._id} value={category._id}>
+                  {category.name} ({category.code})
+                </option>
+              ))}
+            </select>
           </div>
+  
+          <div className="terms-agreement">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+              />
+              <span>I agree to </span>
+              <a
+                href={legalLinks.termsOfUse || 'https://abilityjobfair.org/terms-of-use/'}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Terms of Use (opens in new tab)"
+              >
+                Terms of Use
+              </a>
+              <span> and </span>
+              <a
+                href={legalLinks.privacyPolicy || 'https://abilityjobfair.org/privacy-policy/'}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Privacy Policy (opens in new tab)"
+              >
+                Privacy Policy
+              </a>
+              <span className="required-indicator"> *</span>
+            </label>
+          </div>
+  
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+  
           <div className="modal-actions">
-            <button onClick={handleExit} className="btn-exit">
-              Return to Event
+            <button
+              onClick={handleJoinQueue}
+              disabled={joining || !agreedToTerms}
+              className="btn-join"
+            >
+              {joining ? 'Joining...' : 'Join'}
+            </button>
+            <button
+              onClick={handleExit}
+              className="btn-exit"
+            >
+              Exit
             </button>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="booth-queue-entry">
-      {/* Standard header with user status; override branding with event logo */}
-      <AdminHeader brandingLogo={event?.logoUrl || ''} brandingLogoAlt={event?.logoAltText || ''} />
-
-      <div className="entry-modal">
-        <div className="modal-header">
-          <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
-          <div className="company-branding">
-            <div className="company-logo">
-              {booth?.logoUrl ? (
-                <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} />
-              ) : (
-                <div className="logo-placeholder">
-                  <span className="logo-text">{booth?.name?.[0] || 'C'}</span>
-                </div>
-              )}
-            </div>
-            <div className="company-name">{booth?.name || 'Company'}</div>
-          </div>
-        </div>
-
-        <div className="divider" />
-
-        <div className="interpreter-selection">
-          <label htmlFor="interpreter-select">
-            Choose sign language interpreter for <span className="required">Deaf & non-verbal *</span>
-          </label>
-          <select
-            id="interpreter-select"
-            value={selectedInterpreter}
-            onChange={(e) => setSelectedInterpreter(e.target.value)}
-            className="interpreter-dropdown"
-          >
-            <option value="none">none</option>
-            {interpreterCategories.map(category => (
-              <option key={category._id} value={category._id}>
-                {category.name} ({category.code})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="terms-agreement">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={agreedToTerms}
-              onChange={(e) => setAgreedToTerms(e.target.checked)}
-            />
-            <span>I agree to </span>
-            <a
-              href={legalLinks.termsOfUse || 'https://abilityjobfair.org/terms-of-use/'}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Terms of Use (opens in new tab)"
-            >
-              Terms of Use
-            </a>
-            <span> and </span>
-            <a
-              href={legalLinks.privacyPolicy || 'https://abilityjobfair.org/privacy-policy/'}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Privacy Policy (opens in new tab)"
-            >
-              Privacy Policy
-            </a>
-            <span className="required"> *</span>
-          </label>
-        </div>
-
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
-
-        <div className="modal-actions">
-          <button
-            onClick={handleJoinQueue}
-            disabled={joining || !agreedToTerms}
-            className="btn-join"
-          >
-            {joining ? 'Joining...' : 'Join'}
-          </button>
-          <button
-            onClick={handleExit}
-            className="btn-exit"
-          >
-            Exit
-          </button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

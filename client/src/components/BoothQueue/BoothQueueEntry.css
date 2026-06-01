@@ -11,6 +11,16 @@
   position: relative;
 }
 
+.booth-queue-main {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.booth-queue-entry .skip-link {
+  z-index: 3002;
+}
+
 .booth-queue-entry .entry-modal {
   margin-top: 2rem;
   margin-bottom: 2rem;
@@ -163,7 +173,7 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.company-name {
+.booth-company-name {
   font-size: 1.25rem;
   font-weight: 800;
   color: #111827;
@@ -192,9 +202,14 @@
   font-size: 0.95rem;
 }
 
-.required {
-  color: #ef4444;
-  font-weight: 600;
+.booth-required-text {
+  color: #7f1d1d;
+  font-weight: 700;
+}
+
+.required-indicator {
+  color: #991b1b;
+  font-weight: 700;
 }
 
 .interpreter-dropdown {
@@ -273,9 +288,9 @@
   border-bottom-color: #111827;
 }
 
-.checkbox-label .required {
-  color: #ef4444;
-  font-weight: 600;
+.checkbox-label .required-indicator {
+  color: #991b1b;
+  font-weight: 700;
   margin-left: 1px;
 }
 

@@ -12,6 +12,7 @@ import CallInviteModal from '../VideoCall/CallInviteModal';
 import DeviceTestModal from './DeviceTestModal';
 import EmployerPageTemplate from './EmployerPageTemplate';
 import { useToast, ToastContainer } from '../common/Toast';
+import { announceToScreenReader } from '../Accessibility/FocusManager';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
 
@@ -161,6 +162,11 @@ export default function BoothQueueWaiting() {
       console.warn('⚠️ Speech synthesis not supported in this browser');
     }
   }, []);
+
+  useEffect(() => {
+    if (!booth?.name) return;
+    announceToScreenReader(`${booth.name} waiting area`);
+  }, [booth?.name]);
 
   // Ensure we (re)join socket rooms after the socket connects/reconnects
   useEffect(() => {
@@ -1142,17 +1148,17 @@ export default function BoothQueueWaiting() {
 
   return (
     <div className={`booth-queue-waiting${isEmployerPageMode ? ' employer-mode' : ''}`}>
+      {/* Skip link must be first focusable element in DOM order */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       {/* Global header with event branding */}
       <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} brandingLogoAlt={event?.logoAltText || ''} hideMenuToggle={true} />
 
       <Helmet>
-        <title>{`${booth?.name || 'Waiting Area'} - abilityconnect`}</title>
+        <title>{`${booth?.name || 'Company'} Waiting Area - abilityconnect`}</title>
       </Helmet>
-
-      {/* Skip to main content link for screen readers */}
-      <a href="#main-content" className="skip-link sr-only sr-only-focusable">
-        Skip to main content
-      </a>
 
       {/* Main content area */}
       <div className="waiting-layout">

@@ -1973,14 +1973,14 @@
 
 /* Leave Message Button Styling */
 .sidebar-action-btn.leave-message-btn {
-  background: #ef4444;
-  border-color: #dc2626;
+  background: #b91c1c;
+  border-color: #991b1b;
 }
 
 .sidebar-action-btn.leave-message-btn:hover {
-  background: #dc2626;
+  background: #991b1b;
   color: #ffffff;
-  border-color: #b91c1c;
+  border-color: #7f1d1d;
 }
 
 /* Unread count badge */
