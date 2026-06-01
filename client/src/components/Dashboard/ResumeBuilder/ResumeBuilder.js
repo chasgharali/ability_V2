@@ -469,12 +469,32 @@ export default function ResumeBuilder() {
       { key: 'skills', label: 'Skills' },
       { key: 'more', label: 'More' }
     ];
+    const activeTabLabel = tabs.find((t) => t.key === activeTab)?.label || 'Personal';
+
+    const handleTabKeyDown = (event, currentIndex) => {
+      let nextIndex = null;
+      if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+      if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = tabs.length - 1;
+      if (nextIndex === null) return;
+
+      event.preventDefault();
+      const nextTab = tabs[nextIndex];
+      setActiveTab(nextTab.key);
+      event.currentTarget
+        ?.closest('.rb-tabs')
+        ?.querySelector(`[data-rb-tab-key="${nextTab.key}"]`)
+        ?.focus();
+    };
 
     return (
-      <div className="resume-builder">
+      <div className="resume-builder" aria-busy={saving || parsing}>
         {renderLimitBanner()}
         <div className="rb-editor-topbar">
-          <button className="ajf-btn ajf-btn-outline" onClick={() => setView('list')}>← All Resumes</button>
+          <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => setView('list')}>
+            <span aria-hidden="true">←</span> All Resumes
+          </button>
           <input
             className="rb-title-input"
             value={editing.title || ''}
@@ -495,16 +515,18 @@ export default function ResumeBuilder() {
             )}
             {uploadParseEnabled && (
               <button
+                type="button"
                 className="ajf-btn ajf-btn-outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={parsing}
+                aria-label={parsing ? 'Parsing uploaded resume file' : 'Upload resume file'}
                 title="Upload a new resume file to parse (replaces current content)"
               >
-                {parsing ? 'Parsing…' : '⬆ Upload File'}
+                {parsing ? 'Parsing…' : <><span aria-hidden="true">⬆</span> Upload File</>}
               </button>
             )}
-            <button className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
-            <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving || !canUpdateResume}>
+            <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
+            <button type="button" className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving || !canUpdateResume}>
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
@@ -519,20 +541,33 @@ export default function ResumeBuilder() {
         </div>
 
         <div className="rb-editor-layout">
-          <nav className="rb-tabs" aria-label="Resume sections">
-            {tabs.map(t => (
+          <nav className="rb-tabs" aria-label="Resume sections" role="tablist">
+            {tabs.map((t, index) => (
               <button
                 key={t.key}
+                type="button"
+                id={`rb-tab-${t.key}`}
+                data-rb-tab-key={t.key}
+                role="tab"
+                aria-selected={activeTab === t.key}
+                aria-controls={`rb-tabpanel-${t.key}`}
+                tabIndex={activeTab === t.key ? 0 : -1}
                 className={`rb-tab ${activeTab === t.key ? 'active' : ''}`}
                 onClick={() => setActiveTab(t.key)}
-                aria-current={activeTab === t.key ? 'true' : undefined}
+                onKeyDown={(event) => handleTabKeyDown(event, index)}
               >
                 {t.label}
               </button>
             ))}
           </nav>
 
-          <div className="rb-tab-content">
+          <div
+            className="rb-tab-content"
+            role="tabpanel"
+            id={`rb-tabpanel-${activeTab}`}
+            aria-labelledby={`rb-tab-${activeTab}`}
+            aria-describedby="rb-active-section-helper"
+          >
 
             {activeTab === 'personal' && (
               <fieldset className="rb-fieldset">
@@ -882,18 +917,25 @@ export default function ResumeBuilder() {
         </div>
 
         <div className="rb-editor-footer">
-          <button className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving || !canUpdateResume}>
+          <button type="button" className="ajf-btn ajf-btn-dark" onClick={handleSave} disabled={saving || !canUpdateResume}>
             {saving ? 'Saving…' : 'Save Resume'}
           </button>
-          <button className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
+          <button type="button" className="ajf-btn ajf-btn-outline" onClick={() => setView('preview')}>Preview & Print</button>
         </div>
+        <span className="sr-only" role="status" aria-live="polite">
+          {saving ? 'Saving resume changes.' : ''}
+          {parsing ? 'Parsing uploaded resume.' : ''}
+        </span>
+        <span id="rb-active-section-helper" className="sr-only">
+          {`Active resume section: ${activeTabLabel}.`}
+        </span>
       </div>
     );
   }
 
   // ——— List view ———
   return (
-    <div className="resume-builder">
+    <div className="resume-builder" aria-busy={loading || parsing}>
       <div className="dashboard-content">
         <h1>Resume Builder</h1>
         <p className="rb-subtitle">
@@ -903,28 +945,43 @@ export default function ResumeBuilder() {
         </p>
         {renderLimitBanner()}
 
-        <div className="rb-list-toolbar">
-          <button className="ajf-btn ajf-btn-dark" onClick={handleCreate} disabled={parsing || !canCreateResume}>+ New Resume</button>
+        <div className="rb-list-toolbar" aria-label="Resume actions" role="group">
+          <button
+            type="button"
+            className="ajf-btn ajf-btn-dark"
+            onClick={handleCreate}
+            disabled={parsing || !canCreateResume}
+            aria-label="Create new resume"
+          >
+            <span aria-hidden="true">+</span> New Resume
+          </button>
           {uploadParseEnabled && (
             <button
+              type="button"
               className="ajf-btn ajf-btn-outline"
               onClick={() => fileInputRef.current?.click()}
               disabled={parsing || !canCreateResume}
+              aria-label={parsing ? 'Parsing uploaded resume file' : 'Upload and parse resume'}
               title="Upload a PDF or Word resume to parse and edit"
             >
-              {parsing ? 'Parsing…' : '⬆ Upload & Parse Resume'}
+              {parsing ? 'Parsing…' : <><span aria-hidden="true">⬆</span> Upload & Parse Resume</>}
             </button>
           )}
           {uploadParseEnabled && user?.resumeUrl && (
             <button
+              type="button"
               className="ajf-btn ajf-btn-outline"
               onClick={handleParseFromUploadedResume}
               disabled={parsing || !canCreateResume}
+              aria-label={parsing ? 'Parsing uploaded profile resume' : 'Import uploaded resume'}
               title="Parse your already-uploaded profile resume and import it into the editor"
             >
-              {parsing ? 'Parsing…' : '↙ Import Uploaded Resume'}
+              {parsing ? 'Parsing…' : <><span aria-hidden="true">↙</span> Import Uploaded Resume</>}
             </button>
           )}
+          <span className="sr-only" role="status" aria-live="polite">
+            {parsing ? 'Resume parsing in progress.' : ''}
+          </span>
           <input
             ref={fileInputRef}
             type="file"
@@ -935,10 +992,10 @@ export default function ResumeBuilder() {
           />
         </div>
 
-        {loading && <div className="rb-loading">Loading resumes…</div>}
+        {loading && <div className="rb-loading" role="status" aria-live="polite">Loading resumes…</div>}
 
         {!loading && resumes.length === 0 && (
-          <div className="rb-empty">
+          <div className="rb-empty" role="status" aria-live="polite">
             <p>No resumes yet. Create your first resume to get started.</p>
           </div>
         )}
