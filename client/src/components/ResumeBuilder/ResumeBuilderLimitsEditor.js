@@ -7,9 +7,11 @@ import '../Dashboard/Dashboard.css';
 const SETTING_MAX_RESUMES = 'resume_builder_max_resumes';
 const SETTING_MAX_UPDATES = 'resume_builder_max_updates';
 const SETTING_AI_ENABLED = 'resume_builder_ai_enabled';
+const SETTING_UPLOAD_PARSE_ENABLED = 'resume_builder_upload_parse_enabled';
 const DEFAULT_MAX_RESUMES = 2;
 const DEFAULT_MAX_UPDATES = 3;
 const DEFAULT_AI_ENABLED = false;
+const DEFAULT_UPLOAD_PARSE_ENABLED = true;
 
 function parseLimit(value, defaultValue) {
   if (value === null || value === undefined) return defaultValue;
@@ -33,6 +35,7 @@ export default function ResumeBuilderLimitsEditor() {
   const [maxResumes, setMaxResumes] = useState(String(DEFAULT_MAX_RESUMES));
   const [maxUpdates, setMaxUpdates] = useState(String(DEFAULT_MAX_UPDATES));
   const [aiEnabled, setAiEnabled] = useState(DEFAULT_AI_ENABLED);
+  const [uploadParseEnabled, setUploadParseEnabled] = useState(DEFAULT_UPLOAD_PARSE_ENABLED);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,14 +47,16 @@ export default function ResumeBuilderLimitsEditor() {
   const loadLimits = async () => {
     try {
       setLoading(true);
-      const [resumesRes, updatesRes, aiEnabledRes] = await Promise.all([
+      const [resumesRes, updatesRes, aiEnabledRes, uploadParseEnabledRes] = await Promise.all([
         settingsAPI.getSetting(SETTING_MAX_RESUMES).catch(() => null),
         settingsAPI.getSetting(SETTING_MAX_UPDATES).catch(() => null),
-        settingsAPI.getSetting(SETTING_AI_ENABLED).catch(() => null)
+        settingsAPI.getSetting(SETTING_AI_ENABLED).catch(() => null),
+        settingsAPI.getSetting(SETTING_UPLOAD_PARSE_ENABLED).catch(() => null)
       ]);
       setMaxResumes(String(parseLimit(resumesRes?.value, DEFAULT_MAX_RESUMES)));
       setMaxUpdates(String(parseLimit(updatesRes?.value, DEFAULT_MAX_UPDATES)));
       setAiEnabled(parseBoolean(aiEnabledRes?.value, DEFAULT_AI_ENABLED));
+      setUploadParseEnabled(parseBoolean(uploadParseEnabledRes?.value, DEFAULT_UPLOAD_PARSE_ENABLED));
     } finally {
       setLoading(false);
     }
@@ -93,6 +98,11 @@ export default function ResumeBuilderLimitsEditor() {
           SETTING_AI_ENABLED,
           aiEnabled,
           'Enable or disable Resume Builder AI features for all job seekers'
+        ),
+        settingsAPI.setSetting(
+          SETTING_UPLOAD_PARSE_ENABLED,
+          uploadParseEnabled,
+          'Enable or disable resume upload and parse actions in Resume Builder'
         )
       ]);
       setMaxResumes(String(resumes));
@@ -112,12 +122,14 @@ export default function ResumeBuilderLimitsEditor() {
       await Promise.all([
         settingsAPI.deleteSetting(SETTING_MAX_RESUMES).catch(() => {}),
         settingsAPI.deleteSetting(SETTING_MAX_UPDATES).catch(() => {}),
-        settingsAPI.deleteSetting(SETTING_AI_ENABLED).catch(() => {})
+        settingsAPI.deleteSetting(SETTING_AI_ENABLED).catch(() => {}),
+        settingsAPI.deleteSetting(SETTING_UPLOAD_PARSE_ENABLED).catch(() => {})
       ]);
       setMaxResumes(String(DEFAULT_MAX_RESUMES));
       setMaxUpdates(String(DEFAULT_MAX_UPDATES));
       setAiEnabled(DEFAULT_AI_ENABLED);
-      showMessage('Settings reset to defaults (2 resumes, 3 updates, AI off).');
+      setUploadParseEnabled(DEFAULT_UPLOAD_PARSE_ENABLED);
+      showMessage('Settings reset to defaults (2 resumes, 3 updates, AI off, upload/parse on).');
     } catch (error) {
       console.error('Failed to reset resume builder limits:', error);
       showMessage('Failed to reset settings.');
@@ -151,9 +163,9 @@ export default function ResumeBuilderLimitsEditor() {
             >
               <p>
                 Control how many resumes each job seeker can create and how many times they can save
-                their resume. You can also enable or disable Resume Builder AI features globally.
+                their resume. You can also enable or disable Resume Builder AI features and upload/parse actions globally.
                 Set a value to <strong>0</strong> for unlimited.
-                Defaults when not configured: <strong>2 resumes</strong>, <strong>3 updates</strong>, and <strong>AI off</strong>.
+                Defaults when not configured: <strong>2 resumes</strong>, <strong>3 updates</strong>, <strong>AI off</strong>, and <strong>upload/parse on</strong>.
               </p>
             </div>
             <div className="upload-card" style={{ maxWidth: 480 }}>
@@ -206,7 +218,26 @@ export default function ResumeBuilderLimitsEditor() {
                   Enable Resume Builder AI features
                 </label>
                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
-                  Controls AI generation, AI suggestions, and AI resume parsing in Resume Builder.
+                  Controls AI generation and AI suggestions in Resume Builder.
+                </p>
+              </div>
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label
+                  htmlFor="resumeBuilderUploadParseEnabled"
+                  className="rb-settings-ai-toggle"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', fontWeight: 500, cursor: loading || saving ? 'default' : 'pointer' }}
+                >
+                  <input
+                    id="resumeBuilderUploadParseEnabled"
+                    type="checkbox"
+                    checked={uploadParseEnabled}
+                    onChange={(e) => setUploadParseEnabled(e.target.checked)}
+                    disabled={loading || saving}
+                  />
+                  Enable Resume Upload & Parse
+                </label>
+                <p style={{ margin: '0.5rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                  Controls the &quot;Upload &amp; Parse Resume&quot; and &quot;Import Uploaded Resume&quot; actions in Resume Builder.
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>

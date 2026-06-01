@@ -5,10 +5,12 @@ const User = require('../models/User');
 const SETTING_MAX_RESUMES = 'resume_builder_max_resumes';
 const SETTING_MAX_UPDATES = 'resume_builder_max_updates';
 const SETTING_AI_ENABLED = 'resume_builder_ai_enabled';
+const SETTING_UPLOAD_PARSE_ENABLED = 'resume_builder_upload_parse_enabled';
 
 const DEFAULT_MAX_RESUMES = 2;
 const DEFAULT_MAX_UPDATES = 3;
 const DEFAULT_AI_ENABLED = false;
+const DEFAULT_UPLOAD_PARSE_ENABLED = true;
 
 function parseLimit(value, defaultValue) {
   if (value === null || value === undefined) return defaultValue;
@@ -29,15 +31,17 @@ function parseBoolean(value, defaultValue) {
 }
 
 async function getResumeBuilderLimits() {
-  const [maxResumesRaw, maxUpdatesRaw, aiEnabledRaw] = await Promise.all([
+  const [maxResumesRaw, maxUpdatesRaw, aiEnabledRaw, uploadParseEnabledRaw] = await Promise.all([
     Settings.getSetting(SETTING_MAX_RESUMES),
     Settings.getSetting(SETTING_MAX_UPDATES),
-    Settings.getSetting(SETTING_AI_ENABLED)
+    Settings.getSetting(SETTING_AI_ENABLED),
+    Settings.getSetting(SETTING_UPLOAD_PARSE_ENABLED)
   ]);
   return {
     maxResumes: parseLimit(maxResumesRaw, DEFAULT_MAX_RESUMES),
     maxUpdates: parseLimit(maxUpdatesRaw, DEFAULT_MAX_UPDATES),
-    aiEnabled: parseBoolean(aiEnabledRaw, DEFAULT_AI_ENABLED)
+    aiEnabled: parseBoolean(aiEnabledRaw, DEFAULT_AI_ENABLED),
+    uploadParseEnabled: parseBoolean(uploadParseEnabledRaw, DEFAULT_UPLOAD_PARSE_ENABLED)
   };
 }
 
@@ -153,9 +157,11 @@ module.exports = {
   SETTING_MAX_RESUMES,
   SETTING_MAX_UPDATES,
   SETTING_AI_ENABLED,
+  SETTING_UPLOAD_PARSE_ENABLED,
   DEFAULT_MAX_RESUMES,
   DEFAULT_MAX_UPDATES,
   DEFAULT_AI_ENABLED,
+  DEFAULT_UPLOAD_PARSE_ENABLED,
   getResumeBuilderLimits,
   getResumeBuilderStatus,
   incrementUpdateCount,

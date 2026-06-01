@@ -8,6 +8,7 @@ const {
   SETTING_MAX_RESUMES,
   SETTING_MAX_UPDATES,
   SETTING_AI_ENABLED,
+  SETTING_UPLOAD_PARSE_ENABLED,
   validateLimitSettingValue,
   validateAiEnabledSettingValue
 } = require('../services/resumeBuilderLimits');
@@ -16,7 +17,8 @@ const SUPERADMIN_ONLY_SETTING_KEYS = new Set([
   'footer_text',
   SETTING_MAX_RESUMES,
   SETTING_MAX_UPDATES,
-  SETTING_AI_ENABLED
+  SETTING_AI_ENABLED,
+  SETTING_UPLOAD_PARSE_ENABLED
 ]);
 const FOOTER_TEXT_MAX_LENGTH = 200;
 const RESUME_BUILDER_LIMIT_KEYS = new Set([SETTING_MAX_RESUMES, SETTING_MAX_UPDATES]);
@@ -164,6 +166,16 @@ router.post('/', authenticateToken, requireRole(['Admin', 'GlobalSupport', 'Supe
         });
       }
       sanitizedValue = aiEnabledResult.value;
+    }
+    if (key === SETTING_UPLOAD_PARSE_ENABLED) {
+      const uploadParseResult = validateAiEnabledSettingValue(value);
+      if (uploadParseResult.error) {
+        return res.status(400).json({
+          success: false,
+          error: uploadParseResult.error
+        });
+      }
+      sanitizedValue = uploadParseResult.value;
     }
 
     const setting = await Settings.setSetting(

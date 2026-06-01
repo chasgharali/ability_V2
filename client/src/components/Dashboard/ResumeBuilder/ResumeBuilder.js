@@ -199,8 +199,8 @@ export default function ResumeBuilder() {
   const handleParseFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!aiEnabled) {
-      showToast('Resume Builder AI is currently disabled by the platform administrator.', { type: 'error' });
+    if (!uploadParseEnabled) {
+      showToast('Resume upload and parsing are currently disabled by the platform administrator.', { type: 'error' });
       e.target.value = '';
       return;
     }
@@ -223,8 +223,8 @@ export default function ResumeBuilder() {
   const handleParseFromUploadedResume = async () => {
     const resumeUrl = user?.resumeUrl;
     if (!resumeUrl) return;
-    if (!aiEnabled) {
-      showToast('Resume Builder AI is currently disabled by the platform administrator.', { type: 'error' });
+    if (!uploadParseEnabled) {
+      showToast('Resume upload and parsing are currently disabled by the platform administrator.', { type: 'error' });
       return;
     }
     setParsing(true);
@@ -245,6 +245,7 @@ export default function ResumeBuilder() {
   const canCreateResume = limitStatus?.canCreateResume !== false;
   const canUpdateResume = limitStatus?.canUpdateResume !== false;
   const aiEnabled = limitStatus?.limits?.aiEnabled === true;
+  const uploadParseEnabled = limitStatus?.limits?.uploadParseEnabled !== false;
 
   const renderLimitBanner = () => {
     if (!limitStatus?.limits) return null;
@@ -492,7 +493,7 @@ export default function ResumeBuilder() {
                 {aiLoading === 'generate' ? 'Generating…' : '✨ Generate from Profile'}
               </button>
             )}
-            {aiEnabled && (
+            {uploadParseEnabled && (
               <button
                 className="ajf-btn ajf-btn-outline"
                 onClick={() => fileInputRef.current?.click()}
@@ -904,7 +905,7 @@ export default function ResumeBuilder() {
 
         <div className="rb-list-toolbar">
           <button className="ajf-btn ajf-btn-dark" onClick={handleCreate} disabled={parsing || !canCreateResume}>+ New Resume</button>
-          {aiEnabled && (
+          {uploadParseEnabled && (
             <button
               className="ajf-btn ajf-btn-outline"
               onClick={() => fileInputRef.current?.click()}
@@ -914,7 +915,7 @@ export default function ResumeBuilder() {
               {parsing ? 'Parsing…' : '⬆ Upload & Parse Resume'}
             </button>
           )}
-          {aiEnabled && user?.resumeUrl && (
+          {uploadParseEnabled && user?.resumeUrl && (
             <button
               className="ajf-btn ajf-btn-outline"
               onClick={handleParseFromUploadedResume}

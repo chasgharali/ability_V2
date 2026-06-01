@@ -38,6 +38,18 @@ async function assertResumeBuilderAiEnabled(userId) {
   throw err;
 }
 
+async function assertResumeBuilderUploadParseEnabled(userId) {
+  const limits = await getResumeBuilderLimits();
+  if (limits.uploadParseEnabled) return;
+
+  const status = await getResumeBuilderStatus(userId);
+  const err = new Error('Resume upload and parsing are currently disabled by the platform administrator.');
+  err.status = 403;
+  err.code = 'UPLOAD_PARSE_DISABLED';
+  err.payload = status;
+  throw err;
+}
+
 /**
  * Fire-and-forget: re-build the AI search projection for this user after a
  * resume mutation. We pass `force: true` because we know the source content
@@ -380,7 +392,7 @@ router.post('/:id/suggest', authenticateToken, async (req, res) => {
  */
 router.post('/parse-upload', authenticateToken, upload.single('resume'), async (req, res) => {
   try {
-    await assertResumeBuilderAiEnabled(req.user._id);
+    await assertResumeBuilderUploadParseEnabled(req.user._id);
     await assertCanCreateResume(req.user._id);
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -425,7 +437,7 @@ router.post('/parse-upload', authenticateToken, upload.single('resume'), async (
  */
 router.post('/parse-from-url', authenticateToken, async (req, res) => {
   try {
-    await assertResumeBuilderAiEnabled(req.user._id);
+    await assertResumeBuilderUploadParseEnabled(req.user._id);
     await assertCanCreateResume(req.user._id);
     const { url, title } = req.body;
     if (!url) return res.status(400).json({ error: 'url is required' });
