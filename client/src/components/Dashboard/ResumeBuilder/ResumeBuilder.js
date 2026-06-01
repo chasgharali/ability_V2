@@ -951,9 +951,9 @@ export default function ResumeBuilder() {
             className="ajf-btn ajf-btn-dark"
             onClick={handleCreate}
             disabled={parsing || !canCreateResume}
-            aria-label="Create new resume"
+            aria-label="Add New Resume"
           >
-            <span aria-hidden="true">+</span> New Resume
+            <span aria-hidden="true">+</span> Add New Resume
           </button>
           {uploadParseEnabled && (
             <button
