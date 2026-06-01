@@ -49,8 +49,7 @@ router.get('/', authenticateToken, async (req, res) => {
             await syncMissingNotesForOrganization({ organizationId: req.orgId, actorId: user._id });
             query.organizationId = req.orgId;
         } else if (user.role === 'SuperAdmin') {
-            // SuperAdmin manages global templates
-            query.organizationId = null;
+            // SuperAdmin can view notes across all organizations
         }
 
         // Apply type filter
@@ -67,6 +66,7 @@ router.get('/', authenticateToken, async (req, res) => {
         const rows = await Note.find(query)
             .populate('createdBy', 'name email')
             .populate('updatedBy', 'name email')
+            .populate('organizationId', 'name')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
@@ -78,6 +78,8 @@ router.get('/', authenticateToken, async (req, res) => {
         res.json({
             notes: notes.map(note => ({
                 ...note.getSummary(),
+                organizationId: note.organizationId?._id || note.organizationId || null,
+                organizationName: note.organizationId?.name || null,
                 createdBy: note.createdBy,
                 updatedBy: note.updatedBy
             })),
@@ -266,6 +268,14 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin']), [
         const { title, content, type, assignedRoles, isActive = true, isPlatformDefault = false } = req.body;
         const { user } = req;
         const canSetDefault = user.role === 'SuperAdmin';
+        const includesJobSeekerRole = Array.isArray(assignedRoles) && assignedRoles.includes('JobSeeker');
+
+        if (includesJobSeekerRole && user.role !== 'SuperAdmin') {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'Only SuperAdmin can assign notes to JobSeeker'
+            });
+        }
 
         // Create new note
         const note = new Note({
@@ -347,12 +357,18 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin']), [
         const { title, content, type, assignedRoles, isActive, isPlatformDefault } = req.body;
         const { id } = req.params;
         const { user } = req;
-
         const note = await Note.findById(id);
         if (!note) {
             return res.status(404).json({
                 error: 'Note not found',
                 message: 'The specified note does not exist'
+            });
+        }
+        const effectiveAssignedRoles = Array.isArray(assignedRoles) ? assignedRoles : note.assignedRoles;
+        if (effectiveAssignedRoles.includes('JobSeeker') && user.role !== 'SuperAdmin') {
+            return res.status(403).json({
+                error: 'Access denied',
+                message: 'Only SuperAdmin can assign notes to JobSeeker'
             });
         }
         if (

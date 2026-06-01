@@ -55,17 +55,25 @@ const NoteForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const { user } = useAuth();
+    const roleOptions = useMemo(() => {
+        if (user?.role === 'SuperAdmin') return ROLE_OPTIONS;
+        return ROLE_OPTIONS.filter((role) => role !== 'JobSeeker');
+    }, [user?.role]);
 
     // Fetch existing note for editing
     const fetchNote = useCallback(async () => {
         try {
             setLoading(true);
             const data = await notesAPI.getById(id);
+            const fetchedRoles = data.note.assignedRoles || [];
+            const allowedRoles = user?.role === 'SuperAdmin'
+                ? fetchedRoles
+                : fetchedRoles.filter((role) => role !== 'JobSeeker');
             setFormData({
                 title: data.note.title,
                 content: data.note.content,
                 type: data.note.type,
-                assignedRoles: data.note.assignedRoles || [],
+                assignedRoles: allowedRoles,
                 isActive: data.note.isActive !== undefined ? data.note.isActive : true
             });
         } catch (err) {
@@ -74,7 +82,7 @@ const NoteForm = () => {
         } finally {
             setLoading(false);
         }
-    }, [id]);
+    }, [id, user?.role]);
 
     // Check if this is an edit operation
     useEffect(() => {
@@ -126,6 +134,10 @@ const NoteForm = () => {
 
         if (!formData.assignedRoles || formData.assignedRoles.length === 0) {
             setError('At least one role must be assigned');
+            return;
+        }
+        if (user?.role !== 'SuperAdmin' && formData.assignedRoles.includes('JobSeeker')) {
+            setError('Only SuperAdmin can assign notes to JobSeeker');
             return;
         }
 
@@ -341,7 +353,7 @@ const NoteForm = () => {
                                         <MultiSelect
                                             id="assignedRoles"
                                             name="assignedRoles"
-                                            options={ROLE_OPTIONS.map(role => ({ value: role, label: role }))}
+                                            options={roleOptions.map(role => ({ value: role, label: role }))}
                                             value={formData.assignedRoles}
                                             onChange={handleRoleChange}
                                             placeholder="Select roles"

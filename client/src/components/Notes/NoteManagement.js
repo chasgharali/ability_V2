@@ -22,6 +22,7 @@ const NoteManagement = () => {
     const [selectedNoteId, setSelectedNoteId] = useState(null);
     const navigate = useNavigate();
     const { user } = useAuth();
+    const isSuperAdmin = user?.role === 'SuperAdmin';
 
     // Fetch notes
     const fetchNotes = async () => {
@@ -139,12 +140,26 @@ const NoteManagement = () => {
         );
     };
 
+    const getOrganizationLabel = (row) => {
+        if (!row.organizationId) return 'Platform (Global)';
+        return row.organizationName || 'Organization';
+    };
+
     // DataGrid columns configuration
     const columns = [
         {
             key: 'title',
             label: 'Title',
             render: (row) => <strong>{row.title}</strong>
+        },
+        {
+            key: 'organization',
+            label: 'Organization',
+            render: (row) => (
+                <span className={row.organizationId ? '' : 'muted'}>
+                    {getOrganizationLabel(row)}
+                </span>
+            )
         },
         {
             key: 'type',
@@ -227,20 +242,22 @@ const NoteManagement = () => {
                     </button>
                     {['Admin', 'SuperAdmin'].includes(user?.role) && (
                         <>
-                            <button
-                                type="button"
-                                className="action-btn edit-btn action-btn--labeled"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/notes/${row._id}/edit`);
-                                }}
-                                title="Edit note"
-                                aria-label={`Edit ${row.title}`}
-                            >
-                                <MdEdit aria-hidden="true" />
-                                <span>Edit</span>
-                            </button>
-                            {user?.role === 'SuperAdmin' && (
+                            {(!isSuperAdmin || !row.organizationId) && (
+                                <button
+                                    type="button"
+                                    className="action-btn edit-btn action-btn--labeled"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/notes/${row._id}/edit`);
+                                    }}
+                                    title="Edit note"
+                                    aria-label={`Edit ${row.title}`}
+                                >
+                                    <MdEdit aria-hidden="true" />
+                                    <span>Edit</span>
+                                </button>
+                            )}
+                            {isSuperAdmin && !row.organizationId && (
                                 <>
                                     <button
                                         type="button"
@@ -271,18 +288,20 @@ const NoteManagement = () => {
                                     </button>
                                 </>
                             )}
-                            <button
-                                type="button"
-                                className="action-btn delete-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(row._id);
-                                }}
-                                title="Delete"
-                                aria-label={`Delete ${row.title}`}
-                            >
-                                <MdDelete aria-hidden="true" />
-                            </button>
+                            {(!isSuperAdmin || !row.organizationId) && (
+                                <button
+                                    type="button"
+                                    className="action-btn delete-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete(row._id);
+                                    }}
+                                    title="Delete"
+                                    aria-label={`Delete ${row.title}`}
+                                >
+                                    <MdDelete aria-hidden="true" />
+                                </button>
+                            )}
                         </>
                     )}
                 </div>
