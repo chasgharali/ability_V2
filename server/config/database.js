@@ -5,8 +5,21 @@ const logger = require('../utils/logger');
  * Connect to MongoDB database
  */
 const connectDB = async () => {
+    // Fail fast instead of buffering model operations when MongoDB is unavailable.
+    mongoose.set('bufferCommands', false);
+
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+        logger.error('MongoDB connection failed: MONGODB_URI is not configured');
+        if (process.env.NODE_ENV === 'development') {
+            logger.warn('Continuing without database connection in development mode');
+            return false;
+        }
+        process.exit(1);
+    }
+
     try {
-        const conn = await mongoose.connect(process.env.MONGODB_URI);
+        const conn = await mongoose.connect(mongoUri);
 
         logger.info(`MongoDB Connected: ${conn.connection.host}`);
 
@@ -26,6 +39,7 @@ const connectDB = async () => {
         // Server-level shutdown is handled in server/index.js.
         // Keep connection setup here to avoid duplicate signal handlers
         // racing each other and attempting to close an already closed topology.
+        return true;
 
     } catch (error) {
         logger.error('MongoDB connection failed:', error);
@@ -33,7 +47,7 @@ const connectDB = async () => {
         // In development, don't exit the process if MongoDB is not available
         if (process.env.NODE_ENV === 'development') {
             logger.warn('Continuing without database connection in development mode');
-            return;
+            return false;
         }
 
         process.exit(1);

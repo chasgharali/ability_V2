@@ -159,7 +159,21 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Avoid route-level MongoDB buffering timeouts by short-circuiting
+// requests that require DB when the connection is unavailable.
+const dbConnectionGuard = (req, res, next) => {
+    if (mongoose.connection.readyState === 1) {
+        return next();
+    }
+
+    return res.status(503).json({
+        error: 'Service unavailable',
+        message: 'Database connection is not available. Please try again later.'
+    });
+};
+
 // API routes
+app.use('/api', dbConnectionGuard);
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/booths', boothRoutes);
@@ -255,11 +269,11 @@ process.on('unhandledRejection', (reason, promise) => {
 const startServer = async () => {
     try {
         // Connect to MongoDB (optional in development)
-        await connectDB();
+        const mongoConnected = await connectDB();
         logger.info('MongoDB connection attempted');
 
         // One-time index normalization for legacy settings index conflicts.
-        if (mongoose.connection.readyState === 1) {
+        if (mongoConnected && mongoose.connection.readyState === 1) {
             try {
                 await Settings.normalizeLegacyIndexes(logger);
             } catch (indexError) {
@@ -285,6 +299,8 @@ const startServer = async () => {
                     logger.warn(`AI search index health check failed: ${aiIndexError.message}`);
                 }
             }
+        } else {
+            logger.warn('Skipping MongoDB-dependent startup tasks because database is unavailable');
         }
 
         // Connect to Redis (optional in development)

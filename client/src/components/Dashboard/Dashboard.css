@@ -1723,6 +1723,50 @@ body.sidebar-open .mobile-menu-toggle:hover {
     margin: 0.5rem 0;
 }
 
+.resume-file-requirements {
+    margin-bottom: 0.5rem;
+}
+
+.resume-file-status-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 0.6rem 0.75rem;
+    margin: 0.5rem 0 0.75rem;
+}
+
+.resume-file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #111827;
+    min-width: 0;
+}
+
+.resume-file-name {
+    overflow-wrap: anywhere;
+}
+
+.resume-file-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.resume-file-action-btn {
+    margin: 0 !important;
+    padding: 0.4rem 0.75rem !important;
+}
+
+.resume-upload-control .update-button {
+    margin-bottom: 0;
+}
+
 .avatar-preview {
     margin-top: 0.75rem;
     width: 96px;

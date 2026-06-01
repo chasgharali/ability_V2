@@ -622,17 +622,24 @@ export default function RegistrationWizard() {
                   resumeOptional={resumeSource === 'saved'}
                   resumeTopSlot={
                     <div className="resume-source-wrapper">
-                      <fieldset
+                      <section
                         ref={resumeSourceGroupRef}
                         className="resume-source-group"
+                        aria-labelledby="resume-source-heading"
                         aria-describedby={`resume-source-hint ${validationErrors.step2?.resume ? 'resume-source-error' : ''}`.trim()}
-                        aria-invalid={validationErrors.step2?.resume ? 'true' : undefined}
                       >
-                        <legend className="resume-source-legend">How would you like to provide your resume? *</legend>
+                        <h4 id="resume-source-heading" className="resume-source-heading">
+                          Resume *
+                        </h4>
                         <p id="resume-source-hint" className="resume-source-hint">
-                          Choose one option. Upload a file or pick a resume from your saved resumes.
+                          Choose the method you would like to add your resume.
                         </p>
-                        <div className="resume-source-options">
+                        <div
+                          className="resume-source-options"
+                          role="radiogroup"
+                          aria-labelledby="resume-source-heading"
+                          aria-describedby={`resume-source-hint ${validationErrors.step2?.resume ? 'resume-source-error' : ''}`.trim()}
+                        >
                           <label className={`resume-source-option ${resumeSource === 'upload' ? 'selected' : ''}`}>
                             <input
                               type="radio"
@@ -640,11 +647,12 @@ export default function RegistrationWizard() {
                               value="upload"
                               checked={resumeSource === 'upload'}
                               onChange={() => setResumeSource('upload')}
+                              aria-label="Upload Resume from File"
                               aria-describedby="resume-source-upload-desc"
                             />
-                            <span>Upload a File</span>
+                            <span>Upload Resume from File</span>
                             <span id="resume-source-upload-desc" className="sr-only">
-                              Upload a PDF, DOC, or DOCX file from your device.
+                              Upload a PDF, DOC, or DOCX resume file from your device.
                             </span>
                           </label>
                           <label className={`resume-source-option ${resumeSource === 'saved' ? 'selected' : ''}`}>
@@ -654,11 +662,12 @@ export default function RegistrationWizard() {
                               value="saved"
                               checked={resumeSource === 'saved'}
                               onChange={() => setResumeSource('saved')}
+                              aria-label="Add from Resume Builder"
                               aria-describedby="resume-source-saved-desc"
                             />
-                            <span>Use a Saved Resume</span>
+                            <span>Add from Resume Builder</span>
                             <span id="resume-source-saved-desc" className="sr-only">
-                              Select one of your resumes created in Resume Builder.
+                              Use a resume created in Resume Builder.
                             </span>
                           </label>
                         </div>
@@ -667,7 +676,7 @@ export default function RegistrationWizard() {
                             {validationErrors.step2.resume}
                           </div>
                         )}
-                      </fieldset>
+                      </section>
                       {resumeSource === 'saved' && (
                         <ResumeSelectWidget
                           selectedResumeId={selectedResumeId}

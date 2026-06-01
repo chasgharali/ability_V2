@@ -94,11 +94,11 @@
   outline-offset: 2px;
 }
 
-.resume-source-legend {
+.resume-source-heading {
   font-size: 0.95rem;
   font-weight: 600;
   color: #111827;
-  padding: 0 0.25rem;
+  margin: 0 0 0.25rem;
 }
 
 .resume-source-hint {

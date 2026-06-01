@@ -711,7 +711,7 @@ export default function EditProfileResume({
           {/* Upload UI — shown when upload tab is active, or when embedded in wizard with resumeSource='upload' (resumeOptional=false) */}
           {!resumeOptional && (resumeTopSlot || resumeTab === 'upload') && (
             <>
-              <p id="resume-file-types" className="muted">Accepted file types: PDF and DOC (PDF preferred)</p>
+              <p id="resume-file-types" className="muted resume-file-requirements">Accepted file types: PDF and DOC (PDF preferred)</p>
               <div
                 id="resume-file-status"
                 role="status"
@@ -730,7 +730,39 @@ export default function EditProfileResume({
               >
                 {resumeStatusMessage}
               </div>
-              <div className="upload-actions">
+              {resumeFileName && (
+                <div className="resume-file-status-card" aria-live="polite">
+                  <div className="resume-file-info">
+                    <span id="resume-file-label">File Attached:</span>
+                    <span className="resume-file-name"><strong>{resumeFileName}</strong></span>
+                  </div>
+                  <div className="resume-file-actions">
+                    {resumeUrl && (
+                      <a
+                        href={resumeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="update-button resume-file-action-btn"
+                        style={{ padding: '0.25rem 0.5rem', marginBottom: 0 }}
+                        aria-label={`View ${resumeFileName}`}
+                      >
+                        View
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      className="update-button resume-file-action-btn"
+                      style={{ marginBottom: 0 }}
+                      onClick={deleteResume}
+                      disabled={!resumeKey}
+                      aria-label={`Delete ${resumeFileName}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="upload-actions resume-upload-control">
                 <input
                   ref={resumeInputRef}
                   id="resume-file-input"
@@ -747,25 +779,16 @@ export default function EditProfileResume({
                   className="update-button"
                   onClick={() => resumeInputRef.current?.click()}
                   disabled={uploading}
-                  aria-label={uploading ? 'Uploading resume file' : 'Choose resume file to upload'}
+                  aria-label={uploading ? 'Uploading resume file' : 'Choose file to upload'}
                   aria-describedby={`resume-file-types resume-file-status ${resumeError ? 'resume-upload-error' : ''}`.trim()}
                   aria-required={!resumeOptional ? 'true' : undefined}
                 >
                   {uploading ? 'Uploading…' : 'Choose file to upload'}
                 </button>
-                <button type="button" className="update-button" onClick={deleteResume} disabled={!resumeKey}>Delete</button>
               </div>
               {resumeError && (
                 <div id="resume-upload-error" className="field-error" role="alert" aria-live="polite">
                   {resumeError}
-                </div>
-              )}
-              {resumeFileName && (
-                <div className="muted" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <span>File Attached: {resumeFileName}</span>
-                  {resumeUrl && (
-                    <a href={resumeUrl} target="_blank" rel="noreferrer" className="update-button" style={{ padding: '0.25rem 0.5rem' }}>View</a>
-                  )}
                 </div>
               )}
             </>
