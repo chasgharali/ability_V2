@@ -9,6 +9,7 @@ import '@syncfusion/ej2-react-dropdowns/styles/material.css';
 import { Input } from '../UI/FormComponents';
 import { updateUser } from '../../services/users';
 import { useToast } from '../../contexts/ToastContext';
+import { getSyncfusionMultiSelectA11yHandlers } from '../../utils/syncfusionMultiSelectA11y';
 import {
   JOB_CATEGORY_LIST,
   LANGUAGE_LIST,
@@ -569,9 +570,13 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                 <label id={`${idPrefix}primaryExperience-label`} htmlFor={`${idPrefix}primaryExperience`} className="jsm-field-label">
                   Primary Job Experience (max 2)
                 </label>
+                <span id={`${idPrefix}primaryExperience-instructions`} className="sr-only">
+                  Select one or two Primary Job Experience
+                </span>
                 <MultiSelectComponent
                   id={`${idPrefix}primaryExperience`}
                   aria-labelledby={`${idPrefix}primaryExperience-label`}
+                  aria-describedby={`${idPrefix}primaryExperience-instructions`}
                   dataSource={JOB_CATEGORY_LIST}
                   fields={{ text: 'name', value: 'value' }}
                   value={editForm.primaryExperience}
@@ -583,6 +588,10 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                   showDropDownIcon={true}
                   popupHeight="260px"
                   allowFiltering={false}
+                  {...getSyncfusionMultiSelectA11yHandlers({
+                    instructionsId: `${idPrefix}primaryExperience-instructions`,
+                    listboxLabel: 'Primary Job Experience options',
+                  })}
                   change={(args) => {
                     const values = Array.isArray(args?.value) ? args.value : [];
                     setEditField('primaryExperience', values.slice(0, 2));
@@ -593,9 +602,13 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                 <label id={`${idPrefix}employmentTypes-label`} htmlFor={`${idPrefix}employmentTypes`} className="jsm-field-label">
                   Employment Types
                 </label>
+                <span id={`${idPrefix}employmentTypes-instructions`} className="sr-only">
+                  Select one or more Employment Types
+                </span>
                 <MultiSelectComponent
                   id={`${idPrefix}employmentTypes`}
                   aria-labelledby={`${idPrefix}employmentTypes-label`}
+                  aria-describedby={`${idPrefix}employmentTypes-instructions`}
                   dataSource={JOB_TYPE_LIST}
                   fields={{ text: 'name', value: 'value' }}
                   value={editForm.employmentTypes}
@@ -606,6 +619,10 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                   showDropDownIcon={true}
                   popupHeight="260px"
                   allowFiltering={false}
+                  {...getSyncfusionMultiSelectA11yHandlers({
+                    instructionsId: `${idPrefix}employmentTypes-instructions`,
+                    listboxLabel: 'Employment Types options',
+                  })}
                   change={(args) => {
                     const values = Array.isArray(args?.value) ? args.value : [];
                     setEditField('employmentTypes', values);
@@ -662,9 +679,13 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                 <label id={`${idPrefix}languages-label`} htmlFor={`${idPrefix}languages`} className="jsm-field-label">
                   Languages
                 </label>
+                <span id={`${idPrefix}languages-instructions`} className="sr-only">
+                  Select one or more Language(s)
+                </span>
                 <MultiSelectComponent
                   id={`${idPrefix}languages`}
                   aria-labelledby={`${idPrefix}languages-label`}
+                  aria-describedby={`${idPrefix}languages-instructions`}
                   dataSource={LANGUAGE_LIST}
                   fields={{ text: 'name', value: 'value' }}
                   value={editForm.languages}
@@ -675,6 +696,10 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                   showDropDownIcon={true}
                   popupHeight="260px"
                   allowFiltering={false}
+                  {...getSyncfusionMultiSelectA11yHandlers({
+                    instructionsId: `${idPrefix}languages-instructions`,
+                    listboxLabel: 'Language options',
+                  })}
                   change={(args) => {
                     const values = Array.isArray(args?.value) ? args.value : [];
                     setEditField('languages', values);

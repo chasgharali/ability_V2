@@ -10,6 +10,7 @@ import { LANGUAGE_LIST, MILITARY_EXPERIENCE_LIST, EDUCATION_LEVEL_LIST, EXPERIEN
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import { listResumes, setDefaultResume } from '../../services/resumes';
+import { getSyncfusionMultiSelectA11yHandlers } from '../../utils/syncfusionMultiSelectA11y';
 
 // Using centralized job categories for Primary Job Experience
 // Using centralized EXPERIENCE_LEVEL_LIST for work levels
@@ -1068,9 +1069,13 @@ export default function EditProfileResume({
         <div className="form-row">
           <div className="form-group">
             <label id="primaryExperience-label" htmlFor="primaryExperience">* Primary Job Experience (maximum 2)</label>
+            <span id="primaryExperience-instructions" className="sr-only">
+              Select one or two Primary Job Experience
+            </span>
             <MultiSelectComponent
               id="primaryExperience"
               aria-labelledby="primaryExperience-label"
+              aria-describedby="primaryExperience-instructions"
               dataSource={JOB_CATEGORY_LIST}
               fields={{ text: 'name', value: 'value' }}
               value={form.primaryExperience}
@@ -1080,6 +1085,10 @@ export default function EditProfileResume({
               cssClass="ajf-input"
               showDropDownIcon={true}
               popupHeight="260px"
+              {...getSyncfusionMultiSelectA11yHandlers({
+                instructionsId: 'primaryExperience-instructions',
+                listboxLabel: 'Primary Job Experience options',
+              })}
               change={(args) => {
                 const values = Array.isArray(args?.value) ? args.value : [];
                 setForm(prev => ({ ...prev, primaryExperience: values.slice(0, 2) }));
@@ -1113,9 +1122,13 @@ export default function EditProfileResume({
           </div>
           <div className="form-group">
             <label id="employmentTypes-label" htmlFor="employmentTypes">* Employment Types</label>
+            <span id="employmentTypes-instructions" className="sr-only">
+              Select one or more Employment Types
+            </span>
             <MultiSelectComponent
               id="employmentTypes"
               aria-labelledby="employmentTypes-label"
+              aria-describedby="employmentTypes-instructions"
               dataSource={JOB_TYPE_LIST}
               fields={{ text: 'name', value: 'value' }}
               value={form.employmentTypes}
@@ -1124,6 +1137,10 @@ export default function EditProfileResume({
               cssClass="ajf-input"
               showDropDownIcon={true}
               popupHeight="260px"
+              {...getSyncfusionMultiSelectA11yHandlers({
+                instructionsId: 'employmentTypes-instructions',
+                listboxLabel: 'Employment Types options',
+              })}
               change={(args) => {
                 const values = Array.isArray(args?.value) ? args.value : [];
                 setForm(prev => ({ ...prev, employmentTypes: values }));
@@ -1138,9 +1155,13 @@ export default function EditProfileResume({
 
         <div className="form-group">
           <label id="languages-label" htmlFor="languages">* Language(s)</label>
+          <span id="languages-instructions" className="sr-only">
+            Select one or more Language(s)
+          </span>
           <MultiSelectComponent
             id="languages"
             aria-labelledby="languages-label"
+            aria-describedby="languages-instructions"
             dataSource={LANGUAGE_LIST}
             fields={{ text: 'name', value: 'value' }}
             value={form.languages}
@@ -1150,6 +1171,10 @@ export default function EditProfileResume({
             showDropDownIcon={true}
             popupHeight="260px"
             allowFiltering={true}
+            {...getSyncfusionMultiSelectA11yHandlers({
+              instructionsId: 'languages-instructions',
+              listboxLabel: 'Language options',
+            })}
             change={(args) => {
               const values = Array.isArray(args?.value) ? args.value : [];
               setForm(prev => ({ ...prev, languages: values }));

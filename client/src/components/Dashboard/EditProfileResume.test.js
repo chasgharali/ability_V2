@@ -39,7 +39,7 @@ jest.mock('@syncfusion/ej2-react-dropdowns', () => ({
   )
 }));
 
-describe('EditProfileResume Keywords Accessibility', () => {
+describe('EditProfileResume Accessibility', () => {
   beforeEach(() => {
     global.fetch = jest.fn((url) => {
       if (url === '/api/users/me') {
@@ -68,8 +68,8 @@ describe('EditProfileResume Keywords Accessibility', () => {
   test('connects keywords input to screen-reader instructions', async () => {
     render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
 
-    const keywordInput = await screen.findByLabelText('* Keywords');
-    const instructions = screen.getByText(/add job skills, job titles, certifications, and tools\./i);
+    const keywordInput = await screen.findByLabelText('* Keywords (Skills and Experience)');
+    const instructions = screen.getByText(/enter keywords and press enter after each keyword entry/i);
     const describedBy = keywordInput.getAttribute('aria-describedby') || '';
 
     expect(instructions).not.toBeNull();
@@ -80,7 +80,7 @@ describe('EditProfileResume Keywords Accessibility', () => {
   test('updates keyword values through Syncfusion MultiSelect change handler', async () => {
     render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
 
-    const keywordInput = await screen.findByLabelText('* Keywords');
+    const keywordInput = await screen.findByLabelText('* Keywords (Skills and Experience)');
 
     fireEvent.change(keywordInput, { target: { value: 'JavaScript, React, JavaScript' } });
 
@@ -92,7 +92,7 @@ describe('EditProfileResume Keywords Accessibility', () => {
   test('announces keyword count updates in live region', async () => {
     render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
 
-    const keywordInput = await screen.findByLabelText('* Keywords');
+    const keywordInput = await screen.findByLabelText('* Keywords (Skills and Experience)');
     const liveRegion = screen.getByText('0 keywords selected.');
 
     fireEvent.change(keywordInput, { target: { value: 'Accessibility, Screen Reader' } });
@@ -102,10 +102,37 @@ describe('EditProfileResume Keywords Accessibility', () => {
     });
   });
 
+  test.each([
+    {
+      label: '* Primary Job Experience (maximum 2)',
+      instructionText: 'Select one or two Primary Job Experience',
+      instructionsId: 'primaryExperience-instructions',
+    },
+    {
+      label: '* Employment Types',
+      instructionText: 'Select one or more Employment Types',
+      instructionsId: 'employmentTypes-instructions',
+    },
+    {
+      label: '* Language(s)',
+      instructionText: 'Select one or more Language(s)',
+      instructionsId: 'languages-instructions',
+    },
+  ])('connects $label combobox to screen-reader instructions', async ({ label, instructionText, instructionsId }) => {
+    render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
+
+    const combobox = await screen.findByLabelText(label);
+    const instructions = screen.getByText(instructionText);
+    const describedBy = combobox.getAttribute('aria-describedby') || '';
+
+    expect(instructions.className).toContain('sr-only');
+    expect(describedBy).toContain(instructionsId);
+  });
+
   test('wires resume upload button to helper text and status region', async () => {
     render(<EditProfileResume embedded onValidationChange={jest.fn()} />);
 
-    const uploadButton = await screen.findByRole('button', { name: /choose resume file to upload/i });
+    const uploadButton = await screen.findByRole('button', { name: /choose file to upload/i });
     const uploadHelpText = screen.getByText(/accepted file types: pdf and doc/i);
     const statusRegion = screen.getByRole('status');
     const describedBy = uploadButton.getAttribute('aria-describedby') || '';
@@ -126,7 +153,7 @@ describe('EditProfileResume Keywords Accessibility', () => {
       />
     );
 
-    const uploadButton = await screen.findByRole('button', { name: /choose resume file to upload/i });
+    const uploadButton = await screen.findByRole('button', { name: /choose file to upload/i });
     const errorMessage = screen.getByText('Resume upload is required');
     const describedBy = uploadButton.getAttribute('aria-describedby') || '';
 
