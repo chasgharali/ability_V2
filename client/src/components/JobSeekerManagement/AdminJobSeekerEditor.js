@@ -589,6 +589,8 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                   popupHeight="260px"
                   allowFiltering={false}
                   {...getSyncfusionMultiSelectA11yHandlers({
+                    inputId: `${idPrefix}primaryExperience`,
+                    labelId: `${idPrefix}primaryExperience-label`,
                     instructionsId: `${idPrefix}primaryExperience-instructions`,
                     listboxLabel: 'Primary Job Experience options',
                   })}
@@ -620,6 +622,8 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                   popupHeight="260px"
                   allowFiltering={false}
                   {...getSyncfusionMultiSelectA11yHandlers({
+                    inputId: `${idPrefix}employmentTypes`,
+                    labelId: `${idPrefix}employmentTypes-label`,
                     instructionsId: `${idPrefix}employmentTypes-instructions`,
                     listboxLabel: 'Employment Types options',
                   })}
@@ -697,6 +701,8 @@ export default function AdminJobSeekerEditor({ row, onCancel, onSaved, idPrefix 
                   popupHeight="260px"
                   allowFiltering={false}
                   {...getSyncfusionMultiSelectA11yHandlers({
+                    inputId: `${idPrefix}languages`,
+                    labelId: `${idPrefix}languages-label`,
                     instructionsId: `${idPrefix}languages-instructions`,
                     listboxLabel: 'Language options',
                   })}

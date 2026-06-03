@@ -1086,6 +1086,8 @@ export default function EditProfileResume({
               showDropDownIcon={true}
               popupHeight="260px"
               {...getSyncfusionMultiSelectA11yHandlers({
+                inputId: 'primaryExperience',
+                labelId: 'primaryExperience-label',
                 instructionsId: 'primaryExperience-instructions',
                 listboxLabel: 'Primary Job Experience options',
               })}
@@ -1138,6 +1140,8 @@ export default function EditProfileResume({
               showDropDownIcon={true}
               popupHeight="260px"
               {...getSyncfusionMultiSelectA11yHandlers({
+                inputId: 'employmentTypes',
+                labelId: 'employmentTypes-label',
                 instructionsId: 'employmentTypes-instructions',
                 listboxLabel: 'Employment Types options',
               })}
@@ -1172,6 +1176,8 @@ export default function EditProfileResume({
             popupHeight="260px"
             allowFiltering={true}
             {...getSyncfusionMultiSelectA11yHandlers({
+              inputId: 'languages',
+              labelId: 'languages-label',
               instructionsId: 'languages-instructions',
               listboxLabel: 'Language options',
             })}
