@@ -1740,6 +1740,10 @@ export default function BoothQueueWaiting() {
             </div>
 
             <div className="messages-container">
+              <p className="messages-instruction">
+                Type your message to the recruiter(s) in this booth. Please
+                understand Recruiters may be in meetings.
+              </p>
               <div className="messages-list">
                 {messages.length === 0 ? (
                   <p className="no-messages">No messages yet</p>
