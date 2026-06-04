@@ -382,6 +382,17 @@ const InterpreterDashboard = () => {
             </div>
           )}
 
+          <div className="instructions">
+            <h3>Instructions:</h3>
+            <ul>
+              <li>Click "Start Test" to check your camera and microphone</li>
+              <li>Make sure your camera shows a clear picture</li>
+              <li>Speak to test your microphone (check the browser's permission prompt)</li>
+              <li>You can toggle audio/video during the test</li>
+              <li>Once you're ready, wait for the interviewer to invite you</li>
+            </ul>
+          </div>
+
           <div className="camera-test-layout">
             <div className="camera-test-left">
               <div className="device-selectors">
@@ -515,17 +526,6 @@ const InterpreterDashboard = () => {
                   <MdMic size={18} />
                   <span>Microphone: {audioEnabled ? 'Working' : 'Not Active'}</span>
                 </div>
-              </div>
-
-              <div className="instructions">
-                <h3>Instructions:</h3>
-                <ul>
-                  <li>Click "Start Test" to check your camera and microphone</li>
-                  <li>Make sure your camera shows a clear picture</li>
-                  <li>Speak to test your microphone (check the browser's permission prompt)</li>
-                  <li>You can toggle audio/video during the test</li>
-                  <li>Once you're ready, wait for the interviewer to invite you</li>
-                </ul>
               </div>
             </div>
 

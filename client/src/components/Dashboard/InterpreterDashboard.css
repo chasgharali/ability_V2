@@ -1,9 +1,8 @@
 .interpreter-dashboard {
-  padding: 1rem 1.5rem;
-  max-width: 1200px;
+  padding: 1rem 0;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
-  height: calc(100vh - 80px);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -12,8 +11,6 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  flex: 1;
-  overflow: hidden;
 }
 
 /* Compact Status Selector (in testing area) */
@@ -96,10 +93,8 @@
   padding: 1rem 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .camera-test-section h2 {
@@ -107,23 +102,19 @@
   font-size: 1.25rem;
   margin: 0 0 0.75rem 0;
   font-weight: 600;
-  flex-shrink: 0;
 }
 
 .camera-test-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  align-items: start;
 }
 
 .camera-test-left {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  overflow-y: auto;
   min-width: 0;
 }
 
@@ -132,7 +123,9 @@
   flex-direction: column;
   min-width: 0;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  position: sticky;
+  top: 0;
 }
 
 .error-message {
@@ -335,6 +328,7 @@
   border-radius: 8px;
   border-left: 4px solid #1a1a1a;
   flex-shrink: 0;
+  margin-bottom: 1.5rem;
 }
 
 .instructions h3 {
@@ -369,15 +363,12 @@
 
   .camera-test-right {
     order: -1;
+    position: static;
   }
 
   .video-preview-container {
     max-width: 600px;
     margin: 0 auto;
-  }
-
-  .camera-test-left {
-    overflow-y: visible;
   }
 }
 
