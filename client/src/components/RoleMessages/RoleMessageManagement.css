@@ -68,6 +68,44 @@
   vertical-align: top;
 }
 
+/* Sticky first column (Role) */
+.role-messages-table th:first-child,
+.role-messages-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: white;
+}
+
+.role-messages-table thead th:first-child {
+  z-index: 3;
+  background: #f3f4f6;
+}
+
+.role-messages-table th:first-child::after,
+.role-messages-table td:first-child::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -1px;
+  width: 10px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.12), transparent);
+}
+
+.role-messages-table tbody tr:hover td:first-child {
+  background: #f9fafb;
+}
+
+.role-messages-table tbody tr.editing-row td:first-child {
+  background: #f9fafb;
+}
+
+.role-messages-table tbody tr.editing-row:hover td:first-child {
+  background: #f3f4f6;
+}
+
 .role-messages-table tbody tr {
   transition: all 0.2s ease;
 }

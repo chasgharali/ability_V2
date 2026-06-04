@@ -506,6 +506,7 @@ const TermsConditionsList = () => {
                                     searchable={true}
                                     sortable={true}
                                     selectable={false}
+                                    className="sticky-first-col"
                                     aria-label="Terms and conditions list"
                                 />
                                 {terms.length === 0 && (

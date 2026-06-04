@@ -384,6 +384,7 @@ const NoteManagement = () => {
                             searchable={true}
                             sortable={true}
                             selectable={false}
+                            className="sticky-first-col"
                             aria-label="Notes list"
                         />
                         {notes.length === 0 && (
