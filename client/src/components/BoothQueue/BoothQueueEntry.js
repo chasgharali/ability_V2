@@ -235,8 +235,7 @@ export default function BoothQueueEntry() {
         <main id="main-content" className="booth-queue-main" tabIndex={-1} aria-label="Booth queue entry content">
           <div className="entry-modal">
             <div className="modal-header">
-              <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
-              <div className="company-branding">
+              <div className="booth-entrance-row">
                 <div className="company-logo">
                   {booth?.logoUrl ? (
                     <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} />
@@ -246,8 +245,12 @@ export default function BoothQueueEntry() {
                     </div>
                   )}
                 </div>
-                <div className="booth-company-name">{booth?.name || 'Company'}</div>
+                <h1 className="booth-entrance-text">
+                  <span className="booth-entrance-label">Booth Entrance</span>
+                  <span className="booth-company-name">{booth?.name || 'Company'}</span>
+                </h1>
               </div>
+              <h2 className="event-name">{event?.name || 'ABILITY Job Fair'}</h2>
             </div>
             <div className="divider" />
             <div className="error-container" style={{ 
@@ -282,8 +285,7 @@ export default function BoothQueueEntry() {
       <main id="main-content" className="booth-queue-main" tabIndex={-1} aria-label="Booth queue entry content">
         <div className="entry-modal">
           <div className="modal-header">
-            <h1 className="event-name">{event?.name || 'ABILITY Job Fair'}</h1>
-            <div className="company-branding">
+            <div className="booth-entrance-row">
               <div className="company-logo">
                 {booth?.logoUrl ? (
                   <img src={booth.logoUrl} alt={`${booth?.name || 'Company'} logo`} />
@@ -293,8 +295,12 @@ export default function BoothQueueEntry() {
                   </div>
                 )}
               </div>
-              <div className="booth-company-name">{booth?.name || 'Company'}</div>
+              <h1 className="booth-entrance-text">
+                <span className="booth-entrance-label">Booth Entrance</span>
+                <span className="booth-company-name">{booth?.name || 'Company'}</span>
+              </h1>
             </div>
+            <h2 className="event-name">{event?.name || 'ABILITY Job Fair'}</h2>
           </div>
   
           <div className="divider" />
