@@ -82,8 +82,8 @@
   background: #f3f4f6;
 }
 
-.role-messages-table th:first-child::after,
-.role-messages-table td:first-child::after {
+.role-messages-list.is-scrolled-x .role-messages-table th:first-child::after,
+.role-messages-list.is-scrolled-x .role-messages-table td:first-child::after {
   content: '';
   position: absolute;
   top: 0;

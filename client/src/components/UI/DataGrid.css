@@ -288,8 +288,8 @@
     background: #f0f9ff;
 }
 
-.data-grid.sticky-first-col .data-grid-table:not(.data-grid-table--selectable) thead th:first-child::after,
-.data-grid.sticky-first-col .data-grid-table:not(.data-grid-table--selectable) tbody td:first-child::after {
+.data-grid.sticky-first-col.is-scrolled-x .data-grid-table:not(.data-grid-table--selectable) thead th:first-child::after,
+.data-grid.sticky-first-col.is-scrolled-x .data-grid-table:not(.data-grid-table--selectable) tbody td:first-child::after {
     content: '';
     position: absolute;
     top: 0;

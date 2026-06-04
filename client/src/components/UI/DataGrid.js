@@ -20,7 +20,9 @@ const DataGrid = ({
         new Set(columns.map(col => col.key))
     );
     const [showColumnChooser, setShowColumnChooser] = useState(false);
+    const [isScrolledX, setIsScrolledX] = useState(false);
     const columnChooserRef = useRef(null);
+    const tableContainerRef = useRef(null);
 
     // Filter and sort data
     const processedData = useMemo(() => {
@@ -122,11 +124,25 @@ const DataGrid = ({
         }
     }, [showColumnChooser]);
 
+    // Track horizontal scroll to only show the sticky-column shadow when scrolled
+    useEffect(() => {
+        const container = tableContainerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            setIsScrolledX(container.scrollLeft > 0);
+        };
+
+        handleScroll();
+        container.addEventListener('scroll', handleScroll, { passive: true });
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, [processedData, visibleColumns]);
+
     // Get visible columns
     const visibleColumnsData = columns.filter(col => visibleColumns.has(col.key));
 
     return (
-        <div className={`data-grid ${className}`} role="region" aria-label={ariaLabel}>
+        <div className={`data-grid ${className} ${isScrolledX ? 'is-scrolled-x' : ''}`} role="region" aria-label={ariaLabel}>
             {/* Toolbar */}
             <div className="data-grid-toolbar" role="toolbar" aria-label="Table controls">
                 {searchable && (
@@ -252,6 +268,7 @@ const DataGrid = ({
 
             {/* Table */}
             <div
+                ref={tableContainerRef}
                 className="data-grid-table-container"
                 data-dual-scroll-target="true"
                 role="region"

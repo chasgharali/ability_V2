@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -34,6 +34,8 @@ export default function RoleMessageManagement() {
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createForm, setCreateForm] = useState({ role: 'Recruiter', screen: 'dashboard', content: '', description: '' });
+  const [isScrolledX, setIsScrolledX] = useState(false);
+  const listRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { show: showToast } = useToast();
@@ -67,6 +69,19 @@ export default function RoleMessageManagement() {
       setCreateForm((prev) => ({ ...prev, role: fallbackRole, screen: fallbackScreen }));
     }
   }, [availableRoles, createForm.role]);
+
+  useEffect(() => {
+    const container = listRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsScrolledX(container.scrollLeft > 0);
+    };
+
+    handleScroll();
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [messages, filterRole, filterScreen, loading]);
 
   const fetchMessages = async () => {
     try {
@@ -446,7 +461,7 @@ export default function RoleMessageManagement() {
             )}
 
             {/* Messages List */}
-            <div className="role-messages-list" data-dual-scroll-target="true">
+            <div ref={listRef} className={`role-messages-list ${isScrolledX ? 'is-scrolled-x' : ''}`} data-dual-scroll-target="true">
               {filteredMessages.length === 0 ? (
                 <div style={{ marginTop: '2rem', padding: '2rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                   <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>No Messages Found</h3>
