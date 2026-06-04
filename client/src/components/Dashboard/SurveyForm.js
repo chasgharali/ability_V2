@@ -34,10 +34,10 @@ const RACE_OPTIONS = [
 const AGE_GROUPS = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
 
 const DISABILITY_OPTIONS = [
-  'ADHD', 'Arthritis', 'Autoimmune', 'Blindness / Vision Loss', 'Blood Related', 'Cancer', 'Cardiovascular', 'Cerebral Palsy',
-  'Chronic Pain/Migraine', 'Cognitive', 'Deafness', 'Depression', 'Diabetes', 'Digestive', 'Down Syndrome', 'Dyslexia',
-  'Endocrine', 'Hearing Loss', 'Limb Diff / Amputee', 'Mental Health', 'Multiple Sclerosis', 'Musculoskeletal', 'Neurodivergent', 'Neurological',
-  'Paralysis', 'Post Traumatic Stress', 'Respiratory', 'Skin', 'Speech', 'Traumatic Brain Injury'
+  'ADHD', 'Arthritis', 'Autism Spectrum Disorder (ASD)', 'Auto Inflammatory Disorders', 'Autoimmune', 'Blindness / Vision Loss', 'Blood Related', 'Cancer', 'Cardiovascular', 'Cerebral Palsy',
+  'Chronic Fatigue / Energy Limiting Disability', 'Chronic Illness', 'Chronic Pain/Migraine', 'Cognitive', 'Communication Disability', 'Deafness', 'Depression', 'Developmental Disabilities', 'Diabetes', 'Digestive', 'Down Syndrome', 'Dyslexia',
+  'Endocrine', 'Environmental / Chemical Sensitivity', 'Hearing Loss', 'Infectious Disease-related Disability', 'Intellectual Disability', 'Learning Disability (Beyond Dyslexia)', 'Limb Diff / Amputee', 'Mental Health', 'Mobility Disability', 'Multiple Sclerosis', 'Musculoskeletal', 'Neurodivergent', 'Neurological',
+  'Paralysis', 'Post Traumatic Stress', 'Psychiatric Disabilities', 'Rare Disease / Genetic Condition', 'Respiratory', 'Sensory Processing Disorder', 'Skin', 'Speech', 'Traumatic Brain Injury'
 ];
 
 // Comprehensive country list (display names)
