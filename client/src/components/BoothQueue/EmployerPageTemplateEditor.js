@@ -23,7 +23,8 @@ const SECTION_TITLES = {
 
 const DEFAULT_CONTENT_DATA = {
   about: {
-    logoImageUrl: '', heroImageUrl: '', heroImageAlt: '', brandImage1Url: '', brandImage2Url: '',
+    logoImageUrl: '', logoImageAlt: '', heroImageUrl: '', heroImageAlt: '',
+    brandImage1Url: '', brandImage1Alt: '', brandImage2Url: '', brandImage2Alt: '',
     companyName: '', tagline: '', aboutText: '', bgColor: '', headingColor: '', textColor: '',
   },
   program: { programImageUrl: '', programImageAlt: '', programTitle: '', programText: '', bgColor: '', headingColor: '', textColor: '' },

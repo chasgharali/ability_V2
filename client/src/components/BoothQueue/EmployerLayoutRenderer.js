@@ -152,6 +152,7 @@ function ImgZone({
   fieldName,
   url,
   alt,
+  altValue,
   label,
   className,
   style,
@@ -166,6 +167,8 @@ function ImgZone({
   const uploadKey = `${sectionKey}.${fieldName}`;
   const isUploading = uploadingFields.has(uploadKey);
   const fitFieldName = `${fieldName}__fit`;
+  const displayAlt = (typeof altValue === 'string' && altValue.trim()) ? altValue.trim() : (alt || label);
+  const altPlaceholder = `Alt text — describe ${String(label).split('·')[0].trim() || 'this image'}`;
   const resolvedFitMode = resolveFitMode
     ? resolveFitMode(sectionKey, fieldName, fitFallback)
     : fitFallback;
@@ -200,6 +203,16 @@ function ImgZone({
     e.stopPropagation();
     onUpdateField && onUpdateField(sectionKey, fitFieldName, nextFitMode);
   };
+  const handleAltChange = (nextAlt) => {
+    if (!onUpdateField) return;
+    // Gallery images store url + alt together on the same images.N object.
+    if (fieldName.startsWith('images.')) {
+      onUpdateField(sectionKey, fieldName, { url, alt: nextAlt });
+      return;
+    }
+    // Other images keep alt in a sibling field: heroImageUrl -> heroImageAlt, etc.
+    onUpdateField(sectionKey, fieldName.replace(/Url$/, 'Alt'), nextAlt);
+  };
 
   if (url) {
     return (
@@ -210,13 +223,31 @@ function ImgZone({
         onKeyDown={isEditMode ? handleKeyDown : undefined}
         role={isEditMode ? 'button' : undefined}
         tabIndex={isEditMode ? 0 : undefined}
-        aria-label={isEditMode ? `Change ${label} image` : alt || label}
+        aria-label={isEditMode ? `Change ${label} image` : displayAlt}
       >
-        <img src={url} alt={alt || label} style={{ objectFit: activeFitMode }} />
+        <img src={url} alt={displayAlt} style={{ objectFit: activeFitMode }} />
         {isEditMode && (
           <div className="elr-img-overlay" aria-hidden="true">
             <div className="elr-img-overlay-icon">✎</div>
             <span className="elr-img-overlay-text">Change image</span>
+          </div>
+        )}
+        {isEditMode && (
+          <div
+            className="elr-img-alt-bar"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <span className="elr-img-alt-tag" aria-hidden="true">ALT</span>
+            <input
+              type="text"
+              className="elr-img-alt-input"
+              defaultValue={typeof altValue === 'string' ? altValue : ''}
+              placeholder={altPlaceholder}
+              onBlur={(e) => handleAltChange(e.target.value)}
+              aria-label={`Alt text for ${label}`}
+            />
           </div>
         )}
         {isEditMode && (
@@ -961,7 +992,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       return (
         <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-about" className="elr-bg-white" aria-label="About section">
           <div style={{ padding: '2rem 3rem 0.5rem', display: 'flex', justifyContent: 'center' }}>
-            <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Hero banner'} label="Hero / Banner Image · 800 × 280" className="elr-a-hero-zone" {...imgProps} />
+            <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Hero banner'} altValue={about.heroImageAlt} label="Hero / Banner Image · 800 × 280" className="elr-a-hero-zone" {...imgProps} />
           </div>
           <div className="elr-sec" style={{ paddingTop: '2rem', textAlign: 'center' }}>
             <div style={{ maxWidth: 720, margin: '0 auto' }}>
@@ -979,7 +1010,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       return (
         <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-programs" className="elr-sec elr-bg-blue" aria-label="Programs section">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', maxWidth: 660, margin: '0 auto', textAlign: 'center' }}>
-            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · 600 × 400" style={{ width: '100%', maxWidth: 560, aspectRatio: '3/2' }} {...imgProps} />
+            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · 600 × 400" style={{ width: '100%', maxWidth: 560, aspectRatio: '3/2' }} {...imgProps} />
             <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative or program..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
           </div>
@@ -1002,7 +1033,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <SecWrap sectionKey="gallery" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-gallery" className="elr-sec elr-bg-light" aria-label="Gallery section">
           <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" style={{ textAlign: 'center', marginBottom: '2rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <div className="elr-a-gallery">
-            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} label={`Gallery Image ${i + 1} · 600 × 400`} {...imgProps} />); })}
+            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} altValue={img.alt} label={`Gallery Image ${i + 1} · 600 × 400`} {...imgProps} />); })}
           </div>
         </SecWrap>
       );
@@ -1049,7 +1080,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     <>
       {/* Header */}
       <header className="elr-a-header elr-bg-white" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Company Logo · 240 × 100" className="elr-a-logo-zone" fitFallback="contain" {...imgProps} />
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Company Logo · 240 × 100" className="elr-a-logo-zone" fitFallback="contain" {...imgProps} />
         <nav className="elr-a-nav" aria-label="Page sections">
           {renderNavLinks('a', navItems, 'elr-nav-link')}
         </nav>
@@ -1115,13 +1146,13 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <React.Fragment>
           {hasAboutDualImages && (
             <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · 600 × 400" {...imgProps} />
             </div>
           )}
           <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-about" className="elr-bg-white" aria-label="About section">
             <div className="elr-b-about-row">
-              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Company image'} label="Company Image · ~340 × 340 square" className="elr-b-about-img-zone" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Company image'} altValue={about.heroImageAlt} label="Company Image · ~340 × 340 square" className="elr-b-about-img-zone" {...imgProps} />
               <div className="elr-b-about-txt">
                 <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
@@ -1140,7 +1171,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
               <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
             </div>
-            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · ~300 × 300 square" className="elr-b-prog-img-zone" {...imgProps} />
+            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · ~300 × 300 square" className="elr-b-prog-img-zone" {...imgProps} />
           </div>
         </SecWrap>
       );
@@ -1163,7 +1194,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
             <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
           <div className="elr-b-gal-row">
-            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} label={`Image ${i + 1} · ~260 × 260`} {...imgProps} />); })}
+            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} altValue={img.alt} label={`Image ${i + 1} · ~260 × 260`} {...imgProps} />); })}
           </div>
         </SecWrap>
       );
@@ -1205,7 +1236,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       {/* Header: logo left, nav right */}
       <header className="elr-b-header elr-bg-white" style={getSectionStyle(about)} role="banner">
         <div className="elr-b-logo-col">
-          <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 150 × 80" className="elr-b-logo-zone" fitFallback="contain" {...imgProps} />
+          <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Logo · 150 × 80" className="elr-b-logo-zone" fitFallback="contain" {...imgProps} />
         </div>
         <div className="elr-b-nav-col">
           <nav className="elr-b-nav" aria-label="Page sections">
@@ -1273,8 +1304,8 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <React.Fragment>
           {hasAboutDualImages && (
             <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · 600 × 400" {...imgProps} />
             </div>
           )}
           <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-about" className="elr-sec elr-bg-white" aria-label="About section">
@@ -1286,7 +1317,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
                 <div style={{ marginTop: '1rem' }} />
                 <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
               </div>
-              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Accent portrait'} label="Accent Portrait · 3:4" className="elr-c-about-portrait" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Accent portrait'} altValue={about.heroImageAlt} label="Accent Portrait · 3:4" className="elr-c-about-portrait" {...imgProps} />
             </div>
           </SecWrap>
         </React.Fragment>
@@ -1296,7 +1327,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       return (
         <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-programs" className="elr-bg-light" aria-label="Programs section">
           <div style={{ position: 'relative' }}>
-            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · Full Width × 320px" className="elr-c-prog-full" {...imgProps} />
+            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · Full Width × 320px" className="elr-c-prog-full" {...imgProps} />
             <div className="elr-c-prog-overlay">
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" style={{ color: '#fff', marginBottom: '0.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
               <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, color: program.programText__color || '#b8c8e0', lineHeight: 1.6, maxWidth: 680, display: 'block' }} tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
@@ -1321,11 +1352,11 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <SecWrap sectionKey="gallery" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-gallery" className="elr-sec elr-bg-blue" aria-label="Gallery section">
           <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           <div className="elr-c-mosaic">
-            <ImgZone sectionKey="gallery" fieldName="images.0" url={galleryImages[0]?.url} alt={galleryImages[0]?.alt || 'Gallery 1'} label="Image 1 — Large · ~460 × 360" className="elr-c-mosaic-big" {...imgProps} />
-            <ImgZone sectionKey="gallery" fieldName="images.1" url={galleryImages[1]?.url} alt="Gallery 2" label="Image 2 · ~220 × 175" className="elr-c-mosaic-sm" {...imgProps} />
-            <ImgZone sectionKey="gallery" fieldName="images.2" url={galleryImages[2]?.url} alt="Gallery 3" label="Image 3 · ~220 × 175" className="elr-c-mosaic-sm" {...imgProps} />
-            <ImgZone sectionKey="gallery" fieldName="images.3" url={galleryImages[3]?.url} alt="Gallery 4" label="Image 4 · ~220 × 175" className="elr-c-mosaic-land" {...imgProps} />
-            <ImgZone sectionKey="gallery" fieldName="images.4" url={galleryImages[4]?.url} alt="Gallery 5" label="Image 5 · ~220 × 175" className="elr-c-mosaic-land" {...imgProps} />
+            <ImgZone sectionKey="gallery" fieldName="images.0" url={galleryImages[0]?.url} alt={galleryImages[0]?.alt || 'Gallery 1'} altValue={galleryImages[0]?.alt} label="Image 1 — Large · ~460 × 360" className="elr-c-mosaic-big" {...imgProps} />
+            <ImgZone sectionKey="gallery" fieldName="images.1" url={galleryImages[1]?.url} alt={galleryImages[1]?.alt || 'Gallery 2'} altValue={galleryImages[1]?.alt} label="Image 2 · ~220 × 175" className="elr-c-mosaic-sm" {...imgProps} />
+            <ImgZone sectionKey="gallery" fieldName="images.2" url={galleryImages[2]?.url} alt={galleryImages[2]?.alt || 'Gallery 3'} altValue={galleryImages[2]?.alt} label="Image 3 · ~220 × 175" className="elr-c-mosaic-sm" {...imgProps} />
+            <ImgZone sectionKey="gallery" fieldName="images.3" url={galleryImages[3]?.url} alt={galleryImages[3]?.alt || 'Gallery 4'} altValue={galleryImages[3]?.alt} label="Image 4 · ~220 × 175" className="elr-c-mosaic-land" {...imgProps} />
+            <ImgZone sectionKey="gallery" fieldName="images.4" url={galleryImages[4]?.url} alt={galleryImages[4]?.alt || 'Gallery 5'} altValue={galleryImages[4]?.alt} label="Image 5 · ~220 × 175" className="elr-c-mosaic-land" {...imgProps} />
           </div>
         </SecWrap>
       );
@@ -1377,7 +1408,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     <>
       {/* Header: logo + nav inline */}
       <header className="elr-c-header elr-bg-white" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 110 × 48" className="elr-c-logo-zone" fitFallback="contain" {...imgProps} />
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Logo · 110 × 48" className="elr-c-logo-zone" fitFallback="contain" {...imgProps} />
         <nav className="elr-c-nav" aria-label="Page sections">
           {renderNavLinks('c', navItems, 'elr-nav-link')}
         </nav>
@@ -1442,7 +1473,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <React.Fragment>
           <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-about" className="elr-bg-white" aria-label="About section">
             <div className="elr-d-identity">
-              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Identity image'} label="Identity Image · ~300 × 280" className="elr-d-id-img-zone" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Identity image'} altValue={about.heroImageAlt} label="Identity Image · ~300 × 280" className="elr-d-id-img-zone" {...imgProps} />
               <div className="elr-d-id-txt">
                 <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.05rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
@@ -1452,8 +1483,8 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
           </SecWrap>
           {hasAboutDualImages && (
             <div className="elr-dual-images elr-bg-white" style={{ paddingTop: '1rem' }} role="group" aria-label="Additional company images">
-              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt="Brand image 1" label="Brand Image 1 · 600 × 400" {...imgProps} />
-              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt="Brand image 2" label="Brand Image 2 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · 600 × 400" {...imgProps} />
             </div>
           )}
         </React.Fragment>
@@ -1467,7 +1498,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
               <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
             </div>
-            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} label="Program Image · Landscape 4:3" className="elr-d-prog-img-zone" {...imgProps} />
+            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · Landscape 4:3" className="elr-d-prog-img-zone" {...imgProps} />
           </div>
         </SecWrap>
       );
@@ -1490,7 +1521,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
             <TXT sectionKey="gallery" fieldName="galleryTitle" value={gallery.galleryTitle} placeholder="Life at the Company" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
           <div className="elr-d-gal-row">
-            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} label={`Image ${i + 1} · ~300 × 200`} {...imgProps} />); })}
+            {[0, 1, 2, 3].map((i) => { const img = galleryImages[i] || {}; return (<ImgZone key={i} sectionKey="gallery" fieldName={`images.${i}`} url={img.url} alt={img.alt || `Gallery image ${i + 1}`} altValue={img.alt} label={`Image ${i + 1} · ~300 × 200`} {...imgProps} />); })}
           </div>
         </SecWrap>
       );
@@ -1531,7 +1562,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     <>
       {/* Dark header */}
       <header className="elr-d-header" style={getSectionStyle(about)} role="banner">
-        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.companyName || 'Company logo'} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} fitFallback="contain" {...imgProps} />
+        <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} fitFallback="contain" {...imgProps} />
         <nav className="elr-d-nav" aria-label="Page sections">
           {renderNavLinks('d', navItems)}
         </nav>
