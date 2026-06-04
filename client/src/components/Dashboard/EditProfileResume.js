@@ -68,6 +68,12 @@ export default function EditProfileResume({
   const [builderLoading, setBuilderLoading] = useState(false);
   const [settingDefault, setSettingDefault] = useState(null);
   const [keywordAnnouncement, setKeywordAnnouncement] = useState('');
+  // Persistent live regions (refs) kept in the DOM at all times so VoiceOver and
+  // other screen readers reliably announce upload/delete/added results. We update
+  // textContent imperatively to avoid React batching collapsing the clear+set.
+  const politeRegionRef = useRef(null);
+  const assertiveRegionRef = useRef(null);
+  const announceTimerRef = useRef(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
   const [avatarKey, setAvatarKey] = useState('');
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
@@ -90,8 +96,21 @@ export default function EditProfileResume({
 
   const keywordTags = parseKeywordTags(form.keywords);
 
+  const announceToScreenReader = (message, type = 'success') => {
+    const region = type === 'error' ? assertiveRegionRef.current : politeRegionRef.current;
+    if (!region) return;
+    // Clear first so an identical, consecutive message still re-announces, then
+    // set the text on a short delay so the (already-present) live region fires.
+    region.textContent = '';
+    if (announceTimerRef.current) clearTimeout(announceTimerRef.current);
+    announceTimerRef.current = setTimeout(() => {
+      region.textContent = message;
+    }, 100);
+  };
+
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
+    announceToScreenReader(message, type);
     setTimeout(() => setToast({ visible: false, message: '', type }), 2500);
   };
 
@@ -107,7 +126,7 @@ export default function EditProfileResume({
       setResumeKey('');
       setResumeUrl('');
       showToast('Resume deleted', 'success');
-      setResumeStatusMessage('Resume file removed.');
+      setResumeStatusMessage('Resume deleted successfully.');
       if (resumeInputRef.current) resumeInputRef.current.value = '';
     } catch (e) {
       showToast('Failed to delete resume', 'error');
@@ -159,6 +178,7 @@ export default function EditProfileResume({
     const previewUrl = URL.createObjectURL(file);
     setPendingAvatarFile(file);
     setPendingAvatarPreview(previewUrl);
+    announceToScreenReader('Profile picture added. Preview shown. Select Upload to save, or Cancel to discard.');
   };
 
   const confirmAvatarUpload = async () => {
@@ -180,6 +200,7 @@ export default function EditProfileResume({
     setPendingAvatarFile(null);
     setPendingAvatarPreview(null);
     if (avatarInputRef.current) avatarInputRef.current.value = '';
+    announceToScreenReader('Profile picture discarded.');
   };
 
   // Bind stream to video when modal is open and video is mounted
@@ -364,6 +385,13 @@ export default function EditProfileResume({
     };
   }, [pendingAvatarPreview]);
 
+  // Cleanup pending screen-reader announcement timer on unmount
+  useEffect(() => {
+    return () => {
+      if (announceTimerRef.current) clearTimeout(announceTimerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     setAvatarImageError(false);
   }, [avatarPreviewUrl]);
@@ -442,7 +470,7 @@ export default function EditProfileResume({
         setResumeKey(key);
         const completedUrl = complete?.file?.downloadUrl || immediateDownload;
         if (completedUrl) setResumeUrl(completedUrl);
-        showToast('Resume uploaded');
+        showToast('Resume uploaded', 'success');
         setResumeStatusMessage(`Resume uploaded successfully: ${file.name}.`);
         // Clear input so selecting the same file again triggers onChange
         if (resumeInputRef.current) resumeInputRef.current.value = '';
@@ -648,8 +676,23 @@ export default function EditProfileResume({
       )}
       <div className="dashboard-content">
         <div ref={topRef} style={{ position: 'absolute', top: 0 }} aria-hidden="true" />
+        {/* Persistent live regions: always present in the DOM so screen readers
+            (VoiceOver) reliably announce resume/photo upload, add, and delete
+            results. Text is set imperatively via refs in announceToScreenReader. */}
+        <div
+          ref={politeRegionRef}
+          aria-live="polite"
+          aria-atomic="true"
+          style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}
+        />
+        <div
+          ref={assertiveRegionRef}
+          aria-live="assertive"
+          aria-atomic="true"
+          style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}
+        />
         {toast.visible && (
-          <div className={`toast ${toast.type}`} role="status" aria-live="polite">{toast.message}</div>
+          <div className={`toast ${toast.type}`} aria-hidden="true">{toast.message}</div>
         )}
       {successMessage && (
         <div 
@@ -741,8 +784,6 @@ export default function EditProfileResume({
               <p id="resume-file-types" className="muted resume-file-requirements">Accepted file types: PDF and DOC (PDF preferred)</p>
               <div
                 id="resume-file-status"
-                role="status"
-                aria-live="polite"
                 style={{
                   position: 'absolute',
                   width: 1,
@@ -758,7 +799,7 @@ export default function EditProfileResume({
                 {resumeStatusMessage}
               </div>
               {resumeFileName && (
-                <div className="resume-file-status-card" aria-live="polite">
+                <div className="resume-file-status-card">
                   <div className="resume-file-info">
                     <span id="resume-file-label">File Attached:</span>
                     <span className="resume-file-name"><strong>{resumeFileName}</strong></span>
