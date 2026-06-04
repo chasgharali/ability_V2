@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import AdminHeader from '../Layout/AdminHeader';
@@ -22,7 +21,10 @@ const SCREENS = {
   'Admin': [
     'dashboard',
     'event-management',
+    'event-create-edit-page',
     'booth-management',
+    'create-edit-page',
+    'employer-page-builder',
     'user-management',
     'jobseeker-management',
     'meeting-records',
@@ -38,7 +40,15 @@ const SCREENS = {
     'instructions'
   ]
 };
-const canManageRole = (currentUserRole, targetRole) => currentUserRole === 'SuperAdmin' || targetRole !== 'JobSeeker';
+const canManageRole = (currentUserRole, targetRole) => {
+  if (currentUserRole === 'SuperAdmin') return true;
+  // Only SuperAdmin manages JobSeeker instructions
+  if (targetRole === 'JobSeeker') return false;
+  // Managers can't manage instructions for their own role
+  if (targetRole === currentUserRole) return false;
+  return true;
+};
+const ALL_ORGANIZATIONS = '';
 
 export default function RoleMessageManagement() {
   const [messages, setMessages] = useState([]);
@@ -54,19 +64,21 @@ export default function RoleMessageManagement() {
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createForm, setCreateForm] = useState({ role: 'Recruiter', screen: 'dashboard', content: '', description: '' });
+  const [createForm, setCreateForm] = useState({ role: 'Recruiter', screen: 'dashboard', content: '', description: '', organizationId: ALL_ORGANIZATIONS });
+  const [filterOrganizationId, setFilterOrganizationId] = useState(ALL_ORGANIZATIONS);
   const [isScrolledX, setIsScrolledX] = useState(false);
   const listRef = useRef(null);
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { show: showToast } = useToast();
+  const isSuperAdmin = user?.role === 'SuperAdmin';
   const availableRoles = ROLES.filter((role) => canManageRole(user?.role, role));
 
   useEffect(() => {
     if (user && ['SuperAdmin', 'Admin', 'GlobalSupport'].includes(user.role)) {
       fetchMessages();
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, filterOrganizationId]);
 
   useEffect(() => {
     const fetchOrganizations = async () => {
@@ -111,7 +123,8 @@ export default function RoleMessageManagement() {
       if (user?.role === 'Admin') {
         await roleMessagesAPI.syncDefaults();
       }
-      const response = await roleMessagesAPI.getAllMessages();
+      const orgParam = isSuperAdmin ? (filterOrganizationId || undefined) : undefined;
+      const response = await roleMessagesAPI.getAllMessages(orgParam);
       
       if (response && response.success !== false) {
         const messagesArray = response.messages || [];
@@ -202,15 +215,18 @@ export default function RoleMessageManagement() {
       showToast('Content cannot be empty', { type: 'error', duration: 3000 });
       return;
     }
-    // Check for duplicate message (same role and screen)
+    const targetOrganizationId = isSuperAdmin ? (createForm.organizationId || ALL_ORGANIZATIONS) : ALL_ORGANIZATIONS;
+
+    // Check for duplicate message (same role, screen and organization scope)
     const duplicate = messages.find(
-      msg => 
-        msg.role === createForm.role && 
-        msg.screen === createForm.screen
+      msg =>
+        msg.role === createForm.role &&
+        msg.screen === createForm.screen &&
+        String(msg.organizationId?._id || msg.organizationId || '') === String(targetOrganizationId || '')
     );
-    
+
     if (duplicate) {
-      showToast('A message with this role and screen already exists. Please edit the existing message instead.', { type: 'error', duration: 4000 });
+      showToast('A message with this role and screen already exists for this organization scope. Please edit the existing message instead.', { type: 'error', duration: 4000 });
       return;
     }
     
@@ -221,13 +237,18 @@ export default function RoleMessageManagement() {
         createForm.screen,
         createForm.content,
         createForm.description,
-        false
+        false,
+        targetOrganizationId || null
       );
+      // Surface the new entry under the matching organization scope (SuperAdmin)
+      if (isSuperAdmin && (targetOrganizationId || '') !== (filterOrganizationId || '')) {
+        setFilterOrganizationId(targetOrganizationId || ALL_ORGANIZATIONS);
+      }
       await fetchMessages();
       setShowCreateForm(false);
       const fallbackRole = availableRoles[0] || 'Recruiter';
       const fallbackScreen = getAvailableScreens(fallbackRole)[0] || '';
-      setCreateForm({ role: fallbackRole, screen: fallbackScreen, content: '', description: '' });
+      setCreateForm({ role: fallbackRole, screen: fallbackScreen, content: '', description: '', organizationId: ALL_ORGANIZATIONS });
       showToast('Message created successfully!', { type: 'success', duration: 3000 });
     } catch (err) {
       const errorMsg = err.response?.data?.error || err.message || 'Failed to create message';
@@ -343,21 +364,24 @@ export default function RoleMessageManagement() {
           <div className="bm-header">
             <h1>Page Instructions</h1>
             <div className="bm-header-actions">
-              <button
-                onClick={() => navigate('/instructions')}
-                className="dashboard-button"
-                style={{ width: 'auto', marginRight: '1rem' }}
-              >
-                ← Back to Instructions
-              </button>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="dashboard-button"
-                style={{ width: 'auto' }}
-              >
-                <MdAdd />
-                Create New Message
-              </button>
+              {showCreateForm ? (
+                <button
+                  onClick={() => setShowCreateForm(false)}
+                  className="dashboard-button"
+                  style={{ width: 'auto', marginRight: '1rem' }}
+                >
+                  ← Back to Instructions
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="dashboard-button"
+                  style={{ width: 'auto' }}
+                >
+                  <MdAdd />
+                  Create New Message
+                </button>
+              )}
             </div>
           </div>
 
@@ -375,44 +399,59 @@ export default function RoleMessageManagement() {
           )}
 
           <div className="dashboard-content-area">
-            {/* Filters */}
-            <div className="role-message-filters">
-              <select
-                value={filterRole}
-                onChange={(e) => {
-                  const newRole = e.target.value;
-                  setFilterRole(newRole);
-                  // Reset screen filter when role changes, or set to first available screen
-                  if (newRole !== 'all') {
-                    const availableScreens = getAvailableScreens(newRole);
-                    setFilterScreen(availableScreens.length > 0 ? availableScreens[0] : 'all');
-                  } else {
-                    setFilterScreen('all');
+            {/* Filters (list view only) */}
+            {!showCreateForm && (
+              <div className="role-message-filters">
+                <select
+                  value={filterRole}
+                  onChange={(e) => {
+                    const newRole = e.target.value;
+                    setFilterRole(newRole);
+                    // Reset screen filter when role changes, or set to first available screen
+                    if (newRole !== 'all') {
+                      const availableScreens = getAvailableScreens(newRole);
+                      setFilterScreen(availableScreens.length > 0 ? availableScreens[0] : 'all');
+                    } else {
+                      setFilterScreen('all');
+                    }
+                  }}
+                  className="dashboard-select"
+                >
+                  <option value="all">All Roles</option>
+                  {availableRoles.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterScreen}
+                  onChange={(e) => setFilterScreen(e.target.value)}
+                  className="dashboard-select"
+                >
+                  <option value="all">All Screens</option>
+                  {filterRole === 'all'
+                    ? [...new Set(visibleMessages.map(m => m.screen))].map(screen => (
+                        <option key={screen} value={screen}>{screen}</option>
+                      ))
+                    : getAvailableScreens(filterRole).map(screen => (
+                        <option key={screen} value={screen}>{screen}</option>
+                      ))
                   }
-                }}
-                className="dashboard-select"
-              >
-                <option value="all">All Roles</option>
-                {availableRoles.map(role => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </select>
-              <select
-                value={filterScreen}
-                onChange={(e) => setFilterScreen(e.target.value)}
-                className="dashboard-select"
-              >
-                <option value="all">All Screens</option>
-                {filterRole === 'all' 
-                  ? [...new Set(visibleMessages.map(m => m.screen))].map(screen => (
-                      <option key={screen} value={screen}>{screen}</option>
-                    ))
-                  : getAvailableScreens(filterRole).map(screen => (
-                      <option key={screen} value={screen}>{screen}</option>
-                    ))
-                }
-              </select>
-            </div>
+                </select>
+                {isSuperAdmin && (
+                  <select
+                    value={filterOrganizationId}
+                    onChange={(e) => setFilterOrganizationId(e.target.value)}
+                    className="dashboard-select"
+                    aria-label="Filter by organization"
+                  >
+                    <option value={ALL_ORGANIZATIONS}>All Organizations (Global)</option>
+                    {organizations.map((org) => (
+                      <option key={org._id} value={org._id}>{org.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
 
             {/* Create Form */}
             {showCreateForm && (
@@ -450,6 +489,24 @@ export default function RoleMessageManagement() {
                     ))}
                   </select>
                 </div>
+                {isSuperAdmin && createForm.role !== 'JobSeeker' && (
+                  <div className="form-group">
+                    <label>Organization</label>
+                    <select
+                      value={createForm.organizationId}
+                      onChange={(e) => setCreateForm({ ...createForm, organizationId: e.target.value })}
+                      className="dashboard-select"
+                    >
+                      <option value={ALL_ORGANIZATIONS}>All Organizations (applies to every org)</option>
+                      {organizations.map((org) => (
+                        <option key={org._id} value={org._id}>{org.name}</option>
+                      ))}
+                    </select>
+                    <p className="description-text" style={{ marginTop: '0.5rem' }}>
+                      Choose “All Organizations” for a platform-wide instruction, or select a specific organization to target only that org.
+                    </p>
+                  </div>
+                )}
                 <div className="form-group">
                   <label>Content *</label>
                   <textarea
@@ -482,19 +539,20 @@ export default function RoleMessageManagement() {
             )}
 
             {/* Messages List */}
-            <div ref={listRef} className={`role-messages-list ${isScrolledX ? 'is-scrolled-x' : ''}`} data-dual-scroll-target="true">
-              {filteredMessages.length === 0 ? (
-                <div style={{ marginTop: '2rem', padding: '2rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                  <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>No Messages Found</h3>
-                  <p className="muted" style={{ marginBottom: '1rem' }}>
-                    {messages.length === 0 
-                      ? 'No role messages have been created yet. Click "Create New Message" to add your first message.'
-                      : `No messages match your current filters (Role: ${filterRole}, Screen: ${filterScreen}). Try changing the filters or create a new message.`
-                    }
-                  </p>
-                </div>
-              ) : (
-                <table className="role-messages-table">
+            {!showCreateForm && (
+              <div ref={listRef} className={`role-messages-list ${isScrolledX ? 'is-scrolled-x' : ''}`} data-dual-scroll-target="true">
+                {filteredMessages.length === 0 ? (
+                  <div style={{ marginTop: '2rem', padding: '2rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                    <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>No Messages Found</h3>
+                    <p className="muted" style={{ marginBottom: '1rem' }}>
+                      {messages.length === 0
+                        ? 'No role messages have been created yet. Click "Create New Message" to add your first message.'
+                        : `No messages match your current filters (Role: ${filterRole}, Screen: ${filterScreen}). Try changing the filters or create a new message.`
+                      }
+                    </p>
+                  </div>
+                ) : (
+                  <table className="role-messages-table">
                   <thead>
                     <tr>
                       <th>Role</th>
@@ -610,7 +668,7 @@ export default function RoleMessageManagement() {
                                   </>
                                 )}
                               </button>
-                              {user?.role === 'SuperAdmin' && (
+                              {user?.role === 'SuperAdmin' && !msg.organizationId && (
                                 <>
                                   <button
                                     onClick={() => {
@@ -643,9 +701,10 @@ export default function RoleMessageManagement() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              )}
-            </div>
+                  </table>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>

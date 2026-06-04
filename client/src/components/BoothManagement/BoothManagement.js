@@ -1288,7 +1288,7 @@ export default function BoothManagement() {
 
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
-            <PageInstructionBanner screen="booth-management" />
+            <PageInstructionBanner screen={boothMode === 'list' ? 'booth-management' : 'create-edit-page'} />
             <div className="bm-header">
               <h1>Booth Management</h1>
               <div className="bm-header-actions">

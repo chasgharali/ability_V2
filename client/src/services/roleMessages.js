@@ -6,10 +6,11 @@ function authHeaders() {
 }
 
 const roleMessagesAPI = {
-  // Get all role messages (Admin only)
-  async getAllMessages() {
+  // Get all role messages (Admin only). SuperAdmin may scope by organization.
+  async getAllMessages(organizationId) {
     try {
-      const response = await axios.get('/api/role-messages', { headers: authHeaders() });
+      const params = organizationId ? { organizationId } : {};
+      const response = await axios.get('/api/role-messages', { headers: authHeaders(), params });
       return response.data;
     } catch (error) {
       console.error('Error fetching all role messages:', error);
@@ -41,14 +42,15 @@ const roleMessagesAPI = {
   },
 
   // Create or update a role message
-  async setMessage(role, screen, content, description = '', isPlatformDefault = false) {
+  async setMessage(role, screen, content, description = '', isPlatformDefault = false, organizationId = null) {
     try {
       const response = await axios.post('/api/role-messages', {
         role,
         screen,
         content,
         description,
-        isPlatformDefault
+        isPlatformDefault,
+        ...(organizationId ? { organizationId } : {})
       }, { headers: authHeaders() });
       return response.data;
     } catch (error) {

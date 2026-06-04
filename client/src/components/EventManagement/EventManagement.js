@@ -908,7 +908,7 @@ export default function EventManagement() {
 
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
-                        <PageInstructionBanner screen="event-management" />
+                        <PageInstructionBanner screen={mode === 'list' ? 'event-management' : 'event-create-edit-page'} />
                         <div className="bm-header">
                             <h1>Event Management</h1>
                             <div className="bm-header-actions">

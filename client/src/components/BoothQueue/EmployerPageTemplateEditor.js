@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { uploadImageToS3 } from '../../services/uploads';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import EmployerLayoutRenderer from './EmployerLayoutRenderer';
 import './EmployerPageTemplateEditor.css';
 
@@ -269,6 +270,7 @@ export default function EmployerPageTemplateEditor() {
         <AdminSidebar active="booths" />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
         <div className="dashboard-content employer-editor-page">
+          <PageInstructionBanner screen="employer-page-builder" />
 
           {/* Unified sticky topbar */}
           <div className="elr-topbar">

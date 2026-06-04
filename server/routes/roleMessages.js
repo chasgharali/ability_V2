@@ -11,7 +11,14 @@ const {
 } = require('../services/defaultCopyService');
 
 const router = express.Router();
-const canManageRoleInstructions = (actorRole, targetRole) => actorRole === 'SuperAdmin' || targetRole !== 'JobSeeker';
+const canManageRoleInstructions = (actorRole, targetRole) => {
+  if (actorRole === 'SuperAdmin') return true;
+  // Only SuperAdmin manages JobSeeker instructions
+  if (targetRole === 'JobSeeker') return false;
+  // Managers can't manage instructions for their own role
+  if (targetRole === actorRole) return false;
+  return true;
+};
 
 /**
  * GET /api/role-messages
@@ -21,7 +28,8 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
   try {
     const query = {};
     if (req.user.role === 'SuperAdmin') {
-      query.organizationId = null;
+      // SuperAdmin can view global templates (default) or a specific organization's instructions
+      query.organizationId = req.query.organizationId ? req.query.organizationId : null;
     } else if (req.user.role === 'Admin' && req.orgId) {
       await syncMissingRoleMessagesForOrganization({
         organizationId: req.orgId,
@@ -34,9 +42,13 @@ router.get('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalSu
       query.organizationId = req.orgId || null;
     }
     if (req.user.role !== 'SuperAdmin') {
-      query.role = { $ne: 'JobSeeker' };
+      // Hide JobSeeker (SuperAdmin-only) and the manager's own role
+      query.role = { $nin: ['JobSeeker', req.user.role] };
     }
-    const messages = await RoleMessage.find(query).populate('updatedBy', 'name email').sort({ role: 1, screen: 1 });
+    const messages = await RoleMessage.find(query)
+      .populate('updatedBy', 'name email')
+      .populate('organizationId', 'name')
+      .sort({ role: 1, screen: 1 });
     res.json({ success: true, messages });
   } catch (error) {
     logger.error('Error fetching role messages:', error);
@@ -112,7 +124,8 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
   body('screen').trim().notEmpty().withMessage('Screen is required'),
   body('content').trim().notEmpty().withMessage('Content is required'),
   body('description').optional().trim(),
-  body('isPlatformDefault').optional().isBoolean().withMessage('isPlatformDefault must be a boolean value')
+  body('isPlatformDefault').optional().isBoolean().withMessage('isPlatformDefault must be a boolean value'),
+  body('organizationId').optional({ nullable: true, checkFalsy: true }).isMongoId().withMessage('Invalid organizationId')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -122,18 +135,35 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
 
     const { role, screen, content, description, isPlatformDefault = false } = req.body;
     if (!canManageRoleInstructions(req.user.role, role)) {
-      return res.status(403).json({ success: false, error: 'Only SuperAdmin can manage JobSeeker instructions' });
+      return res.status(403).json({ success: false, error: 'You are not allowed to manage instructions for this role' });
     }
+
+    // Resolve the organization scope. SuperAdmin may target all orgs (null) or a
+    // specific organization; everyone else is restricted to their own org.
+    let targetOrganizationId;
+    if (req.user.role === 'SuperAdmin') {
+      targetOrganizationId = req.body.organizationId || null;
+      if (targetOrganizationId) {
+        const organization = await getTargetOrganization(targetOrganizationId);
+        if (!organization) {
+          return res.status(404).json({ success: false, error: 'Target organization not found' });
+        }
+      }
+    } else {
+      targetOrganizationId = req.orgId || null;
+    }
+
     const message = await RoleMessage.setMessage(
       role,
       screen,
       content,
       req.user.id,
       description || '',
-      req.user.role === 'SuperAdmin' ? null : (req.orgId || null)
+      targetOrganizationId
     );
+    // Platform-default only applies to global (all-organization) templates
     if (req.user.role === 'SuperAdmin') {
-      message.isPlatformDefault = Boolean(isPlatformDefault);
+      message.isPlatformDefault = targetOrganizationId ? false : Boolean(isPlatformDefault);
       message.updatedBy = req.user.id;
       await message.save();
     }
@@ -171,10 +201,7 @@ router.put('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'Globa
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
     if (!canManageRoleInstructions(req.user.role, existingMessage.role)) {
-      return res.status(403).json({ success: false, error: 'Only SuperAdmin can manage JobSeeker instructions' });
-    }
-    if (req.user.role === 'SuperAdmin' && existingMessage.organizationId) {
-      return res.status(403).json({ success: false, error: 'SuperAdmin can only edit global templates here' });
+      return res.status(403).json({ success: false, error: 'You are not allowed to manage instructions for this role' });
     }
     if (req.user.role === 'Admin' && req.orgId && String(existingMessage.organizationId) !== String(req.orgId)) {
       return res.status(403).json({ success: false, error: 'You can only edit your organization messages' });
@@ -210,10 +237,7 @@ router.delete('/:id', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'Gl
       return res.status(404).json({ success: false, error: 'Message not found' });
     }
     if (!canManageRoleInstructions(req.user.role, existingMessage.role)) {
-      return res.status(403).json({ success: false, error: 'Only SuperAdmin can manage JobSeeker instructions' });
-    }
-    if (req.user.role === 'SuperAdmin' && existingMessage.organizationId) {
-      return res.status(403).json({ success: false, error: 'SuperAdmin can only delete global templates' });
+      return res.status(403).json({ success: false, error: 'You are not allowed to manage instructions for this role' });
     }
     if (req.user.role === 'Admin' && req.orgId && String(existingMessage.organizationId) !== String(req.orgId)) {
       return res.status(403).json({ success: false, error: 'You can only delete your organization messages' });
