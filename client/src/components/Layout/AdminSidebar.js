@@ -382,16 +382,16 @@ export default function AdminSidebar({ active = 'booths' }) {
             </div>
             {expanded['my-account'] && (
               <div className="sidebar-items">
-                <button type="button" className={itemClass('survey')}
-                  onClick={(e) => { handleItemClick('/dashboard/survey', e); closeMobileMenu(); }}>Survey</button>
-                <button type="button" className={itemClass('delete-account')}
-                  onClick={(e) => { handleItemClick('/dashboard/delete-account', e); closeMobileMenu(); }}>Delete My Account</button>
                 <button type="button" className={itemClass('edit-profile')}
                   onClick={(e) => { handleItemClick('/dashboard/edit-profile', e); closeMobileMenu(); }}>Edit Profile & Resume</button>
                 <button type="button" className={itemClass('view-profile')}
                   onClick={(e) => { handleItemClick('/dashboard/view-profile', e); closeMobileMenu(); }}>View My Profile</button>
                 <button type="button" className={itemClass('resume-builder')}
                   onClick={(e) => { handleItemClick('/dashboard/resume-builder', e); closeMobileMenu(); }}>Resume Builder</button>
+                <button type="button" className={itemClass('survey')}
+                  onClick={(e) => { handleItemClick('/dashboard/survey', e); closeMobileMenu(); }}>Survey</button>
+                <button type="button" className={itemClass('delete-account')}
+                  onClick={(e) => { handleItemClick('/dashboard/delete-account', e); closeMobileMenu(); }}>Delete My Account</button>
               </div>
             )}
           </div>
