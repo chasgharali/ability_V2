@@ -1052,6 +1052,12 @@ body.sidebar-open .mobile-menu-toggle:hover {
     border-bottom: none;
 }
 
+.sidebar-header-row {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
 .sidebar-header {
     width: 100%;
     background: none;
@@ -1067,18 +1073,39 @@ body.sidebar-open .mobile-menu-toggle:hover {
     transition: background-color 0.2s ease;
 }
 
+.sidebar-header-row .sidebar-header {
+    flex: 1;
+    width: auto;
+}
+
+.sidebar-header-row .icon-button {
+    background: none;
+    border: none;
+    color: #ffffff;
+    padding: 0.85rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
 .sidebar-header:hover,
-.sidebar-header:focus-visible {
+.sidebar-header:focus-visible,
+.sidebar-header-row .icon-button:hover,
+.sidebar-header-row .icon-button:focus-visible {
     background: #404040;
     outline: 2px solid #ffffff;
     outline-offset: -2px;
 }
 
-.sidebar-header:focus {
+.sidebar-header:focus:not(:focus-visible),
+.sidebar-header-row .icon-button:focus:not(:focus-visible) {
     outline: none;
 }
 
-.sidebar-header.active {
+.sidebar-header.active,
+.sidebar-header-row .icon-button.active {
     background: #ffffff;
     color: #000000;
     font-weight: 600;
@@ -1086,21 +1113,26 @@ body.sidebar-open .mobile-menu-toggle:hover {
 }
 
 .sidebar-header.active:hover,
-.sidebar-header.active:focus-visible {
+.sidebar-header.active:focus-visible,
+.sidebar-header-row .icon-button.active:hover,
+.sidebar-header-row .icon-button.active:focus-visible {
     background: #f3f4f6;
     color: #000000;
     outline: 2px solid #000000;
     outline-offset: -2px;
 }
 
-.sidebar-header:disabled {
+.sidebar-header:disabled,
+.sidebar-header-row .icon-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     color: #9ca3af;
 }
 
 .sidebar-header:disabled:hover,
-.sidebar-header:disabled:focus {
+.sidebar-header:disabled:focus,
+.sidebar-header-row .icon-button:disabled:hover,
+.sidebar-header-row .icon-button:disabled:focus {
     background: none;
     outline: none;
 }

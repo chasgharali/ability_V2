@@ -360,23 +360,26 @@ export default function AdminSidebar({ active = 'booths' }) {
       return (
         <>
           <div className="sidebar-section">
-            <button
-              type="button"
-              className={`sidebar-header ${(JOBSEEKER_ACCOUNT_KEYS.has(effectiveActive) || jobSeekerPathActive?.myAccount) ? 'active' : ''}`}
-              onClick={(e) => { handleItemClick('/dashboard/my-account', e); closeMobileMenu(); }}
-              aria-label="Go to My Account"
-              aria-expanded={expanded['my-account']}
-              aria-current={jobSeekerPathActive?.myAccount ? 'page' : undefined}
-            >
-              <span>My Account</span>
-              <span
-                className="icon-button"
-                onClick={(e) => { e.stopPropagation(); toggleSection('my-account'); }}
-                aria-hidden="true"
+            <div className="sidebar-header-row">
+              <button
+                type="button"
+                className={`sidebar-header ${(JOBSEEKER_ACCOUNT_KEYS.has(effectiveActive) || jobSeekerPathActive?.myAccount) ? 'active' : ''}`}
+                onClick={(e) => { handleItemClick('/dashboard/my-account', e); closeMobileMenu(); }}
+                aria-label="Go to My Account"
+                aria-current={jobSeekerPathActive?.myAccount ? 'page' : undefined}
+              >
+                <span>My Account</span>
+              </button>
+              <button
+                type="button"
+                className={`icon-button ${(JOBSEEKER_ACCOUNT_KEYS.has(effectiveActive) || jobSeekerPathActive?.myAccount) ? 'active' : ''}`}
+                onClick={() => toggleSection('my-account')}
+                aria-label="My Account Menu"
+                aria-expanded={expanded['my-account']}
               >
                 {expanded['my-account'] ? <MdExpandLess /> : <MdExpandMore />}
-              </span>
-            </button>
+              </button>
+            </div>
             {expanded['my-account'] && (
               <div className="sidebar-items">
                 <button type="button" className={itemClass('survey')}
@@ -394,35 +397,35 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button
-              type="button"
-              className={`sidebar-header ${myRegistrations.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.registeredList || jobSeekerPathActive.registeredSlug) ? 'active' : ''}`}
-              onClick={(e) => { 
-                if (myRegistrations.length > 0) {
-                  handleItemClick('/events/registered', e); 
-                  closeMobileMenu(); 
-                }
-              }}
-              disabled={myRegistrations.length === 0}
-              aria-label={myRegistrations.length === 0 ? "No current registrations available" : "Go to My Current Registrations"}
-              aria-expanded={myRegistrations.length === 0 ? undefined : expanded.registrations}
-              aria-current={jobSeekerPathActive?.registeredList ? 'page' : undefined}
-              title={myRegistrations.length === 0 ? "No current registrations available" : ""}
-            >
-              <span>Current Registrations</span>
-              <span
-                className="icon-button"
+            <div className="sidebar-header-row">
+              <button
+                type="button"
+                className={`sidebar-header ${myRegistrations.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.registeredList || jobSeekerPathActive.registeredSlug) ? 'active' : ''}`}
                 onClick={(e) => { 
-                  e.stopPropagation(); 
                   if (myRegistrations.length > 0) {
-                    toggleSection('registrations'); 
+                    handleItemClick('/events/registered', e); 
+                    closeMobileMenu(); 
                   }
                 }}
-                aria-hidden="true"
+                disabled={myRegistrations.length === 0}
+                aria-label={myRegistrations.length === 0 ? "No current registrations available" : "Go to My Current Registrations"}
+                aria-current={jobSeekerPathActive?.registeredList ? 'page' : undefined}
+                title={myRegistrations.length === 0 ? "No current registrations available" : ""}
+              >
+                <span>Current Registrations</span>
+              </button>
+              <button
+                type="button"
+                className={`icon-button ${myRegistrations.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.registeredList || jobSeekerPathActive.registeredSlug) ? 'active' : ''}`}
+                onClick={() => toggleSection('registrations')}
+                disabled={myRegistrations.length === 0}
+                aria-label={myRegistrations.length === 0 ? "No current registrations available" : "Current Registrations Menu"}
+                aria-expanded={myRegistrations.length === 0 ? undefined : expanded.registrations}
+                title={myRegistrations.length === 0 ? "No current registrations available" : ""}
               >
                 {expanded['registrations'] ? <MdExpandLess /> : <MdExpandMore />}
-              </span>
-            </button>
+              </button>
+            </div>
             {expanded['registrations'] && (
               <div className="sidebar-items">
                 {myRegistrations.length === 0 && (
@@ -447,35 +450,35 @@ export default function AdminSidebar({ active = 'booths' }) {
           </div>
 
           <div className="sidebar-section">
-            <button
-              type="button"
-              className={`sidebar-header ${upcomingEvents.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.upcomingList || (jobSeekerPathActive.eventSlug && upcomingEvents.some((evt) => upcomingSlugActive(evt.slug || evt._id)))) ? 'active' : ''}`}
-              onClick={(e) => { 
-                if (upcomingEvents.length > 0) {
-                  handleItemClick('/events/upcoming', e); 
-                  closeMobileMenu(); 
-                }
-              }}
-              disabled={upcomingEvents.length === 0}
-              aria-label={upcomingEvents.length === 0 ? "No upcoming events available" : "Go to Upcoming Events"}
-              aria-expanded={upcomingEvents.length === 0 ? undefined : expanded['upcoming-events']}
-              aria-current={jobSeekerPathActive?.upcomingList ? 'page' : undefined}
-              title={upcomingEvents.length === 0 ? "No upcoming events available" : ""}
-            >
-              <span>Upcoming Events</span>
-              <span
-                className="icon-button"
+            <div className="sidebar-header-row">
+              <button
+                type="button"
+                className={`sidebar-header ${upcomingEvents.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.upcomingList || (jobSeekerPathActive.eventSlug && upcomingEvents.some((evt) => upcomingSlugActive(evt.slug || evt._id)))) ? 'active' : ''}`}
                 onClick={(e) => { 
-                  e.stopPropagation(); 
                   if (upcomingEvents.length > 0) {
-                    toggleSection('upcoming-events'); 
+                    handleItemClick('/events/upcoming', e); 
+                    closeMobileMenu(); 
                   }
                 }}
-                aria-hidden="true"
+                disabled={upcomingEvents.length === 0}
+                aria-label={upcomingEvents.length === 0 ? "No upcoming events available" : "Go to Upcoming Events"}
+                aria-current={jobSeekerPathActive?.upcomingList ? 'page' : undefined}
+                title={upcomingEvents.length === 0 ? "No upcoming events available" : ""}
+              >
+                <span>Upcoming Events</span>
+              </button>
+              <button
+                type="button"
+                className={`icon-button ${upcomingEvents.length > 0 && jobSeekerPathActive && (jobSeekerPathActive.upcomingList || (jobSeekerPathActive.eventSlug && upcomingEvents.some((evt) => upcomingSlugActive(evt.slug || evt._id)))) ? 'active' : ''}`}
+                onClick={() => toggleSection('upcoming-events')}
+                disabled={upcomingEvents.length === 0}
+                aria-label={upcomingEvents.length === 0 ? "No upcoming events available" : "Upcoming Events Menu"}
+                aria-expanded={upcomingEvents.length === 0 ? undefined : expanded['upcoming-events']}
+                title={upcomingEvents.length === 0 ? "No upcoming events available" : ""}
               >
                 {expanded['upcoming-events'] ? <MdExpandLess /> : <MdExpandMore />}
-              </span>
-            </button>
+              </button>
+            </div>
             {expanded['upcoming-events'] && (
               <div className="sidebar-items">
                 {upcomingEvents.length === 0 && (
