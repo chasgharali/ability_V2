@@ -7,6 +7,7 @@ import '../Dashboard/Dashboard.css';
 import './BoothManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import filterIcon from '../../assets/filter.png';
 import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject, Page, Sort, Filter, Toolbar as GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze } from '@syncfusion/ej2-react-grids';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
@@ -1287,6 +1288,7 @@ export default function BoothManagement() {
 
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
+            <PageInstructionBanner screen="booth-management" />
             <div className="bm-header">
               <h1>Booth Management</h1>
               <div className="bm-header-actions">

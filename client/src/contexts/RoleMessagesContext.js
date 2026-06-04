@@ -49,9 +49,13 @@ export function RoleMessagesProvider({ children }) {
 
   const resolveTargetRole = useCallback((screen, explicitRole) => {
     if (explicitRole) return explicitRole;
+    // Prefer the viewer's own role so each role sees its own configured
+    // instruction. Fall back to the legacy screen→role map (used for elevated
+    // users previewing pages they don't own).
+    if (user?.role && messagesByRole[user.role]?.[screen]) return user.role;
     if (SCREEN_ROLE_MAP[screen]) return SCREEN_ROLE_MAP[screen];
     return user?.role || null;
-  }, [user?.role]);
+  }, [user?.role, messagesByRole]);
 
   // Fetch role messages for current user role (and audience roles for elevated users).
   const fetchMessages = useCallback(async () => {
@@ -63,9 +67,12 @@ export function RoleMessagesProvider({ children }) {
     try {
       setLoading(true);
       setError(null);
-      const rolesToFetch = ELEVATED_ROLES.has(user.role)
+      // Always include the viewer's own role so role-specific banners resolve,
+      // plus the audience roles elevated users may preview.
+      const audienceRoles = ELEVATED_ROLES.has(user.role)
         ? ['JobSeeker', 'Recruiter', 'Interpreter']
-        : [user.role];
+        : [];
+      const rolesToFetch = Array.from(new Set([...audienceRoles, user.role]));
       const responses = await Promise.all(rolesToFetch.map((role) => roleMessagesAPI.getMessagesByRole(role)));
       const nextMessagesByRole = {};
 

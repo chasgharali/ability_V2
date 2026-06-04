@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { jobSeekerSurveyAPI } from '../../services/jobSeekerSurvey';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
@@ -369,6 +370,7 @@ const JobSeekerSurvey = () => {
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="jobseeker-survey-container">
+                            <PageInstructionBanner screen="jobseeker-survey" />
                             {/* Page Header */}
                             <div className="page-header">
                                 <h1>Job Seeker Survey Data</h1>

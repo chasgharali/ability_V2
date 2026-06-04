@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import '../Dashboard/Dashboard.css';
 import './InterpreterCategories.css';
 import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
@@ -204,6 +205,7 @@ export default function InterpreterCategories() {
         <AdminSidebar active="interpreter-categories" />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
+            <PageInstructionBanner screen="interpreter-categories" />
             <div className="bm-header">
               <h1>Interpreter Categories</h1>
               <ButtonComponent 

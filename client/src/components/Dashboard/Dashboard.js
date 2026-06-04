@@ -46,6 +46,7 @@ import MyAccountInline from '../Account/MyAccountInline';
 import Chat from '../Chat/Chat';
 import settingsAPI from '../../services/settings';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 
 // Simple error boundary to prevent white screens if a nested view crashes
 class ErrorBoundary extends React.Component {
@@ -575,6 +576,7 @@ const Dashboard = () => {
                 return (
                     <div className="dashboard-content support-dashboard">
                         <h1>Support Dashboard</h1>
+                        <PageInstructionBanner screen="dashboard" />
                         <p className="support-subtitle">Welcome to your support workspace. Use team chat to collaborate with recruiters and interpreters.</p>
                         <div className="support-info-cards">
                             <div className="dashboard-card">
@@ -726,6 +728,7 @@ const Dashboard = () => {
                 return (
                     <div className="dashboard-content">
                         <h1>Organization Admin Dashboard</h1>
+                        <PageInstructionBanner screen="dashboard" />
                         {user?.organizationId && (
                             <>
                                 <p style={{ color: '#555', marginBottom: 8 }}>

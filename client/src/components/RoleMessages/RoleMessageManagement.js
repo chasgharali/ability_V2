@@ -11,11 +11,32 @@ import { MdAdd, MdEdit, MdDelete, MdSave, MdCancel, MdDone, MdClear } from 'reac
 import '../Dashboard/Dashboard.css';
 import './RoleMessageManagement.css';
 
-const ROLES = ['JobSeeker', 'Recruiter', 'Interpreter'];
+const ROLES = ['JobSeeker', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'Admin'];
 const SCREENS = {
   'JobSeeker': ['my-account', 'delete-account', 'edit-profile', 'view-profile', 'event-registration', 'survey', 'resume-builder'],
   'Recruiter': ['dashboard', 'meeting-queue', 'meeting-records', 'jobseeker-interests'],
-  'Interpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions']
+  'Interpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions'],
+  'GlobalInterpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions'],
+  'Support': ['dashboard', 'analytics', 'troubleshooting', 'instructions'],
+  'GlobalSupport': ['dashboard', 'analytics', 'troubleshooting', 'instructions'],
+  'Admin': [
+    'dashboard',
+    'event-management',
+    'booth-management',
+    'user-management',
+    'jobseeker-management',
+    'meeting-records',
+    'jobseeker-interests',
+    'jobseeker-survey',
+    'jobseeker-qualifications',
+    'interpreter-categories',
+    'branding',
+    'terms-conditions',
+    'notes',
+    'analytics',
+    'troubleshooting',
+    'instructions'
+  ]
 };
 const canManageRole = (currentUserRole, targetRole) => currentUserRole === 'SuperAdmin' || targetRole !== 'JobSeeker';
 

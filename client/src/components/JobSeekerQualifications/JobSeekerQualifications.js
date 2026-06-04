@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
@@ -242,6 +243,7 @@ const JobSeekerQualifications = () => {
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="jobseeker-qualifications-container">
+                            <PageInstructionBanner screen="jobseeker-qualifications" />
                             {/* Page Header */}
                             <div className="page-header">
                                 <h1>Job Seeker Qualifications Report</h1>

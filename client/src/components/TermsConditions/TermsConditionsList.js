@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import DataGrid from '../UI/DataGrid';
 import CopyToOrganizationModal from '../UI/CopyToOrganizationModal';
 import { termsConditionsAPI } from '../../services/termsConditions';
@@ -478,6 +479,7 @@ const TermsConditionsList = () => {
                     </div>
 
                     <div className="dashboard-content-area">
+                        <PageInstructionBanner screen="terms-conditions" />
                         {(error || successMessage) && (
                             <div className={`terms-message ${error ? 'terms-error-message' : 'terms-success-message'}`} style={{
                                 marginBottom: '1.5rem',

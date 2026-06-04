@@ -8,6 +8,7 @@ import AdvancedJobSeekerSearch from './AdvancedJobSeekerSearch';
 import AdminJobSeekerEditor, { mapJobSeekerUserToAdminEditRow } from './AdminJobSeekerEditor';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import { openResumeInNewTab } from '../../utils/resumeViewer';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
@@ -555,6 +556,8 @@ export default function RegisteredJobSeekerManagement() {
           <p>Showing job seekers who have registered for your organization&apos;s events</p>
         </div>
       </div>
+
+      <PageInstructionBanner screen="jobseeker-management" />
 
       {/* Tab switcher */}
       <div className="rjsm-tab-bar" role="tablist" aria-label="Job seeker view mode">

@@ -3,6 +3,7 @@ import '../Dashboard/Dashboard.css';
 import './Analytics.css';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useNavigate } from 'react-router-dom';
@@ -266,6 +267,7 @@ export default function Analytics() {
                 <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
                     <div className="dashboard-content">
                         <div className="analytics-container">
+                            <PageInstructionBanner screen="analytics" />
                             {/* Page Header 
                             <div className="page-header">
                                 <h1>Analytics & Reports</h1>

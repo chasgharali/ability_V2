@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import '../Dashboard/Dashboard.css';
 import settingsAPI from '../../services/settings';
 import { uploadImageToS3 } from '../../services/uploads';
@@ -102,6 +103,7 @@ export default function BrandingHeaderLogo() {
         <AdminSidebar active="branding" />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
+            <PageInstructionBanner screen="branding" />
             <h1>Branding – Header Logo</h1>
             {message && <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>{message}</div>}
             <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>
