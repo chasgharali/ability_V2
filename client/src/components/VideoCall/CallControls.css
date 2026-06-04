@@ -129,6 +129,16 @@
   position: relative;
 }
 
+/* "CC" glyph inside the caption button */
+.cc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+}
+
 .control-button.caption-button.caption-active {
   background: #007bff;
   color: white;

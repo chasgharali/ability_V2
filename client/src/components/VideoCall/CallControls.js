@@ -9,10 +9,26 @@ import {
   FiUser,
   FiPhoneOff,
   FiSettings,
-  FiMoreHorizontal,
-  FiType
+  FiMoreHorizontal
 } from 'react-icons/fi';
 import './CallControls.css';
+
+// "CC" glyph used for the captions control, matching the customary
+// closed-caption label. Accepts a `size` prop so it can be used
+// interchangeably with the react-icons components in this file.
+// Hidden from assistive tech by default so screen readers announce the
+// button's aria-label (e.g. "Turn on captions") instead of the letters
+// "C C"; callers may override aria-hidden via props if needed.
+const CCIcon = ({ size = 20, ...props }) => (
+  <span
+    className="cc-icon"
+    style={{ fontSize: Math.round(size * 0.7), lineHeight: 1 }}
+    aria-hidden="true"
+    {...props}
+  >
+    CC
+  </span>
+);
 
 const CallControls = ({
   isAudioEnabled,
@@ -78,7 +94,7 @@ const CallControls = ({
     },
     {
       id: 'caption',
-      icon: FiType,
+      icon: CCIcon,
       label: isCaptionEnabled ? 'CC On' : 'CC Off',
       ariaLabel: isCaptionEnabled ? 'Turn off captions' : 'Turn on captions',
       ariaPressed: isCaptionEnabled,
