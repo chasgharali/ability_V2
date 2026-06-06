@@ -347,7 +347,7 @@ const RegisterPage = () => {
                         to={redirectPath ? `/login?redirect=${encodeURIComponent(redirectPath)}` : '/login'}
                         className="register-login-link"
                     >
-                        Already have an account? Login here
+                        Already have an account? <span className="register-login-link-text">Login here</span>
                     </Link>
                 </div>
 

@@ -41,6 +41,10 @@
     text-decoration: none;
 }
 
+.register-login-link-text {
+    text-decoration: underline;
+}
+
 .register-title {
     font-size: 2.25rem;
     font-weight: 700;
