@@ -18,7 +18,7 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
   const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:28px';
   const cardStyle = 'background:#ececec;border-radius:6px;padding:28px;margin:auto;max-width:640px';
-  const contentStyle = 'padding:6px 4px';
+  const contentStyle = 'padding:20px';
 
   const html = `
     <div style="${containerStyle}">
