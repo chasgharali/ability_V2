@@ -88,6 +88,17 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
     mainContent.focus();
   };
 
+  const scrollToTop = () => {
+    const scrollContainer =
+      document.getElementById('main-content') ||
+      document.querySelector('.dashboard-main') ||
+      document.querySelector('main');
+    if (scrollContainer && typeof scrollContainer.scrollTo === 'function') {
+      scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Always read the latest token from storage
   const getToken = () => localStorage.getItem('token');
   const getRefreshToken = () => localStorage.getItem('refreshToken');
@@ -228,6 +239,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
       if (!embedded) {
         focusMainContent();
       }
+      scrollToTop();
       if (onSaveSuccess) {
         onSaveSuccess();
       }
@@ -245,6 +257,7 @@ const SurveyForm = React.forwardRef(function SurveyForm({ onValidationChange, em
             if (!embedded) {
               focusMainContent();
             }
+            scrollToTop();
             if (onSaveSuccess) {
               onSaveSuccess();
             }
