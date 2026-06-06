@@ -525,30 +525,35 @@
 }
 
 .device-test-modal .btn-cancel {
-  padding: 0.875rem 2rem;
+  padding: 0.875rem 2.25rem;
   background: #ffffff;
   color: #475569;
-  border: 2px solid #cbd5e1;
+  border: 2px solid #e2e8f0;
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.9375rem;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .device-test-modal .btn-cancel:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #334155;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #1e293b;
+  border-color: #1e293b;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
 }
 
-.device-test-modal .btn-cancel:focus {
+.device-test-modal .btn-cancel:active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}
+
+.device-test-modal .btn-cancel:focus-visible {
   outline: 3px solid #005aff;
-  outline-offset: 4px;
+  outline-offset: 3px;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .device-test-modal .btn-save {
