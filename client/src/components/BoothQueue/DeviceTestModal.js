@@ -328,6 +328,10 @@ export default function DeviceTestModal({
         <div className="device-test-content">
           {currentView === 'selection' ? (
             <>
+              <p className="device-selection-instructions">
+                Select your camera and mic below, then click the <strong>Test Devices</strong> button. You will see a pop up that provides your status and a button to save your preferences.
+              </p>
+
               <div className="device-selection-section">
                 <div className="device-field">
                   <label className="device-label" htmlFor="mic-select">
