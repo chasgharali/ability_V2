@@ -373,7 +373,10 @@
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
-@media (max-width: 920px) {
+/* Mid-size screens: the title + 4 layout tabs + toggle/back/save row no longer
+   fits on a single line, so wrap the layout tabs onto their own full-width row
+   to prevent them (and the right-side buttons) from being cut off. */
+@media (max-width: 1200px) {
   .elr-topbar {
     height: auto;
     flex-wrap: wrap;

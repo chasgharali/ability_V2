@@ -510,7 +510,7 @@ function ColorBar({ sectionKey, data, onUpdateField }) {
   const hasCustom = bgColor || headingColor || textColor;
   return (
     <div className="elr-color-bar" role="toolbar" aria-label={`Color settings for ${sectionKey} section`}>
-      <span className="elr-color-bar-label">BG</span>
+      <span className="elr-color-bar-label">Background</span>
       {BG_PRESETS.map((p) => (
         <button
           key={p.value}

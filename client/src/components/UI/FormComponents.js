@@ -10,6 +10,7 @@ export const Input = forwardRef(({
     placeholder,
     required = false,
     error,
+    hint,
     disabled = false,
     id,
     name,
@@ -19,6 +20,8 @@ export const Input = forwardRef(({
 }, ref) => {
     const inputId = id || `input-${name || Math.random().toString(36).substr(2, 9)}`;
     const errorId = error ? `${inputId}-error` : undefined;
+    const hintId = hint ? `${inputId}-hint` : undefined;
+    const describedBy = [errorId, hintId, ariaDescribedby].filter(Boolean).join(' ') || undefined;
 
     return (
         <div className={`form-field ${className}`}>
@@ -40,9 +43,14 @@ export const Input = forwardRef(({
                 name={name}
                 className={`form-input ${error ? 'form-input-error' : ''}`}
                 aria-invalid={error ? 'true' : 'false'}
-                aria-describedby={errorId || ariaDescribedby}
+                aria-describedby={describedBy}
                 {...props}
             />
+            {hint && (
+                <p id={hintId} className="form-hint">
+                    {hint}
+                </p>
+            )}
             {error && (
                 <div id={errorId} className="form-error" role="alert">
                     {error}
@@ -375,6 +383,7 @@ export const DateTimePicker = ({
     placeholder = 'Select date and time',
     required = false,
     error,
+    hint,
     disabled = false,
     id,
     name,
@@ -383,6 +392,8 @@ export const DateTimePicker = ({
 }) => {
     const inputId = id || `datetimepicker-${name || Math.random().toString(36).substr(2, 9)}`;
     const errorId = error ? `${inputId}-error` : undefined;
+    const hintId = hint ? `${inputId}-hint` : undefined;
+    const describedBy = [errorId, hintId].filter(Boolean).join(' ') || undefined;
 
     return (
         <div className={`form-field ${className}`}>
@@ -403,11 +414,16 @@ export const DateTimePicker = ({
                     name={name}
                     className={`form-datetimepicker ${error ? 'form-datetimepicker-error' : ''}`}
                     aria-invalid={error ? 'true' : 'false'}
-                    aria-describedby={errorId}
+                    aria-describedby={describedBy}
                     {...props}
                 />
                 <span className="form-datetimepicker-icon" aria-hidden="true">🕒</span>
             </div>
+            {hint && (
+                <p id={hintId} className="form-hint">
+                    {hint}
+                </p>
+            )}
             {error && (
                 <div id={errorId} className="form-error" role="alert">
                     {error}
@@ -423,12 +439,14 @@ export const Checkbox = ({
     checked,
     onChange,
     disabled = false,
+    hint,
     id,
     name,
     className = '',
     ...props
 }) => {
     const checkboxId = id || `checkbox-${name || Math.random().toString(36).substr(2, 9)}`;
+    const hintId = hint ? `${checkboxId}-hint` : undefined;
 
     return (
         <div className={`form-field form-checkbox-field ${className}`}>
@@ -441,6 +459,7 @@ export const Checkbox = ({
                     disabled={disabled}
                     name={name}
                     className="form-checkbox"
+                    aria-describedby={hintId}
                     {...props}
                 />
                 {label && (
@@ -449,6 +468,11 @@ export const Checkbox = ({
                     </label>
                 )}
             </div>
+            {hint && (
+                <p id={hintId} className="form-hint">
+                    {hint}
+                </p>
+            )}
         </div>
     );
 };

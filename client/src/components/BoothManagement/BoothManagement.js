@@ -566,18 +566,6 @@ export default function BoothManagement() {
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <ButtonComponent
           cssClass="e-primary e-small"
-          onClick={() => { }}
-        >
-          Job Seekers Report
-        </ButtonComponent>
-        <ButtonComponent
-          cssClass="e-outline e-primary e-small"
-          onClick={() => setPreviewBooth(row)}
-        >
-          {row.waitingAreaMode === 'employerPage' ? 'Employer Page' : 'Placeholder'}
-        </ButtonComponent>
-        <ButtonComponent
-          cssClass="e-primary e-small"
           onClick={() => copyInvite(row)}
         >
           <MdLink style={{ marginRight: '4px', verticalAlign: 'middle' }} />
@@ -1910,6 +1898,7 @@ export default function BoothManagement() {
                   value={boothForm.customInviteText}
                   onChange={(e) => setBoothField('customInviteText', e.target.value)}
                   placeholder="Enter custom invite text"
+                  hint="Custom slug for the booth's join URL. Whatever you enter becomes the end of the queue link (e.g. /queue/your-text). Leave empty to use the default auto-generated slug."
                 />
 
                 <div className="form-inline-row" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
@@ -1921,6 +1910,7 @@ export default function BoothManagement() {
                       placeholder="Select expiry"
                       disabled={!boothForm.enableExpiry}
                       name="expireLinkTime"
+                      hint="Date and time after which the booth invite link stops working. Enable the checkbox to set an expiry."
                     />
                   </div>
                   <div style={{ flex: '0 0 auto', paddingBottom: 6 }}>
@@ -1929,6 +1919,7 @@ export default function BoothManagement() {
                       checked={boothForm.enableExpiry}
                       onChange={(e) => setBoothField('enableExpiry', e.target.checked)}
                       name="enableExpiry"
+                      hint="Turn on to make the invite link expire at the time set above. When off, the link never expires."
                     />
                   </div>
                 </div>
@@ -1939,6 +1930,7 @@ export default function BoothManagement() {
                   value={boothForm.companyPage}
                   onChange={(e) => setBoothField('companyPage', e.target.value)}
                   placeholder="https://example.com"
+                  hint="The destination URL opened when a job seeker selects the company logo on the event page. Typically the organization's official website or careers page."
                 />
 
                 <Input
@@ -1948,6 +1940,7 @@ export default function BoothManagement() {
                   aria-live="polite"
                   name="jobSeekerQueueLink"
                   placeholder="Auto-generated link"
+                  hint="Auto-generated link that job seekers use to join this booth's queue. Share this link to invite candidates."
                 />
 
                 <Input
@@ -1957,10 +1950,8 @@ export default function BoothManagement() {
                   onChange={(e) => setBoothField('joinBoothButtonLink', e.target.value)}
                   placeholder="Leave empty to use Job Seeker Queue Link"
                   name="joinBoothButtonLink"
+                  hint={'Optional. If set, the "Join Queue" button on the event page redirects to this URL instead of the default Job Seeker Queue Link.'}
                 />
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '-0.5rem', marginBottom: '1rem' }}>
-                  If set, the "Join Queue" button on the event page will redirect to this URL instead of the default queue link.
-                </p>
 
                 <ButtonComponent
                   cssClass="e-primary"
