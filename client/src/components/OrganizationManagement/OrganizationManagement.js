@@ -87,8 +87,14 @@ export default function OrganizationManagement() {
     }
   };
 
+  const orgHasAdmin = (org) => (org?.stats?.adminCount || 0) > 0;
+
   const handleAccessOrganization = async (org) => {
     if (!isSuperAdmin || !org?._id || accessingOrgId) return;
+    if (!orgHasAdmin(org)) {
+      alert('You cannot access this organization until an organization Admin user has been created for it.');
+      return;
+    }
     setAccessingOrgId(org._id);
     try {
       const result = await startImpersonation(org._id);
@@ -118,6 +124,12 @@ export default function OrganizationManagement() {
           </button>
         )}
       </div>
+
+      {isSuperAdmin && (
+        <div className="org-access-instruction" role="note">
+          <strong>Note:</strong> You cannot access an organization until an organization Admin user has been created for it. The <em>Access</em> button stays disabled until an Admin is added.
+        </div>
+      )}
 
       {/* Search */}
       <div className="org-search-bar">
@@ -176,6 +188,12 @@ export default function OrganizationManagement() {
                 </div>
               )}
 
+              {isSuperAdmin && !orgHasAdmin(org) && (
+                <div className="org-no-admin-note" role="note">
+                  No organization Admin user has been created yet. You cannot access this organization until an Admin is added.
+                </div>
+              )}
+
               <div className="org-card-actions">
                 <button
                   className="btn btn-sm btn-secondary"
@@ -187,7 +205,8 @@ export default function OrganizationManagement() {
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => handleAccessOrganization(org)}
-                    disabled={accessingOrgId === org._id}
+                    disabled={accessingOrgId === org._id || !orgHasAdmin(org)}
+                    title={!orgHasAdmin(org) ? 'Create an organization Admin user before accessing this organization' : undefined}
                   >
                     {accessingOrgId === org._id ? 'Accessing...' : 'Access'}
                   </button>

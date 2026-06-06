@@ -180,6 +180,28 @@
   margin-top: 14px;
 }
 
+.org-access-instruction {
+  background: #eef4ff;
+  color: #1a4480;
+  border: 1px solid #b9d2ff;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.org-no-admin-note {
+  background: #fff8e1;
+  color: #8a6d00;
+  border: 1px solid #ffe49c;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 /* Pagination */
 .org-pagination {
   display: flex;

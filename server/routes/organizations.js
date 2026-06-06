@@ -56,7 +56,13 @@ async function buildOrgStats(orgId) {
         isActive: true
     });
 
-    return { totalEvents, totalBooths, totalUsers, totalRegisteredJobSeekers, recruiterCount };
+    const adminCount = await User.countDocuments({
+        organizationId: orgId,
+        role: 'Admin',
+        isActive: true
+    });
+
+    return { totalEvents, totalBooths, totalUsers, totalRegisteredJobSeekers, recruiterCount, adminCount };
 }
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
