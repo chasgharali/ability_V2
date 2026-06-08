@@ -10,6 +10,7 @@ const Organization = require('../models/Organization');
 const { authenticateToken, optionalAuth, validateRefreshToken, ORG_SCOPED_ROLES } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
+const sendyService = require('../services/sendyService');
 
 const router = express.Router();
 
@@ -335,6 +336,19 @@ router.post('/register', optionalAuth, [
         user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         await user.save();
+
+        // Best-effort Sendy subscriptions for JobSeekers
+        if (role === 'JobSeeker') {
+            try {
+                await sendyService.subscribeJobSeeker({
+                    email: user.email,
+                    name: user.name,
+                    subscribeAnnouncements: user.subscribeAnnouncements
+                });
+            } catch (sendyError) {
+                logger.warn(`Sendy subscription failed during registration for ${user.email}:`, sendyError.message);
+            }
+        }
 
         // If recruiter/booth admin/support, add them to the booth's administrators array
         if (['Recruiter', 'BoothAdmin', 'Support'].includes(role) && assignedBooth) {
@@ -1061,9 +1075,28 @@ router.put('/profile', authenticateToken, [
         if (needsASL !== undefined) user.needsASL = needsASL;
         if (needsCaptions !== undefined) user.needsCaptions = needsCaptions;
         if (needsOther !== undefined) user.needsOther = needsOther;
+
+        const prevSubscribeAnnouncements = user.subscribeAnnouncements;
         if (subscribeAnnouncements !== undefined) user.subscribeAnnouncements = subscribeAnnouncements;
 
         await user.save();
+
+        // Best-effort Sendy announcements sync for JobSeekers
+        if (
+            user.role === 'JobSeeker'
+            && subscribeAnnouncements !== undefined
+            && subscribeAnnouncements !== prevSubscribeAnnouncements
+        ) {
+            try {
+                await sendyService.syncAnnouncementsPreference({
+                    email: user.email,
+                    name: user.name,
+                    subscribeAnnouncements: user.subscribeAnnouncements
+                });
+            } catch (sendyError) {
+                logger.warn(`Sendy announcements sync failed for ${user.email}:`, sendyError.message);
+            }
+        }
 
         logger.info(`User profile updated: ${user.email}`);
 

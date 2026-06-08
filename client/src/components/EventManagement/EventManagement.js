@@ -33,6 +33,7 @@ import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../service
 import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 import { listEvents, createEvent, updateEvent, deleteEvent, bulkDeleteEvents } from '../../services/events';
+import { getSendyLists } from '../../services/sendy';
 import { termsConditionsAPI } from '../../services/termsConditions';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -161,6 +162,53 @@ export default function EventManagement() {
         status: 'draft',
         isDemo: false,
     });
+
+    const [sendyLists, setSendyLists] = useState([]);
+    const [sendyListsLoading, setSendyListsLoading] = useState(false);
+    const [manualSendyId, setManualSendyId] = useState('');
+
+    const connectedSendyListName = useMemo(() => {
+        if (!form.sendyId) return '';
+        const match = sendyLists.find((list) => list.id === form.sendyId);
+        return match?.name || '';
+    }, [form.sendyId, sendyLists]);
+
+    useEffect(() => {
+        if (mode !== 'create' && mode !== 'edit') return undefined;
+
+        let cancelled = false;
+
+        const loadSendyLists = async () => {
+            setSendyListsLoading(true);
+            try {
+                const data = await getSendyLists();
+                if (!cancelled) {
+                    setSendyLists(data.lists || []);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setSendyLists([]);
+                    console.warn('Failed to load Sendy lists', error);
+                }
+            } finally {
+                if (!cancelled) {
+                    setSendyListsLoading(false);
+                }
+            }
+        };
+
+        loadSendyLists();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [mode]);
+
+    useEffect(() => {
+        if (mode === 'create' || mode === 'edit') {
+            setManualSendyId(form.sendyId || '');
+        }
+    }, [form.sendyId, mode]);
 
     // Toast notification helper - defined early so it can be used in RTE handlers
     const showToast = (message, type = 'Success') => {
@@ -721,6 +769,7 @@ export default function EventManagement() {
             status: 'draft',
             isDemo: false,
         });
+        setManualSendyId('');
         setEditingId(null);
     };
 
@@ -873,7 +922,7 @@ export default function EventManagement() {
                 logoUrl: form.logoUrl || undefined,
                 logoAltText: form.logoAltText || undefined,
                 link: form.link || undefined,
-                sendyId: form.sendyId || undefined,
+                sendyId: form.sendyId ? form.sendyId : null,
                 termsId: form.termsId || undefined,
                 termsIds: form.termsIds || [],
                 status: form.status || undefined,
@@ -1413,7 +1462,88 @@ export default function EventManagement() {
                             </div>
                         ) : (
                             <form className="account-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} style={{ maxWidth: 720, paddingBottom: 350 }}>
-                                <Input label="Event Sendy Id" value={form.sendyId} onChange={(e) => setField('sendyId', e.target.value)} placeholder="" />
+                                <div
+                                    className="sendy-connection-section"
+                                    style={{
+                                        marginBottom: '1.25rem',
+                                        padding: '1rem',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '8px',
+                                        backgroundColor: '#fafafa'
+                                    }}
+                                >
+                                    <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>Sendy Connection</h3>
+                                    {form.sendyId ? (
+                                        <div>
+                                            <p style={{ margin: '0 0 0.5rem' }}>
+                                                <strong>Status:</strong> Connected
+                                            </p>
+                                            <p style={{ margin: '0 0 0.5rem' }}>
+                                                <strong>List ID:</strong> <code>{form.sendyId}</code>
+                                            </p>
+                                            {connectedSendyListName && (
+                                                <p style={{ margin: '0 0 0.75rem' }}>
+                                                    <strong>List name:</strong> {connectedSendyListName}
+                                                </p>
+                                            )}
+                                            <ButtonComponent
+                                                cssClass="e-outline e-danger"
+                                                type="button"
+                                                onClick={() => {
+                                                    setField('sendyId', '');
+                                                    setManualSendyId('');
+                                                }}
+                                            >
+                                                Disconnect
+                                            </ButtonComponent>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <p style={{ margin: '0 0 0.75rem' }}>
+                                                <strong>Status:</strong> Not connected
+                                            </p>
+                                            {sendyListsLoading ? (
+                                                <p style={{ margin: 0 }}>Loading Sendy lists...</p>
+                                            ) : (
+                                                <>
+                                                    {sendyLists.length > 0 && (
+                                                        <Select
+                                                            label="Select Sendy list"
+                                                            value={manualSendyId}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                setManualSendyId(value);
+                                                                setField('sendyId', value);
+                                                            }}
+                                                            options={[
+                                                                { value: '', label: 'Choose a list...' },
+                                                                ...sendyLists.map((list) => ({
+                                                                    value: list.id,
+                                                                    label: list.name
+                                                                }))
+                                                            ]}
+                                                        />
+                                                    )}
+                                                    <Input
+                                                        label={sendyLists.length > 0 ? 'Or enter Sendy list ID manually' : 'Enter Sendy list ID'}
+                                                        value={manualSendyId}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            setManualSendyId(value);
+                                                            setField('sendyId', value);
+                                                        }}
+                                                        placeholder="Paste list ID from Sendy"
+                                                    />
+                                                    {sendyLists.length === 0 && !sendyListsLoading && (
+                                                        <p style={{ margin: '0.5rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                                                            Create the list in Sendy first, then connect it here by pasting the list ID.
+                                                        </p>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                                 <Input label="Event Name" value={form.name} onChange={(e) => setField('name', e.target.value)} required placeholder="" />
                                 <Input label="Event Link" value={form.link} onChange={(e) => setField('link', e.target.value)} placeholder="https://..." />
 

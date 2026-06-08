@@ -41,6 +41,7 @@ const jobSeekerQualificationsRoutes = require('./routes/jobSeekerQualifications'
 const organizationRoutes = require('./routes/organizations');
 const legalPagesRoutes = require('./routes/legalPages');
 const resumeRoutes = require('./routes/resumes');
+const sendyRoutes = require('./routes/sendy');
 
 // Import socket handlers
 const socketHandler = require('./socket/socketHandler');
@@ -198,6 +199,7 @@ app.use('/api/jobseeker-qualifications', jobSeekerQualificationsRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/legal-pages', legalPagesRoutes);
 app.use('/api/resumes', resumeRoutes);
+app.use('/api/sendy', sendyRoutes);
 
 // Socket.IO connection handling
 socketHandler(io);

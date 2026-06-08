@@ -42,6 +42,10 @@ export default function RegistrationWizard() {
   const surveyFormRef = useRef(null);
   const pageHeadingRef = useRef(null);
   const resumeSourceGroupRef = useRef(null);
+  const registeredEventsKey = useMemo(
+    () => JSON.stringify(user?.metadata?.registeredEvents || []),
+    [user?.metadata?.registeredEvents]
+  );
 
   // Keep keyboard focus aligned with the currently visible registration content.
   // This also handles initial async page load before step content mounts.
@@ -141,7 +145,7 @@ export default function RegistrationWizard() {
         setFetching(false);
       }
     })();
-  }, [slug, user, loading]);
+  }, [slug, user?._id, registeredEventsKey, loading]);
 
   useEffect(() => {
     if (loading) return;

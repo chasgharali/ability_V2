@@ -10,6 +10,7 @@ const logger = require('../utils/logger');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 const { generateAndUploadResumePdf } = require('../services/pdfResumeService');
 const { parseResumeForUser } = require('../services/resumeParserService');
+const sendyService = require('../services/sendyService');
 
 const router = express.Router();
 
@@ -1124,6 +1125,18 @@ router.post('/:id/register', authenticateToken, async (req, res) => {
             if (registeredRow?._id) {
                 parseResumeForUser(user._id, { force: !!resumeId || !!generatedResumeUrl })
                     .catch(e => logger.warn('Auto-parse resume after registration failed:', e.message));
+            }
+
+            // Best-effort Sendy subscription to event list
+            if (event.sendyId) {
+                try {
+                    await sendyService.subscribe(event.sendyId, {
+                        email: user.email,
+                        name: user.name
+                    });
+                } catch (sendyError) {
+                    logger.warn(`Sendy event list subscription failed for ${user.email}:`, sendyError.message);
+                }
             }
         }
 
