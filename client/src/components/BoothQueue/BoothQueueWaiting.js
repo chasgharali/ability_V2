@@ -1528,6 +1528,7 @@ export default function BoothQueueWaiting() {
                             <video
                               src={messageContent}
                               controls
+                              aria-label="Preview of your recorded video message"
                               style={{
                                 width: '100%',
                                 maxWidth: '300px',
@@ -1539,6 +1540,7 @@ export default function BoothQueueWaiting() {
                             <audio
                               src={messageContent}
                               controls
+                              aria-label="Preview of your recorded audio message"
                               style={{ width: '100%' }}
                             />
                           )}
@@ -1670,27 +1672,28 @@ export default function BoothQueueWaiting() {
                   ) : (
                     <div className="recording-preview-section">
                       <div className="preview-controls">
-                        <button onClick={handleMessagePreview} className="btn-preview">
-                          Preview {messageType === 'video' ? 'Video' : 'Audio'}
-                        </button>
                         <button onClick={handleRetakeRecording} className="btn-retake">
                           Retake Recording
                         </button>
                       </div>
 
-                      {showMessagePreview && (
-                        <div className="media-preview">
-                          {messageType === 'video' ? (
-                            <video
-                              src={messageContent}
-                              controls
-                              style={{ width: '100%', maxWidth: '300px', borderRadius: '8px', backgroundColor: '#000' }}
-                            />
-                          ) : (
-                            <audio src={messageContent} controls style={{ width: '100%' }} />
-                          )}
-                        </div>
-                      )}
+                      <div className="media-preview">
+                        {messageType === 'video' ? (
+                          <video
+                            src={messageContent}
+                            controls
+                            aria-label="Preview of your recorded video message"
+                            style={{ width: '100%', maxWidth: '300px', borderRadius: '8px', backgroundColor: '#000' }}
+                          />
+                        ) : (
+                          <audio
+                            src={messageContent}
+                            controls
+                            aria-label="Preview of your recorded audio message"
+                            style={{ width: '100%' }}
+                          />
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
