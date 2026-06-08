@@ -78,6 +78,8 @@ export default function EditProfileResume({
   const [avatarKey, setAvatarKey] = useState('');
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState(null);
+  const [pendingAvatarName, setPendingAvatarName] = useState('');
+  const [pendingAvatarSource, setPendingAvatarSource] = useState('file'); // 'file' | 'camera'
   const [avatarImageError, setAvatarImageError] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -104,12 +106,12 @@ export default function EditProfileResume({
       return 'Uploading your photo. Please wait.';
     }
     if (pendingAvatarPreview) {
-      return 'Your photo is ready. Review the preview below, then select the Upload button to confirm and save it, or select Cancel to discard it.';
+      return 'Your photo is ready. Review the preview below, then select the Confirm button to save it, or select Cancel to discard it.';
     }
     if (avatarPreviewUrl) {
-      return 'Your profile picture is saved. To replace it, choose a new photo from your device or take a new picture, then select the Upload button to confirm. You can also remove the current picture.';
+      return 'Your profile picture is saved. To replace it, choose a new photo from your device or take a new picture, then select the Confirm button. You can also remove the current picture.';
     }
-    return 'You can choose a photo from your device or take a photo with your camera. After you choose or take a photo, you must select the Upload button to confirm and save your upload.';
+    return 'You can choose a photo from your device or take a photo with your camera. After you choose or take a photo, you must select the Confirm button to save it.';
   };
   const avatarInstructions = getAvatarInstructions();
 
@@ -176,7 +178,7 @@ export default function EditProfileResume({
     }
   };
 
-  const handleAvatarFileSelect = (file) => {
+  const handleAvatarFileSelect = (file, source = 'file') => {
     if (!file) return;
     
     // Validate file type
@@ -195,7 +197,12 @@ export default function EditProfileResume({
     const previewUrl = URL.createObjectURL(file);
     setPendingAvatarFile(file);
     setPendingAvatarPreview(previewUrl);
-    announceToScreenReader('Profile picture added. Preview shown. Select Upload to save, or Cancel to discard.');
+    setPendingAvatarSource(source);
+    setPendingAvatarName(source === 'camera' ? '' : (file.name || ''));
+    const addedLabel = source === 'camera'
+      ? 'Photo taken.'
+      : `Photo selected: ${file.name || 'image file'}.`;
+    announceToScreenReader(`${addedLabel} Preview shown. Select Confirm to save, or Cancel to discard.`);
   };
 
   const confirmAvatarUpload = async () => {
@@ -207,6 +214,8 @@ export default function EditProfileResume({
     }
     setPendingAvatarFile(null);
     setPendingAvatarPreview(null);
+    setPendingAvatarName('');
+    setPendingAvatarSource('file');
     if (avatarInputRef.current) avatarInputRef.current.value = '';
   };
 
@@ -216,6 +225,8 @@ export default function EditProfileResume({
     }
     setPendingAvatarFile(null);
     setPendingAvatarPreview(null);
+    setPendingAvatarName('');
+    setPendingAvatarSource('file');
     if (avatarInputRef.current) avatarInputRef.current.value = '';
     announceToScreenReader('Profile picture discarded.');
   };
@@ -617,7 +628,7 @@ export default function EditProfileResume({
       canvas.toBlob(async (blob) => {
         if (!blob) return;
         const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
-        handleAvatarFileSelect(file);
+        handleAvatarFileSelect(file, 'camera');
         closeCamera();
       }, 'image/jpeg', 0.9);
     } catch (e) {
@@ -966,7 +977,7 @@ export default function EditProfileResume({
               >
                 <img 
                   src={pendingAvatarPreview} 
-                  alt="Preview" 
+                  alt="Selected profile preview" 
                   style={{ 
                     width: '100%', 
                     height: '100%', 
@@ -979,6 +990,16 @@ export default function EditProfileResume({
                   }}
                 />
               </div>
+              <div className="avatar-pending-meta">
+                {pendingAvatarSource === 'camera' ? (
+                  <span className="avatar-pending-name"><strong>Photo Taken</strong></span>
+                ) : (
+                  <>
+                    <span>File name:</span>
+                    <span className="avatar-pending-name"><strong>{pendingAvatarName || 'Selected image'}</strong></span>
+                  </>
+                )}
+              </div>
               <div className="avatar-pending-actions">
                 <button 
                   type="button" 
@@ -987,7 +1008,7 @@ export default function EditProfileResume({
                   disabled={uploading}
                   aria-describedby="avatar-instructions"
                 >
-                  {uploading ? 'Uploading…' : 'Upload'}
+                  {uploading ? 'Saving…' : 'Confirm'}
                 </button>
                 <button 
                   type="button" 
