@@ -1749,6 +1749,16 @@ body.sidebar-open .mobile-menu-toggle:hover {
     font-size: 0.9rem;
 }
 
+.avatar-instructions {
+    margin: 0.5rem 0 1rem;
+    padding: 0.6rem 0.8rem;
+    color: #1f2937;
+    background: #f3f4f6;
+    border-left: 4px solid #1f2937;
+    border-radius: 6px;
+    line-height: 1.4;
+}
+
 .resume-method-selector {
     margin-bottom: 0.8rem;
 }

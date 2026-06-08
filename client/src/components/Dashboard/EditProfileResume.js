@@ -96,6 +96,23 @@ export default function EditProfileResume({
 
   const keywordTags = parseKeywordTags(form.keywords);
 
+  // Instruction for the profile picture section. The text reflects the current
+  // state so sighted users see, and screen reader users hear (via the buttons'
+  // aria-describedby reference), exactly what to do next.
+  const getAvatarInstructions = () => {
+    if (uploading) {
+      return 'Uploading your photo. Please wait.';
+    }
+    if (pendingAvatarPreview) {
+      return 'Your photo is ready. Review the preview below, then select the Upload button to confirm and save it, or select Cancel to discard it.';
+    }
+    if (avatarPreviewUrl) {
+      return 'Your profile picture is saved. To replace it, choose a new photo from your device or take a new picture, then select the Upload button to confirm. You can also remove the current picture.';
+    }
+    return 'You can choose a photo from your device or take a photo with your camera. After you choose or take a photo, you must select the Upload button to confirm and save your upload.';
+  };
+  const avatarInstructions = getAvatarInstructions();
+
   const announceToScreenReader = (message, type = 'success') => {
     const region = type === 'error' ? assertiveRegionRef.current : politeRegionRef.current;
     if (!region) return;
@@ -903,6 +920,9 @@ export default function EditProfileResume({
         <div className="upload-card">
           <ProfileSectionHeading>Add a Profile Picture (Optional)</ProfileSectionHeading>
           <p className="muted">Accepted file types: JPG, PNG, GIF (max size: 2MB)</p>
+          <p id="avatar-instructions" className="muted avatar-instructions">
+            {avatarInstructions}
+          </p>
           
           {/* Current Avatar Preview (already uploaded) */}
           {avatarPreviewUrl && !pendingAvatarPreview && (
@@ -959,13 +979,13 @@ export default function EditProfileResume({
                   }}
                 />
               </div>
-              <p className="muted" style={{ margin: 0, fontSize: '0.875rem' }}>Preview shown above. Click Upload to save.</p>
               <div className="avatar-pending-actions">
                 <button 
                   type="button" 
                   className="update-button avatar-action-btn avatar-action-btn-primary" 
                   onClick={confirmAvatarUpload}
                   disabled={uploading}
+                  aria-describedby="avatar-instructions"
                 >
                   {uploading ? 'Uploading…' : 'Upload'}
                 </button>
@@ -974,6 +994,7 @@ export default function EditProfileResume({
                   className="dashboard-button avatar-action-btn avatar-action-btn-secondary" 
                   onClick={cancelAvatarUpload}
                   disabled={uploading}
+                  aria-describedby="avatar-instructions"
                 >
                   Cancel
                 </button>
@@ -1000,6 +1021,7 @@ export default function EditProfileResume({
                   className="update-button avatar-file-btn"
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={uploading}
+                  aria-describedby="avatar-instructions"
                 >
                   Choose Picture
                 </button>
@@ -1008,6 +1030,7 @@ export default function EditProfileResume({
                     type="button" 
                     className="update-button avatar-file-btn" 
                     onClick={deleteAvatar} 
+                    aria-describedby="avatar-instructions"
                   >
                     Remove Picture
                   </button>
@@ -1019,6 +1042,7 @@ export default function EditProfileResume({
                 onClick={openCamera}
                 disabled={uploading}
                 ref={cameraTriggerRef}
+                aria-describedby="avatar-instructions"
               >
                 Take your Picture
               </button>
