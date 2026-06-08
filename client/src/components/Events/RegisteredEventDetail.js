@@ -54,6 +54,14 @@ export default function RegisteredEventDetail() {
             }
           }
         }
+      } catch (error) {
+        // A 404 simply means the event slug/id doesn't exist; render the
+        // "Event not found" state rather than crashing with an unhandled
+        // rejection (which triggers the dev error overlay).
+        if (error.response?.status !== 404) {
+          console.error('Failed to load registered event:', error);
+        }
+        setEvent(null);
       } finally {
         setFetching(false);
       }
