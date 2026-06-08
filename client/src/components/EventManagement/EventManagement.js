@@ -500,7 +500,9 @@ export default function EventManagement() {
         try {
             const res = await termsConditionsAPI.getAll({ page: 1, limit: 100 });
             const list = res?.terms || [];
-            setTermsOptions(list.map(t => ({ value: t._id, label: `${t.title} (v${t.version})${t.isActive ? ' • Active' : ''}` })));
+            // Only active terms can be attached to an event
+            const activeList = list.filter(t => t.isActive);
+            setTermsOptions(activeList.map(t => ({ value: t._id, label: `${t.title} (v${t.version}) • Active` })));
         } catch (e) {
             console.error('Failed to load terms', e);
         }
@@ -679,6 +681,18 @@ export default function EventManagement() {
     );
 
     const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+    // Reorder selected Terms & Conditions. The order of `termsIds` determines the
+    // order they are presented to job seekers during registration.
+    const moveTerm = (index, direction) => {
+        setForm(prev => {
+            const ids = [...(prev.termsIds || [])];
+            const target = index + direction;
+            if (target < 0 || target >= ids.length) return prev;
+            [ids[index], ids[target]] = [ids[target], ids[index]];
+            return { ...prev, termsIds: ids };
+        });
+    };
 
     const resetForm = () => {
         // Clear RichTextEditor content first if ref exists
@@ -1505,6 +1519,77 @@ export default function EventManagement() {
                                     options={termsOptions}
                                     placeholder="Choose one or more Terms & Conditions"
                                 />
+
+                                {form.termsIds.length > 1 && (
+                                    <div className="form-group">
+                                        <label className="form-label">Terms and Conditions Order</label>
+                                        <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#6c757d' }}>
+                                            Use the arrows to set the order job seekers see these during registration.
+                                        </p>
+                                        <ul className="terms-reorder-list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {form.termsIds.map((id, index) => {
+                                                const option = termsOptions.find(o => o.value === id);
+                                                const label = option?.label || id;
+                                                return (
+                                                    <li
+                                                        key={id}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between',
+                                                            gap: '12px',
+                                                            padding: '10px 12px',
+                                                            border: '1px solid #e5e7eb',
+                                                            borderRadius: '8px',
+                                                            background: '#fff'
+                                                        }}
+                                                    >
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                                            <span style={{
+                                                                flexShrink: 0,
+                                                                width: '22px',
+                                                                height: '22px',
+                                                                borderRadius: '50%',
+                                                                background: '#111111',
+                                                                color: '#fff',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '12px',
+                                                                fontWeight: 600
+                                                            }}>
+                                                                {index + 1}
+                                                            </span>
+                                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {label}
+                                                            </span>
+                                                        </span>
+                                                        <span style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                                                            <ButtonComponent
+                                                                cssClass="e-outline e-primary e-small"
+                                                                disabled={index === 0}
+                                                                onClick={(e) => { e.preventDefault(); moveTerm(index, -1); }}
+                                                                aria-label={`Move ${label} up`}
+                                                                title="Move up"
+                                                            >
+                                                                ↑
+                                                            </ButtonComponent>
+                                                            <ButtonComponent
+                                                                cssClass="e-outline e-primary e-small"
+                                                                disabled={index === form.termsIds.length - 1}
+                                                                onClick={(e) => { e.preventDefault(); moveTerm(index, 1); }}
+                                                                aria-label={`Move ${label} down`}
+                                                                title="Move down"
+                                                            >
+                                                                ↓
+                                                            </ButtonComponent>
+                                                        </span>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
+                                )}
 
                                 <ButtonComponent 
                                     cssClass="e-primary" 

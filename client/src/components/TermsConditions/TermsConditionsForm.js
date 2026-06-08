@@ -395,15 +395,11 @@ const TermsConditionsForm = () => {
                                                 name="isActive"
                                                 checked={formData.isActive}
                                                 onChange={handleInputChange}
-                                                aria-describedby="active-help"
                                             />
                                             <div className="terms-checkbox-content">
                                                 <label htmlFor="isActive" className="terms-checkbox-label">
                                                     Make this the active terms and conditions
                                                 </label>
-                                                <p id="active-help" className="terms-checkbox-help">
-                                                    Only one terms and conditions can be active at a time. Activating this will deactivate others.
-                                                </p>
                                             </div>
                                         </div>
                                     </div>
