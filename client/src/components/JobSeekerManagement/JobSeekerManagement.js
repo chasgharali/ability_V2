@@ -105,6 +105,7 @@ export default function JobSeekerManagement() {
   const [events, setEvents] = useState([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [eventSearchLoading, setEventSearchLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [serverStats, setServerStats] = useState({
     totalCount: 0,
     activeCount: 0,
@@ -928,6 +929,96 @@ export default function JobSeekerManagement() {
     setSearchTriggerNonce((prev) => prev + 1);
   }, []);
 
+  // Export the full current result set (all matching filters/search, across all pages) to CSV.
+  const handleExportCsv = useCallback(async () => {
+    try {
+      setExportLoading(true);
+
+      const params = {
+        page: 1,
+        // Fetch the entire matching set, not just the current page.
+        limit: Math.max(pagination?.totalCount || 0, serverStats?.totalCount || 0, 1) || 100000,
+        role: 'JobSeeker',
+        sortBy: sortByRef.current || 'createdAt',
+        sortDir: sortDirRef.current || 'desc'
+      };
+
+      const search = searchFilterRef.current;
+      if (search && search.trim()) params.search = search.trim();
+
+      const statusValue = statusFilterRef.current;
+      if (statusValue === 'active') params.isActive = 'true';
+      else if (statusValue === 'inactive') params.isActive = 'false';
+
+      const eventValue = eventFilterRef.current;
+      if (eventValue && eventValue.trim()) params.eventId = eventValue.trim();
+
+      const orgValue = organizationFilterRef.current;
+      if (orgValue && String(orgValue).trim()) params.organizationId = String(orgValue).trim();
+
+      const res = await listUsers(params);
+      const items = (res?.users || []).filter(u => u.role === 'JobSeeker');
+
+      if (items.length === 0) {
+        showToast('No job seekers to export for the current filters', 'Warning');
+        return;
+      }
+
+      const headers = [
+        'First Name', 'Last Name', 'Email', 'Phone', 'City', 'State', 'Country',
+        'Qualifications', 'Status', 'Email Verified', 'Registration Date', 'Last Login', 'Event Registrations'
+      ];
+
+      const data = items.map(u => {
+        const parts = (u.name || '').trim().split(/\s+/);
+        const firstName = parts[0] || '';
+        const lastName = parts.slice(1).join(' ') || '';
+        const qualifications = [
+          getLabelFromValue(u.metadata?.profile?.educationLevel || u.metadata?.education || u.metadata?.educationLevel, EDUCATION_LEVEL_LIST),
+          getLabelFromValue(u.metadata?.profile?.workLevel || u.metadata?.experienceLevel || u.metadata?.workLevel, EXPERIENCE_LEVEL_LIST)
+        ].filter(Boolean).join(' | ');
+        const events = (u.metadata?.registeredEvents || [])
+          .map(ev => ev?.name || ev?.slug || '')
+          .filter(Boolean)
+          .join('; ');
+        return [
+          firstName,
+          lastName,
+          u.email || '',
+          u.phoneNumber || '',
+          u.city || '',
+          u.state || '',
+          u.country || '',
+          qualifications,
+          u.isActive ? 'Active' : 'Inactive',
+          u.emailVerified ? 'Yes' : 'No',
+          u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '',
+          u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never',
+          events
+        ];
+      });
+
+      const csv = [
+        headers.join(','),
+        ...data.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+      // Prepend BOM so Excel renders UTF-8 correctly.
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `job-seekers-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+
+      showToast(`Exported ${items.length} job seeker(s) to CSV`, 'Success');
+    } catch (error) {
+      console.error('Export CSV failed:', error);
+      showToast('Failed to export job seekers', 'Error');
+    } finally {
+      setExportLoading(false);
+    }
+  }, [pagination, serverStats, showToast]);
+
   // No automatic search on typing - search only on button click or Enter key
 
   // Cleanup grid and toast when mode changes to prevent DOM manipulation errors
@@ -1556,6 +1647,14 @@ export default function JobSeekerManagement() {
                   aria-label="Import job seekers from CSV or spreadsheet"
                 >
                   Import
+                </ButtonComponent>
+                <ButtonComponent
+                  cssClass="e-outline e-primary e-small"
+                  onClick={handleExportCsv}
+                  disabled={exportLoading}
+                  aria-label="Export current search results to CSV"
+                >
+                  {exportLoading ? 'Exporting...' : 'Export CSV'}
                 </ButtonComponent>
                 <ButtonComponent 
                   cssClass="e-outline e-primary e-small" 
