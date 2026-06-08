@@ -614,6 +614,8 @@ export default function EventManagement() {
 
     const eventPageUrlFor = (row) => row.link || `${window.location.origin}/event/${row.slug}`;
 
+    const previewUrlFor = (row) => `/events/registered/${row.slug}?preview=1`;
+
     // Grid template functions for custom column renders - using Syncfusion ButtonComponent
     // Format date/time to show the time in user's local timezone
     const formatEventDateTime = (dateString) => {
@@ -640,6 +642,16 @@ export default function EventManagement() {
             onClick={() => window.open(eventPageUrlFor(props), '_blank')}
         >
             Event Page
+        </ButtonComponent>
+    );
+
+    const previewTemplate = (props) => (
+        <ButtonComponent 
+            cssClass="e-outline e-primary e-small" 
+            onClick={() => navigate(previewUrlFor(props))}
+            title="Preview the job seeker registration page"
+        >
+            Preview
         </ButtonComponent>
     );
 
@@ -1214,6 +1226,13 @@ export default function EventManagement() {
                                             allowSorting={false} 
                                             allowFiltering={false}
                                             template={eventPageTemplate}
+                                        />
+                                        <ColumnDirective 
+                                            headerText='Preview' 
+                                            width='120' 
+                                            allowSorting={false} 
+                                            allowFiltering={false}
+                                            template={previewTemplate}
                                         />
                                         <ColumnDirective 
                                             headerText='Action' 

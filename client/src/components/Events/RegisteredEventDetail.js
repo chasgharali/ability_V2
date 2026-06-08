@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
@@ -12,6 +12,8 @@ import { announceToScreenReader } from '../Accessibility/FocusManager';
 
 export default function RegisteredEventDetail() {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const isPreview = searchParams.get('preview') === '1';
   const { user, loading } = useAuth();
   const [event, setEvent] = useState(null);
   const [booths, setBooths] = useState([]);
@@ -110,7 +112,7 @@ export default function RegisteredEventDetail() {
     <div className="dashboard">
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <Helmet>
-        <title>{event?.name ? `You are registered for ${event.name}` : 'Registered Event'} - abilityconnect</title>
+        <title>{event?.name ? (isPreview ? `Preview: ${event.name}` : `You are registered for ${event.name}`) : 'Registered Event'} - abilityconnect</title>
       </Helmet>
       <AdminHeader />
       <div className="dashboard-layout">
@@ -127,9 +129,28 @@ export default function RegisteredEventDetail() {
             {!fetching && !event && <div>Event not found.</div>}
             {!fetching && event && (
               <>
+                {/* Preview-mode notice (admin viewing the job seeker page) */}
+                {isPreview && (
+                  <>
+                    <div className="registered-event-actions" style={{ marginBottom: '1rem' }}>
+                      <button
+                        type="button"
+                        className="ajf-btn ajf-btn-dark"
+                        onClick={() => navigate('/eventmanagement')}
+                        aria-label="Back to Event Management"
+                      >
+                        ← Back to Event Management
+                      </button>
+                    </div>
+                    <div className="alert-box registered-event-banner" role="status" aria-live="polite">
+                      <p><strong>Preview mode:</strong> This is how the registration page appears to a registered job seeker. Interactive actions (I'm interested, Join Queue) are disabled here.</p>
+                    </div>
+                  </>
+                )}
+
                 {/* Title */}
                 <h1 className="registered-event-title">
-                  You are registered for {event.name}
+                  {isPreview ? `Preview: ${event.name}` : `You are registered for ${event.name}`}
                 </h1>
 
                 {/* Registration confirmation banner */}
@@ -264,7 +285,7 @@ export default function RegisteredEventDetail() {
                                     type="checkbox" 
                                     checked={isInterested}
                                     onChange={() => handleInterestToggle(booth)}
-                                    disabled={isSaving}
+                                    disabled={isSaving || isPreview}
                                     className="interest-checkbox"
                                   />
                                   <span className="checkbox-custom"></span>
@@ -275,7 +296,9 @@ export default function RegisteredEventDetail() {
                                 
                                 <button
                                   className="join-queue-btn"
+                                  disabled={isPreview}
                                   onClick={() => {
+                                    if (isPreview) return;
                                     // Employer-page booths should always enter the queue flow.
                                     if (booth.waitingAreaMode === 'employerPage') {
                                       navigate(`/booth-queue/${event.slug}/${booth._id}/entry`);
