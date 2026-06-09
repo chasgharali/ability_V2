@@ -1,17 +1,58 @@
+/* While the fixed cookie banner is visible, reserve space at the bottom of the
+   main content scroll containers so keyboard-focused elements are scrolled fully
+   into view above the banner instead of being hidden behind it (W3C technique C43). */
+html.cookie-consent-active,
+html.cookie-consent-active .dashboard-main {
+    scroll-padding-bottom: var(--cookie-consent-scroll-offset, 160px);
+}
+
+/* Reserve real space at the bottom of every scroll container so the last items
+   can be scrolled completely clear of the banner. The !important is required
+   because Dashboard.css hardcodes padding-bottom:60px with equal specificity
+   and may be injected after this file, which would otherwise win the cascade. */
+html.cookie-consent-active .dashboard-main,
+html.cookie-consent-active .dashboard-main:has(.account-section) {
+    padding-bottom: var(--cookie-consent-scroll-offset, 160px) !important;
+}
+
+html.cookie-consent-active .App:not(:has(.dashboard)) {
+    padding-bottom: var(--cookie-consent-scroll-offset, 160px) !important;
+}
+
+/* Horizontal bar pinned just above the footer. It spans the main content area
+   only and is offset to clear the fixed sidebar menu (matching the footer). */
 .cookie-consent-banner {
     position: fixed;
-    left: 1rem;
-    right: 1rem;
-    bottom: 1rem;
-    z-index: 3500;
+    left: 0;
+    right: 0;
+    bottom: var(--app-footer-height, 50px);
+    z-index: 1150;
     display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    padding: 1rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    padding: 0.9rem 1.5rem;
     background-color: #111827;
     color: #ffffff;
-    border-radius: 0.75rem;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.cookie-consent-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+/* Desktop only: align the banner with the main content beside the fixed sidebar. */
+@media (min-width: 1025px) {
+    .App:has(.dashboard-sidebar) .cookie-consent-banner {
+        left: 260px;
+    }
 }
 
 .cookie-consent-banner:focus-visible {
@@ -35,6 +76,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
+    flex: 0 0 auto;
 }
 
 .cookie-consent-button {
@@ -71,11 +113,15 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-@media (min-width: 768px) {
+/* Stack content above the buttons on narrow screens. */
+@media (max-width: 640px) {
     .cookie-consent-banner {
-        left: 1.5rem;
-        right: auto;
-        max-width: 480px;
-        bottom: 1.5rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .cookie-consent-actions {
+        justify-content: flex-end;
     }
 }
