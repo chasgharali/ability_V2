@@ -61,6 +61,8 @@ export default function BoothQueueWaiting() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1199);
   const modalRef = useRef(null);
   const previousFocusRef = useRef(null);
+  const queuePanelRef = useRef(null);
+  const queuePanelPreviousFocusRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   // Video call state
@@ -854,6 +856,22 @@ export default function BoothQueueWaiting() {
     }
   }, [showMessageModal]);
 
+  // Move focus into the queue options dialog when it opens on mobile,
+  // and restore focus to the triggering control when it closes.
+  useEffect(() => {
+    if (!isMobile) return;
+
+    if (mobilePanelOpen) {
+      queuePanelPreviousFocusRef.current = document.activeElement;
+      if (queuePanelRef.current) {
+        queuePanelRef.current.focus();
+      }
+    } else if (queuePanelPreviousFocusRef.current) {
+      queuePanelPreviousFocusRef.current.focus();
+      queuePanelPreviousFocusRef.current = null;
+    }
+  }, [mobilePanelOpen, isMobile]);
+
   // Keyboard event handler for accessibility
   const handleKeyDown = (event) => {
     if (event.key === 'Escape' && mobilePanelOpen) {
@@ -1182,10 +1200,13 @@ export default function BoothQueueWaiting() {
         {/* Left sidebar with queue info and actions (moved from right) */}
         <div
           id="queue-panel"
+          ref={queuePanelRef}
           className={`waiting-sidebar-left mobile-collapsible ${mobilePanelOpen ? 'open' : ''}`}
-          role="complementary"
+          role={isMobile && mobilePanelOpen ? 'dialog' : 'complementary'}
+          aria-modal={isMobile && mobilePanelOpen ? 'true' : undefined}
           aria-label="Queue options and actions"
           aria-hidden={isMobile && !mobilePanelOpen ? 'true' : 'false'}
+          tabIndex={isMobile && mobilePanelOpen ? -1 : undefined}
         >
           <div className="mobile-panel-close-row">
             <button
