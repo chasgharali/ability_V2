@@ -18,6 +18,30 @@ import { getSyncfusionMultiSelectA11yHandlers } from '../../utils/syncfusionMult
 // Use centralized JOB_TYPE_LIST for employment types
 const VETERAN_STATUS = ['None', 'Veteran', 'Active Duty', 'Reservist', 'Military Spouse'];
 
+// Required profile fields in DOM order. The order is used to determine which
+// field receives focus first when validation fails (the first invalid field).
+// `field` is the id of the focusable control; `errorId` is the unique id of the
+// inline <span> that displays the error and is referenced via aria-describedby.
+const REQUIRED_PROFILE_FIELDS = [
+  { name: 'headline', field: 'headline', errorId: 'headline-error', label: 'Headline' },
+  { name: 'keywords', field: 'keywords', errorId: 'keywords-error', label: 'Keywords' },
+  { name: 'primaryExperience', field: 'primaryExperience', errorId: 'primaryExperience-error', label: 'Primary Experience' },
+  { name: 'workLevel', field: 'workLevel', errorId: 'workLevel-error', label: 'Work Level' },
+  { name: 'educationLevel', field: 'educationLevel', errorId: 'educationLevel-error', label: 'Education Level' },
+  { name: 'employmentTypes', field: 'employmentTypes', errorId: 'employmentTypes-error', label: 'Employment Types' },
+  { name: 'languages', field: 'languages', errorId: 'languages-error', label: 'Languages' },
+];
+
+// Syncfusion MultiSelect fields render a separate visible combobox; their ARIA
+// (aria-invalid / aria-describedby) must be applied imperatively on that element.
+const MULTISELECT_FIELDS = ['keywords', 'primaryExperience', 'employmentTypes', 'languages'];
+
+const isEmptyValue = (value) =>
+  value === undefined ||
+  value === null ||
+  (Array.isArray(value) && value.length === 0) ||
+  (typeof value === 'string' && value.trim() === '');
+
 const parseKeywordTags = (keywords) => (keywords ? keywords.split(',').map(s => s.trim()).filter(Boolean) : []);
 
 function getNameInitials(displayName) {
@@ -83,6 +107,8 @@ export default function EditProfileResume({
   const [avatarImageError, setAvatarImageError] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const errorSummaryRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const mediaStreamRef = useRef(null);
@@ -97,6 +123,7 @@ export default function EditProfileResume({
   const returnFocusRef = useRef(null);
 
   const keywordTags = parseKeywordTags(form.keywords);
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0;
 
   // Instruction for the profile picture section. The text reflects the current
   // state so sighted users see, and screen reader users hear (via the buttons'
@@ -435,14 +462,88 @@ export default function EditProfileResume({
   }, [successMessage]);
 
 
+  // Remove the error for a single field once the user starts correcting it so
+  // the summary and the field's invalid state update dynamically.
+  const clearFieldError = (name) => {
+    setFieldErrors(prev => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
+
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+    clearFieldError(name);
     // Trigger validation callback when form changes
     if (onValidationChange) {
       setTimeout(onValidationChange, 0); // Use setTimeout to ensure state is updated
     }
   };
+
+  // Validate all required profile fields. Returns an errors map keyed by field name.
+  const validateForm = () => {
+    const errors = {};
+    REQUIRED_PROFILE_FIELDS.forEach(({ name, label }) => {
+      if (isEmptyValue(form[name])) {
+        errors[name] = `${label} is required`;
+      }
+    });
+    return errors;
+  };
+
+  // Resolve the focusable control for a field. Native inputs/selects expose the
+  // element directly; Syncfusion MultiSelect hides the original element behind a
+  // visible combobox input, which is the element that actually receives focus.
+  const getFocusTarget = (fieldId) => {
+    const original = document.getElementById(fieldId);
+    if (!original) return null;
+    const wrapper = original.closest('.e-multiselect');
+    if (wrapper) {
+      return wrapper.querySelector('input.e-dropdownbase, input[role="combobox"]') || original;
+    }
+    return original;
+  };
+
+  const focusField = (fieldId) => {
+    const target = getFocusTarget(fieldId);
+    if (target && typeof target.focus === 'function') {
+      target.focus();
+      return true;
+    }
+    return false;
+  };
+
+  // Syncfusion comboboxes are outside React's control, so apply/remove their
+  // error ARIA imperatively. This keeps aria-invalid and the aria-describedby
+  // error reference in sync with fieldErrors for screen reader users.
+  useEffect(() => {
+    MULTISELECT_FIELDS.forEach((fieldId) => {
+      const target = getFocusTarget(fieldId);
+      if (!target) return;
+      const errorId = `${fieldId}-error`;
+      const hasError = !!fieldErrors[fieldId];
+      const ids = (target.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+      const index = ids.indexOf(errorId);
+      if (hasError && index === -1) {
+        ids.push(errorId);
+      } else if (!hasError && index !== -1) {
+        ids.splice(index, 1);
+      }
+      if (ids.length) {
+        target.setAttribute('aria-describedby', ids.join(' '));
+      } else {
+        target.removeAttribute('aria-describedby');
+      }
+      if (hasError) {
+        target.setAttribute('aria-invalid', 'true');
+      } else {
+        target.removeAttribute('aria-invalid');
+      }
+    });
+  }, [fieldErrors]);
 
   // languages handled by MultiSelect change below
 
@@ -638,8 +739,27 @@ export default function EditProfileResume({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setSuccessMessage(''); // Clear any previous success message
+
+    // Validate required fields BEFORE saving. If anything is missing we must not
+    // save, must not show a success message, and must move the screen reader's
+    // focus to the first invalid field so the associated error is announced.
+    const errors = validateForm();
+    setFieldErrors(errors);
+    const firstInvalid = REQUIRED_PROFILE_FIELDS.find(({ name }) => errors[name]);
+    if (firstInvalid) {
+      if (onValidationChange) {
+        setTimeout(onValidationChange, 0);
+      }
+      // Defer so the error summary and inline messages render (and the imperative
+      // ARIA sync runs) before we move focus to the first invalid field.
+      setTimeout(() => {
+        focusField(firstInvalid.field);
+      }, 60);
+      return;
+    }
+
+    setSaving(true);
     try {
       const payload = {
         linkedInUrl: (form.linkedInUrl || '').trim() || null,
@@ -658,34 +778,33 @@ export default function EditProfileResume({
         method: 'PUT',
         body: JSON.stringify(payload)
       });
-      
-      // Set success message and scroll to top
-      setSuccessMessage('Profile updated successfully!');
-      
-      // Scroll to top smoothly
-      setTimeout(() => {
-        if (topRef.current) {
-          topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          // Focus on success message for screen readers after scroll
-          setTimeout(() => {
-            if (successMessageRef.current) {
-              successMessageRef.current.focus();
-            }
-          }, 300);
-        } else {
-          // Fallback: scroll window to top
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          setTimeout(() => {
-            if (successMessageRef.current) {
-              successMessageRef.current.focus();
-            }
-          }, 300);
-        }
-      }, 100);
-      
-      // Call onDone callback if provided (for wizard navigation)
+
+      // In the wizard, onDone runs the parent's step validation (e.g. resume
+      // requirement) and returns false when it blocks advancing. Only confirm
+      // success when we are not being blocked, so we never show a success
+      // message alongside outstanding errors.
+      let proceeded = true;
       if (onDone) {
-        onDone();
+        const result = onDone();
+        proceeded = result !== false;
+      }
+
+      if (proceeded) {
+        setSuccessMessage('Profile updated successfully!');
+
+        // Scroll to top smoothly, then move focus to the confirmation.
+        setTimeout(() => {
+          if (topRef.current) {
+            topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+          setTimeout(() => {
+            if (successMessageRef.current) {
+              successMessageRef.current.focus();
+            }
+          }, 300);
+        }, 100);
       }
     } catch (e) {
       showToast('Failed to save', 'error');
@@ -722,30 +841,60 @@ export default function EditProfileResume({
         {toast.visible && (
           <div className={`toast ${toast.type}`} aria-hidden="true">{toast.message}</div>
         )}
-      {successMessage && (
-        <div 
-          ref={successMessageRef}
-          className="success-message" 
-          role="alert" 
-          aria-live="assertive"
-          tabIndex={-1}
-          style={{
-            padding: '1rem',
-            marginBottom: '1.5rem',
-            backgroundColor: '#d1fae5',
-            border: '2px solid #10b981',
-            borderRadius: '8px',
-            color: '#065f46',
-            fontWeight: '500',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          <span style={{ fontSize: '1.25rem' }}>✓</span>
-          <span>{successMessage}</span>
-        </div>
-      )}
+      {/* Persistent alert region for form-level status and validation errors.
+          It is always present in the DOM so the screen reader announces whatever
+          content is injected after submit — either the list of field errors or
+          the success confirmation. The inner elements intentionally do NOT carry
+          their own role/aria-live; the parent owns the live region. */}
+      <div role="alert" aria-live="assertive" aria-atomic="true">
+        {hasFieldErrors && (
+          <div
+            ref={errorSummaryRef}
+            className="form-error-summary"
+            tabIndex={-1}
+          >
+            <strong>Please complete all required fields:</strong>
+            <ul>
+              {REQUIRED_PROFILE_FIELDS.filter(({ name }) => fieldErrors[name]).map(({ name, field }) => (
+                <li key={name}>
+                  <a
+                    href={`#${field}`}
+                    className="form-error-summary-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      focusField(field);
+                    }}
+                  >
+                    {fieldErrors[name]}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {successMessage && (
+          <div
+            ref={successMessageRef}
+            className="success-message"
+            tabIndex={-1}
+            style={{
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              backgroundColor: '#d1fae5',
+              border: '2px solid #10b981',
+              borderRadius: '8px',
+              color: '#065f46',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: '1.25rem' }}>✓</span>
+            <span>{successMessage}</span>
+          </div>
+        )}
+      </div>
       {!embedded && <h1>My Profile</h1>}
       {!embedded && <p className="section-note">Edit the form below to update your profile information.</p>}
 
@@ -1097,11 +1246,15 @@ export default function EditProfileResume({
             onChange={onChange} 
             placeholder="Make a brief statement about yourself" 
             maxLength={150}
-            aria-describedby="headline-hint headline-counter"
+            aria-describedby={`headline-hint headline-counter${fieldErrors.headline ? ' headline-error' : ''}`}
+            aria-invalid={fieldErrors.headline ? 'true' : undefined}
           />
           <span id="headline-hint" className="visually-hidden">
             Maximum 150 characters.
           </span>
+          {fieldErrors.headline && (
+            <span id="headline-error" className="field-error">{fieldErrors.headline}</span>
+          )}
         </div>
 
         <div className="form-group">
@@ -1130,6 +1283,7 @@ export default function EditProfileResume({
               const uniqueKeywords = [...new Set(values)];
               setForm(prev => ({ ...prev, keywords: uniqueKeywords.join(', ') }));
               setKeywordAnnouncement(`${uniqueKeywords.length} keywords selected.`);
+              clearFieldError('keywords');
               if (onValidationChange) {
                 setTimeout(onValidationChange, 0);
               }
@@ -1138,6 +1292,9 @@ export default function EditProfileResume({
           <span id="keyword-input-status" className="sr-only" aria-live="polite" aria-atomic="true">
             {keywordAnnouncement || `${keywordTags.length} keywords selected.`}
           </span>
+          {fieldErrors.keywords && (
+            <span id="keywords-error" className="field-error">{fieldErrors.keywords}</span>
+          )}
         </div>
 
         <div className="form-group">
@@ -1180,33 +1337,57 @@ export default function EditProfileResume({
               change={(args) => {
                 const values = Array.isArray(args?.value) ? args.value : [];
                 setForm(prev => ({ ...prev, primaryExperience: values.slice(0, 2) }));
+                clearFieldError('primaryExperience');
                 // Trigger validation callback when form changes
                 if (onValidationChange) {
                   setTimeout(onValidationChange, 0);
                 }
               }}
             />
+            {fieldErrors.primaryExperience && (
+              <span id="primaryExperience-error" className="field-error">{fieldErrors.primaryExperience}</span>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="workLevel">* Work Experience Level</label>
-            <select id="workLevel" name="workLevel" value={form.workLevel} onChange={onChange}>
+            <select
+              id="workLevel"
+              name="workLevel"
+              value={form.workLevel}
+              onChange={onChange}
+              aria-describedby={fieldErrors.workLevel ? 'workLevel-error' : undefined}
+              aria-invalid={fieldErrors.workLevel ? 'true' : undefined}
+            >
               <option value="">Select level</option>
               {EXPERIENCE_LEVEL_LIST.map(o => (
                 <option key={o.value} value={o.value}>{o.name}</option>
               ))}
             </select>
+            {fieldErrors.workLevel && (
+              <span id="workLevel-error" className="field-error">{fieldErrors.workLevel}</span>
+            )}
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="educationLevel">* Highest Education Level</label>
-            <select id="educationLevel" name="educationLevel" value={form.educationLevel} onChange={onChange}>
+            <select
+              id="educationLevel"
+              name="educationLevel"
+              value={form.educationLevel}
+              onChange={onChange}
+              aria-describedby={fieldErrors.educationLevel ? 'educationLevel-error' : undefined}
+              aria-invalid={fieldErrors.educationLevel ? 'true' : undefined}
+            >
               <option value="">Select education</option>
               {EDUCATION_LEVEL_LIST.map(o => (
                 <option key={o.value} value={o.value}>{o.name}</option>
               ))}
             </select>
+            {fieldErrors.educationLevel && (
+              <span id="educationLevel-error" className="field-error">{fieldErrors.educationLevel}</span>
+            )}
           </div>
           <div className="form-group">
             <label id="employmentTypes-label" htmlFor="employmentTypes">* Employment Types</label>
@@ -1234,12 +1415,16 @@ export default function EditProfileResume({
               change={(args) => {
                 const values = Array.isArray(args?.value) ? args.value : [];
                 setForm(prev => ({ ...prev, employmentTypes: values }));
+                clearFieldError('employmentTypes');
                 // Trigger validation callback when form changes
                 if (onValidationChange) {
                   setTimeout(onValidationChange, 0);
                 }
               }}
             />
+            {fieldErrors.employmentTypes && (
+              <span id="employmentTypes-error" className="field-error">{fieldErrors.employmentTypes}</span>
+            )}
           </div>
         </div>
 
@@ -1270,12 +1455,16 @@ export default function EditProfileResume({
             change={(args) => {
               const values = Array.isArray(args?.value) ? args.value : [];
               setForm(prev => ({ ...prev, languages: values }));
+              clearFieldError('languages');
               // Trigger validation callback when form changes
               if (onValidationChange) {
                 setTimeout(onValidationChange, 0);
               }
             }}
           />
+          {fieldErrors.languages && (
+            <span id="languages-error" className="field-error">{fieldErrors.languages}</span>
+          )}
         </div>
 
         <div className="form-row">
