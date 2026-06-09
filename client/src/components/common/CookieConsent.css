@@ -1,22 +1,27 @@
+/* Everything below is keyed off the banner actually existing in the DOM via
+   :has(), so it works purely in CSS without depending on any JS class being
+   added (the banner lives in <App> and never remounts on navigation, so an
+   effect-added class can be missed by React Fast Refresh / on first paint). */
+
 /* While the fixed cookie banner is visible, reserve space at the bottom of the
    main content scroll containers so keyboard-focused elements are scrolled fully
    into view above the banner instead of being hidden behind it (W3C technique C43). */
-html.cookie-consent-active,
-html.cookie-consent-active .dashboard-main {
-    scroll-padding-bottom: var(--cookie-consent-scroll-offset, 160px);
+html:has(.cookie-consent-banner),
+html:has(.cookie-consent-banner) .dashboard-main {
+    scroll-padding-bottom: var(--cookie-consent-scroll-offset, 200px);
 }
 
 /* Reserve real space at the bottom of every scroll container so the last items
    can be scrolled completely clear of the banner. The !important is required
-   because Dashboard.css hardcodes padding-bottom:60px with equal specificity
-   and may be injected after this file, which would otherwise win the cascade. */
-html.cookie-consent-active .dashboard-main,
-html.cookie-consent-active .dashboard-main:has(.account-section) {
-    padding-bottom: var(--cookie-consent-scroll-offset, 160px) !important;
+   because Dashboard.css hardcodes padding-bottom:60px (including inside a
+   max-width:1024px media query with !important) which would otherwise win. */
+html:has(.cookie-consent-banner) .dashboard-main,
+html:has(.cookie-consent-banner) .dashboard-main:has(.account-section) {
+    padding-bottom: var(--cookie-consent-scroll-offset, 200px) !important;
 }
 
-html.cookie-consent-active .App:not(:has(.dashboard)) {
-    padding-bottom: var(--cookie-consent-scroll-offset, 160px) !important;
+html:has(.cookie-consent-banner) .App:not(:has(.dashboard)) {
+    padding-bottom: var(--cookie-consent-scroll-offset, 200px) !important;
 }
 
 /* Horizontal bar pinned just above the footer. It spans the main content area
