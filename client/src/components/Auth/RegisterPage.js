@@ -555,8 +555,7 @@ const RegisterPage = () => {
                                             type="button"
                                             className="register-password-toggle"
                                             onClick={togglePasswordVisibility}
-                                            aria-label={showPassword ? "Hide password" : "Show password"}
-                                            tabIndex="-1"
+                                            aria-label={showPassword ? "Hide New Password" : "Show New Password"}
                                         >
                                             {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
                                         </button>
@@ -591,8 +590,7 @@ const RegisterPage = () => {
                                             type="button"
                                             className="register-password-toggle"
                                             onClick={toggleConfirmPasswordVisibility}
-                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                            tabIndex="-1"
+                                            aria-label={showConfirmPassword ? "Hide Repeat Password" : "Show Repeat Password"}
                                         >
                                             {showConfirmPassword ? <MdVisibilityOff /> : <MdVisibility />}
                                         </button>
