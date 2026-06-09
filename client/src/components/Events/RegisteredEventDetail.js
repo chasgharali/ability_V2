@@ -114,6 +114,22 @@ export default function RegisteredEventDetail() {
     }
   };
 
+  const handleJoinQueueClick = (booth) => {
+    if (isPreview) return;
+
+    const customLink = booth.joinBoothButtonLink?.trim();
+    if (customLink) {
+      if (customLink.startsWith('http://') || customLink.startsWith('https://')) {
+        window.location.href = customLink;
+      } else {
+        navigate(customLink);
+      }
+      return;
+    }
+
+    navigate(`/booth-queue/${event.slug}/${booth._id}/entry`);
+  };
+
   if (loading) return null;
 
   return (
@@ -305,29 +321,7 @@ export default function RegisteredEventDetail() {
                                 <button
                                   className="join-queue-btn"
                                   disabled={isPreview}
-                                  onClick={() => {
-                                    if (isPreview) return;
-                                    // Employer-page booths should always enter the queue flow.
-                                    if (booth.waitingAreaMode === 'employerPage') {
-                                      navigate(`/booth-queue/${event.slug}/${booth._id}/entry`);
-                                      return;
-                                    }
-
-                                    // For non-employer-page booths, allow optional custom button link.
-                                    const customLink = booth.joinBoothButtonLink;
-                                    if (customLink) {
-                                      // Check if it's an external URL
-                                      if (customLink.startsWith('http://') || customLink.startsWith('https://')) {
-                                        window.location.href = customLink;
-                                      } else {
-                                        // Internal path
-                                        navigate(customLink);
-                                      }
-                                    } else {
-                                      // Default behavior
-                                      navigate(`/booth-queue/${event.slug}/${booth._id}/entry`);
-                                    }
-                                  }}
+                                  onClick={() => handleJoinQueueClick(booth)}
                                 >
                                   Join Queue
                                 </button>
