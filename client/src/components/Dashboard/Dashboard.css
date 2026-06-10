@@ -2063,6 +2063,19 @@ body.sidebar-open .mobile-menu-toggle:hover {
         left: 0 !important;
     }
 
+    /* Hide the menu content by default on mobile so its interactive elements do
+       not receive keyboard or screen reader focus while the menu is collapsed.
+       The toggle button sits outside .sidebar-content and stays reachable. */
+    .dashboard-sidebar .sidebar-content {
+        display: none;
+    }
+
+    /* Reveal the menu content only when the menu is open. */
+    .dashboard-sidebar.mobile-open .sidebar-content,
+    body.sidebar-open .dashboard-sidebar .sidebar-content {
+        display: block;
+    }
+
     .mobile-overlay {
         display: none;
         /* keep hidden unless sidebar is open */

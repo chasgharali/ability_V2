@@ -122,6 +122,36 @@ export default function AdminSidebar({ active = 'booths' }) {
     return () => observer.disconnect();
   }, []);
 
+  // When the mobile menu is open, keep the background page content (header, main
+  // content and skip link) out of the keyboard and screen reader focus order.
+  // `inert` removes both keyboard focus and accessibility-tree exposure while
+  // leaving the header bar visible, so there is no layout gap.
+  useEffect(() => {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+
+    const backgroundEls = [
+      document.querySelector('.dashboard-header'),
+      document.querySelector('.dashboard-main'),
+      document.querySelector('.skip-link')
+    ].filter(Boolean);
+
+    const setIsolated = (isolated) => {
+      backgroundEls.forEach((el) => {
+        if (isolated) {
+          el.setAttribute('inert', '');
+          el.setAttribute('aria-hidden', 'true');
+        } else {
+          el.removeAttribute('inert');
+          el.removeAttribute('aria-hidden');
+        }
+      });
+    };
+
+    setIsolated(mobileOpen && window.innerWidth <= 1024);
+
+    return () => setIsolated(false);
+  }, [mobileOpen]);
+
   // Load events for JobSeekers
   useEffect(() => {
     let cancelled = false;
@@ -768,7 +798,12 @@ export default function AdminSidebar({ active = 'booths' }) {
         >
           {mobileOpen ? <MdClose aria-hidden="true" /> : <MdMenu aria-hidden="true" />}
         </button>
-        {renderSidebarContent()}
+        {/* Wrapper so the menu content can be hidden (display:none) on mobile while
+            collapsed, keeping its links out of the keyboard/screen reader order.
+            The toggle button above stays outside this wrapper and remains reachable. */}
+        <div className="sidebar-content">
+          {renderSidebarContent()}
+        </div>
       </nav>
     </>
   );
