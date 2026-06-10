@@ -1163,6 +1163,7 @@ export default function BoothQueueWaiting() {
   }
 
   const isEmployerPageMode = booth?.waitingAreaMode === 'employerPage';
+  const isMobilePanelHidden = isMobile && !mobilePanelOpen;
 
   return (
     <div className={`booth-queue-waiting${isEmployerPageMode ? ' employer-mode' : ''}`}>
@@ -1205,7 +1206,8 @@ export default function BoothQueueWaiting() {
           role={isMobile && mobilePanelOpen ? 'dialog' : 'complementary'}
           aria-modal={isMobile && mobilePanelOpen ? 'true' : undefined}
           aria-label="Queue options and actions"
-          aria-hidden={isMobile && !mobilePanelOpen ? 'true' : 'false'}
+          aria-hidden={isMobilePanelHidden ? 'true' : undefined}
+          inert={isMobilePanelHidden ? '' : undefined}
           tabIndex={isMobile && mobilePanelOpen ? -1 : undefined}
         >
           <div className="mobile-panel-close-row">
@@ -1241,26 +1243,29 @@ export default function BoothQueueWaiting() {
             </div>
           </div>
 
-          <div className="queue-numbers queue-numbers-desktop" role="region" aria-label="Queue status information">
-            <div className="queue-number-card" role="status" aria-live="polite">
-              <span className="queue-label" id="total-waiting-label">Meeting Number</span>
-              <span
-                className="queue-number"
-                aria-labelledby="total-waiting-label"
-                aria-describedby="total-waiting-desc"
-              >
+          <div className="queue-numbers queue-numbers-desktop">
+            <div className="queue-number-card">
+              {/* sr-only sentence is a real DOM node so screen readers read it
+                  during linear / swipe navigation without needing focus.
+                  The visual elements below are aria-hidden to avoid duplication. */}
+              <span className="sr-only">
+                {`Meeting number ${queuePosition || 0}. ${
+                  peopleAhead === 0
+                    ? 'You are next in the queue.'
+                    : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
+                } Status: waiting in queue.`}
+              </span>
+              <span className="queue-label" aria-hidden="true">Meeting Number</span>
+              <span className="queue-number" aria-hidden="true">
                 {queuePosition || 0}
               </span>
-              <span id="total-waiting-desc" className="sr-only">
-                There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
-              </span>
-              <p className="queue-helper-text">
+              <p className="queue-helper-text" aria-hidden="true">
                 There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
               </p>
             </div>
           </div>
 
-          <div className="queue-status queue-status-desktop" role="status" aria-live="polite" aria-label="Current queue status">
+          <div className="queue-status queue-status-desktop" aria-hidden="true">
             <span className="status-dot waiting" aria-hidden="true"></span>
             <span className="status-text">Waiting in queue</span>
           </div>
@@ -1338,8 +1343,11 @@ export default function BoothQueueWaiting() {
             {mobilePanelOpen ? 'Close Queue Options' : 'Queue Options'}
           </button>
 
-          {/* Combined booth logo and queue card for mobile - always visible on mobile */}
-          <div className="mobile-queue-header" role="region" aria-label="Event and queue information">
+          {/* Combined booth logo and queue card for mobile - always visible on mobile.
+              No wrapping role/aria-label here: a labeled region around all of this
+              caused iOS VoiceOver to treat the whole block as one stop and skip the
+              event name, booth name, waiting status, and queue numbers. */}
+          <div className="mobile-queue-header">
             {/* Row 1: logo + identity */}
             <div className="mobile-identity-row">
               <div className="mobile-booth-logo" aria-hidden="true">
@@ -1356,33 +1364,35 @@ export default function BoothQueueWaiting() {
                 )}
               </div>
               <div className="mobile-event-info-compact">
+                {/* Event name as the page-level heading and booth name as a
+                    sub-heading so screen reader users can navigate to and hear
+                    both via the headings rotor. */}
                 <h1 className="mobile-event-title" id="event-title-mobile">{event?.name || 'ABILITY Job Fair - Event'}</h1>
-                <p className="mobile-booth-subtitle" id="booth-title-mobile">{booth?.name || 'Company Booth'}</p>
-                {/* Waiting status sits next to the booth name to save vertical space */}
-                <div className="queue-status queue-status-mobile" role="status" aria-live="polite" aria-label="Current queue status">
+                <h2 className="mobile-booth-subtitle" id="booth-title-mobile">{booth?.name || 'Company Booth'}</h2>
+                <div className="queue-status queue-status-mobile" aria-hidden="true">
                   <span className="status-dot waiting" aria-hidden="true"></span>
                   <span className="status-text">Waiting in queue</span>
                 </div>
               </div>
             </div>
 
-            {/* Row 2: Queue status card - horizontal */}
-            <div className="queue-numbers queue-numbers-mobile" role="region" aria-label="Queue status information">
-              <div className="queue-number-card queue-number-card-mobile" role="status" aria-live="polite">
-                <div className="mqc-label-group">
-                  <span className="queue-label" id="total-waiting-label-mobile">Queue status</span>
-                  <span id="total-waiting-desc-mobile" className="sr-only">
-                    There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you.
-                  </span>
-                </div>
-                <span
-                  className="queue-number"
-                  aria-labelledby="total-waiting-label-mobile"
-                  aria-describedby="total-waiting-desc-mobile"
-                >
-                  {queuePosition || 0}
+            {/* Row 2: Queue status card — sr-only sentence is a real DOM node
+                so VoiceOver / NVDA / JAWS read it during linear/swipe navigation
+                without needing focus. Visual elements are aria-hidden. */}
+            <div className="queue-numbers queue-numbers-mobile">
+              <div className="queue-number-card queue-number-card-mobile">
+                <span className="sr-only">
+                  {`Queue status. Your meeting number is ${queuePosition || 0}. ${
+                    peopleAhead === 0
+                      ? 'You are next in the queue.'
+                      : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
+                  }`}
                 </span>
-                <p className="queue-helper-text queue-helper-text-mobile">
+                <div className="mqc-label-group" aria-hidden="true">
+                  <span className="queue-label">Queue status</span>
+                </div>
+                <span className="queue-number" aria-hidden="true">{queuePosition || 0}</span>
+                <p className="queue-helper-text queue-helper-text-mobile" aria-hidden="true">
                   {peopleAhead === 0 ? 'You are next' : `${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead`}
                 </p>
               </div>

@@ -2293,3 +2293,94 @@
     font-size: 1rem !important;
   }
 }
+
+/* Portrait phones need the waiting header to stack and the page to scroll.
+ * This keeps event, booth, and queue status text available to sighted and
+ * VoiceOver users instead of squeezing it into clipped horizontal rows. */
+@media screen and (orientation: portrait) and (max-width: 768px) {
+  .booth-queue-waiting,
+  .booth-queue-waiting.employer-mode {
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .waiting-layout,
+  .booth-queue-waiting.employer-mode .waiting-layout {
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .waiting-main,
+  .waiting-main.employer-mode {
+    padding: 0.75rem;
+    overflow: visible;
+    min-width: 0;
+  }
+
+  .waiting-employer-pane {
+    overflow: visible;
+    min-height: auto;
+  }
+
+  .mobile-toggle-btn {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 44px;
+  }
+
+  .mobile-queue-header {
+    gap: 0.75rem !important;
+  }
+
+  .mobile-identity-row {
+    align-items: flex-start !important;
+    padding: 0.75rem !important;
+  }
+
+  .mobile-identity-row .mobile-booth-logo .booth-logo-modern {
+    height: 48px !important;
+    max-width: 92px !important;
+  }
+
+  .mobile-identity-row .mobile-booth-logo .booth-logo-modern-placeholder {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .mobile-event-info-compact {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .mobile-event-title,
+  .mobile-booth-subtitle,
+  .queue-helper-text-mobile {
+    white-space: normal !important;
+    overflow: visible !important;
+    overflow-wrap: anywhere !important;
+    text-overflow: unset !important;
+  }
+
+  .queue-number-card-mobile {
+    align-items: center !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+  }
+
+  .queue-number-card-mobile .queue-number {
+    font-size: 1.75rem !important;
+  }
+
+  .queue-helper-text-mobile {
+    text-align: right !important;
+  }
+
+  .waiting-sidebar-left[aria-hidden="true"] {
+    pointer-events: none;
+    visibility: hidden;
+  }
+}
