@@ -41,7 +41,9 @@ html.theme-high-contrast .app-footer {
     left: 0;
     right: 0;
     bottom: 0;
-    height: var(--app-footer-height, 50px);
+    /* Use min-height (not a fixed height) so content can reflow and grow
+       at narrow viewports without clipping the legal links. */
+    min-height: var(--app-footer-height, 50px);
     box-sizing: border-box;
     z-index: 1200;
     border-top: 1px solid var(--footer-border);
@@ -127,10 +129,23 @@ html.theme-high-contrast .app-footer {
 }
 
 @media (max-width: 480px) {
+    .app-footer {
+        /* Allow the footer to size to its (stacked) content at narrow widths
+           so the legal links are never clipped below the viewport. */
+        height: auto;
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+    }
+
     .app-footer-inner {
         flex-direction: column;
         align-items: center;
         text-align: center;
+        row-gap: 0.35rem;
+    }
+
+    .app-footer-copy {
+        font-size: 0.75rem;
     }
 }
 

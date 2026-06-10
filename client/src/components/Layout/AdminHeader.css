@@ -312,3 +312,43 @@
     overflow: hidden;
   }
 }
+
+/* Reflow (WCAG 1.4.10): at narrow viewports (≤480px, e.g. 320px wide) there is
+   not enough room to keep the logo, user name/role and controls on a single
+   line. Allow the header to wrap and let the name/role wrap fully instead of
+   truncating with an ellipsis, so no content is lost. */
+@media (max-width: 480px) {
+  .admin-header-content,
+  .admin-header-jobseeker .admin-header-content {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    row-gap: 0.35rem;
+  }
+
+  .admin-user-info,
+  .admin-header-jobseeker .admin-user-info {
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    min-width: 0;
+    overflow: visible !important;
+    row-gap: 0.35rem;
+  }
+
+  .admin-user-name,
+  .admin-header-jobseeker .admin-user-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    max-width: none !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    display: inline-block !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Allow the (previously forced inline/nowrap) name parts to wrap too */
+  .admin-header-jobseeker .admin-user-name * {
+    white-space: normal !important;
+    display: inline !important;
+  }
+}

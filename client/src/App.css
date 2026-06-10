@@ -6,6 +6,15 @@
     --public-page-padding-x: 2rem;
 }
 
+/* At narrow viewports the footer stacks the copyright text above the legal
+   links, so it needs more vertical space. Reserve that space here so layouts
+   that subtract --app-footer-height don't let content slide under the footer. */
+@media (max-width: 480px) {
+    :root {
+        --app-footer-height: 116px;
+    }
+}
+
 .App {
     min-height: 100vh;
     display: flex;
