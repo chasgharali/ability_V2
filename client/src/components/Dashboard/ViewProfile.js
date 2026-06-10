@@ -352,6 +352,7 @@ export default function ViewProfile() {
                     type="button"
                     className="profile-btn profile-btn-outline"
                     style={{ padding: '6px 14px', fontSize: '13px' }}
+                    aria-label={`View / Edit ${r.title || 'Untitled Resume'} Resume`}
                     onClick={() => navigate('/dashboard/resume-builder', { state: { openResumeId: r._id } })}
                   >
                     View / Edit
