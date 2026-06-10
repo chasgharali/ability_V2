@@ -127,7 +127,23 @@ const RegisterPage = () => {
         }
     };
 
+    // Syncfusion sets aria-labelledby to its own hidden <select>, which overrides
+    // any aria-label and leaves the control with no spoken purpose. Reference both
+    // our visually-hidden label and the hidden select so screen readers announce
+    // the field's purpose and the currently selected country code.
+    const applyCountryCodeAria = () => {
+        const wrapper = document.getElementById('phoneCountryCode')?.closest('.e-ddl');
+        if (wrapper) {
+            wrapper.setAttribute('aria-labelledby', 'phoneCountryCodeLabel phoneCountryCode_hidden');
+        }
+    };
+
+    const handleCountryCodeCreated = () => {
+        applyCountryCodeAria();
+    };
+
     const handleCountryCodeChange = (args) => {
+        applyCountryCodeAria();
         setFormData(prev => ({
             ...prev,
             phoneCountryCode: args.value
@@ -466,21 +482,23 @@ const RegisterPage = () => {
                                     </label>
                                     <div className="register-phone-container">
                                         <div className="register-phone-country-code-wrapper">
+                                            <span id="phoneCountryCodeLabel" className="register-sr-only">Phone country code</span>
                                             <div className="register-input-container register-country-code-container">
                                                 <DropDownListComponent
                                                     ref={countryCodeDropdownRef}
                                                     id="phoneCountryCode"
-                                                    key={`country-code-${formData.phoneCountryCode}`}
                                                     dataSource={countryCodes}
                                                     fields={{ text: 'display', value: 'dialCode' }}
                                                     value={formData.phoneCountryCode}
                                                     change={handleCountryCodeChange}
+                                                    created={handleCountryCodeCreated}
                                                     placeholder="Code"
                                                     width="100%"
                                                     popupHeight="300px"
                                                     allowFiltering={true}
-                                                    filterBarPlaceholder="Search..."
+                                                    filterBarPlaceholder="Search country code"
                                                     cssClass="register-country-code-dropdown"
+                                                    htmlAttributes={{ 'aria-label': 'Phone country code' }}
                                                     itemTemplate={(data) => {
                                                         if (!data || typeof data !== 'object') return <span>Code</span>;
                                                         return (
@@ -490,9 +508,12 @@ const RegisterPage = () => {
                                                             </div>
                                                         );
                                                     }}
-                                                    valueTemplate={() => {
-                                                        // Always use formData.phoneCountryCode to ensure it updates
-                                                        const selectedCountry = countryCodes.find(c => c.dialCode === formData.phoneCountryCode);
+                                                    valueTemplate={(data) => {
+                                                        // Prefer the item Syncfusion passes for the current value;
+                                                        // fall back to formData so the display stays in sync.
+                                                        const selectedCountry = (data && data.dialCode)
+                                                            ? data
+                                                            : countryCodes.find(c => c.dialCode === formData.phoneCountryCode);
                                                         if (selectedCountry) {
                                                             return (
                                                                 <div className="register-country-code-value">
