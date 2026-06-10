@@ -235,20 +235,20 @@ export default function ViewProfile() {
                 <div className="detail-header">
                   <h3 className="detail-title">Professional Summary</h3>
                 </div>
-                <div className="detail-content">
+                <dl className="detail-content">
                   {headline && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Professional Headline</h4>
-                      <div className="detail-value">{headline}</div>
+                      <dt className="detail-label">Professional Headline</dt>
+                      <dd className="detail-value">{headline}</dd>
                     </div>
                   )}
                   {keywords && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Keywords & Skills</h4>
-                      <div className="detail-value">{keywords}</div>
+                      <dt className="detail-label">Keywords & Skills</dt>
+                      <dd className="detail-value">{keywords}</dd>
                     </div>
                   )}
-                </div>
+                </dl>
               </div>
             )}
 
@@ -257,26 +257,26 @@ export default function ViewProfile() {
                 <div className="detail-header">
                   <h3 className="detail-title">Experience & Employment</h3>
                 </div>
-                <div className="detail-content">
+                <dl className="detail-content">
                   {primaryExperienceNames.length > 0 && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Primary Job Experience</h4>
-                      <div className="detail-value"><Chips items={primaryExperienceNames} /></div>
+                      <dt className="detail-label">Primary Job Experience</dt>
+                      <dd className="detail-value"><Chips items={primaryExperienceNames} /></dd>
                     </div>
                   )}
                   {employmentTypeNames.length > 0 && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Employment Types</h4>
-                      <div className="detail-value"><Chips items={employmentTypeNames} /></div>
+                      <dt className="detail-label">Employment Types</dt>
+                      <dd className="detail-value"><Chips items={employmentTypeNames} /></dd>
                     </div>
                   )}
                   {workLevel && mapValue(workLevel, EXP_MAP) !== workLevel && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Experience Level</h4>
-                      <div className="detail-value">{mapValue(workLevel, EXP_MAP)}</div>
+                      <dt className="detail-label">Experience Level</dt>
+                      <dd className="detail-value">{mapValue(workLevel, EXP_MAP)}</dd>
                     </div>
                   )}
-                </div>
+                </dl>
               </div>
             )}
 
@@ -285,14 +285,14 @@ export default function ViewProfile() {
                 <div className="detail-header">
                   <h3 className="detail-title">Education & Qualifications</h3>
                 </div>
-                <div className="detail-content">
+                <dl className="detail-content">
                   {educationLevel && mapValue(educationLevel, EDU_MAP) !== educationLevel && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Highest Education Level</h4>
-                      <div className="detail-value">{mapValue(educationLevel, EDU_MAP)}</div>
+                      <dt className="detail-label">Highest Education Level</dt>
+                      <dd className="detail-value">{mapValue(educationLevel, EDU_MAP)}</dd>
                     </div>
                   )}
-                </div>
+                </dl>
               </div>
             )}
 
@@ -301,20 +301,20 @@ export default function ViewProfile() {
                 <div className="detail-header">
                   <h3 className="detail-title">Additional Information</h3>
                 </div>
-                <div className="detail-content">
+                <dl className="detail-content">
                   {languageNames.length > 0 && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Languages</h4>
-                      <div className="detail-value"><Chips items={languageNames} /></div>
+                      <dt className="detail-label">Languages</dt>
+                      <dd className="detail-value"><Chips items={languageNames} /></dd>
                     </div>
                   )}
                   {veteranStatus && mapValue(veteranStatus, VET_MAP) !== veteranStatus && (
                     <div className="detail-item">
-                      <h4 className="detail-label">Veteran/Military Status</h4>
-                      <div className="detail-value">{mapValue(veteranStatus, VET_MAP)}</div>
+                      <dt className="detail-label">Veteran/Military Status</dt>
+                      <dd className="detail-value">{mapValue(veteranStatus, VET_MAP)}</dd>
                     </div>
                   )}
-                </div>
+                </dl>
               </div>
             )}
 

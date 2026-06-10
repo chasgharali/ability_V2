@@ -270,6 +270,7 @@
 
 .detail-content {
     padding: 1.25rem;
+    margin: 0;
 }
 
 .profile-view .detail-item {
@@ -298,6 +299,7 @@
     font-size: 0.95rem;
     font-weight: 500;
     line-height: 1.5;
+    margin: 0;
 }
 
 .empty-state {
