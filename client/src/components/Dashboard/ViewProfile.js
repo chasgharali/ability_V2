@@ -166,7 +166,6 @@ export default function ViewProfile() {
                   <span className="profile-avatar-initials">{getNameInitials(name)}</span>
                 )}
               </div>
-              <div className="profile-status-indicator" aria-label="Profile active"></div>
             </div>
             
             <div className="profile-identity">
