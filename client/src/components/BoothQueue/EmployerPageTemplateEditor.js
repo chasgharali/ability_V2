@@ -123,7 +123,9 @@ export default function EmployerPageTemplateEditor() {
       prev.map((s) => {
         if (s.key !== sectionKey) return s;
         // Handle nested gallery images: "images.0" etc.
-        if (fieldName.startsWith('images.')) {
+        // Note: per-image fit fields (e.g. "images.0__fit") are stored as flat
+        // sibling keys on contentData, so they must skip the image-array branch.
+        if (fieldName.startsWith('images.') && !fieldName.includes('__fit')) {
           const idx = parseInt(fieldName.split('.')[1], 10);
           const images = Array.isArray(s.contentData?.images)
             ? [...s.contentData.images]

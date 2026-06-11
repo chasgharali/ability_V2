@@ -39,6 +39,10 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  /* Query container so the topbar can respond to the editor column width
+     (which is narrower than the viewport because of the sidebar). */
+  container-type: inline-size;
+  container-name: elr-editor;
 }
 
 /* ── Unified topbar ─────────────────────────────────────────── */
@@ -47,12 +51,15 @@
   align-items: center;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 0 20px;
-  height: 52px;
+  padding: 6px 20px;
+  min-height: 52px;
   flex-shrink: 0;
-  gap: 12px;
+  gap: 12px 16px;
   position: relative;
   z-index: 2;
+  /* Wrap instead of clipping when the row can't fit; combined with the
+     container query below this guarantees the action buttons stay visible. */
+  flex-wrap: wrap;
 }
 
 /* Left zone */
@@ -376,7 +383,31 @@
 /* Mid-size screens: the title + 4 layout tabs + toggle/back/save row no longer
    fits on a single line, so wrap the layout tabs onto their own full-width row
    to prevent them (and the right-side buttons) from being cut off. */
-@media (max-width: 1200px) {
+/* Keep the action buttons from ever being clipped at the right edge. */
+.elr-topbar-right { margin-left: auto; }
+
+/* When the editor column (not the viewport) gets too narrow, drop the layout
+   tabs onto their own row so the Back / Save buttons stay fully visible. */
+@container elr-editor (max-width: 1280px) {
+  .elr-topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .elr-layout-tabs {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .elr-topbar-left  { flex: 1 1 auto; }
+  .elr-topbar-right { flex: 0 0 auto; margin-left: auto; }
+  .elr-topbar-divider { display: none; }
+}
+
+/* Fallback for browsers without container query support. */
+@media (max-width: 1400px) {
   .elr-topbar {
     height: auto;
     flex-wrap: wrap;

@@ -393,6 +393,18 @@
   object-fit: contain;
   filter: brightness(0) saturate(100%);
 }
+.elr-social-icon-mask {
+  width: 16px;
+  height: 16px;
+  display: block;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
 .elr-social-icon-label {
   font-family: monospace;
   font-size: 10px;
@@ -661,12 +673,13 @@
   justify-content: space-between;
   padding: 1rem 2.5rem;
   background: #1c2533;
+  color: #aab5cc;
 }
 .elr-d-logo-zone { width: 95px; height: 40px; }
 .elr-d-nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
 .elr-d-nav a {
   text-decoration: none;
-  color: #aab5cc;
+  color: inherit;
   font-family: monospace;
   font-size: 11px;
   letter-spacing: 0.07em;

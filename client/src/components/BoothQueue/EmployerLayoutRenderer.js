@@ -3,9 +3,9 @@ import {
   FaFacebookF,
   FaInstagram,
   FaLinkedinIn,
-  FaTwitter,
   FaYoutube,
 } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import './EmployerLayoutRenderer.css';
 
 /* ================================================================
@@ -494,6 +494,18 @@ function getSectionStyle(data) {
   return s;
 }
 
+/**
+ * Style for the menu/header (logo + nav). Kept independent of the hero/about
+ * section colors so the navigation bar can be themed separately. When no
+ * menu-specific colors are set the header keeps its default CSS theme.
+ */
+function getMenuStyle(data) {
+  const s = {};
+  if (data?.menuBgColor) s.background = data.menuBgColor;
+  if (data?.menuTextColor) s.color = data.menuTextColor;
+  return s;
+}
+
 function getImageFitMode(sectionData, fieldName, fallback = 'cover') {
   const raw = sectionData?.[`${fieldName}__fit`];
   if (IMAGE_FIT_PRESETS.some((preset) => preset.value === raw)) {
@@ -605,6 +617,86 @@ function ColorBar({ sectionKey, data, onUpdateField }) {
             onUpdateField(sectionKey, 'textColor', '');
           }}
           title="Reset to default colors"
+        >
+          ↺
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Color control bar for the menu/header bar (independent of the hero colors) */
+function MenuColorBar({ data, onUpdateField }) {
+  const menuBgColor = data?.menuBgColor || '';
+  const menuTextColor = data?.menuTextColor || '';
+  const hasCustom = menuBgColor || menuTextColor;
+  return (
+    <div className="elr-color-bar" role="toolbar" aria-label="Color settings for menu bar">
+      <span className="elr-color-bar-label">Menu Background</span>
+      {BG_PRESETS.map((p) => (
+        <button
+          key={`menu-bg-${p.value}`}
+          type="button"
+          className={`elr-color-swatch${menuBgColor === p.value ? ' elr-swatch-active' : ''}`}
+          style={{ background: p.value }}
+          title={p.label}
+          onClick={() => onUpdateField('about', 'menuBgColor', menuBgColor === p.value ? '' : p.value)}
+          aria-label={`Menu background: ${p.label}`}
+          aria-pressed={menuBgColor === p.value}
+        />
+      ))}
+      <label className="elr-color-custom-wrap" title="Custom menu background color">
+        <span
+          className="elr-color-swatch elr-color-custom-swatch"
+          style={{ background: menuBgColor && !BG_PRESETS.find((p) => p.value === menuBgColor) ? menuBgColor : 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
+          aria-hidden="true"
+        />
+        <input
+          type="color"
+          value={menuBgColor || '#ffffff'}
+          onChange={(e) => onUpdateField('about', 'menuBgColor', e.target.value)}
+          aria-label="Custom menu background color"
+        />
+      </label>
+
+      <span className="elr-color-bar-sep" aria-hidden="true" />
+
+      <span className="elr-color-bar-label">Menu Text</span>
+      {TEXT_PRESETS.map((p) => (
+        <button
+          key={`menu-text-${p.value}`}
+          type="button"
+          className={`elr-color-swatch${menuTextColor === p.value ? ' elr-swatch-active' : ''}`}
+          style={{ background: p.value }}
+          title={p.label}
+          onClick={() => onUpdateField('about', 'menuTextColor', menuTextColor === p.value ? '' : p.value)}
+          aria-label={`Menu text: ${p.label}`}
+          aria-pressed={menuTextColor === p.value}
+        />
+      ))}
+      <label className="elr-color-custom-wrap" title="Custom menu text color">
+        <span
+          className="elr-color-swatch elr-color-custom-swatch"
+          style={{ background: menuTextColor && !TEXT_PRESETS.find((p) => p.value === menuTextColor) ? menuTextColor : 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
+          aria-hidden="true"
+        />
+        <input
+          type="color"
+          value={menuTextColor || '#1a1a1a'}
+          onChange={(e) => onUpdateField('about', 'menuTextColor', e.target.value)}
+          aria-label="Custom menu text color"
+        />
+      </label>
+
+      {hasCustom && (
+        <button
+          type="button"
+          className="elr-color-reset"
+          onClick={() => {
+            onUpdateField('about', 'menuBgColor', '');
+            onUpdateField('about', 'menuTextColor', '');
+          }}
+          title="Reset menu colors"
         >
           ↺
         </button>
@@ -748,7 +840,7 @@ function BenefitsList({ sectionKey, benefitsList, isEditMode, onUpdateField }) {
 }
 
 /** Social footer links */
-function SocialFooter({ sectionKey, links, bgColor, textColor, isEditMode, onUpdateField }) {
+function SocialFooter({ sectionKey, links, bgColor, textColor, iconColor, iconBgColor, isEditMode, onUpdateField }) {
   const PLATFORMS = ['FB', 'IN', 'IG', 'TH', 'YT', 'TT', 'BS', 'X'];
   const platformLabels = {
     FB: 'Facebook',
@@ -775,16 +867,22 @@ function SocialFooter({ sectionKey, links, bgColor, textColor, isEditMode, onUpd
     IN: FaLinkedinIn,
     IG: FaInstagram,
     YT: FaYoutube,
-    X: FaTwitter,
+    X: FaXTwitter,
   };
+  const resolvedIconColor = iconColor || '#111827';
+  const resolvedIconBgColor = iconBgColor || textColor || '#e8e6e1';
 
   const renderPlatformIcon = (platform) => {
+    // Image-based icons are rendered via CSS mask so the icon color applies.
     if (platformImageUrls[platform]) {
       return (
-        <img
-          src={platformImageUrls[platform]}
-          alt=""
-          className="elr-social-icon-img"
+        <span
+          className="elr-social-icon-mask"
+          style={{
+            backgroundColor: resolvedIconColor,
+            WebkitMaskImage: `url(${platformImageUrls[platform]})`,
+            maskImage: `url(${platformImageUrls[platform]})`,
+          }}
           aria-hidden="true"
         />
       );
@@ -794,9 +892,9 @@ function SocialFooter({ sectionKey, links, bgColor, textColor, isEditMode, onUpd
     return <Icon className="elr-social-icon-svg" aria-hidden="true" focusable="false" />;
   };
   const socialIconStyle = {
-    background: textColor || '#e8e6e1',
-    color: '#111827',
-    borderColor: textColor || '#ccc',
+    background: resolvedIconBgColor,
+    color: resolvedIconColor,
+    borderColor: iconBgColor || textColor || '#ccc',
   };
 
   if (isEditMode) {
@@ -808,6 +906,57 @@ function SocialFooter({ sectionKey, links, bgColor, textColor, isEditMode, onUpd
               {renderPlatformIcon(l.platform)}
             </a>
           ))}
+        </div>
+        <div className="elr-social-icon-color" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, justifyContent: 'center' }}>
+          <span style={{ fontSize: 12, color: '#555' }}>Icon color</span>
+          <label className="elr-color-custom-wrap" title="Custom icon color" style={{ display: 'inline-flex' }}>
+            <span
+              className="elr-color-swatch elr-color-custom-swatch"
+              style={{ background: resolvedIconColor }}
+              aria-hidden="true"
+            />
+            <input
+              type="color"
+              value={resolvedIconColor}
+              onChange={(e) => onUpdateField && onUpdateField(sectionKey, 'iconColor', e.target.value)}
+              aria-label="Custom icon color"
+            />
+          </label>
+          {iconColor && (
+            <button
+              type="button"
+              className="elr-color-reset"
+              onClick={() => onUpdateField && onUpdateField(sectionKey, 'iconColor', '')}
+              title="Reset icon color"
+            >
+              ↺
+            </button>
+          )}
+          <span className="elr-color-bar-sep" aria-hidden="true" />
+          <span style={{ fontSize: 12, color: '#555' }}>Button color</span>
+          <label className="elr-color-custom-wrap" title="Custom button background color" style={{ display: 'inline-flex' }}>
+            <span
+              className="elr-color-swatch elr-color-custom-swatch"
+              style={{ background: resolvedIconBgColor }}
+              aria-hidden="true"
+            />
+            <input
+              type="color"
+              value={resolvedIconBgColor}
+              onChange={(e) => onUpdateField && onUpdateField(sectionKey, 'iconBgColor', e.target.value)}
+              aria-label="Custom button background color"
+            />
+          </label>
+          {iconBgColor && (
+            <button
+              type="button"
+              className="elr-color-reset"
+              onClick={() => onUpdateField && onUpdateField(sectionKey, 'iconBgColor', '')}
+              title="Reset button color"
+            >
+              ↺
+            </button>
+          )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {safeLinks.map((l, idx) => (
@@ -855,15 +1004,16 @@ function CtaButtons({ sectionKey, contentData, isEditMode, onUpdateField, classN
   } = contentData;
   const resolvedPrimaryBtnText = hasText(primaryBtnText) ? primaryBtnText.trim() : 'Join Our Talent Community';
   const resolvedSecondaryBtnText = hasText(secondaryBtnText) ? secondaryBtnText.trim() : 'View Our Open Positions';
-  const accentColor = contentData?.textColor || 'currentColor';
-  const primaryBtnStyle = {
-    background: accentColor,
-    borderColor: accentColor,
-  };
-  const outlineBtnStyle = {
-    color: accentColor,
-    borderColor: accentColor,
-  };
+  // Only override the button colors when a custom text/accent color is set.
+  // Falling back to `currentColor` made the primary button resolve to its own
+  // white text color (invisible on light backgrounds), so default to the CSS.
+  const accentColor = contentData?.textColor || '';
+  const primaryBtnStyle = accentColor
+    ? { background: accentColor, borderColor: accentColor }
+    : undefined;
+  const outlineBtnStyle = accentColor
+    ? { color: accentColor, borderColor: accentColor }
+    : undefined;
 
   if (isEditMode) {
     return (
@@ -1079,7 +1229,8 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   return (
     <>
       {/* Header */}
-      <header className="elr-a-header elr-bg-white" style={getSectionStyle(about)} role="banner">
+      {isEditMode && <MenuColorBar data={about} onUpdateField={onUpdateField} />}
+      <header className="elr-a-header elr-bg-white" style={getMenuStyle(about)} role="banner">
         <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Company Logo · 240 × 100" className="elr-a-logo-zone" fitFallback="contain" {...imgProps} />
         <nav className="elr-a-nav" aria-label="Page sections">
           {renderNavLinks('a', navItems, 'elr-nav-link')}
@@ -1097,7 +1248,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
 
       {/* Footer / Social */}
       <SecWrap sectionKey="social" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} className="elr-sec-sm elr-bg-white" style={{ textAlign: 'center', borderTop: '1px solid #e8e5e0' }} as="footer" role="contentinfo">
-        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} iconColor={social.iconColor} iconBgColor={social.iconBgColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         <TXT
           sectionKey="social"
           fieldName="copyrightText"
@@ -1234,7 +1385,8 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   return (
     <>
       {/* Header: logo left, nav right */}
-      <header className="elr-b-header elr-bg-white" style={getSectionStyle(about)} role="banner">
+      {isEditMode && <MenuColorBar data={about} onUpdateField={onUpdateField} />}
+      <header className="elr-b-header elr-bg-white" style={getMenuStyle(about)} role="banner">
         <div className="elr-b-logo-col">
           <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Logo · 150 × 80" className="elr-b-logo-zone" fitFallback="contain" {...imgProps} />
         </div>
@@ -1255,7 +1407,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       </main>
 
       <SecWrap sectionKey="social" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} className="elr-sec-sm elr-bg-white" style={{ textAlign: 'center', borderTop: '1px solid #e8e5e0' }} as="footer" role="contentinfo">
-        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} iconColor={social.iconColor} iconBgColor={social.iconBgColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         <TXT
           sectionKey="social"
           fieldName="copyrightText"
@@ -1407,7 +1559,8 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   return (
     <>
       {/* Header: logo + nav inline */}
-      <header className="elr-c-header elr-bg-white" style={getSectionStyle(about)} role="banner">
+      {isEditMode && <MenuColorBar data={about} onUpdateField={onUpdateField} />}
+      <header className="elr-c-header elr-bg-white" style={getMenuStyle(about)} role="banner">
         <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Logo · 110 × 48" className="elr-c-logo-zone" fitFallback="contain" {...imgProps} />
         <nav className="elr-c-nav" aria-label="Page sections">
           {renderNavLinks('c', navItems, 'elr-nav-link')}
@@ -1424,7 +1577,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       </main>
 
       <SecWrap sectionKey="social" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} className="elr-sec-sm elr-bg-white" style={{ textAlign: 'center', borderTop: '1px solid #e8e5e0' }} as="footer" role="contentinfo">
-        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} iconColor={social.iconColor} iconBgColor={social.iconBgColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         <TXT
           sectionKey="social"
           fieldName="copyrightText"
@@ -1561,7 +1714,8 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
   return (
     <>
       {/* Dark header */}
-      <header className="elr-d-header" style={getSectionStyle(about)} role="banner">
+      {isEditMode && <MenuColorBar data={about} onUpdateField={onUpdateField} />}
+      <header className="elr-d-header" style={getMenuStyle(about)} role="banner">
         <ImgZone sectionKey="about" fieldName="logoImageUrl" url={about.logoImageUrl} alt={about.logoImageAlt || about.companyName || 'Company logo'} altValue={about.logoImageAlt} label="Logo · 95 × 40" className="elr-d-logo-zone" style={{ background: '#2d3a50', borderColor: '#445' }} fitFallback="contain" {...imgProps} />
         <nav className="elr-d-nav" aria-label="Page sections">
           {renderNavLinks('d', navItems)}
@@ -1578,7 +1732,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       </main>
 
       <SecWrap sectionKey="social" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} className="elr-sec-sm elr-bg-white" style={{ textAlign: 'center', borderTop: '1px solid #e8e5e0' }} as="footer" role="contentinfo">
-        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+        <SocialFooter sectionKey="social" links={social.links} bgColor={social.bgColor} textColor={social.textColor} iconColor={social.iconColor} iconBgColor={social.iconBgColor} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         <TXT
           sectionKey="social"
           fieldName="copyrightText"
