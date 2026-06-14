@@ -257,55 +257,20 @@ export default function JobSeekerManagement() {
       }
     };
     
-    // Apply filter icon styling
-    const applyFilterIcon = () => {
-      const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
-      filterIcons.forEach(icon => {
-        icon.style.backgroundImage = filterIconUrl;
-        icon.style.display = 'inline-block';
-        icon.style.visibility = 'visible';
-      });
-    };
-    
-    // Attach event listener to grid container
+    // The filter-icon image is styled entirely via CSS (--filter-icon-url), so no
+    // per-mutation DOM observer is needed. We only intercept clicks on the grid
+    // element to open the column menu. Re-runs on data change so the handler is
+    // re-attached if the grid remounts (e.g. list/form mode toggle).
     const gridElement = grid.element;
     if (gridElement) {
       gridElement.addEventListener('click', handleFilterIconClick, true);
     }
-    
-    // Apply filter icon styling
-    applyFilterIcon();
-    
-    // Watch for new filter icons being added - ONLY observe the grid element, not entire body
-    // This prevents performance issues when typing in search field
-    let observer = null;
-    let debounceTimer = null;
-    const debouncedApplyFilterIcon = () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(applyFilterIcon, 100);
-    };
-    
-    if (gridElement) {
-      observer = new MutationObserver(debouncedApplyFilterIcon);
-      observer.observe(gridElement, { 
-        childList: true, 
-        subtree: true 
-      });
-    }
-    
-    // Also apply after delays to catch grid render
-    const timeoutId1 = setTimeout(applyFilterIcon, 500);
-    const timeoutId2 = setTimeout(applyFilterIcon, 1000);
     
     return () => {
       document.documentElement.style.removeProperty('--filter-icon-url');
       if (gridElement) {
         gridElement.removeEventListener('click', handleFilterIconClick, true);
       }
-      if (observer) observer.disconnect();
-      if (debounceTimer) clearTimeout(debounceTimer);
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
     };
   }, [jobSeekers]);
 

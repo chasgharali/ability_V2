@@ -83,44 +83,19 @@ export default function EventManagement() {
             }
         };
         
-        // Apply filter icon styling
-        const applyFilterIcon = () => {
-            const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
-            filterIcons.forEach(icon => {
-                icon.style.backgroundImage = filterIconUrl;
-                icon.style.display = 'inline-block';
-                icon.style.visibility = 'visible';
-            });
-        };
-        
-        // Attach event listener to grid container
+        // The filter-icon image is styled entirely via CSS (--filter-icon-url), so no
+        // per-mutation DOM observer is needed. We only intercept clicks on the grid
+        // element to open the column menu. Runs once on mount.
         const gridElement = grid.element;
         if (gridElement) {
             gridElement.addEventListener('click', handleFilterIconClick, true);
         }
-        
-        // Apply filter icon styling
-        applyFilterIcon();
-        
-        // Watch for new filter icons being added
-        const observer = new MutationObserver(applyFilterIcon);
-        observer.observe(document.body, { 
-            childList: true, 
-            subtree: true 
-        });
-        
-        // Also apply after delays to catch grid render
-        const timeoutId1 = setTimeout(applyFilterIcon, 500);
-        const timeoutId2 = setTimeout(applyFilterIcon, 1000);
         
         return () => {
             document.documentElement.style.removeProperty('--filter-icon-url');
             if (gridElement) {
                 gridElement.removeEventListener('click', handleFilterIconClick, true);
             }
-            observer.disconnect();
-            clearTimeout(timeoutId1);
-            clearTimeout(timeoutId2);
         };
     }, []);
 
@@ -578,12 +553,21 @@ export default function EventManagement() {
         }
     }, []);
 
-    // Load events on mount and when filters change
-    useEffect(() => { 
-        if (!loading) { 
-            loadEvents(); 
-        } 
+    // Load events on mount and when filters change.
+    // Debounce so rapid Search/Clear collapse into a single request. Direct
+    // loadEvents() calls (delete, save, etc.) remain immediate.
+    useEffect(() => {
+        if (loading) return;
+        const t = setTimeout(() => { loadEvents(); }, 250);
+        return () => clearTimeout(t);
     }, [loading, loadEvents]);
+
+    // Memoize the current page slice so the grid dataSource keeps a stable reference
+    // across unrelated re-renders (selection, hover) and only recomputes on data/page change.
+    const paginatedEvents = useMemo(
+        () => events.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [events, currentPage, pageSize]
+    );
 
     // Syncfusion Grid does not automatically pick up dataSource prop changes —
     // an explicit refresh() is required after every data update.
@@ -591,7 +575,7 @@ export default function EventManagement() {
         if (gridRef.current && typeof gridRef.current.refresh === 'function') {
             gridRef.current.refresh();
         }
-    }, [events, currentPage, pageSize]);
+    }, [paginatedEvents]);
 
     // Track selection changes from grid
     useEffect(() => {
@@ -995,12 +979,12 @@ export default function EventManagement() {
                                                     <input
                                                         type="checkbox"
                                                         id="select-all-events"
-                                                        checked={selectedEvents.length > 0 && selectedEvents.length === events.slice((currentPage - 1) * pageSize, currentPage * pageSize).length}
+                                                        checked={selectedEvents.length > 0 && selectedEvents.length === paginatedEvents.length}
                                                         onChange={(e) => {
                                                             if (e.target.checked) {
                                                                 // Select all rows on current page
                                                                 if (gridRef.current) {
-                                                                    const pageData = events.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+                                                                    const pageData = paginatedEvents;
                                                                     gridRef.current.selectRows(Array.from({ length: pageData.length }, (_, i) => i));
                                                                     // Manually update state to ensure checkbox reflects selection immediately
                                                                     setTimeout(() => {
@@ -1132,7 +1116,7 @@ export default function EventManagement() {
                                 )}
                                 <GridComponent
                                     ref={gridRef}
-                                    dataSource={events.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+                                    dataSource={paginatedEvents}
                                     allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}

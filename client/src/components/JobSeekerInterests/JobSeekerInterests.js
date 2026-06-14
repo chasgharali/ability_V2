@@ -82,44 +82,19 @@ const JobSeekerInterests = () => {
             }
         };
         
-        // Apply filter icon styling
-        const applyFilterIcon = () => {
-            const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
-            filterIcons.forEach(icon => {
-                icon.style.backgroundImage = filterIconUrl;
-                icon.style.display = 'inline-block';
-                icon.style.visibility = 'visible';
-            });
-        };
-        
-        // Attach event listener to grid container
+        // The filter-icon image is styled entirely via CSS (--filter-icon-url), so no
+        // per-mutation DOM observer is needed. We only intercept clicks on the grid
+        // element to open the column menu. Runs once on mount.
         const gridElement = grid.element;
         if (gridElement) {
             gridElement.addEventListener('click', handleFilterIconClick, true);
         }
-        
-        // Apply filter icon styling
-        applyFilterIcon();
-        
-        // Watch for new filter icons being added
-        const observer = new MutationObserver(applyFilterIcon);
-        observer.observe(document.body, { 
-            childList: true, 
-            subtree: true 
-        });
-        
-        // Also apply after delays to catch grid render
-        const timeoutId1 = setTimeout(applyFilterIcon, 500);
-        const timeoutId2 = setTimeout(applyFilterIcon, 1000);
         
         return () => {
             document.documentElement.style.removeProperty('--filter-icon-url');
             if (gridElement) {
                 gridElement.removeEventListener('click', handleFilterIconClick, true);
             }
-            observer.disconnect();
-            clearTimeout(timeoutId1);
-            clearTimeout(timeoutId2);
         };
     }, []);
 
@@ -354,6 +329,9 @@ const JobSeekerInterests = () => {
 
         const fetchAllData = async () => {
             fetchInProgress.current = true;
+            // Track this specific request so stale/overlapping responses are discarded
+            // (covers the pendingFetchRequestedRef re-invoke path that bypasses cleanup).
+            const gen = ++loadRequestGenRef.current;
             
             try {
                 setLoadingData(true);
@@ -393,7 +371,7 @@ const JobSeekerInterests = () => {
                 console.log('Loading interests with filters:', filtersForAPI);
                 const response = await jobSeekerInterestsAPI.getInterests(filtersForAPI);
 
-                if (cancelled) return;
+                if (cancelled || gen !== loadRequestGenRef.current) return;
 
                 const interests = response.interests || [];
                 setInterests(interests);
@@ -442,10 +420,13 @@ const JobSeekerInterests = () => {
             }
         };
 
-        fetchAllData();
+        // Debounce the fetch so rapid Search/Clear (and filter changes) collapse
+        // into a single request instead of firing one per keystroke/click.
+        const debounceTimer = setTimeout(fetchAllData, 250);
 
         return () => {
             cancelled = true;
+            clearTimeout(debounceTimer);
         };
     }, [user, filters, searchTriggerNonce]);
 
@@ -657,6 +638,9 @@ const JobSeekerInterests = () => {
             searchInputRef.current.value = '';
         }
         showToast('Search cleared', 'Success', 1500);
+        // Bump the nonce like handleSearch so the fetch effect always re-runs, even
+        // when search was already empty (otherwise clearing could be a stale no-op).
+        setSearchTriggerNonce((prev) => prev + 1);
         setFilters(prev => ({
             ...prev,
             search: '',

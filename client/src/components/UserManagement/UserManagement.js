@@ -625,7 +625,12 @@ export default function UserManagement() {
     }
   };
 
-  useEffect(() => { loadUsers(); }, [loadUsers]);
+  // Debounce the fetch so rapid Search/Clear/filter changes collapse into a single
+  // request. Direct loadUsers() calls (delete, save, etc.) remain immediate.
+  useEffect(() => {
+    const t = setTimeout(() => { loadUsers(); }, 250);
+    return () => clearTimeout(t);
+  }, [loadUsers]);
   useEffect(() => {
     if (mode === 'list') return;
     if (isSuperAdmin && !editingId) {
@@ -723,44 +728,20 @@ export default function UserManagement() {
       }
     };
     
-    // Apply filter icon styling
-    const applyFilterIcon = () => {
-      const filterIcons = document.querySelectorAll('.e-grid .e-filtericon');
-      filterIcons.forEach(icon => {
-        icon.style.backgroundImage = filterIconUrl;
-        icon.style.display = 'inline-block';
-        icon.style.visibility = 'visible';
-      });
-    };
-    
-    // Attach event listener to grid container
+    // The filter-icon image is styled entirely via CSS (--filter-icon-url), so no
+    // per-mutation DOM observer is needed. We only intercept clicks on the grid
+    // element to open the column menu. Re-runs on data change so the handler is
+    // re-attached if the grid remounts (e.g. list/form mode toggle).
     const gridElement = grid.element;
     if (gridElement) {
       gridElement.addEventListener('click', handleFilterIconClick, true);
     }
-    
-    // Apply filter icon styling
-    applyFilterIcon();
-    
-    // Watch for new filter icons being added
-    const observer = new MutationObserver(applyFilterIcon);
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true 
-    });
-    
-    // Also apply after delays to catch grid render
-    const timeoutId1 = setTimeout(applyFilterIcon, 500);
-    const timeoutId2 = setTimeout(applyFilterIcon, 1000);
     
     return () => {
       document.documentElement.style.removeProperty('--filter-icon-url');
       if (gridElement) {
         gridElement.removeEventListener('click', handleFilterIconClick, true);
       }
-      observer.disconnect();
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
     };
   }, [users]);
 
