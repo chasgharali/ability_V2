@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import '../Dashboard/Dashboard.css';
 import './RegistrationWizard.css';
 import { getEventBySlug, registerForEvent } from '../../services/events';
@@ -500,6 +501,7 @@ export default function RegistrationWizard() {
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="main content">
           <div className="dashboard-content">
             <h1 ref={pageHeadingRef} style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{event?.name || 'Event Registration'}</h1>
+            <PageInstructionBanner screen="event-registration" />
             {isAlreadyRegistered ? (
               <div className="alert-box" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>
                 <p><strong>You are already registered for this event.</strong> You can view your registration details in "My Current Registrations".</p>

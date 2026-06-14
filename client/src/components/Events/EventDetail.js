@@ -6,18 +6,16 @@ import AdminSidebar from '../Layout/AdminSidebar';
 import '../Dashboard/Dashboard.css';
 import { getEvent, getEventBooths, listRegisteredEvents } from '../../services/events';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRoleMessages } from '../../contexts/RoleMessagesContext';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import { announceToScreenReader } from '../Accessibility/FocusManager';
 
 export default function EventDetail() {
   const { slug } = useParams();
   const { user, loading } = useAuth();
-  const { getMessage } = useRoleMessages();
   const [event, setEvent] = useState(null);
   const [booths, setBooths] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [serverIsRegistered, setServerIsRegistered] = useState(false);
-  const registrationInstruction = getMessage('event-registration', 'registration-instruction') || '';
   const navigate = useNavigate();
   const organization = event?.organization || (event?.organizationId && typeof event.organizationId === 'object'
     ? {
@@ -101,6 +99,13 @@ export default function EventDetail() {
         <AdminSidebar active="events" />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label={event?.name ? `${event.name} - main content` : 'Event details - main content'}>
           <div className="dashboard-content">
+            {/* Page instruction banner — shown at the top, consistent with other pages */}
+            {!isRegistered && (
+              <PageInstructionBanner
+                screen="event-registration"
+                messageKey="registration-instruction"
+              />
+            )}
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}
             {!fetching && event && (
@@ -108,12 +113,6 @@ export default function EventDetail() {
                 {/* Title */}
                 <h1 style={{ textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 }}>{event.name}</h1>
 
-                {/* Banner note */}
-                {!isRegistered && registrationInstruction && (
-                  <div className="alert-box" role="status" aria-live="polite" style={{ maxWidth: 860, margin: '0 auto 16px' }}>
-                    <p>{registrationInstruction}</p>
-                  </div>
-                )}
                 {isRegistered && (
                   <div className="alert-box" role="status" aria-live="polite" style={{ maxWidth: 860, margin: '0 auto 16px' }}>
                     <p>You are registered for this event. You can manage your registration and mark employer interest below.</p>

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import '../Dashboard/Dashboard.css';
 import './RegisteredEventDetail.css';
 import { getEvent, getEventBooths } from '../../services/events';
@@ -149,6 +150,7 @@ export default function RegisteredEventDetail() {
           aria-label={event?.name ? `You are registered for ${event.name} - main content` : 'Registered event - main content'}
         >
           <div className="dashboard-content">
+            <PageInstructionBanner screen="registered-event-detail" />
             {fetching && <div>Loading…</div>}
             {!fetching && !event && <div>Event not found.</div>}
             {!fetching && event && (

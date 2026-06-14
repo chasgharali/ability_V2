@@ -28,8 +28,11 @@ const InterpreterDashboard = () => {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const videoRef = useRef(null);
 
-  // Get role message from context
-  const infoBannerMessage = getMessage('interpreter-dashboard', 'welcome') || '';
+  // Get role message from context. The interpreter dashboard lives at /dashboard,
+  // so admins configure it under the "dashboard" screen. Fall back to the legacy
+  // "interpreter-dashboard" screen for any previously created instructions.
+  const infoBannerMessage =
+    getMessage('dashboard', 'welcome') || getMessage('interpreter-dashboard', 'welcome') || '';
 
   // Status options with colors
   const statusOptions = [

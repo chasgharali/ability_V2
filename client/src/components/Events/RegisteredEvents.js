@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import '../Dashboard/Dashboard.css';
 import './RegisteredEvents.css';
 import { listRegisteredEvents } from '../../services/events';
@@ -103,6 +104,7 @@ export default function RegisteredEvents() {
           <AdminSidebar active="events" />
         <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="Current Registrations - main content">
           <div className="dashboard-content">
+            <PageInstructionBanner screen="registered-events" />
             <div className="registered-events-container">
               <header className="registered-events-header">
                 <h1>My Current Registrations</h1>

@@ -12,10 +12,10 @@ import './RoleMessageManagement.css';
 
 const ROLES = ['JobSeeker', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'Admin'];
 const SCREENS = {
-  'JobSeeker': ['my-account', 'delete-account', 'edit-profile', 'view-profile', 'event-registration', 'survey', 'resume-builder'],
+  'JobSeeker': ['my-account', 'delete-account', 'edit-profile', 'view-profile', 'upcoming-events', 'event-registration', 'registered-events', 'registered-event-detail', 'survey', 'resume-builder'],
   'Recruiter': ['dashboard', 'meeting-queue', 'meeting-records', 'jobseeker-interests'],
-  'Interpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions'],
-  'GlobalInterpreter': ['dashboard', 'interpreter-dashboard', 'troubleshooting', 'instructions'],
+  'Interpreter': ['dashboard', 'troubleshooting', 'instructions'],
+  'GlobalInterpreter': ['dashboard', 'troubleshooting', 'instructions'],
   'Support': ['dashboard', 'analytics', 'troubleshooting', 'instructions'],
   'GlobalSupport': ['dashboard', 'analytics', 'troubleshooting', 'instructions'],
   'Admin': [

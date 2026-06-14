@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
+import PageInstructionBanner from '../common/PageInstructionBanner';
 import '../Dashboard/Dashboard.css';
 import './UpcomingEvents.css';
 import { listUpcomingEvents, listRegisteredEvents } from '../../services/events';
@@ -117,6 +118,7 @@ export default function UpcomingEvents() {
           <AdminSidebar active="events" />
           <main id="main-content" className="dashboard-main" tabIndex={-1} aria-label="Upcoming Events - main content">
             <div className="dashboard-content">
+            <PageInstructionBanner screen="upcoming-events" />
             <div className="upcoming-events-container">
               <header className="upcoming-events-header">
                 <h1>Upcoming Events</h1>
