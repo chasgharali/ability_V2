@@ -70,10 +70,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Role is required'],
         enum: {
-            values: ['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'],
+            values: ['SuperAdmin', 'Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker', 'Unassigned'],
             message: 'Invalid role specified'
         },
-        default: 'JobSeeker'
+        // No silent JobSeeker default. Callers that create real job seekers
+        // (registration, job seeker import) set role explicitly; anything else
+        // that omits a role is flagged "Unassigned" / Needs Info.
+        default: 'Unassigned'
     },
     // Organization scope — null for SuperAdmin and JobSeeker (global)
     organizationId: {
@@ -479,6 +482,9 @@ userSchema.methods.getPublicProfile = function () {
 const getMissingImportFields = (userLike = {}) => {
     const missing = [];
     const role = userLike.role;
+    if (!role || role === 'Unassigned') {
+        missing.push('role');
+    }
     const needsBooth = BOOTH_REQUIRED_ROLES.includes(role);
     if (needsBooth && !userLike.assignedBooth) {
         missing.push('assignedBooth');

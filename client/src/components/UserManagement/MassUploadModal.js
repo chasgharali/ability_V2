@@ -170,7 +170,8 @@ export default function MassUploadModal({
 
         <p style={{ color: '#555', marginBottom: 16 }}>
           Upload an Excel (XLS/XLSX) or CSV file to bulk-create users.
-          Required: <strong>email, password, role</strong>, and either a single <strong>name</strong> column or <strong>First Name</strong> and <strong>Last Name</strong>.
+          Required: <strong>email, password</strong>, and either a single <strong>name</strong> column or <strong>First Name</strong> and <strong>Last Name</strong>.
+          <strong>Role</strong> is required to mark a user as ready; rows without a role are imported as inactive and marked <strong>Needs Info</strong> until an admin assigns a role.
           Optional: phone, city, state, country.
           Roles <strong>Recruiter</strong>, <strong>BoothAdmin</strong>, <strong>Support</strong>, or <strong>Interpreter</strong> can be imported without booth and will be marked <strong>Needs Info</strong> until completed.
           {defaultRole && (

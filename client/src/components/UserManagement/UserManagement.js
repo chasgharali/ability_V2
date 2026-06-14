@@ -27,7 +27,7 @@ export default function UserManagement() {
   const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
   const [showMassUpload, setShowMassUpload] = useState(false);
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
-  const [bulkUpdateFields, setBulkUpdateFields] = useState({ assignedBooth: '', assignedEvents: [] });
+  const [bulkUpdateFields, setBulkUpdateFields] = useState({ role: '', assignedBooth: '', assignedEvents: [] });
   const [bulkBoothEventOptions, setBulkBoothEventOptions] = useState([]);
   const [orgFilter, setOrgFilter] = useState('');
   const [orgsList, setOrgsList] = useState([]);
@@ -324,6 +324,7 @@ export default function UserManagement() {
     const ids = [...selectedUsersRef.current];
     if (!ids.length) return;
     const updates = {};
+    if (bulkUpdateFields.role) updates.role = bulkUpdateFields.role;
     if (bulkUpdateFields.assignedBooth) updates.assignedBooth = bulkUpdateFields.assignedBooth;
     if (Array.isArray(bulkUpdateFields.assignedEvents) && bulkUpdateFields.assignedEvents.length > 0) {
       updates.assignedEvents = bulkUpdateFields.assignedEvents;
@@ -337,7 +338,7 @@ export default function UserManagement() {
       await bulkUpdateUsers(ids, updates);
       showToast(`Updated ${ids.length} user(s) successfully`, 'Success');
       setShowBulkUpdate(false);
-      setBulkUpdateFields({ assignedBooth: '', assignedEvents: [] });
+      setBulkUpdateFields({ role: '', assignedBooth: '', assignedEvents: [] });
       setBulkBoothEventOptions([]);
       setSelectedUsers([]);
       selectedUsersRef.current = [];
@@ -839,7 +840,7 @@ export default function UserManagement() {
       firstName,
       lastName,
       email: row.email || '',
-      role: row.role || '',
+      role: row.role === 'Unassigned' ? '' : (row.role || ''),
       boothId: row.assignedBoothId || '',
       field: '',
       eventId: row.role === 'GlobalSupport' && row.assignedEvents?.length > 0
@@ -1310,7 +1311,23 @@ export default function UserManagement() {
                       allowFiltering={true}
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.role || ''}
+                          {props.role === 'Unassigned' ? (
+                            <span
+                              title="Assign a role to complete this user"
+                              style={{
+                                background: '#f3f4f6',
+                                color: '#6b7280',
+                                padding: '2px 8px',
+                                borderRadius: 10,
+                                fontSize: '0.82rem',
+                                fontWeight: 600
+                              }}
+                            >
+                              Unassigned (set role)
+                            </span>
+                          ) : (
+                            props.role || ''
+                          )}
                         </div>
                       )}
                     />
@@ -1994,6 +2011,20 @@ export default function UserManagement() {
             </p>
 
             <label style={{ display: 'block', marginBottom: 16 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 6 }}>Role</span>
+              <select
+                value={bulkUpdateFields.role}
+                onChange={e => setBulkUpdateFields(f => ({ ...f, role: e.target.value }))}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
+              >
+                <option value="">— No Change —</option>
+                {roleOptionsNoJobSeeker.map((roleOption) => (
+                  <option key={roleOption.value} value={roleOption.value}>{roleOption.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label style={{ display: 'block', marginBottom: 16 }}>
               <span style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 6 }}>Assigned Booth</span>
               <select
                 value={bulkUpdateFields.assignedBooth}
@@ -2023,7 +2054,7 @@ export default function UserManagement() {
               <button
                 onClick={() => {
                   setShowBulkUpdate(false);
-                  setBulkUpdateFields({ assignedBooth: '', assignedEvents: [] });
+                  setBulkUpdateFields({ role: '', assignedBooth: '', assignedEvents: [] });
                   setBulkBoothEventOptions([]);
                 }}
                 style={{ padding: '9px 20px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontWeight: 500 }}

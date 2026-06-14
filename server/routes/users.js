@@ -1327,6 +1327,9 @@ router.put('/:id([0-9a-fA-F]{24})', authenticateToken, requireRole(['SuperAdmin'
         const oldEmail = targetUser.email;
         const emailChanged = email !== undefined && email !== null && normalizeEmailForLookup(email.trim()) !== normalizeEmailForLookup(oldEmail);
 
+        // Track whether this user was an unassigned import (inactive until a real role is set).
+        const wasUnassignedImport = targetUser.role === 'Unassigned';
+
         // Update allowed fields
         if (name !== undefined) targetUser.name = name;
         if (email !== undefined) targetUser.email = email;
@@ -1497,6 +1500,18 @@ router.put('/:id([0-9a-fA-F]{24})', authenticateToken, requireRole(['SuperAdmin'
 
         // Recompute import readiness after admin edit updates required fields.
         targetUser.refreshImportReadiness();
+
+        // Auto-reactivate users that were only inactive because they were imported
+        // without a role, once a real role is assigned and the record is complete.
+        if (
+            wasUnassignedImport &&
+            isActive === undefined &&
+            targetUser.role !== 'Unassigned' &&
+            targetUser.importStatus === 'complete'
+        ) {
+            targetUser.isActive = true;
+        }
+
         await targetUser.save();
 
         // Send email notifications if email was changed (only for JobSeekers)
@@ -1770,7 +1785,7 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
             return out;
         };
 
-        const VALID_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker'];
+        const VALID_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport', 'JobSeeker', 'Unassigned'];
         const orgScopedRoles = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
         const roleDefaultResolved = VALID_ROLES.find((r) => r.toLowerCase() === defaultRoleInput.toLowerCase()) || '';
 
@@ -1816,7 +1831,11 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
 
                 const email = row.email || row.emailaddress || '';
                 const password = row.password || row.pass || '';
-                const roleInput = (row.role || roleDefaultResolved || 'JobSeeker').toString().trim();
+                // JobSeeker is never a hardcoded fallback. A blank role becomes
+                // "Unassigned" unless an explicit defaultRole was provided (the
+                // JobSeeker import passes defaultRole="JobSeeker" from the UI).
+                const rawRole = (row.role || roleDefaultResolved || '').toString().trim();
+                const roleInput = rawRole || 'Unassigned';
                 const roleResolved = VALID_ROLES.find((r) => r.toLowerCase() === roleInput.toLowerCase());
                 const role = roleResolved || roleInput;
                 rowEmail = email;
@@ -1847,7 +1866,10 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
                     rowMessage = 'Email already exists';
                     skipped.push({ row: rowNum, email, reason: rowMessage });
                 } else {
-                    const organizationId = orgScopedRoles.includes(role) ? (req.orgId || null) : null;
+                    const isUnassignedRole = role === 'Unassigned';
+                    const organizationId = isUnassignedRole
+                        ? (req.orgId || null)
+                        : (orgScopedRoles.includes(role) ? (req.orgId || null) : null);
                     if (organizationId && orgLimits?.limits?.maxUsers > 0 && orgScopedRoles.includes(role) && currentOrgUsers >= orgLimits.limits.maxUsers) {
                         rowStatus = 'skipped';
                         rowMessage = `User limit reached (${orgLimits.limits.maxUsers})`;
@@ -1872,7 +1894,7 @@ router.post('/mass-upload', authenticateToken, requireRole(['SuperAdmin', 'Admin
                             country: row.country || 'US',
                             organizationId,
                             assignedBooth: assignedBooth || null,
-                            isActive: true,
+                            isActive: isUnassignedRole ? false : true,
                             emailVerified: true,
                             importStatus: rowImportStatus,
                             importMissingFields: rowMissingFields,
@@ -2034,6 +2056,7 @@ router.put('/bulk-update', authenticateToken, requireRole(['SuperAdmin', 'Admin'
 
             let modifiedCount = 0;
             for (const target of usersToUpdate) {
+                const wasUnassignedImport = target.role === 'Unassigned';
                 if (updateFields.isActive !== undefined) target.isActive = updateFields.isActive;
                 if (updateFields.role !== undefined) target.role = updateFields.role;
                 if (updateFields.organizationId !== undefined) target.organizationId = updateFields.organizationId;
@@ -2047,6 +2070,18 @@ router.put('/bulk-update', authenticateToken, requireRole(['SuperAdmin', 'Admin'
                 }
 
                 target.refreshImportReadiness();
+
+                // Auto-reactivate users that were only inactive because they were
+                // imported without a role, once a real role is assigned and complete.
+                if (
+                    wasUnassignedImport &&
+                    updateFields.isActive === undefined &&
+                    target.role !== 'Unassigned' &&
+                    target.importStatus === 'complete'
+                ) {
+                    target.isActive = true;
+                }
+
                 await target.save();
                 modifiedCount += 1;
             }
