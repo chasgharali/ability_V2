@@ -597,13 +597,57 @@ export default function UserManagement() {
     }
   }, [users]);
 
+  // Syncfusion's Grid (frozen panes) and its body-appended popups (column chooser,
+  // filter menus) render form fields without id/name — and occasionally duplicate
+  // ids — which trips Chrome DevTools "Issues". Normalize them: keep the first id,
+  // strip duplicates, and give a stable name to fields that have neither id nor name.
+  const normalizeGridFormFields = useCallback(() => {
+    const gridEl = gridRef.current?.element;
+    const scopes = [gridEl, ...document.querySelectorAll('.e-grid-popup, .e-ccdlg, .e-filter-popup, .e-columnmenu')].filter(Boolean);
+    const seen = new Set();
+    scopes.forEach((scope) => {
+      scope.querySelectorAll('input, select, textarea').forEach((el) => {
+        if (el.id) {
+          if (seen.has(el.id)) {
+            el.removeAttribute('id');
+          } else {
+            seen.add(el.id);
+          }
+        }
+        if (!el.id && !el.getAttribute('name')) {
+          el.setAttribute('name', `um-grid-field-${Math.random().toString(36).slice(2, 9)}`);
+        }
+      });
+    });
+  }, []);
+
+  // Column chooser / filter popups are created lazily and appended to <body>,
+  // so watch for them and normalize their fields as they appear.
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      const relevant = mutations.some((m) =>
+        Array.from(m.addedNodes).some(
+          (n) => n.nodeType === 1 &&
+            (n.matches?.('.e-grid-popup, .e-ccdlg, .e-filter-popup, .e-columnmenu') ||
+              n.querySelector?.('.e-grid-popup, .e-ccdlg, .e-filter-popup, .e-columnmenu'))
+        )
+      );
+      if (relevant) {
+        requestAnimationFrame(() => normalizeGridFormFields());
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [normalizeGridFormFields]);
+
   // Syncfusion Grid does not automatically pick up dataSource prop changes —
   // an explicit refresh() is required after every data update.
   useEffect(() => {
     if (gridRef.current && typeof gridRef.current.refresh === 'function') {
       gridRef.current.refresh();
+      requestAnimationFrame(() => normalizeGridFormFields());
     }
-  }, [paginatedDataSource]);
+  }, [paginatedDataSource, normalizeGridFormFields]);
 
   const loadBoothsAndEvents = async (organizationId = '') => {
     try {
@@ -745,9 +789,6 @@ export default function UserManagement() {
       }
     };
   }, [users]);
-
-  // Frozen columns rely on native Syncfusion movable/frozen pane scrolling.
-  useEffect(() => undefined, [users]);
 
   // Center delete dialog when it opens
   useEffect(() => {
@@ -1266,8 +1307,10 @@ export default function UserManagement() {
                   enableHeaderFocus={false}
                   rowSelected={updateSelectionBatched}
                   rowDeselected={updateSelectionBatched}
+                  dataBound={normalizeGridFormFields}
                 >
                   <ColumnsDirective>
+                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                     <ColumnDirective type='checkbox' width='50' freeze='Left' />
                     <ColumnDirective 
                       field='firstName' 
@@ -1281,11 +1324,11 @@ export default function UserManagement() {
                         </div>
                       )}
                     />
-                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                     <ColumnDirective 
                       field='lastName' 
                       headerText='Last Name' 
                       width='150' 
+                      freeze='Left'
                       allowFiltering={true}
                       template={(props) => (
                         <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -1429,6 +1472,8 @@ export default function UserManagement() {
                                 Rows per page:
                             </span>
                             <select
+                                id="um-page-size"
+                                name="pageSize"
                                 value={pageSize}
                                 onChange={(e) => {
                                     const newSize = parseInt(e.target.value);
@@ -1498,6 +1543,8 @@ export default function UserManagement() {
                             </button>
                             
                             <input
+                                id="um-current-page"
+                                name="currentPage"
                                 type="number"
                                 min="1"
                                 max={Math.ceil(users.length / pageSize) || 1}
@@ -1567,9 +1614,9 @@ export default function UserManagement() {
               </div>
             ) : (
               <form className="account-form" onSubmit={(e) => { e.preventDefault(); }} style={{ maxWidth: 720 }}>
-                <Input label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
-                <Input label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
-                <Select label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
+                <Input id="um-firstName" name="firstName" label="First Name" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} required />
+                <Input id="um-lastName" name="lastName" label="Last Name" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} required />
+                <Select id="um-role" name="role" label="Select User Role" value={form.role} onChange={(e) => setField('role', e.target.value)} options={[{ value: '', label: 'Choose Role' }, ...roleOptionsAll]} required />
                 {recruiterLimitReached && ['Recruiter', 'BoothAdmin'].includes(form.role) && !editingId && (
                   <p style={{ marginTop: '-4px', marginBottom: '10px', color: '#b91c1c', fontSize: '12px' }}>
                     Recruiter limit reached ({currentActiveRecruitersCount}/{maxRecruitersLimit}). Select a different role.
@@ -1577,13 +1624,15 @@ export default function UserManagement() {
                 )}
                 {isSuperAdmin && !editingId && form.role !== 'SuperAdmin' && (
                   <Select
+                    id="um-organizationId"
+                    name="organizationId"
                     label="Select Organization"
                     value={form.organizationId}
                     onChange={(e) => setField('organizationId', e.target.value)}
                     options={[{ value: '', label: 'No organization (unassigned)' }, ...orgsList.map(o => ({ value: o._id, label: o.name }))]}
                   />
                 )}
-                <Input label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
+                <Input id="um-email" name="email" label="Email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
                 <div className="form-field password-field-container">
                   <label htmlFor="um-password-input" className="form-label">
                     {editingId ? "New Password (leave blank to keep current)" : "Password"}
@@ -1651,6 +1700,8 @@ export default function UserManagement() {
                   </div>
                 </div>
                 <Select
+                  id="um-boothId"
+                  name="boothId"
                   label="Select Booth"
                   value={form.boothId}
                   onChange={(e) => setField('boothId', e.target.value)}
@@ -1663,6 +1714,7 @@ export default function UserManagement() {
                 {['Recruiter', 'BoothAdmin', 'Support', 'Interpreter'].includes(form.role) && form.boothId && (
                   <>
                     <MultiSelect
+                      id="um-selectedEvents"
                       label="Select Events"
                       value={form.selectedEvents}
                       onChange={(e) => setField('selectedEvents', e.target.value)}
@@ -1677,12 +1729,13 @@ export default function UserManagement() {
                 {/* Multi-select events for GlobalInterpreter (all events, no booth required) */}
                 {form.role === 'GlobalInterpreter' && (
                   <MultiSelect
+                    id="um-globalInterpreterEvents"
                     label="Select Events"
                     value={form.selectedEvents}
                     onChange={(e) => setField('selectedEvents', e.target.value)}
                     options={eventOptions}
                     placeholder={isSuperAdmin && !editingId && !form.organizationId ? 'Select organization first' : 'Select events for this interpreter'}
-                    name="selectedEvents"
+                    name="globalInterpreterEvents"
                     required
                     disabled={isSuperAdmin && !editingId && !form.organizationId}
                   />
@@ -1691,6 +1744,8 @@ export default function UserManagement() {
                 {/* <Select label="Select Field" value={form.field} onChange={(e) => setField('field', e.target.value)} options={fieldOptions} /> */}
                 {!['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalInterpreter'].includes(form.role) && (
                   <Select
+                    id="um-eventId"
+                    name="eventId"
                     label="Select Event"
                     value={form.eventId}
                     onChange={(e) => setField('eventId', e.target.value)}
