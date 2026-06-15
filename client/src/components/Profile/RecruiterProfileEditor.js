@@ -287,7 +287,6 @@ export default function RecruiterProfileEditor() {
                         className="password-toggle-btn"
                         onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
                         aria-label={showPasswords.current ? 'Hide current password' : 'Show current password'}
-                        aria-pressed={showPasswords.current}
                       >
                         {showPasswords.current ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                       </button>
@@ -311,7 +310,6 @@ export default function RecruiterProfileEditor() {
                           className="password-toggle-btn"
                           onClick={() => setShowPasswords(prev => ({ ...prev, next: !prev.next }))}
                           aria-label={showPasswords.next ? 'Hide new password' : 'Show new password'}
-                          aria-pressed={showPasswords.next}
                         >
                           {showPasswords.next ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                         </button>
@@ -334,7 +332,6 @@ export default function RecruiterProfileEditor() {
                           className="password-toggle-btn"
                           onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
                           aria-label={showPasswords.confirm ? 'Hide confirm password' : 'Show confirm password'}
-                          aria-pressed={showPasswords.confirm}
                         >
                           {showPasswords.confirm ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                         </button>

@@ -739,7 +739,6 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                   className="password-toggle-btn"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
-                  aria-pressed={showCurrentPassword}
                 >
                   {showCurrentPassword ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                 </button>
@@ -765,7 +764,6 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                     className="password-toggle-btn"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
-                    aria-pressed={showNewPassword}
                   >
                     {showNewPassword ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                   </button>
@@ -788,7 +786,6 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                     className="password-toggle-btn"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-                    aria-pressed={showConfirmPassword}
                   >
                     {showConfirmPassword ? <MdVisibilityOff aria-hidden="true" /> : <MdVisibility aria-hidden="true" />}
                   </button>
