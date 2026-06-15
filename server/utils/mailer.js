@@ -16,23 +16,27 @@ async function sendVerificationEmail(toEmail, verifyLink, appVerifyLink) {
 
   const fallbackLink = appVerifyLink || verifyLink;
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
-  const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:28px';
-  const cardStyle = 'background:#ececec;border-radius:6px;padding:28px;margin:auto;max-width:640px';
-  const contentStyle = 'padding:20px';
+  const bodyFont = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6';
 
   const html = `
-    <div style="${containerStyle}">
-      <div style="${cardStyle}">
-        <div style="${contentStyle}">
-          <p style="margin:0 0 8px 0; color:#111">Welcome to abilityCONNECT.online. Please Verify Your Email Address.</p>
-          <p style="margin:12px 0">Please click the button below to verify your email address:</p>
-          <p style="margin:18px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="${buttonStyle}">Verify Email</a></p>
-          <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
-          <p style="margin:8px 0;word-break:break-word;overflow-wrap:anywhere;"><a href="${fallbackLink}" target="_blank" rel="noopener" style="color:#1d4ed8;word-break:break-word;overflow-wrap:anywhere;">${fallbackLink}</a></p>
-          <p style="margin-top:16px; color:#111"><strong>Attention:</strong> Chrome browser is required. Please copy the link into the Chrome browser if Chrome is not your default browser.</p>
-        </div>
-      </div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;">
+      <tr>
+        <td align="center" style="padding:20px;">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ececec;border-radius:6px;">
+            <tr>
+              <td style="padding:20px;${bodyFont}">
+                <p style="margin:0 0 8px 0; color:#111">Welcome to abilityCONNECT.online. Please Verify Your Email Address.</p>
+                <p style="margin:12px 0">Please click the button below to verify your email address:</p>
+                <p style="margin:18px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="${buttonStyle}">Verify Email</a></p>
+                <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
+                <p style="margin:8px 0;word-break:break-word;overflow-wrap:anywhere;"><a href="${fallbackLink}" target="_blank" rel="noopener" style="color:#1d4ed8;word-break:break-word;overflow-wrap:anywhere;">${fallbackLink}</a></p>
+                <p style="margin-top:16px; color:#111"><strong>Attention:</strong> Chrome browser is required. Please copy the link into the Chrome browser if Chrome is not your default browser.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   `;
   const text = `Welcome to abilityCONNECT.online. Please Verify Your Email Address.\n\nVerify Email: ${verifyLink}\n\nIf the button above doesn't work, use this link: ${fallbackLink}\n\nAttention: Chrome browser is required. Please copy the link into Chrome if it is not your default browser.`;
 
@@ -102,20 +106,27 @@ async function sendPasswordResetEmail(toEmail, resetLink) {
   const subject = 'Reset Your Password - abilityCONNECT.online';
 
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
-  const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
-  const cardStyle = 'background:#ececec;border-radius:6px;padding:16px;margin:auto;max-width:640px';
+  const bodyFont = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6';
 
   const html = `
-    <div style="${containerStyle}">
-      <div style="${cardStyle}">
-        <p style="margin:0 0 8px 0; color:#111">Reset your password</p>
-        <p style="margin:12px 0">You requested to reset your password. Please click the button below to reset it:</p>
-        <p style="margin:16px 0"><a href="${resetLink}" target="_blank" rel="noopener" style="${buttonStyle}">Reset Password</a></p>
-        <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
-        <p style="margin:8px 0"><a href="${resetLink}" target="_blank" rel="noopener" style="color:#1d4ed8">${resetLink}</a></p>
-        <p style="margin-top:16px; color:#666; font-size:12px;">This link will expire in 1 hour. If you didn't request a password reset, please ignore this email.</p>
-      </div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;">
+      <tr>
+        <td align="center" style="padding:20px;">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ececec;border-radius:6px;">
+            <tr>
+              <td style="padding:20px;${bodyFont}">
+                <p style="margin:0 0 8px 0; color:#111">Reset your password</p>
+                <p style="margin:12px 0">You requested to reset your password. Please click the button below to reset it:</p>
+                <p style="margin:16px 0"><a href="${resetLink}" target="_blank" rel="noopener" style="${buttonStyle}">Reset Password</a></p>
+                <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
+                <p style="margin:8px 0"><a href="${resetLink}" target="_blank" rel="noopener" style="color:#1d4ed8">${resetLink}</a></p>
+                <p style="margin-top:16px; color:#666; font-size:12px;">This link will expire in 1 hour. If you didn't request a password reset, please ignore this email.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   `;
   const text = `Reset your password\n\nYou requested to reset your password. Please use the following link to reset it:\n\n${resetLink}\n\nThis link will expire in 1 hour. If you didn't request a password reset, please ignore this email.`;
 
@@ -185,20 +196,27 @@ async function sendEmailChangeVerificationEmail(toEmail, verifyLink) {
   const subject = 'Verify Your New Email Address - abilityCONNECT.online';
 
   const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
-  const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
-  const cardStyle = 'background:#ececec;border-radius:6px;padding:16px;margin:auto;max-width:640px';
+  const bodyFont = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6';
 
   const html = `
-    <div style="${containerStyle}">
-      <div style="${cardStyle}">
-        <p style="margin:0 0 8px 0; color:#111">Verify your new email address</p>
-        <p style="margin:12px 0">You requested to change your email address. Please click the button below to verify your new email address:</p>
-        <p style="margin:16px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="${buttonStyle}">Verify New Email</a></p>
-        <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
-        <p style="margin:8px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="color:#1d4ed8">${verifyLink}</a></p>
-        <p style="margin-top:16px; color:#666; font-size:12px;">This link will expire in 24 hours. If you didn't request an email change, please ignore this email.</p>
-      </div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;">
+      <tr>
+        <td align="center" style="padding:20px;">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ececec;border-radius:6px;">
+            <tr>
+              <td style="padding:20px;${bodyFont}">
+                <p style="margin:0 0 8px 0; color:#111">Verify your new email address</p>
+                <p style="margin:12px 0">You requested to change your email address. Please click the button below to verify your new email address:</p>
+                <p style="margin:16px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="${buttonStyle}">Verify New Email</a></p>
+                <p style="margin:16px 0">If the button above doesn't work, please use the following link:</p>
+                <p style="margin:8px 0"><a href="${verifyLink}" target="_blank" rel="noopener" style="color:#1d4ed8">${verifyLink}</a></p>
+                <p style="margin-top:16px; color:#666; font-size:12px;">This link will expire in 24 hours. If you didn't request an email change, please ignore this email.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   `;
   const text = `Verify your new email address\n\nYou requested to change your email address. Please use the following link to verify your new email:\n\n${verifyLink}\n\nThis link will expire in 24 hours. If you didn't request an email change, please ignore this email.`;
 
@@ -267,20 +285,26 @@ async function sendEmailChangedNotificationOldEmail(oldEmail, newEmail, userName
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
   const subject = 'Your Email Address Has Been Changed - abilityCONNECT.online';
 
-  const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
-  const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
-  const cardStyle = 'background:#ececec;border-radius:6px;padding:16px;margin:auto;max-width:640px';
+  const bodyFont = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6';
 
   const html = `
-    <div style="${containerStyle}">
-      <div style="${cardStyle}">
-        <p style="margin:0 0 8px 0; color:#111">Your email address has been changed</p>
-        <p style="margin:12px 0">Hello ${userName || 'there'},</p>
-        <p style="margin:12px 0">Your email address has been changed from <strong>${oldEmail}</strong> to <strong>${newEmail}</strong>.</p>
-        <p style="margin:12px 0">If you did not request this change, please contact support immediately.</p>
-        <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityCONNECT.online</p>
-      </div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;">
+      <tr>
+        <td align="center" style="padding:20px;">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ececec;border-radius:6px;">
+            <tr>
+              <td style="padding:20px;${bodyFont}">
+                <p style="margin:0 0 8px 0; color:#111">Your email address has been changed</p>
+                <p style="margin:12px 0">Hello ${userName || 'there'},</p>
+                <p style="margin:12px 0">Your email address has been changed from <strong>${oldEmail}</strong> to <strong>${newEmail}</strong>.</p>
+                <p style="margin:12px 0">If you did not request this change, please contact support immediately.</p>
+                <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityCONNECT.online</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   `;
   const text = `Your email address has been changed\n\nHello ${userName || 'there'},\n\nYour email address has been changed from ${oldEmail} to ${newEmail}.\n\nIf you did not request this change, please contact support immediately.\n\nThis is an automated notification from abilityCONNECT.online`;
 
@@ -345,20 +369,26 @@ async function sendEmailChangedNotificationNewEmail(newEmail, userName) {
   const fromEmail = process.env.AWS_SES_FROM_EMAIL || 'noreply@localhost';
   const subject = 'Congratulations! Your Email Address Has Been Updated - abilityCONNECT.online';
 
-  const buttonStyle = 'display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600';
-  const containerStyle = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6;background:#f5f5f5;padding:16px';
-  const cardStyle = 'background:#ececec;border-radius:6px;padding:16px;margin:auto;max-width:640px';
+  const bodyFont = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.6';
 
   const html = `
-    <div style="${containerStyle}">
-      <div style="${cardStyle}">
-        <p style="margin:0 0 8px 0; color:#111">Congratulations! Your email address has been updated</p>
-        <p style="margin:12px 0">Hello ${userName || 'there'},</p>
-        <p style="margin:12px 0">Congratulations! Your email address has been successfully updated to <strong>${newEmail}</strong>.</p>
-        <p style="margin:12px 0">You can now use this email address to log in to your account on abilityCONNECT.online.</p>
-        <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityCONNECT.online</p>
-      </div>
-    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;">
+      <tr>
+        <td align="center" style="padding:20px;">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ececec;border-radius:6px;">
+            <tr>
+              <td style="padding:20px;${bodyFont}">
+                <p style="margin:0 0 8px 0; color:#111">Congratulations! Your email address has been updated</p>
+                <p style="margin:12px 0">Hello ${userName || 'there'},</p>
+                <p style="margin:12px 0">Congratulations! Your email address has been successfully updated to <strong>${newEmail}</strong>.</p>
+                <p style="margin:12px 0">You can now use this email address to log in to your account on abilityCONNECT.online.</p>
+                <p style="margin-top:16px; color:#666; font-size:12px;">This is an automated notification from abilityCONNECT.online</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   `;
   const text = `Congratulations! Your email address has been updated\n\nHello ${userName || 'there'},\n\nCongratulations! Your email address has been successfully updated to ${newEmail}.\n\nYou can now use this email address to log in to your account on abilityCONNECT.online.\n\nThis is an automated notification from abilityCONNECT.online`;
 
