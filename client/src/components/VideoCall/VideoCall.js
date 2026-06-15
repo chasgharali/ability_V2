@@ -255,6 +255,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const callEndedRef = useRef(false);
   // Syncfusion SpeechToText component reference
   const speechToTextRef = useRef(null);
+  // Observer that keeps the off-screen speech-to-text widget out of the
+  // keyboard tab order (it is visually hidden but must stay in the DOM).
+  const speechWidgetObserverRef = useRef(null);
   const localAudioCaptureRef = useRef(null);
   // Ref to track caption enabled state (avoids stale closure in event handlers)
   const isCaptionEnabledRef = useRef(false);
@@ -2056,6 +2059,36 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
     }
   }, [socket, callInfo, isAudioEnabled, localTracks, user]);
 
+  // The Syncfusion SpeechToText widget is rendered off-screen (visually hidden)
+  // so transcription keeps running, but its internal button/inputs must not be
+  // reachable by keyboard users since they cannot perceive the control. This
+  // callback ref strips any focusable descendants from the tab order while
+  // keeping them programmatically clickable (tabindex="-1").
+  const speechWidgetRef = useCallback((node) => {
+    if (speechWidgetObserverRef.current) {
+      speechWidgetObserverRef.current.disconnect();
+      speechWidgetObserverRef.current = null;
+    }
+
+    if (!node) return;
+
+    const removeFromTabOrder = () => {
+      const focusable = node.querySelectorAll(
+        'button, input, textarea, select, a[href], [tabindex]:not([tabindex="-1"])'
+      );
+      focusable.forEach((el) => {
+        el.setAttribute('tabindex', '-1');
+      });
+    };
+
+    // Apply immediately and on any future DOM updates (Syncfusion renders its
+    // button asynchronously after mount).
+    removeFromTabOrder();
+    const observer = new MutationObserver(removeFromTabOrder);
+    observer.observe(node, { childList: true, subtree: true });
+    speechWidgetObserverRef.current = observer;
+  }, []);
+
   // Helper function to start Syncfusion SpeechToText component
   const startSyncfusionComponent = useCallback(() => {
     if (!speechToTextRef.current) {
@@ -2861,6 +2894,10 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
               <span className="signal-bar bar-3"></span>
               <span className="signal-bar bar-4"></span>
             </div>
+            {/* Visible text label so connection quality is not conveyed by color alone */}
+            <span className="connection-quality-label" aria-hidden="true">
+              {connectionQuality.charAt(0).toUpperCase() + connectionQuality.slice(1)}
+            </span>
             {networkStats.latency > 0 && (
               <span className="network-details" aria-label={`Latency: ${networkStats.latency}ms, Packet loss: ${networkStats.packetLoss}%`}>
                 {networkStats.latency}ms
@@ -2948,6 +2985,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         if (actualAudioEnabled) {
           return (
             <div 
+              ref={speechWidgetRef}
               style={{ 
                 position: 'fixed', 
                 top: '10px', 

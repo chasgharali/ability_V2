@@ -1181,20 +1181,32 @@ export default function BoothQueueWaiting() {
 
   const isEmployerPageMode = booth?.waitingAreaMode === 'employerPage';
   const isMobilePanelHidden = isMobile && !mobilePanelOpen;
+  // While the full-screen video call overlay is active, the waiting-area page
+  // (global header logout button, queue-options sidebar, etc.) is still in the
+  // DOM behind it. Hide that content from keyboard focus and assistive tech so
+  // users can only reach the visible in-call controls.
+  const isBehindCallOverlay = isInCall && !!callInvitation;
 
   return (
     <div className={`booth-queue-waiting${isEmployerPageMode ? ' employer-mode' : ''}`}>
-      {/* Skip link must be first focusable element in DOM order */}
-      <a href="#main-content" className="skip-link">
-        Skip to main content
-      </a>
+      {/* `display: contents` keeps the flex layout intact while letting us mark
+          the entire waiting-area subtree inert during an active call. */}
+      <div
+        style={{ display: 'contents' }}
+        inert={isBehindCallOverlay ? '' : undefined}
+        aria-hidden={isBehindCallOverlay ? 'true' : undefined}
+      >
+        {/* Skip link must be first focusable element in DOM order */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
 
-      {/* Global header with event branding */}
-      <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} brandingLogoAlt={event?.logoAltText || ''} hideMenuToggle={true} />
+        {/* Global header with event branding */}
+        <AdminHeader brandingLogo={event?.logoUrl || event?.logo || ''} brandingLogoAlt={event?.logoAltText || ''} hideMenuToggle={true} />
 
-      <Helmet>
-        <title>{`${booth?.name || 'Company'} Waiting Area - abilityconnect`}</title>
-      </Helmet>
+        <Helmet>
+          <title>{`${booth?.name || 'Company'} Waiting Area - abilityconnect`}</title>
+        </Helmet>
 
       {/* Main content area */}
       <div className="waiting-layout">
@@ -1467,6 +1479,7 @@ export default function BoothQueueWaiting() {
         </main>
 
         {/* Removed old right sidebar */}
+      </div>
       </div>
 
 

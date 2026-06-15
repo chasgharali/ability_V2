@@ -445,6 +445,17 @@
   margin-left: 4px;
 }
 
+/* Visible text label for connection quality. Ensures the quality level is
+   conveyed by text in addition to the colored signal bars, so it does not
+   rely on color perception alone. */
+.connection-quality-label {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
 /* Signal Bars */
 .signal-bars {
   display: flex;
