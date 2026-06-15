@@ -1,4 +1,5 @@
 import React from 'react';
+import useDialogFocus from '../../hooks/useDialogFocus';
 import './CallInviteModal.css';
 
 export default function CallInviteModal({
@@ -14,11 +15,21 @@ export default function CallInviteModal({
   onAccept,
   onDecline
 }) {
+  const { dialogRef, onKeyDown } = useDialogFocus(true, onDecline);
+
   return (
-    <div className="call-invite-modal-overlay" role="dialog" aria-modal="true">
+    <div
+      className="call-invite-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="call-invite-title"
+      ref={dialogRef}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+    >
       <div className="call-invite-modal" role="document">
         <div className="call-invite-header">
-          <h3 className="call-invite-title">Video Call Invitation</h3>
+          <h3 className="call-invite-title" id="call-invite-title">Video Call Invitation</h3>
           <button className="call-invite-close" aria-label="Close" onClick={onDecline}>×</button>
         </div>
         <hr className="call-invite-divider" />

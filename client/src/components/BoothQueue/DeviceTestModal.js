@@ -20,12 +20,15 @@ export default function DeviceTestModal({
   const [cameraStatus, setCameraStatus] = useState('inactive'); // 'inactive', 'loading', 'active', 'error'
   const [microphoneStatus, setMicrophoneStatus] = useState('inactive'); // 'inactive', 'loading', 'active', 'error'
   const [testResults, setTestResults] = useState({ camera: false, microphone: false });
+  const [srAnnouncement, setSrAnnouncement] = useState('');
 
   const videoRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
   const streamRef = useRef(null);
+  const modalRef = useRef(null);
+  const previousActiveElementRef = useRef(null);
 
   // Cleanup function
   const cleanupTest = () => {
@@ -72,8 +75,78 @@ export default function DeviceTestModal({
       cleanupTest();
       setCurrentView('selection');
       setTestResults({ camera: false, microphone: false });
+      setSrAnnouncement('');
     }
   }, [isOpen]);
+
+  // Announce device test status changes to screen readers. The visible status
+  // text lives in plain spans that screen readers don't read on change, so we
+  // mirror the result into a polite live region whenever a test completes.
+  useEffect(() => {
+    const messages = [];
+    if (cameraStatus === 'active') messages.push('Camera working!');
+    else if (cameraStatus === 'error') messages.push('Camera not working');
+
+    if (microphoneStatus === 'active') messages.push('Microphone working!');
+    else if (microphoneStatus === 'error') messages.push('Microphone not working');
+
+    if (messages.length > 0) {
+      // Clear first so identical consecutive results are still announced.
+      setSrAnnouncement('');
+      const message = messages.join('. ');
+      const id = requestAnimationFrame(() => setSrAnnouncement(message));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [cameraStatus, microphoneStatus]);
+
+  // Move focus into the dialog when it opens so keyboard and screen reader users
+  // land on the modal, and restore focus to the triggering element on close.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    previousActiveElementRef.current = document.activeElement;
+
+    // Wait for the dialog to render, then focus its container so screen readers
+    // announce the dialog name (via aria-labelledby) before the user tabs in.
+    const focusId = requestAnimationFrame(() => {
+      if (modalRef.current) {
+        modalRef.current.focus();
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(focusId);
+      const previous = previousActiveElementRef.current;
+      if (previous && typeof previous.focus === 'function' && document.contains(previous)) {
+        previous.focus();
+      }
+      previousActiveElementRef.current = null;
+    };
+  }, [isOpen]);
+
+  // Keep keyboard focus trapped inside the dialog while it is open.
+  const handleFocusTrap = (e) => {
+    if (e.key !== 'Tab' || !modalRef.current) return;
+
+    const focusable = modalRef.current.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    if (e.shiftKey) {
+      if (active === first || active === modalRef.current) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   const startDeviceTest = async () => {
     try {
@@ -294,6 +367,7 @@ export default function DeviceTestModal({
 
   return (
     <div 
+      ref={modalRef}
       className="modal-overlay device-test-overlay"
       role="dialog"
       aria-modal="true"
@@ -306,11 +380,16 @@ export default function DeviceTestModal({
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           handleClose();
+          return;
         }
+        handleFocusTrap(e);
       }}
       tabIndex={-1}
     >
       <div className="modal-content device-test-modal">
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {srAnnouncement}
+        </div>
         <div className="modal-header">
           <h3 id="device-test-modal-title">
             {currentView === 'selection' ? 'Select Camera & Microphone' : 'Test Your Devices'}

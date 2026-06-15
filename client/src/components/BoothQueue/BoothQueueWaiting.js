@@ -13,6 +13,7 @@ import DeviceTestModal from './DeviceTestModal';
 import EmployerPageTemplate from './EmployerPageTemplate';
 import { useToast, ToastContainer } from '../common/Toast';
 import { announceToScreenReader } from '../Accessibility/FocusManager';
+import useDialogFocus from '../../hooks/useDialogFocus';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
 
@@ -856,6 +857,22 @@ export default function BoothQueueWaiting() {
     }
   }, [showMessageModal]);
 
+  // Close + reset for the "Leave a Message" dialog.
+  const closeLeaveMessageModal = () => {
+    setShowLeaveMessageModal(false);
+    setRecordedBlob(null);
+    setMessageContent('');
+    setShowMessagePreview(false);
+  };
+
+  // Focus management (move-in, trap, restore + Escape) for the dialogs that
+  // were missing it, so keyboard and screen reader users land on the dialog.
+  const leaveMessageDialog = useDialogFocus(showLeaveMessageModal, closeLeaveMessageModal);
+  const textMessagingDialog = useDialogFocus(
+    showTextMessagingModal,
+    () => setShowTextMessagingModal(false)
+  );
+
   // Move focus into the queue options dialog when it opens on mobile,
   // and restore focus to the triggering control when it closes.
   useEffect(() => {
@@ -1608,18 +1625,21 @@ export default function BoothQueueWaiting() {
 
       {/* Leave Message Modal */}
       {showLeaveMessageModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="leave-modal-title">
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="leave-modal-title"
+          ref={leaveMessageDialog.dialogRef}
+          tabIndex={-1}
+          onKeyDown={leaveMessageDialog.onKeyDown}
+        >
           <div className="modal-content">
             <div className="modal-header">
               <h3 id="leave-modal-title">Leave a Message</h3>
               <button
                 className="modal-close"
-                onClick={() => {
-                  setShowLeaveMessageModal(false);
-                  setRecordedBlob(null);
-                  setMessageContent('');
-                  setShowMessagePreview(false);
-                }}
+                onClick={closeLeaveMessageModal}
                 aria-label="Close leave message dialog"
                 type="button"
               >
@@ -1732,12 +1752,7 @@ export default function BoothQueueWaiting() {
 
               <div className="modal-actions">
                 <button
-                  onClick={() => {
-                    setShowLeaveMessageModal(false);
-                    setRecordedBlob(null);
-                    setMessageContent('');
-                    setShowMessagePreview(false);
-                  }}
+                  onClick={closeLeaveMessageModal}
                   className="btn-cancel"
                   type="button"
                 >
@@ -1759,7 +1774,15 @@ export default function BoothQueueWaiting() {
 
       {/* Text Messaging Modal */}
       {showTextMessagingModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="text-modal-title">
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="text-modal-title"
+          ref={textMessagingDialog.dialogRef}
+          tabIndex={-1}
+          onKeyDown={textMessagingDialog.onKeyDown}
+        >
           <div className="modal-content text-messaging-modal">
             <div className="modal-header">
               <h3 id="text-modal-title">Messages</h3>
