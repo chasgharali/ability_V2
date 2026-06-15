@@ -1879,14 +1879,6 @@ export default function BoothManagement() {
                   placeholder="Enter number of recruiters"
                 />
 
-                <Input
-                  label="Custom invite text"
-                  value={boothForm.customInviteText}
-                  onChange={(e) => setBoothField('customInviteText', e.target.value)}
-                  placeholder="Enter custom invite text"
-                  hint="Custom slug for the booth's join URL. Whatever you enter becomes the end of the queue link (e.g. /queue/your-text). Leave empty to use the default auto-generated slug."
-                />
-
                 <div className="form-inline-row" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                   <div style={{ flex: '1 1 380px', minWidth: 260 }}>
                     <DateTimePicker
@@ -1917,6 +1909,14 @@ export default function BoothManagement() {
                   onChange={(e) => setBoothField('companyPage', e.target.value)}
                   placeholder="https://example.com"
                   hint="The destination URL opened when a job seeker selects the company logo on the event page. Typically the organization's official website or careers page."
+                />
+
+                <Input
+                  label="Custom invite text"
+                  value={boothForm.customInviteText}
+                  onChange={(e) => setBoothField('customInviteText', e.target.value)}
+                  placeholder="Enter custom invite text"
+                  hint="Custom slug for the booth's join URL. Whatever you enter becomes the end of the queue link (e.g. /queue/your-text). Leave empty to use the default auto-generated slug."
                 />
 
                 <Input
