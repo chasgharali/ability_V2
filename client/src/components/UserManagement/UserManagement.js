@@ -20,6 +20,7 @@ import { listOrganizations, assignUserToOrg, removeUserFromOrg } from '../../ser
 import { JOB_CATEGORY_LIST } from '../../constants/options';
 import MassUploadModal from './MassUploadModal';
 import { useAuth } from '../../contexts/AuthContext';
+import useQueryParamState from '../../hooks/useQueryParamState';
 import { Helmet } from 'react-helmet-async';
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
@@ -29,7 +30,7 @@ export default function UserManagement() {
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
   const [bulkUpdateFields, setBulkUpdateFields] = useState({ role: '', assignedBooth: '', assignedEvents: [] });
   const [bulkBoothEventOptions, setBulkBoothEventOptions] = useState([]);
-  const [orgFilter, setOrgFilter] = useState('');
+  const [orgFilter, setOrgFilter] = useQueryParamState('org', '');
   const [orgsList, setOrgsList] = useState([]);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [users, setUsers] = useState([]);
@@ -44,35 +45,10 @@ export default function UserManagement() {
   const selectedUsersRef = useRef([]); // Store in ref for immediate access without re-render
   const [orgUsageCounts, setOrgUsageCounts] = useState({ totalUsers: 0, activeRecruiters: 0 });
 
-  // Load filters from sessionStorage on mount (per-table persistence for role filter)
-  const loadRoleFilterFromSession = () => {
-    try {
-      const saved = sessionStorage.getItem('userManagement_roleFilter');
-      if (saved) {
-        return saved;
-      }
-    } catch (error) {
-      console.error('Error loading User Management role filter from sessionStorage:', error);
-    }
-    return '';
-  };
-
-  // Load search query from sessionStorage on mount (per-table persistence for search)
-  const loadSearchQueryFromSession = () => {
-    try {
-      const saved = sessionStorage.getItem('userManagement_searchQuery');
-      if (saved) {
-        return saved;
-      }
-    } catch (error) {
-      console.error('Error loading User Management search query from sessionStorage:', error);
-    }
-    return '';
-  };
-
-  const [roleFilter, setRoleFilter] = useState(loadRoleFilterFromSession);
-  const savedSearchQuery = loadSearchQueryFromSession();
-  const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  // Keep the role filter and search query in the URL (?role= / ?search=) so they
+  // survive navigation and reloads without any browser storage.
+  const [roleFilter, setRoleFilter] = useQueryParamState('role', '');
+  const [activeSearchQuery, setActiveSearchQuery] = useQueryParamState('search', '');
   const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -105,29 +81,11 @@ export default function UserManagement() {
   useModalAriaHidden(confirmOpen || confirmBulkDeleteOpen || showMassUpload || showBulkUpdate);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Persist role filter in sessionStorage so it survives navigation within the session
+  // Keep the (uncontrolled) search input in sync with the ?search= query param,
+  // including on mount and when navigating back/forward.
   useEffect(() => {
-    try {
-      if (roleFilter) {
-        sessionStorage.setItem('userManagement_roleFilter', roleFilter);
-      } else {
-        sessionStorage.removeItem('userManagement_roleFilter');
-      }
-    } catch (error) {
-      console.error('Error saving User Management role filter to sessionStorage:', error);
-    }
-  }, [roleFilter]);
-
-  // Persist search query in sessionStorage so it survives navigation within the session
-  useEffect(() => {
-    try {
-      if (activeSearchQuery && activeSearchQuery.trim()) {
-        sessionStorage.setItem('userManagement_searchQuery', activeSearchQuery.trim());
-      } else {
-        sessionStorage.removeItem('userManagement_searchQuery');
-      }
-    } catch (error) {
-      console.error('Error saving User Management search query to sessionStorage:', error);
+    if (searchInputRef.current) {
+      searchInputRef.current.value = activeSearchQuery || '';
     }
   }, [activeSearchQuery]);
 
@@ -427,7 +385,7 @@ export default function UserManagement() {
     setActiveSearchQuery((searchInputRef.current?.value || '').trim());
     setSearchTriggerNonce((prev) => prev + 1);
     setCurrentPage(1);
-  }, []);
+  }, [setActiveSearchQuery]);
 
   const handleClearSearch = useCallback(() => {
     if (searchInputRef.current) {
@@ -439,12 +397,7 @@ export default function UserManagement() {
     // grid keeps showing stale results).
     setSearchTriggerNonce((prev) => prev + 1);
     setCurrentPage(1);
-    try {
-      sessionStorage.removeItem('userManagement_searchQuery');
-    } catch (error) {
-      console.error('Error clearing User Management search query from sessionStorage:', error);
-    }
-  }, []);
+  }, [setActiveSearchQuery]);
 
   const escapeCsvCell = (v) => {
     const s = v === null || v === undefined ? '' : String(v);
@@ -1243,7 +1196,7 @@ export default function UserManagement() {
                         id="user-search-input"
                         type="text"
                         ref={searchInputRef}
-                        defaultValue={savedSearchQuery}
+                        defaultValue={activeSearchQuery}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();

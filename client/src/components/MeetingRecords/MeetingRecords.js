@@ -13,7 +13,7 @@ import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { meetingRecordsAPI } from '../../services/meetingRecords';
 import { listUsers } from '../../services/users';
 import { listEvents } from '../../services/events';
@@ -135,93 +135,58 @@ export default function MeetingRecords() {
         }
     }, [supportsMeetingAiTab, activeTab]);
 
-    // Load search query from sessionStorage on mount (per-table persistence for search)
-    const loadSearchQueryFromSession = () => {
-        try {
-            const saved = sessionStorage.getItem('meetingRecords_searchQuery');
-            if (saved) {
-                return saved;
-            }
-        } catch (error) {
-            console.error('Error loading Meeting Records search query from sessionStorage:', error);
-        }
-        return '';
-    };
+    // Keep the search query and filters in the URL (?search=, ?recruiter=,
+    // ?event=, ?booth=, ?status=, ?startDate=, ?endDate=, ?sortBy=, ?sortOrder=)
+    // so they survive navigation and reloads without any browser storage.
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    // Load filters from sessionStorage on mount
-    const loadFiltersFromSession = () => {
-        try {
-            const savedFilters = sessionStorage.getItem('meetingRecords_filters');
-            const savedSearchQuery = loadSearchQueryFromSession();
-            if (savedFilters) {
-                const parsed = JSON.parse(savedFilters);
-                return {
-                    recruiterId: parsed.recruiterId || '',
-                    eventId: parsed.eventId || '',
-                    boothId: parsed.boothId || '',
-                    status: parsed.status || '',
-                    startDate: parsed.startDate || '',
-                    endDate: parsed.endDate || '',
-                    search: savedSearchQuery,
-                    page: 1,
-                    limit: 50,
-                    sortBy: parsed.sortBy || 'startTime',
-                    sortOrder: parsed.sortOrder || 'desc'
-                };
-            }
-        } catch (error) {
-            console.error('Error loading filters from sessionStorage:', error);
-        }
-        const savedSearchQuery = loadSearchQueryFromSession();
-        return {
-            recruiterId: '',
-            eventId: '',
-            boothId: '',
-            status: '',
-            startDate: '',
-            endDate: '',
-            search: savedSearchQuery,
-            page: 1,
-            limit: 50,
-            sortBy: 'startTime',
-            sortOrder: 'desc'
-        };
-    };
+    // Filters - initialised from the URL query params on mount
+    const [filters, setFilters] = useState(() => ({
+        recruiterId: searchParams.get('recruiter') || '',
+        eventId: searchParams.get('event') || '',
+        boothId: searchParams.get('booth') || '',
+        status: searchParams.get('status') || '',
+        startDate: searchParams.get('startDate') || '',
+        endDate: searchParams.get('endDate') || '',
+        search: searchParams.get('search') || '',
+        page: 1,
+        limit: 50,
+        sortBy: searchParams.get('sortBy') || 'startTime',
+        sortOrder: searchParams.get('sortOrder') || 'desc'
+    }));
 
-    // Filters
-    const [filters, setFilters] = useState(loadFiltersFromSession);
-    
-    const savedSearchQuery = loadSearchQueryFromSession();
-    
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
 
-    // Set search input value from sessionStorage on mount
+    // Mirror the filters/search into the URL whenever they change.
     useEffect(() => {
-        const savedSearchQuery = loadSearchQueryFromSession();
-        if (searchInputRef.current && savedSearchQuery) {
-            searchInputRef.current.value = savedSearchQuery;
-        }
-    }, []);
+        setSearchParams((prev) => {
+            const params = new URLSearchParams(prev);
+            const setOrDelete = (key, value, defaultValue = '') => {
+                const v = (value ?? '').toString().trim();
+                if (v && v !== defaultValue) {
+                    params.set(key, v);
+                } else {
+                    params.delete(key);
+                }
+            };
+            setOrDelete('search', filters.search);
+            setOrDelete('recruiter', filters.recruiterId);
+            setOrDelete('event', filters.eventId);
+            setOrDelete('booth', filters.boothId);
+            setOrDelete('status', filters.status);
+            setOrDelete('startDate', filters.startDate);
+            setOrDelete('endDate', filters.endDate);
+            setOrDelete('sortBy', filters.sortBy, 'startTime');
+            setOrDelete('sortOrder', filters.sortOrder, 'desc');
+            return params;
+        }, { replace: true });
+    }, [filters.search, filters.recruiterId, filters.eventId, filters.boothId, filters.status, filters.startDate, filters.endDate, filters.sortBy, filters.sortOrder, setSearchParams]);
 
-    // Persist search query in sessionStorage so it survives navigation within the session
+    // Keep the (uncontrolled) search input in sync with the ?search= query param.
     useEffect(() => {
-        try {
-            if (filters.search && filters.search.trim()) {
-                sessionStorage.setItem('meetingRecords_searchQuery', filters.search.trim());
-                // Also update the input field if it exists
-                if (searchInputRef.current) {
-                    searchInputRef.current.value = filters.search.trim();
-                }
-            } else {
-                sessionStorage.removeItem('meetingRecords_searchQuery');
-                // Also clear the input field if it exists
-                if (searchInputRef.current) {
-                    searchInputRef.current.value = '';
-                }
-            }
-        } catch (error) {
-            console.error('Error saving Meeting Records search query to sessionStorage:', error);
+        if (searchInputRef.current) {
+            searchInputRef.current.value = filters.search || '';
         }
     }, [filters.search]);
 
@@ -455,30 +420,11 @@ export default function MeetingRecords() {
     }, [user, filters.eventId, filters.boothId, filters.recruiterId, filters.status, filters.startDate, filters.endDate, filters.search]);
 
     const handleFilterChange = (field, value) => {
-        setFilters(prev => {
-            const newFilters = {
-                ...prev,
-                [field]: value,
-                page: 1 // Reset to first page when filters change
-            };
-            // Save filters to sessionStorage (excluding page, search, limit)
-            try {
-                const filtersToSave = {
-                    recruiterId: newFilters.recruiterId,
-                    eventId: newFilters.eventId,
-                    boothId: newFilters.boothId,
-                    status: newFilters.status,
-                    startDate: newFilters.startDate,
-                    endDate: newFilters.endDate,
-                    sortBy: newFilters.sortBy,
-                    sortOrder: newFilters.sortOrder
-                };
-                sessionStorage.setItem('meetingRecords_filters', JSON.stringify(filtersToSave));
-            } catch (error) {
-                console.error('Error saving filters to sessionStorage:', error);
-            }
-            return newFilters;
-        });
+        setFilters(prev => ({
+            ...prev,
+            [field]: value,
+            page: 1 // Reset to first page when filters change
+        }));
     };
 
     const handlePageChange = (page) => {
@@ -1079,13 +1025,6 @@ export default function MeetingRecords() {
         if (searchInputRef.current) {
             searchInputRef.current.value = '';
         }
-        // Clear sessionStorage
-        try {
-            sessionStorage.removeItem('meetingRecords_filters');
-            sessionStorage.removeItem('meetingRecords_searchQuery');
-        } catch (error) {
-            console.error('Error clearing filters from sessionStorage:', error);
-        }
         setFilters({
             recruiterId: '',
             eventId: '',
@@ -1119,12 +1058,6 @@ export default function MeetingRecords() {
             search: '',
             page: 1
         }));
-        // Clear from sessionStorage
-        try {
-            sessionStorage.removeItem('meetingRecords_searchQuery');
-        } catch (error) {
-            console.error('Error clearing Meeting Records search query from sessionStorage:', error);
-        }
     };
 
     const formatDuration = (minutes) => {
@@ -1897,7 +1830,7 @@ export default function MeetingRecords() {
                                         ref={searchInputRef}
                                         id="meeting-records-search-input"
                                         type="text"
-                                        defaultValue={savedSearchQuery}
+                                        defaultValue={filters.search}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();

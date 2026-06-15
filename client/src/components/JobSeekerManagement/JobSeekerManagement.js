@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import useModalAriaHidden from '../../hooks/useModalAriaHidden';
+import useQueryParamState from '../../hooks/useQueryParamState';
 import '../Dashboard/Dashboard.css';
 import './JobSeekerManagement.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -57,48 +58,13 @@ export default function JobSeekerManagement() {
   // Use ref for search input to avoid re-renders on every keystroke
   const searchInputRef = useRef(null);
   
-  // Load search query from sessionStorage on mount (per-table persistence for search)
-  const loadSearchQueryFromSession = () => {
-    try {
-      const saved = sessionStorage.getItem('jobSeekerManagement_searchQuery');
-      if (saved) {
-        return saved;
-      }
-    } catch (error) {
-      console.error('Error loading Job Seeker Management search query from sessionStorage:', error);
-    }
-    return '';
-  };
-
-  const savedSearchQuery = loadSearchQueryFromSession();
-  const [activeSearchQuery, setActiveSearchQuery] = useState(savedSearchQuery); // Actual search parameter used in API
+  // Keep the search query and filters in the URL (?search=, ?status=, ?org=,
+  // ?event=) so they survive navigation and reloads without any browser storage.
+  const [activeSearchQuery, setActiveSearchQuery] = useQueryParamState('search', '');
   const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
-  // Load filters from sessionStorage on mount (per-table persistence)
-  const loadFiltersFromSession = () => {
-    try {
-      const savedFilters = sessionStorage.getItem('jobSeekerManagement_filters');
-      if (savedFilters) {
-        const parsed = JSON.parse(savedFilters);
-        return {
-          statusFilter: parsed.statusFilter || '',
-          organizationFilter: parsed.organizationFilter || '',
-          eventFilter: parsed.eventFilter || '',
-        };
-      }
-    } catch (error) {
-      console.error('Error loading Job Seeker Management filters from sessionStorage:', error);
-    }
-    return {
-      statusFilter: '',
-      organizationFilter: '',
-      eventFilter: '',
-    };
-  };
-
-  const initialFilters = loadFiltersFromSession();
-  const [statusFilter, setStatusFilter] = useState(initialFilters.statusFilter);
-  const [organizationFilter, setOrganizationFilter] = useState(initialFilters.organizationFilter);
-  const [eventFilter, setEventFilter] = useState(initialFilters.eventFilter);
+  const [statusFilter, setStatusFilter] = useQueryParamState('status', '');
+  const [organizationFilter, setOrganizationFilter] = useQueryParamState('org', '');
+  const [eventFilter, setEventFilter] = useQueryParamState('event', '');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortDir, setSortDir] = useState('desc');
   const [organizations, setOrganizations] = useState([]);
@@ -617,46 +583,11 @@ export default function JobSeekerManagement() {
     sortDirRef.current = sortDir;
   }, [sortDir]);
 
-  // Persist filters per-table in sessionStorage so they survive navigation
+  // Keep the (uncontrolled) search input in sync with the ?search= query param,
+  // including on mount and when navigating back/forward.
   useEffect(() => {
-    try {
-      const filtersToSave = {
-        statusFilter,
-        organizationFilter,
-        eventFilter,
-      };
-      sessionStorage.setItem('jobSeekerManagement_filters', JSON.stringify(filtersToSave));
-    } catch (error) {
-      console.error('Error saving Job Seeker Management filters to sessionStorage:', error);
-    }
-  }, [statusFilter, organizationFilter, eventFilter]);
-
-  // Set search input value from sessionStorage on mount
-  useEffect(() => {
-    const savedSearchQuery = loadSearchQueryFromSession();
-    if (searchInputRef.current && savedSearchQuery) {
-      searchInputRef.current.value = savedSearchQuery;
-    }
-  }, []);
-
-  // Persist search query in sessionStorage so it survives navigation within the session
-  useEffect(() => {
-    try {
-      if (activeSearchQuery && activeSearchQuery.trim()) {
-        sessionStorage.setItem('jobSeekerManagement_searchQuery', activeSearchQuery.trim());
-        // Also update the input field if it exists
-        if (searchInputRef.current) {
-          searchInputRef.current.value = activeSearchQuery.trim();
-        }
-      } else {
-        sessionStorage.removeItem('jobSeekerManagement_searchQuery');
-        // Also clear the input field if it exists
-        if (searchInputRef.current) {
-          searchInputRef.current.value = '';
-        }
-      }
-    } catch (error) {
-      console.error('Error saving Job Seeker Management search query to sessionStorage:', error);
+    if (searchInputRef.current) {
+      searchInputRef.current.value = activeSearchQuery || '';
     }
   }, [activeSearchQuery]);
 
@@ -714,7 +645,7 @@ export default function JobSeekerManagement() {
 
   // Load events on mount - only runs once
   useEffect(() => {
-    const initialOrgFilter = canFilterByOrganization ? (initialFilters.organizationFilter || '') : '';
+    const initialOrgFilter = canFilterByOrganization ? (organizationFilter || '') : '';
     loadEventsData(initialOrgFilter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEventsData, canFilterByOrganization]);
@@ -728,14 +659,14 @@ export default function JobSeekerManagement() {
       inactiveCount: 0,
       verifiedCount: 0
     });
-    // Load with saved search query if available
-    const initialOrganizationFilter = canFilterByOrganization ? (initialFilters.organizationFilter || '') : '';
+    // Load with the search query / filters from the URL if present
+    const initialOrganizationFilter = canFilterByOrganization ? (organizationFilter || '') : '';
     loadJobSeekers(
       1,
       pageSize,
-      savedSearchQuery || '',
-      initialFilters.statusFilter || '',
-      initialFilters.eventFilter || '',
+      activeSearchQuery || '',
+      statusFilter || '',
+      eventFilter || '',
       initialOrganizationFilter
     );
     isFirstRender.current = false; // Mark first render as complete
@@ -1777,7 +1708,7 @@ export default function JobSeekerManagement() {
                     ref={searchInputRef}
                     id="jobseeker-search-input"
                     type="text"
-                    defaultValue={savedSearchQuery}
+                    defaultValue={activeSearchQuery}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1819,12 +1750,6 @@ export default function JobSeekerManagement() {
                       // letting the guard desync after repeated clear+search cycles and
                       // silently skip the reload.
                       setSearchTriggerNonce((prev) => prev + 1);
-                      // Clear from sessionStorage
-                      try {
-                        sessionStorage.removeItem('jobSeekerManagement_searchQuery');
-                      } catch (error) {
-                        console.error('Error clearing Job Seeker Management search query from sessionStorage:', error);
-                      }
                       // loadJobSeekers will be called automatically via useEffect when activeSearchQuery changes
                     }}
                     disabled={searchLoading}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { listEvents } from '../../services/events';
 import { listUsers } from '../../services/users';
@@ -119,88 +119,53 @@ const JobSeekerInterests = () => {
     const fetchInProgress = useRef(false);
     const pendingFetchRequestedRef = useRef(false);
 
-    // Load search query from sessionStorage on mount (per-table persistence for search)
-    const loadSearchQueryFromSession = () => {
-        try {
-            const saved = sessionStorage.getItem('jobSeekerInterests_searchQuery');
-            if (saved) {
-                return saved;
-            }
-        } catch (error) {
-            console.error('Error loading Job Seeker Interests search query from sessionStorage:', error);
-        }
-        return '';
-    };
+    // Keep the search query and filters in the URL (?search=, ?recruiter=,
+    // ?event=, ?booth=, ?sortBy=, ?sortOrder=) so they survive navigation and
+    // reloads without any browser storage.
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    // Load filters from sessionStorage on mount
-    const loadFiltersFromSession = () => {
-        try {
-            const savedFilters = sessionStorage.getItem('jobSeekerInterests_filters');
-            const savedSearchQuery = loadSearchQueryFromSession();
-            if (savedFilters) {
-                const parsed = JSON.parse(savedFilters);
-                return {
-                    recruiterId: parsed.recruiterId || '',
-                    eventId: parsed.eventId || '',
-                    boothId: parsed.boothId || '',
-                    search: savedSearchQuery,
-                    page: 1,
-                    limit: 50,
-                    sortBy: parsed.sortBy || 'createdAt',
-                    sortOrder: parsed.sortOrder || 'desc'
-                };
-            }
-        } catch (error) {
-            console.error('Error loading filters from sessionStorage:', error);
-        }
-        const savedSearchQuery = loadSearchQueryFromSession();
-        return {
-            recruiterId: '',
-            eventId: '',
-            boothId: '',
-            search: savedSearchQuery,
-            page: 1,
-            limit: 50,
-            sortBy: 'createdAt',
-            sortOrder: 'desc'
-        };
-    };
-
-    // Filters
-    const [filters, setFilters] = useState(loadFiltersFromSession);
+    // Filters - initialised from the URL query params on mount
+    const [filters, setFilters] = useState(() => ({
+        recruiterId: searchParams.get('recruiter') || '',
+        eventId: searchParams.get('event') || '',
+        boothId: searchParams.get('booth') || '',
+        search: searchParams.get('search') || '',
+        page: 1,
+        limit: 50,
+        sortBy: searchParams.get('sortBy') || 'createdAt',
+        sortOrder: searchParams.get('sortOrder') || 'desc'
+    }));
     const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
-    
-    const savedSearchQuery = loadSearchQueryFromSession();
-    
+
     // Search input ref (uncontrolled to avoid live filtering on typing)
     const searchInputRef = useRef(null);
 
-    // Set search input value from sessionStorage on mount
+    // Mirror the filters/search into the URL whenever they change.
     useEffect(() => {
-        const savedSearchQuery = loadSearchQueryFromSession();
-        if (searchInputRef.current && savedSearchQuery) {
-            searchInputRef.current.value = savedSearchQuery;
-        }
-    }, []);
+        setSearchParams((prev) => {
+            const params = new URLSearchParams(prev);
+            const setOrDelete = (key, value, defaultValue = '') => {
+                const v = (value ?? '').toString().trim();
+                if (v && v !== defaultValue) {
+                    params.set(key, v);
+                } else {
+                    params.delete(key);
+                }
+            };
+            setOrDelete('search', filters.search);
+            setOrDelete('recruiter', filters.recruiterId);
+            setOrDelete('event', filters.eventId);
+            setOrDelete('booth', filters.boothId);
+            setOrDelete('sortBy', filters.sortBy, 'createdAt');
+            setOrDelete('sortOrder', filters.sortOrder, 'desc');
+            return params;
+        }, { replace: true });
+    }, [filters.search, filters.recruiterId, filters.eventId, filters.boothId, filters.sortBy, filters.sortOrder, setSearchParams]);
 
-    // Persist search query in sessionStorage so it survives navigation within the session
+    // Keep the (uncontrolled) search input in sync with the ?search= query param.
     useEffect(() => {
-        try {
-            if (filters.search && filters.search.trim()) {
-                sessionStorage.setItem('jobSeekerInterests_searchQuery', filters.search.trim());
-                // Also update the input field if it exists
-                if (searchInputRef.current) {
-                    searchInputRef.current.value = filters.search.trim();
-                }
-            } else {
-                sessionStorage.removeItem('jobSeekerInterests_searchQuery');
-                // Also clear the input field if it exists
-                if (searchInputRef.current) {
-                    searchInputRef.current.value = '';
-                }
-            }
-        } catch (error) {
-            console.error('Error saving Job Seeker Interests search query to sessionStorage:', error);
+        if (searchInputRef.current) {
+            searchInputRef.current.value = filters.search || '';
         }
     }, [filters.search]);
 
@@ -573,39 +538,16 @@ const JobSeekerInterests = () => {
     }, [user, loadInterests]);
 
     const handleFilterChange = (key, value) => {
-        setFilters(prev => {
-            const newFilters = {
-                ...prev,
-                [key]: value,
-                page: 1 // Reset to first page when filters change
-            };
-            // Save filters to sessionStorage (excluding page, search, limit)
-            try {
-                const filtersToSave = {
-                    recruiterId: newFilters.recruiterId,
-                    eventId: newFilters.eventId,
-                    boothId: newFilters.boothId,
-                    sortBy: newFilters.sortBy,
-                    sortOrder: newFilters.sortOrder
-                };
-                sessionStorage.setItem('jobSeekerInterests_filters', JSON.stringify(filtersToSave));
-            } catch (error) {
-                console.error('Error saving filters to sessionStorage:', error);
-            }
-            return newFilters;
-        });
+        setFilters(prev => ({
+            ...prev,
+            [key]: value,
+            page: 1 // Reset to first page when filters change
+        }));
     };
 
     const clearFilters = () => {
         if (searchInputRef.current) {
             searchInputRef.current.value = '';
-        }
-        // Clear sessionStorage
-        try {
-            sessionStorage.removeItem('jobSeekerInterests_filters');
-            sessionStorage.removeItem('jobSeekerInterests_searchQuery');
-        } catch (error) {
-            console.error('Error clearing filters from sessionStorage:', error);
         }
         setFilters({
             recruiterId: '',
@@ -646,12 +588,6 @@ const JobSeekerInterests = () => {
             search: '',
             page: 1
         }));
-        // Clear from sessionStorage
-        try {
-            sessionStorage.removeItem('jobSeekerInterests_searchQuery');
-        } catch (error) {
-            console.error('Error clearing Job Seeker Interests search query from sessionStorage:', error);
-        }
     };
 
     const handleBulkDelete = () => {
@@ -1976,7 +1912,7 @@ const JobSeekerInterests = () => {
                                             ref={searchInputRef}
                                             id="jsi-search-input"
                                             type="text"
-                                            defaultValue={savedSearchQuery}
+                                            defaultValue={filters.search}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();

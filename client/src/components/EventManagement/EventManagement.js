@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import '../Dashboard/Dashboard.css';
 import './EventManagement.css';
+import useQueryParamState from '../../hooks/useQueryParamState';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import PageInstructionBanner from '../common/PageInstructionBanner';
@@ -339,22 +340,11 @@ export default function EventManagement() {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(50);
 
-    // Load status filter from sessionStorage on mount (per-table persistence)
-    const loadStatusFilterFromSession = () => {
-        try {
-            const saved = sessionStorage.getItem('eventManagement_statusFilter');
-            if (saved) {
-                return saved;
-            }
-        } catch (error) {
-            console.error('Error loading Event Management status filter from sessionStorage:', error);
-        }
-        return '';
-    };
-
-    const [statusFilter, setStatusFilter] = useState(loadStatusFilterFromSession);
+    // Keep the status filter and search query in the URL (?status= / ?search=) so
+    // they survive navigation and reloads without any browser storage.
+    const [statusFilter, setStatusFilter] = useQueryParamState('status', '');
     const searchInputRef = useRef(null);
-    const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search parameter used for filtering
+    const [activeSearchQuery, setActiveSearchQuery] = useQueryParamState('search', '');
     const [searchTriggerNonce, setSearchTriggerNonce] = useState(0);
     const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
 
@@ -363,7 +353,7 @@ export default function EventManagement() {
         setActiveSearchQuery(query);
         setSearchTriggerNonce((prev) => prev + 1);
         setCurrentPage(1); // Reset to first page when searching
-    }, []);
+    }, [setActiveSearchQuery]);
 
     const handleClearSearch = useCallback(() => {
         if (searchInputRef.current) {
@@ -375,7 +365,7 @@ export default function EventManagement() {
         // and the grid keeps showing stale results).
         setSearchTriggerNonce((prev) => prev + 1);
         setCurrentPage(1); // Reset to first page when clearing
-    }, []);
+    }, [setActiveSearchQuery]);
 
 
     const statusOptions = [
@@ -387,18 +377,13 @@ export default function EventManagement() {
         { value: 'cancelled', label: 'Cancelled' },
     ];
 
-    // Persist status filter in sessionStorage so it survives navigation during the session
+    // Keep the (uncontrolled) search input in sync with the ?search= query param,
+    // including on mount and when navigating back/forward.
     useEffect(() => {
-        try {
-            if (statusFilter) {
-                sessionStorage.setItem('eventManagement_statusFilter', statusFilter);
-            } else {
-                sessionStorage.removeItem('eventManagement_statusFilter');
-            }
-        } catch (error) {
-            console.error('Error saving Event Management status filter to sessionStorage:', error);
+        if (searchInputRef.current) {
+            searchInputRef.current.value = activeSearchQuery || '';
         }
-    }, [statusFilter]);
+    }, [activeSearchQuery]);
 
     const loadEvents = useCallback(async () => {
         // Track this specific request so stale responses can be discarded
