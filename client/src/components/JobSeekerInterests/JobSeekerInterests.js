@@ -789,12 +789,15 @@ const JobSeekerInterests = () => {
         });
     }, [interests]);
 
-    // Syncfusion Grid does not automatically pick up dataSource prop changes —
-    // an explicit refresh() is required after every data update.
+    // Syncfusion Grid does not reliably pick up dataSource prop changes. Calling
+    // refresh() alone only re-renders the grid's *existing* internal dataSource, so
+    // searched/filtered results only appeared after a full page reload remounted the
+    // grid. Assigning the new array to the grid instance forces EJ2 to rebind to the
+    // fresh data (which also re-renders templated cells).
     useEffect(() => {
-        if (gridRef.current && typeof gridRef.current.refresh === 'function') {
-            gridRef.current.refresh();
-        }
+        const grid = gridRef.current;
+        if (!grid) return;
+        grid.dataSource = gridDataSource;
     }, [gridDataSource]);
 
     // Memoize grid settings to prevent unnecessary re-renders

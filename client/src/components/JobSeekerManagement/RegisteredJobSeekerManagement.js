@@ -187,11 +187,15 @@ export default function RegisteredJobSeekerManagement() {
       });
   }, [jobSeekers]);
 
-  // Syncfusion Grid does not reliably pick up dataSource prop changes — refresh after data updates (e.g. search).
+  // Syncfusion Grid does not reliably pick up dataSource prop changes. Calling
+  // refresh() alone only re-renders the grid's *existing* internal dataSource, so
+  // searched/filtered results only appeared after a full page reload remounted the
+  // grid. Assigning the new array to the grid instance forces EJ2 to rebind to the
+  // fresh data (which also re-renders templated cells).
   useEffect(() => {
-    if (gridRef.current && typeof gridRef.current.refresh === 'function') {
-      gridRef.current.refresh();
-    }
+    const grid = gridRef.current;
+    if (!grid) return;
+    grid.dataSource = flatDataSource;
   }, [flatDataSource]);
 
   // Frozen columns rely on native Syncfusion movable/frozen pane scrolling.
