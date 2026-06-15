@@ -514,11 +514,12 @@ export default function BoothQueueWaiting() {
   const announceToScreenReader = (message) => {
     announcementCounterRef.current += 1;
     const uniqueId = `announcement-${Date.now()}-${announcementCounterRef.current}-${Math.random().toString(36).substr(2, 9)}`;
-    setAnnouncements(prev => {
-      const newAnnouncements = [...prev, { id: uniqueId, message }];
-      // Keep only last 5 announcements
-      return newAnnouncements.slice(-5);
-    });
+    // Keep only the latest announcement. The live region is aria-atomic="true",
+    // so if multiple announcements coexist it re-reads ALL of them together (e.g.
+    // a lingering "You said: ..." would be read again in front of an incoming
+    // recruiter message). Replacing instead of stacking ensures the screen reader
+    // announces only the newest message.
+    setAnnouncements([{ id: uniqueId, message }]);
   };
 
   // Simple, reliable speech function using native SpeechSynthesis
@@ -699,6 +700,22 @@ export default function BoothQueueWaiting() {
         return [...prev, data.message];
       });
       
+      // Announce the incoming recruiter message to screen reader users as a single
+      // assertive announcement: "New message from recruiter: <content>".
+      // (The .messages-list log is intentionally not a live region so it doesn't
+      // re-read previous messages on each update.)
+      //
+      // We deliberately keep the prefix AND content together in one announcement
+      // rather than relying on the polite toast for the prefix: an assertive update
+      // interrupts a pending polite one, which caused the toast's "New message from
+      // recruiter" to be dropped. Bundling both guarantees the user hears the full
+      // phrase, then the message text.
+      const incomingText =
+        data.message.type === 'text' && data.message.content
+          ? `New message from recruiter: ${data.message.content}`
+          : 'New message from recruiter';
+      announceToScreenReader(incomingText);
+
       if (showTextMessagingModal) {
         setTimeout(scrollToBottom, 100);
       } else {
@@ -939,6 +956,8 @@ export default function BoothQueueWaiting() {
         isRead: true
       };
       setMessages(prev => [...prev, newMessage]);
+      // Announce the sent message once for screen reader users.
+      announceToScreenReader(`You said: ${newMessage.content}`);
       setTextMessageContent('');
       // Removed toast notification for message sent
 
@@ -1814,7 +1833,11 @@ export default function BoothQueueWaiting() {
                 Type your message to the recruiter(s) in this booth. Please
                 understand Recruiters may be in meetings.
               </p>
-              <div className="messages-list">
+              <div
+                className="messages-list"
+                role="log"
+                aria-label="Messages"
+              >
                 {messages.length === 0 ? (
                   <p className="no-messages">No messages yet</p>
                 ) : (

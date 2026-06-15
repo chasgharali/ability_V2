@@ -1261,7 +1261,8 @@
 }
 
 .modal-close:hover {
-  color: #000000;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 /* Responsive Design */
