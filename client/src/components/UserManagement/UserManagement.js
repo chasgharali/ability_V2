@@ -22,6 +22,9 @@ import MassUploadModal from './MassUploadModal';
 import { useAuth } from '../../contexts/AuthContext';
 import useQueryParamState from '../../hooks/useQueryParamState';
 import { Helmet } from 'react-helmet-async';
+
+const ORG_SCOPED_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
+
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === 'SuperAdmin';
@@ -69,7 +72,6 @@ export default function UserManagement() {
   const loadingUsersRef = useRef(false);
   const loadRequestGenRef = useRef(0); // Generation counter to discard stale API responses
   const selectionUpdateTimeoutRef = useRef(null);
-  const isUpdatingSelectionRef = useRef(false);
   const previousUsersRef = useRef([]);
   // Delete confirmation dialog
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -169,10 +171,10 @@ export default function UserManagement() {
     }
   };
 
-  const handleDelete = (row) => {
+  const handleDelete = useCallback((row) => {
     setRowPendingDelete(row);
     setConfirmOpen(true);
-  };
+  }, []);
 
   const confirmDelete = async () => {
     if (!rowPendingDelete) return;
@@ -245,11 +247,11 @@ export default function UserManagement() {
   // Batched selection update to prevent blinking/flashing
   // Uses requestAnimationFrame and only updates state when selection actually changed
   const updateSelectionBatched = useCallback(() => {
+    // Collapse bursts of selection events into a single state update on the next
+    // frame. Always (re)schedule so a later event can't leave us in a stuck state.
     if (selectionUpdateTimeoutRef.current) {
       cancelAnimationFrame(selectionUpdateTimeoutRef.current);
     }
-    if (isUpdatingSelectionRef.current) return;
-    isUpdatingSelectionRef.current = true;
 
     selectionUpdateTimeoutRef.current = requestAnimationFrame(() => {
       const currentSelection = getSelectedUsersFromGrid();
@@ -260,7 +262,6 @@ export default function UserManagement() {
         }
         return prev;
       });
-      isUpdatingSelectionRef.current = false;
       selectionUpdateTimeoutRef.current = null;
     });
   }, [getSelectedUsersFromGrid]);
@@ -766,7 +767,6 @@ export default function UserManagement() {
     }
   }, [confirmOpen]);
 
-  const ORG_SCOPED_ROLES = ['Admin', 'AdminEvent', 'BoothAdmin', 'Recruiter', 'Interpreter', 'GlobalInterpreter', 'Support', 'GlobalSupport'];
   const orgLimits = currentUser?.organizationId?.limits || {};
   const maxUsersLimit = Number(orgLimits?.maxUsers || 0);
   const maxRecruitersLimit = Number(orgLimits?.maxRecruiters || 0);
@@ -779,8 +779,54 @@ export default function UserManagement() {
   const orgUserLimitReached = currentUser?.role === 'Admin' && maxUsersLimit > 0 && currentOrgScopedUsersCount >= maxUsersLimit;
   const recruiterLimitReached = currentUser?.role === 'Admin' && maxRecruitersLimit > 0 && currentActiveRecruitersCount >= maxRecruitersLimit;
 
-  // Grid template functions for custom column renders - using Syncfusion ButtonComponent
-  const actionsTemplate = (props) => {
+  const startEdit = useCallback((row) => {
+    const firstName = row.firstName || '';
+    const lastName = row.lastName || '';
+    setForm(prev => ({
+      ...prev,
+      firstName,
+      lastName,
+      email: row.email || '',
+      role: row.role === 'Unassigned' ? '' : (row.role || ''),
+      boothId: row.assignedBoothId || '',
+      field: '',
+      eventId: row.role === 'GlobalSupport' && row.assignedEvents?.length > 0
+        ? row.assignedEvents[0]
+        : '',
+      password: '',
+      confirmPassword: '',
+      selectedEvents: row.assignedEvents || [],
+    }));
+    setEditingId(row.id);
+    setMode('create'); // reuse the same form UI
+  }, []);
+
+  const handleDeactivate = useCallback(async (row) => {
+    try {
+      await deactivateUser(row.id);
+      showToast('User deactivated', 'Success');
+      await loadUsers();
+    } catch (e) {
+      console.error('Deactivate failed', e);
+      showToast('Failed to deactivate user', 'Error');
+    }
+  }, [loadUsers]);
+
+  const handleReactivate = useCallback(async (row) => {
+    try {
+      await reactivateUser(row.id);
+      showToast('User reactivated', 'Success');
+      await loadUsers();
+    } catch (e) {
+      console.error('Reactivate failed', e);
+      showToast('Failed to reactivate user', 'Error');
+    }
+  }, [loadUsers]);
+
+  // Grid template functions for custom column renders - using Syncfusion ButtonComponent.
+  // Memoized with stable handler deps so the grid's column definitions keep a stable
+  // reference across re-renders (prevents Syncfusion from refreshing & dropping selection).
+  const actionsTemplate = useCallback((props) => {
     const row = props;
     return (
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -827,51 +873,188 @@ export default function UserManagement() {
         </ButtonComponent>
       </div>
     );
-  };
+  }, [isSuperAdmin, startEdit, handleDeactivate, handleReactivate, handleDelete]);
 
-  const startEdit = (row) => {
-    const firstName = row.firstName || '';
-    const lastName = row.lastName || '';
-    setForm(prev => ({
-      ...prev,
-      firstName,
-      lastName,
-      email: row.email || '',
-      role: row.role === 'Unassigned' ? '' : (row.role || ''),
-      boothId: row.assignedBoothId || '',
-      field: '',
-      eventId: row.role === 'GlobalSupport' && row.assignedEvents?.length > 0
-        ? row.assignedEvents[0]
-        : '',
-      password: '',
-      confirmPassword: '',
-      selectedEvents: row.assignedEvents || [],
-    }));
-    setEditingId(row.id);
-    setMode('create'); // reuse the same form UI
-  };
-
-  const handleDeactivate = async (row) => {
-    try {
-      await deactivateUser(row.id);
-      showToast('User deactivated', 'Success');
-      await loadUsers();
-    } catch (e) {
-      console.error('Deactivate failed', e);
-      showToast('Failed to deactivate user', 'Error');
-    }
-  };
-
-  const handleReactivate = async (row) => {
-    try {
-      await reactivateUser(row.id);
-      showToast('User reactivated', 'Success');
-      await loadUsers();
-    } catch (e) {
-      console.error('Reactivate failed', e);
-      showToast('Failed to reactivate user', 'Error');
-    }
-  };
+  // Memoize the entire grid element so selection-only re-renders (which update
+  // selectedUsers/header state) reuse the exact same React element. React then
+  // bails out of reconciling the Syncfusion grid, so its wrapper never re-runs
+  // refreshChild and never refreshes/clears the row selection (fixes the
+  // "selection blinks and disappears" bug). It only re-renders when the data
+  // (paginatedDataSource), org visibility, or stable callbacks actually change.
+  const gridElement = useMemo(() => (
+    <GridComponent
+      ref={gridRef}
+      dataSource={paginatedDataSource}
+      allowPaging={false}
+      allowSorting={true}
+      allowFiltering={true}
+      filterSettings={{ 
+        type: 'Menu',
+        showFilterBarStatus: true,
+        immediateModeDelay: 0,
+        showFilterBarOperator: true,
+        enableCaseSensitivity: false
+      }}
+      showColumnMenu={true}
+      showColumnChooser={true}
+      allowResizing={true}
+      allowReordering={true}
+      toolbar={['ColumnChooser']}
+      selectionSettings={{ type: 'Multiple', checkboxOnly: true, persistSelection: true }}
+      enableHover={true}
+      allowRowDragAndDrop={false}
+      enableHeaderFocus={false}
+      rowSelected={updateSelectionBatched}
+      rowDeselected={updateSelectionBatched}
+      dataBound={normalizeGridFormFields}
+    >
+      <ColumnsDirective>
+        <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
+        <ColumnDirective type='checkbox' width='50' freeze='Left' />
+        <ColumnDirective 
+          field='firstName' 
+          headerText='First Name' 
+          width='150' 
+          freeze='Left'
+          allowFiltering={true}
+          template={(props) => (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+              {props.firstName || ''}
+            </div>
+          )}
+        />
+        <ColumnDirective 
+          field='lastName' 
+          headerText='Last Name' 
+          width='150' 
+          freeze='Left'
+          allowFiltering={true}
+          template={(props) => (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+              {props.lastName || ''}
+            </div>
+          )}
+        />
+        <ColumnDirective 
+          field='email' 
+          headerText='Email' 
+          width='250' 
+          allowFiltering={true}
+          template={(props) => (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+              {props.email || ''}
+            </div>
+          )}
+        />
+        <ColumnDirective 
+          field='role' 
+          headerText='Role' 
+          width='150' 
+          allowFiltering={true}
+          template={(props) => (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+              {props.role === 'Unassigned' ? (
+                <span
+                  title="Assign a role to complete this user"
+                  style={{
+                    background: '#f3f4f6',
+                    color: '#6b7280',
+                    padding: '2px 8px',
+                    borderRadius: 10,
+                    fontSize: '0.82rem',
+                    fontWeight: 600
+                  }}
+                >
+                  Unassigned (set role)
+                </span>
+              ) : (
+                props.role || ''
+              )}
+            </div>
+          )}
+        />
+        <ColumnDirective 
+          field='organizationName' 
+          headerText='Organization' 
+          width='180' 
+          visible={isSuperAdmin}
+          allowFiltering={true}
+          template={(props) => (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+              {props.organizationName && props.organizationName !== '-' ? (
+                <span style={{ background: '#e8f4fd', color: '#0066cc', padding: '2px 8px', borderRadius: 10, fontSize: '0.85rem' }}>
+                  {props.organizationName}
+                </span>
+              ) : (
+                <span style={{ color: '#aaa' }}>-</span>
+              )}
+            </div>
+          )}
+        />
+        <ColumnDirective 
+          field='booth' 
+          headerText='Booth' 
+          width='180' 
+          allowFiltering={true}
+          template={(props) => (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+              {props.booth || '-'}
+            </div>
+          )}
+        />
+        <ColumnDirective
+          field='assignedEventsLabel'
+          headerText='Assigned Event(s)'
+          width='220'
+          allowFiltering={true}
+          template={(props) => (
+            <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+              {props.assignedEventsLabel && props.assignedEventsLabel !== '-' ? (
+                <span title={props.assignedEventsLabel}>{props.assignedEventsLabel}</span>
+              ) : (
+                <span style={{ color: '#aaa' }}>-</span>
+              )}
+            </div>
+          )}
+        />
+        <ColumnDirective
+          field='importStatus'
+          headerText='Import Status'
+          width='170'
+          allowFiltering={true}
+          template={(props) => {
+            const needsInfo = props.importStatus === 'incomplete';
+            const missing = Array.isArray(props.importMissingFields) ? props.importMissingFields : [];
+            return (
+              <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                <span
+                  title={needsInfo && missing.length > 0 ? `Missing: ${missing.join(', ')}` : 'Ready'}
+                  style={{
+                    background: needsInfo ? '#fff4e5' : '#e8f5e9',
+                    color: needsInfo ? '#b45309' : '#166534',
+                    padding: '2px 8px',
+                    borderRadius: 10,
+                    fontSize: '0.82rem',
+                    fontWeight: 600
+                  }}
+                >
+                  {needsInfo ? 'Needs Info' : 'Ready'}
+                </span>
+              </div>
+            );
+          }}
+        />
+        <ColumnDirective
+          headerText='Action'
+          width='430'
+          allowSorting={false} 
+          allowFiltering={false}
+          template={actionsTemplate}
+        />
+      </ColumnsDirective>
+      <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze]} />
+    </GridComponent>
+  ), [paginatedDataSource, isSuperAdmin, actionsTemplate, updateSelectionBatched, normalizeGridFormFields]);
 
   const handleAssignOrg = async () => {
     if (!assignOrgRow) return;
@@ -1239,178 +1422,7 @@ export default function UserManagement() {
                     </div>
                   </div>
                 )}
-                <GridComponent
-                  ref={gridRef}
-                  dataSource={paginatedDataSource}
-                  allowPaging={false}
-                  allowSorting={true}
-                  allowFiltering={true}
-                  filterSettings={{ 
-                    type: 'Menu',
-                    showFilterBarStatus: true,
-                    immediateModeDelay: 0,
-                    showFilterBarOperator: true,
-                    enableCaseSensitivity: false
-                  }}
-                  showColumnMenu={true}
-                  showColumnChooser={true}
-                  allowResizing={true}
-                  allowReordering={true}
-                  toolbar={['ColumnChooser']}
-                  selectionSettings={{ type: 'Multiple', checkboxOnly: true }}
-                  enableHover={true}
-                  allowRowDragAndDrop={false}
-                  enableHeaderFocus={false}
-                  rowSelected={updateSelectionBatched}
-                  rowDeselected={updateSelectionBatched}
-                  dataBound={normalizeGridFormFields}
-                >
-                  <ColumnsDirective>
-                    <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-                    <ColumnDirective type='checkbox' width='50' freeze='Left' />
-                    <ColumnDirective 
-                      field='firstName' 
-                      headerText='First Name' 
-                      width='150' 
-                      freeze='Left'
-                      allowFiltering={true}
-                      template={(props) => (
-                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.firstName || ''}
-                        </div>
-                      )}
-                    />
-                    <ColumnDirective 
-                      field='lastName' 
-                      headerText='Last Name' 
-                      width='150' 
-                      freeze='Left'
-                      allowFiltering={true}
-                      template={(props) => (
-                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.lastName || ''}
-                        </div>
-                      )}
-                    />
-                    <ColumnDirective 
-                      field='email' 
-                      headerText='Email' 
-                      width='250' 
-                      allowFiltering={true}
-                      template={(props) => (
-                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.email || ''}
-                        </div>
-                      )}
-                    />
-                    <ColumnDirective 
-                      field='role' 
-                      headerText='Role' 
-                      width='150' 
-                      allowFiltering={true}
-                      template={(props) => (
-                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.role === 'Unassigned' ? (
-                            <span
-                              title="Assign a role to complete this user"
-                              style={{
-                                background: '#f3f4f6',
-                                color: '#6b7280',
-                                padding: '2px 8px',
-                                borderRadius: 10,
-                                fontSize: '0.82rem',
-                                fontWeight: 600
-                              }}
-                            >
-                              Unassigned (set role)
-                            </span>
-                          ) : (
-                            props.role || ''
-                          )}
-                        </div>
-                      )}
-                    />
-                    <ColumnDirective 
-                      field='organizationName' 
-                      headerText='Organization' 
-                      width='180' 
-                      visible={isSuperAdmin}
-                      allowFiltering={true}
-                      template={(props) => (
-                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.organizationName && props.organizationName !== '-' ? (
-                            <span style={{ background: '#e8f4fd', color: '#0066cc', padding: '2px 8px', borderRadius: 10, fontSize: '0.85rem' }}>
-                              {props.organizationName}
-                            </span>
-                          ) : (
-                            <span style={{ color: '#aaa' }}>-</span>
-                          )}
-                        </div>
-                      )}
-                    />
-                    <ColumnDirective 
-                      field='booth' 
-                      headerText='Booth' 
-                      width='180' 
-                      allowFiltering={true}
-                      template={(props) => (
-                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.booth || '-'}
-                        </div>
-                      )}
-                    />
-                    <ColumnDirective
-                      field='assignedEventsLabel'
-                      headerText='Assigned Event(s)'
-                      width='220'
-                      allowFiltering={true}
-                      template={(props) => (
-                        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                          {props.assignedEventsLabel && props.assignedEventsLabel !== '-' ? (
-                            <span title={props.assignedEventsLabel}>{props.assignedEventsLabel}</span>
-                          ) : (
-                            <span style={{ color: '#aaa' }}>-</span>
-                          )}
-                        </div>
-                      )}
-                    />
-                    <ColumnDirective
-                      field='importStatus'
-                      headerText='Import Status'
-                      width='170'
-                      allowFiltering={true}
-                      template={(props) => {
-                        const needsInfo = props.importStatus === 'incomplete';
-                        const missing = Array.isArray(props.importMissingFields) ? props.importMissingFields : [];
-                        return (
-                          <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                            <span
-                              title={needsInfo && missing.length > 0 ? `Missing: ${missing.join(', ')}` : 'Ready'}
-                              style={{
-                                background: needsInfo ? '#fff4e5' : '#e8f5e9',
-                                color: needsInfo ? '#b45309' : '#166534',
-                                padding: '2px 8px',
-                                borderRadius: 10,
-                                fontSize: '0.82rem',
-                                fontWeight: 600
-                              }}
-                            >
-                              {needsInfo ? 'Needs Info' : 'Ready'}
-                            </span>
-                          </div>
-                        );
-                      }}
-                    />
-                    <ColumnDirective
-                      headerText='Action'
-                      width='430'
-                      allowSorting={false} 
-                      allowFiltering={false}
-                      template={actionsTemplate}
-                    />
-                  </ColumnsDirective>
-                  <GridInject services={[Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, Freeze]} />
-                </GridComponent>
+                {gridElement}
 
                 {/* Custom Pagination Footer */}
                 {users.length > 0 && (
