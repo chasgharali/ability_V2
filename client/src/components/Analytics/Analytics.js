@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import '../Dashboard/Dashboard.css';
 import './Analytics.css';
 import AdminHeader from '../Layout/AdminHeader';
@@ -56,6 +56,13 @@ export default function Analytics() {
     const isSupportRole = user?.role === 'Support';
     const isRecruiterRole = user?.role === 'Recruiter';
     const canFilterBooth = ['Admin', 'GlobalSupport'].includes(user?.role);
+    const recruiterAssignedEventIds = useMemo(
+        () => (user?.assignedEvents || []).map((e) => (e?._id || e).toString()),
+        [user?.assignedEvents]
+    );
+    const recruiterEventOptions = isRecruiterRole && recruiterAssignedEventIds.length > 0
+        ? events.filter((e) => recruiterAssignedEventIds.includes(e._id.toString()))
+        : events;
 
     const showToast = useCallback((message, type = 'info') => {
         toast.show(message, { type, duration: 3000 });
@@ -71,8 +78,10 @@ export default function Analytics() {
                 console.error('Error loading events:', error);
             }
         };
-        loadEvents();
-    }, []);
+        if (user) {
+            loadEvents();
+        }
+    }, [user]);
 
     // Load booths for admin/global support filters
     useEffect(() => {
@@ -97,22 +106,29 @@ export default function Analytics() {
 
     // Support and Recruiter roles: lock filters to assigned booth/event
     useEffect(() => {
-        if ((!isSupportRole && !isRecruiterRole) || assignedBoothLoading || !assignedBooth || !assignedBooth._id) {
+        if ((!isSupportRole && !isRecruiterRole) || assignedBoothLoading) {
             return;
         }
 
-        setBoothOptions([assignedBooth]);
+        if (assignedBooth?._id) {
+            setBoothOptions([assignedBooth]);
+        }
 
         setFilters(prev => {
             let updated = false;
             const next = { ...prev };
 
-            if (!prev.boothId && assignedBooth._id) {
+            if (!prev.boothId && assignedBooth?._id) {
                 next.boothId = assignedBooth._id;
                 updated = true;
             }
 
-            if (assignedEvent?._id && prev.eventId !== assignedEvent._id) {
+            if (isRecruiterRole && recruiterAssignedEventIds.length > 0) {
+                if (!prev.eventId || !recruiterAssignedEventIds.includes(prev.eventId.toString())) {
+                    next.eventId = recruiterAssignedEventIds[0];
+                    updated = true;
+                }
+            } else if (assignedEvent?._id && prev.eventId !== assignedEvent._id) {
                 next.eventId = assignedEvent._id;
                 updated = true;
             }
@@ -120,7 +136,7 @@ export default function Analytics() {
             return updated ? next : prev;
         });
 
-    }, [isSupportRole, isRecruiterRole, assignedBoothLoading, assignedBooth, assignedEvent]);
+    }, [isSupportRole, isRecruiterRole, assignedBoothLoading, assignedBooth, assignedEvent, recruiterAssignedEventIds]);
 
     // Load overview data
     const loadOverview = useCallback(async () => {
@@ -331,9 +347,10 @@ export default function Analytics() {
                                                     id="event-filter"
                                                     value={filters.eventId}
                                                     onChange={(e) => handleFilterChange('eventId', e.target.value)}
+                                                    disabled={isRecruiterRole && recruiterEventOptions.length <= 1}
                                                     options={[
-                                                        { value: '', label: 'All Events' },
-                                                        ...events.map(e => ({ value: e._id, label: e.name }))
+                                                        ...(!isRecruiterRole ? [{ value: '', label: 'All Events' }] : []),
+                                                        ...recruiterEventOptions.map(e => ({ value: e._id, label: e.name }))
                                                     ]}
                                                 />
                                             </div>

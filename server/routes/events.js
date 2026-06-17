@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Event = require('../models/Event');
 const Booth = require('../models/Booth');
+const User = require('../models/User');
 const { authenticateToken, requireRole, requireResourceAccess } = require('../middleware/auth');
 const Organization = require('../models/Organization');
 const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
@@ -150,6 +151,15 @@ router.get('/', authenticateToken, async (req, res) => {
         // Apply status filter
         if (status) {
             query.status = status;
+        }
+
+        // Recruiters with assigned events only see those events
+        if (user.role === 'Recruiter') {
+            const recruiter = await User.findById(user._id).select('assignedEvents');
+            const assignedEvents = recruiter?.assignedEvents || [];
+            if (assignedEvents.length > 0) {
+                query._id = { $in: assignedEvents };
+            }
         }
 
         // Apply time-based filters

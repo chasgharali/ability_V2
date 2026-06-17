@@ -29,6 +29,68 @@ const buildBoothFilter = async (user) => {
 };
 
 /**
+ * For recruiters with assignedEvents, validate requested eventId and return scope.
+ */
+const resolveRecruiterEventScope = async (user, eventId) => {
+    if (user.role !== 'Recruiter') {
+        return { denied: false, eventId: eventId || null, eventIds: null };
+    }
+
+    const recruiter = await User.findById(user._id).select('assignedEvents');
+    const assignedEvents = (recruiter?.assignedEvents || [])
+        .filter((id) => id && mongoose.Types.ObjectId.isValid(id.toString()));
+
+    if (assignedEvents.length === 0) {
+        return { denied: false, eventId: eventId || null, eventIds: null };
+    }
+
+    const assignedObjectIds = assignedEvents.map((id) => new mongoose.Types.ObjectId(id.toString()));
+
+    if (eventId) {
+        if (!mongoose.Types.ObjectId.isValid(eventId)) {
+            return { denied: true, status: 400, error: 'Invalid eventId format' };
+        }
+        const allowed = assignedObjectIds.some((id) => id.toString() === eventId.toString());
+        if (!allowed) {
+            return { denied: true, status: 403, error: 'Access denied to this event' };
+        }
+        return { denied: false, eventId: new mongoose.Types.ObjectId(eventId), eventIds: null };
+    }
+
+    return { denied: false, eventId: null, eventIds: assignedObjectIds };
+};
+
+const applyEventScopeToBoothQuery = (boothMatchQuery, eventScope) => {
+    if (eventScope.eventId) {
+        boothMatchQuery.$or = [
+            { eventId: eventScope.eventId },
+            { events: eventScope.eventId }
+        ];
+    } else if (eventScope.eventIds?.length > 0) {
+        boothMatchQuery.$or = [
+            { eventId: { $in: eventScope.eventIds } },
+            { events: { $in: eventScope.eventIds } }
+        ];
+    }
+};
+
+const applyEventScopeToMatchQuery = (matchQuery, eventScope) => {
+    if (eventScope.eventId) {
+        matchQuery.eventId = eventScope.eventId;
+    } else if (eventScope.eventIds?.length > 0) {
+        matchQuery.eventId = { $in: eventScope.eventIds };
+    }
+};
+
+const applyEventScopeToQueueQuery = (queueMatchQuery, eventScope) => {
+    if (eventScope.eventId) {
+        queueMatchQuery.event = eventScope.eventId;
+    } else if (eventScope.eventIds?.length > 0) {
+        queueMatchQuery.event = { $in: eventScope.eventIds };
+    }
+};
+
+/**
  * GET /api/analytics/overview
  * Get system-wide analytics overview
  * Admin and GlobalSupport: all data
@@ -43,6 +105,11 @@ router.get('/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport'
         }
 
         const { startDate, endDate, eventId, boothId } = req.query;
+
+        const eventScope = await resolveRecruiterEventScope(req.user, eventId);
+        if (eventScope.denied) {
+            return res.status(eventScope.status).json({ error: eventScope.error });
+        }
         
         // Build date filter
         let dateFilter = {};
@@ -54,11 +121,10 @@ router.get('/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport'
 
         // Combine filters
         const matchQuery = { ...boothFilter, ...dateFilter };
-        if (eventId) {
-            if (!mongoose.Types.ObjectId.isValid(eventId)) {
-                return res.status(400).json({ error: 'Invalid eventId format' });
-            }
-            matchQuery.eventId = new mongoose.Types.ObjectId(eventId);
+        if (eventScope.eventId) {
+            matchQuery.eventId = eventScope.eventId;
+        } else if (eventScope.eventIds?.length > 0) {
+            matchQuery.eventId = { $in: eventScope.eventIds };
         }
         if (boothId && !boothFilter.boothId) {
             if (!mongoose.Types.ObjectId.isValid(boothId)) {
@@ -108,8 +174,10 @@ router.get('/overview', authenticateToken, requireRole(['Admin', 'GlobalSupport'
         } else if (boothId && mongoose.Types.ObjectId.isValid(boothId)) {
             queueMatchQuery.booth = new mongoose.Types.ObjectId(boothId);
         }
-        if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
-            queueMatchQuery.event = new mongoose.Types.ObjectId(eventId);
+        if (eventScope.eventId) {
+            queueMatchQuery.event = eventScope.eventId;
+        } else if (eventScope.eventIds?.length > 0) {
+            queueMatchQuery.event = { $in: eventScope.eventIds };
         }
         if (startDate || endDate) {
             queueMatchQuery.joinedAt = {};
@@ -323,6 +391,11 @@ router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
 
         const { eventId, boothId, startDate, endDate } = req.query;
 
+        const eventScope = await resolveRecruiterEventScope(req.user, eventId);
+        if (eventScope.denied) {
+            return res.status(eventScope.status).json({ error: eventScope.error });
+        }
+
         // Build date filter
         let dateFilter = {};
         if (startDate || endDate) {
@@ -341,12 +414,13 @@ router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
             }
             boothMatchQuery._id = new mongoose.Types.ObjectId(boothId);
         }
-        if (eventId) {
+        if (eventScope.eventId || eventScope.eventIds?.length > 0) {
+            applyEventScopeToBoothQuery(boothMatchQuery, eventScope);
+        } else if (eventId) {
             if (!mongoose.Types.ObjectId.isValid(eventId)) {
                 return res.status(400).json({ error: 'Invalid eventId format' });
             }
             const eventObjectId = new mongoose.Types.ObjectId(eventId);
-            // Check both eventId and events array for multi-event booth support
             boothMatchQuery.$or = [
                 { eventId: eventObjectId },
                 { events: eventObjectId }
@@ -367,7 +441,8 @@ router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
 
         // Build query for meeting stats
         let matchQuery = { ...dateFilter, boothId: { $in: boothIds } };
-        if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+        applyEventScopeToMatchQuery(matchQuery, eventScope);
+        if (!eventScope.eventId && !eventScope.eventIds?.length && eventId && mongoose.Types.ObjectId.isValid(eventId)) {
             matchQuery.eventId = new mongoose.Types.ObjectId(eventId);
         }
 
@@ -409,7 +484,8 @@ router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
 
         // Get queue statistics per booth
         let queueMatchQuery = { booth: { $in: boothIds } };
-        if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+        applyEventScopeToQueueQuery(queueMatchQuery, eventScope);
+        if (!eventScope.eventId && !eventScope.eventIds?.length && eventId && mongoose.Types.ObjectId.isValid(eventId)) {
             queueMatchQuery.event = new mongoose.Types.ObjectId(eventId);
         }
         if (startDate || endDate) {
@@ -435,7 +511,11 @@ router.get('/booths', authenticateToken, requireRole(['Admin', 'GlobalSupport', 
         // Get job seeker interests per booth
         const JobSeekerInterest = require('../models/JobSeekerInterest');
         let interestMatchQuery = { booth: { $in: boothIds } };
-        if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+        if (eventScope.eventId) {
+            interestMatchQuery.event = eventScope.eventId;
+        } else if (eventScope.eventIds?.length > 0) {
+            interestMatchQuery.event = { $in: eventScope.eventIds };
+        } else if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
             interestMatchQuery.event = new mongoose.Types.ObjectId(eventId);
         }
 
