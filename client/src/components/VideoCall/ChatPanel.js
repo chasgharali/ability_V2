@@ -81,6 +81,26 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
     return senderId && senderId === currentUserId;
   };
 
+  const capitalizeRole = (role) => {
+    if (!role) return 'User';
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  };
+
+  const getSenderRole = (message) =>
+    message.senderRole || message.sender?.role || '';
+
+  // Whether to show only the role (and hide the sender's name).
+  // - Job seekers only ever see roles.
+  // - Interpreters must not see a recruiter's name; show the role instead.
+  const shouldShowRoleOnly = (message) => {
+    if (user?.role === 'JobSeeker') return true;
+    const isInterpreter =
+      user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter';
+    const senderIsRecruiter =
+      String(getSenderRole(message)).toLowerCase() === 'recruiter';
+    return isInterpreter && senderIsRecruiter;
+  };
+
   return (
     <div
       className="incall-chat-panel"
@@ -143,10 +163,10 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
                 <>
                   {!isOwnMessage(message) && (
                     <div className="incall-chat-message-sender">
-                      {user?.role === 'JobSeeker' ? (
-                        // For job seekers, only show the role
+                      {shouldShowRoleOnly(message) ? (
+                        // Only show the role (name is hidden)
                         <span className="incall-chat-sender-name">
-                          {message.senderRole || message.sender?.role || 'User'}
+                          {capitalizeRole(getSenderRole(message))}
                         </span>
                       ) : (
                         // For other roles, show name and role
@@ -155,7 +175,7 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
                             {message.sender?.name || 'Unknown'}
                           </span>
                           <span className="incall-chat-sender-role">
-                            ({message.senderRole || message.sender?.role || 'User'})
+                            ({capitalizeRole(getSenderRole(message))})
                           </span>
                         </>
                       )}

@@ -1219,7 +1219,7 @@ const socketHandler = (io) => {
                 }
 
                 const videoCall = await VideoCall.findById(callId)
-                    .populate('recruiter jobSeeker booth');
+                    .populate('recruiter jobSeeker booth event');
 
                 if (!videoCall) {
                     socket.emit('error', { message: 'Video call not found' });
@@ -1266,6 +1266,7 @@ const socketHandler = (io) => {
                         roomName: videoCall.roomName,
                         accessToken: interpreterToken,
                         booth: videoCall.booth,
+                        event: videoCall.event,
                         recruiter: socketSafeUser(videoCall.recruiter),
                         jobSeeker: socketSafeUser(videoCall.jobSeeker)
                     });

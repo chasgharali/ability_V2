@@ -329,6 +329,7 @@ const InterpreterDashboard = () => {
               accessToken: data.accessToken,
               userRole: 'interpreter',
               booth: data.booth,
+              event: data.event,
               participants: {
                 recruiter: data.recruiter,
                 jobSeeker: data.jobSeeker

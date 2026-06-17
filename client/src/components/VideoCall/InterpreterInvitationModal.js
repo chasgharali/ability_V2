@@ -92,7 +92,7 @@ const InterpreterInvitationModal = ({ invitation, onAccept, onReject }) => {
           <p className="call-invite-text">
             You are invited to join a video call at{' '}
             <strong>{invitation.booth?.name || 'Unknown Booth'}</strong> for{' '}
-            <strong>{invitation.booth?.event?.name || 'oct 8 event'}</strong>.
+            <strong>{invitation.event?.name || invitation.booth?.event?.name || 'Unknown Event'}</strong>.
           </p>
           <p className="call-invite-subtext">Please select your camera and microphone before joining.</p>
 

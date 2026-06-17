@@ -575,7 +575,7 @@ router.post('/invite-interpreter', auth, async (req, res) => {
     });
 
     const videoCall = await VideoCall.findById(callId)
-      .populate('recruiter jobSeeker booth');
+      .populate('recruiter jobSeeker booth event');
 
     if (!videoCall) {
       return res.status(404).json({ error: 'Video call not found' });
@@ -694,6 +694,7 @@ router.post('/invite-interpreter', auth, async (req, res) => {
         email: videoCall.jobSeeker.email
       },
       booth: videoCall.booth,
+      event: videoCall.event,
       accessToken: interpreterToken
     });
 
