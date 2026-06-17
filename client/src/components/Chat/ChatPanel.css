@@ -1,3 +1,8 @@
+/* When the cookie consent banner is visible, sit above it so both remain clickable. */
+html:has(.cookie-consent-banner) .team-chat-panel-toggle {
+    bottom: var(--cookie-consent-scroll-offset, 120px);
+}
+
 /* Chat Panel Toggle Button */
 .team-chat-panel-toggle {
     position: fixed;
@@ -168,7 +173,6 @@
 
     .team-chat-panel-toggle {
         right: 16px;
-        bottom: calc(var(--app-footer-height, 50px) + 8px);
         padding: 10px 20px;
         font-size: 13px;
     }
