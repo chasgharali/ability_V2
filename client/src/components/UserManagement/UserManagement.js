@@ -19,6 +19,12 @@ import { listEvents } from '../../services/events';
 import { listOrganizations, assignUserToOrg, removeUserFromOrg } from '../../services/organizations';
 import { JOB_CATEGORY_LIST } from '../../constants/options';
 import MassUploadModal from './MassUploadModal';
+import {
+  SYNC_GRID_FILTER_SETTINGS,
+  SYNC_GRID_CHECKBOX_COLUMN_PROPS,
+  normalizeSyncfusionGridFormFields,
+  observeSyncfusionGridPopups,
+} from '../../utils/syncfusionGridHelpers';
 import { useAuth } from '../../contexts/AuthContext';
 import useQueryParamState from '../../hooks/useQueryParamState';
 import { Helmet } from 'react-helmet-async';
@@ -551,47 +557,12 @@ export default function UserManagement() {
     }
   }, [users]);
 
-  // Syncfusion's Grid (frozen panes) and its body-appended popups (column chooser,
-  // filter menus) render form fields without id/name — and occasionally duplicate
-  // ids — which trips Chrome DevTools "Issues". Normalize them: keep the first id,
-  // strip duplicates, and give a stable name to fields that have neither id nor name.
   const normalizeGridFormFields = useCallback(() => {
-    const gridEl = gridRef.current?.element;
-    const scopes = [gridEl, ...document.querySelectorAll('.e-grid-popup, .e-ccdlg, .e-filter-popup, .e-columnmenu')].filter(Boolean);
-    const seen = new Set();
-    scopes.forEach((scope) => {
-      scope.querySelectorAll('input, select, textarea').forEach((el) => {
-        if (el.id) {
-          if (seen.has(el.id)) {
-            el.removeAttribute('id');
-          } else {
-            seen.add(el.id);
-          }
-        }
-        if (!el.id && !el.getAttribute('name')) {
-          el.setAttribute('name', `um-grid-field-${Math.random().toString(36).slice(2, 9)}`);
-        }
-      });
-    });
+    normalizeSyncfusionGridFormFields(gridRef, 'um-grid-field');
   }, []);
 
-  // Column chooser / filter popups are created lazily and appended to <body>,
-  // so watch for them and normalize their fields as they appear.
   useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      const relevant = mutations.some((m) =>
-        Array.from(m.addedNodes).some(
-          (n) => n.nodeType === 1 &&
-            (n.matches?.('.e-grid-popup, .e-ccdlg, .e-filter-popup, .e-columnmenu') ||
-              n.querySelector?.('.e-grid-popup, .e-ccdlg, .e-filter-popup, .e-columnmenu'))
-        )
-      );
-      if (relevant) {
-        requestAnimationFrame(() => normalizeGridFormFields());
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    return observeSyncfusionGridPopups(normalizeGridFormFields);
   }, [normalizeGridFormFields]);
 
   // Syncfusion Grid does not reliably pick up dataSource prop changes. Calling
@@ -888,13 +859,7 @@ export default function UserManagement() {
       allowPaging={false}
       allowSorting={true}
       allowFiltering={true}
-      filterSettings={{ 
-        type: 'Menu',
-        showFilterBarStatus: true,
-        immediateModeDelay: 0,
-        showFilterBarOperator: true,
-        enableCaseSensitivity: false
-      }}
+      filterSettings={SYNC_GRID_FILTER_SETTINGS}
       showColumnMenu={true}
       showColumnChooser={true}
       allowResizing={true}
@@ -910,12 +875,13 @@ export default function UserManagement() {
     >
       <ColumnsDirective>
         <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
-        <ColumnDirective type='checkbox' width='50' freeze='Left' />
+        <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
         <ColumnDirective 
           field='firstName' 
           headerText='First Name' 
           width='150' 
           freeze='Left'
+          type='string'
           allowFiltering={true}
           template={(props) => (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -928,6 +894,7 @@ export default function UserManagement() {
           headerText='Last Name' 
           width='150' 
           freeze='Left'
+          type='string'
           allowFiltering={true}
           template={(props) => (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -939,6 +906,7 @@ export default function UserManagement() {
           field='email' 
           headerText='Email' 
           width='250' 
+          type='string'
           allowFiltering={true}
           template={(props) => (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -950,6 +918,7 @@ export default function UserManagement() {
           field='role' 
           headerText='Role' 
           width='150' 
+          type='string'
           allowFiltering={true}
           template={(props) => (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -978,6 +947,7 @@ export default function UserManagement() {
           headerText='Organization' 
           width='180' 
           visible={isSuperAdmin}
+          type='string'
           allowFiltering={true}
           template={(props) => (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -995,6 +965,7 @@ export default function UserManagement() {
           field='booth' 
           headerText='Booth' 
           width='180' 
+          type='string'
           allowFiltering={true}
           template={(props) => (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -1006,6 +977,7 @@ export default function UserManagement() {
           field='assignedEventsLabel'
           headerText='Assigned Event(s)'
           width='220'
+          type='string'
           allowFiltering={true}
           template={(props) => (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -1021,6 +993,7 @@ export default function UserManagement() {
           field='importStatus'
           headerText='Import Status'
           width='170'
+          type='string'
           allowFiltering={true}
           template={(props) => {
             const needsInfo = props.importStatus === 'incomplete';

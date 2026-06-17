@@ -27,6 +27,7 @@ import {
   EDUCATION_LEVEL_LIST,
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
+import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
 
 const getLabelFromValue = (value, optionsList) => {
   if (!value) return 'Not provided';
@@ -322,13 +323,7 @@ export default function RegisteredJobSeekerManagement() {
     }
   }, []);
 
-  const gridFilterSettings = useMemo(() => ({
-    type: 'Menu',
-    showFilterBarStatus: true,
-    immediateModeDelay: 0,
-    showFilterBarOperator: true,
-    enableCaseSensitivity: false
-  }), []);
+  const gridFilterSettings = useMemo(() => SYNC_GRID_FILTER_SETTINGS, []);
 
   const gridToolbar = useMemo(() => ['ColumnChooser'], []);
 
@@ -756,15 +751,15 @@ export default function RegisteredJobSeekerManagement() {
             enableHover={true}
           >
             <ColumnsDirective>
-              <ColumnDirective type="checkbox" width="50" allowSorting={false} allowFiltering={false} showInColumnChooser={false} freeze='Left' />
-              <ColumnDirective field="name" headerText="Name" width="180" allowFiltering={true} freeze='Left' />
+              <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
+              <ColumnDirective field="name" headerText="Name" width="180" type="string" allowFiltering={true} freeze='Left' />
               <ColumnDirective field="_id" headerText="" width="0" visible={false} isPrimaryKey />
-              <ColumnDirective field="email" headerText="Email" width="220" allowFiltering={true} />
-              <ColumnDirective field="phoneNumber" headerText="Phone" width="140" allowFiltering={true} />
-              <ColumnDirective field="city" headerText="City" width="120" allowFiltering={true} />
-              <ColumnDirective field="state" headerText="State" width="100" allowFiltering={true} />
-              <ColumnDirective field="country" headerText="Country" width="120" allowFiltering={true} />
-              <ColumnDirective field="isActive" headerText="Status" width="100" textAlign="Center" template={statusTemplate} />
+              <ColumnDirective field="email" headerText="Email" width="220" type="string" allowFiltering={true} />
+              <ColumnDirective field="phoneNumber" headerText="Phone" width="140" type="string" allowFiltering={true} />
+              <ColumnDirective field="city" headerText="City" width="120" type="string" allowFiltering={true} />
+              <ColumnDirective field="state" headerText="State" width="100" type="string" allowFiltering={true} />
+              <ColumnDirective field="country" headerText="Country" width="120" type="string" allowFiltering={true} />
+              <ColumnDirective field="isActive" headerText="Status" width="100" textAlign="Center" type="boolean" allowFiltering={true} template={statusTemplate} />
               <ColumnDirective
                 field="importStatus"
                 headerText="Import Status"
@@ -782,9 +777,9 @@ export default function RegisteredJobSeekerManagement() {
                   );
                 }}
               />
-              <ColumnDirective field="emailVerified" headerText="Email Verified" width="120" textAlign="Center" template={emailVerifiedTemplate} />
-              <ColumnDirective field="registeredEvent" headerText="Registered Event" width="200" allowFiltering={true} />
-              <ColumnDirective field="qualificationSummary" headerText="Qualifications" width="280" allowFiltering={true} />
+              <ColumnDirective field="emailVerified" headerText="Email Verified" width="120" textAlign="Center" type="boolean" allowFiltering={true} template={emailVerifiedTemplate} />
+              <ColumnDirective field="registeredEvent" headerText="Registered Event" width="200" type="string" allowFiltering={true} />
+              <ColumnDirective field="qualificationSummary" headerText="Qualifications" width="280" type="string" allowFiltering={true} />
               <ColumnDirective field="resumeTitle" headerText="Resume Used" width="220" allowFiltering={true} template={(props) => (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span>{props.resumeTitle || (props.registrationResumeUrl || props.resumeUrl ? 'Uploaded File' : '—')}</span>
@@ -800,8 +795,8 @@ export default function RegisteredJobSeekerManagement() {
                   )}
                 </span>
               )} />
-              <ColumnDirective field="registeredAt" headerText="Registered Date" width="140" template={registeredAtTemplate} />
-              <ColumnDirective field="lastLogin" headerText="Last Login" width="140" template={lastLoginTemplate} />
+              <ColumnDirective field="registeredAt" headerText="Registered Date" width="140" type="string" allowFiltering={true} template={registeredAtTemplate} />
+              <ColumnDirective field="lastLogin" headerText="Last Login" width="140" type="string" allowFiltering={true} template={lastLoginTemplate} />
               <ColumnDirective headerText="Actions" width="160" allowSorting={false} allowFiltering={false} template={actionsTemplate} />
             </ColumnsDirective>
             <GridInject services={[Page, Sort, Filter, GridToolbar, Selection, Resize, Reorder, ColumnChooser, ColumnMenu, ExcelExport, Freeze]} />

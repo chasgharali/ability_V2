@@ -30,6 +30,7 @@ import {
   EDUCATION_LEVEL_LIST, 
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
+import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
 
 export default function JobSeekerManagement() {
   const { user } = useAuth();
@@ -464,6 +465,10 @@ export default function JobSeekerManagement() {
         const firstName = parts[0] || '';
         const lastName = parts.slice(1).join(' ') || '';
         const registeredEvents = (u.metadata?.registeredEvents || []);
+        const registeredEventsText = registeredEvents
+          .map((ev) => ev?.name || ev?.slug || '')
+          .filter(Boolean)
+          .join(', ') || 'None';
         return {
           id: u._id,
           firstName,
@@ -485,7 +490,8 @@ export default function JobSeekerManagement() {
             getLabelFromValue(u.metadata?.profile?.educationLevel || u.metadata?.education || u.metadata?.educationLevel, EDUCATION_LEVEL_LIST),
             getLabelFromValue(u.metadata?.profile?.workLevel || u.metadata?.experienceLevel || u.metadata?.workLevel, EXPERIENCE_LEVEL_LIST)
           ].filter(Boolean).join(' | '),
-          registeredEvents: registeredEvents, // Extract registered events for display
+          registeredEvents,
+          registeredEventsText,
           avatarUrl: u.avatarUrl,
           usesScreenMagnifier: u.usesScreenMagnifier,
           usesScreenReader: u.usesScreenReader,
@@ -1123,29 +1129,11 @@ export default function JobSeekerManagement() {
     );
   }, []);
 
-  const registeredEventsTemplate = useCallback((props) => {
-    const row = props;
-    const registeredEvents = row.registeredEvents || [];
-    
-    if (!Array.isArray(registeredEvents) || registeredEvents.length === 0) {
-      return (
-        <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', color: '#6b7280', textAlign: 'left' }}>
-          None
-        </div>
-      );
-    }
-    
-    // Extract event names from registered events
-    const eventNames = registeredEvents
-      .map(reg => reg.name || reg.slug || 'Unknown Event')
-      .filter(Boolean);
-    
-    return (
-      <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'left' }}>
-        {eventNames.join(', ')}
-      </div>
-    );
-  }, []);
+  const registeredEventsTemplate = useCallback((props) => (
+    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'left', color: props.registeredEventsText === 'None' ? '#6b7280' : 'inherit' }}>
+      {props.registeredEventsText || 'None'}
+    </div>
+  ), []);
 
   const actionsTemplate = useCallback((props) => {
     const row = props;
@@ -1471,13 +1459,7 @@ export default function JobSeekerManagement() {
   }, [paginatedDataSource]);
 
   // Memoize grid settings to prevent unnecessary re-renders
-  const gridFilterSettings = useMemo(() => ({
-    type: 'Menu',
-    showFilterBarStatus: true,
-    immediateModeDelay: 0,
-    showFilterBarOperator: true,
-    enableCaseSensitivity: false
-  }), []);
+  const gridFilterSettings = useMemo(() => SYNC_GRID_FILTER_SETTINGS, []);
 
   const gridToolbar = useMemo(() => ['ColumnChooser'], []);
 
@@ -1877,7 +1859,7 @@ export default function JobSeekerManagement() {
                   rowDeselected={handleRowSelected}
                 >
               <ColumnsDirective>
-                <ColumnDirective type='checkbox' width='50' freeze='Left' />
+                <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
                 <ColumnDirective 
                   field='firstName' 
                   headerText='First Name' 
@@ -1968,6 +1950,7 @@ export default function JobSeekerManagement() {
                   headerText='Email Verified' 
                   width='130' 
                   textAlign='Center'
+                  type='boolean'
                   allowFiltering={true}
                   template={emailVerifiedTemplate}
                 />
@@ -1975,6 +1958,7 @@ export default function JobSeekerManagement() {
                   field='createdAt' 
                   headerText='Registration Date' 
                   width='180' 
+                  type='string'
                   allowFiltering={true}
                   allowSorting={true}
                   template={createdAtTemplate}
@@ -1983,13 +1967,15 @@ export default function JobSeekerManagement() {
                   field='lastLogin' 
                   headerText='Last Login' 
                   width='150' 
+                  type='string'
                   allowFiltering={true}
                   template={lastLoginTemplate}
                 />
                 <ColumnDirective 
-                  field='registeredEvents' 
+                  field='registeredEventsText' 
                   headerText='Event Registrations' 
                   width='300' 
+                  type='string'
                   allowFiltering={true}
                   template={registeredEventsTemplate}
                 />

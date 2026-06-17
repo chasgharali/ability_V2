@@ -40,6 +40,7 @@ import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertImageSettings, getInsertVideoSetti
 import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 import EmployerPageTemplate from '../BoothQueue/EmployerPageTemplate';
+import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
 
 const EMPLOYER_PAGE_SECTION_DEFS = [
   { key: 'about', title: 'About Section' },
@@ -1357,13 +1358,7 @@ export default function BoothManagement() {
                   allowPaging={false}
                   allowSorting={true}
                   allowFiltering={true}
-                  filterSettings={{ 
-                    type: 'Menu',
-                    showFilterBarStatus: true,
-                    immediateModeDelay: 0,
-                    showFilterBarOperator: true,
-                    enableCaseSensitivity: false
-                  }}
+                  filterSettings={SYNC_GRID_FILTER_SETTINGS}
                   showColumnMenu={true}
                   showColumnChooser={true}
                   enableHeaderFocus={false}
@@ -1375,12 +1370,13 @@ export default function BoothManagement() {
                   allowRowDragAndDrop={false}
                 >
                   <ColumnsDirective>
-                    <ColumnDirective type='checkbox' width='50' freeze='Left' />
+                    <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
                     <ColumnDirective
                       field='name'
                       headerText='Booth Name'
                       width='200'
                       freeze='Left'
+                      type='string'
                       allowFiltering={true}
                       template={(props) => (
                         <div style={{
@@ -1399,7 +1395,8 @@ export default function BoothManagement() {
                       headerText='Logo'
                       width='100'
                       textAlign='Center'
-                      allowFiltering={true}
+                      type='string'
+                      allowFiltering={false}
                       template={(props) => props.logo ? <img src={props.logo} alt="Booth logo" style={{ width: 80, height: 28, objectFit: 'contain', borderRadius: 4 }} /> : '-'}
                     />
                     <ColumnDirective

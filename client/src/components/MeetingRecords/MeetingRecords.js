@@ -22,6 +22,7 @@ import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import JSZip from 'jszip';
+import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS, labelsToFilterText } from '../../utils/syncfusionGridHelpers';
 import {
     JOB_CATEGORY_LIST,
     EXPERIENCE_LEVEL_LIST,
@@ -1252,8 +1253,8 @@ export default function MeetingRecords() {
                 jobSeekerEducationLevel: getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST) === 'Not provided'
                     ? ''
                     : getLabelFromValue(profile?.educationLevel || '', EDUCATION_LEVEL_LIST),
-                jobSeekerEmploymentTypes: getLabelsArrayFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST),
-                jobSeekerLanguages: getLabelsArrayFromValues(profile?.languages || [], LANGUAGE_LIST),
+                jobSeekerEmploymentTypes: labelsToFilterText(getLabelsArrayFromValues(profile?.employmentTypes || [], JOB_TYPE_LIST)),
+                jobSeekerLanguages: labelsToFilterText(getLabelsArrayFromValues(profile?.languages || [], LANGUAGE_LIST)),
                 jobSeekerVeteranStatus: getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST) === 'Not provided'
                     ? ''
                     : getLabelFromValue(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST),
@@ -1277,13 +1278,7 @@ export default function MeetingRecords() {
     }, [gridDataSource]);
 
     // Memoize grid settings to prevent unnecessary re-renders
-    const gridFilterSettings = useMemo(() => ({
-        type: 'Menu',
-        showFilterBarStatus: true,
-        immediateModeDelay: 0,
-        showFilterBarOperator: true,
-        enableCaseSensitivity: false
-    }), []);
+    const gridFilterSettings = useMemo(() => SYNC_GRID_FILTER_SETTINGS, []);
 
     const gridToolbar = useMemo(() => ['ColumnChooser'], []);
 
@@ -1579,11 +1574,7 @@ export default function MeetingRecords() {
     }, []);
 
     const employmentTypesTemplate = useCallback((props) => {
-        const row = props;
-        const employmentTypes = row.jobSeekerEmploymentTypes || [];
-        const displayValue = Array.isArray(employmentTypes) && employmentTypes.length > 0
-            ? employmentTypes.filter(Boolean).join(', ')
-            : '';
+        const displayValue = props.jobSeekerEmploymentTypes || '';
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {displayValue || 'N/A'}
@@ -1592,11 +1583,7 @@ export default function MeetingRecords() {
     }, []);
 
     const languagesTemplate = useCallback((props) => {
-        const row = props;
-        const languages = row.jobSeekerLanguages || [];
-        const displayValue = Array.isArray(languages) && languages.length > 0
-            ? languages.filter(Boolean).join(', ')
-            : '';
+        const displayValue = props.jobSeekerLanguages || '';
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 {displayValue || 'N/A'}
@@ -1934,13 +1921,9 @@ export default function MeetingRecords() {
                             >
                                     <ColumnsDirective>
                                     {['Admin', 'GlobalSupport', 'AdminEvent', 'Recruiter'].includes(user?.role) && (
-                                        <ColumnDirective 
-                                            type='checkbox' 
-                                            width='50' 
-                                            freeze='Left'
-                                        />
+                                        <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
                                     )}
-                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} textAlign='Center' freeze='Left' />
+                                    <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} type='string' textAlign='Center' freeze='Left' />
                                     <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                     <ColumnDirective field='jobSeekerEmail' headerText='Job Seeker Email' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerEmailTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerPhone' headerText='Phone' width='150' clipMode='EllipsisWithTooltip' template={phoneTemplate} allowFiltering={true} visible={true} textAlign='Center' />
@@ -1950,15 +1933,15 @@ export default function MeetingRecords() {
                                     <ColumnDirective field='jobSeekerPrimaryExperience' headerText='Primary Job Experience' width='210' clipMode='EllipsisWithTooltip' template={primaryJobExperienceTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerWorkLevel' headerText='Work Experience Level' width='180' clipMode='EllipsisWithTooltip' template={workExperienceLevelTemplate} allowFiltering={true} visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={true} textAlign='Center' />
-                                    <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={true} textAlign='Center' />
-                                    <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} visible={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} type='string' visible={true} textAlign='Center' />
+                                    <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} type='string' visible={true} textAlign='Center' />
                                     <ColumnDirective field='jobSeekerVeteranStatus' headerText='Veteran/Military Status' width='200' clipMode='EllipsisWithTooltip' template={veteranStatusTemplate} allowFiltering={true} visible={true} textAlign='Center' />
-                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} textAlign='Center' />
+                                    <ColumnDirective field='startTime' headerText='Start Time' width='180' clipMode='EllipsisWithTooltip' template={startTimeTemplate} allowFiltering={true} type='string' textAlign='Center' />
                                     <ColumnDirective field='duration' headerText='Duration' width='120' textAlign='Center' template={durationTemplate} allowFiltering={true} />
                                     <ColumnDirective field='status' headerText='Status' width='130' textAlign='Center' template={statusTemplate} allowFiltering={true} />
                                     <ColumnDirective field='recruiterRating' headerText='Rating' width='150' textAlign='Center' template={ratingTemplate} allowFiltering={true} />
                                     <ColumnDirective field='recruiterFeedback' headerText='Meeting Notes' width='300' clipMode='EllipsisWithTooltip' template={meetingNotesTemplate} allowFiltering={true} type='string' textAlign='Center' />
-                                    <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} />
+                                    <ColumnDirective field='messagesCount' headerText='Messages' width='100' textAlign='Center' template={messagesTemplate} allowFiltering={true} type='number' />
                                     <ColumnDirective field='interpreterName' headerText='Interpreter' width='150' clipMode='EllipsisWithTooltip' template={interpreterTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='eventName' headerText='Event' width='150' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} textAlign='Center' />
                                     <ColumnDirective field='boothName' headerText='Booth' width='150' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} textAlign='Center' />

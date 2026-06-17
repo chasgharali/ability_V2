@@ -38,6 +38,7 @@ import { getSendyLists } from '../../services/sendy';
 import { termsConditionsAPI } from '../../services/termsConditions';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
 
 export default function EventManagement() {
     const { user, loading } = useAuth();
@@ -1108,13 +1109,7 @@ export default function EventManagement() {
                                     allowPaging={false}
                                     allowSorting={true}
                                     allowFiltering={true}
-                                    filterSettings={{ 
-                                        type: 'Menu',
-                                        showFilterBarStatus: true,
-                                        immediateModeDelay: 0,
-                                        showFilterBarOperator: true,
-                                        enableCaseSensitivity: false
-                                    }}
+                                    filterSettings={SYNC_GRID_FILTER_SETTINGS}
                                     showColumnMenu={true}
                                     showColumnChooser={true}
                                     allowResizing={true}
@@ -1132,12 +1127,13 @@ export default function EventManagement() {
                                     enableHeaderFocus={false}
                                 >
                                     <ColumnsDirective>
-                                        <ColumnDirective type='checkbox' width='50' freeze='Left' />
+                                        <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
                                         <ColumnDirective 
                                             field='name' 
                                             headerText='Event Name' 
                                             width='200' 
                                             freeze='Left'
+                                            type='string'
                                             allowFiltering={true}
                                             template={(props) => (
                                                 <div style={{ 
@@ -1156,6 +1152,7 @@ export default function EventManagement() {
                                             field='startTime' 
                                             headerText='Event Start Time' 
                                             width='200' 
+                                            type='string'
                                             allowFiltering={true}
                                             template={(props) => (
                                                 <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
@@ -1167,6 +1164,7 @@ export default function EventManagement() {
                                             field='endTime' 
                                             headerText='Event End Time' 
                                             width='200' 
+                                            type='string'
                                             allowFiltering={true}
                                             template={(props) => (
                                                 <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>

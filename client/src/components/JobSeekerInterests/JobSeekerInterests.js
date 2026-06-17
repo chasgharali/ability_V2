@@ -20,6 +20,7 @@ import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
 import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import { openResumeInNewTab } from '../../utils/resumeViewer';
 import JSZip from 'jszip';
+import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS, labelsToFilterText } from '../../utils/syncfusionGridHelpers';
 import {
     JOB_CATEGORY_LIST,
     EXPERIENCE_LEVEL_LIST,
@@ -711,8 +712,8 @@ const JobSeekerInterests = () => {
                 jobSeekerPrimaryExperience: getLabelFromValueLocal(primaryExperienceValue, JOB_CATEGORY_LIST),
                 jobSeekerWorkLevel: getLabelFromValueLocal(profile?.workLevel || '', EXPERIENCE_LEVEL_LIST),
                 jobSeekerEducationLevel: getLabelFromValueLocal(profile?.educationLevel || '', EDUCATION_LEVEL_LIST),
-                jobSeekerEmploymentTypes: getLabelsArrayFromValuesLocal(profile?.employmentTypes || [], JOB_TYPE_LIST),
-                jobSeekerLanguages: getLabelsArrayFromValuesLocal(profile?.languages || [], LANGUAGE_LIST),
+                jobSeekerEmploymentTypes: labelsToFilterText(getLabelsArrayFromValuesLocal(profile?.employmentTypes || [], JOB_TYPE_LIST)),
+                jobSeekerLanguages: labelsToFilterText(getLabelsArrayFromValuesLocal(profile?.languages || [], LANGUAGE_LIST)),
                 jobSeekerVeteranStatus: getLabelFromValueLocal(profile?.veteranStatus || '', MILITARY_EXPERIENCE_LIST),
                 jobSeekerResumeId: r.jobSeeker?.resolvedResume?.resumeId || '',
                 jobSeekerResumeUrl: r.jobSeeker?.resolvedResume?.resumeUrl || r.jobSeeker?.resumeUrl || '',
@@ -737,13 +738,7 @@ const JobSeekerInterests = () => {
     }, [gridDataSource]);
 
     // Memoize grid settings to prevent unnecessary re-renders
-    const gridFilterSettings = useMemo(() => ({
-        type: 'Menu',
-        showFilterBarStatus: true,
-        immediateModeDelay: 0,
-        showFilterBarOperator: true,
-        enableCaseSensitivity: false
-    }), []);
+    const gridFilterSettings = useMemo(() => SYNC_GRID_FILTER_SETTINGS, []);
 
     const gridToolbar = useMemo(() => ['ColumnChooser'], []);
 
@@ -1679,11 +1674,7 @@ const JobSeekerInterests = () => {
     }, []);
 
     const employmentTypesTemplate = useCallback((props) => {
-        const row = props;
-        const employmentTypes = row.jobSeekerEmploymentTypes || [];
-        const displayValue = Array.isArray(employmentTypes) && employmentTypes.length > 0
-            ? employmentTypes.filter(Boolean).join(', ')
-            : '';
+        const displayValue = props.jobSeekerEmploymentTypes || '';
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                 {displayValue || 'N/A'}
@@ -1692,11 +1683,7 @@ const JobSeekerInterests = () => {
     }, []);
 
     const languagesTemplate = useCallback((props) => {
-        const row = props;
-        const languages = row.jobSeekerLanguages || [];
-        const displayValue = Array.isArray(languages) && languages.length > 0
-            ? languages.filter(Boolean).join(', ')
-            : '';
+        const displayValue = props.jobSeekerLanguages || '';
         return (
             <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
                 {displayValue || 'N/A'}
@@ -1999,11 +1986,7 @@ const JobSeekerInterests = () => {
                                 >
                                     <ColumnsDirective>
                                         {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && (
-                                            <ColumnDirective 
-                                                type='checkbox' 
-                                                width='50' 
-                                                freeze='Left'
-                                            />
+                                            <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
                                         )}
                                         <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} freeze='Left' />
                                         <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
@@ -2017,12 +2000,12 @@ const JobSeekerInterests = () => {
                                         <ColumnDirective field='jobSeekerPrimaryExperience' headerText='Primary Job Experience' width='210' clipMode='EllipsisWithTooltip' template={primaryJobExperienceTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerWorkLevel' headerText='Work Experience Level' width='180' clipMode='EllipsisWithTooltip' template={workExperienceLevelTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='jobSeekerEducationLevel' headerText='Highest Education Level' width='200' clipMode='EllipsisWithTooltip' template={educationLevelTemplate} allowFiltering={true} visible={true} />
-                                        <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} visible={true} />
-                                        <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} visible={true} />
+                                        <ColumnDirective field='jobSeekerEmploymentTypes' headerText='Employment Types' width='200' clipMode='EllipsisWithTooltip' template={employmentTypesTemplate} allowFiltering={true} type='string' visible={true} />
+                                        <ColumnDirective field='jobSeekerLanguages' headerText='Language(s)' width='200' clipMode='EllipsisWithTooltip' template={languagesTemplate} allowFiltering={true} type='string' visible={true} />
                                         <ColumnDirective field='jobSeekerVeteranStatus' headerText='Veteran/Military Status' width='200' clipMode='EllipsisWithTooltip' template={veteranStatusTemplate} allowFiltering={true} visible={true} />
                                         <ColumnDirective field='eventName' headerText='Event' width='180' clipMode='EllipsisWithTooltip' template={eventTemplate} allowFiltering={true} />
                                         <ColumnDirective field='boothName' headerText='Booth' width='180' clipMode='EllipsisWithTooltip' template={boothTemplate} allowFiltering={true} />
-                                        <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} />
+                                        <ColumnDirective field='createdAt' headerText='Date Expressed' width='180' clipMode='EllipsisWithTooltip' template={dateExpressedTemplate} allowFiltering={true} type='string' />
                                         <ColumnDirective field='jobSeekerResumeUrl' headerText='Resume' width='120' textAlign='Center' allowFiltering={false} template={(props) => {
                                             const rid = props.jobSeekerResumeId || props.jobSeeker?.resolvedResume?.resumeId;
                                             const rurl = props.jobSeekerResumeUrl || props.jobSeeker?.resolvedResume?.resumeUrl;

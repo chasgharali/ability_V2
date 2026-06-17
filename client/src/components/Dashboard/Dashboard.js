@@ -47,6 +47,7 @@ import Chat from '../Chat/Chat';
 import settingsAPI from '../../services/settings';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 import PageInstructionBanner from '../common/PageInstructionBanner';
+import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS, labelsToFilterText } from '../../utils/syncfusionGridHelpers';
 
 // Simple error boundary to prevent white screens if a nested view crashes
 class ErrorBoundary extends React.Component {
@@ -107,6 +108,7 @@ const Dashboard = () => {
             recruitersCount: 3,
             eventDate: '2025-11-11T17:00:00.000Z',
             events: ['Event Demo test'],
+            eventsText: 'Event Demo test',
             customInviteText: 'abilityjobs.dev-invite',
             expireLinkTime: '',
             enableExpiry: false,
@@ -119,6 +121,7 @@ const Dashboard = () => {
             recruitersCount: 5,
             eventDate: '2025-10-21T15:30:00.000Z',
             events: ['Demonstration'],
+            eventsText: 'Demonstration',
             customInviteText: '',
             expireLinkTime: '2025-12-31T23:00:00.000Z',
             enableExpiry: true,
@@ -933,7 +936,7 @@ const Dashboard = () => {
                                         pageSettings={{ pageSize: 10 }}
                                         allowSorting={true}
                                         allowFiltering={true}
-                                        filterSettings={{ type: 'Menu' }}
+                                        filterSettings={SYNC_GRID_FILTER_SETTINGS}
                                         showColumnMenu={true}
                                         showColumnChooser={true}
                                         allowResizing={true}
@@ -942,7 +945,7 @@ const Dashboard = () => {
                                         selectionSettings={{ type: 'Multiple' }}
                                     >
                                         <ColumnsDirective>
-                                            <ColumnDirective type='checkbox' width='40' freeze='Left' />
+                                            <ColumnDirective {...{ ...SYNC_GRID_CHECKBOX_COLUMN_PROPS, width: '40' }} />
                                             <ColumnDirective
                                                 field='name'
                                                 headerText='Booth Name'
@@ -954,12 +957,13 @@ const Dashboard = () => {
                                                     </div>
                                                 )}
                                             />
-                                            <ColumnDirective headerText='Logo' width='110' template={(props) => props.logo ? (<img src={props.logo} alt="logo" style={{ height: 28 }} />) : null} />
+                                            <ColumnDirective headerText='Logo' width='110' allowFiltering={false} template={(props) => props.logo ? (<img src={props.logo} alt="logo" style={{ height: 28 }} />) : null} />
                                             <ColumnDirective
                                                 field='recruitersCount'
                                                 headerText='Recruiters'
                                                 width='120'
                                                 textAlign='Center'
+                                                type='number'
                                                 template={(props) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0', textAlign: 'center' }}>
                                                         {props.recruitersCount ?? 0}
@@ -967,12 +971,13 @@ const Dashboard = () => {
                                                 )}
                                             />
                                             <ColumnDirective
-                                                field='events'
+                                                field='eventsText'
                                                 headerText='Event Title'
                                                 width='200'
+                                                type='string'
                                                 template={(p) => (
                                                     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
-                                                        {(p.events || []).join(', ')}
+                                                        {p.eventsText || labelsToFilterText(p.events) || '-'}
                                                     </div>
                                                 )}
                                             />
