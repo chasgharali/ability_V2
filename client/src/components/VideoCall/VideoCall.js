@@ -280,6 +280,18 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const isSpeechActiveRef = useRef(false);
   // Ref for caption content container (for auto-scrolling)
   const captionContentRef = useRef(null);
+  const captionSettingsBtnRef = useRef(null);
+  const captionSettingsWasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (showCaptionSettings) {
+      captionSettingsWasOpenRef.current = true;
+    } else if (captionSettingsWasOpenRef.current) {
+      captionSettingsWasOpenRef.current = false;
+      captionSettingsBtnRef.current?.focus();
+    }
+  }, [showCaptionSettings]);
+
   // State for scroll button visibility
   const [showScrollUp, setShowScrollUp] = useState(false);
   const [showScrollDown, setShowScrollDown] = useState(false);
@@ -3017,6 +3029,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           {/* Caption Settings Button */}
           <button
             type="button"
+            ref={captionSettingsBtnRef}
             className="caption-settings-btn"
             onClick={() => setShowCaptionSettings(!showCaptionSettings)}
             aria-label="Caption settings"
