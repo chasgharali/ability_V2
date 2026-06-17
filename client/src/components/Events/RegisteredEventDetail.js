@@ -245,7 +245,7 @@ export default function RegisteredEventDetail() {
                   <div className="participating-employers">
                     <div className="section-divider">
                       <hr />
-                      <span className="section-label">Participating Employers</span>
+                      <h3 className="section-label">Participating Employers</h3>
                       <hr />
                     </div>
 

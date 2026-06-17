@@ -93,6 +93,7 @@
 }
 
 .section-label {
+  margin: 0;
   font-weight: 600;
   font-size: 0.875rem;
   color: #000000;
