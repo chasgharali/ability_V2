@@ -169,12 +169,12 @@ export async function uploadAudioToS3(file, onProgress) {
     { headers }
   );
 
-  // Use stable stream endpoint for <audio> playback (redirects to fresh presigned URL)
-  const streamUrl = `/api/uploads/stream?key=${encodeURIComponent(key)}&token=${encodeURIComponent(token || '')}`;
+  // Use stable public proxy URL for <audio> playback (no auth required in HTML attributes)
+  const publicUrl = `/api/uploads/public/${encodeKeyForPath(key)}`;
 
   return {
     key,
-    downloadUrl: streamUrl || completeRes?.data?.file?.streamUrl || completeRes?.data?.file?.downloadUrl || download?.url,
+    downloadUrl: publicUrl || completeRes?.data?.file?.publicUrl || completeRes?.data?.file?.streamUrl || completeRes?.data?.file?.downloadUrl || download?.url,
   };
 }
 
@@ -254,12 +254,11 @@ export async function uploadVideoToS3(file, onProgress) {
     { headers }
   );
 
-  // Use stable stream endpoint for <video> playback (redirects to fresh presigned URL)
-  // We include token as query param because media tags can't send Authorization headers.
-  const streamUrl = `/api/uploads/stream?key=${encodeURIComponent(key)}&token=${encodeURIComponent(token || '')}`;
+  // Use stable public proxy URL for <video> playback (no auth required in HTML attributes)
+  const publicUrl = `/api/uploads/public/${encodeKeyForPath(key)}`;
 
   return {
     key,
-    downloadUrl: streamUrl || completeRes?.data?.file?.streamUrl || completeRes?.data?.file?.downloadUrl || download?.url,
+    downloadUrl: publicUrl || completeRes?.data?.file?.publicUrl || completeRes?.data?.file?.streamUrl || completeRes?.data?.file?.downloadUrl || download?.url,
   };
 }

@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Booth = require('../models/Booth');
+const BoothQueue = require('../models/BoothQueue');
 const { authenticateToken, requireRole, requireResourceAccess } = require('../middleware/auth');
 const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
@@ -8,6 +9,53 @@ const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
 const router = express.Router();
 const EMPLOYER_SECTION_KEYS = ['about', 'program', 'video', 'gallery', 'jobs', 'benefits', 'contact', 'social'];
+
+const normalizeObjectId = (value) => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'object' && value._id !== undefined) {
+        return normalizeObjectId(value._id);
+    }
+    return String(value).trim();
+};
+
+async function userCanViewBooth(booth, user) {
+    if (!user || !booth) return false;
+
+    const canManage = typeof booth.canUserManage === 'function' ? booth.canUserManage(user) : false;
+    const canAccessEvent = booth.eventId && typeof booth.eventId.canUserAccess === 'function'
+        ? booth.eventId.canUserAccess(user)
+        : false;
+    if (canManage || canAccessEvent) return true;
+
+    const boothId = normalizeObjectId(booth._id);
+    const boothEventId = normalizeObjectId(booth.eventId);
+
+    if (['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalInterpreter'].includes(user.role)) {
+        if (normalizeObjectId(user.assignedBooth) === boothId) return true;
+
+        const assignedEventIds = (user.assignedEvents || []).map(normalizeObjectId).filter(Boolean);
+        if (boothEventId && assignedEventIds.includes(boothEventId)) return true;
+    }
+
+    if (user.role === 'JobSeeker') {
+        const queueEntry = await BoothQueue.findOne({
+            jobSeeker: user._id,
+            booth: booth._id,
+            status: { $in: ['waiting', 'invited', 'in_meeting', 'completed'] }
+        }).select('_id');
+        if (queueEntry) return true;
+
+        const registeredEvents = user.metadata?.registeredEvents || [];
+        const isRegistered = boothEventId && registeredEvents.some((reg) =>
+            normalizeObjectId(reg.id) === boothEventId
+            || (reg.slug && booth.eventId?.slug && reg.slug === booth.eventId.slug)
+        );
+        if (isRegistered || booth.eventId?.isDemo) return true;
+    }
+
+    return false;
+}
 
 const normalizeId = (value) => {
     let current = value;
@@ -645,11 +693,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
 
         // Check if user can access this booth (guard against missing fields)
-        const canManage = typeof booth.canUserManage === 'function' ? booth.canUserManage(user) : false;
-        const canAccessEvent = booth.eventId && typeof booth.eventId.canUserAccess === 'function'
-            ? booth.eventId.canUserAccess(user)
-            : false;
-        if (!canManage && !canAccessEvent) {
+        const canAccess = await userCanViewBooth(booth, user);
+        if (!canAccess) {
             return res.status(403).json({
                 error: 'Access denied',
                 message: 'You do not have permission to view this booth'

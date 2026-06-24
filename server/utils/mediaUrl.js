@@ -37,6 +37,55 @@ function extractS3KeyFromUrl(value, bucketName = '') {
     return pathname;
 }
 
+function safeDecode(value) {
+    if (typeof value !== 'string') return value;
+    try {
+        return decodeURIComponent(value);
+    } catch (_error) {
+        return value;
+    }
+}
+
+/**
+ * Extract a clean S3 key from a stream URL key param, including malformed values
+ * where a JWT was appended without a proper &token= separator.
+ */
+function extractVideoAudioKey(rawKey) {
+    if (!rawKey || typeof rawKey !== 'string') return null;
+
+    const decoded = safeDecode(rawKey.trim());
+
+    const withExtension = decoded.match(
+        /((?:video|audio)\/[^?&#\s]+\/[^?&#\s]+?\.(?:mp4|mov|webm|ogg|mp3|wav|m4a|aac))/i
+    );
+    if (withExtension) {
+        return withExtension[1];
+    }
+
+    if (/^(video|audio)\/[^/]+\/[^?&#\s]+$/.test(decoded)) {
+        return decoded.split(/[?&#]/)[0];
+    }
+
+    return null;
+}
+
+const STREAM_URL_PATTERN = /\/api\/uploads\/stream\?key=([^"'&\s]+)(?:(?:&amp;|&)token=[^"'&\s]*)?/gi;
+
+/**
+ * Rewrite RTE stream URLs to stable public media URLs for booth/event HTML content.
+ */
+function hydrateStreamMediaUrlsInHtml(html) {
+    if (!html || typeof html !== 'string') return html;
+
+    return html.replace(STREAM_URL_PATTERN, (_match, encodedKey) => {
+        const mediaKey = extractVideoAudioKey(encodedKey);
+        if (mediaKey) {
+            return `/api/uploads/public/${encodeKeyForPath(mediaKey)}`;
+        }
+        return _match;
+    });
+}
+
 function toStablePublicImageUrl(value, bucketName = process.env.AWS_S3_BUCKET) {
     if (!value || typeof value !== 'string') return value;
 
@@ -55,6 +104,8 @@ function toStablePublicImageUrl(value, bucketName = process.env.AWS_S3_BUCKET) {
 
 module.exports = {
     extractS3KeyFromUrl,
+    extractVideoAudioKey,
+    hydrateStreamMediaUrlsInHtml,
     toStablePublicImageUrl,
     encodeKeyForPath
 };

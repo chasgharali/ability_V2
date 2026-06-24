@@ -1432,6 +1432,19 @@
   font-size: 0.875rem;
 }
 
+.recording-live-preview {
+  margin-bottom: 1rem;
+}
+
+.recording-live-video {
+  width: 100%;
+  max-width: 300px;
+  border-radius: 8px;
+  background-color: #000;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
 /* Medium screens (tablets) - show toggle button but keep sidebar behavior */
 @media (max-width: 1199px) and (min-width: 769px) {
   .waiting-layout {

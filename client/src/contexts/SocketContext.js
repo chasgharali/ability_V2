@@ -55,13 +55,11 @@ export const SocketProvider = ({ children }) => {
 
         // Connection event handlers
         newSocket.on('connect', () => {
-            console.log('Socket connected:', newSocket.id);
             setConnected(true);
             setError(null);
         });
 
-        newSocket.on('disconnect', (reason) => {
-            console.log('Socket disconnected:', reason);
+        newSocket.on('disconnect', () => {
             setConnected(false);
         });
 

@@ -8,6 +8,7 @@ import '../Dashboard/Dashboard.css';
 import './UpcomingEvents.css';
 import { listUpcomingEvents, listRegisteredEvents } from '../../services/events';
 import { useAuth } from '../../contexts/AuthContext';
+import { hydrateStreamMediaUrls } from '../../utils/videoContentProcessor';
 
 export default function UpcomingEvents() {
   const { user, loading } = useAuth();
@@ -194,7 +195,7 @@ export default function UpcomingEvents() {
                         {evt.description && (
                           <div 
                             className="event-description" 
-                            dangerouslySetInnerHTML={{ __html: evt.description }}
+                            dangerouslySetInnerHTML={{ __html: hydrateStreamMediaUrls(evt.description) }}
                           />
                         )}
 

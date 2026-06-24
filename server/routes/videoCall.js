@@ -68,16 +68,17 @@ router.post('/create', auth, async (req, res) => {
       return res.status(403).json({ error: 'Only recruiters can create video calls' });
     }
 
-    // CRITICAL FIX: Atomic check-and-update of queue entry status
-    // This prevents race conditions where multiple recruiters try to create calls simultaneously
+    // Lock the queue entry while the call is being created.
+    // Use `invited` first so clients don't see `in_meeting` before VideoCall exists.
     const queueEntry = await BoothQueue.findOneAndUpdate(
       {
         _id: queueId,
-        status: { $in: ['waiting', 'invited'] }  // Only update if not already in meeting
+        status: { $in: ['waiting', 'invited'] }
       },
       {
         $set: {
-          status: 'in_meeting',
+          status: 'invited',
+          invitedAt: new Date(),
           lastActivity: new Date()
         }
       },
@@ -118,7 +119,7 @@ router.post('/create', auth, async (req, res) => {
     if (existingCall) {
       // Restore queue entry status since we couldn't create the call
       await BoothQueue.findByIdAndUpdate(queueId, {
-        $set: { status: queueEntry.status === 'in_meeting' ? 'invited' : 'waiting' }
+        $set: { status: 'waiting' }
       });
       
       return res.status(409).json({
@@ -192,16 +193,32 @@ router.post('/create', auth, async (req, res) => {
       queueEntry: videoCall.queueEntry.toString()
     });
 
+    // Promote queue entry to in_meeting only after VideoCall exists.
+    const inMeetingEntry = await BoothQueue.findOneAndUpdate(
+      { _id: queueId, status: 'invited' },
+      { $set: { status: 'in_meeting', lastActivity: new Date() } },
+      { new: true }
+    );
+
+    if (!inMeetingEntry) {
+      videoCall.status = 'ended';
+      await videoCall.save();
+      return res.status(409).json({
+        error: 'Queue entry not available',
+        message: 'Queue entry changed while the call was being created'
+      });
+    }
+
     // Generate access tokens with unique identities
     const timestamp = Date.now();
     const recruiterToken = generateAccessToken(`recruiter_${recruiterId}_${timestamp}`, roomName);
     const jobSeekerToken = generateAccessToken(`jobseeker_${queueEntry.jobSeeker._id}_${timestamp}`, roomName);
 
-    // Queue entry status already updated atomically above
-    console.log('✅ Queue entry status updated to in_meeting (atomic):', {
-      queueId: queueEntry._id,
+    // Queue entry status updated after VideoCall creation
+    console.log('✅ Queue entry status updated to in_meeting:', {
+      queueId: inMeetingEntry._id,
       jobSeeker: queueEntry.jobSeeker._id.toString(),
-      status: queueEntry.status
+      status: inMeetingEntry.status
     });
 
     // Emit socket event to job seeker
@@ -279,6 +296,17 @@ router.post('/create', auth, async (req, res) => {
   } catch (error) {
     console.error('Error creating video call:', error);
     console.error('Error stack:', error.stack);
+    try {
+      const { queueId } = req.body;
+      if (queueId) {
+        await BoothQueue.findOneAndUpdate(
+          { _id: queueId, status: 'invited' },
+          { $set: { status: 'waiting' } }
+        );
+      }
+    } catch (rollbackError) {
+      console.error('Failed to rollback queue entry after call creation error:', rollbackError);
+    }
     res.status(500).json({
       error: 'Failed to create video call',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -1015,7 +1043,7 @@ router.get('/active', auth, async (req, res) => {
 router.get('/by-queue/:queueEntryId', auth, async (req, res) => {
   try {
     const { queueEntryId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
 
     const videoCall = await VideoCall.findOne({
       queueEntry: queueEntryId,
@@ -1024,16 +1052,16 @@ router.get('/by-queue/:queueEntryId', auth, async (req, res) => {
       .populate('recruiter jobSeeker event booth queueEntry interpreters.interpreter');
 
     if (!videoCall) {
-      return res.status(404).json({ 
-        success: false,
-        error: 'Active video call not found for this queue entry' 
+      return res.json({
+        success: true,
+        videoCall: null
       });
     }
 
     // Check if user has access to this call
     const hasAccess = videoCall.recruiter._id.toString() === userId ||
       videoCall.jobSeeker._id.toString() === userId ||
-      videoCall.interpreters.some(i => i.interpreter._id.toString() === userId);
+      videoCall.interpreters.some(i => i.interpreter?._id?.toString() === userId);
 
     if (!hasAccess) {
       return res.status(403).json({ 
@@ -1081,7 +1109,7 @@ router.get('/by-queue/:queueEntryId', auth, async (req, res) => {
 router.get('/:callId', auth, async (req, res) => {
   try {
     const { callId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
 
     const videoCall = await VideoCall.findById(callId)
       .populate('recruiter jobSeeker event booth queueEntry interpreters.interpreter');
@@ -1093,7 +1121,7 @@ router.get('/:callId', auth, async (req, res) => {
     // Check if user has access to this call
     const hasAccess = videoCall.recruiter._id.toString() === userId ||
       videoCall.jobSeeker._id.toString() === userId ||
-      videoCall.interpreters.some(i => i.interpreter._id.toString() === userId);
+      videoCall.interpreters.some(i => i.interpreter?._id?.toString() === userId);
 
     if (!hasAccess) {
       return res.status(403).json({ error: 'Unauthorized access to call' });

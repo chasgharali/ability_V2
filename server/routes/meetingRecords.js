@@ -849,15 +849,35 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             return res.status(404).json({ message: 'Video call not found' });
         }
 
-        const recordOrgId = videoCall.event?.organizationId || videoCall.booth?.organizationId || req.orgId || null;
-        if (!isSuperAdmin(req) && (!recordOrgId || recordOrgId.toString() !== req.orgId.toString())) {
-            return res.status(403).json({ message: 'Access denied' });
+        const userId = req.user._id.toString();
+        const isCallRecruiter = videoCall.recruiter?._id?.toString() === userId;
+        const isPrivileged = ['SuperAdmin', 'Admin', 'GlobalSupport'].includes(req.user.role);
+
+        let recordOrgId = videoCall.event?.organizationId || videoCall.booth?.organizationId || null;
+        if (!recordOrgId && videoCall.event?._id) {
+            const eventDoc = await Event.findById(videoCall.event._id).select('organizationId').lean();
+            recordOrgId = eventDoc?.organizationId || null;
+        }
+        if (!recordOrgId) {
+            recordOrgId = req.orgId || null;
+        }
+
+        if (!isCallRecruiter && !isPrivileged) {
+            if (!recordOrgId || !req.orgId || recordOrgId.toString() !== req.orgId.toString()) {
+                const hasOrgAccess = await canAccessMeetingByOrg(
+                    { organizationId: recordOrgId, eventId: videoCall.event?._id },
+                    req
+                );
+                if (!hasOrgAccess) {
+                    return res.status(403).json({ message: 'Access denied' });
+                }
+            }
         }
 
         // Check if meeting record already exists
         const existingRecord = await MeetingRecord.findOne({ videoCallId });
         if (existingRecord) {
-            if (!(await canAccessMeetingByOrg(existingRecord, req))) {
+            if (!isCallRecruiter && !isPrivileged && !(await canAccessMeetingByOrg(existingRecord, req))) {
                 return res.status(403).json({ message: 'Access denied' });
             }
             return res.json(existingRecord);

@@ -70,6 +70,8 @@ const io = socketIo(server, {
     allowEIO3: true
 });
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Security middleware
 app.use(helmet({
     // YouTube embeds can fail with Error 153 if Referer is fully stripped.
@@ -77,20 +79,19 @@ app.use(helmet({
     referrerPolicy: {
         policy: 'strict-origin-when-cross-origin'
     },
-    contentSecurityPolicy: {
+    // Disable CSP on the API server in development (CRA dev server sets its own).
+    // Syncfusion RTE requires 'unsafe-eval' in production as well.
+    contentSecurityPolicy: isProduction ? {
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            // 'unsafe-eval' is only needed in development because the CRA/webpack dev
-            // server uses eval()-based source maps and HMR. Production builds do not
-            // use eval, so we keep script-src locked down to 'self' in production.
-            scriptSrc: process.env.NODE_ENV === 'production'
-                ? ["'self'"]
-                : ["'self'", "'unsafe-eval'"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "wss:", "https:", "ws:"],
+            scriptSrc: ["'self'", "'unsafe-eval'"],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:", "https:"],
+            connectSrc: ["'self'", "wss:", "https:", "ws:", "blob:"],
             mediaSrc: ["'self'", "blob:", "https:"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+            workerSrc: ["'self'", "blob:"],
             frameSrc: [
                 "'self'",
                 "https://www.youtube.com",
@@ -104,9 +105,10 @@ app.use(helmet({
                 "https://www.tiktok.com",
             ],
             objectSrc: ["'none'"],
+            baseUri: ["'self'"],
             upgradeInsecureRequests: [],
         },
-    },
+    } : false,
 }));
 
 // If running behind a proxy (e.g., CRA dev server, reverse proxy, or load balancer),

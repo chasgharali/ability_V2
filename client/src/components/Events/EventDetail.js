@@ -8,6 +8,7 @@ import { getEvent, getEventBooths, listRegisteredEvents } from '../../services/e
 import { useAuth } from '../../contexts/AuthContext';
 import PageInstructionBanner from '../common/PageInstructionBanner';
 import { announceToScreenReader } from '../Accessibility/FocusManager';
+import { hydrateStreamMediaUrls } from '../../utils/videoContentProcessor';
 
 export default function EventDetail() {
   const { slug } = useParams();
@@ -174,7 +175,7 @@ export default function EventDetail() {
                       <div
                         className="muted"
                         style={{ lineHeight: 1.6 }}
-                        dangerouslySetInnerHTML={{ __html: event.description }}
+                        dangerouslySetInnerHTML={{ __html: hydrateStreamMediaUrls(event.description) }}
                       />
                     ) : (
                       <p className="muted">Details will be provided soon.</p>

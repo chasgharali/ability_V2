@@ -18,6 +18,9 @@ import '@syncfusion/ej2-react-notifications/styles/material.css';
 import './components/UI/RichTextEditor.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { suppressExtensionConsoleNoise } from './utils/suppressExtensionConsoleNoise';
+
+suppressExtensionConsoleNoise();
 
 const syncfusionLicense = process.env.REACT_APP_SYNCFUSION_LICENSE || 'Ngo9BigBOggjHTQxAR8/V1JHaF5cWWdCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdlWXpcdnRRQmdeVUd0XUBWYEo=';
 try {

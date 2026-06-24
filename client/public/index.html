@@ -3,6 +3,25 @@
 
 <head>
     <meta charset="utf-8" />
+    <script>
+        (function () {
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
+            var patterns = [/MaxListenersExceededWarning/, /ObjectMultiplex/, /^InspectPage:/];
+            function isNoise(args) {
+                var text = Array.prototype.slice.call(args).map(function (arg) {
+                    return typeof arg === 'string' ? arg : (arg && arg.message) || '';
+                }).join(' ');
+                return patterns.some(function (p) { return p.test(text); });
+            }
+            ['log', 'warn'].forEach(function (level) {
+                var original = console[level].bind(console);
+                console[level] = function () {
+                    if (isNoise(arguments)) return;
+                    original.apply(console, arguments);
+                };
+            });
+        })();
+    </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%234169E1'/><text x='50%' y='50%' font-size='70' font-family='Arial, sans-serif' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>A</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />

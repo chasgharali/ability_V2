@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { toStablePublicImageUrl } = require('../utils/mediaUrl');
+const { toStablePublicImageUrl, hydrateStreamMediaUrlsInHtml, encodeKeyForPath } = require('../utils/mediaUrl');
 
 const eventSchema = new mongoose.Schema({
     name: {
@@ -299,7 +299,9 @@ eventSchema.methods.canUserAccess = function (user) {
 // Instance method to get event summary
 eventSchema.methods.getSummary = function () {
     // Decompress video content for display
-    const fullDescription = decompressVideoContent(this.description, this.videoContent);
+    const fullDescription = hydrateStreamMediaUrlsInHtml(
+        decompressVideoContent(this.description, this.videoContent)
+    );
     
     return {
         _id: this._id,
@@ -354,10 +356,10 @@ function decompressVideoContent(compressedHtml, videos = []) {
  * Create video HTML element from video data (for model use)
  */
 function createVideoHtml(video) {
-    const { src, key, token } = video;
-    
-    // If we have key and token, reconstruct the streaming URL
-    const videoSrc = src || `/api/uploads/stream?key=${encodeURIComponent(key)}&token=${encodeURIComponent(token)}`;
+    const { src, key } = video;
+    const videoSrc = key
+        ? `/api/uploads/public/${encodeKeyForPath(key)}`
+        : (src || '');
     
     // Determine video type from the key or src
     let videoType = 'video/mp4'; // default

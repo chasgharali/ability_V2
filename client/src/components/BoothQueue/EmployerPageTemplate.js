@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import EmployerLayoutRenderer from './EmployerLayoutRenderer';
+import { hydrateStreamMediaUrls } from '../../utils/videoContentProcessor';
 import './EmployerPageTemplate.css';
 
 const SECTION_DEFS = [
@@ -85,7 +86,7 @@ export default function EmployerPageTemplate({ booth }) {
           return (
             <article id={`employer-${sectionDef.key}`} key={sectionDef.key} className="employer-page-section-card">
               <h3>{section?.title || sectionDef.label}</h3>
-              <div className="employer-page-section-body" dangerouslySetInnerHTML={{ __html: html }} />
+              <div className="employer-page-section-body" dangerouslySetInnerHTML={{ __html: hydrateStreamMediaUrls(html) }} />
             </article>
           );
         })}

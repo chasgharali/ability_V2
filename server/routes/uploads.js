@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
-const { extractS3KeyFromUrl, encodeKeyForPath } = require('../utils/mediaUrl');
+const { extractS3KeyFromUrl, extractVideoAudioKey, encodeKeyForPath } = require('../utils/mediaUrl');
 
 // Multer configured for memory storage (files buffered in RAM then streamed to S3)
 const upload = multer({
@@ -402,7 +402,7 @@ router.post('/complete', authenticateToken, [
                 // Stable URL that redirects to a fresh presigned URL.
                 // Use this for <video>/<audio> tags so playback doesn't break when URLs expire.
                 streamUrl: `/api/uploads/stream?key=${encodeURIComponent(fileKey)}`,
-                publicUrl: /^((image|booth-logo|organization-logo|avatar)\/)/.test(fileKey)
+                publicUrl: /^((image|booth-logo|organization-logo|avatar|video|audio)\/)/.test(fileKey)
                     ? `/api/uploads/public/${encodeKeyForPath(fileKey)}`
                     : null,
                 uploadedAt: new Date()
@@ -428,10 +428,10 @@ router.get('/public/*', async (req, res) => {
         const decoded = decodeURIComponent(rawPath || '');
         const key = extractS3KeyFromUrl(decoded) || decoded;
 
-        if (!key || !/^(image|booth-logo|organization-logo|avatar)\//.test(key)) {
+        if (!key || !/^(image|booth-logo|organization-logo|avatar|video|audio)\//.test(key)) {
             return res.status(400).json({
                 error: 'Invalid key',
-                message: 'Only image, avatar, organization-logo, and booth-logo keys are allowed'
+                message: 'Only image, avatar, organization-logo, booth-logo, video, and audio keys are allowed'
             });
         }
 
@@ -454,6 +454,22 @@ router.get('/public/*', async (req, res) => {
 });
 
 /**
+ * RTE booth/event videos are public content. Redirect to the public proxy so
+ * legacy stream URLs work even when HTML embeds a missing or malformed token.
+ */
+const redirectPublicMediaStream = (req, res, next) => {
+    try {
+        const mediaKey = extractVideoAudioKey(req.query.key);
+        if (mediaKey) {
+            return res.redirect(302, `/api/uploads/public/${encodeKeyForPath(mediaKey)}`);
+        }
+    } catch (error) {
+        logger.warn('Public media stream redirect failed:', error);
+    }
+    return next();
+};
+
+/**
  * GET /api/uploads/stream?key=...&token=...
  * Redirect to a short-lived presigned URL for media playback (video/audio).
  *
@@ -462,7 +478,7 @@ router.get('/public/*', async (req, res) => {
  * - long-lived presigned URLs expire / can be invalid
  * - redirecting generates a fresh short-lived URL each time
  */
-router.get('/stream', authenticateTokenFromHeaderOrQuery, async (req, res) => {
+router.get('/stream', redirectPublicMediaStream, authenticateTokenFromHeaderOrQuery, async (req, res) => {
     try {
         const { key } = req.query;
         const { user } = req;
@@ -482,8 +498,14 @@ router.get('/stream', authenticateTokenFromHeaderOrQuery, async (req, res) => {
                 message: 'Invalid S3 key format'
             });
         }
+        const mediaPrefix = parts[0];
         const userIdInKey = parts[1];
-        if (userIdInKey !== user._id.toString() && !['Admin', 'GlobalSupport'].includes(user.role)) {
+        const isOwner = userIdInKey === user._id.toString();
+        const isPrivileged = ['Admin', 'GlobalSupport'].includes(user.role);
+        // RTE booth/event videos are uploaded by admins but viewed by job seekers in queue pages.
+        const isSharedContentMedia = mediaPrefix === 'video' || mediaPrefix === 'audio';
+
+        if (!isSharedContentMedia && !isOwner && !isPrivileged) {
             return res.status(403).json({
                 error: 'Access denied',
                 message: 'You do not have permission to access this file'

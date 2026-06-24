@@ -83,10 +83,6 @@ export const getSocketUrl = () => {
         url = url.replace(/^https:\/\//, 'http://');
     }
 
-    if (process.env.NODE_ENV === 'development') {
-        console.log(`🔌 Socket URL: ${url} (source: ${source}, NODE_ENV: ${process.env.NODE_ENV})`);
-    }
-
     return url;
 };
 

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ability V2 — Work Report (20 May – 17 Jun 2026)</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --card: #fff; --text: #1e293b; --muted: #64748b;
+      --primary: #2563eb; --danger: #dc2626; --warning: #d97706; --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+    header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; padding: 2.5rem 2rem; border-radius: 12px; margin-bottom: 2rem; }
+    header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    header p { opacity: 0.9; font-size: 0.95rem; }
+    .meta { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.25rem; font-size: 0.85rem; }
+    .meta span { background: rgba(255,255,255,0.15); padding: 0.35rem 0.75rem; border-radius: 6px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; text-align: center; }
+    .stat-card .number { font-size: 2.25rem; font-weight: 700; }
+    .stat-card .label { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+    .stat-card.feature .number { color: var(--primary); }
+    .stat-card.bug .number { color: var(--danger); }
+    .stat-card.change .number { color: var(--warning); }
+    .stat-card.total .number { color: #1e3a5f; }
+    .stat-card.hours .number { color: #059669; }
+    section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.2rem; margin-bottom: 1rem; padding-left: 0.75rem; }
+    .badge { background: #e2e8f0; color: var(--text); font-size: 0.8rem; padding: 0.15rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; vertical-align: middle; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { text-align: left; padding: 0.6rem 0.75rem; background: #f1f5f9; border-bottom: 2px solid var(--border); font-weight: 600; }
+    td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:hover td { background: #f8fafc; }
+    code { font-size: 0.8rem; background: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .area-tag { display: inline-block; background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; white-space: nowrap; }
+    .bar-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem; font-size: 0.8rem; }
+    .bar-date { width: 90px; color: var(--muted); }
+    .bar-track { flex: 1; height: 18px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; min-width: 2px; }
+    .bar-count { width: 48px; text-align: right; font-weight: 600; font-size: 0.75rem; }
+    .mini-bar { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+    .mini-bar div { height: 100%; background: var(--primary); border-radius: 4px; }
+    .donut-legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .category-section table { margin-top: 0.5rem; }
+    .table-scroll { overflow-x: auto; }
+    .table-scroll table { font-size: 0.8rem; min-width: 900px; }
+    .table-scroll th, .table-scroll td { text-align: center; white-space: nowrap; }
+    .table-scroll th:first-child, .table-scroll td:first-child { text-align: left; }
+    .col-feat { color: var(--primary); font-weight: 600; }
+    .col-fix { color: var(--danger); font-weight: 600; }
+    .col-enh { color: var(--warning); font-weight: 600; }
+    footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 2rem 0 1rem; }
+    @media print { body { background: #fff; } section, .stat-card { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Ability V2 — Development Work Report</h1>
+      <p>Summary of all commits from <strong>20 May 2026</strong> through <strong>17 June 2026</strong></p>
+      <div class="meta">
+        <span>Generated: 17 June 2026</span>
+        <span>Repository: ability_V2</span>
+        <span>Author: ali</span>
+        <span>Period: 29 days</span>
+        <span>Man-Hours: 256 hrs</span>
+      </div>
+    </header>
+
+    <div class="summary-grid">
+      <div class="stat-card total"><div class="number">105</div><div class="label">Total Commits</div></div>
+      <div class="stat-card hours"><div class="number">256</div><div class="label">Man-Hours</div></div>
+      <div class="stat-card feature"><div class="number">79</div><div class="label">New Features</div></div>
+      <div class="stat-card bug"><div class="number">10</div><div class="label">Bug Fixes</div></div>
+      <div class="stat-card change"><div class="number">16</div><div class="label">Change Requests</div></div>
+      <div class="stat-card"><div class="number">353</div><div class="label">Files Changed</div></div>
+      <div class="stat-card"><div class="number">+10,342</div><div class="label">Lines Added</div></div>
+      <div class="stat-card"><div class="number">19</div><div class="label">Active Days</div></div>
+    </div>
+
+    <section>
+      <h2 style="border-left: 4px solid #1e3a5f">Category Breakdown</h2>
+      <table>
+        <thead><tr><th>Category</th><th>Count</th><th>Man-Hours</th><th>% of Total</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><strong style="color:var(--primary)">New Feature (feat)</strong></td><td>79</td><td>212.7 hrs</td><td>83.1%</td><td>New functionality, integrations, and feature enhancements</td></tr>
+          <tr><td><strong style="color:var(--danger)">Bug Fix (fix)</strong></td><td>10</td><td>16.1 hrs</td><td>6.3%</td><td>Defect fixes, error handling, and corrections</td></tr>
+          <tr><td><strong style="color:var(--warning)">Enhancement</strong></td><td>16</td><td>27.1 hrs</td><td>10.6%</td><td>Refactors, style updates, chores, and improvements</td></tr>
+          <tr style="font-weight:600;background:#f8fafc"><td>Total</td><td>105</td><td>255.9 hrs</td><td>100%</td><td>Weighted by type, files changed, and lines of code per commit</td></tr>
+        </tbody>
+      </table>
+      <div class="donut-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div> Features (feat): 79 commits · 212.7 hrs</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> Bug Fixes (fix): 10 commits · 16.1 hrs</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div> Enhancements: 16 commits · 27.1 hrs</div>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="border-left: 4px solid #059669">Man-Hours by Day</h2>
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Commits</th>
+            <th class="col-feat">Feat</th>
+            <th class="col-fix">Fix</th>
+            <th class="col-enh">Enhancement</th>
+            <th>Files</th>
+            <th>Lines Changed</th>
+            <th class="col-feat">Feat Hrs</th>
+            <th class="col-fix">Fix Hrs</th>
+            <th class="col-enh">Enh Hrs</th>
+            <th>Total Hrs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>2026-05-21</td><td>10</td><td>8</td><td>0</td><td>2</td><td>39</td><td>1,824</td><td>15.4</td><td>0.0</td><td>2.5</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-05-22</td><td>3</td><td>3</td><td>0</td><td>0</td><td>17</td><td>1,212</td><td>11.8</td><td>0.0</td><td>0.0</td><td><strong>11.8</strong></td></tr>
+          <tr><td>2026-05-23</td><td>2</td><td>1</td><td>0</td><td>1</td><td>10</td><td>139</td><td>4.5</td><td>0.0</td><td>3.3</td><td><strong>7.8</strong></td></tr>
+          <tr><td>2026-05-24</td><td>3</td><td>0</td><td>2</td><td>1</td><td>3</td><td>38</td><td>0.0</td><td>2.8</td><td>1.4</td><td><strong>4.3</strong></td></tr>
+          <tr><td>2026-05-25</td><td>2</td><td>1</td><td>0</td><td>1</td><td>6</td><td>226</td><td>4.5</td><td>0.0</td><td>2.7</td><td><strong>7.2</strong></td></tr>
+          <tr><td>2026-05-26</td><td>6</td><td>5</td><td>0</td><td>1</td><td>36</td><td>2,162</td><td>15.0</td><td>0.0</td><td>3.0</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-06-01</td><td>13</td><td>9</td><td>1</td><td>3</td><td>53</td><td>2,396</td><td>15.3</td><td>0.6</td><td>2.2</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-06-03</td><td>2</td><td>2</td><td>0</td><td>0</td><td>9</td><td>362</td><td>9.0</td><td>0.0</td><td>0.0</td><td><strong>9.0</strong></td></tr>
+          <tr><td>2026-06-04</td><td>14</td><td>12</td><td>1</td><td>1</td><td>46</td><td>1,081</td><td>17.2</td><td>0.5</td><td>0.4</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-06-06</td><td>1</td><td>1</td><td>0</td><td>0</td><td>2</td><td>6</td><td>2.5</td><td>0.0</td><td>0.0</td><td><strong>2.5</strong></td></tr>
+          <tr><td>2026-06-07</td><td>6</td><td>4</td><td>1</td><td>1</td><td>13</td><td>190</td><td>14.5</td><td>1.3</td><td>1.4</td><td><strong>17.2</strong></td></tr>
+          <tr><td>2026-06-08</td><td>9</td><td>7</td><td>1</td><td>1</td><td>22</td><td>857</td><td>16.2</td><td>0.9</td><td>0.9</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-06-09</td><td>5</td><td>4</td><td>1</td><td>0</td><td>6</td><td>476</td><td>14.6</td><td>1.4</td><td>0.0</td><td><strong>16.0</strong></td></tr>
+          <tr><td>2026-06-10</td><td>9</td><td>6</td><td>0</td><td>3</td><td>16</td><td>28,228</td><td>13.3</td><td>0.0</td><td>4.7</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-06-11</td><td>1</td><td>1</td><td>0</td><td>0</td><td>4</td><td>266</td><td>4.5</td><td>0.0</td><td>0.0</td><td><strong>4.5</strong></td></tr>
+          <tr><td>2026-06-14</td><td>4</td><td>4</td><td>0</td><td>0</td><td>20</td><td>499</td><td>18.0</td><td>0.0</td><td>0.0</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-06-15</td><td>6</td><td>4</td><td>2</td><td>0</td><td>15</td><td>543</td><td>13.9</td><td>4.1</td><td>0.0</td><td><strong>18.0</strong></td></tr>
+          <tr><td>2026-06-16</td><td>3</td><td>1</td><td>1</td><td>1</td><td>15</td><td>1,211</td><td>4.5</td><td>4.5</td><td>4.5</td><td><strong>13.5</strong></td></tr>
+          <tr><td>2026-06-17</td><td>6</td><td>6</td><td>0</td><td>0</td><td>21</td><td>570</td><td>18.0</td><td>0.0</td><td>0.0</td><td><strong>18.0</strong></td></tr>
+          <tr style="font-weight:600;background:#f8fafc">
+            <td>Total (19 days)</td>
+            <td>105</td>
+            <td>79</td>
+            <td>10</td>
+            <td>16</td>
+            <td>353</td>
+            <td>42,286</td>
+            <td>212.7</td>
+            <td>16.1</td>
+            <td>27.1</td>
+            <td><strong>255.9</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="border-left: 4px solid #7c3aed">Work by Functional Area</h2>
+      <table>
+        <thead><tr><th>Area</th><th>Commits</th><th>%</th><th>Distribution</th></tr></thead>
+        <tbody><tr><td>Accessibility</td><td>36</td><td>34.3%</td><td><div class="mini-bar"><div style="width:34.3%"></div></div></td></tr>
+<tr><td>Video Call &amp; Queue</td><td>13</td><td>12.4%</td><td><div class="mini-bar"><div style="width:12.4%"></div></div></td></tr>
+<tr><td>UI/UX &amp; Layout</td><td>8</td><td>7.6%</td><td><div class="mini-bar"><div style="width:7.6%"></div></div></td></tr>
+<tr><td>Profile &amp; Resume</td><td>8</td><td>7.6%</td><td><div class="mini-bar"><div style="width:7.6%"></div></div></td></tr>
+<tr><td>Admin &amp; Analytics</td><td>7</td><td>6.7%</td><td><div class="mini-bar"><div style="width:6.7%"></div></div></td></tr>
+<tr><td>General / Other</td><td>7</td><td>6.7%</td><td><div class="mini-bar"><div style="width:6.7%"></div></div></td></tr>
+<tr><td>Event Management</td><td>5</td><td>4.8%</td><td><div class="mini-bar"><div style="width:4.8%"></div></div></td></tr>
+<tr><td>Employer &amp; Booth</td><td>5</td><td>4.8%</td><td><div class="mini-bar"><div style="width:4.8%"></div></div></td></tr>
+<tr><td>Email &amp; Notifications</td><td>5</td><td>4.8%</td><td><div class="mini-bar"><div style="width:4.8%"></div></div></td></tr>
+<tr><td>User Management</td><td>4</td><td>3.8%</td><td><div class="mini-bar"><div style="width:3.8%"></div></div></td></tr>
+<tr><td>Notes &amp; Terms</td><td>4</td><td>3.8%</td><td><div class="mini-bar"><div style="width:3.8%"></div></div></td></tr>
+<tr><td>Infrastructure</td><td>2</td><td>1.9%</td><td><div class="mini-bar"><div style="width:1.9%"></div></div></td></tr>
+<tr><td>AI &amp; Search</td><td>1</td><td>1.0%</td><td><div class="mini-bar"><div style="width:1.0%"></div></div></td></tr>
+</tbody>
+      </table>
+    </section>
+
+    <h2 style="margin: 2rem 0 1rem; font-size: 1.35rem;">Detailed Commit Log by Category</h2>
+    
+    <section class="category-section" id="new-feature">
+      <h2 style="border-left: 4px solid #2563eb">New Feature <span class="badge">79</span></h2>
+      <table>
+        <thead><tr><th>Date</th><th>Commit</th><th>Area</th><th>Description</th></tr></thead>
+        <tbody><tr>
+          <td>2026-06-17</td>
+          <td><code>78da6d89</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Enhance caption settings management in VideoCall component</td>
+        </tr>
+<tr>
+          <td>2026-06-17</td>
+          <td><code>a52d1ab1</code></td>
+          <td><span class="area-tag">Event Management</span></td>
+          <td>feat: Update RegisteredEventDetail styles and structure</td>
+        </tr>
+<tr>
+          <td>2026-06-17</td>
+          <td><code>06ce8fea</code></td>
+          <td><span class="area-tag">Admin &amp; Analytics</span></td>
+          <td>feat: Standardize Syncfusion Grid settings across components</td>
+        </tr>
+<tr>
+          <td>2026-06-17</td>
+          <td><code>def1eb76</code></td>
+          <td><span class="area-tag">Admin &amp; Analytics</span></td>
+          <td>feat: Enhance recruiter event filtering and analytics functionality</td>
+        </tr>
+<tr>
+          <td>2026-06-17</td>
+          <td><code>3dd1f134</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>feat: Adjust ChatPanel positioning for cookie consent banner visibility</td>
+        </tr>
+<tr>
+          <td>2026-06-17</td>
+          <td><code>3ca8afa8</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Enhance video call components with event data integration</td>
+        </tr>
+<tr>
+          <td>2026-06-16</td>
+          <td><code>f468a47b</code></td>
+          <td><span class="area-tag">Infrastructure</span></td>
+          <td>feat: Implement query parameter state management across multiple components</td>
+        </tr>
+<tr>
+          <td>2026-06-15</td>
+          <td><code>98fad42a</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance accessibility and focus management in BoothQueueWaiting and VideoCall components</td>
+        </tr>
+<tr>
+          <td>2026-06-15</td>
+          <td><code>f42481c7</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance dialog accessibility and focus management in BoothQueue and DeviceTestModal components</td>
+        </tr>
+<tr>
+          <td>2026-06-15</td>
+          <td><code>37e4d85d</code></td>
+          <td><span class="area-tag">Employer &amp; Booth</span></td>
+          <td>feat: Reorganize custom invite text input in BoothManagement component</td>
+        </tr>
+<tr>
+          <td>2026-06-15</td>
+          <td><code>e9b36651</code></td>
+          <td><span class="area-tag">Email &amp; Notifications</span></td>
+          <td>feat: Refactor email templates in mailer.js for improved structure and styling</td>
+        </tr>
+<tr>
+          <td>2026-06-14</td>
+          <td><code>55d167e0</code></td>
+          <td><span class="area-tag">General / Other</span></td>
+          <td>feat: Update role message retrieval and enhance event detail components</td>
+        </tr>
+<tr>
+          <td>2026-06-14</td>
+          <td><code>b3eff9de</code></td>
+          <td><span class="area-tag">User Management</span></td>
+          <td>feat: Normalize form field IDs and names in UserManagement component</td>
+        </tr>
+<tr>
+          <td>2026-06-14</td>
+          <td><code>6a568e38</code></td>
+          <td><span class="area-tag">User Management</span></td>
+          <td>feat: Update user role management in MassUploadModal and UserManagement components</td>
+        </tr>
+<tr>
+          <td>2026-06-14</td>
+          <td><code>d8443885</code></td>
+          <td><span class="area-tag">General / Other</span></td>
+          <td>feat: Implement debounce and memoization for improved performance in management components</td>
+        </tr>
+<tr>
+          <td>2026-06-11</td>
+          <td><code>b0d67980</code></td>
+          <td><span class="area-tag">Employer &amp; Booth</span></td>
+          <td>feat: Enhance EmployerLayoutRenderer and EmployerPageTemplateEditor with new features and styles</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>582ff036</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Improve accessibility in ViewProfile component</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>bb02493f</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance mobile layout and accessibility for footer and header components</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>6f0b532d</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Improve accessibility for country code selection in RegisterPage</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>292389c5</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance mobile sidebar accessibility and interaction</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>6fc1a056</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance mobile layout and accessibility in BoothQueueWaiting component</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>16bb31fa</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Refactor join queue button logic in RegisteredEventDetail component</td>
+        </tr>
+<tr>
+          <td>2026-06-09</td>
+          <td><code>c68df358</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance accessibility in BoothQueueWaiting component for mobile users</td>
+        </tr>
+<tr>
+          <td>2026-06-09</td>
+          <td><code>b4e0fbfc</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Update cookie consent banner styles for improved layout and accessibility</td>
+        </tr>
+<tr>
+          <td>2026-06-09</td>
+          <td><code>e1bc569c</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Improve cookie consent banner accessibility and layout</td>
+        </tr>
+<tr>
+          <td>2026-06-09</td>
+          <td><code>e0eab74a</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance profile validation and accessibility in EditProfileResume</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>20ab347d</code></td>
+          <td><span class="area-tag">Admin &amp; Analytics</span></td>
+          <td>feat: Implement CSV export functionality for job seekers</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>8b87f6d0</code></td>
+          <td><span class="area-tag">Event Management</span></td>
+          <td>feat: Integrate Sendy mailing list functionality in Event Management</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>5c736257</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Improve media preview accessibility in BoothQueueWaiting component</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>c57c86b1</code></td>
+          <td><span class="area-tag">Event Management</span></td>
+          <td>feat: Enhance Event Management with active terms filtering and reordering functionality</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>2ab3de28</code></td>
+          <td><span class="area-tag">Event Management</span></td>
+          <td>feat: Add preview functionality to event registration pages</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>9c0b6e46</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>feat: Enhance avatar upload experience in EditProfileResume</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>c6a71a37</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Add avatar upload instructions for improved accessibility</td>
+        </tr>
+<tr>
+          <td>2026-06-07</td>
+          <td><code>5dce39b8</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>feat: Add device selection instructions in DeviceTestModal</td>
+        </tr>
+<tr>
+          <td>2026-06-07</td>
+          <td><code>6e5bdd91</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>feat: Implement smooth scrolling to top in SurveyForm on save actions</td>
+        </tr>
+<tr>
+          <td>2026-06-07</td>
+          <td><code>b93ec70f</code></td>
+          <td><span class="area-tag">General / Other</span></td>
+          <td>feat: Add organization access instructions and admin checks</td>
+        </tr>
+<tr>
+          <td>2026-06-07</td>
+          <td><code>6b413f05</code></td>
+          <td><span class="area-tag">Employer &amp; Booth</span></td>
+          <td>feat: Enhance BoothManagement and FormComponents with helpful hints</td>
+        </tr>
+<tr>
+          <td>2026-06-06</td>
+          <td><code>dc006b35</code></td>
+          <td><span class="area-tag">User Management</span></td>
+          <td>feat: Update RegisterPage for improved link visibility</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>36ca97a5</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance screen reader support in EditProfileResume component</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>7ce83dd6</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>feat: Update disability options in SurveyForm for inclusivity</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>fc3c7f07</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Add instructional message for users in BoothQueueWaiting component</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>41376fbd</code></td>
+          <td><span class="area-tag">Notes &amp; Terms</span></td>
+          <td>feat: Update PageInstructionBanner integration for dynamic screen context</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>2662ce88</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Refactor BoothQueueEntry layout and styles for improved presentation</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>61ff7804</code></td>
+          <td><span class="area-tag">Notes &amp; Terms</span></td>
+          <td>feat: Add PageInstructionBanner component for role-specific guidance</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>d4789691</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Add closed-caption icon to CallControls for improved accessibility</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>919ff4eb</code></td>
+          <td><span class="area-tag">Admin &amp; Analytics</span></td>
+          <td>feat: Enhance horizontal scroll handling in RoleMessageManagement and DataGrid components</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>7f0c2404</code></td>
+          <td><span class="area-tag">Notes &amp; Terms</span></td>
+          <td>feat: Implement sticky first column for Notes and Terms &amp; Conditions tables</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>3a5b086b</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Update InterpreterDashboard layout and add user instructions</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>6cc8e076</code></td>
+          <td><span class="area-tag">Employer &amp; Booth</span></td>
+          <td>feat: Add alt text editor for images in EmployerLayoutRenderer</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>9eb2278a</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Refactor AdminSidebar layout and enhance button accessibility</td>
+        </tr>
+<tr>
+          <td>2026-06-03</td>
+          <td><code>a891b077</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance accessibility for MultiSelect components in EditProfileResume and AdminJobSeekerEditor</td>
+        </tr>
+<tr>
+          <td>2026-06-03</td>
+          <td><code>a3f88581</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Improve accessibility in EditProfileResume and AdminJobSeekerEditor components</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>2ad02229</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance resume method selection and improve accessibility in Dashboard components</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>244aca9f</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance resume upload UI and improve accessibility in Dashboard components</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>226ad916</code></td>
+          <td><span class="area-tag">Employer &amp; Booth</span></td>
+          <td>feat: Refactor BoothManagement and EmployerLayout components for improved functionality and UI</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>01bb6134</code></td>
+          <td><span class="area-tag">AI &amp; Search</span></td>
+          <td>feat: Implement streaming AI search functionality for job seekers</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>fc147844</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance accessibility and UI structure in BoothQueue components</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>279b1565</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance accessibility and keyboard navigation in ResumeBuilder component</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>a1735886</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>feat: Introduce resume upload and parsing settings in Resume Builder</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>2fba55fc</code></td>
+          <td><span class="area-tag">Notes &amp; Terms</span></td>
+          <td>feat: Enhance role management and access control in NoteForm and NoteManagement components</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>99a1a347</code></td>
+          <td><span class="area-tag">Email &amp; Notifications</span></td>
+          <td>feat: Standardize email subjects and content for consistency across mailer functions</td>
+        </tr>
+<tr>
+          <td>2026-05-26</td>
+          <td><code>ff324ab6</code></td>
+          <td><span class="area-tag">Admin &amp; Analytics</span></td>
+          <td>feat: Update Syncfusion dependencies and license key in environment configuration</td>
+        </tr>
+<tr>
+          <td>2026-05-26</td>
+          <td><code>d0011c2b</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>feat: Enhance resume upload and management features in EditProfileResume and RegistrationWizard</td>
+        </tr>
+<tr>
+          <td>2026-05-26</td>
+          <td><code>1d49866c</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Improve call handling and UI responsiveness in BoothQueue and VideoCall components</td>
+        </tr>
+<tr>
+          <td>2026-05-26</td>
+          <td><code>6a3897a5</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>feat: Implement Resume Builder AI settings and validation</td>
+        </tr>
+<tr>
+          <td>2026-05-26</td>
+          <td><code>89fc6411</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Enhance BoothQueue functionality with improved call handling and mobile UI updates</td>
+        </tr>
+<tr>
+          <td>2026-05-25</td>
+          <td><code>f63e79ea</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Enhance BoothQueue components with improved queue handling and call recovery</td>
+        </tr>
+<tr>
+          <td>2026-05-23</td>
+          <td><code>f24b38de</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance accessibility and focus management in various components</td>
+        </tr>
+<tr>
+          <td>2026-05-22</td>
+          <td><code>eb8588c8</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Add programmatic focus sentinel for improved accessibility</td>
+        </tr>
+<tr>
+          <td>2026-05-22</td>
+          <td><code>0d760d59</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Improve accessibility and focus management across components</td>
+        </tr>
+<tr>
+          <td>2026-05-22</td>
+          <td><code>a57a971f</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>feat: Enhance accessibility and focus management in components</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>8cd7bbbf</code></td>
+          <td><span class="area-tag">General / Other</span></td>
+          <td>feat: Enhance JobSeekerInterests and MeetingRecords components with improved data handling and UI updates</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>29660e06</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Update document titles in BoothQueue and VideoCall components</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>696813bb</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>feat: Refactor keyword management in EditProfileResume component</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>61c44af2</code></td>
+          <td><span class="area-tag">General / Other</span></td>
+          <td>feat: Update registration navigation in RegistrationWizard component</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>ca54f68c</code></td>
+          <td><span class="area-tag">Email &amp; Notifications</span></td>
+          <td>feat: Implement email verification resend functionality</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>ff399c8c</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>feat: Implement call invitation decline handling for job seekers</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>34316eb9</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>feat: Enhance keyword management in EditProfileResume component</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>91d8902c</code></td>
+          <td><span class="area-tag">General / Other</span></td>
+          <td>feat: Introduce searchTriggerNonce state to manage search queries across components</td>
+        </tr>
+</tbody>
+      </table>
+    </section>
+    <section class="category-section" id="bug-fix">
+      <h2 style="border-left: 4px solid #dc2626">Bug Fix <span class="badge">10</span></h2>
+      <table>
+        <thead><tr><th>Date</th><th>Commit</th><th>Area</th><th>Description</th></tr></thead>
+        <tbody><tr>
+          <td>2026-06-16</td>
+          <td><code>90e3d47a</code></td>
+          <td><span class="area-tag">Admin &amp; Analytics</span></td>
+          <td>fix: Update Syncfusion Grid data binding in multiple components</td>
+        </tr>
+<tr>
+          <td>2026-06-15</td>
+          <td><code>f8ca9492</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>fix: Update modal close hover styles and enhance screen reader announcements in BoothQueue components</td>
+        </tr>
+<tr>
+          <td>2026-06-15</td>
+          <td><code>6364ac85</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>fix: Remove aria-pressed attributes from password toggle buttons in MyAccountInline and RecruiterProfileEditor components</td>
+        </tr>
+<tr>
+          <td>2026-06-09</td>
+          <td><code>66dcd143</code></td>
+          <td><span class="area-tag">General / Other</span></td>
+          <td>fix: Update password visibility toggle labels for clarity</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>f83fc8e0</code></td>
+          <td><span class="area-tag">Event Management</span></td>
+          <td>fix: Handle 404 errors in RegisteredEventDetail component</td>
+        </tr>
+<tr>
+          <td>2026-06-07</td>
+          <td><code>471bded0</code></td>
+          <td><span class="area-tag">Email &amp; Notifications</span></td>
+          <td>fix: Adjust padding in verification email template for better layout</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>2c31feef</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>fix: Adjust font weight for event name in BoothQueueEntry for improved readability</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>26ec1c76</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>fix: Update button labels in ResumeBuilder for clarity and consistency</td>
+        </tr>
+<tr>
+          <td>2026-05-24</td>
+          <td><code>3b746dd8</code></td>
+          <td><span class="area-tag">Email &amp; Notifications</span></td>
+          <td>fix: Update email subject and content for consistency in verification emails</td>
+        </tr>
+<tr>
+          <td>2026-05-24</td>
+          <td><code>833794a1</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>fix: Reset main content scroll position in GlobalRouteObserver for improved accessibility</td>
+        </tr>
+</tbody>
+      </table>
+    </section>
+    <section class="category-section" id="change-request">
+      <h2 style="border-left: 4px solid #d97706">Change Request <span class="badge">16</span></h2>
+      <table>
+        <thead><tr><th>Date</th><th>Commit</th><th>Area</th><th>Description</th></tr></thead>
+        <tbody><tr>
+          <td>2026-06-16</td>
+          <td><code>6eb252e3</code></td>
+          <td><span class="area-tag">User Management</span></td>
+          <td>refactor: Optimize UserManagement component with improved state management and memoization</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>2accd102</code></td>
+          <td><span class="area-tag">Infrastructure</span></td>
+          <td>chore: Update .gitignore to specify log file paths and remove existing log files</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>336ea183</code></td>
+          <td><span class="area-tag">Profile &amp; Resume</span></td>
+          <td>refactor: Remove unnecessary profile status indicator in ViewProfile component</td>
+        </tr>
+<tr>
+          <td>2026-06-10</td>
+          <td><code>690b9acb</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>refactor: Update ViewProfile component structure for semantic HTML</td>
+        </tr>
+<tr>
+          <td>2026-06-08</td>
+          <td><code>54e2e253</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>style: Refine layout and button styles in DeviceTestModal for better UX</td>
+        </tr>
+<tr>
+          <td>2026-06-07</td>
+          <td><code>7adb1d95</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>style: Update button styles in DeviceTestModal for improved UX</td>
+        </tr>
+<tr>
+          <td>2026-06-04</td>
+          <td><code>875a1e55</code></td>
+          <td><span class="area-tag">Admin &amp; Analytics</span></td>
+          <td>refactor: Reorganize buttons in AdminSidebar for improved layout</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>aebb2fb2</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>style: Update overflow property in Dashboard CSS for improved mobile menu behavior</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>c2d14c15</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>style: Improve accessibility and consistency in account and event components</td>
+        </tr>
+<tr>
+          <td>2026-06-01</td>
+          <td><code>b51d1dae</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>style: Enhance mobile accessibility in BoothQueueWaiting CSS</td>
+        </tr>
+<tr>
+          <td>2026-05-26</td>
+          <td><code>d6b2e107</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>style: Update BoothQueueWaiting component for improved mobile layout and accessibility</td>
+        </tr>
+<tr>
+          <td>2026-05-25</td>
+          <td><code>13a3bf3f</code></td>
+          <td><span class="area-tag">Video Call &amp; Queue</span></td>
+          <td>style: Update Chat and VideoCall components for improved UI consistency</td>
+        </tr>
+<tr>
+          <td>2026-05-24</td>
+          <td><code>3a83e2f9</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>refactor: Improve focus management and accessibility in GlobalRouteObserver</td>
+        </tr>
+<tr>
+          <td>2026-05-23</td>
+          <td><code>b282eb48</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>refactor: Simplify focus management and enhance accessibility features</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>75405352</code></td>
+          <td><span class="area-tag">UI/UX &amp; Layout</span></td>
+          <td>style: Update DeviceTestModal and SurveyForm for improved UI consistency</td>
+        </tr>
+<tr>
+          <td>2026-05-21</td>
+          <td><code>a5f2131a</code></td>
+          <td><span class="area-tag">Accessibility</span></td>
+          <td>refactor: Update focus management in Accessibility components</td>
+        </tr>
+</tbody>
+      </table>
+    </section>
+
+    <footer>
+      Report generated from git commit history &bull; ability_V2 &bull; 2026-06-17 19:20
+    </footer>
+  </div>
+</body>
+</html>

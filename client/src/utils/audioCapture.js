@@ -1,15 +1,74 @@
 /**
  * AudioCapture - Captures audio from Twilio tracks and sends to server for transcription
- * 
+ *
  * This utility captures audio from Twilio Video audio tracks, converts it to the
  * format expected by Deepgram (16-bit PCM, 16kHz, mono), and streams it to the
  * server via Socket.IO.
  */
 
 const SAMPLE_RATE = 16000; // Target sample rate
-const BUFFER_SIZE = 4096;  // Audio processing buffer size
+const BUFFER_SIZE = 4096; // Audio processing buffer size
 /** RMS level below which a buffer is considered silence (0–1 range). */
 const SILENCE_THRESHOLD = 0.003;
+
+const PCM_CAPTURE_WORKLET_SOURCE = `
+class PcmCaptureProcessor extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    this.silenceThreshold = options.processorOptions?.silenceThreshold ?? 0.003;
+  }
+
+  process(inputs) {
+    const channel = inputs[0] && inputs[0][0];
+    if (!channel || channel.length === 0) {
+      return true;
+    }
+
+    let sumSq = 0;
+    for (let i = 0; i < channel.length; i++) {
+      sumSq += channel[i] * channel[i];
+    }
+    const rms = Math.sqrt(sumSq / channel.length);
+    if (rms < this.silenceThreshold) {
+      return true;
+    }
+
+    const int16 = new Int16Array(channel.length);
+    for (let i = 0; i < channel.length; i++) {
+      const sample = Math.max(-1, Math.min(1, channel[i]));
+      int16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+    }
+
+    this.port.postMessage(int16.buffer, [int16.buffer]);
+    return true;
+  }
+}
+
+registerProcessor('pcm-capture-processor', PcmCaptureProcessor);
+`;
+
+const workletModulePromises = new WeakMap();
+
+async function loadPcmCaptureWorklet(audioContext) {
+  if (!audioContext?.audioWorklet) {
+    throw new Error('AudioWorklet is not supported in this browser');
+  }
+
+  if (!workletModulePromises.has(audioContext)) {
+    const loadPromise = (async () => {
+      const blob = new Blob([PCM_CAPTURE_WORKLET_SOURCE], { type: 'application/javascript' });
+      const moduleUrl = URL.createObjectURL(blob);
+      try {
+        await audioContext.audioWorklet.addModule(moduleUrl);
+      } finally {
+        URL.revokeObjectURL(moduleUrl);
+      }
+    })();
+    workletModulePromises.set(audioContext, loadPromise);
+  }
+
+  return workletModulePromises.get(audioContext);
+}
 
 /**
  * AudioCapture class - handles audio capture and streaming for one participant
@@ -21,16 +80,18 @@ export class AudioCapture {
     this.roomName = roomName;
     this.participantId = participantId;
     this.participantName = participantName;
-    
+
     // Audio processing state
     this.audioContext = null;
     this.mediaStreamSource = null;
-    this.processor = null;
+    this.workletNode = null;
+    this.silentGain = null;
     this.isCapturing = false;
     this.chunksSent = 0;
-    
-    // Bind methods
-    this.handleAudioProcess = this.handleAudioProcess.bind(this);
+    this.sampleBuffer = new Int16Array(BUFFER_SIZE);
+    this.sampleBufferOffset = 0;
+
+    this.handleWorkletMessage = this.handleWorkletMessage.bind(this);
   }
 
   /**
@@ -52,71 +113,55 @@ export class AudioCapture {
     try {
       console.log(`🎤 [AudioCapture] Starting capture for ${this.participantName}`);
 
-      // Get the underlying MediaStreamTrack from Twilio track
-      let mediaStreamTrack;
-      
-      if (twilioTrack.mediaStreamTrack) {
-        // Direct access to mediaStreamTrack
-        mediaStreamTrack = twilioTrack.mediaStreamTrack;
-      } else if (typeof twilioTrack.attach === 'function') {
-        // Create a temporary audio element to get the stream
-        const audioElement = document.createElement('audio');
-        twilioTrack.attach(audioElement);
-        
-        if (audioElement.srcObject) {
-          const tracks = audioElement.srcObject.getAudioTracks();
-          if (tracks.length > 0) {
-            mediaStreamTrack = tracks[0];
-          }
-        }
-        
-        // Detach the temporary element
-        twilioTrack.detach(audioElement);
-      }
-
+      const mediaStreamTrack = this.resolveMediaStreamTrack(twilioTrack);
       if (!mediaStreamTrack) {
         console.error('[AudioCapture] Could not get MediaStreamTrack from Twilio track');
         return false;
       }
 
-      // Create AudioContext with target sample rate
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
-        sampleRate: SAMPLE_RATE
+        sampleRate: SAMPLE_RATE,
       });
 
-      // Create a MediaStream from the track
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+
+      await loadPcmCaptureWorklet(this.audioContext);
+
       const stream = new MediaStream([mediaStreamTrack]);
-
-      // Create media stream source
       this.mediaStreamSource = this.audioContext.createMediaStreamSource(stream);
+      this.workletNode = new AudioWorkletNode(this.audioContext, 'pcm-capture-processor', {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        channelCount: 1,
+        processorOptions: {
+          silenceThreshold: SILENCE_THRESHOLD,
+        },
+      });
+      this.workletNode.port.onmessage = this.handleWorkletMessage;
 
-      // Create script processor for audio chunks
-      // Note: ScriptProcessorNode is deprecated but still widely supported
-      // For production, consider using AudioWorklet
-      this.processor = this.audioContext.createScriptProcessor(BUFFER_SIZE, 1, 1);
-      
-      // Set up audio processing
-      this.processor.onaudioprocess = this.handleAudioProcess;
+      // Keep the graph alive without audible output.
+      this.silentGain = this.audioContext.createGain();
+      this.silentGain.gain.value = 0;
+      this.mediaStreamSource.connect(this.workletNode);
+      this.workletNode.connect(this.silentGain);
+      this.silentGain.connect(this.audioContext.destination);
 
-      // Connect the audio graph
-      this.mediaStreamSource.connect(this.processor);
-      this.processor.connect(this.audioContext.destination);
-
-      // Notify server to start transcription
       this.socket.emit('caption-audio-stream', {
         callId: this.callId,
         roomName: this.roomName,
         participantId: this.participantId,
         participantName: this.participantName,
-        isStart: true
+        isStart: true,
       });
 
       this.isCapturing = true;
       this.chunksSent = 0;
+      this.sampleBufferOffset = 0;
 
       console.log(`✅ [AudioCapture] Started for ${this.participantName}`);
       return true;
-
     } catch (error) {
       console.error(`[AudioCapture] Failed to start capture for ${this.participantName}:`, error);
       this.cleanup();
@@ -124,87 +169,94 @@ export class AudioCapture {
     }
   }
 
+  resolveMediaStreamTrack(twilioTrack) {
+    if (twilioTrack.mediaStreamTrack) {
+      return twilioTrack.mediaStreamTrack;
+    }
+
+    if (typeof twilioTrack.attach === 'function') {
+      const audioElement = document.createElement('audio');
+      twilioTrack.attach(audioElement);
+
+      let mediaStreamTrack = null;
+      if (audioElement.srcObject) {
+        const tracks = audioElement.srcObject.getAudioTracks();
+        if (tracks.length > 0) {
+          mediaStreamTrack = tracks[0];
+        }
+      }
+
+      twilioTrack.detach(audioElement);
+      return mediaStreamTrack;
+    }
+
+    return null;
+  }
+
   /**
-   * Handle audio processing - convert and send audio chunks
-   * @param {AudioProcessingEvent} event - Audio processing event
+   * Accumulate worklet PCM chunks and emit fixed-size buffers to the server.
+   * @param {MessageEvent<ArrayBuffer>} event
    */
-  handleAudioProcess(event) {
-    if (!this.isCapturing || !this.socket) return;
+  handleWorkletMessage(event) {
+    if (!this.isCapturing || !this.socket || !event.data) return;
 
     try {
-      // Get audio data from input buffer (mono)
-      const inputData = event.inputBuffer.getChannelData(0);
+      const int16Chunk = new Int16Array(event.data);
+      let chunkOffset = 0;
 
-      // Skip silent frames to avoid sending blank audio to the server.
-      let sumSq = 0;
-      for (let i = 0; i < inputData.length; i++) {
-        sumSq += inputData[i] * inputData[i];
+      while (chunkOffset < int16Chunk.length) {
+        const remaining = BUFFER_SIZE - this.sampleBufferOffset;
+        const toCopy = Math.min(remaining, int16Chunk.length - chunkOffset);
+        this.sampleBuffer.set(
+          int16Chunk.subarray(chunkOffset, chunkOffset + toCopy),
+          this.sampleBufferOffset
+        );
+        this.sampleBufferOffset += toCopy;
+        chunkOffset += toCopy;
+
+        if (this.sampleBufferOffset >= BUFFER_SIZE) {
+          this.emitAudioChunk(this.sampleBuffer.slice());
+          this.sampleBufferOffset = 0;
+        }
       }
-      const rms = Math.sqrt(sumSq / inputData.length);
-      if (rms < SILENCE_THRESHOLD) return;
-
-      // Convert Float32Array to Int16Array (16-bit PCM)
-      const int16Data = this.float32ToInt16(inputData);
-      
-      // Convert to array for Socket.IO transmission
-      const audioArray = Array.from(int16Data);
-
-      // Send audio chunk to server
-      const emitData = {
-        callId: this.callId,
-        roomName: this.roomName,
-        participantId: this.participantId,
-        participantName: this.participantName,
-        audioChunk: audioArray
-      };
-      
-      // Log first chunk details
-      if (this.chunksSent === 0) {
-        console.log(`📤 [AudioCapture] Sending first audio chunk to server:`, {
-          callId: this.callId,
-          roomName: this.roomName,
-          participantId: this.participantId,
-          chunkSize: audioArray.length,
-          socketConnected: this.socket?.connected
-        });
-      }
-      
-      this.socket.emit('caption-audio-stream', emitData);
-
-      this.chunksSent++;
-
-      // Log every 10 chunks for debugging (approximately every 2.5 seconds at 16kHz)
-      if (this.chunksSent % 10 === 0) {
-        console.log(`📊 [AudioCapture] ${this.participantName}: sent ${this.chunksSent} chunks (chunk size: ${audioArray.length} samples)`);
-      }
-      
-      // Log first chunk to verify audio is being captured
-      if (this.chunksSent === 1) {
-        console.log(`🎤 [AudioCapture] First audio chunk sent - audio capture is working!`);
-        console.log(`   Chunk size: ${audioArray.length} samples, sample rate: 16000Hz`);
-      }
-
     } catch (error) {
       console.error(`[AudioCapture] Error processing audio for ${this.participantName}:`, error);
     }
   }
 
-  /**
-   * Convert Float32 audio samples to Int16
-   * @param {Float32Array} float32Array - Input audio samples (-1.0 to 1.0)
-   * @returns {Int16Array} - Output audio samples (-32768 to 32767)
-   */
-  float32ToInt16(float32Array) {
-    const int16Array = new Int16Array(float32Array.length);
-    
-    for (let i = 0; i < float32Array.length; i++) {
-      // Clamp value to -1.0 to 1.0 range
-      const sample = Math.max(-1, Math.min(1, float32Array[i]));
-      // Convert to 16-bit signed integer
-      int16Array[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+  emitAudioChunk(int16Data) {
+    const audioArray = Array.from(int16Data);
+    const emitData = {
+      callId: this.callId,
+      roomName: this.roomName,
+      participantId: this.participantId,
+      participantName: this.participantName,
+      audioChunk: audioArray,
+    };
+
+    if (this.chunksSent === 0) {
+      console.log('📤 [AudioCapture] Sending first audio chunk to server:', {
+        callId: this.callId,
+        roomName: this.roomName,
+        participantId: this.participantId,
+        chunkSize: audioArray.length,
+        socketConnected: this.socket?.connected,
+      });
     }
-    
-    return int16Array;
+
+    this.socket.emit('caption-audio-stream', emitData);
+    this.chunksSent += 1;
+
+    if (this.chunksSent % 10 === 0) {
+      console.log(
+        `📊 [AudioCapture] ${this.participantName}: sent ${this.chunksSent} chunks (chunk size: ${audioArray.length} samples)`
+      );
+    }
+
+    if (this.chunksSent === 1) {
+      console.log('🎤 [AudioCapture] First audio chunk sent - audio capture is working!');
+      console.log(`   Chunk size: ${audioArray.length} samples, sample rate: 16000Hz`);
+    }
   }
 
   /**
@@ -217,14 +269,13 @@ export class AudioCapture {
 
     console.log(`🛑 [AudioCapture] Stopping capture for ${this.participantName}`);
 
-    // Notify server to stop transcription
     if (this.socket) {
       this.socket.emit('caption-audio-stream', {
         callId: this.callId,
         roomName: this.roomName,
         participantId: this.participantId,
         participantName: this.participantName,
-        isEnd: true
+        isEnd: true,
       });
     }
 
@@ -238,16 +289,25 @@ export class AudioCapture {
    */
   cleanup() {
     this.isCapturing = false;
+    this.sampleBufferOffset = 0;
 
-    // Disconnect and clean up audio nodes
-    if (this.processor) {
+    if (this.workletNode) {
       try {
-        this.processor.onaudioprocess = null;
-        this.processor.disconnect();
+        this.workletNode.port.onmessage = null;
+        this.workletNode.disconnect();
       } catch (e) {
         // Ignore errors during cleanup
       }
-      this.processor = null;
+      this.workletNode = null;
+    }
+
+    if (this.silentGain) {
+      try {
+        this.silentGain.disconnect();
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
+      this.silentGain = null;
     }
 
     if (this.mediaStreamSource) {
@@ -289,7 +349,7 @@ export class AudioCapture {
       participantName: this.participantName,
       isCapturing: this.isCapturing,
       chunksSent: this.chunksSent,
-      audioContextState: this.audioContext?.state || 'none'
+      audioContextState: this.audioContext?.state || 'none',
     };
   }
 }
@@ -304,14 +364,10 @@ export class CaptionManager {
     this.roomName = roomName;
     this.captures = new Map(); // Map of participantId -> AudioCapture
     this.isEnabled = false;
-    
-    // Set up socket listeners for caption events
+
     this.setupSocketListeners();
   }
 
-  /**
-   * Set up socket listeners for caption-related events
-   */
   setupSocketListeners() {
     if (!this.socket) return;
 
@@ -325,20 +381,12 @@ export class CaptionManager {
 
     this.socket.on('caption-error', (data) => {
       console.error('❌ Caption error:', data);
-      // Optionally show error to user
       if (data.code === 'SERVICE_UNAVAILABLE') {
         console.warn('Caption service is not available. Falling back to browser-based captions.');
       }
     });
   }
 
-  /**
-   * Start capturing audio for a participant
-   * @param {string} participantId - Participant identifier
-   * @param {string} participantName - Participant display name
-   * @param {LocalAudioTrack|RemoteAudioTrack} audioTrack - Twilio audio track
-   * @returns {Promise<boolean>} Success status
-   */
   async startCapture(participantId, participantName, audioTrack) {
     if (!this.isEnabled) {
       console.warn('[CaptionManager] Captions not enabled');
@@ -367,10 +415,6 @@ export class CaptionManager {
     return success;
   }
 
-  /**
-   * Stop capturing audio for a participant
-   * @param {string} participantId - Participant identifier
-   */
   stopCapture(participantId) {
     const capture = this.captures.get(participantId);
     if (capture) {
@@ -379,11 +423,6 @@ export class CaptionManager {
     }
   }
 
-  /**
-   * Enable captions - start capturing for all provided participants
-   * @param {Array} participants - Array of {id, name, audioTrack} objects
-   * @returns {Promise<number>} Number of successful captures started
-   */
   async enable(participants = []) {
     this.isEnabled = true;
     let successCount = 0;
@@ -394,44 +433,32 @@ export class CaptionManager {
         participant.name,
         participant.audioTrack
       );
-      if (success) successCount++;
+      if (success) successCount += 1;
     }
 
     console.log(`✅ [CaptionManager] Enabled - ${successCount}/${participants.length} captures started`);
     return successCount;
   }
 
-  /**
-   * Disable captions - stop all captures
-   */
   disable() {
     console.log(`🛑 [CaptionManager] Disabling - stopping ${this.captures.size} captures`);
 
-    this.captures.forEach((capture, participantId) => {
+    this.captures.forEach((capture) => {
       capture.stopCapture();
     });
 
     this.captures.clear();
     this.isEnabled = false;
 
-    // Notify server to stop all captions for this call
     if (this.socket) {
       this.socket.emit('caption-stop-all', { callId: this.callId });
     }
   }
 
-  /**
-   * Check if captions are enabled
-   * @returns {boolean}
-   */
   isActive() {
     return this.isEnabled;
   }
 
-  /**
-   * Get all capture statistics
-   * @returns {Array}
-   */
   getStats() {
     const stats = [];
     this.captures.forEach((capture) => {
@@ -440,13 +467,9 @@ export class CaptionManager {
     return stats;
   }
 
-  /**
-   * Clean up and destroy manager
-   */
   destroy() {
     this.disable();
-    
-    // Remove socket listeners
+
     if (this.socket) {
       this.socket.off('caption-started');
       this.socket.off('caption-stopped');

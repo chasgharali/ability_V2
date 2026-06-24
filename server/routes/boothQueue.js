@@ -378,12 +378,31 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
             });
         }
 
-        const queueEntry = await BoothQueue.findOne({
+        const queueLookup = {
             jobSeeker: jobSeekerId,
             booth: boothId,
-            queueToken,
             status: { $in: ['waiting', 'invited'] }
-        }).populate('jobSeeker', 'name email').populate('booth', 'name administrators').populate('event', 'name');
+        };
+        if (queueToken) {
+            queueLookup.queueToken = queueToken;
+        }
+
+        let queueEntry = await BoothQueue.findOne(queueLookup)
+            .populate('jobSeeker', 'name email')
+            .populate('booth', 'name administrators')
+            .populate('event', 'name');
+
+        // Fallback when token is missing or stale (e.g. after page refresh)
+        if (!queueEntry && queueToken) {
+            queueEntry = await BoothQueue.findOne({
+                jobSeeker: jobSeekerId,
+                booth: boothId,
+                status: { $in: ['waiting', 'invited'] }
+            })
+            .populate('jobSeeker', 'name email')
+            .populate('booth', 'name administrators')
+            .populate('event', 'name');
+        }
 
         if (!queueEntry) {
             return res.status(404).json({
@@ -655,6 +674,15 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
             position: { $lt: queueEntry.position }
         });
 
+        let activeCallId = null;
+        if (queueEntry.status === 'in_meeting') {
+            const activeCall = await VideoCall.findOne({
+                queueEntry: queueEntry._id,
+                status: 'active'
+            }).select('_id');
+            activeCallId = activeCall?._id || null;
+        }
+
         res.json({
             success: true,
             position: queueEntry.position,
@@ -663,6 +691,7 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
             waitingCount,
             peopleAhead,
             status: queueEntry.status,
+            activeCallId,
             queueEntry,
             unreadMessages: queueEntry.unreadForJobSeeker
         });

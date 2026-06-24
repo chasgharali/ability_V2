@@ -16,6 +16,7 @@ import { announceToScreenReader } from '../Accessibility/FocusManager';
 import useDialogFocus from '../../hooks/useDialogFocus';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
+import { hydrateStreamMediaUrls, hydrateStreamMediaElements } from '../../utils/videoContentProcessor';
 
 export default function BoothQueueWaiting() {
   const { eventSlug, boothId } = useParams();
@@ -41,7 +42,14 @@ export default function BoothQueueWaiting() {
   const [currentServing, setCurrentServing] = useState(initialServing);
   const [waitingCount, setWaitingCount] = useState(0);
   const [peopleAhead, setPeopleAhead] = useState(0);
-  const [queueToken, setQueueToken] = useState(location.state?.queueToken || '');
+  const [queueToken, setQueueToken] = useState(() => {
+    if (location.state?.queueToken) return location.state.queueToken;
+    try {
+      return localStorage.getItem(`queueToken_${boothId}`) || '';
+    } catch (_e) {
+      return '';
+    }
+  });
   const [queueEntryId, setQueueEntryId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -78,30 +86,45 @@ export default function BoothQueueWaiting() {
   const [showDeviceModal, setShowDeviceModal] = useState(false);
 
   const mediaRecorderRef = useRef(null);
+  const recordingStreamRef = useRef(null);
+  const recordingVideoRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const announcementCounterRef = useRef(0);
   const hasLeftQueueRef = useRef(false); // Track if user has left the queue
   const isInCallRef = useRef(false); // Ref to avoid stale closure in interval callbacks
+  const hasPendingInviteRef = useRef(false); // Skip restore when socket invite is already shown
+  const callRestoreBlockedRef = useRef(false); // Stop retrying after a definitive 403
 
   // Keep ref in sync with state so interval callbacks always see the latest value
   useEffect(() => {
     isInCallRef.current = isInCall;
   }, [isInCall]);
 
+  useEffect(() => {
+    hasPendingInviteRef.current = !!(showInviteModal || pendingInvitation || callInvitation);
+  }, [showInviteModal, pendingInvitation, callInvitation]);
+
   const tryRestoreActiveCall = async (queueData) => {
-    // Socket invites can be missed if the user is temporarily disconnected.
-    // If backend says they're already in_meeting, recover the call via queue entry.
-    // Use isInCallRef.current (not isInCall state) to avoid stale closure in interval callbacks.
+    // Only recover after a page refresh mid-call. New invites are handled via socket modal.
     if (!queueData || queueData.status !== 'in_meeting' || isInCallRef.current) return;
+    if (hasPendingInviteRef.current || callRestoreBlockedRef.current) return;
+    if (sessionStorage.getItem(`inActiveCall_${boothId}`) !== '1') return;
+
     const queueEntryId = queueData.queueEntry?._id;
     if (!queueEntryId) return;
 
     try {
-      const videoCallRes = await axios.get(`/api/video-call/by-queue/${queueEntryId}`);
-      if (videoCallRes.data?.success && videoCallRes.data.videoCall) {
-        const callData = videoCallRes.data.videoCall;
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const videoCallRes = await axios.get(`/api/video-call/by-queue/${queueEntryId}`, { headers });
+
+      const callData = videoCallRes.data?.videoCall;
+      if (videoCallRes.data?.success && callData) {
         // Mark as in-call immediately via ref to prevent duplicate recovery attempts
         isInCallRef.current = true;
+        try {
+          sessionStorage.setItem(`inActiveCall_${boothId}`, '1');
+        } catch (_e) { /* ignore */ }
         setCallInvitation({
           id: callData._id || callData.id,
           roomName: callData.roomName,
@@ -121,7 +144,13 @@ export default function BoothQueueWaiting() {
         setIsInCall(true);
       }
     } catch (callErr) {
-      // Keep waiting UI if recovery call is not ready yet.
+      const status = callErr.response?.status;
+      if (status === 404) return;
+      if (status === 403) {
+        callRestoreBlockedRef.current = true;
+        console.warn('Unable to restore video call: unauthorized for this queue entry');
+        return;
+      }
       console.error('Error restoring video call from queue status:', callErr);
     }
   };
@@ -129,7 +158,15 @@ export default function BoothQueueWaiting() {
 
   useEffect(() => {
     // Reset queueToken when boothId changes to prevent using token from wrong booth
-    setQueueToken(location.state?.queueToken || '');
+    if (location.state?.queueToken) {
+      setQueueToken(location.state.queueToken);
+    } else {
+      try {
+        setQueueToken(localStorage.getItem(`queueToken_${boothId}`) || '');
+      } catch (_e) {
+        setQueueToken('');
+      }
+    }
     setQueueEntryId(null);
     
     loadData();
@@ -170,6 +207,11 @@ export default function BoothQueueWaiting() {
     if (!booth?.name) return;
     announceToScreenReader(`${booth.name} waiting area`);
   }, [booth?.name]);
+
+  // Rewrite any legacy stream URLs on mounted video/audio elements
+  useEffect(() => {
+    hydrateStreamMediaElements(document.querySelector('.waiting-employer-pane, .content-grid-expanded'));
+  }, [booth]);
 
   // Ensure we (re)join socket rooms after the socket connects/reconnects
   useEffect(() => {
@@ -226,9 +268,9 @@ export default function BoothQueueWaiting() {
     if (!boothId || loading) return;
     
     const refreshInterval = setInterval(async () => {
-      // Don't make status requests if user has left the queue
-      if (hasLeftQueueRef.current) {
-        clearInterval(refreshInterval);
+      // Don't poll while leaving, uploading, or after the user has left the queue
+      if (hasLeftQueueRef.current || showLeaveMessageModal || isUploading) {
+        if (hasLeftQueueRef.current) clearInterval(refreshInterval);
         return;
       }
       
@@ -241,10 +283,12 @@ export default function BoothQueueWaiting() {
           setPeopleAhead(queueData.peopleAhead ?? 0);
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
-          await tryRestoreActiveCall(queueData);
           try {
             localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+            if (queueData.token) {
+              localStorage.setItem(`queueToken_${boothId}`, queueData.token);
+            }
           } catch (e) { }
         }
       } catch (e) {
@@ -252,7 +296,7 @@ export default function BoothQueueWaiting() {
         const is404 = e.response?.status === 404;
         const shouldRedirect = e.response?.data?.shouldRedirect;
         
-        if (is404 && shouldRedirect) {
+        if (is404 && shouldRedirect && !hasLeftQueueRef.current) {
           // User is truly not in queue - redirect to queue entry page
           console.log('User not in queue during periodic refresh, redirecting');
           navigate(`/booth-queue/${eventSlug}/${boothId}/entry`, { replace: true });
@@ -263,7 +307,7 @@ export default function BoothQueueWaiting() {
     }, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(refreshInterval);
-  }, [boothId, loading, eventSlug, navigate]);
+  }, [boothId, loading, eventSlug, navigate, showLeaveMessageModal, isUploading]);
 
   const loadData = async () => {
     try {
@@ -309,12 +353,16 @@ export default function BoothQueueWaiting() {
           try {
             localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+            if (queueData.token) {
+              localStorage.setItem(`queueToken_${boothId}`, queueData.token);
+            }
           } catch (e) { }
         } else {
           // Not in queue or backend returned a non-successful shape
           // Reset queueToken to prevent using token from wrong booth
           setQueueToken('');
           setQueueEntryId(null);
+          try { localStorage.removeItem(`queueToken_${boothId}`); } catch (_e) { }
           // Do not reset to 0; retain last known value in UI for position
         }
       } catch (qErr) {
@@ -334,6 +382,7 @@ export default function BoothQueueWaiting() {
         // Reset queueToken to prevent using token from wrong booth
         setQueueToken('');
         setQueueEntryId(null);
+        try { localStorage.removeItem(`queueToken_${boothId}`); } catch (_e) { }
         // Keep existing values for position to avoid flashing zeros
       }
 
@@ -370,10 +419,12 @@ export default function BoothQueueWaiting() {
         setWaitingCount(queueData.waitingCount ?? 0);
         setQueueToken(queueData.token);
         setQueueEntryId(queueData.queueEntry?._id);
-        await tryRestoreActiveCall(queueData);
         try {
           localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
           localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
+          if (queueData.token) {
+            localStorage.setItem(`queueToken_${boothId}`, queueData.token);
+          }
         } catch (e) { }
       }
     } catch (e) {
@@ -439,14 +490,18 @@ export default function BoothQueueWaiting() {
       // We get this on booth rooms; ensure it's this booth and it's our queue entry
       if (!data) return;
       const sameBooth = String(data.boothId) === String(boothId);
-      // Check for both 'left' (user action) and 'removed' (recruiter action)
-      const isLeftOrRemoved = data.action === 'left' || data.action === 'removed' || data.type === 'left';
+      // Check for leave actions: user left, left with message, or recruiter removal
+      const isLeftOrRemoved = data.action === 'left'
+        || data.action === 'left_with_message'
+        || data.action === 'removed'
+        || data.type === 'left';
       const je = data.queueEntry?.jobSeeker;
       const jobSeekerId = typeof je === 'string' ? je : je?._id;
       const isCurrentUser = String(jobSeekerId) === String(user._id);
 
       if (sameBooth && isLeftOrRemoved && isCurrentUser) {
         // User has been removed from the queue (by recruiter or call ended)
+        hasLeftQueueRef.current = true;
         setIsInCall(false);
         setCallInvitation(null);
         // Show a message if removed by recruiter
@@ -574,6 +629,7 @@ export default function BoothQueueWaiting() {
 
 
   const handleCallInvitation = (data) => {
+    hasPendingInviteRef.current = true;
     console.log('Received call invitation:', data);
     setPendingInvitation(data);
     playInviteSound();
@@ -592,6 +648,9 @@ export default function BoothQueueWaiting() {
     if (selectedAudioId) localStorage.setItem('preferredAudioDeviceId', selectedAudioId);
     if (selectedVideoId) localStorage.setItem('preferredVideoDeviceId', selectedVideoId);
     isInCallRef.current = true;
+    try {
+      sessionStorage.setItem(`inActiveCall_${boothId}`, '1');
+    } catch (_e) { /* ignore */ }
     setCallInvitation({
       id: data.callId,
       roomName: data.roomName,
@@ -631,6 +690,9 @@ export default function BoothQueueWaiting() {
 
   const handleCallEnd = async (endData = {}) => {
     isInCallRef.current = false;
+    try {
+      sessionStorage.removeItem(`inActiveCall_${boothId}`);
+    } catch (_e) { /* ignore */ }
     setCallInvitation(null);
     setIsInCall(false);
 
@@ -825,6 +887,11 @@ export default function BoothQueueWaiting() {
   };
 
   const closeModal = () => {
+    if (isRecording && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+    stopRecordingStream();
     setShowMessageModal(false);
     if (previousFocusRef.current) {
       previousFocusRef.current.focus();
@@ -874,8 +941,29 @@ export default function BoothQueueWaiting() {
     }
   }, [showMessageModal]);
 
+  const stopRecordingStream = () => {
+    if (recordingStreamRef.current) {
+      recordingStreamRef.current.getTracks().forEach((track) => track.stop());
+      recordingStreamRef.current = null;
+    }
+    if (recordingVideoRef.current) {
+      recordingVideoRef.current.srcObject = null;
+    }
+  };
+
+  useEffect(() => {
+    if (isRecording && messageType === 'video' && recordingStreamRef.current && recordingVideoRef.current) {
+      recordingVideoRef.current.srcObject = recordingStreamRef.current;
+    }
+  }, [isRecording, messageType]);
+
   // Close + reset for the "Leave a Message" dialog.
   const closeLeaveMessageModal = () => {
+    if (isRecording && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+    stopRecordingStream();
     setShowLeaveMessageModal(false);
     setRecordedBlob(null);
     setMessageContent('');
@@ -1001,6 +1089,8 @@ export default function BoothQueueWaiting() {
         finalContent = uploadResult.downloadUrl;
       }
 
+      // Stop status polling before leaving so in-flight requests don't 404
+      hasLeftQueueRef.current = true;
       setIsUploading(true);
       await boothQueueAPI.leaveWithMessage({
         boothId,
@@ -1009,17 +1099,21 @@ export default function BoothQueueWaiting() {
         queueToken
       });
 
-      // Mark that user has left to prevent further status checks
-      hasLeftQueueRef.current = true;
-
       setShowLeaveMessageModal(false);
       setRecordedBlob(null);
       setMessageContent('');
+      try {
+        localStorage.removeItem(`queueToken_${boothId}`);
+        localStorage.removeItem(`queuePos_${boothId}`);
+        localStorage.removeItem(`serving_${boothId}`);
+      } catch (_e) { /* ignore */ }
       showSuccess('Message sent! You have left the queue.');
       navigate(`/events/registered/${eventSlug}`);
     } catch (error) {
+      // Allow polling again if the leave request failed
+      hasLeftQueueRef.current = false;
       console.error('Error leaving with message:', error);
-      showError('Failed to send leave message');
+      showError(error.response?.data?.message || 'Failed to send leave message');
     } finally {
       setIsUploading(false);
     }
@@ -1136,6 +1230,7 @@ export default function BoothQueueWaiting() {
         video: messageType === 'video'
       });
 
+      recordingStreamRef.current = stream;
       mediaRecorderRef.current = new MediaRecorder(stream);
       recordedChunksRef.current = [];
 
@@ -1157,13 +1252,14 @@ export default function BoothQueueWaiting() {
         setMessageContent(previewUrl);
         setShowMessagePreview(true);
 
-        stream.getTracks().forEach(track => track.stop());
+        stopRecordingStream();
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
+      stopRecordingStream();
       alert('Failed to start recording');
     }
   };
@@ -1182,10 +1278,29 @@ export default function BoothQueueWaiting() {
   };
 
   const handleRetakeRecording = () => {
+    if (messageContent.startsWith('blob:')) {
+      URL.revokeObjectURL(messageContent);
+    }
+    stopRecordingStream();
     setRecordedBlob(null);
     setMessageContent('');
     setShowMessagePreview(false);
   };
+
+  const renderLiveRecordingPreview = () => (
+    isRecording && messageType === 'video' ? (
+      <div className="media-preview recording-live-preview">
+        <video
+          ref={recordingVideoRef}
+          autoPlay
+          playsInline
+          muted
+          aria-label="Live camera preview while recording"
+          className="recording-live-video"
+        />
+      </div>
+    ) : null
+  );
 
   if (loading) {
     return (
@@ -1487,7 +1602,7 @@ export default function BoothQueueWaiting() {
               ).map((section, idx) => (
                 <div key={section._id || idx} className="content-card-expanded">
                   {section.contentHtml ? (
-                    <div className="content-body" dangerouslySetInnerHTML={{ __html: section.contentHtml }} />
+                    <div className="content-body" dangerouslySetInnerHTML={{ __html: hydrateStreamMediaUrls(section.contentHtml) }} />
                   ) : (
                     <p className="content-placeholder">Content will be available soon.</p>
                   )}
@@ -1578,6 +1693,7 @@ export default function BoothQueueWaiting() {
                 <div className="recording-controls">
                   {!recordedBlob ? (
                     <div className="recording-section">
+                      {renderLiveRecordingPreview()}
                       {!isRecording ? (
                         <button onClick={startRecording} className="record-btn">
                           Start Recording {messageType === 'video' ? 'Video' : 'Audio'}
@@ -1739,6 +1855,7 @@ export default function BoothQueueWaiting() {
                 <div className="recording-controls">
                   {!recordedBlob ? (
                     <div className="recording-section">
+                      {renderLiveRecordingPreview()}
                       {!isRecording ? (
                         <button onClick={startRecording} className="record-btn">
                           Start Recording {messageType === 'video' ? 'Video' : 'Audio'}

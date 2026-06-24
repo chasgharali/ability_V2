@@ -86,10 +86,11 @@ export function decompressVideoContent(compressedHtml, videos = []) {
  * @returns {string} - HTML string for the video element
  */
 function createVideoHtml(video) {
-    const { src, key, token } = video;
-    
-    // If we have key and token, reconstruct the streaming URL
-    const videoSrc = src || `/api/uploads/stream?key=${encodeURIComponent(key)}&token=${encodeURIComponent(token)}`;
+    const { src, key } = video;
+    const mediaKey = key || extractVideoAudioKey(src);
+    const videoSrc = mediaKey
+        ? `/api/uploads/public/${encodeKeyForPath(mediaKey)}`
+        : (src || '');
     
     // Determine video type from the key or src
     let videoType = 'video/mp4'; // default
@@ -104,6 +105,78 @@ function createVideoHtml(video) {
             <source src="${videoSrc}" type="${videoType}" />
         </video>
     </span>`;
+}
+
+/**
+ * Inject the current viewer's auth token into stream URLs embedded in HTML.
+ * RTE booth/event videos use the public media proxy (no auth) because query-string
+ * JWTs break inside HTML attributes (& is parsed as an entity).
+ * @param {string} html - HTML content with optional /api/uploads/stream URLs
+ * @returns {string} - HTML with playback-safe media URLs
+ */
+const encodeKeyForPath = (key) => encodeURIComponent(key).replace(/%2F/g, '/');
+
+function extractVideoAudioKey(rawKey) {
+    if (!rawKey || typeof rawKey !== 'string') return null;
+
+    let decoded = rawKey.trim();
+    try {
+        decoded = decodeURIComponent(decoded);
+    } catch (_e) {
+        // keep raw value
+    }
+
+    const withExtension = decoded.match(
+        /((?:video|audio)\/[^?&#\s]+\/[^?&#\s]+?\.(?:mp4|mov|webm|ogg|mp3|wav|m4a|aac))/i
+    );
+    if (withExtension) {
+        return withExtension[1];
+    }
+
+    if (/^(video|audio)\/[^/]+\/[^?&#\s]+$/.test(decoded)) {
+        return decoded.split(/[?&#]/)[0];
+    }
+
+    return null;
+}
+
+const STREAM_URL_PATTERN = /\/api\/uploads\/stream\?key=([^"'&\s]+)(?:(?:&amp;|&)token=[^"'&\s]*)?/gi;
+
+export function hydrateStreamMediaUrls(html) {
+    if (!html || typeof html !== 'string') {
+        return html;
+    }
+
+    return html.replace(STREAM_URL_PATTERN, (_match, encodedKey) => {
+        const mediaKey = extractVideoAudioKey(encodedKey);
+        if (mediaKey) {
+            return `/api/uploads/public/${encodeKeyForPath(mediaKey)}`;
+        }
+        return _match;
+    });
+}
+
+/**
+ * Fix media elements already mounted in the DOM (e.g. after dangerouslySetInnerHTML).
+ */
+export function hydrateStreamMediaElements(root = document) {
+    if (!root || typeof root.querySelectorAll !== 'function') {
+        return;
+    }
+
+    const selector = 'video, audio, source, [data-videosrc], [data-audiosrc]';
+    root.querySelectorAll(selector).forEach((el) => {
+        ['src', 'data-videosrc', 'data-audiosrc'].forEach((attr) => {
+            const value = el.getAttribute(attr);
+            if (!value || !value.includes('/api/uploads/stream')) {
+                return;
+            }
+            const fixed = hydrateStreamMediaUrls(value);
+            if (fixed !== value) {
+                el.setAttribute(attr, fixed);
+            }
+        });
+    });
 }
 
 /**

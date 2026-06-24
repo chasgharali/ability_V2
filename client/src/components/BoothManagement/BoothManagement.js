@@ -41,6 +41,7 @@ import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, gener
 import { MdEdit, MdDelete, MdLink, MdBusiness } from 'react-icons/md';
 import EmployerPageTemplate from '../BoothQueue/EmployerPageTemplate';
 import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
+import { hydrateStreamMediaUrls } from '../../utils/videoContentProcessor';
 
 const EMPLOYER_PAGE_SECTION_DEFS = [
   { key: 'about', title: 'About Section' },
@@ -1980,7 +1981,7 @@ export default function BoothManagement() {
                       overflow: 'auto' 
                     }}
                   >
-                    <div dangerouslySetInnerHTML={{ __html: previewBooth.richSections?.[i]?.contentHtml || '<em>No content</em>' }} />
+                    <div dangerouslySetInnerHTML={{ __html: hydrateStreamMediaUrls(previewBooth.richSections?.[i]?.contentHtml || '<em>No content</em>') }} />
                   </div>
                 ))}
               </div>

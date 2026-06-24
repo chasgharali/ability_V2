@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { toStablePublicImageUrl } = require('../utils/mediaUrl');
+const { toStablePublicImageUrl, hydrateStreamMediaUrlsInHtml } = require('../utils/mediaUrl');
 
 const richSectionSchema = new mongoose.Schema({
     title: {
@@ -270,7 +270,7 @@ boothSchema.methods.getSummary = function () {
         _id: this._id,
         eventId: this.eventId,
         name: this.name,
-        description: this.description,
+        description: hydrateStreamMediaUrlsInHtml(this.description),
         logoUrl: toStablePublicImageUrl(this.logoUrl),
         recruitersCount: this.recruitersCount,
         companyPage: this.companyPage,
@@ -287,7 +287,7 @@ boothSchema.methods.getSummary = function () {
         richSections: sections
             .slice(0, 3)
             .sort((a, b) => a.order - b.order)
-            .map(s => ({ _id: s._id, title: s.title, contentHtml: s.contentHtml, order: s.order, isActive: s.isActive })),
+            .map(s => ({ _id: s._id, title: s.title, contentHtml: hydrateStreamMediaUrlsInHtml(s.contentHtml), order: s.order, isActive: s.isActive })),
         employerPageSections: employerSections
             .filter(s => s.isActive !== false)
             .sort((a, b) => a.order - b.order)
@@ -295,7 +295,7 @@ boothSchema.methods.getSummary = function () {
                 _id: s._id,
                 key: s.key,
                 title: s.title,
-                contentHtml: s.contentHtml,
+                contentHtml: hydrateStreamMediaUrlsInHtml(s.contentHtml),
                 contentData: s.contentData ?? null,
                 order: s.order,
                 isActive: s.isActive
@@ -310,7 +310,7 @@ boothSchema.methods.getPublicInfo = function () {
     return {
         _id: this._id,
         name: this.name,
-        description: this.description,
+        description: hydrateStreamMediaUrlsInHtml(this.description),
         logoUrl: toStablePublicImageUrl(this.logoUrl),
         recruitersCount: this.recruitersCount,
         companyPage: this.companyPage,
@@ -325,7 +325,7 @@ boothSchema.methods.getPublicInfo = function () {
             .sort((a, b) => a.order - b.order)
             .map(section => ({
                 title: section.title,
-                contentHtml: section.contentHtml
+                contentHtml: hydrateStreamMediaUrlsInHtml(section.contentHtml)
             })),
         employerPageSections: employerSections
             .filter(section => section.isActive)
@@ -333,7 +333,7 @@ boothSchema.methods.getPublicInfo = function () {
             .map(section => ({
                 key: section.key,
                 title: section.title,
-                contentHtml: section.contentHtml,
+                contentHtml: hydrateStreamMediaUrlsInHtml(section.contentHtml),
                 contentData: section.contentData ?? null
             }))
     };

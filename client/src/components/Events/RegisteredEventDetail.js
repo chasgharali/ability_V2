@@ -10,6 +10,7 @@ import { getEvent, getEventBooths } from '../../services/events';
 import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { useAuth } from '../../contexts/AuthContext';
 import { announceToScreenReader } from '../Accessibility/FocusManager';
+import { hydrateStreamMediaUrls } from '../../utils/videoContentProcessor';
 
 export default function RegisteredEventDetail() {
   const { slug } = useParams();
@@ -233,7 +234,7 @@ export default function RegisteredEventDetail() {
                     {event.description ? (
                       <div
                         className="event-description-content"
-                        dangerouslySetInnerHTML={{ __html: event.description }}
+                        dangerouslySetInnerHTML={{ __html: hydrateStreamMediaUrls(event.description) }}
                       />
                     ) : (
                       <p className="muted">This event is for testing purposes only.</p>
