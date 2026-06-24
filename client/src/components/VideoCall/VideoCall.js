@@ -179,7 +179,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const normalizeIncomingChatMessage = (rawMessage = {}) => {
     const senderValue = rawMessage.sender;
     const senderId = senderValue?.id || senderValue?._id || senderValue || rawMessage.userId || '';
-    const senderRole = rawMessage.senderRole || senderValue?.role || rawMessage.role || '';
+    const senderRole = normalizeRoleKey(
+      rawMessage.senderRole || senderValue?.role || rawMessage.role || ''
+    );
 
     return {
       sender: {
@@ -481,6 +483,17 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
     return 'Participant';
   }, [user, callInfo, participants, normalizeCallData]);
+
+  const resolveChatSenderDisplayRole = useCallback((message) => {
+    const senderId = String(message?.sender?.id || message?.sender?._id || '');
+    if (senderId) {
+      const callRole = getParticipantRole(senderId);
+      if (callRole && callRole !== 'Participant') {
+        return callRole;
+      }
+    }
+    return formatRoleLabel(message.senderRole || message.sender?.role || '');
+  }, [getParticipantRole]);
 
   // Create caption transcription handler function (outside useEffect to avoid closure issues)
   const handleCaptionTranscription = useCallback((data) => {
@@ -1429,8 +1442,9 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         sender: {
           id: senderId,
           name: user.name,
-          role: user.role
+          role: normalizeRoleKey(callInfo?.userRole || user.role)
         },
+        senderRole: normalizeRoleKey(callInfo?.userRole || user.role),
         timestamp: new Date().toISOString(),
         messageType: 'text'
       };
@@ -2964,6 +2978,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           messages={chatMessages}
           onSendMessage={sendChatMessage}
           onClose={() => setIsChatOpen(false)}
+          resolveSenderRole={resolveChatSenderDisplayRole}
         />
       )}
 

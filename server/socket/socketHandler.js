@@ -36,6 +36,18 @@ function captionParticipantRoleFromUser(user) {
     return null;
 }
 
+/** Resolve a participant's role within an active video call (recruiter | jobseeker | interpreter). */
+function getVideoCallSenderRole(videoCall, userId) {
+    const uid = String(userId);
+    if (participantRefToId(videoCall.recruiter) === uid) return 'recruiter';
+    if (participantRefToId(videoCall.jobSeeker) === uid) return 'jobseeker';
+    const isInterpreter = (videoCall.interpreters || []).some(
+        (entry) => entry.interpreter && participantRefToId(entry.interpreter) === uid
+    );
+    if (isInterpreter) return 'interpreter';
+    return null;
+}
+
 /**
  * Minimal user payload for Socket.IO. Full getPublicProfile() includes metadata (Mixed) and
  * other fields that can be extremely deep and cause "Maximum call stack size exceeded"
@@ -494,11 +506,10 @@ const socketHandler = (io) => {
                     return;
                 }
 
-                // Persist using schema-compatible fields.
-                const senderRole = String(socket.user.role || '').toLowerCase();
-                const normalizedSenderRole = ['recruiter', 'jobseeker', 'interpreter'].includes(senderRole)
-                    ? senderRole
-                    : 'recruiter';
+                // Persist using schema-compatible fields — role is based on call participation, not account role.
+                const normalizedSenderRole = getVideoCallSenderRole(videoCall, socket.userId)
+                    || captionParticipantRoleFromUser(socket.user)
+                    || 'participant';
                 const timestamp = message?.timestamp || new Date().toISOString();
 
                 videoCall.chatMessages.push({
@@ -515,7 +526,7 @@ const socketHandler = (io) => {
                     sender: {
                         id: socket.userId,
                         name: socket.user.name,
-                        role: socket.user.role
+                        role: normalizedSenderRole
                     },
                     senderRole: normalizedSenderRole,
                     message: messageText,
@@ -555,12 +566,14 @@ const socketHandler = (io) => {
                     return;
                 }
                 
+                const senderRole = captionParticipantRoleFromUser(socket.user) || 'participant';
                 const messageData = {
                     sender: {
                         id: socket.userId,
                         name: socket.user.name,
-                        role: socket.user.role
+                        role: senderRole
                     },
+                    senderRole,
                     message: message,
                     timestamp: new Date().toISOString(),
                     messageType: 'text'

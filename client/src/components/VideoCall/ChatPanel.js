@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiSend, FiX, FiMessageCircle } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatRoleLabel, normalizeRoleKey } from '../../utils/videoCallRoles';
 import './ChatPanel.css';
 
-const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
+const ChatPanel = ({ messages = [], onSendMessage, onClose, resolveSenderRole }) => {
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -81,13 +82,12 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
     return senderId && senderId === currentUserId;
   };
 
-  const capitalizeRole = (role) => {
-    if (!role) return 'User';
-    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  const getSenderRoleLabel = (message) => {
+    if (resolveSenderRole) {
+      return resolveSenderRole(message);
+    }
+    return formatRoleLabel(message.senderRole || message.sender?.role || '');
   };
-
-  const getSenderRole = (message) =>
-    message.senderRole || message.sender?.role || '';
 
   // Whether to show only the role (and hide the sender's name).
   // - Job seekers only ever see roles.
@@ -97,7 +97,7 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
     const isInterpreter =
       user?.role === 'Interpreter' || user?.role === 'GlobalInterpreter';
     const senderIsRecruiter =
-      String(getSenderRole(message)).toLowerCase() === 'recruiter';
+      normalizeRoleKey(getSenderRoleLabel(message)) === 'recruiter';
     return isInterpreter && senderIsRecruiter;
   };
 
@@ -166,7 +166,7 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
                       {shouldShowRoleOnly(message) ? (
                         // Only show the role (name is hidden)
                         <span className="incall-chat-sender-name">
-                          {capitalizeRole(getSenderRole(message))}
+                          {getSenderRoleLabel(message)}
                         </span>
                       ) : (
                         // For other roles, show name and role
@@ -175,7 +175,7 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose }) => {
                             {message.sender?.name || 'Unknown'}
                           </span>
                           <span className="incall-chat-sender-role">
-                            ({capitalizeRole(getSenderRole(message))})
+                            ({getSenderRoleLabel(message)})
                           </span>
                         </>
                       )}
