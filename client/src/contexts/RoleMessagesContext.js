@@ -4,6 +4,10 @@ import roleMessagesAPI from '../services/roleMessages';
 
 const RoleMessagesContext = createContext(null);
 const ELEVATED_ROLES = new Set(['SuperAdmin', 'Admin', 'GlobalSupport', 'AdminEvent']);
+// BoothAdmin shares Recruiter page instructions (admin UI only exposes Recruiter screens).
+const INSTRUCTION_ROLE_ALIASES = {
+  BoothAdmin: 'Recruiter'
+};
 const SCREEN_ROLE_MAP = {
   'my-account': 'JobSeeker',
   'delete-account': 'JobSeeker',
@@ -50,15 +54,25 @@ export function RoleMessagesProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const getScreenMessages = useCallback((role, screen) => {
+    if (!role) return null;
+    const primary = messagesByRole[role]?.[screen];
+    if (primary && typeof primary === 'object') return primary;
+
+    const aliasRole = INSTRUCTION_ROLE_ALIASES[role];
+    const aliased = aliasRole ? messagesByRole[aliasRole]?.[screen] : null;
+    return aliased && typeof aliased === 'object' ? aliased : null;
+  }, [messagesByRole]);
+
   const resolveTargetRole = useCallback((screen, explicitRole) => {
     if (explicitRole) return explicitRole;
     // Prefer the viewer's own role so each role sees its own configured
     // instruction. Fall back to the legacy screen→role map (used for elevated
     // users previewing pages they don't own).
-    if (user?.role && messagesByRole[user.role]?.[screen]) return user.role;
+    if (user?.role && getScreenMessages(user.role, screen)) return user.role;
     if (SCREEN_ROLE_MAP[screen]) return SCREEN_ROLE_MAP[screen];
     return user?.role || null;
-  }, [user?.role, messagesByRole]);
+  }, [user?.role, getScreenMessages]);
 
   // Fetch role messages for current user role (and audience roles for elevated users).
   const fetchMessages = useCallback(async () => {
@@ -75,7 +89,8 @@ export function RoleMessagesProvider({ children }) {
       const audienceRoles = ELEVATED_ROLES.has(user.role)
         ? ['JobSeeker', 'Recruiter', 'Interpreter']
         : [];
-      const rolesToFetch = Array.from(new Set([...audienceRoles, user.role]));
+      const aliasRole = INSTRUCTION_ROLE_ALIASES[user.role];
+      const rolesToFetch = Array.from(new Set([...audienceRoles, user.role, aliasRole].filter(Boolean)));
       const responses = await Promise.all(rolesToFetch.map((role) => roleMessagesAPI.getMessagesByRole(role)));
       const nextMessagesByRole = {};
 
@@ -103,8 +118,8 @@ export function RoleMessagesProvider({ children }) {
   const getMessage = useCallback((screen, messageKey, role = null) => {
     const targetRole = resolveTargetRole(screen, role);
     if (!targetRole) return null;
-    const screenMessages = messagesByRole[targetRole]?.[screen];
-    if (!screenMessages || typeof screenMessages !== 'object') {
+    const screenMessages = getScreenMessages(targetRole, screen);
+    if (!screenMessages) {
       return null;
     }
 
@@ -118,7 +133,7 @@ export function RoleMessagesProvider({ children }) {
 
     const firstMessage = Object.values(screenMessages)[0];
     return firstMessage || null;
-  }, [messagesByRole, resolveTargetRole]);
+  }, [getScreenMessages, resolveTargetRole]);
 
   // Refresh messages (useful after admin updates)
   const refreshMessages = useCallback(() => {

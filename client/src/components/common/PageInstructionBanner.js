@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useRoleMessages } from '../../contexts/RoleMessagesContext';
 
 /**
@@ -15,10 +14,8 @@ export default function PageInstructionBanner({
   className = '',
   style = {}
 }) {
-  const { user } = useAuth();
   const { getMessage } = useRoleMessages();
-  const targetRole = role || user?.role || null;
-  const message = (screen && getMessage(screen, messageKey, targetRole)) || '';
+  const message = (screen && getMessage(screen, messageKey, role)) || '';
 
   if (!message) return null;
 

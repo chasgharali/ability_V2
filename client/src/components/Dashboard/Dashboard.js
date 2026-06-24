@@ -650,15 +650,10 @@ const Dashboard = () => {
             case 'Recruiter':
             case 'BoothAdmin': {
                 const assignedBoothId = user?.assignedBooth;
-                const welcomeMessage = getMessage('dashboard', 'welcome') || '';
                 return (
                     <div className="dashboard-content">
                         <h1>Recruiter Dashboard</h1>
-                        {welcomeMessage && (
-                            <div className="info-banner" style={{ marginBottom: '1.5rem' }}>
-                                <span>{welcomeMessage}</span>
-                            </div>
-                        )}
+                        <PageInstructionBanner screen="dashboard" />
                         {!assignedBoothId && (
                             <div className="alert-box" style={{ background: '#fff3cd', borderColor: '#ffeeba' }}>
                                 <p><strong>Action required:</strong> No booth is assigned to your account yet. Please ask an administrator to assign a booth so you can manage your meeting queue.</p>
