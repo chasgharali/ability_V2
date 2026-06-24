@@ -31,6 +31,7 @@ import {
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
+import { formatAccessibilityNeeds } from '../../utils/formatAccessibilityNeeds';
 
 export default function JobSeekerManagement() {
   const { user } = useAuth();
@@ -498,6 +499,7 @@ export default function JobSeekerManagement() {
           needsASL: u.needsASL,
           needsCaptions: u.needsCaptions,
           needsOther: u.needsOther,
+          accessibilityNeedsText: formatAccessibilityNeeds(u),
           importStatus: u.importStatus || 'complete',
           importMissingFields: Array.isArray(u.importMissingFields) ? u.importMissingFields : [],
         };
@@ -868,7 +870,7 @@ export default function JobSeekerManagement() {
 
       const headers = [
         'First Name', 'Last Name', 'Email', 'Phone', 'City', 'State', 'Country',
-        'Qualifications', 'Status', 'Email Verified', 'Registration Date', 'Last Login', 'Event Registrations'
+        'Qualifications', 'Accessibility Needs', 'Status', 'Email Verified', 'Registration Date', 'Last Login', 'Event Registrations'
       ];
 
       const data = items.map(u => {
@@ -892,6 +894,7 @@ export default function JobSeekerManagement() {
           u.state || '',
           u.country || '',
           qualifications,
+          formatAccessibilityNeeds(u),
           u.isActive ? 'Active' : 'Inactive',
           u.emailVerified ? 'Yes' : 'No',
           u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '',
@@ -1909,6 +1912,17 @@ export default function JobSeekerManagement() {
                   headerText='Qualifications'
                   width='300'
                   allowFiltering={true}
+                />
+                <ColumnDirective
+                  field='accessibilityNeedsText'
+                  headerText='Accessibility Needs'
+                  width='260'
+                  allowFiltering={true}
+                  template={(props) => (
+                    <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                      {props.accessibilityNeedsText || 'None'}
+                    </div>
+                  )}
                 />
                 <ColumnDirective 
                   field='statusText' 

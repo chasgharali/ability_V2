@@ -28,6 +28,7 @@ import {
   MILITARY_EXPERIENCE_LIST
 } from '../../constants/options';
 import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
+import { formatAccessibilityNeeds } from '../../utils/formatAccessibilityNeeds';
 
 const getLabelFromValue = (value, optionsList) => {
   if (!value) return 'Not provided';
@@ -180,6 +181,7 @@ export default function RegisteredJobSeekerManagement() {
           registeredEvent: reg.eventId?.name,
           registeredAt: reg.registeredAt,
           qualificationSummary: formatQualificationSummary(js),
+          accessibilityNeedsText: formatAccessibilityNeeds(js),
           jobSeekerId: js,
           registration: reg,
           importStatus: js.importStatus || 'complete',
@@ -243,7 +245,7 @@ export default function RegisteredJobSeekerManagement() {
 
   const handleExportSelectedCsv = useCallback(() => {
     const rows = selectedRows.length > 0 ? selectedRows : flatDataSource;
-    const headers = ['Name', 'Email', 'Phone', 'City', 'State', 'Country', 'Status', 'Email Verified', 'Registered Event', 'Registered Date', 'Last Login'];
+    const headers = ['Name', 'Email', 'Phone', 'City', 'State', 'Country', 'Accessibility Needs', 'Status', 'Email Verified', 'Registered Event', 'Registered Date', 'Last Login'];
     const data = rows.map(row => [
       row.name || '',
       row.email || '',
@@ -251,6 +253,7 @@ export default function RegisteredJobSeekerManagement() {
       row.city || '',
       row.state || '',
       row.country || '',
+      row.accessibilityNeedsText || 'None',
       row.isActive ? 'Active' : 'Inactive',
       row.emailVerified ? 'Yes' : 'No',
       row.registeredEvent || '',
@@ -780,6 +783,18 @@ export default function RegisteredJobSeekerManagement() {
               <ColumnDirective field="emailVerified" headerText="Email Verified" width="120" textAlign="Center" type="boolean" allowFiltering={true} template={emailVerifiedTemplate} />
               <ColumnDirective field="registeredEvent" headerText="Registered Event" width="200" type="string" allowFiltering={true} />
               <ColumnDirective field="qualificationSummary" headerText="Qualifications" width="280" type="string" allowFiltering={true} />
+              <ColumnDirective
+                field="accessibilityNeedsText"
+                headerText="Accessibility Needs"
+                width="260"
+                type="string"
+                allowFiltering={true}
+                template={(props) => (
+                  <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
+                    {props.accessibilityNeedsText || 'None'}
+                  </div>
+                )}
+              />
               <ColumnDirective field="resumeTitle" headerText="Resume Used" width="220" allowFiltering={true} template={(props) => (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span>{props.resumeTitle || (props.registrationResumeUrl || props.resumeUrl ? 'Uploaded File' : '—')}</span>
