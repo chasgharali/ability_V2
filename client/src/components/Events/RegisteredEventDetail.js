@@ -25,14 +25,9 @@ export default function RegisteredEventDetail() {
   const navigate = useNavigate();
   const mainContentRef = useRef(null);
   const organization = event?.organization || (event?.organizationId && typeof event.organizationId === 'object'
-    ? {
-      name: event.organizationId.name,
-      logoUrl: event.organizationId.logoUrl,
-      logoAltText: event.organizationId.logoAltText
-    }
+    ? { name: event.organizationId.name }
     : null);
   const organizationName = organization?.name || 'Not specified';
-  const showOrganizationLogo = Boolean(organization?.logoUrl && organization.logoUrl !== event?.logoUrl);
 
   useEffect(() => {
     if (loading) return;
@@ -230,13 +225,6 @@ export default function RegisteredEventDetail() {
                       <div className="datetime-item">
                         <span className="datetime-label">Organized by:</span>
                         <span className="datetime-value datetime-organization">
-                          {showOrganizationLogo && (
-                            <img
-                              src={organization.logoUrl}
-                              alt={organization.logoAltText || organization.name}
-                              className="organization-logo"
-                            />
-                          )}
                           <strong>{organizationName}</strong>
                         </span>
                       </div>

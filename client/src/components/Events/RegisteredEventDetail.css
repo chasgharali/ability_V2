@@ -59,14 +59,7 @@
 .datetime-organization {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   color: #111827;
-}
-
-.organization-logo {
-  height: 16px;
-  width: auto;
-  object-fit: contain;
 }
 
 .event-logo {
