@@ -42,7 +42,31 @@ const HEARTBEAT_INTERVAL_MS = 30000;
  * @returns {WebSocket.Server}
  */
 const setupCaptionSocketServer = (server, io) => {
-    const wss = new WebSocket.Server({ server, path: '/captions' });
+    // IMPORTANT: use `noServer` and route the HTTP `upgrade` event manually.
+    //
+    // If we instead pass `{ server, path }`, the `ws` library attaches its own
+    // `upgrade` listener that calls `abortHandshake(socket, 400)` for EVERY
+    // upgrade whose path doesn't match — including Socket.IO's `/socket.io/`
+    // WebSocket upgrades — which silently kills all Socket.IO connections.
+    const wss = new WebSocket.Server({ noServer: true });
+
+    server.on('upgrade', (req, socket, head) => {
+        let pathname;
+        try {
+            pathname = new URL(req.url, 'http://localhost').pathname;
+        } catch {
+            return;
+        }
+
+        // Only handle our own path. Leave everything else (Socket.IO) untouched.
+        if (pathname !== '/captions') {
+            return;
+        }
+
+        wss.handleUpgrade(req, socket, head, (ws) => {
+            wss.emit('connection', ws, req);
+        });
+    });
 
     wss.on('connection', async (ws, req) => {
         // --- Authenticate via ?token=<jwt> ---
