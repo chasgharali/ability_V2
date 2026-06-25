@@ -211,6 +211,11 @@ app.use('/api/sendy', sendyRoutes);
 // Socket.IO connection handling
 socketHandler(io);
 
+// Dedicated WebSocket server for caption audio streaming (keeps heavy audio
+// traffic off the Socket.IO heartbeat connection).
+const { setupCaptionSocketServer } = require('./socket/captionSocketServer');
+setupCaptionSocketServer(server, io);
+
 // Make io available to routes
 app.set('io', io);
 

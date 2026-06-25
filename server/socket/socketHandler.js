@@ -8,8 +8,7 @@ const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const logger = require('../utils/logger');
 const liveStatsStore = require('../utils/liveStatsStore');
-const deepgramService = require('../services/deepgramService');
-const openaiCaptionService = require('../services/openaiCaptionService');
+const { getCaptionService } = require('../services/captionProvider');
 const { endRoom } = require('../config/twilio');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 
@@ -137,21 +136,16 @@ const getIO = () => {
     return _io;
 };
 
-const getCaptionService = () => {
-    const provider = (process.env.CAPTION_PROVIDER || 'openai').toLowerCase();
-    if (provider === 'deepgram' && deepgramService.isAvailable()) {
-        return { service: deepgramService, provider: 'deepgram' };
-    }
+// Job seekers are not removed from queues the instant their socket drops.
+// We wait for a grace period so a brief network blip / page reload doesn't kick
+// them out of the queue or an active meeting. Map of userId -> timeout handle.
+const pendingQueueCleanups = new Map();
+const QUEUE_CLEANUP_GRACE_MS = parseInt(process.env.QUEUE_DISCONNECT_GRACE_MS || '30000', 10);
 
-    if (openaiCaptionService.isAvailable()) {
-        return { service: openaiCaptionService, provider: 'openai' };
-    }
-
-    if (deepgramService.isAvailable()) {
-        return { service: deepgramService, provider: 'deepgram' };
-    }
-
-    return { service: null, provider: provider };
+/** True if the user currently has at least one live socket connected. */
+const isUserConnected = (io, userId) => {
+    const room = io.sockets.adapter.rooms.get(`user:${userId}`);
+    return !!room && room.size > 0;
 };
 
 const socketHandler = (io) => {
@@ -191,6 +185,14 @@ const socketHandler = (io) => {
 
     io.on('connection', (socket) => {
         logger.info(`User ${socket.user.email} connected via socket`);
+
+        // User reconnected within the grace window: cancel any pending queue removal.
+        const pendingCleanup = pendingQueueCleanups.get(socket.userId);
+        if (pendingCleanup) {
+            clearTimeout(pendingCleanup);
+            pendingQueueCleanups.delete(socket.userId);
+            logger.info(`Cancelled pending queue cleanup for reconnected user ${socket.user.email}`);
+        }
 
         liveStatsStore.userConnected(socket.user);
         const canSetTeamChatStatus = liveStatsStore.canSetChatStatus(socket.user.role);
@@ -594,160 +596,12 @@ const socketHandler = (io) => {
         });
 
         /**
-         * Caption Audio Stream - Receive audio chunks for Deepgram transcription
-         * This enables real-time captions using professional speech-to-text
+         * Caption audio is no longer streamed over Socket.IO. Audio now flows over a
+         * dedicated WebSocket endpoint (`/captions`) handled by captionSocketServer.js
+         * so heavy PCM traffic can't starve the Socket.IO heartbeat (which caused
+         * ping-timeout disconnects during calls). Transcription results are still
+         * broadcast back over the Socket.IO `caption-transcription` event.
          */
-        socket.on('caption-audio-stream', async (data) => {
-            try {
-                const { callId, roomName, participantId, participantName, audioChunk, isStart, isEnd } = data;
-                
-                if (!callId || !roomName || !participantId) {
-                    logger.warn('Caption audio stream missing required fields');
-                    return;
-                }
-
-                const connectionKey = `${callId}_${participantId}`;
-
-                // Start new transcription session
-                if (isStart) {
-                    const { service: captionService, provider } = getCaptionService();
-                    if (!captionService) {
-                        logger.error('❌ No caption service available - configure OPENAI_API_KEY or DEEPGRAM_API_KEY');
-                        socket.emit('caption-error', { 
-                            message: 'Caption service not configured. Please contact administrator.',
-                            code: 'SERVICE_UNAVAILABLE',
-                            details: 'OPENAI_API_KEY and DEEPGRAM_API_KEY are not configured'
-                        });
-                        return;
-                    }
-                    
-                    logger.info(`🎤 Starting ${provider} transcription for ${participantName} (callId: ${callId}, roomName: ${roomName})`);
-
-                    try {
-                        await captionService.startTranscription(
-                            connectionKey,
-                            callId,
-                            roomName,
-                            participantId,
-                            participantName || socket.user.name,
-                            (transcription) => {
-                                // Broadcast transcription to all participants
-                                const captionData = {
-                                    participantId: transcription.participantId,
-                                    participantName: transcription.participantName,
-                                    text: transcription.text,
-                                    isFinal: transcription.isFinal,
-                                    timestamp: transcription.timestamp,
-                                    confidence: transcription.confidence
-                                };
-                                const captionRole = captionParticipantRoleFromUser(socket.user);
-                                if (captionRole) {
-                                    captionData.participantRole = captionRole;
-                                }
-
-                                // Use existing room format for broadcasting
-                                const fullRoomName = `call_${roomName}`;
-                                const videoCallRoomName = `video-call-${callId}`;
-
-                                // Broadcast to all participants in the call rooms (including sender)
-                                io.to(fullRoomName).emit('caption-transcription', captionData);
-                                io.to(videoCallRoomName).emit('caption-transcription', captionData);
-                                
-                                // Also emit directly to sender to ensure they receive it
-                                socket.emit('caption-transcription', captionData);
-
-                                logger.info(`📝 Caption broadcast: ${transcription.participantName} -> "${transcription.text.substring(0, 50)}..." (to ${fullRoomName} and ${videoCallRoomName})`);
-                            }
-                        );
-
-                        socket.emit('caption-started', { 
-                            connectionKey,
-                            provider,
-                            message: 'Caption transcription started' 
-                        });
-
-                        logger.info(`🎤 Caption transcription started (${provider}) for ${participantName} in call ${callId}`);
-                    } catch (error) {
-                        logger.error('Failed to start caption transcription:', error);
-                        socket.emit('caption-error', { 
-                            message: 'Failed to start caption service',
-                            code: 'START_FAILED'
-                        });
-                    }
-                    return;
-                }
-
-                // End transcription session
-                if (isEnd) {
-                    const { service: captionService } = getCaptionService();
-                    if (captionService) {
-                        await captionService.stopTranscription(connectionKey);
-                    }
-                    socket.emit('caption-stopped', { 
-                        connectionKey,
-                        message: 'Caption transcription stopped' 
-                    });
-                    logger.info(`🛑 Caption transcription stopped for ${participantName} in call ${callId}`);
-                    return;
-                }
-
-                // Send audio chunk to Deepgram
-                if (audioChunk) {
-                    // Convert array/object to Buffer if needed
-                    let audioBuffer;
-                    if (Buffer.isBuffer(audioChunk)) {
-                        audioBuffer = audioChunk;
-                    } else if (audioChunk.data && Array.isArray(audioChunk.data)) {
-                        // Convert Int16 array to proper Buffer (16-bit PCM)
-                        const int16Array = new Int16Array(audioChunk.data);
-                        audioBuffer = Buffer.from(int16Array.buffer);
-                    } else if (Array.isArray(audioChunk)) {
-                        // Convert Int16 array to proper Buffer (16-bit PCM)
-                        // The array contains Int16 values, so we need to create an Int16Array first
-                        const int16Array = new Int16Array(audioChunk);
-                        audioBuffer = Buffer.from(int16Array.buffer);
-                    } else if (typeof audioChunk === 'string') {
-                        audioBuffer = Buffer.from(audioChunk, 'base64');
-                    } else {
-                        logger.warn(`⚠️ Invalid audio chunk format received for ${participantName}:`, typeof audioChunk, audioChunk?.constructor?.name);
-                        return;
-                    }
-
-                    // Track chunk count for logging
-                    if (!socket._audioChunkCount) socket._audioChunkCount = 0;
-                    socket._audioChunkCount++;
-                    
-                    // Log first chunk and periodically
-                    if (socket._audioChunkCount === 1) {
-                        logger.info(`🎤 First audio chunk received from ${participantName} (size: ${audioBuffer.length} bytes)`);
-                        logger.info(`   Original array length: ${Array.isArray(audioChunk) ? audioChunk.length : 'N/A'}, Buffer size: ${audioBuffer.length} bytes`);
-                        logger.info(`   Expected buffer size for Int16: ${Array.isArray(audioChunk) ? audioChunk.length * 2 : 'N/A'} bytes`);
-                        // Log sample values to verify they're in valid Int16 range
-                        if (Array.isArray(audioChunk) && audioChunk.length > 0) {
-                            const sampleValues = audioChunk.slice(0, 5);
-                            logger.info(`   Sample values (first 5): ${JSON.stringify(sampleValues)}`);
-                        }
-                    } else if (socket._audioChunkCount % 50 === 0) {
-                        logger.debug(`📤 Received ${socket._audioChunkCount} audio chunks from ${participantName}`);
-                    }
-
-                    const { service: captionService, provider } = getCaptionService();
-                    if (!captionService) {
-                        return;
-                    }
-
-                    const sent = captionService.sendAudio(connectionKey, audioBuffer);
-                    if (!sent) {
-                        logger.warn(`⚠️ Failed to send audio chunk ${socket._audioChunkCount} to ${provider} caption service for ${participantName} (connectionKey: ${connectionKey})`);
-                    }
-                } else {
-                    logger.debug(`No audio chunk in data for ${participantName}`);
-                }
-
-            } catch (error) {
-                logger.error('Caption audio stream error:', error);
-            }
-        });
 
         /**
          * Stop all captions when leaving a call
@@ -1465,40 +1319,64 @@ const socketHandler = (io) => {
                 }
             }
 
-            // Clean up queue entries for job seekers who disconnect
+            // Clean up queue entries for job seekers who disconnect — but only AFTER a
+            // grace period, so a brief network blip / page reload doesn't kick them out
+            // of the queue or an active meeting. The timer is cancelled if the user
+            // reconnects (see the connection handler above).
             if (socket.user.role === 'JobSeeker') {
-                try {
-                    const BoothQueue = require('../models/BoothQueue');
+                const userId = socket.userId;
+                const userSnapshot = socketSafeUser(socket.user);
+                const userEmail = socket.user.email;
 
-                    // Find any active queue entries for this user (including in_meeting status)
-                    const activeQueues = await BoothQueue.find({
-                        jobSeeker: socket.userId,
-                        status: { $in: ['waiting', 'invited', 'in_meeting'] }
-                    });
-
-                    // Leave all active queues
-                    for (const queueEntry of activeQueues) {
-                        await queueEntry.leaveQueue();
-
-                        // Notify booth management about queue update
-                        const updateData = {
-                            boothId: queueEntry.booth,
-                            action: 'left',
-                            queueEntry: {
-                                _id: queueEntry._id,
-                                jobSeeker: socketSafeUser(socket.user),
-                                position: queueEntry.position,
-                                status: 'left'
-                            }
-                        };
-                        socket.to(`booth_${queueEntry.booth}`).emit('queue-updated', updateData);
-                        socket.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', updateData);
-
-                        logger.info(`Auto-removed user ${socket.user.email} from queue for booth ${queueEntry.booth} due to disconnect`);
-                    }
-                } catch (error) {
-                    logger.error('Error cleaning up queue on disconnect:', error);
+                const existingTimer = pendingQueueCleanups.get(userId);
+                if (existingTimer) {
+                    clearTimeout(existingTimer);
                 }
+
+                const cleanupTimer = setTimeout(async () => {
+                    pendingQueueCleanups.delete(userId);
+
+                    // If the user reconnected during the grace window, keep them in queue.
+                    if (isUserConnected(io, userId)) {
+                        logger.info(`Skipping queue cleanup for ${userEmail} - reconnected within grace period`);
+                        return;
+                    }
+
+                    try {
+                        const BoothQueue = require('../models/BoothQueue');
+
+                        // Find any active queue entries for this user (including in_meeting status)
+                        const activeQueues = await BoothQueue.find({
+                            jobSeeker: userId,
+                            status: { $in: ['waiting', 'invited', 'in_meeting'] }
+                        });
+
+                        // Leave all active queues
+                        for (const queueEntry of activeQueues) {
+                            await queueEntry.leaveQueue();
+
+                            // Notify booth management about queue update
+                            const updateData = {
+                                boothId: queueEntry.booth,
+                                action: 'left',
+                                queueEntry: {
+                                    _id: queueEntry._id,
+                                    jobSeeker: userSnapshot,
+                                    position: queueEntry.position,
+                                    status: 'left'
+                                }
+                            };
+                            io.to(`booth_${queueEntry.booth}`).emit('queue-updated', updateData);
+                            io.to(`booth_management_${queueEntry.booth}`).emit('queue-updated', updateData);
+
+                            logger.info(`Auto-removed user ${userEmail} from queue for booth ${queueEntry.booth} after disconnect grace period`);
+                        }
+                    } catch (error) {
+                        logger.error('Error cleaning up queue on disconnect:', error);
+                    }
+                }, QUEUE_CLEANUP_GRACE_MS);
+
+                pendingQueueCleanups.set(userId, cleanupTimer);
             }
 
             liveStatsStore.userDisconnected(socket.userId);

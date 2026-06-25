@@ -3,13 +3,42 @@
  *
  * This utility captures audio from Twilio Video audio tracks, converts it to the
  * format expected by Deepgram (16-bit PCM, 16kHz, mono), and streams it to the
- * server via Socket.IO.
+ * server over a DEDICATED WebSocket (`/captions`) — NOT the main Socket.IO
+ * connection. Streaming audio over Socket.IO previously saturated the heartbeat
+ * channel and caused ping-timeout disconnects during calls.
+ *
+ * Transcription RESULTS still arrive over Socket.IO (`caption-transcription`),
+ * which the VideoCall component listens for.
  */
+
+import { getSocketUrl } from './apiConfig';
 
 const SAMPLE_RATE = 16000; // Target sample rate
 const BUFFER_SIZE = 4096; // Audio processing buffer size
 /** RMS level below which a buffer is considered silence (0–1 range). */
 const SILENCE_THRESHOLD = 0.003;
+/**
+ * Skip sending an audio frame if the WebSocket already has more than this many
+ * bytes buffered (slow network) — prevents unbounded memory growth.
+ */
+const MAX_WS_BUFFERED_BYTES = 1 * 1024 * 1024; // 1 MB
+
+/**
+ * Build the dedicated caption WebSocket URL (ws:// or wss://) with auth token.
+ * @returns {string|null}
+ */
+function buildCaptionWsUrl() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('[AudioCapture] No auth token available for caption WebSocket');
+    return null;
+  }
+
+  let base = getSocketUrl(); // e.g. http://localhost:5000 or https://app.example.com
+  base = base.replace(/^http:\/\//i, 'ws://').replace(/^https:\/\//i, 'wss://');
+  base = base.replace(/\/$/, '');
+  return `${base}/captions?token=${encodeURIComponent(token)}`;
+}
 
 const PCM_CAPTURE_WORKLET_SOURCE = `
 class PcmCaptureProcessor extends AudioWorkletProcessor {
@@ -75,11 +104,17 @@ async function loadPcmCaptureWorklet(audioContext) {
  */
 export class AudioCapture {
   constructor(socket, callId, roomName, participantId, participantName) {
+    // `socket` (Socket.IO) is retained for backward-compatible API only; audio is
+    // streamed over a dedicated WebSocket instead.
     this.socket = socket;
     this.callId = callId;
     this.roomName = roomName;
     this.participantId = participantId;
     this.participantName = participantName;
+
+    // Dedicated caption WebSocket (carries audio + control frames).
+    this.ws = null;
+    this.wsReady = false;
 
     // Audio processing state
     this.audioContext = null;
@@ -148,13 +183,7 @@ export class AudioCapture {
       this.workletNode.connect(this.silentGain);
       this.silentGain.connect(this.audioContext.destination);
 
-      this.socket.emit('caption-audio-stream', {
-        callId: this.callId,
-        roomName: this.roomName,
-        participantId: this.participantId,
-        participantName: this.participantName,
-        isStart: true,
-      });
+      await this.connectWebSocket();
 
       this.isCapturing = true;
       this.chunksSent = 0;
@@ -167,6 +196,77 @@ export class AudioCapture {
       this.cleanup();
       return false;
     }
+  }
+
+  /**
+   * Open the dedicated caption WebSocket and send the `start` control frame.
+   * Resolves once the connection is open; rejects on error/timeout.
+   * @returns {Promise<void>}
+   */
+  connectWebSocket() {
+    return new Promise((resolve, reject) => {
+      const wsUrl = buildCaptionWsUrl();
+      if (!wsUrl) {
+        reject(new Error('Caption WebSocket URL unavailable (missing token)'));
+        return;
+      }
+
+      let settled = false;
+      const ws = new WebSocket(wsUrl);
+      ws.binaryType = 'arraybuffer';
+      this.ws = ws;
+
+      const timeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error('Caption WebSocket connection timeout'));
+          try { ws.close(); } catch (e) { /* noop */ }
+        }
+      }, 10000);
+
+      ws.onopen = () => {
+        this.wsReady = true;
+        ws.send(
+          JSON.stringify({
+            type: 'start',
+            callId: this.callId,
+            roomName: this.roomName,
+            participantId: this.participantId,
+            participantName: this.participantName,
+          })
+        );
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          resolve();
+        }
+        console.log(`🔌 [AudioCapture] Caption WebSocket open for ${this.participantName}`);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'caption-error') {
+            console.error('❌ [AudioCapture] Caption error:', msg);
+          }
+        } catch (e) {
+          // Non-JSON message; ignore.
+        }
+      };
+
+      ws.onerror = (event) => {
+        console.error(`[AudioCapture] Caption WebSocket error for ${this.participantName}:`, event);
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          reject(new Error('Caption WebSocket error'));
+        }
+      };
+
+      ws.onclose = () => {
+        this.wsReady = false;
+      };
+    });
   }
 
   resolveMediaStreamTrack(twilioTrack) {
@@ -198,7 +298,7 @@ export class AudioCapture {
    * @param {MessageEvent<ArrayBuffer>} event
    */
   handleWorkletMessage(event) {
-    if (!this.isCapturing || !this.socket || !event.data) return;
+    if (!this.isCapturing || !event.data) return;
 
     try {
       const int16Chunk = new Int16Array(event.data);
@@ -225,37 +325,21 @@ export class AudioCapture {
   }
 
   emitAudioChunk(int16Data) {
-    const audioArray = Array.from(int16Data);
-    const emitData = {
-      callId: this.callId,
-      roomName: this.roomName,
-      participantId: this.participantId,
-      participantName: this.participantName,
-      audioChunk: audioArray,
-    };
-
-    if (this.chunksSent === 0) {
-      console.log('📤 [AudioCapture] Sending first audio chunk to server:', {
-        callId: this.callId,
-        roomName: this.roomName,
-        participantId: this.participantId,
-        chunkSize: audioArray.length,
-        socketConnected: this.socket?.connected,
-      });
+    if (!this.ws || !this.wsReady || this.ws.readyState !== WebSocket.OPEN) {
+      return;
     }
 
-    this.socket.emit('caption-audio-stream', emitData);
+    // Drop frames if the socket is backed up (slow network) to bound memory.
+    if (this.ws.bufferedAmount > MAX_WS_BUFFERED_BYTES) {
+      return;
+    }
+
+    // Send raw 16-bit PCM bytes directly as a binary frame (no JSON encoding).
+    this.ws.send(int16Data.buffer);
     this.chunksSent += 1;
 
-    if (this.chunksSent % 10 === 0) {
-      console.log(
-        `📊 [AudioCapture] ${this.participantName}: sent ${this.chunksSent} chunks (chunk size: ${audioArray.length} samples)`
-      );
-    }
-
     if (this.chunksSent === 1) {
-      console.log('🎤 [AudioCapture] First audio chunk sent - audio capture is working!');
-      console.log(`   Chunk size: ${audioArray.length} samples, sample rate: 16000Hz`);
+      console.log('🎤 [AudioCapture] First audio chunk sent over caption WebSocket - capture working!');
     }
   }
 
@@ -269,14 +353,12 @@ export class AudioCapture {
 
     console.log(`🛑 [AudioCapture] Stopping capture for ${this.participantName}`);
 
-    if (this.socket) {
-      this.socket.emit('caption-audio-stream', {
-        callId: this.callId,
-        roomName: this.roomName,
-        participantId: this.participantId,
-        participantName: this.participantName,
-        isEnd: true,
-      });
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      try {
+        this.ws.send(JSON.stringify({ type: 'stop' }));
+      } catch (e) {
+        // Ignore send errors during stop.
+      }
     }
 
     this.cleanup();
@@ -290,6 +372,22 @@ export class AudioCapture {
   cleanup() {
     this.isCapturing = false;
     this.sampleBufferOffset = 0;
+
+    if (this.ws) {
+      try {
+        this.ws.onopen = null;
+        this.ws.onmessage = null;
+        this.ws.onerror = null;
+        this.ws.onclose = null;
+        if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+          this.ws.close();
+        }
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
+      this.ws = null;
+      this.wsReady = false;
+    }
 
     if (this.workletNode) {
       try {
