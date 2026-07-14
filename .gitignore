@@ -22,3 +22,9 @@ server/logs/error.log
 
 # Local MongoDB dumps (mongodump)
 db-backups/
+
+# AWS / Elastic Beanstalk logs
+aws-logs/
+
+# VS Code / Cursor workspace files
+*.code-workspace
