@@ -32,6 +32,7 @@ import {
 } from '../../constants/options';
 import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
 import { formatAccessibilityNeeds } from '../../utils/formatAccessibilityNeeds';
+import { jobSeekerAvatarCellTemplate } from '../common/JobSeekerAvatarThumbnail';
 
 export default function JobSeekerManagement() {
   const { user } = useAuth();
@@ -1472,6 +1473,8 @@ export default function JobSeekerManagement() {
   }), []);
 
   // Memoize column templates to prevent re-renders
+  const avatarTemplate = useCallback((props) => jobSeekerAvatarCellTemplate(props), []);
+
   const textTemplate = useCallback((props, field) => (
     <div style={{ wordWrap: 'break-word', whiteSpace: 'normal', padding: '8px 0' }}>
       {props[field] || ''}
@@ -1863,6 +1866,17 @@ export default function JobSeekerManagement() {
                 >
               <ColumnsDirective>
                 <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
+                <ColumnDirective
+                  field='avatarUrl'
+                  headerText='Photo'
+                  width='110'
+                  textAlign='Center'
+                  allowFiltering={false}
+                  allowSorting={false}
+                  showColumnMenu={false}
+                  template={avatarTemplate}
+                  freeze='Left'
+                />
                 <ColumnDirective 
                   field='firstName' 
                   headerText='First Name' 

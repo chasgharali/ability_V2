@@ -31,7 +31,7 @@ const INTERESTS_AI_CACHE_TTL_SECONDS = parseInt(process.env.INTERESTS_AI_CACHE_T
 const INTEREST_POPULATE = [
     {
         path: 'jobSeeker',
-        select: 'name email phoneNumber city state country resumeUrl metadata',
+        select: 'name email phoneNumber city state country resumeUrl avatarUrl metadata',
         options: { strictPopulate: false }
     },
     {
@@ -590,7 +590,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
                     .map(id => new mongoose.Types.ObjectId(id));
                 
                 const jobSeekers = await User.find({ _id: { $in: jobSeekerIdsArray } })
-                    .select('name email phoneNumber city state country resumeUrl metadata')
+                    .select('name email phoneNumber city state country resumeUrl avatarUrl metadata')
                     .lean();
                 
                 jobSeekers.forEach(user => {
@@ -608,7 +608,7 @@ router.get('/', authenticateToken, requireRole(['Recruiter', 'Admin', 'GlobalSup
         if (legacyJobSeekerIds.length > 0) {
             try {
                 const legacyUsers = await User.find({ legacyId: { $in: legacyJobSeekerIds } })
-                    .select('name email phoneNumber city state country resumeUrl metadata legacyId')
+                    .select('name email phoneNumber city state country resumeUrl avatarUrl metadata legacyId')
                     .lean();
                 legacyUsers.forEach(user => {
                     legacyUsersMap[user.legacyId] = user;
@@ -1389,7 +1389,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
             interests = await JobSeekerInterest.find(exportQuery)
                 .populate({
                     path: 'jobSeeker',
-                    select: 'name email phoneNumber city state country resumeUrl metadata',
+                    select: 'name email phoneNumber city state country resumeUrl avatarUrl metadata',
                     model: 'User',
                     options: { strictPopulate: false }
                 })
@@ -1431,7 +1431,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Recruiter', 'Admin', 
                     const legacyUsers = await User.find({ 
                         legacyId: { $in: Array.from(legacyJobSeekerIdsToFetch) } 
                     })
-                    .select('name email phoneNumber city state country resumeUrl metadata legacyId')
+                    .select('name email phoneNumber city state country resumeUrl avatarUrl metadata legacyId')
                     .lean();
                     
                     legacyUsers.forEach(user => {

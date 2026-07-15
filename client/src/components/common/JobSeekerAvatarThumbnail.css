@@ -1,0 +1,132 @@
+.js-avatar-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e5e7eb;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.js-avatar-thumb:disabled {
+  cursor: default;
+}
+
+.js-avatar-thumb--clickable {
+  cursor: pointer;
+}
+
+.js-avatar-thumb--clickable:hover,
+.js-avatar-thumb--clickable:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.js-avatar-thumb__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.js-avatar-thumb__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  user-select: none;
+}
+
+.js-avatar-thumb-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 4px 0;
+}
+
+.js-avatar-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, 0.72);
+  cursor: pointer;
+}
+
+.js-avatar-lightbox__content {
+  position: relative;
+  max-width: min(90vw, 560px);
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 20px 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.js-avatar-lightbox__close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.js-avatar-lightbox__close:hover,
+.js-avatar-lightbox__close:focus-visible {
+  background: #e5e7eb;
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.js-avatar-lightbox__name {
+  margin: 0 40px 0 0;
+  align-self: flex-start;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.js-avatar-lightbox__image {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 100px);
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}

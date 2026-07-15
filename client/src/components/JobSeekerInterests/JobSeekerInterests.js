@@ -17,6 +17,7 @@ import { DropDownListComponent } from '@syncfusion/ej2-react-dropdowns';
 import { Input } from '../UI/FormComponents';
 import filterIcon from '../../assets/filter.png';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
+import { jobSeekerAvatarCellTemplate } from '../common/JobSeekerAvatarThumbnail';
 import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import { openResumeInNewTab } from '../../utils/resumeViewer';
 import JSZip from 'jszip';
@@ -702,6 +703,7 @@ const JobSeekerInterests = () => {
                 jobSeekerName: name || (r.legacyJobSeekerId ? 'Legacy User' : ''),
                 jobSeekerFirstName: firstName,
                 jobSeekerLastName: lastName,
+                jobSeekerAvatarUrl: r.jobSeeker?.avatarUrl || '',
                 jobSeekerEmail: r.jobSeeker?.email || '',
                 jobSeekerPhone: r.jobSeeker?.phoneNumber || '',
                 jobSeekerCity: r.jobSeeker?.city || '',
@@ -1426,6 +1428,8 @@ const JobSeekerInterests = () => {
     };
 
     // Grid template functions for custom column renders - memoized to prevent re-renders
+    const avatarTemplate = useCallback((props) => jobSeekerAvatarCellTemplate(props), []);
+
     const jobSeekerTemplate = useCallback((props) => {
         const row = props;
         const jobSeekerName = row.jobSeeker?.name || (row.legacyJobSeekerId ? 'Legacy User' : 'N/A');
@@ -1988,6 +1992,7 @@ const JobSeekerInterests = () => {
                                         {['Admin', 'GlobalSupport', 'Recruiter'].includes(user?.role) && (
                                             <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
                                         )}
+                                        <ColumnDirective field='jobSeekerAvatarUrl' headerText='Photo' width='110' textAlign='Center' allowFiltering={false} allowSorting={false} showColumnMenu={false} showInColumnChooser={true} template={avatarTemplate} freeze='Left' />
                                         <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} freeze='Left' />
                                         <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                         <ColumnDirective field='jobSeekerFirstName' headerText='Firstname' width='150' clipMode='EllipsisWithTooltip' template={firstNameTemplate} allowFiltering={true} visible={true} />

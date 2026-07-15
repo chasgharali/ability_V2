@@ -20,6 +20,7 @@ import { listEvents } from '../../services/events';
 import { listBooths } from '../../services/booths';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
+import { jobSeekerAvatarCellTemplate } from '../common/JobSeekerAvatarThumbnail';
 import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import JSZip from 'jszip';
 import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS, labelsToFilterText } from '../../utils/syncfusionGridHelpers';
@@ -1227,6 +1228,7 @@ export default function MeetingRecords() {
                 jobSeekerName: name,
                 jobSeekerFirstName: nameParts.firstName,
                 jobSeekerLastName: nameParts.lastName,
+                jobSeekerAvatarUrl: (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.avatarUrl) ? jobSeeker.avatarUrl : '',
                 jobSeekerEmail: getFieldEmail(jobSeeker),
                 jobSeekerPhone: (jobSeeker && typeof jobSeeker === 'object' && jobSeeker.phoneNumber) ? jobSeeker.phoneNumber : '',
                 jobSeekerCity: getFieldCity(jobSeeker),
@@ -1342,6 +1344,8 @@ export default function MeetingRecords() {
     };
 
     // Grid template functions for custom column renders - memoized to prevent re-renders
+    const avatarTemplate = useCallback((props) => jobSeekerAvatarCellTemplate(props), []);
+
     const eventTemplate = useCallback((props) => {
         const row = props;
         return (
@@ -1923,6 +1927,7 @@ export default function MeetingRecords() {
                                     {['Admin', 'GlobalSupport', 'AdminEvent', 'Recruiter'].includes(user?.role) && (
                                         <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
                                     )}
+                                    <ColumnDirective field='jobSeekerAvatarUrl' headerText='Photo' width='110' textAlign='Center' allowFiltering={false} allowSorting={false} showColumnMenu={false} showInColumnChooser={true} template={avatarTemplate} freeze='Left' />
                                     <ColumnDirective field='jobSeekerName' headerText='Job Seeker' width='180' clipMode='EllipsisWithTooltip' template={jobSeekerTemplate} allowFiltering={true} type='string' textAlign='Center' freeze='Left' />
                                     <ColumnDirective field='id' headerText='' width='0' isPrimaryKey={true} visible={false} showInColumnChooser={false} />
                                     <ColumnDirective field='jobSeekerEmail' headerText='Job Seeker Email' width='220' clipMode='EllipsisWithTooltip' template={jobSeekerEmailTemplate} allowFiltering={true} textAlign='Center' />

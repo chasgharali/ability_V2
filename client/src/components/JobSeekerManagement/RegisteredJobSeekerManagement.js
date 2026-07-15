@@ -29,6 +29,7 @@ import {
 } from '../../constants/options';
 import { SYNC_GRID_FILTER_SETTINGS, SYNC_GRID_CHECKBOX_COLUMN_PROPS } from '../../utils/syncfusionGridHelpers';
 import { formatAccessibilityNeeds } from '../../utils/formatAccessibilityNeeds';
+import { jobSeekerAvatarCellTemplate } from '../common/JobSeekerAvatarThumbnail';
 
 const getLabelFromValue = (value, optionsList) => {
   if (!value) return 'Not provided';
@@ -170,6 +171,7 @@ export default function RegisteredJobSeekerManagement() {
           city: js.city,
           state: js.state,
           country: js.country,
+          avatarUrl: js.avatarUrl || '',
           isActive: js.isActive,
           emailVerified: js.emailVerified,
           lastLogin: js.lastLogin,
@@ -338,6 +340,8 @@ export default function RegisteredJobSeekerManagement() {
       </span>
     );
   }, []);
+
+  const avatarTemplate = useCallback((props) => jobSeekerAvatarCellTemplate(props), []);
 
   const emailVerifiedTemplate = useCallback((props) => {
     const verified = props.emailVerified;
@@ -755,6 +759,7 @@ export default function RegisteredJobSeekerManagement() {
           >
             <ColumnsDirective>
               <ColumnDirective {...SYNC_GRID_CHECKBOX_COLUMN_PROPS} />
+              <ColumnDirective field="avatarUrl" headerText="Photo" width="110" textAlign="Center" allowFiltering={false} allowSorting={false} showColumnMenu={false} template={avatarTemplate} freeze="Left" />
               <ColumnDirective field="name" headerText="Name" width="180" type="string" allowFiltering={true} freeze='Left' />
               <ColumnDirective field="_id" headerText="" width="0" visible={false} isPrimaryKey />
               <ColumnDirective field="email" headerText="Email" width="220" type="string" allowFiltering={true} />

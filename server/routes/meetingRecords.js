@@ -252,7 +252,7 @@ router.get('/', authenticateToken, async (req, res) => {
             .populate('eventId', 'name slug')
             .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
-            .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
+            .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl avatarUrl metadata')
             .populate('interpreterId', 'name email')
             .populate('queueId')
             .populate('videoCallId')
@@ -553,7 +553,7 @@ router.post('/ai-search', authenticateToken, async (req, res) => {
                 .populate('eventId', 'name')
                 .populate('boothId', 'name')
                 .populate('recruiterId', 'name email')
-                .populate('jobseekerId', 'name email phoneNumber city state country')
+                .populate('jobseekerId', 'name email phoneNumber city state country avatarUrl')
                 .populate('interpreterId', 'name email')
                 .sort({ startTime: -1 })
                 .lean(),
@@ -615,7 +615,7 @@ router.post('/ai-search', authenticateToken, async (req, res) => {
                 .populate('eventId', 'name')
                 .populate('boothId', 'name')
                 .populate('recruiterId', 'name email')
-                .populate('jobseekerId', 'name email phoneNumber city state country')
+                .populate('jobseekerId', 'name email phoneNumber city state country avatarUrl')
                 .populate('interpreterId', 'name email')
                 .sort({ startTime: -1 })
                 .lean();
@@ -758,7 +758,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
             .populate('eventId', 'name slug')
             .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
-            .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl metadata')
+            .populate('jobseekerId', 'name email phoneNumber city state country resumeUrl avatarUrl metadata')
             .populate('interpreterId', 'name email')
             .populate('queueId')
             .populate('videoCallId');
@@ -928,7 +928,7 @@ router.post('/create-from-call', authenticateToken, requireRole(['Recruiter', 'A
             .populate('eventId', 'name slug')
             .populate('boothId', 'name logoUrl')
             .populate('recruiterId', 'name email')
-            .populate('jobseekerId', 'name email city state metadata')
+            .populate('jobseekerId', 'name email city state avatarUrl metadata')
             .populate('interpreterId', 'name email');
 
         res.status(201).json(populatedRecord);
@@ -1239,7 +1239,7 @@ router.get('/export/csv', authenticateToken, requireRole(['Admin', 'GlobalSuppor
             })
             .populate({
                 path: 'jobseekerId',
-                select: 'name email phoneNumber city state country resumeUrl metadata',
+                select: 'name email phoneNumber city state country resumeUrl avatarUrl metadata',
                 model: 'User'
             })
             .populate({
