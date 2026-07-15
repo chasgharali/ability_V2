@@ -117,6 +117,16 @@ class LiveStatsStore {
         this.callParticipants.delete(userId.toString());
     }
 
+    clearCallSession(sessionId) {
+        if (!sessionId) return;
+        const sessionKey = sessionId.toString();
+        for (const [userId, participant] of this.callParticipants.entries()) {
+            if (participant.sessionId === sessionKey) {
+                this.callParticipants.delete(userId);
+            }
+        }
+    }
+
     getOnlineUsers() {
         return Array.from(this.onlineUsers.values());
     }

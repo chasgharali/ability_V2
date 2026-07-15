@@ -6,6 +6,7 @@ const MeetingRecord = require('../models/MeetingRecord');
 const Queue = require('../models/Queue');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const liveStatsStore = require('../utils/liveStatsStore');
 
 const router = express.Router();
 
@@ -414,6 +415,9 @@ router.post('/:meetingId/end', authenticateToken, async (req, res) => {
 
         // End the meeting
         await meeting.endCall();
+
+        // Clear live-stats so Analytics "Users in Calls" updates immediately
+        liveStatsStore.clearCallSession(`meeting:${meetingId}`);
 
     // End the Twilio room
     if (twilioClient) {

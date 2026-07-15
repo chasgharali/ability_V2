@@ -943,6 +943,9 @@ router.post('/end', auth, async (req, res) => {
     // Update call status
     await videoCall.endCall();
 
+    // Clear live-stats so Analytics "Users in Calls" updates immediately
+    liveStatsStore.clearCallSession(`video:${callId}`);
+
     // Update queue entry status: ensure jobseeker leaves the queue
     const queueEntry = await BoothQueue.findById(videoCall.queueEntry);
     let queueUpdateData = null;

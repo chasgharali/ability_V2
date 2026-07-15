@@ -10,8 +10,10 @@ import { useNavigate } from 'react-router-dom';
 import { analyticsAPI } from '../../services/analytics';
 import { listEvents } from '../../services/events';
 import { listBooths } from '../../services/booths';
+import videoCallService from '../../services/videoCall';
 import { Select } from '../UI/FormComponents';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
+import axios from 'axios';
 
 export default function Analytics() {
     const { user, loading } = useAuth();
@@ -44,6 +46,7 @@ export default function Analytics() {
     // Live stats
     const [liveStats, setLiveStats] = useState(null);
     const [liveStatsLoading, setLiveStatsLoading] = useState(false);
+    const [endingCallSessionId, setEndingCallSessionId] = useState(null);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -56,6 +59,7 @@ export default function Analytics() {
     const isSupportRole = user?.role === 'Support';
     const isRecruiterRole = user?.role === 'Recruiter';
     const canFilterBooth = ['Admin', 'GlobalSupport'].includes(user?.role);
+    const canForceEndCall = ['Admin', 'GlobalSupport'].includes(user?.role);
     const recruiterAssignedEventIds = useMemo(
         () => (user?.assignedEvents || []).map((e) => (e?._id || e).toString()),
         [user?.assignedEvents]
@@ -185,6 +189,47 @@ export default function Analytics() {
             }
         }
     }, [filters.eventId, filters.boothId, showToast]);
+
+    const handleForceEndCall = useCallback(async (meeting) => {
+        const sessionId = meeting?.sessionId;
+        if (!sessionId) {
+            showToast('Unable to identify this call', 'error');
+            return;
+        }
+
+        const participants = [meeting.jobSeeker, meeting.recruiter, meeting.interpreter]
+            .filter((name) => name && name !== '—')
+            .join(', ');
+        const confirmMsg = participants
+            ? `Force end only this call (${participants})? Other active calls will not be affected.`
+            : 'Force end only this call? Other active calls will not be affected.';
+
+        if (!window.confirm(confirmMsg)) {
+            return;
+        }
+
+        setEndingCallSessionId(sessionId);
+        try {
+            if (sessionId.startsWith('video:')) {
+                const callId = sessionId.slice('video:'.length);
+                await videoCallService.endCall(callId);
+            } else if (sessionId.startsWith('meeting:')) {
+                const meetingId = sessionId.slice('meeting:'.length);
+                await axios.post(`/api/calls/${meetingId}/end`);
+            } else {
+                showToast('Unsupported call type', 'error');
+                return;
+            }
+
+            showToast('Call ended successfully', 'success');
+            await loadLiveStats();
+        } catch (error) {
+            console.error('Error force-ending call:', error);
+            showToast(error?.error || error?.message || 'Failed to end call', 'error');
+        } finally {
+            setEndingCallSessionId(null);
+        }
+    }, [loadLiveStats, showToast]);
 
     // Load data based on active tab
     useEffect(() => {
@@ -635,6 +680,7 @@ export default function Analytics() {
                                                                         <th>Interpreter</th>
                                                                         <th>Booth</th>
                                                                         <th>Joined</th>
+                                                                        {canForceEndCall && <th>Actions</th>}
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -645,6 +691,21 @@ export default function Analytics() {
                                                                             <td>{meeting.interpreter || '—'}</td>
                                                                             <td>{meeting.boothName || '—'}</td>
                                                                             <td>{formatDateTime(meeting.joinedAt)}</td>
+                                                                            {canForceEndCall && (
+                                                                                <td>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        className="btn-force-end-call"
+                                                                                        onClick={() => handleForceEndCall(meeting)}
+                                                                                        disabled={endingCallSessionId === meeting.sessionId}
+                                                                                        aria-label={`Force end call${meeting.jobSeeker ? ` with ${meeting.jobSeeker}` : ''}`}
+                                                                                    >
+                                                                                        {endingCallSessionId === meeting.sessionId
+                                                                                            ? 'Ending…'
+                                                                                            : 'Force End Call'}
+                                                                                    </button>
+                                                                                </td>
+                                                                            )}
                                                                         </tr>
                                                                     ))}
                                                                 </tbody>
