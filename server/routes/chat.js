@@ -476,6 +476,13 @@ router.post('/:chatId/messages', authenticateToken, async (req, res) => {
             return res.status(403).json({ message: 'You are not a participant in this chat' });
         }
 
+        // Event Broadcast is read-only except for GlobalSupport
+        if (chat.metadata?.broadcastType === 'event' && req.user.role !== 'GlobalSupport') {
+            return res.status(403).json({
+                message: 'Event Broadcast is read-only. Only Global Support can post messages.'
+            });
+        }
+
         const message = await Message.create({
             chat: chatId,
             sender: req.user._id,

@@ -1458,6 +1458,12 @@ const socketHandler = (io) => {
                     return;
                 }
 
+                // Event Broadcast is read-only except for GlobalSupport
+                if (chat.metadata?.broadcastType === 'event' && socket.user?.role !== 'GlobalSupport') {
+                    socket.emit('error', { message: 'Event Broadcast is read-only. Only Global Support can post messages.' });
+                    return;
+                }
+
                 // Create message
                 const message = await Message.create({
                     chat: chatId,

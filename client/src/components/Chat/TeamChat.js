@@ -57,10 +57,13 @@ const TEAM_CHAT_STATUS_OPTIONS = [
 
 const TEAM_CHAT_STATUS_SETTER_ROLES = new Set(['Support', 'Recruiter', 'Interpreter']);
 
+const isEventBroadcastChat = (chat) => chat?.metadata?.broadcastType === 'event';
+
 const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
     const { user } = useAuth();
     const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
+    const isBroadcastReadOnly = isEventBroadcastChat(selectedChat) && user?.role !== 'GlobalSupport';
     const [messages, setMessages] = useState([]);
     const [participants, setParticipants] = useState([]);
     const [showNewChat, setShowNewChat] = useState(false);
@@ -773,6 +776,11 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
             return;
         }
 
+        if (isEventBroadcastChat(selectedChat) && user?.role !== 'GlobalSupport') {
+            console.warn('⚠️ Event Broadcast is read-only for non-GlobalSupport users');
+            return;
+        }
+
         const content = messageText.trim();
 
         try {
@@ -1336,11 +1344,18 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
 
                                                 return TEAM_CHAT_STATUS_OPTIONS.find(option => option.value === chatStatus)?.label || 'Offline';
                                             })()
-                                        ) : 'Group Chat'}
+                                        ) : isEventBroadcastChat(selectedChat)
+                                            ? (isBroadcastReadOnly ? 'Broadcast · Read only' : 'Event Broadcast')
+                                            : 'Group Chat'}
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        {isBroadcastReadOnly && (
+                            <div className="team-chat-readonly-banner" role="status">
+                                Only Global Support can post in Event Broadcast. You can view messages here.
+                            </div>
+                        )}
                         {typingUsers.size > 0 && (
                             <div className="team-chat-typing-indicator">
                                 <span className="typing-dot"></span>
@@ -1354,9 +1369,9 @@ const TeamChat = ({ onUnreadCountChange, isPanelOpen }) => {
                             user={currentUser}
                             messages={messages}
                             messageSend={handleSendMessage}
-                            placeholder="Type your message..."
+                            placeholder={isBroadcastReadOnly ? 'This chat is read-only' : 'Type your message...'}
                             showHeader={false}
-                            showFooter={true}
+                            showFooter={!isBroadcastReadOnly}
                         />
                     </div>
                 ) : (
