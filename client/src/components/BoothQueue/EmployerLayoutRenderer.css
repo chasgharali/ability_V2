@@ -292,6 +292,33 @@
   line-height: 1.7;
   color: inherit;
 }
+
+/* Syncfusion RTE body fields in template editor */
+.elr-rte-field {
+  width: 100%;
+  max-width: 100%;
+  text-align: left;
+  margin: 0.5rem 0 0;
+}
+.elr-rte-field .e-richtexteditor {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+.elr-rte-field .e-richtexteditor .e-rte-content {
+  background: #fff;
+}
+.elr-rte-html p {
+  margin: 0 0 0.75em;
+}
+.elr-rte-html p:last-child {
+  margin-bottom: 0;
+}
+.elr-rte-html ul,
+.elr-rte-html ol {
+  margin: 0.5em 0 0.75em;
+  padding-left: 1.25em;
+  text-align: left;
+}
 .elr-wrap .elr-nav-link {
   font-family: Arial, sans-serif;
   font-size: 16px;

@@ -771,6 +771,11 @@
   overflow: visible !important;
 }
 
+/* Keep inactive waiting-area mode mounted (state preserved) but fully hidden */
+.bm-waiting-area-panel[hidden] {
+  display: none !important;
+}
+
 .bm-rte-block {
   overflow: visible !important;
 }

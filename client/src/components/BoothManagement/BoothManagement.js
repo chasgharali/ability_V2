@@ -581,6 +581,57 @@ export default function BoothManagement() {
   };
 
   const setBoothField = (k, v) => setBoothForm(prev => ({ ...prev, [k]: v }));
+
+  const getLatestRteHtml = useCallback((ref, fallback) => {
+    try {
+      if (ref?.current?.inputElement) return ref.current.inputElement.innerHTML;
+      if (ref?.current?.value != null) return ref.current.value;
+    } catch (e) { /* fall through */ }
+    return fallback;
+  }, []);
+
+  /** Toggle waiting-area mode without discarding the other mode's content. */
+  const toggleWaitingAreaMode = useCallback(() => {
+    setBoothForm((prev) => {
+      const switchingToPlaceholders = prev.waitingAreaMode === 'employerPage';
+      // Capture latest placeholder HTML from live RTE instances before they are hidden.
+      const firstHtml = switchingToPlaceholders
+        ? prev.firstHtml
+        : getLatestRteHtml(rteFirstRef, prev.firstHtml);
+      const secondHtml = switchingToPlaceholders
+        ? prev.secondHtml
+        : getLatestRteHtml(rteSecondRef, prev.secondHtml);
+      const thirdHtml = switchingToPlaceholders
+        ? prev.thirdHtml
+        : getLatestRteHtml(rteThirdRef, prev.thirdHtml);
+      return {
+        ...prev,
+        firstHtml,
+        secondHtml,
+        thirdHtml,
+        waitingAreaMode: switchingToPlaceholders ? 'placeholders' : 'employerPage',
+        // Keep employer page sections/template intact when switching to placeholders.
+        employerPageSections: Array.isArray(prev.employerPageSections) && prev.employerPageSections.length
+          ? prev.employerPageSections
+          : getDefaultEmployerPageSections(),
+        employerPageTemplateId: prev.employerPageTemplateId || 'default-v1',
+      };
+    });
+  }, [getLatestRteHtml]);
+
+  // Syncfusion RTE needs a layout refresh after being revealed from [hidden].
+  useEffect(() => {
+    if (boothForm.waitingAreaMode === 'employerPage') return undefined;
+    const timer = window.setTimeout(() => {
+      [rteFirstRef, rteSecondRef, rteThirdRef].forEach((ref) => {
+        try {
+          ref.current?.refreshUI?.();
+        } catch (e) { /* ignore */ }
+      });
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [boothForm.waitingAreaMode]);
+
   const persistBoothDraft = useCallback((nextForm = boothForm, nextMode = boothMode, nextEditingId = editingBoothId) => {
     try {
       sessionStorage.setItem(BOOTH_FORM_DRAFT_KEY, JSON.stringify({
@@ -665,13 +716,7 @@ export default function BoothManagement() {
       // Image upload success handlers update the DOM img src attribute directly,
       // which may not trigger a React state update via the RTE change event.
       // This ensures we save the correct server URLs instead of blob: URLs.
-      const getLatestRteHtml = (ref, fallback) => {
-        try {
-          if (ref?.current?.inputElement) return ref.current.inputElement.innerHTML;
-          if (ref?.current?.value != null) return ref.current.value;
-        } catch (e) { /* fall through */ }
-        return fallback;
-      };
+      // Placeholders stay mounted (CSS-hidden) in employer-page mode, so DOM reads still work.
       const latestFirstHtml = getLatestRteHtml(rteFirstRef, boothForm.firstHtml);
       const latestSecondHtml = getLatestRteHtml(rteSecondRef, boothForm.secondHtml);
       const latestThirdHtml = getLatestRteHtml(rteThirdRef, boothForm.thirdHtml);
@@ -728,12 +773,10 @@ export default function BoothManagement() {
           events: selectedEventIds, // Send full events array
           eventId: selectedEventIds.length > 0 ? selectedEventIds[0] : undefined, // Backward compat
         });
-        if (payload.waitingAreaMode === 'employerPage') {
-          await updateBoothEmployerPageSections(editingBoothId, payload.employerPageSections);
-        } else {
-          // Update rich sections via dedicated endpoint
-          await updateBoothRichSections(editingBoothId, payload.richSections);
-        }
+        // Always persist both waiting-area payloads so toggling modes never
+        // drops unsaved employer-page or placeholder content on the server.
+        await updateBoothEmployerPageSections(editingBoothId, payload.employerPageSections);
+        await updateBoothRichSections(editingBoothId, payload.richSections);
         // Refetch and redirect to list
         await loadBooths();
         await loadEvents();
@@ -1691,10 +1734,7 @@ export default function BoothManagement() {
                       type="button"
                       role="switch"
                       aria-checked={boothForm.waitingAreaMode === 'employerPage'}
-                      onClick={() => setBoothField(
-                        'waitingAreaMode',
-                        boothForm.waitingAreaMode === 'employerPage' ? 'placeholders' : 'employerPage'
-                      )}
+                      onClick={toggleWaitingAreaMode}
                       style={{
                         width: '100%',
                         border: '1px solid #d1d5db',
@@ -1736,91 +1776,95 @@ export default function BoothManagement() {
                       </span>
                     </button>
                   </div>
-                  {boothForm.waitingAreaMode === 'employerPage' && (
-                    <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, background: '#f8fafc', padding: 12 }}>
-                      <p style={{ margin: '0 0 10px 0', color: '#374151', fontSize: 14 }}>
-                        Configure the employer page in the visual template editor with inline section editing and live preview.
-                      </p>
-                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <ButtonComponent cssClass="e-primary" type="button" onClick={openEmployerTemplateEditor}>
-                          Open Template Editor
-                        </ButtonComponent>
-                        <span style={{ fontSize: 13, color: '#6b7280' }}>
-                          Sections configured: {(boothForm.employerPageSections || []).filter(s => (s.contentData && Object.keys(s.contentData).some(k => s.contentData[k])) || (s.contentHtml || '').trim()).length}/{(boothForm.employerPageSections || []).length || 8}
-                        </span>
-                      </div>
+                  {/* Keep both panels mounted so toggling modes never resets editor state. */}
+                  <div
+                    className="bm-waiting-area-panel"
+                    hidden={boothForm.waitingAreaMode !== 'employerPage'}
+                    style={{ border: '1px solid #e5e7eb', borderRadius: 8, background: '#f8fafc', padding: 12 }}
+                  >
+                    <p style={{ margin: '0 0 10px 0', color: '#374151', fontSize: 14 }}>
+                      Configure the employer page in the visual template editor with inline section editing and live preview.
+                    </p>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <ButtonComponent cssClass="e-primary" type="button" onClick={openEmployerTemplateEditor}>
+                        Open Template Editor
+                      </ButtonComponent>
+                      <span style={{ fontSize: 13, color: '#6b7280' }}>
+                        Sections configured: {(boothForm.employerPageSections || []).filter(s => (s.contentData && Object.keys(s.contentData).some(k => s.contentData[k])) || (s.contentHtml || '').trim()).length}/{(boothForm.employerPageSections || []).length || 8}
+                      </span>
                     </div>
-                  )}
-                  {boothForm.waitingAreaMode !== 'employerPage' && (
-                    <div className="bm-rte-tabs">
-                      <div className="bm-rte-block">
-                        <h4>First Placeholder</h4>
-                        <RTE
-                          ref={rteFirstRef}
-                          value={boothForm.firstHtml}
-                          change={(e) => setBoothField('firstHtml', e?.value || '')}
-                          toolbarSettings={rteToolbarSettings}
-                          quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
-                          insertImageSettings={getInsertImageSettings()}
-                          insertVideoSettings={getInsertVideoSettings()}
-                          insertAudioSettings={getInsertAudioSettings()}
-                          height={550}
-                          placeholder="Enter content for first placeholder..."
-                          enableXhtml={true}
-                          keyDown={handleRteKeyDown}
-                          fileUploading={(args) => handleFileUploading(args, rteFirstRef)}
-                          imageUploading={handleImageUploading}
-                          imageUploadSuccess={handleImageUploadSuccess}
-                        >
-                          <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
-                        </RTE>
-                      </div>
-                      <div className="bm-rte-block">
-                        <h4>Second Placeholder</h4>
-                        <RTE
-                          ref={rteSecondRef}
-                          value={boothForm.secondHtml}
-                          change={(e) => setBoothField('secondHtml', e?.value || '')}
-                          toolbarSettings={rteToolbarSettings}
-                          quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
-                          insertImageSettings={getInsertImageSettings()}
-                          insertVideoSettings={getInsertVideoSettings()}
-                          insertAudioSettings={getInsertAudioSettings()}
-                          height={550}
-                          placeholder="Enter content for second placeholder..."
-                          enableXhtml={true}
-                          keyDown={handleRteKeyDown}
-                          fileUploading={(args) => handleFileUploading(args, rteSecondRef)}
-                          imageUploading={handleImageUploading}
-                          imageUploadSuccess={handleImageUploadSuccess}
-                        >
-                          <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
-                        </RTE>
-                      </div>
-                      <div className="bm-rte-block">
-                        <h4>Third Placeholder</h4>
-                        <RTE
-                          ref={rteThirdRef}
-                          value={boothForm.thirdHtml}
-                          change={(e) => setBoothField('thirdHtml', e?.value || '')}
-                          toolbarSettings={rteToolbarSettings}
-                          quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
-                          insertImageSettings={getInsertImageSettings()}
-                          insertVideoSettings={getInsertVideoSettings()}
-                          insertAudioSettings={getInsertAudioSettings()}
-                          height={550}
-                          placeholder="Enter content for third placeholder..."
-                          enableXhtml={true}
-                          keyDown={handleRteKeyDown}
-                          fileUploading={(args) => handleFileUploading(args, rteThirdRef)}
-                          imageUploading={handleImageUploading}
-                          imageUploadSuccess={handleImageUploadSuccess}
-                        >
-                          <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
-                        </RTE>
-                      </div>
+                  </div>
+                  <div
+                    className="bm-rte-tabs bm-waiting-area-panel"
+                    hidden={boothForm.waitingAreaMode === 'employerPage'}
+                  >
+                    <div className="bm-rte-block">
+                      <h4>First Placeholder</h4>
+                      <RTE
+                        ref={rteFirstRef}
+                        value={boothForm.firstHtml}
+                        change={(e) => setBoothField('firstHtml', e?.value || '')}
+                        toolbarSettings={rteToolbarSettings}
+                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertImageSettings={getInsertImageSettings()}
+                        insertVideoSettings={getInsertVideoSettings()}
+                        insertAudioSettings={getInsertAudioSettings()}
+                        height={550}
+                        placeholder="Enter content for first placeholder..."
+                        enableXhtml={true}
+                        keyDown={handleRteKeyDown}
+                        fileUploading={(args) => handleFileUploading(args, rteFirstRef)}
+                        imageUploading={handleImageUploading}
+                        imageUploadSuccess={handleImageUploadSuccess}
+                      >
+                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
+                      </RTE>
                     </div>
-                  )}
+                    <div className="bm-rte-block">
+                      <h4>Second Placeholder</h4>
+                      <RTE
+                        ref={rteSecondRef}
+                        value={boothForm.secondHtml}
+                        change={(e) => setBoothField('secondHtml', e?.value || '')}
+                        toolbarSettings={rteToolbarSettings}
+                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertImageSettings={getInsertImageSettings()}
+                        insertVideoSettings={getInsertVideoSettings()}
+                        insertAudioSettings={getInsertAudioSettings()}
+                        height={550}
+                        placeholder="Enter content for second placeholder..."
+                        enableXhtml={true}
+                        keyDown={handleRteKeyDown}
+                        fileUploading={(args) => handleFileUploading(args, rteSecondRef)}
+                        imageUploading={handleImageUploading}
+                        imageUploadSuccess={handleImageUploadSuccess}
+                      >
+                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
+                      </RTE>
+                    </div>
+                    <div className="bm-rte-block">
+                      <h4>Third Placeholder</h4>
+                      <RTE
+                        ref={rteThirdRef}
+                        value={boothForm.thirdHtml}
+                        change={(e) => setBoothField('thirdHtml', e?.value || '')}
+                        toolbarSettings={rteToolbarSettings}
+                        quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+                        insertImageSettings={getInsertImageSettings()}
+                        insertVideoSettings={getInsertVideoSettings()}
+                        insertAudioSettings={getInsertAudioSettings()}
+                        height={550}
+                        placeholder="Enter content for third placeholder..."
+                        enableXhtml={true}
+                        keyDown={handleRteKeyDown}
+                        fileUploading={(args) => handleFileUploading(args, rteThirdRef)}
+                        imageUploading={handleImageUploading}
+                        imageUploadSuccess={handleImageUploadSuccess}
+                      >
+                        <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, Video, Audio, EmojiPicker, PasteCleanup, Count, RTEResize, FormatPainter]} />
+                      </RTE>
+                    </div>
+                  </div>
                 </div>
 
                 <MultiSelect

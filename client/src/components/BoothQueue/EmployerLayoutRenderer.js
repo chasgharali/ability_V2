@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   FaFacebookF,
   FaInstagram,
@@ -6,6 +6,20 @@ import {
   FaYoutube,
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+import {
+  RichTextEditorComponent as RTE,
+  Toolbar as RTEToolbar,
+  Link as RteLink,
+  Image as RteImage,
+  HtmlEditor,
+  QuickToolbar,
+  Table,
+  EmojiPicker,
+  PasteCleanup,
+  Count,
+  Inject as RTEInject,
+} from '@syncfusion/ej2-react-richtexteditor';
+import { RTE_QUICK_TOOLBAR_SETTINGS, getRteToolbarSettingsSimple } from '../../utils/rteConfig';
 import './EmployerLayoutRenderer.css';
 
 /* ================================================================
@@ -43,12 +57,18 @@ export default function EmployerLayoutRenderer({
       .map((item, index) => {
         const section = getSec(item.key);
         const headingFromContent = section?.contentData?.sectionHeading;
+        // Prefer saved order; fall back to position in the sections payload
+        // (public API may omit order on older responses), then NAV_SECTIONS index.
+        const sectionIndex = sections.findIndex((s) => s.key === item.key);
+        const order = typeof section?.order === 'number'
+          ? section.order
+          : (sectionIndex >= 0 ? sectionIndex : index);
         return {
           ...item,
           title: headingFromContent
             || normalizeSectionTitle(section?.title || item.label || '')
             || item.label,
-          order: typeof section?.order === 'number' ? section.order : index,
+          order,
           isActive: section?.isActive !== false,
         };
       })
@@ -105,6 +125,8 @@ function renderNavLinks(prefix, navItems, linkClassName = '') {
 }
 
 const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
+const stripHtml = (value = '') => String(value).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').trim();
+const hasHtmlText = (value) => stripHtml(value).length > 0;
 const hasAnyImage = (images = []) => Array.isArray(images) && images.some((img) => hasText(img?.url));
 const hasActionLink = (text, url) => hasText(text) && hasText(url) && url.trim() !== '#';
 const IMAGE_FIT_PRESETS = [
@@ -119,13 +141,13 @@ function hasRenderableSectionContent(sectionKey, section) {
       return (
         hasText(data.companyName)
         || hasText(data.tagline)
-        || hasText(data.aboutText)
+        || hasHtmlText(data.aboutText)
         || hasText(data.heroImageUrl)
         || hasText(data.brandImage1Url)
         || hasText(data.brandImage2Url)
       );
     case 'program':
-      return hasText(data.programTitle) || hasText(data.programText) || hasText(data.programImageUrl);
+      return hasText(data.programTitle) || hasHtmlText(data.programText) || hasText(data.programImageUrl);
     case 'video':
       return hasText(data.videoTitle) || hasText(data.videoUrl);
     case 'gallery':
@@ -365,6 +387,56 @@ function TXT({ sectionKey, fieldName, value, placeholder, className, style, tagN
     <Tag className={className} style={colorStyle}>
       {value}
     </Tag>
+  );
+}
+
+/** Syncfusion rich-text body field for longer template copy. */
+function RichBody({
+  sectionKey,
+  fieldName,
+  value,
+  placeholder,
+  className,
+  style,
+  isEditMode,
+  onUpdateField,
+}) {
+  const toolbarSettings = useMemo(() => getRteToolbarSettingsSimple(), []);
+  const hasValue = hasHtmlText(value);
+
+  if (isEditMode) {
+    return (
+      <div
+        className={`elr-rte-field${className ? ` ${className}` : ''}`}
+        style={style}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="presentation"
+      >
+        <RTE
+          value={value || ''}
+          change={(e) => onUpdateField && onUpdateField(sectionKey, fieldName, e?.value || '')}
+          toolbarSettings={toolbarSettings}
+          quickToolbarSettings={RTE_QUICK_TOOLBAR_SETTINGS}
+          height={220}
+          placeholder={placeholder}
+          enableXhtml
+          aria-label={placeholder}
+        >
+          <RTEInject services={[HtmlEditor, RTEToolbar, QuickToolbar, RteLink, RteImage, Table, EmojiPicker, PasteCleanup, Count]} />
+        </RTE>
+      </div>
+    );
+  }
+
+  if (!hasValue) return null;
+
+  return (
+    <div
+      className={`elr-body elr-rte-html${className ? ` ${className}` : ''}`}
+      style={style}
+      dangerouslySetInnerHTML={{ __html: value }}
+    />
   );
 }
 
@@ -1150,7 +1222,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <div style={{ marginTop: '0.75rem' }} />
               <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.2rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
               <div style={{ marginTop: '1rem' }} />
-              <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
+              <RichBody sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
             </div>
           </div>
         </SecWrap>
@@ -1162,7 +1234,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', maxWidth: 660, margin: '0 auto', textAlign: 'center' }}>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · 600 × 400" style={{ width: '100%', maxWidth: 560, aspectRatio: '3/2' }} {...imgProps} />
             <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative or program..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
+            <RichBody sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative or program..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
       );
@@ -1307,7 +1379,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <div className="elr-b-about-txt">
                 <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
+                <RichBody sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
               </div>
             </div>
           </SecWrap>
@@ -1320,7 +1392,7 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
           <div className="elr-b-prog-row">
             <div className="elr-b-prog-txt">
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
+              <RichBody sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
             </div>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · ~300 × 300 square" className="elr-b-prog-img-zone" {...imgProps} />
           </div>
@@ -1467,7 +1539,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
                 <div style={{ marginTop: '0.75rem' }} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.15rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <div style={{ marginTop: '1rem' }} />
-                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
+                <RichBody sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
               </div>
               <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Accent portrait'} altValue={about.heroImageAlt} label="Accent Portrait · 3:4" className="elr-c-about-portrait" {...imgProps} />
             </div>
@@ -1482,7 +1554,7 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · Full Width × 320px" className="elr-c-prog-full" {...imgProps} />
             <div className="elr-c-prog-overlay">
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" style={{ color: '#fff', marginBottom: '0.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, color: program.programText__color || '#b8c8e0', lineHeight: 1.6, maxWidth: 680, display: 'block' }} tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
+              <RichBody sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." className="elr-body" style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, color: program.programText__color || '#b8c8e0', lineHeight: 1.6, maxWidth: 680, display: 'block' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             </div>
           </div>
         </SecWrap>
@@ -1630,7 +1702,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
               <div className="elr-d-id-txt">
                 <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
                 <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.05rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-                <TXT sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={about.aboutText__color} />
+                <RichBody sectionKey="about" fieldName="aboutText" value={about.aboutText} placeholder="About Us paragraph..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
               </div>
             </div>
           </SecWrap>
@@ -1649,7 +1721,7 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
           <div className="elr-d-prog-row">
             <div className="elr-d-prog-txt">
               <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
-              <TXT sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." className="elr-body" tagName="p" isEditMode={isEditMode} onUpdateField={onUpdateField} showColorPicker colorValue={program.programText__color} />
+              <RichBody sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special initiative..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
             </div>
             <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · Landscape 4:3" className="elr-d-prog-img-zone" {...imgProps} />
           </div>

@@ -334,7 +334,9 @@ boothSchema.methods.getPublicInfo = function () {
                 key: section.key,
                 title: section.title,
                 contentHtml: hydrateStreamMediaUrlsInHtml(section.contentHtml),
-                contentData: section.contentData ?? null
+                contentData: section.contentData ?? null,
+                order: section.order,
+                isActive: section.isActive
             }))
     };
 };

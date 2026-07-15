@@ -428,7 +428,7 @@ export default function EmployerPageTemplateEditor() {
             {/* Edit mode hint */}
             {!isLiveView && (
               <p className="elr-edit-hint">
-                Click on any image to upload · Click on any text to edit inline
+                Click on any image to upload · Click short titles to edit inline · Use the Syncfusion editor for About / Program body text
               </p>
             )}
 
