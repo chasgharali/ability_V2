@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaArrowLeft, FaVideo, FaMicrophone, FaCheck, FaTimes } from 'react-icons/fa';
+import { createLocalVideoTrack } from 'twilio-video';
+import {
+  applyBackgroundBlurToTrack,
+  isBackgroundBlurEnabled,
+  isBackgroundBlurSupported,
+  removeBackgroundBlurFromTrack,
+  setBackgroundBlurEnabled
+} from '../../utils/backgroundBlur';
 import './DeviceTestModal.css';
 
 export default function DeviceTestModal({
@@ -21,17 +29,36 @@ export default function DeviceTestModal({
   const [microphoneStatus, setMicrophoneStatus] = useState('inactive'); // 'inactive', 'loading', 'active', 'error'
   const [testResults, setTestResults] = useState({ camera: false, microphone: false });
   const [srAnnouncement, setSrAnnouncement] = useState('');
+  const [backgroundBlur, setBackgroundBlur] = useState(() => isBackgroundBlurEnabled());
+  const [blurSupported] = useState(() => isBackgroundBlurSupported());
+  const [blurStatus, setBlurStatus] = useState('idle'); // 'idle' | 'loading' | 'active' | 'unsupported' | 'error'
 
   const videoRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
   const streamRef = useRef(null);
+  const twilioVideoTrackRef = useRef(null);
   const modalRef = useRef(null);
   const previousActiveElementRef = useRef(null);
 
   // Cleanup function
   const cleanupTest = () => {
+    if (twilioVideoTrackRef.current) {
+      try {
+        removeBackgroundBlurFromTrack(twilioVideoTrackRef.current);
+        twilioVideoTrackRef.current.detach().forEach((el) => {
+          if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        });
+        twilioVideoTrackRef.current.stop();
+      } catch (error) {
+        console.warn('Error cleaning up blurred preview track:', error);
+      }
+      twilioVideoTrackRef.current = null;
+    }
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -61,6 +88,7 @@ export default function DeviceTestModal({
     setAudioLevel(0);
     setCameraStatus('inactive');
     setMicrophoneStatus('inactive');
+    setBlurStatus('idle');
   };
 
   // Cleanup on unmount or close
@@ -76,6 +104,8 @@ export default function DeviceTestModal({
       setCurrentView('selection');
       setTestResults({ camera: false, microphone: false });
       setSrAnnouncement('');
+    } else {
+      setBackgroundBlur(isBackgroundBlurEnabled());
     }
   }, [isOpen]);
 
@@ -154,7 +184,9 @@ export default function DeviceTestModal({
       setCurrentView('testing');
       setCameraStatus('loading');
       setMicrophoneStatus('loading');
+      setBlurStatus(backgroundBlur && blurSupported ? 'loading' : 'idle');
 
+      let effectiveVideoDeviceId = selectedVideoId;
       let constraints = {
         audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
         video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true
@@ -178,6 +210,8 @@ export default function DeviceTestModal({
             console.log('Cleared invalid audio device ID from localStorage');
           }
 
+          effectiveVideoDeviceId = null;
+
           // Retry without device constraints
           constraints = {
             audio: true,
@@ -193,37 +227,63 @@ export default function DeviceTestModal({
 
       // Test camera
       const videoTracks = stream.getVideoTracks();
-      if (videoTracks.length > 0) {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          
-          // Wait for video to load metadata
-          const videoLoadPromise = new Promise((resolve, reject) => {
-            const video = videoRef.current;
-            const onLoadedMetadata = () => {
-              video.removeEventListener('loadedmetadata', onLoadedMetadata);
-              video.removeEventListener('error', onError);
-              resolve();
-            };
-            const onError = (error) => {
-              video.removeEventListener('loadedmetadata', onLoadedMetadata);
-              video.removeEventListener('error', onError);
-              reject(error);
-            };
-            
-            video.addEventListener('loadedmetadata', onLoadedMetadata);
-            video.addEventListener('error', onError);
-          });
+      if (videoTracks.length > 0 && videoRef.current) {
+        try {
+          const useBlurPreview = backgroundBlur && blurSupported;
 
-          try {
+          if (useBlurPreview) {
+            // Free the camera from getUserMedia so Twilio can reopen it with a processor.
+            videoTracks.forEach((track) => track.stop());
+
+            const twilioTrack = await createLocalVideoTrack({
+              frameRate: { ideal: 24, max: 30 },
+              facingMode: 'user',
+              ...(effectiveVideoDeviceId ? { deviceId: { exact: effectiveVideoDeviceId } } : {})
+            });
+            twilioVideoTrackRef.current = twilioTrack;
+
+            const blurApplied = await applyBackgroundBlurToTrack(twilioTrack, { force: true });
+            setBlurStatus(blurApplied ? 'active' : 'error');
+
+            twilioTrack.attach(videoRef.current);
+            await videoRef.current.play().catch(() => {});
+          } else {
+            if (backgroundBlur && !blurSupported) {
+              setBlurStatus('unsupported');
+            }
+
+            videoRef.current.srcObject = stream;
+
+            // Wait for video to load metadata
+            const videoLoadPromise = new Promise((resolve, reject) => {
+              const video = videoRef.current;
+              const onLoadedMetadata = () => {
+                video.removeEventListener('loadedmetadata', onLoadedMetadata);
+                video.removeEventListener('error', onError);
+                resolve();
+              };
+              const onError = (error) => {
+                video.removeEventListener('loadedmetadata', onLoadedMetadata);
+                video.removeEventListener('error', onError);
+                reject(error);
+              };
+
+              video.addEventListener('loadedmetadata', onLoadedMetadata);
+              video.addEventListener('error', onError);
+            });
+
             await videoLoadPromise;
             await videoRef.current.play();
-            setCameraStatus('active');
-            setTestResults(prev => ({ ...prev, camera: true }));
-          } catch (error) {
-            console.error('Video play error:', error);
-            setCameraStatus('error');
-            setTestResults(prev => ({ ...prev, camera: false }));
+          }
+
+          setCameraStatus('active');
+          setTestResults(prev => ({ ...prev, camera: true }));
+        } catch (error) {
+          console.error('Video play error:', error);
+          setCameraStatus('error');
+          setTestResults(prev => ({ ...prev, camera: false }));
+          if (backgroundBlur) {
+            setBlurStatus('error');
           }
         }
       } else {
@@ -253,6 +313,9 @@ export default function DeviceTestModal({
       setCameraStatus('error');
       setMicrophoneStatus('error');
       setTestResults({ camera: false, microphone: false });
+      if (backgroundBlur) {
+        setBlurStatus('error');
+      }
     }
   };
 
@@ -328,6 +391,7 @@ export default function DeviceTestModal({
   };
 
   const handleSave = () => {
+    setBackgroundBlurEnabled(backgroundBlur);
     cleanupTest();
     onSave();
   };
@@ -390,17 +454,17 @@ export default function DeviceTestModal({
         <div className="sr-only" aria-live="polite" aria-atomic="true">
           {srAnnouncement}
         </div>
-        <div className="modal-header">
+        <div className="device-test-header">
           <h3 id="device-test-modal-title">
             {currentView === 'selection' ? 'Select Camera & Microphone' : 'Test Your Devices'}
           </h3>
           <button
-            className="modal-close"
+            className="device-test-close"
             onClick={handleClose}
             aria-label="Close device test modal"
             type="button"
           >
-            ×
+            <span aria-hidden="true">&times;</span>
           </button>
         </div>
 
@@ -448,6 +512,39 @@ export default function DeviceTestModal({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="device-field background-blur-field">
+                  <div className="background-blur-toggle-row">
+                    <div className="background-blur-copy">
+                      <label className="background-blur-label" htmlFor="background-blur-toggle">
+                        Background blur
+                      </label>
+                      <p id="background-blur-help" className="background-blur-help">
+                        {blurSupported
+                          ? 'Blur your background during video calls so others see less of your surroundings.'
+                          : 'Background blur is not supported in this browser.'}
+                      </p>
+                    </div>
+                    <button
+                      id="background-blur-toggle"
+                      type="button"
+                      role="switch"
+                      aria-checked={backgroundBlur}
+                      aria-describedby="background-blur-help"
+                      className={`background-blur-switch ${backgroundBlur ? 'is-on' : ''}`}
+                      disabled={!blurSupported}
+                      onClick={() => {
+                        if (!blurSupported) return;
+                        setBackgroundBlur((prev) => !prev);
+                      }}
+                    >
+                      <span className="background-blur-switch-thumb" aria-hidden="true" />
+                      <span className="sr-only">
+                        {backgroundBlur ? 'Background blur on' : 'Background blur off'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -521,6 +618,16 @@ export default function DeviceTestModal({
                   <p>
                     <strong>Camera:</strong> You should see yourself in the video above.
                   </p>
+                  {backgroundBlur && (
+                    <p>
+                      <strong>Background blur:</strong>{' '}
+                      {blurStatus === 'active' && 'Your background should appear blurred.'}
+                      {blurStatus === 'loading' && 'Applying blur to your camera preview…'}
+                      {blurStatus === 'unsupported' && 'Not supported in this browser; camera works without blur.'}
+                      {blurStatus === 'error' && 'Could not apply blur. Camera still works without it.'}
+                      {blurStatus === 'idle' && 'Enabled — preview will show blur when available.'}
+                    </p>
+                  )}
                   <p>
                     <strong>Microphone:</strong> Speak normally to see the level indicator move.
                   </p>

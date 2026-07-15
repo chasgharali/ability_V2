@@ -4,8 +4,10 @@ server/node_modules
 server/logs
 server/build
 client/build
+client/public/twilio-video-processors
 server/be.zip
 server/logs/*
+package-lock.json
 
 # Environment files
 .env

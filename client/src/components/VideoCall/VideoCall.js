@@ -12,6 +12,7 @@ import JobSeekerProfileCall from './JobSeekerProfileCall';
 import CallInviteModal from './CallInviteModal';
 import { ToastContainer, useToast } from '../common/Toast';
 import { validateAndCleanDevicePreferences, createExactMediaConstraints } from '../../utils/deviceUtils';
+import { applyBackgroundBlurToTrack } from '../../utils/backgroundBlur';
 import { AudioCapture } from '../../utils/audioCapture';
 import {
   extractUserIdFromTwilioIdentity,
@@ -799,6 +800,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         }
       }
 
+      await applyBackgroundBlurToTrack(videoTrack);
+
       setLocalTracks([videoTrack, audioTrack]);
 
       // Connect to Twilio room using provided access token
@@ -939,6 +942,8 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           throw deviceError;
         }
       }
+
+      await applyBackgroundBlurToTrack(videoTrack);
 
       setLocalTracks([videoTrack, audioTrack]);
 
