@@ -240,7 +240,7 @@ export default function RegisteredEventDetail() {
 
                   {/* Event information */}
                   <div className="event-description">
-                    <h3 id="evt-info">Event Information</h3>
+                    <h2 id="evt-info">Event Information</h2>
                     {event.description ? (
                       <div
                         className="event-description-content"
@@ -256,7 +256,7 @@ export default function RegisteredEventDetail() {
                   <div className="participating-employers">
                     <div className="section-divider">
                       <hr />
-                      <h3 className="section-label">Participating Employers</h3>
+                      <h2 className="section-label">Participating Employers</h2>
                       <hr />
                     </div>
 

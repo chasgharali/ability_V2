@@ -72,7 +72,8 @@
   margin-bottom: 2rem;
 }
 
-.event-description h3 {
+/* Extra specificity so global .dashboard-content h2 sizing doesn't override */
+.registered-event-details .event-description h2 {
   margin: 0 0 0.75rem 0;
   font-size: 1.1rem;
   font-weight: 600;
@@ -98,7 +99,8 @@
   margin: 0;
 }
 
-.section-label {
+/* Extra specificity so global .dashboard-content h2 sizing doesn't override */
+.section-divider h2.section-label {
   margin: 0;
   font-weight: 600;
   font-size: 0.875rem;
@@ -202,7 +204,8 @@
 }
 
 .join-queue-btn {
-  background: #3b82f6;
+  /* #2563eb gives 5.2:1 contrast with white text (WCAG AA requires 4.5:1) */
+  background: #2563eb;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -215,7 +218,7 @@
 }
 
 .join-queue-btn:hover {
-  background: #2563eb;
+  background: #1d4ed8;
   transform: translateY(-1px);
 }
 

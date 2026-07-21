@@ -170,7 +170,7 @@ export default function EventDetail() {
 
                   {/* Event information */}
                   <div style={{ marginTop: 16 }}>
-                    <h3 id="evt-info" style={{ marginBottom: 8 }}>Event Information</h3>
+                    <h2 id="evt-info" style={{ fontSize: '1.1rem', marginBottom: 8 }}>Event Information</h2>
                     {event.description ? (
                       <div
                         className="muted"
@@ -185,7 +185,7 @@ export default function EventDetail() {
                   {/* Divider with centered label */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8, marginTop: 16, color: '#374151' }}>
                     <hr style={{ border: 0, borderTop: '1px solid #d1d5db' }} />
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>Participating Employers</span>
+                    <h2 style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>Participating Employers</h2>
                     <hr style={{ border: 0, borderTop: '1px solid #d1d5db' }} />
                   </div>
 
