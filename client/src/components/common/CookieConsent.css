@@ -30,7 +30,9 @@ html:has(.cookie-consent-banner) .App:not(:has(.dashboard)) {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--app-footer-height, 50px);
+    /* Measured footer height set from JS; the static variable is only the
+       first-paint fallback before the effect runs. */
+    bottom: var(--cookie-consent-bottom, var(--app-footer-height, 50px));
     z-index: 1150;
     display: flex;
     flex-direction: row;
@@ -38,11 +40,44 @@ html:has(.cookie-consent-banner) .App:not(:has(.dashboard)) {
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem 1.5rem;
-    padding: 0.9rem 1.5rem;
+    padding: 1.15rem 1.5rem;
     background-color: #111827;
     color: #ffffff;
     border-top: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.cookie-consent-close {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 1.75rem;
+    height: 1.75rem;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    border: 1px solid #9ca3af;
+    border-radius: 0.375rem;
+    background-color: transparent;
+    color: #f9fafb;
+    cursor: pointer;
+}
+
+.cookie-consent-close svg {
+    display: block;
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.cookie-consent-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.cookie-consent-close:focus-visible {
+    outline: 3px solid #60a5fa;
+    outline-offset: 2px;
 }
 
 .cookie-consent-content {
@@ -126,7 +161,22 @@ html:has(.cookie-consent-banner) .App:not(:has(.dashboard)) {
         gap: 0.75rem;
     }
 
+    /* The 320px flex-basis on .cookie-consent-content is a min-*width* for the
+       desktop row layout. In column direction that same basis becomes a
+       min-*height*, forcing a huge empty block and pushing the buttons off
+       screen, so it must be reset once the axis flips. */
+    .cookie-consent-content {
+        flex: 1 1 auto;
+    }
+
     .cookie-consent-actions {
         justify-content: flex-end;
+    }
+
+    /* Keep the close control pinned to the top-right corner of the stack
+       instead of trailing below the action buttons. */
+    .cookie-consent-close {
+        order: -1;
+        align-self: flex-end;
     }
 }
