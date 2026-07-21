@@ -40,6 +40,8 @@ const SCREENS = {
     'instructions'
   ]
 };
+const roleLabel = (role) => (role === 'JobSeeker' ? 'Job Seeker' : role);
+
 const canManageRole = (currentUserRole, targetRole) => {
   if (currentUserRole === 'SuperAdmin') return true;
   // Only SuperAdmin manages JobSeeker instructions
@@ -183,7 +185,7 @@ export default function RoleMessageManagement() {
   const handleDelete = async (id) => {
     const message = messages.find(m => m._id === id);
     const confirmMsg = message 
-      ? `Are you sure you want to delete the message for ${message.role} / ${message.screen}?`
+      ? `Are you sure you want to delete the message for ${roleLabel(message.role)} / ${message.screen}?`
       : 'Are you sure you want to delete this message?';
     
     if (!window.confirm(confirmMsg)) {
@@ -207,7 +209,7 @@ export default function RoleMessageManagement() {
 
   const handleCreate = async () => {
     if (!canManageRole(user?.role, createForm.role)) {
-      showToast('Only Super Admin can manage JobSeeker instructions', { type: 'error', duration: 4000 });
+      showToast('Only Super Admin can manage Job Seeker instructions', { type: 'error', duration: 4000 });
       return;
     }
 
@@ -419,7 +421,7 @@ export default function RoleMessageManagement() {
                 >
                   <option value="all">All Roles</option>
                   {availableRoles.map(role => (
-                    <option key={role} value={role}>{role}</option>
+                    <option key={role} value={role}>{roleLabel(role)}</option>
                   ))}
                 </select>
                 <select
@@ -470,7 +472,7 @@ export default function RoleMessageManagement() {
                     className="dashboard-select"
                   >
                     {availableRoles.map(role => (
-                      <option key={role} value={role}>{role}</option>
+                      <option key={role} value={role}>{roleLabel(role)}</option>
                     ))}
                   </select>
                 </div>
@@ -568,7 +570,7 @@ export default function RoleMessageManagement() {
                   <tbody>
                     {filteredMessages.map((msg) => (
                       <tr key={msg._id} className={editingId === msg._id ? 'editing-row' : ''}>
-                        <td><span className="role-badge">{msg.role}</span></td>
+                        <td><span className="role-badge">{roleLabel(msg.role)}</span></td>
                         <td><span className="screen-badge">{msg.screen}</span></td>
                         <td>
                           {msg.isPlatformDefault ? (

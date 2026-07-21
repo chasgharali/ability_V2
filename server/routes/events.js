@@ -1067,7 +1067,7 @@ router.post('/:id/register', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const { user } = req;
         if (user.role !== 'JobSeeker') {
-            return res.status(403).json({ error: 'Only JobSeeker can register for events' });
+            return res.status(403).json({ error: 'Only Job Seekers can register for events' });
         }
 
         // Find event by id or slug

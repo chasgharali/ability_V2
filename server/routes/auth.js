@@ -1192,7 +1192,7 @@ router.get('/survey', authenticateToken, async (req, res) => {
         if (req.user.role !== 'JobSeeker') {
             return res.status(403).json({
                 error: 'Forbidden',
-                message: 'Survey is only available for JobSeeker accounts'
+                message: 'Survey is only available for Job Seeker accounts'
             });
         }
         return res.json({ survey: req.user.survey || {} });
@@ -1218,7 +1218,7 @@ router.put('/survey', authenticateToken, [
         if (req.user.role !== 'JobSeeker') {
             return res.status(403).json({
                 error: 'Forbidden',
-                message: 'Survey is only available for JobSeeker accounts'
+                message: 'Survey is only available for Job Seeker accounts'
             });
         }
         const errors = validationResult(req);

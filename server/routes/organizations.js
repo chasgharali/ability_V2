@@ -378,7 +378,7 @@ router.post('/:id/assign-user', authenticateToken, requireSuperAdmin, async (req
             return res.status(400).json({ error: 'SuperAdmin users cannot be assigned to an organization' });
         }
         if (user.role === 'JobSeeker') {
-            return res.status(400).json({ error: 'JobSeeker users are not assigned to organizations directly. They join via event registration.' });
+            return res.status(400).json({ error: 'Job Seeker users are not assigned to organizations directly. They join via event registration.' });
         }
 
         const previousOrgId = user.organizationId;

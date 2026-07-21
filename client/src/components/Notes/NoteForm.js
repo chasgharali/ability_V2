@@ -137,7 +137,7 @@ const NoteForm = () => {
             return;
         }
         if (user?.role !== 'SuperAdmin' && formData.assignedRoles.includes('JobSeeker')) {
-            setError('Only SuperAdmin can assign notes to JobSeeker');
+            setError('Only SuperAdmin can assign notes to Job Seeker');
             return;
         }
 
@@ -353,7 +353,7 @@ const NoteForm = () => {
                                         <MultiSelect
                                             id="assignedRoles"
                                             name="assignedRoles"
-                                            options={roleOptions.map(role => ({ value: role, label: role }))}
+                                            options={roleOptions.map(role => ({ value: role, label: role === 'JobSeeker' ? 'Job Seeker' : role }))}
                                             value={formData.assignedRoles}
                                             onChange={handleRoleChange}
                                             placeholder="Select roles"

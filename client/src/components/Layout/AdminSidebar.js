@@ -593,7 +593,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   Meeting Records
                 </button>
                 <button className={itemClass('interests')} onClick={() => handleItemClick('/jobseeker-interests')}>
-                  JobSeeker Interests
+                  Job Seeker Interests
                 </button>
                 <button className={itemClass('analytics')} onClick={() => handleItemClick('/analytics')}>
                   Report
@@ -661,7 +661,7 @@ export default function AdminSidebar({ active = 'booths' }) {
                   AI Search
                 </button>
                 <button className={itemClass('jobseeker-survey')} onClick={() => handleItemClick('/jobseeker-survey')}>
-                  JobSeeker Survey Data
+                  Job Seeker Survey Data
                 </button>
               </div>
             )}
@@ -736,9 +736,9 @@ export default function AdminSidebar({ active = 'booths' }) {
                 <button className={itemClass('users')} onClick={() => handleItemClick('/usermanagement')}>User Management</button>
                 <button className={itemClass('jobseekers')} onClick={() => handleItemClick('/jobseekermanagement')}>Registered Job Seekers</button>
                 <button className={itemClass('meeting-records')} onClick={() => handleItemClick('/meeting-records')}>Meeting Records</button>
-                <button className={itemClass('jobseeker-interests')} onClick={() => handleItemClick('/jobseeker-interests')}>JobSeeker Interests</button>
-                <button className={itemClass('jobseeker-survey')} onClick={() => handleItemClick('/jobseeker-survey')}>JobSeeker Survey Data</button>
-                <button className={itemClass('jobseeker-qualifications')} onClick={() => handleItemClick('/jobseeker-qualifications')}>JobSeeker Qualifications</button>
+                <button className={itemClass('jobseeker-interests')} onClick={() => handleItemClick('/jobseeker-interests')}>Job Seeker Interests</button>
+                <button className={itemClass('jobseeker-survey')} onClick={() => handleItemClick('/jobseeker-survey')}>Job Seeker Survey Data</button>
+                <button className={itemClass('jobseeker-qualifications')} onClick={() => handleItemClick('/jobseeker-qualifications')}>Job Seeker Qualifications</button>
               </div>
             )}
           </div>

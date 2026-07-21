@@ -548,7 +548,7 @@ const Dashboard = () => {
 
     const getRoleDisplayName = (role) => {
         const roleNames = {
-            'JobSeeker': 'JobSeeker',
+            'JobSeeker': 'Job Seeker',
             'Admin': 'Administrator',
             'AdminEvent': 'Event Administrator',
             'BoothAdmin': 'Booth Administrator',
@@ -685,7 +685,7 @@ const Dashboard = () => {
                                 <button className="dashboard-button" onClick={() => navigate('/meeting-records')}>View Records</button>
                             </div>
                             <div className="dashboard-card">
-                                <h3>JobSeeker Interests</h3>
+                                <h3>Job Seeker Interests</h3>
                                 <p>View job seeker interests in your booths</p>
                                 <button className="dashboard-button" onClick={() => navigate('/jobseeker-interests')}>View Interests</button>
                             </div>
@@ -762,7 +762,7 @@ const Dashboard = () => {
                                         <strong>{user.organizationId?.limits?.maxUsers || user.organizationId?.limits?.maxRecruiters || 0}</strong>
                                     </span>
                                     <span>
-                                        Registered JobSeeker Limit:{' '}
+                                        Registered Job Seeker Limit:{' '}
                                         <strong>{user.organizationId?.limits?.maxJobSeekers || 0}</strong>
                                     </span>
                                 </div>
