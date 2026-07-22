@@ -30,10 +30,11 @@ export const boothQueueAPI = {
     return res.data;
   },
 
-  // Get queue for a specific booth (recruiter view)
-  async getBoothQueue(boothId) {
+  // Get queue for a specific booth (recruiter view), optionally scoped to one event
+  async getBoothQueue(boothId, eventId) {
     const res = await axios.get(`/api/booth-queue/booth/${boothId}`, { 
-      headers: authHeaders() 
+      headers: authHeaders(),
+      params: eventId ? { eventId } : undefined
     });
     return res.data;
   },

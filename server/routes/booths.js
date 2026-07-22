@@ -13,7 +13,8 @@ const EMPLOYER_SECTION_KEYS = ['about', 'program', 'video', 'gallery', 'jobs', '
 const normalizeObjectId = (value) => {
     if (value === null || value === undefined) return '';
     if (typeof value === 'string') return value.trim();
-    if (typeof value === 'object' && value._id !== undefined) {
+    // Guard against ObjectId instances whose _id getter returns themselves
+    if (typeof value === 'object' && value._id !== undefined && value._id !== value) {
         return normalizeObjectId(value._id);
     }
     return String(value).trim();
@@ -55,6 +56,15 @@ async function userCanViewBooth(booth, user) {
     }
 
     return false;
+}
+
+// An event is visible on the queue page only if it is published/active and
+// (for non-demo events) has not ended yet.
+function isEventVisible(event) {
+    if (!event) return false;
+    if (!['published', 'active'].includes(event.status)) return false;
+    if (event.isDemo) return true;
+    return event.end && new Date(event.end) > new Date();
 }
 
 const normalizeId = (value) => {
@@ -706,14 +716,49 @@ router.get('/:id', authenticateToken, async (req, res) => {
             ? (typeof booth.getPublicInfo === 'function' ? booth.getPublicInfo() : booth)
             : (typeof booth.getSummary === 'function' ? booth.getSummary() : booth);
 
+        // Build the list of events visible to this user for this booth:
+        // union of booth.events and legacy booth.eventId, intersected with the
+        // user's assignedEvents for booth-scoped roles, filtered to
+        // published/active events that have not ended.
+        const Event = require('../models/Event');
+        const boothEventIds = new Set(
+            (booth.events || []).map(normalizeObjectId).filter(Boolean)
+        );
+        if (booth.eventId) {
+            boothEventIds.add(normalizeObjectId(booth.eventId));
+        }
+
+        let candidateEventIds = [...boothEventIds];
+        const boothScopedRoles = ['Recruiter', 'BoothAdmin', 'Support', 'Interpreter', 'GlobalInterpreter'];
+        if (boothScopedRoles.includes(user?.role)) {
+            const assignedEventIds = (user.assignedEvents || []).map(normalizeObjectId).filter(Boolean);
+            if (assignedEventIds.length > 0) {
+                candidateEventIds = candidateEventIds.filter(id => assignedEventIds.includes(id));
+            }
+        }
+
+        let visibleEvents = [];
+        if (candidateEventIds.length > 0) {
+            const eventDocs = await Event.find({ _id: { $in: candidateEventIds } });
+            visibleEvents = eventDocs
+                .filter(isEventVisible)
+                .sort((a, b) => new Date(a.start) - new Date(b.start))
+                .map(e => e.getSummary());
+        }
+
+        const legacyEventSummary = booth.eventId && typeof booth.eventId.getSummary === 'function'
+            ? booth.eventId.getSummary()
+            : (booth.eventId || null);
+
         res.json({
             booth: {
                 ...boothData,
                 events: booth.events || []
             },
-            event: booth.eventId && typeof booth.eventId.getSummary === 'function'
-                ? booth.eventId.getSummary()
-                : (booth.eventId || null)
+            // Prefer the first visible event; fall back to the legacy eventId
+            // summary for backward compatibility when nothing is visible.
+            event: visibleEvents[0] || legacyEventSummary,
+            events: visibleEvents
         });
     } catch (error) {
         logger.error('Get booth error:', error);

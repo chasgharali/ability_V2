@@ -710,6 +710,7 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
 router.get('/booth/:boothId', authenticateToken, async (req, res) => {
     try {
         const { boothId } = req.params;
+        const { eventId } = req.query;
 
         // Check if user has permission to view this booth's queue
         if (!['Admin', 'Recruiter', 'GlobalSupport'].includes(req.user.role)) {
@@ -725,9 +726,21 @@ router.get('/booth/:boothId', authenticateToken, async (req, res) => {
             status: { $in: ['waiting', 'invited', 'in_meeting'] }
         };
 
-        // For Recruiters with assigned events, filter to only show job seekers from those events
-        // Admin and GlobalSupport can see all queue entries
-        if (req.user.role === 'Recruiter' && req.user.assignedEvents && req.user.assignedEvents.length > 0) {
+        if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+            // Recruiters may only request events they are assigned to
+            if (req.user.role === 'Recruiter' && req.user.assignedEvents && req.user.assignedEvents.length > 0) {
+                const assignedIds = req.user.assignedEvents.map(id => (id?._id || id).toString());
+                if (!assignedIds.includes(eventId.toString())) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'You are not assigned to this event'
+                    });
+                }
+            }
+            query.event = new mongoose.Types.ObjectId(eventId.toString());
+        } else if (req.user.role === 'Recruiter' && req.user.assignedEvents && req.user.assignedEvents.length > 0) {
+            // For Recruiters with assigned events, filter to only show job seekers from those events
+            // Admin and GlobalSupport can see all queue entries
             const eventIds = req.user.assignedEvents
                 .filter(id => id && mongoose.Types.ObjectId.isValid(id.toString()))
                 .map(id => new mongoose.Types.ObjectId(id.toString()));

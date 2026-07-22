@@ -49,13 +49,18 @@ export default function BoothQueueManagement() {
   const { user } = useAuth();
   const { getMessage } = useRoleMessages();
   const { socket } = useSocket();
-  const { booth: recruiterBooth, event: recruiterEvent } = useRecruiterBooth();
+  const { booth: recruiterBooth } = useRecruiterBooth();
   
   // Get role message from context
   const infoBannerMessage = getMessage('meeting-queue', 'info-banner') || '';
 
   const [booth, setBooth] = useState(null);
   const [event, setEvent] = useState(null);
+  // Visible (published/active, not ended) events the user can switch between
+  const [availableEvents, setAvailableEvents] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  // Ref mirror so socket handlers (registered once) always see the current selection
+  const selectedEventIdRef = useRef(null);
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
@@ -214,6 +219,10 @@ export default function BoothQueueManagement() {
   };
 
 
+  // Admin/GlobalSupport may still view the full booth queue when no event
+  // passes the visibility filter; recruiters may not.
+  const canViewUnscopedQueue = ['Admin', 'GlobalSupport'].includes(user?.role);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -227,37 +236,54 @@ export default function BoothQueueManagement() {
         return;
       }
 
-      const [boothRes, queueRes] = await Promise.all([
-        axios.get(`/api/booths/${targetBoothId}`),
-        boothQueueAPI.getBoothQueue(targetBoothId)
-      ]);
-
+      const boothRes = await axios.get(`/api/booths/${targetBoothId}`);
       const boothData = boothRes.data;
+
+      let eventIdForQueue = null;
 
       if (boothData && boothData.booth) {
         setBooth(boothData.booth);
 
-        // Set event data if it's included in the response, otherwise use from hook
-        if (boothData.event) {
+        const visibleEvents = Array.isArray(boothData.events) ? boothData.events : [];
+        setAvailableEvents(visibleEvents);
+
+        // Keep the current selection if it is still visible, otherwise default to the first visible event
+        const currentId = selectedEventIdRef.current;
+        const stillVisible = currentId && visibleEvents.some(e => String(e._id) === String(currentId));
+        const nextId = stillVisible
+          ? String(currentId)
+          : (visibleEvents[0] ? String(visibleEvents[0]._id) : null);
+        selectedEventIdRef.current = nextId;
+        setSelectedEventId(nextId);
+        eventIdForQueue = nextId;
+
+        const selected = visibleEvents.find(e => String(e._id) === String(nextId));
+        if (selected) {
+          setEvent(selected);
+        } else if (canViewUnscopedQueue && boothData.event) {
           setEvent(boothData.event);
-        } else if (recruiterEvent) {
-          setEvent(recruiterEvent);
+        } else {
+          setEvent(null);
         }
       } else {
         console.error('Failed to load booth:', boothData.message || boothData.error);
-        // Fallback to recruiter booth if API call fails
+        // Fallback to recruiter booth if API call fails (event intentionally not
+        // taken from the hook: it could be expired/unpublished)
         if (recruiterBooth) {
           setBooth(recruiterBooth);
-          if (recruiterEvent) {
-            setEvent(recruiterEvent);
-          }
         }
       }
 
-      if (queueRes.success) {
-        setQueue(queueRes.queue);
+      if (eventIdForQueue || canViewUnscopedQueue) {
+        const queueRes = await boothQueueAPI.getBoothQueue(targetBoothId, eventIdForQueue || undefined);
+        if (queueRes.success) {
+          setQueue(queueRes.queue);
+        } else {
+          console.error('Failed to load queue:', queueRes.message);
+        }
       } else {
-        console.error('Failed to load queue:', queueRes.message);
+        // No visible event for this user: don't show queue entries from hidden events
+        setQueue([]);
       }
 
     } catch (error) {
@@ -265,9 +291,6 @@ export default function BoothQueueManagement() {
       // Fallback to recruiter booth on error
       if (recruiterBooth) {
         setBooth(recruiterBooth);
-        if (recruiterEvent) {
-          setEvent(recruiterEvent);
-        }
       }
     } finally {
       setLoading(false);
@@ -304,6 +327,13 @@ export default function BoothQueueManagement() {
   // Helper to check if a queue entry's event is in user's assigned events
   // Returns true if user should see this queue entry (Admin/GlobalSupport see all, Recruiters see only their assigned events)
   const shouldProcessQueueEntry = (queueEntry) => {
+    // Ignore updates for events other than the one currently being viewed
+    const selectedId = selectedEventIdRef.current;
+    const entryEventId = queueEntry?.event?._id || queueEntry?.event;
+    if (selectedId && entryEventId && String(entryEventId) !== String(selectedId)) {
+      return false;
+    }
+
     // Admin and GlobalSupport can see all queue entries
     if (['Admin', 'GlobalSupport'].includes(user?.role)) {
       return true;
@@ -354,7 +384,12 @@ export default function BoothQueueManagement() {
         console.error('No booth ID available for loading queue data');
         return;
       }
-      const queueRes = await boothQueueAPI.getBoothQueue(targetBoothId);
+      const eventIdForQueue = selectedEventIdRef.current;
+      if (!eventIdForQueue && !canViewUnscopedQueue) {
+        setQueue([]);
+        return;
+      }
+      const queueRes = await boothQueueAPI.getBoothQueue(targetBoothId, eventIdForQueue || undefined);
       if (queueRes.success) {
         setQueue(queueRes.queue);
         setToast('Queue data refreshed successfully');
@@ -370,6 +405,16 @@ export default function BoothQueueManagement() {
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  // Switch the event whose queue is being viewed
+  const handleEventChange = (nextEventId) => {
+    const normalized = nextEventId ? String(nextEventId) : null;
+    selectedEventIdRef.current = normalized;
+    setSelectedEventId(normalized);
+    const selected = availableEvents.find(e => String(e._id) === String(normalized));
+    setEvent(selected || null);
+    loadQueueData();
   };
 
   const scrollToBottom = () => {
@@ -790,9 +835,11 @@ export default function BoothQueueManagement() {
   }
 
 
-  // Use booth/event from state if available, otherwise fallback to hook data
+  // Use booth from state if available, otherwise fallback to hook data.
+  // The event always comes from state so hidden (expired/unpublished) events
+  // from the hook are never displayed.
   const displayBooth = booth || recruiterBooth;
-  const displayEvent = event || recruiterEvent;
+  const displayEvent = event;
 
   return (
     <div className="dashboard">
@@ -900,10 +947,30 @@ export default function BoothQueueManagement() {
                       )}
                     </div>
                     <div className="queue-event-card-body">
-                      <p className="queue-event-card-kicker">Event</p>
-                      <h2 id="queue-event-card-title" className="queue-event-card-title">
-                        {displayEvent.name}
-                      </h2>
+                      <div className="queue-event-card-heading">
+                        <div>
+                          <p className="queue-event-card-kicker">Event</p>
+                          <h2 id="queue-event-card-title" className="queue-event-card-title">
+                            {displayEvent.name}
+                          </h2>
+                        </div>
+                        {availableEvents.length > 1 && (
+                          <div className="queue-event-switcher">
+                            <label htmlFor="queue-event-select">Switch event</label>
+                            <select
+                              id="queue-event-select"
+                              value={selectedEventId || ''}
+                              onChange={(e) => handleEventChange(e.target.value)}
+                            >
+                              {availableEvents.map((ev) => (
+                                <option key={ev._id} value={ev._id}>
+                                  {ev.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
                       <dl className="queue-event-card-meta">
                         {formatEventDateTime(displayEvent.start) && (
                           <div className="queue-event-card-meta-item">
@@ -954,7 +1021,9 @@ export default function BoothQueueManagement() {
                 ) : (
                   <div className="queue-event-card-inner queue-event-card-inner--empty">
                     <p className="queue-event-card-missing">
-                      Event information is not available for this booth.
+                      {availableEvents.length === 0
+                        ? 'No active event is assigned to this booth. Events that have ended or are not published are hidden.'
+                        : 'Event information is not available for this booth.'}
                     </p>
                   </div>
                 )}
