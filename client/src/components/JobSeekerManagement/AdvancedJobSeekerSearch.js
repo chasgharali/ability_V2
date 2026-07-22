@@ -69,7 +69,7 @@ function getApi(mode, orgId) {
   };
 }
 
-export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJobSeeker }) {
+export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJobSeeker, onViewMeetingRecord }) {
   const navigate = useNavigate();
   const api = getApi(mode, orgId);
   const [parseStatus, setParseStatus] = useState(null);
@@ -567,7 +567,13 @@ export default function AdvancedJobSeekerSearch({ orgId, mode = 'org', onViewJob
                   <MeetingRecordCard
                     key={result.meetingRecordId || result._id}
                     meetingRecord={result}
-                    onViewDetails={(meetingRecordId) => navigate(`/meeting-records/${meetingRecordId}`)}
+                    onViewDetails={(meetingRecordId) => {
+                      if (onViewMeetingRecord) {
+                        onViewMeetingRecord(meetingRecordId);
+                      } else {
+                        navigate(`/meeting-records/${meetingRecordId}`);
+                      }
+                    }}
                   />
                 )
                 : mode === 'interests'

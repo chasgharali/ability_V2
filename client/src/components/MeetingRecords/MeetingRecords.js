@@ -20,6 +20,7 @@ import { listEvents } from '../../services/events';
 import { listBooths } from '../../services/booths';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
 import JobSeekerProfileModal from '../common/JobSeekerProfileModal';
+import MeetingRecordDetailModal from './MeetingRecordDetailModal';
 import { jobSeekerAvatarCellTemplate } from '../common/JobSeekerAvatarThumbnail';
 import AdvancedJobSeekerSearch from '../JobSeekerManagement/AdvancedJobSeekerSearch';
 import JSZip from 'jszip';
@@ -125,6 +126,23 @@ export default function MeetingRecords() {
     const [showJobSeekerModal, setShowJobSeekerModal] = useState(false);
     const [selectedJobSeekerForModal, setSelectedJobSeekerForModal] = useState(null);
     const [selectedEventIdForModal, setSelectedEventIdForModal] = useState(null);
+
+    // Meeting Record Detail Modal state
+    const [showMeetingDetailModal, setShowMeetingDetailModal] = useState(false);
+    const [selectedMeetingRecordId, setSelectedMeetingRecordId] = useState(null);
+
+    const openMeetingDetailModal = useCallback((meetingRecordId) => {
+        if (!meetingRecordId) return;
+        window.setTimeout(() => {
+            setSelectedMeetingRecordId(meetingRecordId);
+            setShowMeetingDetailModal(true);
+        }, 0);
+    }, []);
+
+    const closeMeetingDetailModal = useCallback(() => {
+        setShowMeetingDetailModal(false);
+        setSelectedMeetingRecordId(null);
+    }, []);
 
     // Resume export state
     const [isExportingResumes, setIsExportingResumes] = useState(false);
@@ -1614,7 +1632,7 @@ export default function MeetingRecords() {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <ButtonComponent 
                     cssClass="e-primary e-small" 
-                    onClick={() => navigate(`/meeting-records/${row._id}`)}
+                    onClick={() => openMeetingDetailModal(row._id)}
                     aria-label="View meeting record details"
                 >
                     View Details
@@ -1646,7 +1664,7 @@ export default function MeetingRecords() {
                 ) : null}
             </div>
         );
-    }, [navigate, setSelectedJobSeekerForModal, setShowJobSeekerModal]);
+    }, [openMeetingDetailModal, setSelectedJobSeekerForModal, setShowJobSeekerModal]);
 
     if (loading || !user) {
         return (
@@ -1749,7 +1767,10 @@ export default function MeetingRecords() {
 
                         {supportsMeetingAiTab && activeTab === 'ai-search' && (
                             <div className="mr-ai-tab-content">
-                                <AdvancedJobSeekerSearch mode="meeting" />
+                                <AdvancedJobSeekerSearch
+                                    mode="meeting"
+                                    onViewMeetingRecord={openMeetingDetailModal}
+                                />
                             </div>
                         )}
 
@@ -2177,6 +2198,14 @@ export default function MeetingRecords() {
                     }}
                     jobSeeker={selectedJobSeekerForModal}
                     eventId={selectedEventIdForModal}
+                />
+            )}
+
+            {showMeetingDetailModal && selectedMeetingRecordId && (
+                <MeetingRecordDetailModal
+                    isOpen
+                    onClose={closeMeetingDetailModal}
+                    meetingRecordId={selectedMeetingRecordId}
                 />
             )}
 

@@ -1,0 +1,139 @@
+.meeting-record-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  animation: meetingRecordDetailFadeIn 0.2s ease-out;
+}
+
+@keyframes meetingRecordDetailFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.meeting-record-detail-modal {
+  background: white;
+  border-radius: 12px;
+  width: 95vw;
+  max-width: 1100px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: meetingRecordDetailSlideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes meetingRecordDetailSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.meeting-record-detail-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  flex-shrink: 0;
+  background: #f8fafc;
+  border-radius: 12px 12px 0 0;
+}
+
+.meeting-record-detail-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.meeting-record-detail-modal .modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.5rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.meeting-record-detail-modal .modal-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.meeting-record-detail-modal .modal-close:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.meeting-record-detail-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.meeting-record-detail-loading,
+.meeting-record-detail-error {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #6b7280;
+}
+
+.meeting-record-detail-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: meetingRecordDetailSpin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes meetingRecordDetailSpin {
+  to { transform: rotate(360deg); }
+}
+
+.meeting-record-detail-error .btn-back {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .meeting-record-detail-modal {
+    width: 100%;
+    max-height: 95vh;
+  }
+
+  .meeting-record-detail-modal .modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .meeting-record-detail-modal .modal-header h3 {
+    font-size: 1.15rem;
+  }
+
+  .meeting-record-detail-body {
+    padding: 1rem;
+  }
+}
