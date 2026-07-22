@@ -1886,27 +1886,23 @@ export default function BoothManagement() {
                   placeholder="Enter number of recruiters"
                 />
 
-                <div className="form-inline-row" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                  <div style={{ flex: '1 1 380px', minWidth: 260 }}>
-                    <DateTimePicker
-                      label="Expire Link Time"
-                      value={boothForm.expireLinkTime}
-                      onChange={(e) => setBoothField('expireLinkTime', e.target.value)}
-                      placeholder="Select expiry"
-                      disabled={!boothForm.enableExpiry}
-                      name="expireLinkTime"
-                      hint="Date and time after which the booth invite link stops working. Enable the checkbox to set an expiry."
-                    />
-                  </div>
-                  <div style={{ flex: '0 0 auto', paddingBottom: 6 }}>
-                    <Checkbox
-                      label="Enable Expiry Link Time"
-                      checked={boothForm.enableExpiry}
-                      onChange={(e) => setBoothField('enableExpiry', e.target.checked)}
-                      name="enableExpiry"
-                      hint="Turn on to make the invite link expire at the time set above. When off, the link never expires."
-                    />
-                  </div>
+                <div className="form-inline-row" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <Checkbox
+                    label="Enable Expiry Link Time"
+                    checked={boothForm.enableExpiry}
+                    onChange={(e) => setBoothField('enableExpiry', e.target.checked)}
+                    name="enableExpiry"
+                    hint="Turn on to make the invite link expire at the time set below. When off, the link never expires."
+                  />
+                  <DateTimePicker
+                    label="Expire Link Time"
+                    value={boothForm.expireLinkTime}
+                    onChange={(e) => setBoothField('expireLinkTime', e.target.value)}
+                    placeholder="Select expiry"
+                    disabled={!boothForm.enableExpiry}
+                    name="expireLinkTime"
+                    hint="Date and time after which the booth invite link stops working. Enable the checkbox above to set an expiry."
+                  />
                 </div>
 
                 <Input
