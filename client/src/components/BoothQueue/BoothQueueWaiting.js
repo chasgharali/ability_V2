@@ -18,6 +18,21 @@ import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
 import { hydrateStreamMediaUrls, hydrateStreamMediaElements } from '../../utils/videoContentProcessor';
 
+const RECRUITER_END_BANNER_MESSAGE =
+  'Recruiters are no longer available for live meetings. This booth is still open — you can leave a message for the recruiters.';
+
+/** True when recruiter end time has passed and booth is still within its close window. */
+function shouldShowRecruiterEndBanner(booth, now = new Date()) {
+  if (!booth?.recruiterEndTime) return false;
+  const recruiterEnd = new Date(booth.recruiterEndTime);
+  if (Number.isNaN(recruiterEnd.getTime()) || now < recruiterEnd) return false;
+  if (booth.closeTime) {
+    const close = new Date(booth.closeTime);
+    if (!Number.isNaN(close.getTime()) && now >= close) return false;
+  }
+  return true;
+}
+
 export default function BoothQueueWaiting() {
   const { eventSlug, boothId } = useParams();
   const navigate = useNavigate();
@@ -84,6 +99,7 @@ export default function BoothQueueWaiting() {
   const [selectedAudioId, setSelectedAudioId] = useState('');
   const [selectedVideoId, setSelectedVideoId] = useState('');
   const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [availabilityNow, setAvailabilityNow] = useState(() => new Date());
 
   const mediaRecorderRef = useRef(null);
   const recordingStreamRef = useRef(null);
@@ -94,6 +110,7 @@ export default function BoothQueueWaiting() {
   const isInCallRef = useRef(false); // Ref to avoid stale closure in interval callbacks
   const hasPendingInviteRef = useRef(false); // Skip restore when socket invite is already shown
   const callRestoreBlockedRef = useRef(false); // Stop retrying after a definitive 403
+  const recruiterEndBannerAnnouncedRef = useRef(false);
 
   // Keep ref in sync with state so interval callbacks always see the latest value
   useEffect(() => {
@@ -576,6 +593,27 @@ export default function BoothQueueWaiting() {
     // announces only the newest message.
     setAnnouncements([{ id: uniqueId, message }]);
   };
+
+  const showRecruiterEndBanner = shouldShowRecruiterEndBanner(booth, availabilityNow);
+
+  // Re-evaluate recruiter-end window so the banner appears without a full page refresh.
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setAvailabilityNow(new Date());
+    }, 15000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Announce once when the recruiter-end banner first becomes visible.
+  useEffect(() => {
+    if (showRecruiterEndBanner && !recruiterEndBannerAnnouncedRef.current) {
+      recruiterEndBannerAnnouncedRef.current = true;
+      announceToScreenReader(RECRUITER_END_BANNER_MESSAGE);
+    }
+    if (!showRecruiterEndBanner) {
+      recruiterEndBannerAnnouncedRef.current = false;
+    }
+  }, [showRecruiterEndBanner]);
 
   // Simple, reliable speech function using native SpeechSynthesis
   const speak = (text) => {
@@ -1563,6 +1601,25 @@ export default function BoothQueueWaiting() {
           </div>
 
           {/* Waiting message on top of placeholders */}
+          {showRecruiterEndBanner && (
+            <div
+              className="recruiter-end-banner"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <p className="recruiter-end-banner-text">{RECRUITER_END_BANNER_MESSAGE}</p>
+              <button
+                type="button"
+                className="recruiter-end-banner-cta"
+                onClick={() => { setShowLeaveMessageModal(true); setMessageType('audio'); }}
+                aria-label="Leave a message for recruiters"
+              >
+                Leave a message
+              </button>
+            </div>
+          )}
+
           {!isEmployerPageMode && (
             <div className="waiting-message-header waiting-message-centered" role="status" aria-live="polite">
               <h3>You are now in the queue.</h3>

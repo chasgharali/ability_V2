@@ -92,6 +92,19 @@ const boothSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    // Booth availability window (optional datetimes)
+    openTime: {
+        type: Date,
+        default: null
+    },
+    recruiterEndTime: {
+        type: Date,
+        default: null
+    },
+    closeTime: {
+        type: Date,
+        default: null
+    },
     customInviteSlug: {
         type: String,
         unique: true,
@@ -275,6 +288,9 @@ boothSchema.methods.getSummary = function () {
         recruitersCount: this.recruitersCount,
         companyPage: this.companyPage,
         expireLinkTime: this.expireLinkTime,
+        openTime: this.openTime || null,
+        recruiterEndTime: this.recruiterEndTime || null,
+        closeTime: this.closeTime || null,
         customInviteSlug: this.customInviteSlug,
         joinBoothButtonLink: this.joinBoothButtonLink || '',
         waitingAreaMode: this.waitingAreaMode || 'placeholders',
@@ -319,6 +335,9 @@ boothSchema.methods.getPublicInfo = function () {
         employerPageTemplateId: this.employerPageTemplateId || 'default-v1',
         isAvailableForQueue: this.isAvailableForQueue,
         expireLinkTime: this.expireLinkTime,
+        openTime: this.openTime || null,
+        recruiterEndTime: this.recruiterEndTime || null,
+        closeTime: this.closeTime || null,
         estimatedWaitTime: this.settings?.queueSettings?.estimatedWaitTime ?? 15,
         richSections: sections
             .filter(section => section.isActive)

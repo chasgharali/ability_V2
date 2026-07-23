@@ -10,6 +10,56 @@ const { toStablePublicImageUrl } = require('../utils/mediaUrl');
 const router = express.Router();
 const EMPLOYER_SECTION_KEYS = ['about', 'program', 'video', 'gallery', 'jobs', 'benefits', 'contact', 'social'];
 
+/** Nullable ISO8601 datetime body validator (same pattern as expireLinkTime on update). */
+const optionalNullableIsoDate = (field) =>
+    body(field)
+        .optional({ nullable: true, checkFalsy: true })
+        .custom((value) => {
+            if (value === null || value === undefined || value === '' || value === 'null' || String(value).toLowerCase() === 'null') {
+                return true;
+            }
+            const validator = require('validator');
+            return validator.isISO8601(String(value));
+        });
+
+/** Convert request body date values to Date or null. */
+function parseNullableDate(value) {
+    if (value === undefined) return undefined;
+    if (value === null || value === '' || value === 'null' || String(value).toLowerCase() === 'null') {
+        return null;
+    }
+    if (value instanceof Date) {
+        return isNaN(value.getTime()) ? null : value;
+    }
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * Validate openTime <= recruiterEndTime <= closeTime when multiple are set.
+ * Returns an error message string or null if valid.
+ */
+function validateAvailabilityOrder({ openTime, recruiterEndTime, closeTime }) {
+    const open = openTime ? new Date(openTime).getTime() : null;
+    const recruiterEnd = recruiterEndTime ? new Date(recruiterEndTime).getTime() : null;
+    const close = closeTime ? new Date(closeTime).getTime() : null;
+
+    if (open !== null && isNaN(open)) return 'Booth open time is invalid';
+    if (recruiterEnd !== null && isNaN(recruiterEnd)) return 'Recruiter end time is invalid';
+    if (close !== null && isNaN(close)) return 'Booth close time is invalid';
+
+    if (open !== null && recruiterEnd !== null && open > recruiterEnd) {
+        return 'Booth open time must be before or equal to recruiter end time';
+    }
+    if (recruiterEnd !== null && close !== null && recruiterEnd > close) {
+        return 'Recruiter end time must be before or equal to booth close time';
+    }
+    if (open !== null && close !== null && open > close) {
+        return 'Booth open time must be before or equal to booth close time';
+    }
+    return null;
+}
+
 const normalizeObjectId = (value) => {
     if (value === null || value === undefined) return '';
     if (typeof value === 'string') return value.trim();
@@ -409,6 +459,9 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
         .optional({ nullable: true, checkFalsy: true })
         .isISO8601()
         .toDate(),
+    optionalNullableIsoDate('openTime'),
+    optionalNullableIsoDate('recruiterEndTime'),
+    optionalNullableIsoDate('closeTime'),
     body('customInviteSlug')
         .optional({ nullable: true, checkFalsy: true })
         .isString()
@@ -443,6 +496,9 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             companyPage,
             recruitersCount,
             expireLinkTime,
+            openTime,
+            recruiterEndTime,
+            closeTime,
             customInviteSlug,
             joinBoothButtonLink,
             waitingAreaMode,
@@ -451,6 +507,18 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             richSections = [],
             eventIds = []
         } = req.body;
+
+        const parsedOpenTime = parseNullableDate(openTime) ?? null;
+        const parsedRecruiterEndTime = parseNullableDate(recruiterEndTime) ?? null;
+        const parsedCloseTime = parseNullableDate(closeTime) ?? null;
+        const availabilityError = validateAvailabilityOrder({
+            openTime: parsedOpenTime,
+            recruiterEndTime: parsedRecruiterEndTime,
+            closeTime: parsedCloseTime
+        });
+        if (availabilityError) {
+            return res.status(400).json({ error: 'Validation failed', message: availabilityError });
+        }
         const Event = require('../models/Event');
 
         const validEvents = [];
@@ -551,6 +619,9 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             companyPage: companyPage || '',
             recruitersCount: recruitersCount || 1,
             expireLinkTime: expireLinkTime || null,
+            openTime: parsedOpenTime,
+            recruiterEndTime: parsedRecruiterEndTime,
+            closeTime: parsedCloseTime,
             customInviteSlug: customInviteSlug || undefined,
             joinBoothButtonLink: joinBoothButtonLink || '',
             waitingAreaMode: waitingAreaMode || 'placeholders',
@@ -859,6 +930,9 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             const validator = require('validator');
             return validator.isISO8601(String(value));
         }),
+    optionalNullableIsoDate('openTime'),
+    optionalNullableIsoDate('recruiterEndTime'),
+    optionalNullableIsoDate('closeTime'),
     body('customInviteSlug')
         .optional()
         .isString()
@@ -918,6 +992,9 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             companyPage,
             recruitersCount,
             expireLinkTime,
+            openTime,
+            recruiterEndTime,
+            closeTime,
             customInviteSlug,
             joinBoothButtonLink,
             waitingAreaMode,
@@ -981,6 +1058,19 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
                 processedValue = isNaN(parsedDate.getTime()) ? null : parsedDate;
             }
             updateData.expireLinkTime = processedValue;
+        }
+
+        if (openTime !== undefined) updateData.openTime = parseNullableDate(openTime);
+        if (recruiterEndTime !== undefined) updateData.recruiterEndTime = parseNullableDate(recruiterEndTime);
+        if (closeTime !== undefined) updateData.closeTime = parseNullableDate(closeTime);
+
+        const availabilityError = validateAvailabilityOrder({
+            openTime: openTime !== undefined ? updateData.openTime : booth.openTime,
+            recruiterEndTime: recruiterEndTime !== undefined ? updateData.recruiterEndTime : booth.recruiterEndTime,
+            closeTime: closeTime !== undefined ? updateData.closeTime : booth.closeTime
+        });
+        if (availabilityError) {
+            return res.status(400).json({ error: 'Validation failed', message: availabilityError });
         }
         
         if (customInviteSlug !== undefined) {

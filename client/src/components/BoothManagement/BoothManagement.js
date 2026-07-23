@@ -161,6 +161,9 @@ export default function BoothManagement() {
     customInviteText: '',
     expireLinkTime: '',
     enableExpiry: false,
+    openTime: '',
+    recruiterEndTime: '',
+    closeTime: '',
     companyPage: '',
     joinBoothButtonLink: ''
   });
@@ -712,6 +715,32 @@ export default function BoothManagement() {
         }
       }
 
+      const toIsoOrNull = (localValue) => {
+        if (!localValue) return null;
+        try {
+          const date = new Date(localValue);
+          return isNaN(date.getTime()) ? null : date.toISOString();
+        } catch (e) {
+          return null;
+        }
+      };
+      const openTimeValue = toIsoOrNull(boothForm.openTime);
+      const recruiterEndTimeValue = toIsoOrNull(boothForm.recruiterEndTime);
+      const closeTimeValue = toIsoOrNull(boothForm.closeTime);
+
+      if (openTimeValue && recruiterEndTimeValue && new Date(openTimeValue) > new Date(recruiterEndTimeValue)) {
+        showToast('Booth open time must be before or equal to recruiter end time.', 'Error', 5000);
+        return;
+      }
+      if (recruiterEndTimeValue && closeTimeValue && new Date(recruiterEndTimeValue) > new Date(closeTimeValue)) {
+        showToast('Recruiter end time must be before or equal to booth close time.', 'Error', 5000);
+        return;
+      }
+      if (openTimeValue && closeTimeValue && new Date(openTimeValue) > new Date(closeTimeValue)) {
+        showToast('Booth open time must be before or equal to booth close time.', 'Error', 5000);
+        return;
+      }
+
       // Read the latest HTML directly from RTE content areas.
       // Image upload success handlers update the DOM img src attribute directly,
       // which may not trigger a React state update via the RTE change event.
@@ -745,6 +774,9 @@ export default function BoothManagement() {
         companyPage: boothForm.companyPage || undefined,
         recruitersCount: boothForm.recruitersCount || 1,
         expireLinkTime: expireLinkTimeValue,
+        openTime: openTimeValue,
+        recruiterEndTime: recruiterEndTimeValue,
+        closeTime: closeTimeValue,
         customInviteSlug: customInviteSlug || undefined,
         joinBoothButtonLink: boothForm.joinBoothButtonLink || '',
         waitingAreaMode: boothForm.waitingAreaMode || 'placeholders',
@@ -766,6 +798,9 @@ export default function BoothManagement() {
           companyPage: payload.companyPage,
           recruitersCount: payload.recruitersCount,
           expireLinkTime: expireLinkTimeValue,
+          openTime: openTimeValue,
+          recruiterEndTime: recruiterEndTimeValue,
+          closeTime: closeTimeValue,
           customInviteSlug: payload.customInviteSlug,
           joinBoothButtonLink: payload.joinBoothButtonLink,
           waitingAreaMode: payload.waitingAreaMode,
@@ -967,6 +1002,9 @@ export default function BoothManagement() {
           customUrl: b.customInviteSlug ? `${baseUrl}/queue/${b.customInviteSlug}` : '',
           recruitersCount: b.recruitersCount ?? 0,
           expireLinkTime: b.expireLinkTime || null,
+          openTime: b.openTime || null,
+          recruiterEndTime: b.recruiterEndTime || null,
+          closeTime: b.closeTime || null,
         };
       }));
     } catch (e) {
@@ -1165,6 +1203,9 @@ export default function BoothManagement() {
       recruitersCount: row.recruitersCount || 1,
       expireLinkTime: expireTime,
       enableExpiry: !!row.expireLinkTime,
+      openTime: formatDateTimeLocal(row.openTime),
+      recruiterEndTime: formatDateTimeLocal(row.recruiterEndTime),
+      closeTime: formatDateTimeLocal(row.closeTime),
     }));
     setBoothMode('create');
     setEditingBoothId(normalizeId(row.id));
@@ -1904,6 +1945,36 @@ export default function BoothManagement() {
                     hint="Date and time after which the booth invite link stops working. Enable the checkbox above to set an expiry."
                   />
                 </div>
+
+                <fieldset className="booth-availability-times" style={{ border: '1px solid #d0d5dd', borderRadius: '8px', padding: '1rem 1.25rem', margin: '0 0 1rem' }}>
+                  <legend style={{ padding: '0 0.35rem', fontWeight: 600 }}>Booth Availability times</legend>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <DateTimePicker
+                      label="Booth open time"
+                      value={boothForm.openTime}
+                      onChange={(e) => setBoothField('openTime', e.target.value)}
+                      placeholder="Select open time"
+                      name="openTime"
+                      hint="When the booth opens for the event day. Optional."
+                    />
+                    <DateTimePicker
+                      label="Recruiter end time"
+                      value={boothForm.recruiterEndTime}
+                      onChange={(e) => setBoothField('recruiterEndTime', e.target.value)}
+                      placeholder="Select recruiter end time"
+                      name="recruiterEndTime"
+                      hint="After this time, job seekers in the waiting area see a message that recruiters are no longer available for live meetings, but they can still leave a message while the booth is open."
+                    />
+                    <DateTimePicker
+                      label="Booth close time"
+                      value={boothForm.closeTime}
+                      onChange={(e) => setBoothField('closeTime', e.target.value)}
+                      placeholder="Select close time"
+                      name="closeTime"
+                      hint="When the booth availability window ends. Optional."
+                    />
+                  </div>
+                </fieldset>
 
                 <Input
                   label="Company Page"
