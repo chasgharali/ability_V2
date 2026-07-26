@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import { uploadAudioToS3, uploadVideoToS3 } from '../../services/uploads';
-import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
+import { FaVideo, FaCommentDots, FaSyncAlt, FaArrowLeft, FaSignOutAlt, FaBars, FaTimes, FaCalendarAlt, FaUsers, FaClock } from 'react-icons/fa';
 import VideoCall from '../VideoCall/VideoCall';
 import CallInviteModal from '../VideoCall/CallInviteModal';
 import DeviceTestModal from './DeviceTestModal';
@@ -38,6 +38,36 @@ function getRecruiterUnavailableMessage(booth) {
     ? booth.recruiterUnavailableMessage.trim()
     : '';
   return custom || RECRUITER_END_BANNER_MESSAGE;
+}
+
+function formatEventDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function formatBoothTime(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatTimeRange(startValue, endValue) {
+  const start = formatBoothTime(startValue);
+  const end = formatBoothTime(endValue);
+  if (start === '—' && end === '—') return '—';
+  if (start === '—') return end;
+  if (end === '—') return start;
+  return `${start} - ${end}`;
 }
 
 export default function BoothQueueWaiting() {
@@ -117,7 +147,7 @@ export default function BoothQueueWaiting() {
   const isInCallRef = useRef(false); // Ref to avoid stale closure in interval callbacks
   const hasPendingInviteRef = useRef(false); // Skip restore when socket invite is already shown
   const callRestoreBlockedRef = useRef(false); // Stop retrying after a definitive 403
-  const recruiterEndBannerAnnouncedRef = useRef(false);
+  const recruiterEndBannerAnnouncedRef = useRef(''); // last announced message text (empty = not announced)
 
   // Keep ref in sync with state so interval callbacks always see the latest value
   useEffect(() => {
@@ -604,23 +634,56 @@ export default function BoothQueueWaiting() {
   const showRecruiterEndBanner = shouldShowRecruiterEndBanner(booth, availabilityNow);
   const recruiterUnavailableMessage = getRecruiterUnavailableMessage(booth);
 
-  // Re-evaluate recruiter-end window so the banner appears without a full page refresh.
+  // Re-evaluate recruiter-end window and refresh booth fields (e.g. custom message)
+  // so admin edits appear without a full page refresh.
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setAvailabilityNow(new Date());
-    }, 15000);
-    return () => clearInterval(intervalId);
-  }, []);
+    if (!boothId) return undefined;
+    let cancelled = false;
 
-  // Announce once when the recruiter-end banner first becomes visible.
+    const extractBooth = (boothData) => {
+      if (boothData?.booth) return boothData.booth;
+      if (boothData?.success && boothData?.data) return boothData.data;
+      if (boothData?.name) return boothData;
+      return null;
+    };
+
+    const refreshBoothAvailability = async () => {
+      setAvailabilityNow(new Date());
+      try {
+        const boothRes = await axios.get(`/api/booths/${boothId}`);
+        const extractedBooth = extractBooth(boothRes.data);
+        if (!cancelled && extractedBooth) setBooth(extractedBooth);
+      } catch (_e) {
+        // Keep existing booth state if refresh fails
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshBoothAvailability();
+      }
+    };
+
+    const intervalId = setInterval(refreshBoothAvailability, 15000);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [boothId]);
+
+  // Announce when the recruiter-end banner appears, and again if the message text changes.
   useEffect(() => {
-    if (showRecruiterEndBanner && !recruiterEndBannerAnnouncedRef.current) {
-      recruiterEndBannerAnnouncedRef.current = true;
-      announceToScreenReader(recruiterUnavailableMessage);
-    }
     if (!showRecruiterEndBanner) {
-      recruiterEndBannerAnnouncedRef.current = false;
+      recruiterEndBannerAnnouncedRef.current = '';
+      return;
     }
+    if (recruiterEndBannerAnnouncedRef.current === recruiterUnavailableMessage) {
+      return;
+    }
+    recruiterEndBannerAnnouncedRef.current = recruiterUnavailableMessage;
+    announceToScreenReader(recruiterUnavailableMessage);
   }, [showRecruiterEndBanner, recruiterUnavailableMessage]);
 
   // Simple, reliable speech function using native SpeechSynthesis
@@ -1360,6 +1423,12 @@ export default function BoothQueueWaiting() {
   }
 
   const isEmployerPageMode = booth?.waitingAreaMode === 'employerPage';
+  const eventDateLabel = formatEventDate(event?.start);
+  const recruitersCountLabel = typeof booth?.recruitersCount === 'number'
+    ? String(booth.recruitersCount)
+    : (booth?.recruitersCount ? String(booth.recruitersCount) : '—');
+  const meetingHoursLabel = formatTimeRange(booth?.openTime, booth?.recruiterEndTime);
+  const afterHoursLabel = formatTimeRange(booth?.recruiterEndTime, booth?.closeTime);
   const isMobilePanelHidden = isMobile && !mobilePanelOpen;
   // While the full-screen video call overlay is active, the waiting-area page
   // (global header logout button, queue-options sidebar, etc.) is still in the
@@ -1607,6 +1676,42 @@ export default function BoothQueueWaiting() {
               </div>
             </div>
           </div>
+
+          {booth && (
+            <section
+              className="booth-availability-info-bar"
+              aria-label="Booth availability information"
+            >
+              <div className="booth-availability-info-item">
+                <FaCalendarAlt className="booth-availability-info-icon" aria-hidden="true" />
+                <div className="booth-availability-info-copy">
+                  <span className="booth-availability-info-label">Event date</span>
+                  <span className="booth-availability-info-value">{eventDateLabel}</span>
+                </div>
+              </div>
+              <div className="booth-availability-info-item">
+                <FaUsers className="booth-availability-info-icon" aria-hidden="true" />
+                <div className="booth-availability-info-copy">
+                  <span className="booth-availability-info-label">Available Recruiters</span>
+                  <span className="booth-availability-info-value">{recruitersCountLabel}</span>
+                </div>
+              </div>
+              <div className="booth-availability-info-item">
+                <FaClock className="booth-availability-info-icon" aria-hidden="true" />
+                <div className="booth-availability-info-copy">
+                  <span className="booth-availability-info-label">Meeting hours</span>
+                  <span className="booth-availability-info-value">{meetingHoursLabel}</span>
+                </div>
+              </div>
+              <div className="booth-availability-info-item">
+                <FaCommentDots className="booth-availability-info-icon" aria-hidden="true" />
+                <div className="booth-availability-info-copy">
+                  <span className="booth-availability-info-label">After hours messaging video, audio or text</span>
+                  <span className="booth-availability-info-value">{afterHoursLabel}</span>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Waiting message on top of placeholders */}
           {showRecruiterEndBanner && (

@@ -487,6 +487,7 @@ export const TextArea = ({
     error,
     disabled = false,
     rows = 4,
+    hint,
     id,
     name,
     className = '',
@@ -494,6 +495,8 @@ export const TextArea = ({
 }) => {
     const textareaId = id || `textarea-${name || Math.random().toString(36).substr(2, 9)}`;
     const errorId = error ? `${textareaId}-error` : undefined;
+    const hintId = hint ? `${textareaId}-hint` : undefined;
+    const describedBy = [errorId, hintId].filter(Boolean).join(' ') || undefined;
 
     return (
         <div className={`form-field ${className}`}>
@@ -514,9 +517,14 @@ export const TextArea = ({
                 rows={rows}
                 className={`form-textarea ${error ? 'form-textarea-error' : ''}`}
                 aria-invalid={error ? 'true' : 'false'}
-                aria-describedby={errorId}
+                aria-describedby={describedBy}
                 {...props}
             />
+            {hint && (
+                <p id={hintId} className="form-hint">
+                    {hint}
+                </p>
+            )}
             {error && (
                 <div id={errorId} className="form-error" role="alert">
                     {error}

@@ -732,6 +732,15 @@ export default function BoothManagement() {
       const recruiterEndTimeValue = toIsoOrNull(boothForm.recruiterEndTime);
       const closeTimeValue = toIsoOrNull(boothForm.closeTime);
 
+      // Prefer live DOM value so the latest textarea edits are saved even if a
+      // Syncfusion click races ahead of the last React state flush.
+      const messageFromDom = typeof document !== 'undefined'
+        ? document.querySelector('textarea[name="recruiterUnavailableMessage"]')?.value
+        : undefined;
+      const recruiterUnavailableMessageValue = (
+        (typeof messageFromDom === 'string' ? messageFromDom : boothForm.recruiterUnavailableMessage) || ''
+      ).trim() || DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE;
+
       if (openTimeValue && recruiterEndTimeValue && new Date(openTimeValue) > new Date(recruiterEndTimeValue)) {
         showToast('Booth open time must be before or equal to recruiter end time.', 'Error', 5000);
         return;
@@ -781,8 +790,7 @@ export default function BoothManagement() {
         openTime: openTimeValue,
         recruiterEndTime: recruiterEndTimeValue,
         closeTime: closeTimeValue,
-        recruiterUnavailableMessage: (boothForm.recruiterUnavailableMessage || '').trim()
-          || DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE,
+        recruiterUnavailableMessage: recruiterUnavailableMessageValue,
         customInviteSlug: customInviteSlug || undefined,
         joinBoothButtonLink: boothForm.joinBoothButtonLink || '',
         waitingAreaMode: boothForm.waitingAreaMode || 'placeholders',
@@ -1173,27 +1181,31 @@ export default function BoothManagement() {
 
   // Edit handler (basic prefill)
   const startEdit = (row) => {
-    const expireTime = formatDateTimeLocal(row.expireLinkTime);
+    // Prefer the full record from state — Syncfusion row props can omit fields
+    // that are not declared as grid columns.
+    const rowId = normalizeId(row?.id || row?._id);
+    const fullRow = booths.find((b) => normalizeId(b.id || b._id) === rowId) || row;
+    const expireTime = formatDateTimeLocal(fullRow.expireLinkTime);
     // Use the full eventIds array if available, otherwise fallback to eventIdRaw
     const eventIdsToUse = normalizeIdArray(
-      row.eventIds && row.eventIds.length > 0
-        ? row.eventIds
-        : (row.eventIdRaw ? [row.eventIdRaw] : boothForm.eventIds)
+      fullRow.eventIds && fullRow.eventIds.length > 0
+        ? fullRow.eventIds
+        : (fullRow.eventIdRaw ? [fullRow.eventIdRaw] : boothForm.eventIds)
     );
     
     setBoothForm(prev => ({
       ...prev,
-      boothName: row.name || '',
-      boothLogo: row.logo || '',
-      boothLogoAlt: row.logoAltText || '',
-      firstHtml: row.richSections?.[0]?.contentHtml || '',
-      secondHtml: row.richSections?.[1]?.contentHtml || '',
-      thirdHtml: row.richSections?.[2]?.contentHtml || '',
-      waitingAreaMode: row.waitingAreaMode || 'placeholders',
-      employerPageTemplateId: row.employerPageTemplateId || 'default-v1',
-      employerPageSections: Array.isArray(row.employerPageSections) && row.employerPageSections.length
+      boothName: fullRow.name || '',
+      boothLogo: fullRow.logo || '',
+      boothLogoAlt: fullRow.logoAltText || '',
+      firstHtml: fullRow.richSections?.[0]?.contentHtml || '',
+      secondHtml: fullRow.richSections?.[1]?.contentHtml || '',
+      thirdHtml: fullRow.richSections?.[2]?.contentHtml || '',
+      waitingAreaMode: fullRow.waitingAreaMode || 'placeholders',
+      employerPageTemplateId: fullRow.employerPageTemplateId || 'default-v1',
+      employerPageSections: Array.isArray(fullRow.employerPageSections) && fullRow.employerPageSections.length
         ? EMPLOYER_PAGE_SECTION_DEFS.map((section, index) => {
-          const saved = row.employerPageSections.find(s => s.key === section.key);
+          const saved = fullRow.employerPageSections.find(s => s.key === section.key);
           return {
             key: section.key,
             title: saved?.title || section.title,
@@ -1205,16 +1217,16 @@ export default function BoothManagement() {
         })
         : getDefaultEmployerPageSections(),
       eventIds: eventIdsToUse,
-      companyPage: row.companyPage || '',
-      customInviteText: row.customInviteSlug || '',
-      joinBoothButtonLink: row.joinBoothButtonLink || '',
-      recruitersCount: row.recruitersCount || 1,
+      companyPage: fullRow.companyPage || '',
+      customInviteText: fullRow.customInviteSlug || '',
+      joinBoothButtonLink: fullRow.joinBoothButtonLink || '',
+      recruitersCount: fullRow.recruitersCount || 1,
       expireLinkTime: expireTime,
-      enableExpiry: !!row.expireLinkTime,
-      openTime: formatDateTimeLocal(row.openTime),
-      recruiterEndTime: formatDateTimeLocal(row.recruiterEndTime),
-      closeTime: formatDateTimeLocal(row.closeTime),
-      recruiterUnavailableMessage: row.recruiterUnavailableMessage || DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE,
+      enableExpiry: !!fullRow.expireLinkTime,
+      openTime: formatDateTimeLocal(fullRow.openTime),
+      recruiterEndTime: formatDateTimeLocal(fullRow.recruiterEndTime),
+      closeTime: formatDateTimeLocal(fullRow.closeTime),
+      recruiterUnavailableMessage: fullRow.recruiterUnavailableMessage || DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE,
     }));
     setBoothMode('create');
     setEditingBoothId(normalizeId(row.id));

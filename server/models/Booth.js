@@ -297,7 +297,8 @@ boothSchema.methods.getSummary = function () {
         openTime: this.openTime || null,
         recruiterEndTime: this.recruiterEndTime || null,
         closeTime: this.closeTime || null,
-        recruiterUnavailableMessage: this.recruiterUnavailableMessage || '',
+        recruiterUnavailableMessage: (this.recruiterUnavailableMessage && String(this.recruiterUnavailableMessage).trim())
+            || 'Recruiters are no longer available for live meetings. This booth is still open — you can leave a message for the recruiters.',
         customInviteSlug: this.customInviteSlug,
         joinBoothButtonLink: this.joinBoothButtonLink || '',
         waitingAreaMode: this.waitingAreaMode || 'placeholders',
@@ -345,7 +346,8 @@ boothSchema.methods.getPublicInfo = function () {
         openTime: this.openTime || null,
         recruiterEndTime: this.recruiterEndTime || null,
         closeTime: this.closeTime || null,
-        recruiterUnavailableMessage: this.recruiterUnavailableMessage || '',
+        recruiterUnavailableMessage: (this.recruiterUnavailableMessage && String(this.recruiterUnavailableMessage).trim())
+            || 'Recruiters are no longer available for live meetings. This booth is still open — you can leave a message for the recruiters.',
         estimatedWaitTime: this.settings?.queueSettings?.estimatedWaitTime ?? 15,
         richSections: sections
             .filter(section => section.isActive)
