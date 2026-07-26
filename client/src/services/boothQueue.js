@@ -103,5 +103,14 @@ export const boothQueueAPI = {
       { headers: authHeaders() }
     );
     return res.data;
+  },
+
+  // Broadcast message to all active job seekers in the booth queue
+  async broadcastMessage(boothId, content, eventId) {
+    const res = await axios.post('/api/booth-queue/broadcast-message',
+      { boothId, content, eventId: eventId || undefined },
+      { headers: authHeaders() }
+    );
+    return res.data;
   }
 };

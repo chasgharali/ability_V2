@@ -12,7 +12,7 @@ module.exports = function setupProxy(app) {
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "connect-src 'self' http://localhost:5000 ws://localhost:5000 ws://localhost:3000 http://localhost:3000 https: wss: ws:",
+    "connect-src 'self' http://localhost:5050 ws://localhost:5050 http://127.0.0.1:5050 ws://127.0.0.1:5050 ws://localhost:3000 http://localhost:3000 https: wss: ws:",
     "img-src 'self' data: blob: https:",
     "media-src 'self' blob: https:",
     "font-src 'self' https://fonts.gstatic.com data:",

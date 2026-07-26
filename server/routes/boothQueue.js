@@ -11,6 +11,45 @@ const { authenticateToken } = require('../middleware/auth');
 const { getIO } = require('../socket/socketHandler');
 const logger = require('../utils/logger');
 
+// Emit recruiter→job-seeker queue message to user rooms and booth room
+const emitMessageToJobSeeker = (io, queueEntry, message) => {
+    const socketIo = io || getIO();
+    if (!socketIo || !queueEntry?.jobSeeker) return;
+
+    const jobSeekerId = (queueEntry.jobSeeker._id || queueEntry.jobSeeker).toString();
+    const boothId = (queueEntry.booth._id || queueEntry.booth).toString();
+    const queueId = queueEntry._id.toString();
+    const payload = {
+        queueId,
+        boothId,
+        jobSeekerId,
+        message
+    };
+
+    const userColonRoom = `user:${jobSeekerId}`;
+    const userUnderscoreRoom = `user_${jobSeekerId}`;
+    const boothRoom = `booth_${boothId}`;
+
+    socketIo.to(userColonRoom).emit('new-message-from-recruiter', payload);
+    socketIo.to(userUnderscoreRoom).emit('new-message-from-recruiter', payload);
+    socketIo.to(boothRoom).emit('new-message-from-recruiter', payload);
+
+    const rooms = socketIo.sockets.adapter.rooms;
+    const userColonSize = rooms.get(userColonRoom)?.size || 0;
+    const userUnderscoreSize = rooms.get(userUnderscoreRoom)?.size || 0;
+    const boothSize = rooms.get(boothRoom)?.size || 0;
+    logger.info('Emitted new-message-from-recruiter', {
+        queueId,
+        boothId,
+        jobSeekerId,
+        rooms: {
+            [userColonRoom]: userColonSize,
+            [userUnderscoreRoom]: userUnderscoreSize,
+            [boothRoom]: boothSize
+        }
+    });
+};
+
 // Helper function to get job seekers currently in active calls for a booth
 const getJobSeekersInActiveCalls = async (boothId) => {
     const boothObjectId = mongoose.Types.ObjectId.isValid(boothId)
@@ -897,16 +936,20 @@ router.post('/message-to-jobseeker/:queueId', authenticateToken, async (req, res
         await queueEntry.addMessage({ type: 'text', content, sender: 'recruiter' });
         await queueEntry.updateActivity();
 
-        // Emit socket event to job seeker
-        if (req.app.get('io') && queueEntry.jobSeeker && queueEntry.jobSeeker._id) {
-            // Use user:userId format to match socket handler room joining
-            const jobSeekerIdStr = queueEntry.jobSeeker._id.toString();
-            req.app.get('io').to(`user:${jobSeekerIdStr}`).emit('new-message-from-recruiter', {
-                queueId: queueEntry._id,
-                boothId: queueEntry.booth,
-                message: { type: 'text', content, sender: 'recruiter', createdAt: new Date() }
-            });
-        }
+        const savedMessage = queueEntry.messages[queueEntry.messages.length - 1];
+        const messagePayload = savedMessage
+            ? {
+                _id: savedMessage._id,
+                type: savedMessage.type,
+                content: savedMessage.content,
+                sender: savedMessage.sender,
+                createdAt: savedMessage.createdAt,
+                isRead: savedMessage.isRead
+            }
+            : { type: 'text', content, sender: 'recruiter', createdAt: new Date() };
+
+        // Emit socket event to job seeker (both room formats)
+        emitMessageToJobSeeker(req.app.get('io') || getIO(), queueEntry, messagePayload);
 
         res.json({
             success: true,
@@ -918,6 +961,108 @@ router.post('/message-to-jobseeker/:queueId', authenticateToken, async (req, res
         res.status(500).json({
             success: false,
             message: 'Failed to send message',
+            error: error.message
+        });
+    }
+});
+
+// Broadcast message from recruiter to all active job seekers in the booth queue
+router.post('/broadcast-message', authenticateToken, async (req, res) => {
+    try {
+        const { boothId, content, eventId } = req.body;
+
+        if (!['Admin', 'Recruiter', 'GlobalSupport'].includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Insufficient permissions'
+            });
+        }
+
+        if (!boothId || !mongoose.Types.ObjectId.isValid(boothId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid booth ID is required'
+            });
+        }
+
+        const trimmedContent = typeof content === 'string' ? content.trim() : '';
+        if (!trimmedContent) {
+            return res.status(400).json({
+                success: false,
+                message: 'Message content is required'
+            });
+        }
+
+        // Same active-queue + event scoping as GET /booth/:boothId
+        let query = {
+            booth: boothId,
+            status: { $in: ['waiting', 'invited', 'in_meeting'] }
+        };
+
+        if (eventId && mongoose.Types.ObjectId.isValid(eventId)) {
+            if (req.user.role === 'Recruiter' && req.user.assignedEvents && req.user.assignedEvents.length > 0) {
+                const assignedIds = req.user.assignedEvents.map(id => (id?._id || id).toString());
+                if (!assignedIds.includes(eventId.toString())) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'You are not assigned to this event'
+                    });
+                }
+            }
+            query.event = new mongoose.Types.ObjectId(eventId.toString());
+        } else if (req.user.role === 'Recruiter' && req.user.assignedEvents && req.user.assignedEvents.length > 0) {
+            const eventIds = req.user.assignedEvents
+                .filter(id => id && mongoose.Types.ObjectId.isValid(id.toString()))
+                .map(id => new mongoose.Types.ObjectId(id.toString()));
+
+            if (eventIds.length > 0) {
+                query.event = { $in: eventIds };
+            }
+        }
+
+        const queueEntries = await BoothQueue.find(query)
+            .populate('jobSeeker', 'name email');
+
+        if (queueEntries.length === 0) {
+            return res.json({
+                success: true,
+                recipientCount: 0,
+                message: 'No job seekers currently in the queue'
+            });
+        }
+
+        const io = req.app.get('io') || getIO();
+
+        for (const queueEntry of queueEntries) {
+            await queueEntry.addMessage({ type: 'text', content: trimmedContent, sender: 'recruiter' });
+            await queueEntry.updateActivity();
+
+            const savedMessage = queueEntry.messages[queueEntry.messages.length - 1];
+            const messagePayload = savedMessage
+                ? {
+                    _id: savedMessage._id,
+                    type: savedMessage.type,
+                    content: savedMessage.content,
+                    sender: savedMessage.sender,
+                    createdAt: savedMessage.createdAt,
+                    isRead: savedMessage.isRead
+                }
+                : { type: 'text', content: trimmedContent, sender: 'recruiter', createdAt: new Date() };
+
+            emitMessageToJobSeeker(io, queueEntry, messagePayload);
+        }
+
+        res.json({
+            success: true,
+            recipientCount: queueEntries.length,
+            message: `Message sent to ${queueEntries.length} job seeker${queueEntries.length === 1 ? '' : 's'}`
+        });
+
+    } catch (error) {
+        console.error('Error broadcasting message to queue:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to broadcast message',
             error: error.message
         });
     }

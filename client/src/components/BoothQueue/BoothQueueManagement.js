@@ -8,7 +8,7 @@ import { useSocket } from '../../contexts/SocketContext';
 import { boothQueueAPI } from '../../services/boothQueue';
 import videoCallService from '../../services/videoCall';
 import VideoCall from '../VideoCall/VideoCall';
-import { FaRedoAlt, FaPlug, FaVideo, FaLinkedin } from 'react-icons/fa';
+import { FaRedoAlt, FaPlug, FaVideo, FaLinkedin, FaBullhorn } from 'react-icons/fa';
 import { getUser } from '../../services/users';
 import CallInviteModal from '../VideoCall/CallInviteModal';
 import DeviceTestModal from './DeviceTestModal';
@@ -77,6 +77,9 @@ export default function BoothQueueManagement() {
   const [currentChatEntry, setCurrentChatEntry] = useState(null);
   const [messageToSend, setMessageToSend] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
   const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
 
   // Video call state
@@ -535,6 +538,37 @@ export default function BoothQueueManagement() {
     }
   };
 
+  const closeBroadcastModal = () => {
+    setShowBroadcastModal(false);
+    setBroadcastMessage('');
+  };
+
+  const handleBroadcastMessage = async () => {
+    const targetBoothId = boothId || recruiterBooth?._id;
+    if (!broadcastMessage.trim() || !targetBoothId || queue.length === 0) return;
+
+    try {
+      setIsBroadcasting(true);
+      const response = await boothQueueAPI.broadcastMessage(
+        targetBoothId,
+        broadcastMessage.trim(),
+        selectedEventId || undefined
+      );
+      const count = response.recipientCount ?? 0;
+      if (count === 0) {
+        showInfo(response.message || 'No job seekers currently in the queue');
+      } else {
+        showSuccess(response.message || `Message sent to ${count} job seeker${count === 1 ? '' : 's'}`);
+      }
+      closeBroadcastModal();
+    } catch (error) {
+      console.error('Error broadcasting message:', error);
+      showError(error.response?.data?.message || 'Failed to broadcast message');
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
+
   const playNotificationSound = () => {
     try {
       // Create a simple notification beep using Web Audio API
@@ -919,6 +953,16 @@ export default function BoothQueueManagement() {
                   >
                     <FaVideo size={16} aria-hidden="true" /> Test Device
                   </button>
+                <button
+                    onClick={() => setShowBroadcastModal(true)}
+                    className="broadcast-message-btn"
+                    title="Broadcast message to all job seekers in queue"
+                    aria-label="Broadcast message to all job seekers in queue"
+                    disabled={queue.length === 0}
+                    type="button"
+                  >
+                    <FaBullhorn size={16} aria-hidden="true" /> Broadcast Message
+                  </button>
                 </div>
               </div>
             </div>
@@ -1278,6 +1322,56 @@ export default function BoothQueueManagement() {
                   type="button"
                 >
                   {isSendingMessage ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Broadcast Message Modal */}
+      {showBroadcastModal && (
+        <div className="modal-overlay">
+          <div className="modal-content broadcast-message-modal" role="dialog" aria-modal="true" aria-labelledby="broadcast-message-title">
+            <div className="modal-header">
+              <h3 id="broadcast-message-title">Broadcast Message</h3>
+              <button
+                className="modal-close"
+                onClick={closeBroadcastModal}
+                aria-label="Close broadcast message dialog"
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            <div className="broadcast-message-body">
+              <p className="broadcast-recipient-note">
+                This message will be sent to {queue.length} job seeker{queue.length === 1 ? '' : 's'} currently in the queue.
+              </p>
+              <textarea
+                value={broadcastMessage}
+                onChange={(e) => setBroadcastMessage(e.target.value)}
+                placeholder="Type a message for everyone in the queue..."
+                rows={4}
+                aria-label="Broadcast message content"
+                disabled={isBroadcasting}
+              />
+              <div className="broadcast-message-actions">
+                <button
+                  type="button"
+                  className="btn-cancel-broadcast"
+                  onClick={closeBroadcastModal}
+                  disabled={isBroadcasting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-send-broadcast"
+                  onClick={handleBroadcastMessage}
+                  disabled={!broadcastMessage.trim() || queue.length === 0 || isBroadcasting}
+                >
+                  {isBroadcasting ? 'Sending...' : 'Send to All'}
                 </button>
               </div>
             </div>

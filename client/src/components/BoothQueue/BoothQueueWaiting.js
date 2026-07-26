@@ -148,11 +148,33 @@ export default function BoothQueueWaiting() {
   const hasPendingInviteRef = useRef(false); // Skip restore when socket invite is already shown
   const callRestoreBlockedRef = useRef(false); // Stop retrying after a definitive 403
   const recruiterEndBannerAnnouncedRef = useRef(''); // last announced message text (empty = not announced)
+  const queueEntryIdRef = useRef(null);
+  const boothIdRef = useRef(boothId);
+  const showTextMessagingModalRef = useRef(false);
+  const recentIncomingMessageKeysRef = useRef(new Set());
+  const userIdRef = useRef(user?._id ? String(user._id) : '');
+  const handleNewMessageFromRecruiterRef = useRef(null);
 
   // Keep ref in sync with state so interval callbacks always see the latest value
   useEffect(() => {
     isInCallRef.current = isInCall;
   }, [isInCall]);
+
+  useEffect(() => {
+    queueEntryIdRef.current = queueEntryId;
+  }, [queueEntryId]);
+
+  useEffect(() => {
+    boothIdRef.current = boothId;
+  }, [boothId]);
+
+  useEffect(() => {
+    showTextMessagingModalRef.current = showTextMessagingModal;
+  }, [showTextMessagingModal]);
+
+  useEffect(() => {
+    userIdRef.current = user?._id ? String(user._id) : '';
+  }, [user?._id]);
 
   useEffect(() => {
     hasPendingInviteRef.current = !!(showInviteModal || pendingInvitation || callInvitation);
@@ -241,7 +263,7 @@ export default function BoothQueueWaiting() {
 
     return () => {
       if (socket) {
-        socket.emit('leave-booth-queue', { boothId, userId: user._id });
+        socket.emit('leave-booth-queue', { boothId, userId: user?._id ? String(user._id) : undefined });
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
@@ -277,19 +299,26 @@ export default function BoothQueueWaiting() {
     };
 
     socket.on('connect', handleConnect);
+    if (socket.connected || socketConnected) {
+      joinSocketRoom();
+    }
     return () => {
       socket.off('connect', handleConnect);
     };
-  }, [socket, boothId, user?._id]);
+  }, [socket, socketConnected, boothId, user?._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!socket || !socketConnected) return;
+
+    const onNewMessageFromRecruiter = (data) => {
+      handleNewMessageFromRecruiterRef.current?.(data);
+    };
 
     socket.on('queue-position-updated', handleQueueUpdate);
     socket.on('queue-serving-updated', handleServingUpdate);
     socket.on('queue-invited-to-meeting', handleMeetingInvite);
     socket.on('call_invitation', handleCallInvitation);
-    socket.on('new-message-from-recruiter', handleNewMessageFromRecruiter);
+    socket.on('new-message-from-recruiter', onNewMessageFromRecruiter);
     // Detect server-side queue leaves (e.g., when recruiter ends call)
     socket.on('queue-updated', handleQueueUpdated);
     socket.on('queue_left', handleQueueUpdated);
@@ -299,23 +328,23 @@ export default function BoothQueueWaiting() {
       socket.off('queue-serving-updated', handleServingUpdate);
       socket.off('queue-invited-to-meeting', handleMeetingInvite);
       socket.off('call_invitation', handleCallInvitation);
-      socket.off('new-message-from-recruiter', handleNewMessageFromRecruiter);
+      socket.off('new-message-from-recruiter', onNewMessageFromRecruiter);
       socket.off('queue-updated', handleQueueUpdated);
       socket.off('queue_left', handleQueueUpdated);
     };
   // socketConnected is a React state from SocketContext (reliable), unlike socket?.connected (mutable property)
-  }, [socketConnected]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket, socketConnected]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Heartbeat to keep connection alive and detect if user is still active
   useEffect(() => {
     const heartbeatInterval = setInterval(() => {
-      if (socket && socket.connected) {
-        socket.emit('queue-heartbeat', { boothId, userId: user._id });
+      if (socket && socket.connected && user?._id) {
+        socket.emit('queue-heartbeat', { boothId, userId: String(user._id) });
       }
     }, 120000); // Send heartbeat every 2 minutes (less aggressive)
 
     return () => clearInterval(heartbeatInterval);
-  }, [socket, boothId, user._id]);
+  }, [socket, boothId, user?._id]);
 
   // Periodic refresh of queue status to keep numbers updated
   useEffect(() => {
@@ -337,6 +366,10 @@ export default function BoothQueueWaiting() {
           setPeopleAhead(queueData.peopleAhead ?? 0);
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
+          // Keep unread badge in sync when messages modal is closed
+          if (!showTextMessagingModalRef.current) {
+            setUnreadCount(queueData.unreadMessages || 0);
+          }
           try {
             localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -456,10 +489,10 @@ export default function BoothQueueWaiting() {
   };
 
   const joinSocketRoom = () => {
-    if (socket && boothId && user) {
+    if (socket && boothId && user?._id) {
       socket.emit('join-booth-queue', {
         boothId,
-        userId: user._id,
+        userId: String(user._id),
         eventSlug
       });
     }
@@ -480,6 +513,10 @@ export default function BoothQueueWaiting() {
         setWaitingCount(queueData.waitingCount ?? 0);
         setQueueToken(queueData.token);
         setQueueEntryId(queueData.queueEntry?._id);
+        // Keep unread badge in sync when messages modal is closed
+        if (!showTextMessagingModalRef.current) {
+          setUnreadCount(queueData.unreadMessages || 0);
+        }
         try {
           localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
           localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -863,60 +900,82 @@ export default function BoothQueueWaiting() {
   };
 
   const handleNewMessageFromRecruiter = (data) => {
-    if (data.queueId === queueEntryId || data.boothId === boothId) {
-      playNotificationSound();
-      showInfo('New message from recruiter', 0);
+    const currentQueueEntryId = queueEntryIdRef.current;
+    const currentBoothId = boothIdRef.current;
+    const currentUserId = userIdRef.current;
+    const incomingQueueId = data?.queueId != null ? String(data.queueId) : '';
+    const incomingBoothId = data?.boothId != null ? String(data.boothId) : '';
+    const incomingJobSeekerId = data?.jobSeekerId != null ? String(data.jobSeekerId) : '';
+    const matchesQueue =
+      currentQueueEntryId && incomingQueueId && incomingQueueId === String(currentQueueEntryId);
+    const matchesBoothAndUser =
+      currentBoothId &&
+      incomingBoothId &&
+      incomingBoothId === String(currentBoothId) &&
+      currentUserId &&
+      incomingJobSeekerId &&
+      incomingJobSeekerId === currentUserId;
 
-      setMessages(prev => {
-        const incomingCreatedAt = data.message.createdAt instanceof Date 
-          ? data.message.createdAt.getTime() 
-          : new Date(data.message.createdAt).getTime();
-        
-        const isDuplicate = prev.some(msg => {
-          if (msg._id && data.message._id) {
-            return msg._id.toString() === data.message._id.toString();
-          }
-          
-          const msgCreatedAt = msg.createdAt instanceof Date 
-            ? msg.createdAt.getTime() 
-            : new Date(msg.createdAt).getTime();
-          
-          const timeDiff = Math.abs(msgCreatedAt - incomingCreatedAt);
-          return msg.content === data.message.content && 
-                 msg.sender === data.message.sender &&
-                 timeDiff < 5000;
-        });
-        
-        if (isDuplicate) {
-          return prev;
+    if ((!matchesQueue && !matchesBoothAndUser) || !data?.message) {
+      return;
+    }
+
+    const incomingCreatedAt = data.message.createdAt instanceof Date
+      ? data.message.createdAt.getTime()
+      : new Date(data.message.createdAt).getTime();
+    const dedupeKey = data.message._id
+      ? `id:${data.message._id}`
+      : `content:${data.message.sender}|${data.message.content}|${incomingCreatedAt}`;
+
+    if (recentIncomingMessageKeysRef.current.has(dedupeKey)) {
+      return;
+    }
+    recentIncomingMessageKeysRef.current.add(dedupeKey);
+    setTimeout(() => {
+      recentIncomingMessageKeysRef.current.delete(dedupeKey);
+    }, 5000);
+
+    playNotificationSound();
+    showInfo('New message from recruiter', 0);
+
+    setMessages(prev => {
+      const isDuplicate = prev.some(msg => {
+        if (msg._id && data.message._id) {
+          return msg._id.toString() === data.message._id.toString();
         }
-        
-        return [...prev, data.message];
-      });
-      
-      // Announce the incoming recruiter message to screen reader users as a single
-      // assertive announcement: "New message from recruiter: <content>".
-      // (The .messages-list log is intentionally not a live region so it doesn't
-      // re-read previous messages on each update.)
-      //
-      // We deliberately keep the prefix AND content together in one announcement
-      // rather than relying on the polite toast for the prefix: an assertive update
-      // interrupts a pending polite one, which caused the toast's "New message from
-      // recruiter" to be dropped. Bundling both guarantees the user hears the full
-      // phrase, then the message text.
-      const incomingText =
-        data.message.type === 'text' && data.message.content
-          ? `New message from recruiter: ${data.message.content}`
-          : 'New message from recruiter';
-      announceToScreenReader(incomingText);
 
-      if (showTextMessagingModal) {
-        setTimeout(scrollToBottom, 100);
-      } else {
-        setUnreadCount(prev => prev + 1);
+        const msgCreatedAt = msg.createdAt instanceof Date
+          ? msg.createdAt.getTime()
+          : new Date(msg.createdAt).getTime();
+
+        const timeDiff = Math.abs(msgCreatedAt - incomingCreatedAt);
+        return msg.content === data.message.content &&
+          msg.sender === data.message.sender &&
+          timeDiff < 5000;
+      });
+
+      if (isDuplicate) {
+        return prev;
       }
+
+      return [...prev, data.message];
+    });
+
+    // Announce the incoming recruiter message to screen reader users as a single
+    // assertive announcement: "New message from recruiter: <content>".
+    const incomingText =
+      data.message.type === 'text' && data.message.content
+        ? `New message from recruiter: ${data.message.content}`
+        : 'New message from recruiter';
+    announceToScreenReader(incomingText);
+
+    if (showTextMessagingModalRef.current) {
+      setTimeout(scrollToBottom, 100);
+    } else {
+      setUnreadCount(prev => prev + 1);
     }
   };
+  handleNewMessageFromRecruiterRef.current = handleNewMessageFromRecruiter;
 
   const handleLeaveQueue = async () => {
     if (window.confirm('Are you sure you want to leave the queue?')) {
@@ -935,7 +994,7 @@ export default function BoothQueueWaiting() {
     // Return to event detail and explicitly leave queue for this booth.
     hasLeftQueueRef.current = true;
     if (socket) {
-      socket.emit('leave-booth-queue', { boothId, userId: user._id });
+      socket.emit('leave-booth-queue', { boothId, userId: user?._id ? String(user._id) : undefined });
     }
     try {
       await boothQueueAPI.leaveQueue(boothId);
@@ -1588,7 +1647,13 @@ export default function BoothQueueWaiting() {
               aria-label="View and send text messages to the recruiter"
               type="button"
             >
-              <FaCommentDots aria-hidden="true" />Send Messages {unreadCount > 0 && `(${unreadCount})`}
+              <FaCommentDots aria-hidden="true" />
+              Send Messages
+              {unreadCount > 0 && (
+                <span className="unread-badge" aria-label={`${unreadCount} unread messages`}>
+                  {unreadCount}
+                </span>
+              )}
             </button>
 
             <button

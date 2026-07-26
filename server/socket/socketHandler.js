@@ -759,42 +759,45 @@ const socketHandler = (io) => {
 
         /**
          * Join booth queue room for real-time updates
+         * Use authenticated socket.userId (ignore client-provided userId mismatches)
          */
         socket.on('join-booth-queue', async (data) => {
-            const { boothId, userId, eventSlug } = data;
-            if (boothId && userId === socket.userId) {
-                socket.join(`booth_${boothId}`);
-                socket.join(`user_${userId}`);
-                socket.currentBoothId = boothId;
-
-                // Update activity timestamp for job seekers
-                if (socket.user.role === 'JobSeeker') {
-                    try {
-                        const BoothQueue = require('../models/BoothQueue');
-                        const queueEntry = await BoothQueue.findOne({
-                            jobSeeker: socket.userId,
-                            booth: boothId,
-                            status: { $in: ['waiting', 'invited'] }
-                        });
-
-                        if (queueEntry) {
-                            await queueEntry.updateActivity();
-                        }
-                    } catch (error) {
-                        logger.error('Error updating queue activity:', error);
-                    }
-                }
-
-                logger.info(`User ${socket.user.email} joined booth queue room ${boothId}`);
+            const { boothId } = data || {};
+            if (!boothId || !socket.userId) {
+                return;
             }
+
+            socket.join(`booth_${boothId}`);
+            socket.join(`user_${socket.userId}`);
+            socket.currentBoothId = boothId;
+
+            // Update activity timestamp for job seekers
+            if (socket.user.role === 'JobSeeker') {
+                try {
+                    const BoothQueue = require('../models/BoothQueue');
+                    const queueEntry = await BoothQueue.findOne({
+                        jobSeeker: socket.userId,
+                        booth: boothId,
+                        status: { $in: ['waiting', 'invited'] }
+                    });
+
+                    if (queueEntry) {
+                        await queueEntry.updateActivity();
+                    }
+                } catch (error) {
+                    logger.error('Error updating queue activity:', error);
+                }
+            }
+
+            logger.info(`User ${socket.user.email} joined booth queue room ${boothId}`);
         });
 
         /**
          * Leave booth queue room
          */
         socket.on('leave-booth-queue', (data) => {
-            const { boothId, userId } = data;
-            if (boothId && userId === socket.userId) {
+            const { boothId } = data || {};
+            if (boothId && socket.userId) {
                 socket.leave(`booth_${boothId}`);
                 if (socket.currentBoothId === boothId) {
                     socket.currentBoothId = null;
