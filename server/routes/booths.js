@@ -772,6 +772,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { user } = req;
+        const eventIdQuery = req.query.eventId ? normalizeObjectId(req.query.eventId) : '';
 
         const booth = await Booth.findById(id)
             .populate('eventId', 'name slug description link sendyId logoUrl start end timezone status administrators createdBy booths limits theme termsIds createdAt')
@@ -802,6 +803,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         // user's assignedEvents for booth-scoped roles, filtered to
         // published/active events that have not ended.
         const Event = require('../models/Event');
+        const User = require('../models/User');
         const boothEventIds = new Set(
             (booth.events || []).map(normalizeObjectId).filter(Boolean)
         );
@@ -831,11 +833,29 @@ router.get('/:id', authenticateToken, async (req, res) => {
             ? booth.eventId.getSummary()
             : (booth.eventId || null);
 
+        let assignedRecruitersCount = null;
+        if (eventIdQuery) {
+            const mongoose = require('mongoose');
+            const eventObjectId = mongoose.Types.ObjectId.isValid(eventIdQuery)
+                ? new mongoose.Types.ObjectId(eventIdQuery)
+                : null;
+            if (eventObjectId) {
+                assignedRecruitersCount = await User.countDocuments({
+                    role: 'Recruiter',
+                    isActive: true,
+                    assignedBooth: booth._id,
+                    assignedEvents: eventObjectId
+                });
+            }
+        }
+
         res.json({
             booth: {
                 ...boothData,
-                events: booth.events || []
+                events: booth.events || [],
+                ...(assignedRecruitersCount !== null ? { assignedRecruitersCount } : {})
             },
+            assignedRecruitersCount,
             // Prefer the first visible event; fall back to the legacy eventId
             // summary for backward compatibility when nothing is visible.
             event: visibleEvents[0] || legacyEventSummary,

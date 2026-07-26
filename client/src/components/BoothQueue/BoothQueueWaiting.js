@@ -367,26 +367,33 @@ export default function BoothQueueWaiting() {
     try {
       setLoading(true);
 
-      // Load event and booth in parallel
-      const [eventRes, boothRes] = await Promise.all([
-        axios.get(`/api/events/slug/${eventSlug}`),
-        axios.get(`/api/booths/${boothId}`)
-      ]);
-
+      // Load event first so we can request booth with assigned-recruiter count for this event
+      const eventRes = await axios.get(`/api/events/slug/${eventSlug}`);
       const eventData = eventRes.data;
-      const boothData = boothRes.data;
 
-      // Normalize event
       let extractedEvent = null;
       if (eventData?.event) extractedEvent = eventData.event;
       else if (eventData?.success && eventData?.data) extractedEvent = eventData.data;
       else if (eventData?.name) extractedEvent = eventData;
 
-      // Normalize booth
+      const eventId = extractedEvent?._id || extractedEvent?.id;
+      const boothRes = await axios.get(`/api/booths/${boothId}`, {
+        params: eventId ? { eventId: String(eventId) } : undefined
+      });
+      const boothData = boothRes.data;
+
       let extractedBooth = null;
       if (boothData?.booth) extractedBooth = boothData.booth;
       else if (boothData?.success && boothData?.data) extractedBooth = boothData.data;
       else if (boothData?.name) extractedBooth = boothData;
+
+      const assignedCount = boothData?.assignedRecruitersCount ?? extractedBooth?.assignedRecruitersCount;
+      if (typeof assignedCount === 'number' && extractedBooth) {
+        extractedBooth = {
+          ...extractedBooth,
+          assignedRecruitersCount: assignedCount
+        };
+      }
 
       if (extractedEvent) setEvent(extractedEvent);
       if (extractedBooth) setBooth(extractedBooth);
@@ -638,6 +645,11 @@ export default function BoothQueueWaiting() {
   // so admin edits appear without a full page refresh.
   useEffect(() => {
     if (!boothId) return undefined;
+    const eventId = event?._id || event?.id;
+    // Wait until the current event is known so assignedRecruitersCount is scoped correctly.
+    // Refreshing without eventId returns no count and can wipe a correct value from loadData.
+    if (!eventId) return undefined;
+
     let cancelled = false;
 
     const extractBooth = (boothData) => {
@@ -650,8 +662,17 @@ export default function BoothQueueWaiting() {
     const refreshBoothAvailability = async () => {
       setAvailabilityNow(new Date());
       try {
-        const boothRes = await axios.get(`/api/booths/${boothId}`);
-        const extractedBooth = extractBooth(boothRes.data);
+        const boothRes = await axios.get(`/api/booths/${boothId}`, {
+          params: { eventId: String(eventId) }
+        });
+        let extractedBooth = extractBooth(boothRes.data);
+        const count = boothRes.data?.assignedRecruitersCount ?? extractedBooth?.assignedRecruitersCount;
+        if (typeof count === 'number' && extractedBooth) {
+          extractedBooth = {
+            ...extractedBooth,
+            assignedRecruitersCount: count
+          };
+        }
         if (!cancelled && extractedBooth) setBooth(extractedBooth);
       } catch (_e) {
         // Keep existing booth state if refresh fails
@@ -664,6 +685,8 @@ export default function BoothQueueWaiting() {
       }
     };
 
+    // Refresh immediately once eventId is available, then on an interval.
+    refreshBoothAvailability();
     const intervalId = setInterval(refreshBoothAvailability, 15000);
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
@@ -671,7 +694,7 @@ export default function BoothQueueWaiting() {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [boothId]);
+  }, [boothId, event?._id, event?.id]);
 
   // Announce when the recruiter-end banner appears, and again if the message text changes.
   useEffect(() => {
@@ -1424,9 +1447,9 @@ export default function BoothQueueWaiting() {
 
   const isEmployerPageMode = booth?.waitingAreaMode === 'employerPage';
   const eventDateLabel = formatEventDate(event?.start);
-  const recruitersCountLabel = typeof booth?.recruitersCount === 'number'
-    ? String(booth.recruitersCount)
-    : (booth?.recruitersCount ? String(booth.recruitersCount) : '—');
+  const recruitersCountLabel = typeof booth?.assignedRecruitersCount === 'number'
+    ? String(booth.assignedRecruitersCount)
+    : '—';
   const meetingHoursLabel = formatTimeRange(booth?.openTime, booth?.recruiterEndTime);
   const afterHoursLabel = formatTimeRange(booth?.recruiterEndTime, booth?.closeTime);
   const isMobilePanelHidden = isMobile && !mobilePanelOpen;
