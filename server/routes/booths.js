@@ -462,6 +462,12 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
     optionalNullableIsoDate('openTime'),
     optionalNullableIsoDate('recruiterEndTime'),
     optionalNullableIsoDate('closeTime'),
+    body('recruiterUnavailableMessage')
+        .optional({ nullable: true })
+        .isString()
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Recruiter unavailable message cannot exceed 500 characters'),
     body('customInviteSlug')
         .optional({ nullable: true, checkFalsy: true })
         .isString()
@@ -499,6 +505,7 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             openTime,
             recruiterEndTime,
             closeTime,
+            recruiterUnavailableMessage,
             customInviteSlug,
             joinBoothButtonLink,
             waitingAreaMode,
@@ -622,6 +629,9 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             openTime: parsedOpenTime,
             recruiterEndTime: parsedRecruiterEndTime,
             closeTime: parsedCloseTime,
+            recruiterUnavailableMessage: typeof recruiterUnavailableMessage === 'string'
+                ? recruiterUnavailableMessage.trim()
+                : undefined,
             customInviteSlug: customInviteSlug || undefined,
             joinBoothButtonLink: joinBoothButtonLink || '',
             waitingAreaMode: waitingAreaMode || 'placeholders',
@@ -933,6 +943,12 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
     optionalNullableIsoDate('openTime'),
     optionalNullableIsoDate('recruiterEndTime'),
     optionalNullableIsoDate('closeTime'),
+    body('recruiterUnavailableMessage')
+        .optional({ nullable: true })
+        .isString()
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Recruiter unavailable message cannot exceed 500 characters'),
     body('customInviteSlug')
         .optional()
         .isString()
@@ -995,6 +1011,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             openTime,
             recruiterEndTime,
             closeTime,
+            recruiterUnavailableMessage,
             customInviteSlug,
             joinBoothButtonLink,
             waitingAreaMode,
@@ -1063,6 +1080,13 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         if (openTime !== undefined) updateData.openTime = parseNullableDate(openTime);
         if (recruiterEndTime !== undefined) updateData.recruiterEndTime = parseNullableDate(recruiterEndTime);
         if (closeTime !== undefined) updateData.closeTime = parseNullableDate(closeTime);
+        if (recruiterUnavailableMessage !== undefined) {
+            const trimmed = typeof recruiterUnavailableMessage === 'string'
+                ? recruiterUnavailableMessage.trim()
+                : '';
+            updateData.recruiterUnavailableMessage = trimmed
+                || 'Recruiters are no longer available for live meetings. This booth is still open — you can leave a message for the recruiters.';
+        }
 
         const availabilityError = validateAvailabilityOrder({
             openTime: openTime !== undefined ? updateData.openTime : booth.openTime,

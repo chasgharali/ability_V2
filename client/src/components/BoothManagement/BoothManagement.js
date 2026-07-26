@@ -14,7 +14,7 @@ import { GridComponent, ColumnsDirective, ColumnDirective, Inject as GridInject,
 import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
-import { Input, MultiSelect, DateTimePicker, Checkbox } from '../UI/FormComponents';
+import { Input, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections, updateBoothEmployerPageSections, bulkDeleteBooths } from '../../services/booths';
 import { uploadBoothLogoToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
@@ -104,6 +104,9 @@ const getBoothAssignedEventIds = (booth) => {
   return normalizeIdArray([...eventIds, booth.eventIdRaw]);
 };
 
+const DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE =
+  'Recruiters are no longer available for live meetings. This booth is still open — you can leave a message for the recruiters.';
+
 export default function BoothManagement() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -164,6 +167,7 @@ export default function BoothManagement() {
     openTime: '',
     recruiterEndTime: '',
     closeTime: '',
+    recruiterUnavailableMessage: DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE,
     companyPage: '',
     joinBoothButtonLink: ''
   });
@@ -777,6 +781,8 @@ export default function BoothManagement() {
         openTime: openTimeValue,
         recruiterEndTime: recruiterEndTimeValue,
         closeTime: closeTimeValue,
+        recruiterUnavailableMessage: (boothForm.recruiterUnavailableMessage || '').trim()
+          || DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE,
         customInviteSlug: customInviteSlug || undefined,
         joinBoothButtonLink: boothForm.joinBoothButtonLink || '',
         waitingAreaMode: boothForm.waitingAreaMode || 'placeholders',
@@ -801,6 +807,7 @@ export default function BoothManagement() {
           openTime: openTimeValue,
           recruiterEndTime: recruiterEndTimeValue,
           closeTime: closeTimeValue,
+          recruiterUnavailableMessage: payload.recruiterUnavailableMessage,
           customInviteSlug: payload.customInviteSlug,
           joinBoothButtonLink: payload.joinBoothButtonLink,
           waitingAreaMode: payload.waitingAreaMode,
@@ -1005,6 +1012,7 @@ export default function BoothManagement() {
           openTime: b.openTime || null,
           recruiterEndTime: b.recruiterEndTime || null,
           closeTime: b.closeTime || null,
+          recruiterUnavailableMessage: b.recruiterUnavailableMessage || DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE,
         };
       }));
     } catch (e) {
@@ -1206,6 +1214,7 @@ export default function BoothManagement() {
       openTime: formatDateTimeLocal(row.openTime),
       recruiterEndTime: formatDateTimeLocal(row.recruiterEndTime),
       closeTime: formatDateTimeLocal(row.closeTime),
+      recruiterUnavailableMessage: row.recruiterUnavailableMessage || DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE,
     }));
     setBoothMode('create');
     setEditingBoothId(normalizeId(row.id));
@@ -1963,7 +1972,16 @@ export default function BoothManagement() {
                       onChange={(e) => setBoothField('recruiterEndTime', e.target.value)}
                       placeholder="Select recruiter end time"
                       name="recruiterEndTime"
-                      hint="After this time, job seekers in the waiting area see a message that recruiters are no longer available for live meetings, but they can still leave a message while the booth is open."
+                      hint="After this time, job seekers in the waiting area see the message below."
+                    />
+                    <TextArea
+                      label="Recruiter unavailable message"
+                      value={boothForm.recruiterUnavailableMessage}
+                      onChange={(e) => setBoothField('recruiterUnavailableMessage', e.target.value)}
+                      name="recruiterUnavailableMessage"
+                      rows={3}
+                      placeholder={DEFAULT_RECRUITER_UNAVAILABLE_MESSAGE}
+                      hint="Shown on the job seeker waiting area after recruiter end time, while the booth is still open. Leave blank to use the default message."
                     />
                     <DateTimePicker
                       label="Booth close time"

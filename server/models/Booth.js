@@ -105,6 +105,12 @@ const boothSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    recruiterUnavailableMessage: {
+        type: String,
+        default: 'Recruiters are no longer available for live meetings. This booth is still open — you can leave a message for the recruiters.',
+        trim: true,
+        maxlength: [500, 'Recruiter unavailable message cannot exceed 500 characters']
+    },
     customInviteSlug: {
         type: String,
         unique: true,
@@ -291,6 +297,7 @@ boothSchema.methods.getSummary = function () {
         openTime: this.openTime || null,
         recruiterEndTime: this.recruiterEndTime || null,
         closeTime: this.closeTime || null,
+        recruiterUnavailableMessage: this.recruiterUnavailableMessage || '',
         customInviteSlug: this.customInviteSlug,
         joinBoothButtonLink: this.joinBoothButtonLink || '',
         waitingAreaMode: this.waitingAreaMode || 'placeholders',
@@ -338,6 +345,7 @@ boothSchema.methods.getPublicInfo = function () {
         openTime: this.openTime || null,
         recruiterEndTime: this.recruiterEndTime || null,
         closeTime: this.closeTime || null,
+        recruiterUnavailableMessage: this.recruiterUnavailableMessage || '',
         estimatedWaitTime: this.settings?.queueSettings?.estimatedWaitTime ?? 15,
         richSections: sections
             .filter(section => section.isActive)

@@ -33,6 +33,13 @@ function shouldShowRecruiterEndBanner(booth, now = new Date()) {
   return true;
 }
 
+function getRecruiterUnavailableMessage(booth) {
+  const custom = typeof booth?.recruiterUnavailableMessage === 'string'
+    ? booth.recruiterUnavailableMessage.trim()
+    : '';
+  return custom || RECRUITER_END_BANNER_MESSAGE;
+}
+
 export default function BoothQueueWaiting() {
   const { eventSlug, boothId } = useParams();
   const navigate = useNavigate();
@@ -595,6 +602,7 @@ export default function BoothQueueWaiting() {
   };
 
   const showRecruiterEndBanner = shouldShowRecruiterEndBanner(booth, availabilityNow);
+  const recruiterUnavailableMessage = getRecruiterUnavailableMessage(booth);
 
   // Re-evaluate recruiter-end window so the banner appears without a full page refresh.
   useEffect(() => {
@@ -608,12 +616,12 @@ export default function BoothQueueWaiting() {
   useEffect(() => {
     if (showRecruiterEndBanner && !recruiterEndBannerAnnouncedRef.current) {
       recruiterEndBannerAnnouncedRef.current = true;
-      announceToScreenReader(RECRUITER_END_BANNER_MESSAGE);
+      announceToScreenReader(recruiterUnavailableMessage);
     }
     if (!showRecruiterEndBanner) {
       recruiterEndBannerAnnouncedRef.current = false;
     }
-  }, [showRecruiterEndBanner]);
+  }, [showRecruiterEndBanner, recruiterUnavailableMessage]);
 
   // Simple, reliable speech function using native SpeechSynthesis
   const speak = (text) => {
@@ -1608,7 +1616,7 @@ export default function BoothQueueWaiting() {
               aria-live="polite"
               aria-atomic="true"
             >
-              <p className="recruiter-end-banner-text">{RECRUITER_END_BANNER_MESSAGE}</p>
+              <p className="recruiter-end-banner-text">{recruiterUnavailableMessage}</p>
               <button
                 type="button"
                 className="recruiter-end-banner-cta"
