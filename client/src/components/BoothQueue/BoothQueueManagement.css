@@ -742,6 +742,92 @@
   }
 }
 
+.queue-filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin: 0 0 1rem 0;
+  padding: 0.875rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.queue-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 190px;
+}
+
+.queue-filter label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.queue-filter select {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.queue-filter select:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.queue-filter select:focus-visible,
+.queue-filter-clear:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.queue-filter-clear {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.queue-filter-clear:hover {
+  background: #f9fafb;
+}
+
+.queue-filter-count {
+  margin: 0 0 0.35rem auto;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+@media (max-width: 640px) {
+  .queue-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .queue-filter {
+    min-width: 0;
+  }
+
+  .queue-filter-count {
+    margin: 0;
+  }
+}
+
 .empty-queue {
   background: white;
   padding: 3rem;
@@ -922,6 +1008,36 @@
 
 .detail-item strong {
   color: #1f2937;
+}
+
+/* Selected position/location/interpreter: paired columns keep the card compact */
+.queue-detail-list {
+  margin: 0.625rem 0 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.queue-detail-pair {
+  margin: 0;
+  min-width: 0;
+}
+
+.queue-detail-pair dt {
+  margin: 0 0 0.15rem 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.queue-detail-pair dd {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: #1f2937;
+  overflow-wrap: anywhere;
 }
 
 .queue-actions {
@@ -1778,6 +1894,10 @@
   }
 
   .detail-item {
+    font-size: 0.8125rem;
+  }
+
+  .queue-detail-pair dd {
     font-size: 0.8125rem;
   }
 

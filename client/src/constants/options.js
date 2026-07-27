@@ -467,6 +467,40 @@ export const EDUCATION_LEVEL_LIST = [
   { name: 'International', value: 'international' }
 ];
 
+// Suggested locations for booth open positions. Booth admins can also type their
+// own, so these are only starting points — the stored value is the label itself.
+export const BOOTH_LOCATION_SUGGESTIONS = [
+  'Remote',
+  'Hybrid',
+  'On-site',
+  'New York',
+  'California',
+  'Texas',
+  'Florida',
+  'Illinois',
+  'Washington',
+  'Massachusetts',
+  'Georgia',
+  'Virginia',
+  'Ohio',
+  'Pennsylvania',
+  'North Carolina',
+  'Arizona',
+  'Colorado',
+  'New Jersey',
+  'Michigan',
+  'United States',
+  'Canada',
+  'Mexico',
+  'United Kingdom',
+  'Ireland',
+  'Germany',
+  'India',
+  'Pakistan',
+  'Philippines',
+  'Australia'
+];
+
 export const INTERPRETER_CATEGORIES = [
   { label: 'Sign Language', value: 'ASL' },
   { label: 'Spanish', value: 'Spanish' },

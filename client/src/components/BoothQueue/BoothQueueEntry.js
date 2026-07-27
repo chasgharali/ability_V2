@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
@@ -17,12 +17,33 @@ export default function BoothQueueEntry() {
   const [booth, setBooth] = useState(null);
   const [interpreterCategories, setInterpreterCategories] = useState([]);
   const [selectedInterpreter, setSelectedInterpreter] = useState('none');
+  const [selectedPosition, setSelectedPosition] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
   const [isBoothExpired, setIsBoothExpired] = useState(false);
   const [legalLinks, setLegalLinks] = useState({ termsOfUse: null, privacyPolicy: null });
+
+  const openPositions = useMemo(
+    () => (Array.isArray(booth?.openPositions) ? booth.openPositions.filter(position => position?.title) : []),
+    [booth]
+  );
+  const positionLocations = useMemo(() => {
+    const match = openPositions.find(position => position.title === selectedPosition);
+    return Array.isArray(match?.locations) ? match.locations.filter(Boolean) : [];
+  }, [openPositions, selectedPosition]);
+  const needsLocation = positionLocations.length > 0;
+  const positionSelectionComplete = openPositions.length === 0
+    || (!!selectedPosition && (!needsLocation || !!selectedLocation));
+
+  // Reset the location whenever it no longer belongs to the selected position
+  useEffect(() => {
+    if (selectedLocation && !positionLocations.includes(selectedLocation)) {
+      setSelectedLocation('');
+    }
+  }, [positionLocations, selectedLocation]);
 
   useEffect(() => {
     const boothName = booth?.name || 'Company';
@@ -144,6 +165,16 @@ export default function BoothQueueEntry() {
       return;
     }
 
+    if (openPositions.length > 0 && !selectedPosition) {
+      setError('Please select the position you are applying for');
+      return;
+    }
+
+    if (needsLocation && !selectedLocation) {
+      setError('Please select a location for the selected position');
+      return;
+    }
+
     try {
       setJoining(true);
       setError('');
@@ -152,6 +183,8 @@ export default function BoothQueueEntry() {
         eventId: event._id,
         boothId: booth._id,
         interpreterCategory: selectedInterpreter !== 'none' ? selectedInterpreter : null,
+        appliedPosition: selectedPosition,
+        appliedLocation: selectedLocation,
         agreedToTerms: true
       };
 
@@ -304,7 +337,56 @@ export default function BoothQueueEntry() {
           </div>
   
           <div className="divider" />
-  
+
+          {openPositions.length > 0 && (
+            <>
+              <div className="interpreter-selection">
+                <label htmlFor="position-select">
+                  Position you are applying for <span className="required-indicator">*</span>
+                </label>
+                <select
+                  id="position-select"
+                  value={selectedPosition}
+                  onChange={(e) => {
+                    setSelectedPosition(e.target.value);
+                    setSelectedLocation('');
+                  }}
+                  className="interpreter-dropdown"
+                  required
+                >
+                  <option value="">Select a position</option>
+                  {openPositions.map((position) => (
+                    <option key={position._id || position.title} value={position.title}>
+                      {position.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {needsLocation && (
+                <div className="interpreter-selection">
+                  <label htmlFor="position-location-select">
+                    Location <span className="required-indicator">*</span>
+                  </label>
+                  <select
+                    id="position-location-select"
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    className="interpreter-dropdown"
+                    required
+                  >
+                    <option value="">Select a location</option>
+                    {positionLocations.map((location) => (
+                      <option key={location} value={location}>
+                        {location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </>
+          )}
+
           <div className="interpreter-selection">
             <label htmlFor="interpreter-select">
               Choose sign language interpreter for <span className="booth-required-text">Deaf & non-verbal <span className="required-indicator">*</span></span>
@@ -362,7 +444,7 @@ export default function BoothQueueEntry() {
           <div className="modal-actions">
             <button
               onClick={handleJoinQueue}
-              disabled={joining || !agreedToTerms}
+              disabled={joining || !agreedToTerms || !positionSelectionComplete}
               className="btn-join"
             >
               {joining ? 'Joining...' : 'Join'}

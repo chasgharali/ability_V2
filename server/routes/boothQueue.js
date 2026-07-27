@@ -105,7 +105,7 @@ const getJobSeekersInActiveCalls = async (boothId) => {
 // Join a booth queue
 router.post('/join', authenticateToken, async (req, res) => {
     try {
-        const { eventId, boothId, interpreterCategory, agreedToTerms } = req.body;
+        const { eventId, boothId, interpreterCategory, agreedToTerms, appliedPosition, appliedLocation } = req.body;
         const jobSeekerId = req.user._id;
 
         // Validate required fields
@@ -145,6 +145,35 @@ router.post('/join', authenticateToken, async (req, res) => {
                     message: `This booth link expired on ${formattedDate}. You cannot join this queue.`,
                     expiredAt: booth.expireLinkTime
                 });
+            }
+        }
+
+        // When the booth has published open positions, the job seeker must tell the
+        // recruiter which one (and where) they are applying for.
+        const boothPositions = Array.isArray(booth.openPositions) ? booth.openPositions : [];
+        let selectedPosition = '';
+        let selectedLocation = '';
+        if (boothPositions.length > 0) {
+            const requestedPosition = typeof appliedPosition === 'string' ? appliedPosition.trim() : '';
+            const matchedPosition = boothPositions.find(p => p.title === requestedPosition);
+            if (!matchedPosition) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Please select one of the open positions offered by this booth'
+                });
+            }
+            selectedPosition = matchedPosition.title;
+
+            const positionLocations = (matchedPosition.locations || []).filter(Boolean);
+            if (positionLocations.length > 0) {
+                const requestedLocation = typeof appliedLocation === 'string' ? appliedLocation.trim() : '';
+                if (!positionLocations.includes(requestedLocation)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Please select a location available for the selected position'
+                    });
+                }
+                selectedLocation = requestedLocation;
             }
         }
 
@@ -233,6 +262,13 @@ router.post('/join', authenticateToken, async (req, res) => {
                     existingQueue = null; // Allow them to join
                 }
             } else if (isSameBooth && existingQueue.status === 'waiting') {
+                // Rejoining the same booth keeps the original spot, but honour a
+                // changed position/location selection from the entrance form.
+                if (existingQueue.appliedPosition !== selectedPosition || existingQueue.appliedLocation !== selectedLocation) {
+                    existingQueue.appliedPosition = selectedPosition;
+                    existingQueue.appliedLocation = selectedLocation;
+                    await existingQueue.save();
+                }
                 // If trying to rejoin the same booth, return the existing queue entry
                 return res.json({
                     success: true,
@@ -264,7 +300,9 @@ router.post('/join', authenticateToken, async (req, res) => {
                 event: eventId,
                 position,
                 interpreterCategory: interpreterCategory || null,
-                agreedToTerms,
+                appliedPosition: selectedPosition,
+                appliedLocation: selectedLocation,
+                agreedToTerms: !!agreedToTerms,
                 status: 'waiting'
             });
 
@@ -292,7 +330,9 @@ router.post('/join', authenticateToken, async (req, res) => {
                         event: eventId,
                         position,
                         interpreterCategory: interpreterCategory || null,
-                        agreedToTerms,
+                        appliedPosition: selectedPosition,
+                        appliedLocation: selectedLocation,
+                        agreedToTerms: !!agreedToTerms,
                         status: 'waiting'
                     });
 

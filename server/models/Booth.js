@@ -57,6 +57,21 @@ const employerPageSectionSchema = new mongoose.Schema({
     }
 }, { _id: true });
 
+const openPositionSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: [true, 'Position title is required'],
+        trim: true,
+        maxlength: [150, 'Position title cannot exceed 150 characters']
+    },
+    // Free-form location labels (e.g. Remote, New York, California, Canada, Pakistan)
+    locations: [{
+        type: String,
+        trim: true,
+        maxlength: [100, 'Location cannot exceed 100 characters']
+    }]
+}, { _id: true });
+
 const boothSchema = new mongoose.Schema({
     eventId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -148,6 +163,8 @@ const boothSchema = new mongoose.Schema({
         trim: true
     },
     employerPageSections: [employerPageSectionSchema],
+    // Open positions job seekers pick from before joining the queue
+    openPositions: [openPositionSchema],
     // Queue reference
     queueId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -281,6 +298,12 @@ boothSchema.methods.canUserManage = function (user) {
     return false;
 };
 
+const mapOpenPositions = (positions) => (Array.isArray(positions) ? positions : []).map(position => ({
+    _id: position._id,
+    title: position.title,
+    locations: Array.isArray(position.locations) ? position.locations.filter(Boolean) : []
+}));
+
 // Instance method to get booth summary
 boothSchema.methods.getSummary = function () {
     const sections = Array.isArray(this.richSections) ? this.richSections : [];
@@ -323,7 +346,8 @@ boothSchema.methods.getSummary = function () {
                 contentData: s.contentData ?? null,
                 order: s.order,
                 isActive: s.isActive
-            }))
+            })),
+        openPositions: mapOpenPositions(this.openPositions)
     };
 };
 
@@ -366,7 +390,8 @@ boothSchema.methods.getPublicInfo = function () {
                 contentData: section.contentData ?? null,
                 order: section.order,
                 isActive: section.isActive
-            }))
+            })),
+        openPositions: mapOpenPositions(this.openPositions)
     };
 };
 

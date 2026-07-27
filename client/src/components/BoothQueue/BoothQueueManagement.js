@@ -62,6 +62,8 @@ export default function BoothQueueManagement() {
   // Ref mirror so socket handlers (registered once) always see the current selection
   const selectedEventIdRef = useRef(null);
   const [queue, setQueue] = useState([]);
+  const [positionFilter, setPositionFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null);
   const [profileModalJobSeeker, setProfileModalJobSeeker] = useState(null); // Full fetched profile (includes linkedInUrl)
@@ -108,6 +110,51 @@ export default function BoothQueueManagement() {
     warningBg: '#fef3c7',
     warningText: '#92400e',
   }), [event]);
+
+  // Filter options come from the booth's configured open positions, plus whatever
+  // queue entries were recorded with in case the booth edited its positions later.
+  const boothOpenPositions = useMemo(() => {
+    const configured = (booth || recruiterBooth)?.openPositions;
+    return Array.isArray(configured) ? configured : [];
+  }, [booth, recruiterBooth]);
+
+  const positionFilterOptions = useMemo(() => {
+    const titles = [
+      ...boothOpenPositions.map(position => position?.title),
+      ...queue.map(entry => entry?.appliedPosition)
+    ];
+    return [...new Set(titles.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  }, [boothOpenPositions, queue]);
+
+  const locationFilterOptions = useMemo(() => {
+    const configured = boothOpenPositions;
+    const scoped = positionFilter === 'all'
+      ? configured
+      : configured.filter(position => position?.title === positionFilter);
+    const labels = [
+      ...scoped.flatMap(position => (Array.isArray(position?.locations) ? position.locations : [])),
+      ...queue
+        .filter(entry => positionFilter === 'all' || entry?.appliedPosition === positionFilter)
+        .map(entry => entry?.appliedLocation)
+    ];
+    return [...new Set(labels.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  }, [boothOpenPositions, queue, positionFilter]);
+
+  // Drop a location filter that no longer applies to the selected position
+  useEffect(() => {
+    if (locationFilter !== 'all' && !locationFilterOptions.includes(locationFilter)) {
+      setLocationFilter('all');
+    }
+  }, [locationFilterOptions, locationFilter]);
+
+  const filteredQueue = useMemo(() => queue.filter((entry) => {
+    if (positionFilter !== 'all' && (entry?.appliedPosition || '') !== positionFilter) return false;
+    if (locationFilter !== 'all' && (entry?.appliedLocation || '') !== locationFilter) return false;
+    return true;
+  }), [queue, positionFilter, locationFilter]);
+
+  const hasQueueFilters = positionFilterOptions.length > 0 || locationFilterOptions.length > 0;
+  const isQueueFiltered = positionFilter !== 'all' || locationFilter !== 'all';
 
   useEffect(() => {
     // Wait for recruiter booth to load if boothId is not in URL
@@ -1075,13 +1122,57 @@ export default function BoothQueueManagement() {
 
               <h2 className="queue-seekers-heading">Job Seekers in Queue</h2>
 
-              {queue.length === 0 ? (
+              {hasQueueFilters && (
+                <div className="queue-filters" role="group" aria-label="Filter queue by position and location">
+                  <div className="queue-filter">
+                    <label htmlFor="queue-position-filter">Position</label>
+                    <select
+                      id="queue-position-filter"
+                      value={positionFilter}
+                      onChange={(e) => setPositionFilter(e.target.value)}
+                    >
+                      <option value="all">All positions</option>
+                      {positionFilterOptions.map((title) => (
+                        <option key={title} value={title}>{title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="queue-filter">
+                    <label htmlFor="queue-location-filter">Location</label>
+                    <select
+                      id="queue-location-filter"
+                      value={locationFilter}
+                      onChange={(e) => setLocationFilter(e.target.value)}
+                      disabled={locationFilterOptions.length === 0}
+                    >
+                      <option value="all">All locations</option>
+                      {locationFilterOptions.map((location) => (
+                        <option key={location} value={location}>{location}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {isQueueFiltered && (
+                    <button
+                      type="button"
+                      className="queue-filter-clear"
+                      onClick={() => { setPositionFilter('all'); setLocationFilter('all'); }}
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                  <p className="queue-filter-count" aria-live="polite">
+                    Showing {filteredQueue.length} of {queue.length} job seeker{queue.length === 1 ? '' : 's'}
+                  </p>
+                </div>
+              )}
+
+              {filteredQueue.length === 0 ? (
                 <div className="empty-queue">
-                  <p>No job seekers in queue</p>
+                  <p>{queue.length > 0 && isQueueFiltered ? 'No job seekers match the selected filters' : 'No job seekers in queue'}</p>
                 </div>
               ) : (
                 <div className="queue-grid">
-                  {queue.map((queueEntry) => {
+                  {filteredQueue.map((queueEntry) => {
                     // Skip entries with null jobSeeker
                     if (!queueEntry.jobSeeker) {
                       return null;
@@ -1148,10 +1239,27 @@ export default function BoothQueueManagement() {
                             View Details
                           </button>
                         </div>
-                        {queueEntry.interpreterCategory && (
-                          <div className="detail-item">
-                            <strong>Interpreter:</strong> {queueEntry.interpreterCategory.name}
-                          </div>
+                        {(queueEntry.appliedPosition || queueEntry.appliedLocation || queueEntry.interpreterCategory) && (
+                          <dl className="queue-detail-list">
+                            {queueEntry.appliedPosition && (
+                              <div className="queue-detail-pair">
+                                <dt>Position</dt>
+                                <dd>{queueEntry.appliedPosition}</dd>
+                              </div>
+                            )}
+                            {queueEntry.appliedLocation && (
+                              <div className="queue-detail-pair">
+                                <dt>Location</dt>
+                                <dd>{queueEntry.appliedLocation}</dd>
+                              </div>
+                            )}
+                            {queueEntry.interpreterCategory && (
+                              <div className="queue-detail-pair">
+                                <dt>Interpreter</dt>
+                                <dd>{queueEntry.interpreterCategory.name}</dd>
+                              </div>
+                            )}
+                          </dl>
                         )}
                         {queueEntry.messageCount > 0 && (
                           <div className="detail-item">
@@ -1452,6 +1560,22 @@ export default function BoothQueueManagement() {
                 <h3>Professional Details</h3>
 
                 <div className="details-grid">
+                  {selectedJobSeeker?.appliedPosition && (
+                    <div className="detail-section">
+                      <h4>Applying For</h4>
+                      <div className="detail-content">
+                        <div className="detail-item">
+                          <span className="detail-label">POSITION</span>
+                          <p>{selectedJobSeeker.appliedPosition}</p>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">POSITION LOCATION</span>
+                          <p>{selectedJobSeeker.appliedLocation || 'Not specified'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Professional Summary */}
                   <div className="detail-section">
                     <h4>Professional Summary</h4>

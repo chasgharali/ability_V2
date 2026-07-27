@@ -30,6 +30,22 @@ const boothQueueSchema = new mongoose.Schema({
         ref: 'InterpreterCategory',
         default: null
     },
+    // Booth open position the job seeker selected on the entrance form.
+    // Stored as a label so the entry keeps its meaning if the booth edits its positions later.
+    appliedPosition: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    appliedLocation: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    agreedToTerms: {
+        type: Boolean,
+        default: false
+    },
     status: {
         type: String,
         enum: ['waiting', 'invited', 'in_meeting', 'completed', 'left', 'left_with_message', 'removed'],

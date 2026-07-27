@@ -15,6 +15,7 @@ import { ButtonComponent } from '@syncfusion/ej2-react-buttons';
 import { DialogComponent } from '@syncfusion/ej2-react-popups';
 import { ToastComponent } from '@syncfusion/ej2-react-notifications';
 import { Input, MultiSelect, DateTimePicker, Checkbox, TextArea } from '../UI/FormComponents';
+import OpenPositionsEditor from './OpenPositionsEditor';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections, updateBoothEmployerPageSections, bulkDeleteBooths } from '../../services/booths';
 import { uploadBoothLogoToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
@@ -159,6 +160,7 @@ export default function BoothManagement() {
     waitingAreaMode: 'placeholders',
     employerPageTemplateId: 'default-v1',
     employerPageSections: getDefaultEmployerPageSections(),
+    openPositions: [],
     recruitersCount: 1,
     eventIds: [],
     customInviteText: '',
@@ -777,6 +779,15 @@ export default function BoothManagement() {
         ? employerAboutHtml
         : latestFirstHtml;
 
+      const openPositionsPayload = (boothForm.openPositions || [])
+        .map(position => ({
+          title: (position?.title || '').trim(),
+          locations: (Array.isArray(position?.locations) ? position.locations : [])
+            .map(location => (location || '').trim())
+            .filter(Boolean),
+        }))
+        .filter(position => position.title);
+
       const customInviteSlug = sanitizeInvite(boothForm.customInviteText || '');
       const payload = {
         name: boothForm.boothName,
@@ -796,6 +807,7 @@ export default function BoothManagement() {
         waitingAreaMode: boothForm.waitingAreaMode || 'placeholders',
         employerPageTemplateId: boothForm.employerPageTemplateId || 'default-v1',
         employerPageSections: employerPageSectionsPayload,
+        openPositions: openPositionsPayload,
         richSections: [
           { title: 'First Placeholder', contentHtml: latestFirstHtml || '' },
           { title: 'Second Placeholder', contentHtml: latestSecondHtml || '' },
@@ -820,6 +832,7 @@ export default function BoothManagement() {
           joinBoothButtonLink: payload.joinBoothButtonLink,
           waitingAreaMode: payload.waitingAreaMode,
           employerPageTemplateId: payload.employerPageTemplateId,
+          openPositions: payload.openPositions,
           events: selectedEventIds, // Send full events array
           eventId: selectedEventIds.length > 0 ? selectedEventIds[0] : undefined, // Backward compat
         });
@@ -1011,6 +1024,7 @@ export default function BoothManagement() {
           employerPageSections: Array.isArray(b.employerPageSections) && b.employerPageSections.length
             ? b.employerPageSections
             : getDefaultEmployerPageSections(),
+          openPositions: Array.isArray(b.openPositions) ? b.openPositions : [],
           customInviteSlug: b.customInviteSlug || '',
           companyPage: b.companyPage || '',
           joinBoothButtonLink: b.joinBoothButtonLink || '',
@@ -1216,6 +1230,12 @@ export default function BoothManagement() {
           };
         })
         : getDefaultEmployerPageSections(),
+      openPositions: Array.isArray(fullRow.openPositions)
+        ? fullRow.openPositions.map(position => ({
+          title: position?.title || '',
+          locations: Array.isArray(position?.locations) ? position.locations.filter(Boolean) : [],
+        }))
+        : [],
       eventIds: eventIdsToUse,
       companyPage: fullRow.companyPage || '',
       customInviteText: fullRow.customInviteSlug || '',
@@ -2005,6 +2025,11 @@ export default function BoothManagement() {
                     />
                   </div>
                 </fieldset>
+
+                <OpenPositionsEditor
+                  positions={boothForm.openPositions}
+                  onChange={(positions) => setBoothField('openPositions', positions)}
+                />
 
                 <Input
                   label="Company Page"

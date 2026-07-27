@@ -22,6 +22,53 @@ const optionalNullableIsoDate = (field) =>
             return validator.isISO8601(String(value));
         });
 
+const MAX_OPEN_POSITIONS = 50;
+const MAX_LOCATIONS_PER_POSITION = 25;
+
+/** Body validators for the booth open positions list (title + locations). */
+const openPositionsValidators = [
+    body('openPositions').optional({ nullable: true }).isArray({ max: MAX_OPEN_POSITIONS })
+        .withMessage(`Provide at most ${MAX_OPEN_POSITIONS} open positions`),
+    body('openPositions.*.title').optional().isString().trim().isLength({ min: 1, max: 150 })
+        .withMessage('Position title must be 1-150 characters'),
+    body('openPositions.*.locations').optional({ nullable: true }).isArray({ max: MAX_LOCATIONS_PER_POSITION })
+        .withMessage(`Provide at most ${MAX_LOCATIONS_PER_POSITION} locations per position`),
+    body('openPositions.*.locations.*').optional().isString().trim().isLength({ min: 1, max: 100 })
+        .withMessage('Location must be 1-100 characters')
+];
+
+/**
+ * Trim/dedupe the open positions payload and drop entries without a title so a
+ * half-filled row in the booth form never reaches the database.
+ */
+function normalizeOpenPositions(positions) {
+    if (!Array.isArray(positions)) return [];
+    const normalized = [];
+    const seenTitles = new Set();
+    for (const position of positions.slice(0, MAX_OPEN_POSITIONS)) {
+        const title = typeof position?.title === 'string' ? position.title.trim() : '';
+        if (!title) continue;
+        const titleKey = title.toLowerCase();
+        if (seenTitles.has(titleKey)) continue;
+        seenTitles.add(titleKey);
+
+        const locations = Array.isArray(position?.locations) ? position.locations : [];
+        const seenLocations = new Set();
+        const cleanLocations = [];
+        for (const location of locations) {
+            const label = typeof location === 'string' ? location.trim() : '';
+            if (!label) continue;
+            const locationKey = label.toLowerCase();
+            if (seenLocations.has(locationKey)) continue;
+            seenLocations.add(locationKey);
+            cleanLocations.push(label.slice(0, 100));
+            if (cleanLocations.length >= MAX_LOCATIONS_PER_POSITION) break;
+        }
+        normalized.push({ title: title.slice(0, 150), locations: cleanLocations });
+    }
+    return normalized;
+}
+
 /** Convert request body date values to Date or null. */
 function parseNullableDate(value) {
     if (value === undefined) return undefined;
@@ -486,6 +533,7 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
     body('richSections').optional().isArray({ max: 3 }),
     body('richSections.*.title').optional().isString().isLength({ min: 1, max: 100 }),
     body('richSections.*.contentHtml').optional().isString().isLength({ min: 0, max: 5000 }),
+    ...openPositionsValidators,
     body('eventIds').optional().isArray().withMessage('eventIds must be an array'),
     body('eventIds.*').optional().isMongoId().withMessage('Each eventId must be a valid id')
 ], async (req, res) => {
@@ -512,6 +560,7 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
             employerPageTemplateId,
             employerPageSections = [],
             richSections = [],
+            openPositions = [],
             eventIds = []
         } = req.body;
 
@@ -650,7 +699,8 @@ router.post('/', authenticateToken, requireRole(['SuperAdmin', 'Admin', 'GlobalS
                 contentData: s.contentData ?? null,
                 isActive: s.isActive !== false,
                 order: s.order ?? index
-            }))
+            })),
+            openPositions: normalizeOpenPositions(openPositions)
         });
 
         // Add booth to all events' booths arrays
@@ -992,6 +1042,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         .trim()
         .isLength({ min: 1, max: 100 })
         .withMessage('Employer page template id must be between 1 and 100 characters'),
+    ...openPositionsValidators,
     body('eventId')
         .optional()
         .isMongoId()
@@ -1036,6 +1087,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
             joinBoothButtonLink,
             waitingAreaMode,
             employerPageTemplateId,
+            openPositions,
             eventId,
             events
         } = req.body;
@@ -1130,6 +1182,7 @@ router.put('/:id', authenticateToken, requireResourceAccess('booth', 'id'), [
         if (joinBoothButtonLink !== undefined) updateData.joinBoothButtonLink = joinBoothButtonLink;
         if (waitingAreaMode !== undefined) updateData.waitingAreaMode = waitingAreaMode;
         if (employerPageTemplateId !== undefined) updateData.employerPageTemplateId = employerPageTemplateId || 'default-v1';
+        if (openPositions !== undefined) updateData.openPositions = normalizeOpenPositions(openPositions);
         if (eventId !== undefined) {
             const targetEvent = await Event.findById(eventId);
             if (!targetEvent) {
