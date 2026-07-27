@@ -49,14 +49,31 @@ const socketHandler = require('./socket/socketHandler');
 const app = express();
 const server = http.createServer(app);
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Initialize Socket.IO with CORS configuration
 // Support multiple origins if CORS_ORIGIN is a comma-separated string
 const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
 const allowedOrigins = corsOrigin.split(',').map(origin => origin.trim());
 
+// Private network ranges, so a phone or a second machine on the same Wi-Fi can
+// reach the dev server: its page origin is a LAN IP, never localhost.
+const PRIVATE_LAN_ORIGIN = /^https?:\/\/(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+
+const isOriginAllowed = (origin) => {
+    // No origin: same-origin requests, curl, mobile apps.
+    if (!origin) return true;
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) return true;
+    if (allowedOrigins.includes(origin)) return true;
+    return !isProduction && PRIVATE_LAN_ORIGIN.test(origin);
+};
+
 const io = socketIo(server, {
     cors: {
-        origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
+        origin: (origin, callback) => {
+            if (isOriginAllowed(origin)) return callback(null, true);
+            callback(new Error('Not allowed by CORS'));
+        },
         methods: ["GET", "POST"],
         credentials: true
     },
@@ -69,8 +86,6 @@ const io = socketIo(server, {
     // Important: allow Socket.IO to work behind proxies
     allowEIO3: true
 });
-
-const isProduction = process.env.NODE_ENV === 'production';
 
 // Security middleware
 app.use(helmet({
@@ -132,21 +147,11 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-// Using allowedOrigins already declared above for Socket.IO
+// Using the same isOriginAllowed helper declared above for Socket.IO
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        // Always allow localhost origins (for development and local testing)
-        const localhostPatterns = ['http://localhost', 'http://127.0.0.1'];
-        if (localhostPatterns.some(pattern => origin.startsWith(pattern))) {
-            return callback(null, true);
-        }
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
+        if (isOriginAllowed(origin)) return callback(null, true);
+        callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

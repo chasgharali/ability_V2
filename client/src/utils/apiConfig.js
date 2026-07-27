@@ -3,9 +3,25 @@
  * Port 5050 is used instead of 5000 because macOS AirPlay Receiver occupies port 5000.
  */
 const LOCAL_BACKEND_ORIGIN = 'http://localhost:5050';
+const LOCAL_BACKEND_PORT = '5050';
 
 /** Matches http(s)://localhost:<port> and http(s)://127.0.0.1:<port> */
 const LOCAL_ORIGIN_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i;
+
+/**
+ * Development backend origin for the host the page was actually loaded from.
+ * Hardcoding localhost breaks any client that is not on this machine (a phone or
+ * a second computer on the same Wi-Fi), because there localhost is the device
+ * itself. REST calls survive that because they are relative and proxied by the
+ * dev server, but Socket.IO connects directly and would silently never connect.
+ */
+const getLocalBackendOrigin = () => {
+    if (typeof window === 'undefined' || !window.location?.hostname) {
+        return LOCAL_BACKEND_ORIGIN;
+    }
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    return `${protocol}//${window.location.hostname}:${LOCAL_BACKEND_PORT}`;
+};
 
 /**
  * Get the API base URL for the current environment
@@ -56,7 +72,7 @@ export const getSocketUrl = () => {
             !process.env.NODE_ENV;
 
         if (isLocalDev) {
-            url = LOCAL_BACKEND_ORIGIN;
+            url = getLocalBackendOrigin();
             source = 'local-dev-fallback';
         } else {
             // In production, use current origin

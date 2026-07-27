@@ -154,6 +154,9 @@ export default function BoothQueueWaiting() {
   const recentIncomingMessageKeysRef = useRef(new Set());
   const userIdRef = useRef(user?._id ? String(user._id) : '');
   const handleNewMessageFromRecruiterRef = useRef(null);
+  // Highest unread count already notified, so polling can catch messages whose
+  // socket event never arrived without re-announcing ones we already showed.
+  const lastSeenUnreadRef = useRef(0);
 
   // Keep ref in sync with state so interval callbacks always see the latest value
   useEffect(() => {
@@ -366,10 +369,7 @@ export default function BoothQueueWaiting() {
           setPeopleAhead(queueData.peopleAhead ?? 0);
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
-          // Keep unread badge in sync when messages modal is closed
-          if (!showTextMessagingModalRef.current) {
-            setUnreadCount(queueData.unreadMessages || 0);
-          }
+          syncUnreadFromStatus(queueData);
           try {
             localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
             localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -394,7 +394,7 @@ export default function BoothQueueWaiting() {
     }, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(refreshInterval);
-  }, [boothId, loading, eventSlug, navigate, showLeaveMessageModal, isUploading]);
+  }, [boothId, loading, eventSlug, navigate, showLeaveMessageModal, isUploading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {
@@ -441,6 +441,9 @@ export default function BoothQueueWaiting() {
           setPeopleAhead(queueData.peopleAhead ?? 0);
           setQueueToken(queueData.token);
           setQueueEntryId(queueData.queueEntry?._id);
+          // Seed the baseline on first load so existing unread messages are shown
+          // on the badge without replaying a toast for each of them.
+          lastSeenUnreadRef.current = queueData.unreadMessages || 0;
           setUnreadCount(queueData.unreadMessages || 0);
           await tryRestoreActiveCall(queueData);
           
@@ -513,10 +516,7 @@ export default function BoothQueueWaiting() {
         setWaitingCount(queueData.waitingCount ?? 0);
         setQueueToken(queueData.token);
         setQueueEntryId(queueData.queueEntry?._id);
-        // Keep unread badge in sync when messages modal is closed
-        if (!showTextMessagingModalRef.current) {
-          setUnreadCount(queueData.unreadMessages || 0);
-        }
+        syncUnreadFromStatus(queueData);
         try {
           localStorage.setItem(`queuePos_${boothId}`, String(queueData.position));
           localStorage.setItem(`serving_${boothId}`, String(queueData.currentServing));
@@ -876,27 +876,79 @@ export default function BoothQueueWaiting() {
     navigate(`/events/registered/${eventSlug}`);
   };
 
+  // Two-note "ting" chime for incoming recruiter messages.
   const playNotificationSound = () => {
     try {
-      // Create a simple notification beep using Web Audio API
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // A context created before any user gesture starts suspended and plays nothing.
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(() => { /* ignore */ });
+      }
 
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
+      const playNote = (frequency, startOffset, duration) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
 
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+
+        const startAt = audioContext.currentTime + startOffset;
+        gainNode.gain.setValueAtTime(0.0001, startAt);
+        gainNode.gain.exponentialRampToValueAtTime(0.25, startAt + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+        oscillator.start(startAt);
+        oscillator.stop(startAt + duration);
+      };
+
+      playNote(1175, 0, 0.18);
+      playNote(1568, 0.1, 0.35);
     } catch (err) {
       console.log('Could not play notification sound:', err);
     }
+  };
+
+  // Sound + toast + screen reader announcement for a newly received recruiter message.
+  const notifyIncomingMessage = ({ isBroadcast = false, content = '' } = {}) => {
+    playNotificationSound();
+
+    const label = isBroadcast ? 'Announcement from recruiter' : 'New message from recruiter';
+    const text = typeof content === 'string' ? content.trim() : '';
+    const preview = text.length > 120 ? `${text.slice(0, 117)}...` : text;
+
+    showInfo(preview ? `${label}: ${preview}` : label, 0);
+    announceToScreenReader(text ? `${label}: ${text}` : label);
+  };
+
+  // Drive the unread badge from the polled queue status. Socket events can be
+  // missed entirely (e.g. the socket never joined the booth/user rooms), so the
+  // count returned by the status endpoint is the reliable trigger.
+  const syncUnreadFromStatus = (queueData) => {
+    const unread = queueData?.unreadMessages || 0;
+
+    // While the dialog is open the messages are already on screen, so only track
+    // the count and leave the badge alone.
+    if (showTextMessagingModalRef.current) {
+      lastSeenUnreadRef.current = unread;
+      return;
+    }
+
+    if (unread > lastSeenUnreadRef.current) {
+      const latestUnread = (queueData?.queueEntry?.messages || [])
+        .filter(msg => msg.sender === 'recruiter' && !msg.isRead)
+        .pop();
+      notifyIncomingMessage({
+        isBroadcast: !!latestUnread?.isBroadcast,
+        content: latestUnread?.type === 'text' ? latestUnread.content : ''
+      });
+    }
+
+    lastSeenUnreadRef.current = unread;
+    setUnreadCount(unread);
   };
 
   const handleNewMessageFromRecruiter = (data) => {
@@ -935,9 +987,6 @@ export default function BoothQueueWaiting() {
       recentIncomingMessageKeysRef.current.delete(dedupeKey);
     }, 5000);
 
-    playNotificationSound();
-    showInfo('New message from recruiter', 0);
-
     setMessages(prev => {
       const isDuplicate = prev.some(msg => {
         if (msg._id && data.message._id) {
@@ -961,18 +1010,19 @@ export default function BoothQueueWaiting() {
       return [...prev, data.message];
     });
 
-    // Announce the incoming recruiter message to screen reader users as a single
-    // assertive announcement: "New message from recruiter: <content>".
-    const incomingText =
-      data.message.type === 'text' && data.message.content
-        ? `New message from recruiter: ${data.message.content}`
-        : 'New message from recruiter';
-    announceToScreenReader(incomingText);
+    notifyIncomingMessage({
+      isBroadcast: !!data.message.isBroadcast,
+      content: data.message.type === 'text' ? data.message.content : ''
+    });
 
     if (showTextMessagingModalRef.current) {
       setTimeout(scrollToBottom, 100);
     } else {
-      setUnreadCount(prev => prev + 1);
+      // Advance the polling baseline too, so the next status poll does not
+      // re-notify for this same message.
+      const next = lastSeenUnreadRef.current + 1;
+      lastSeenUnreadRef.current = next;
+      setUnreadCount(next);
     }
   };
   handleNewMessageFromRecruiterRef.current = handleNewMessageFromRecruiter;
@@ -1347,6 +1397,7 @@ export default function BoothQueueWaiting() {
         });
         
         setUnreadCount(0); // Mark as read when viewing
+        lastSeenUnreadRef.current = 0;
         // Scroll to bottom after messages load
         setTimeout(scrollToBottom, 100);
       }
@@ -1702,11 +1753,22 @@ export default function BoothQueueWaiting() {
             onClick={handleMobilePanelToggle}
             aria-expanded={mobilePanelOpen}
             aria-controls="queue-panel"
-            aria-label={mobilePanelOpen ? 'Close queue options panel' : 'Open queue options panel'}
+            aria-label={
+              mobilePanelOpen
+                ? 'Close queue options panel'
+                : `Open queue options panel${unreadCount > 0
+                  ? `, ${unreadCount} unread message${unreadCount === 1 ? '' : 's'}`
+                  : ''}`
+            }
             type="button"
           >
             {mobilePanelOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
             {mobilePanelOpen ? 'Close Queue Options' : 'Queue Options'}
+            {/* The Send Messages badge sits inside the collapsed panel, so mirror the
+                count here where it stays visible on small screens. */}
+            {!mobilePanelOpen && unreadCount > 0 && (
+              <span className="unread-badge" aria-hidden="true">{unreadCount}</span>
+            )}
           </button>
 
           {/* Combined booth logo and queue card for mobile - always visible on mobile.

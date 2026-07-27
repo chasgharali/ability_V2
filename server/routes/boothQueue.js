@@ -38,16 +38,12 @@ const emitMessageToJobSeeker = (io, queueEntry, message) => {
     const userColonSize = rooms.get(userColonRoom)?.size || 0;
     const userUnderscoreSize = rooms.get(userUnderscoreRoom)?.size || 0;
     const boothSize = rooms.get(boothRoom)?.size || 0;
-    logger.info('Emitted new-message-from-recruiter', {
-        queueId,
-        boothId,
-        jobSeekerId,
-        rooms: {
-            [userColonRoom]: userColonSize,
-            [userUnderscoreRoom]: userUnderscoreSize,
-            [boothRoom]: boothSize
-        }
-    });
+    // Room sizes go in the message string because the Winston printf format
+    // only prints info.message and discards metadata.
+    logger.info(
+        `Emitted new-message-from-recruiter queue=${queueId} booth=${boothId} jobSeeker=${jobSeekerId} ` +
+        `rooms ${userColonRoom}=${userColonSize} ${userUnderscoreRoom}=${userUnderscoreSize} ${boothRoom}=${boothSize}`
+    );
 };
 
 // Helper function to get job seekers currently in active calls for a booth
@@ -735,6 +731,13 @@ router.get('/status/:boothId', authenticateToken, async (req, res) => {
             unreadMessages: queueEntry.unreadForJobSeeker
         });
 
+        if (queueEntry.unreadForJobSeeker > 0) {
+            logger.debug(
+                `Queue status poll: jobSeeker=${jobSeekerId} queue=${queueEntry._id} ` +
+                `unread=${queueEntry.unreadForJobSeeker}`
+            );
+        }
+
     } catch (error) {
         console.error('Error getting queue status:', error);
         res.status(500).json({
@@ -1034,7 +1037,12 @@ router.post('/broadcast-message', authenticateToken, async (req, res) => {
         const io = req.app.get('io') || getIO();
 
         for (const queueEntry of queueEntries) {
-            await queueEntry.addMessage({ type: 'text', content: trimmedContent, sender: 'recruiter' });
+            await queueEntry.addMessage({
+                type: 'text',
+                content: trimmedContent,
+                sender: 'recruiter',
+                isBroadcast: true
+            });
             await queueEntry.updateActivity();
 
             const savedMessage = queueEntry.messages[queueEntry.messages.length - 1];
@@ -1045,9 +1053,16 @@ router.post('/broadcast-message', authenticateToken, async (req, res) => {
                     content: savedMessage.content,
                     sender: savedMessage.sender,
                     createdAt: savedMessage.createdAt,
-                    isRead: savedMessage.isRead
+                    isRead: savedMessage.isRead,
+                    isBroadcast: true
                 }
-                : { type: 'text', content: trimmedContent, sender: 'recruiter', createdAt: new Date() };
+                : {
+                    type: 'text',
+                    content: trimmedContent,
+                    sender: 'recruiter',
+                    createdAt: new Date(),
+                    isBroadcast: true
+                };
 
             emitMessageToJobSeeker(io, queueEntry, messagePayload);
         }

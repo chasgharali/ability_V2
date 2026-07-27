@@ -55,16 +55,19 @@ export const SocketProvider = ({ children }) => {
 
         // Connection event handlers
         newSocket.on('connect', () => {
+            console.info(`Socket connected to ${socketUrl} as ${user?.email || user?._id}`);
             setConnected(true);
             setError(null);
         });
 
-        newSocket.on('disconnect', () => {
+        newSocket.on('disconnect', (reason) => {
+            console.warn(`Socket disconnected from ${socketUrl}: ${reason}`);
             setConnected(false);
         });
 
         newSocket.on('connect_error', (error) => {
-            console.error('Socket connection error:', error);
+            // Include the URL: a wrong host/port is the usual cause and is otherwise invisible.
+            console.error(`Socket connection error (${socketUrl}):`, error.message || error);
             setError('Connection failed');
             setConnected(false);
         });

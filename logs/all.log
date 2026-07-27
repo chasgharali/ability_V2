@@ -1,0 +1,3 @@
+2026-07-27 01:48:02:482 [33mwarn[39m: [33m⚠️ DEEPGRAM_API_KEY not configured - caption service will be unavailable[39m
+2026-07-27 01:48:02:482 [33mwarn[39m: [33m   Set DEEPGRAM_API_KEY in your .env file to enable real-time captions[39m
+2026-07-27 01:48:02:482 [33mwarn[39m: [33m⚠️ OpenAI caption service unavailable - OPENAI_API_KEY missing[39m

@@ -94,6 +94,11 @@ const boothQueueSchema = new mongoose.Schema({
         isRead: {
             type: Boolean,
             default: false
+        },
+        // Set when the recruiter sent this to the whole queue rather than to one job seeker
+        isBroadcast: {
+            type: Boolean,
+            default: false
         }
     }],
     // Meeting details when invited
@@ -185,7 +190,8 @@ boothQueueSchema.methods.addMessage = function(messageData) {
         content: messageData.content,
         sender: messageData.sender,
         createdAt: new Date(),
-        isRead: false
+        isRead: false,
+        isBroadcast: !!messageData.isBroadcast
     });
     return this.save();
 };

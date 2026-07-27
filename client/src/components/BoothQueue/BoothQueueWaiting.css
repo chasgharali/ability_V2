@@ -2164,7 +2164,8 @@
 }
 
 /* Unread count badge */
-.sidebar-action-btn .unread-badge {
+.sidebar-action-btn .unread-badge,
+.mobile-toggle-btn .unread-badge {
   display: inline-block;
   background: #ef4444;
   color: #ffffff;
