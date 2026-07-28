@@ -155,7 +155,7 @@ function hasRenderableSectionContent(sectionKey, section) {
     case 'jobs':
       return (Array.isArray(data.jobsList) && data.jobsList.length > 0) || hasText(data.locationsText);
     case 'benefits':
-      return Array.isArray(data.benefitsList) && data.benefitsList.length > 0;
+      return hasHtmlText(getBenefitsHtml(data));
     case 'contact':
       return (
         hasText(data.sectionHeading)
@@ -853,61 +853,35 @@ function JobsList({ sectionKey, jobsList, isEditMode, onUpdateField }) {
   );
 }
 
-/** Benefits list — editable as textarea */
-function BenefitsList({ sectionKey, benefitsList, isEditMode, onUpdateField }) {
-  const items = Array.isArray(benefitsList) ? benefitsList : [];
-  const half = Math.ceil(items.length / 2);
-  const col1 = items.slice(0, half);
-  const col2 = items.slice(half);
+/** Convert legacy one-per-line benefitsList into HTML for the rich-text field. */
+function benefitsListToHtml(list) {
+  if (!Array.isArray(list) || list.length === 0) return '';
+  const escape = (s) => String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  return `<ul>${list.map((item) => `<li>${escape(item)}</li>`).join('')}</ul>`;
+}
 
-  if (isEditMode) {
-    return (
-      <div>
-        <p style={{ fontFamily: 'Arial,sans-serif', fontSize: 13, color: '#aaa', marginBottom: 6 }}>
-          Edit benefits (one per line):
-        </p>
-        <textarea
-          defaultValue={items.join('\n')}
-          rows={6}
-          style={{
-            width: '100%',
-            fontFamily: 'Arial,sans-serif',
-            fontSize: 14,
-            border: '1px solid #2d3d55',
-            borderRadius: 4,
-            padding: '8px 10px',
-            background: '#162030',
-            color: '#d0d8e8',
-            resize: 'vertical',
-            lineHeight: 1.6,
-          }}
-          onBlur={(e) => {
-            const lines = e.target.value.split('\n').map((l) => l.trim()).filter(Boolean);
-            onUpdateField && onUpdateField(sectionKey, 'benefitsList', lines);
-          }}
-          aria-label="Benefits list (one per line)"
-        />
-      </div>
-    );
-  }
+function getBenefitsHtml({ benefitsText, benefitsList } = {}) {
+  // Once benefitsText exists (even empty), prefer it so clearing the editor sticks.
+  if (typeof benefitsText === 'string') return benefitsText;
+  return benefitsListToHtml(benefitsList);
+}
 
-  if (items.length === 0) {
-    if (!isEditMode) return null;
-    return <p style={{ color: '#aaa', fontStyle: 'italic', fontFamily: 'Arial,sans-serif', fontSize: 14 }}>No benefits listed yet.</p>;
-  }
+/** Benefits — rich-text body (migrates legacy benefitsList arrays). */
+function BenefitsList({ sectionKey, benefitsText, benefitsList, isEditMode, onUpdateField }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 3rem' }}>
-      <ul className="elr-ben-list" aria-label="Benefits column 1">
-        {col1.map((b, i) => (
-          <li key={i}><span className="elr-ben-dot" aria-hidden="true" />{b}</li>
-        ))}
-      </ul>
-      <ul className="elr-ben-list" aria-label="Benefits column 2">
-        {col2.map((b, i) => (
-          <li key={i}><span className="elr-ben-dot" aria-hidden="true" />{b}</li>
-        ))}
-      </ul>
-    </div>
+    <RichBody
+      sectionKey={sectionKey}
+      fieldName="benefitsText"
+      value={getBenefitsHtml({ benefitsText, benefitsList })}
+      placeholder="Describe benefits and perks..."
+      className="elr-body"
+      isEditMode={isEditMode}
+      onUpdateField={onUpdateField}
+    />
   );
 }
 
@@ -1285,12 +1259,12 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
-      if (!isEditMode && !benefits.benefitsList?.length) return null;
+      if (!isEditMode && !hasHtmlText(getBenefitsHtml(benefits))) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-benefits" className="elr-sec elr-bg-dark" aria-label="Benefits section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
             <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+            <BenefitsList sectionKey="benefits" benefitsText={benefits.benefitsText} benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
       );
@@ -1443,11 +1417,11 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
-      if (!isEditMode && !benefits.benefitsList?.length) return null;
+      if (!isEditMode && !hasHtmlText(getBenefitsHtml(benefits))) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-benefits" className="elr-b-ben-col elr-bg-dark" aria-label="Benefits section">
           <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1.25rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-          <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+          <BenefitsList sectionKey="benefits" benefitsText={benefits.benefitsText} benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
       );
     }
@@ -1615,12 +1589,12 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
-      if (!isEditMode && !benefits.benefitsList?.length) return null;
+      if (!isEditMode && !hasHtmlText(getBenefitsHtml(benefits))) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-benefits" className="elr-sec elr-bg-dark" aria-label="Benefits section">
           <div style={{ maxWidth: 860, margin: '0 auto' }}>
             <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-            <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+            <BenefitsList sectionKey="benefits" benefitsText={benefits.benefitsText} benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
         </SecWrap>
       );
@@ -1772,11 +1746,11 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       );
     }
     if (key === 'benefits') {
-      if (!isEditMode && !benefits.benefitsList?.length) return null;
+      if (!isEditMode && !hasHtmlText(getBenefitsHtml(benefits))) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="d-benefits" className="elr-d-ben-col" aria-label="Benefits section">
           <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
-          <BenefitsList sectionKey="benefits" benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
+          <BenefitsList sectionKey="benefits" benefitsText={benefits.benefitsText} benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
         </SecWrap>
       );
     }

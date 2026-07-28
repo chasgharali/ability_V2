@@ -33,7 +33,7 @@ const DEFAULT_CONTENT_DATA = {
   gallery: { galleryTitle: 'Life at the Company', images: Array(5).fill(null).map(() => ({ url: '', alt: '' })), bgColor: '', headingColor: '', textColor: '' },
   contact: { primaryBtnText: 'Join Our Talent Community', primaryBtnUrl: '#', secondaryBtnText: 'View Our Open Positions', secondaryBtnUrl: '#', ctaHeadline: 'Ready to explore a career with us?', bgColor: '', headingColor: '', textColor: '' },
   jobs: { jobsList: [], locationsText: '', bgColor: '', headingColor: '', textColor: '' },
-  benefits: { benefitsList: [], bgColor: '', headingColor: '', textColor: '' },
+  benefits: { benefitsText: '', bgColor: '', headingColor: '', textColor: '' },
   social: {
     links: ['FB', 'IN', 'IG', 'TH', 'YT', 'TT', 'BS', 'X'].map((p) => ({ platform: p, url: '' })),
     copyrightText: '',
