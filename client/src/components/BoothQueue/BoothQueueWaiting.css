@@ -677,8 +677,10 @@
   display: block;
   font-size: 0.75rem;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem;
   opacity: 0.8;
+  color: inherit;
+  line-height: inherit;
 }
 
 .queue-number {

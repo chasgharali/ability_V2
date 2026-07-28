@@ -1656,9 +1656,10 @@ export default function BoothQueueWaiting() {
 
           <div className="queue-numbers queue-numbers-desktop">
             <div className="queue-number-card">
-              {/* sr-only sentence is a real DOM node so screen readers read it
-                  during linear / swipe navigation without needing focus.
-                  The visual elements below are aria-hidden to avoid duplication. */}
+              {/* h2 exposes "Meeting Number" in the heading outline for screen-reader
+                  navigation. The sr-only sentence below is read during linear / swipe
+                  navigation. The number and helper text stay aria-hidden to avoid
+                  duplicating that announcement. */}
               <span className="sr-only">
                 {`Meeting number ${queuePosition || 0}. ${
                   peopleAhead === 0
@@ -1666,7 +1667,7 @@ export default function BoothQueueWaiting() {
                     : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
                 } Status: waiting in queue.`}
               </span>
-              <span className="queue-label" aria-hidden="true">Meeting Number</span>
+              <h2 className="queue-label" id="total-waiting-label">Meeting Number</h2>
               <span className="queue-number" aria-hidden="true">
                 {queuePosition || 0}
               </span>
@@ -1804,9 +1805,9 @@ export default function BoothQueueWaiting() {
               </div>
             </div>
 
-            {/* Row 2: Queue status card — sr-only sentence is a real DOM node
-                so VoiceOver / NVDA / JAWS read it during linear/swipe navigation
-                without needing focus. Visual elements are aria-hidden. */}
+            {/* Row 2: Queue status card — h2 exposes the section in the heading
+                outline; sr-only sentence is read during linear/swipe navigation.
+                Number and helper text stay aria-hidden to avoid duplication. */}
             <div className="queue-numbers queue-numbers-mobile">
               <div className="queue-number-card queue-number-card-mobile">
                 <span className="sr-only">
@@ -1816,8 +1817,8 @@ export default function BoothQueueWaiting() {
                       : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
                   }`}
                 </span>
-                <div className="mqc-label-group" aria-hidden="true">
-                  <span className="queue-label">Queue status</span>
+                <div className="mqc-label-group">
+                  <h2 className="queue-label" id="total-waiting-label-mobile">Queue status</h2>
                 </div>
                 <span className="queue-number" aria-hidden="true">{queuePosition || 0}</span>
                 <p className="queue-helper-text queue-helper-text-mobile" aria-hidden="true">
