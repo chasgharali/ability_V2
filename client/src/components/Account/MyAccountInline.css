@@ -120,7 +120,7 @@
 .checkbox-custom {
   width: 20px;
   height: 20px;
-  border: 2px solid #d1d5db;
+  border: 2px solid #6b7280;
   border-radius: 4px;
   background: white;
   flex-shrink: 0;
@@ -248,7 +248,7 @@
 .form-group input,
 .form-group select {
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #6b7280;
   border-radius: 4px;
   font-size: 0.875rem;
   transition: border-color 0.15s ease, background-color 0.15s ease;
@@ -336,7 +336,7 @@
 .phone-field-wrapper select,
 .phone-field-wrapper input {
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #6b7280;
   border-radius: 4px;
   font-size: 0.875rem;
   transition: border-color 0.15s ease, background-color 0.15s ease;
