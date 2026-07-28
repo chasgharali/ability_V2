@@ -597,7 +597,7 @@ export default function DeviceTestModal({
 
                   {isTestingAudio && (
                     <div className="audio-level-container">
-                      <div className="audio-level-label">Microphone Level</div>
+                      <h3 className="audio-level-label">Microphone Level</h3>
                       <div className="audio-level-bar">
                         <div
                           className="audio-level-fill"
