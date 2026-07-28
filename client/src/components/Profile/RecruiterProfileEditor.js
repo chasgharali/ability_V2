@@ -216,11 +216,11 @@ export default function RecruiterProfileEditor() {
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="firstName">First Name *</label>
-                      <input id="firstName" name="firstName" value={profileForm.firstName} onChange={handleProfileChange} required />
+                      <input id="firstName" name="firstName" value={profileForm.firstName} onChange={handleProfileChange} required autoComplete="given-name" />
                     </div>
                     <div className="form-group">
                       <label htmlFor="lastName">Last Name *</label>
-                      <input id="lastName" name="lastName" value={profileForm.lastName} onChange={handleProfileChange} required />
+                      <input id="lastName" name="lastName" value={profileForm.lastName} onChange={handleProfileChange} required autoComplete="family-name" />
                     </div>
                   </div>
                   <div className="form-actions">

@@ -444,17 +444,17 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">First Name *</label>
-            <input id="firstName" name="firstName" value={form.firstName} onChange={onChange} required />
+            <input id="firstName" name="firstName" value={form.firstName} onChange={onChange} required autoComplete="given-name" />
           </div>
           <div className="form-group">
             <label htmlFor="lastName">Last Name *</label>
-            <input id="lastName" name="lastName" value={form.lastName} onChange={onChange} required />
+            <input id="lastName" name="lastName" value={form.lastName} onChange={onChange} required autoComplete="family-name" />
           </div>
         </div>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="email">Email *</label>
-            <input id="email" name="email" value={form.email} readOnly aria-readonly="true" />
+            <input id="email" name="email" value={form.email} readOnly aria-readonly="true" autoComplete="email" />
             {pendingEmail && (
               <div className="field-help" style={{ color: '#2563eb', marginTop: '4px' }}>
                 Pending email change to: {pendingEmail}. Please check your inbox and verify the new email address.
@@ -469,6 +469,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                 name="phoneCountryCode"
                 value={form.phoneCountryCode}
                 onChange={onChange}
+                autoComplete="tel-country-code"
               >
                 {countryCodes.map(country => (
                   <option key={country.dialCode} value={country.dialCode}>
@@ -485,6 +486,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
                 value={form.phone} 
                 onChange={onChange} 
                 type="tel"
+                autoComplete="tel-national"
               />
             </div>
           </div>
@@ -498,6 +500,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
               value={form.state}
               onChange={onChange}
               required
+              autoComplete="address-level1"
               aria-describedby="state-help"
               aria-invalid={!form.state}
             />
@@ -511,6 +514,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
               value={form.city}
               onChange={onChange}
               required
+              autoComplete="address-level2"
               aria-describedby="city-help"
               aria-invalid={!form.city}
             />
@@ -525,6 +529,7 @@ export default function MyAccountInline({ user, onDone, updateProfile, changePas
             value={form.country}
             onChange={onChange}
             required
+            autoComplete="country"
             aria-describedby="country-help"
             aria-invalid={!form.country}
           >
