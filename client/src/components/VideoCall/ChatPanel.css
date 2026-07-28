@@ -23,8 +23,17 @@
   border-left: 1px solid #ddd;
   display: flex;
   flex-direction: column;
-  z-index: 20;
+  z-index: 30;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.incall-chat-panel:focus {
+  outline: none;
+}
+
+.incall-chat-panel:focus-visible {
+  outline: 3px solid #005aff;
+  outline-offset: -3px;
 }
 
 /* Header */
@@ -72,6 +81,7 @@
   color: #333;
 }
 
+.incall-chat-close-button:focus,
 .incall-chat-close-button:focus-visible {
   outline: 3px solid #005aff;
   outline-offset: 4px;

@@ -34,6 +34,7 @@ const CallControls = ({
   isAudioEnabled,
   isVideoEnabled,
   isCaptionEnabled,
+  isChatOpen = false,
   onToggleAudio,
   onToggleVideo,
   onToggleCaption,
@@ -44,7 +45,8 @@ const CallControls = ({
   onLeaveCall,
   userRole,
   participantCount,
-  chatUnreadCount = 0
+  chatUnreadCount = 0,
+  chatButtonRef = null
 }) => {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
 
@@ -103,11 +105,15 @@ const CallControls = ({
       id: 'chat',
       icon: FiMessageCircle,
       label: 'Chat',
-      ariaLabel: chatUnreadCount > 0 ? `Open chat (${chatUnreadCount} unread messages)` : 'Open chat',
+      ariaLabel: chatUnreadCount > 0
+        ? `${isChatOpen ? 'Close' : 'Open'} chat (${chatUnreadCount} unread messages)`
+        : (isChatOpen ? 'Close chat' : 'Open chat'),
       onClick: onToggleChat,
-      className: 'control-button',
+      className: `control-button ${isChatOpen ? 'enabled' : ''}`,
       badge: chatUnreadCount > 0 ? chatUnreadCount : null,
-      primary: false
+      primary: false,
+      ariaExpanded: isChatOpen,
+      ariaControls: 'incall-chat-panel'
     }
   ];
 
@@ -181,10 +187,14 @@ const CallControls = ({
             return (
               <div key={button.id} className="control-wrapper">
                 <button
+                  id={button.id === 'chat' ? 'video-call-chat-button' : undefined}
+                  ref={button.id === 'chat' ? chatButtonRef : undefined}
                   className={button.className}
                   onClick={button.onClick}
                   title={button.ariaLabel}
                   aria-label={button.ariaLabel}
+                  aria-expanded={button.ariaExpanded}
+                  aria-controls={button.ariaControls}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {

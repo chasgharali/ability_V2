@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiSend, FiX, FiMessageCircle } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatRoleLabel, normalizeRoleKey } from '../../utils/videoCallRoles';
+import useDialogFocus from '../../hooks/useDialogFocus';
 import './ChatPanel.css';
 
 const ChatPanel = ({ messages = [], onSendMessage, onClose, resolveSenderRole }) => {
@@ -11,18 +12,12 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose, resolveSenderRole })
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const panelRef = useRef(null);
+  // Trap focus in the panel while open and restore it to the Chat trigger on close.
+  const { dialogRef, onKeyDown } = useDialogFocus(true, onClose);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  useEffect(() => {
-    // Focus input when panel opens
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -103,24 +98,29 @@ const ChatPanel = ({ messages = [], onSendMessage, onClose, resolveSenderRole })
 
   return (
     <div
+      id="incall-chat-panel"
       className="incall-chat-panel"
-      ref={panelRef}
-      role="complementary"
-      aria-label="Meeting Group Chat"
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="incall-chat-title"
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
     >
       {/* Screen reader announcements */}
       <div id="chat-announcements" className="sr-only" aria-live="assertive"></div>
       
       {/* Header */}
-      <div className="incall-chat-header" role="heading" aria-level={2}>
+      <div className="incall-chat-header">
         <div className="incall-chat-title">
           <FiMessageCircle size={20} aria-hidden="true" />
-          <h2>Chat</h2>
+          <h2 id="incall-chat-title">Chat</h2>
           <span className="incall-chat-message-count" aria-label={`${messages.length} messages`}>
             ({messages.length})
           </span>
         </div>
         <button 
+          type="button"
           className="incall-chat-close-button"
           onClick={onClose}
           aria-label="Close chat panel"

@@ -285,6 +285,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
   const captionContentRef = useRef(null);
   const captionSettingsBtnRef = useRef(null);
   const captionSettingsWasOpenRef = useRef(false);
+  const chatButtonRef = useRef(null);
 
   useEffect(() => {
     if (showCaptionSettings) {
@@ -1528,8 +1529,21 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
       // Close other panels
       setIsParticipantsOpen(false);
       setIsProfileOpen(false);
+    } else {
+      // Return focus to the Chat trigger after the panel unmounts
+      requestAnimationFrame(() => {
+        chatButtonRef.current?.focus();
+      });
     }
   };
+
+  const handleCloseChat = useCallback(() => {
+    setIsChatOpen(false);
+    // Prefer restoring focus to the Chat button (WCAG 2.4.3 Focus Order)
+    requestAnimationFrame(() => {
+      chatButtonRef.current?.focus();
+    });
+  }, []);
 
   const handleToggleParticipants = () => {
     const newState = !isParticipantsOpen;
@@ -2982,7 +2996,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
         <ChatPanel
           messages={chatMessages}
           onSendMessage={sendChatMessage}
-          onClose={() => setIsChatOpen(false)}
+          onClose={handleCloseChat}
           resolveSenderRole={resolveChatSenderDisplayRole}
         />
       )}
@@ -3303,6 +3317,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           isAudioEnabled={isAudioEnabled}
           isVideoEnabled={isVideoEnabled}
           isCaptionEnabled={isCaptionEnabled}
+          isChatOpen={isChatOpen}
           onToggleAudio={toggleAudio}
           onToggleVideo={toggleVideo}
           onToggleCaption={toggleCaption}
@@ -3314,6 +3329,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
           userRole={callInfo?.userRole || user?.role}
           participantCount={participants.size + 1}
           chatUnreadCount={unreadChatCount}
+          chatButtonRef={chatButtonRef}
         />
       </footer>
 
