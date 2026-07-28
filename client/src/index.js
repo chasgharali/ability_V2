@@ -22,7 +22,7 @@ import { suppressExtensionConsoleNoise } from './utils/suppressExtensionConsoleN
 
 suppressExtensionConsoleNoise();
 
-const syncfusionLicense = process.env.REACT_APP_SYNCFUSION_LICENSE || 'Ngo9BigBOggjHTQxAR8/V1JHaF5cWWdCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdlWXpcdnRRQmdeVUd0XUBWYEo=';
+const syncfusionLicense = process.env.REACT_APP_SYNCFUSION_LICENSE || 'Ngo9BigBOggjHTQxAR8/V1JAaF5cX2pCd1p/TH5YfUNzdUVEY1ZUTXxaS1ZhSXxVdkJhUX5bdHNXRWVVV0d9XEY=';
 try {
     registerLicense(syncfusionLicense);
 } catch (err) {
