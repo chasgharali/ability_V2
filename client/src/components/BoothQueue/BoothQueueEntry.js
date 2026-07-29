@@ -5,9 +5,44 @@ import { interpreterCategoriesAPI } from '../../services/interpreterCategories';
 import { boothQueueAPI } from '../../services/boothQueue';
 import { legalPagesAPI } from '../../services/legalPages';
 import { announceToScreenReader } from '../Accessibility/FocusManager';
+import {
+  isBoothClosed,
+  isBoothLinkExpired,
+  isEventEnded,
+  formatAvailabilityDate
+} from '../../utils/availability';
 import './BoothQueueEntry.css';
 import AdminHeader from '../Layout/AdminHeader';
 import '../Dashboard/Dashboard.css';
+
+/** Blocked states share one screen; the heading tells the job seeker which gate stopped them. */
+const buildBlockedState = (event, booth) => {
+  if (isBoothLinkExpired(booth)) {
+    return {
+      heading: 'Booth Link Expired',
+      message: `This booth link expired on ${formatAvailabilityDate(booth.expireLinkTime)}. You are unable to join this queue.`
+    };
+  }
+  if (isEventEnded(event)) {
+    return {
+      heading: 'Event Has Ended',
+      message: `This event ended on ${formatAvailabilityDate(event.end)}. You are unable to join this queue.`
+    };
+  }
+  if (isBoothClosed(booth)) {
+    return {
+      heading: 'Booth Closed',
+      message: `This booth closed on ${formatAvailabilityDate(booth.closeTime)}. You are unable to join this queue.`
+    };
+  }
+  return null;
+};
+
+const BLOCKED_HEADINGS_BY_ERROR_CODE = {
+  BOOTH_EXPIRED: 'Booth Link Expired',
+  EVENT_ENDED: 'Event Has Ended',
+  BOOTH_CLOSED: 'Booth Closed'
+};
 
 export default function BoothQueueEntry() {
   const { eventSlug, boothId } = useParams();
@@ -23,7 +58,7 @@ export default function BoothQueueEntry() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
-  const [isBoothExpired, setIsBoothExpired] = useState(false);
+  const [blockedState, setBlockedState] = useState(null);
   const [legalLinks, setLegalLinks] = useState({ termsOfUse: null, privacyPolicy: null });
 
   const openPositions = useMemo(
@@ -119,26 +154,15 @@ export default function BoothQueueEntry() {
       console.log('Extracted event:', extractedEvent);
       console.log('Extracted booth:', extractedBooth);
 
-      // Check if booth link has expired
-      if (extractedBooth?.expireLinkTime) {
-        const now = new Date();
-        const expireDate = new Date(extractedBooth.expireLinkTime);
-        if (now > expireDate) {
-          const formattedDate = expireDate.toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          });
-          setError(`This booth link expired on ${formattedDate}. You are unable to join this queue.`);
-          setIsBoothExpired(true);
-          setBooth(extractedBooth); // Still set booth for display purposes
-          setEvent(extractedEvent);
-          setLoading(false);
-          return; // Stop loading, show error
-        }
+      // Expired link, ended event, and closed booth all block joining
+      const blocked = buildBlockedState(extractedEvent, extractedBooth);
+      if (blocked) {
+        setError(blocked.message);
+        setBlockedState(blocked);
+        setBooth(extractedBooth); // Still set booth for display purposes
+        setEvent(extractedEvent);
+        setLoading(false);
+        return; // Stop loading, show error
       }
 
       setEvent(extractedEvent);
@@ -200,7 +224,13 @@ export default function BoothQueueEntry() {
       }
     } catch (error) {
       console.error('Error joining queue:', error);
-      setError(error.response?.data?.message || 'Failed to join queue');
+      const data = error.response?.data;
+      const message = data?.message || 'Failed to join queue';
+      setError(message);
+      const heading = BLOCKED_HEADINGS_BY_ERROR_CODE[data?.error];
+      if (heading) {
+        setBlockedState({ heading, message });
+      }
     } finally {
       setJoining(false);
     }
@@ -259,8 +289,8 @@ export default function BoothQueueEntry() {
     );
   }
 
-  // Show error screen when booth is expired
-  if (isBoothExpired) {
+  // Show error screen when the link expired, the event ended, or the booth closed
+  if (blockedState) {
     return (
       <div className="booth-queue-entry">
         <a href="#main-content" className="skip-link">Skip to main content</a>
@@ -286,7 +316,7 @@ export default function BoothQueueEntry() {
               <h2 className="event-name">{event?.name || 'ABILITY Job Fair'}</h2>
             </div>
             <div className="divider" />
-            <div className="error-container" style={{ 
+            <div className="error-container" role="alert" style={{ 
               background: '#ffe8e8', 
               borderColor: '#f5c2c7', 
               color: '#842029',
@@ -295,8 +325,8 @@ export default function BoothQueueEntry() {
               margin: '1rem 0',
               textAlign: 'center'
             }}>
-              <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.25rem' }}>Booth Link Expired</h2>
-              <p style={{ margin: 0 }}>{error}</p>
+              <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.25rem' }}>{blockedState.heading}</h2>
+              <p style={{ margin: 0 }}>{blockedState.message}</p>
             </div>
             <div className="modal-actions">
               <button onClick={handleExit} className="btn-exit">

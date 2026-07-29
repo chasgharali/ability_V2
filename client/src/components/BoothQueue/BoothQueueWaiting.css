@@ -156,6 +156,19 @@
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
 }
 
+/* Booth past its close time: no call to action, so the banner reads as a final
+   notice rather than an invitation to act. #842029 on #ffe8e8 is 7.5:1. */
+.recruiter-end-banner.booth-closed-banner {
+  background: #ffe8e8;
+  border-color: #f5c2c7;
+  border-left-color: #b91c1c;
+  color: #842029;
+}
+
+.booth-closed-banner .recruiter-end-banner-text {
+  color: #842029;
+}
+
 /* Booth Queue Waiting Styles */
 
 .booth-queue-waiting {
@@ -717,6 +730,18 @@
 .status-text {
   color: #111827;
   font-weight: 600;
+}
+
+/* Closed booths override the green "waiting" treatment on both breakpoints. */
+.queue-status.booth-closed-status .status-dot,
+.mobile-identity-row .queue-status.booth-closed-status .status-dot {
+  background: #6b7280;
+  animation: none;
+}
+
+.queue-status.booth-closed-status .status-text,
+.mobile-identity-row .queue-status.booth-closed-status .status-text {
+  color: #374151;
 }
 
 

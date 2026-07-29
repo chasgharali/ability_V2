@@ -6,6 +6,7 @@ const { authenticateToken, requireRole, requireResourceAccess } = require('../mi
 const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
 const { toStablePublicImageUrl } = require('../utils/mediaUrl');
+const { isBoothClosed } = require('../utils/availability');
 
 const router = express.Router();
 const EMPLOYER_SECTION_KEYS = ['about', 'program', 'video', 'gallery', 'jobs', 'benefits', 'contact', 'social'];
@@ -450,6 +451,7 @@ router.get('/invite/:slug', authenticateToken, async (req, res) => {
         // 2. Event is published/active (not draft or cancelled) AND
         // 3. Event hasn't ended (or is demo)
         // 4. Booth link hasn't expired
+        // 5. Booth hasn't passed its close time
         const eventHasEnded = eventEnd && eventEnd < now;
         
         // Check booth link expiry
@@ -462,11 +464,14 @@ router.get('/invite/:slug', authenticateToken, async (req, res) => {
                 boothExpiredAt = booth.expireLinkTime;
             }
         }
-        
-        const canJoinQueue = isRegistered && isEventPublished && (!eventHasEnded || isDemoEvent) && !isBoothExpired;
+
+        const isBoothClosedNow = isBoothClosed(booth, now);
+        const boothClosedAt = isBoothClosedNow ? booth.closeTime : null;
+
+        const canJoinQueue = isRegistered && isEventPublished && (!eventHasEnded || isDemoEvent) && !isBoothExpired && !isBoothClosedNow;
 
         // Log for debugging
-        logger.info(`Booth invite resolve: slug=${slug}, boothId=${booth._id}, eventId=${event._id}, isRegistered=${isRegistered}, isEventPublished=${isEventPublished}, eventHasEnded=${eventHasEnded}, isDemoEvent=${isDemoEvent}, isBoothExpired=${isBoothExpired}, canJoinQueue=${canJoinQueue}`);
+        logger.info(`Booth invite resolve: slug=${slug}, boothId=${booth._id}, eventId=${event._id}, isRegistered=${isRegistered}, isEventPublished=${isEventPublished}, eventHasEnded=${eventHasEnded}, isDemoEvent=${isDemoEvent}, isBoothExpired=${isBoothExpired}, isBoothClosed=${isBoothClosedNow}, canJoinQueue=${canJoinQueue}`);
 
         // Public info for job seekers
         res.json({
@@ -477,7 +482,9 @@ router.get('/invite/:slug', authenticateToken, async (req, res) => {
             isEventUpcoming,
             canJoinQueue,
             isBoothExpired,
-            boothExpiredAt
+            boothExpiredAt,
+            isBoothClosed: isBoothClosedNow,
+            boothClosedAt
         });
     } catch (error) {
         logger.error('Resolve booth by invite slug error:', error);

@@ -17,9 +17,13 @@ import useDialogFocus from '../../hooks/useDialogFocus';
 import './BoothQueueWaiting.css';
 import AdminHeader from '../Layout/AdminHeader';
 import { hydrateStreamMediaUrls, hydrateStreamMediaElements } from '../../utils/videoContentProcessor';
+import { isBoothClosed } from '../../utils/availability';
 
 const RECRUITER_END_BANNER_MESSAGE =
   'Recruiters are no longer available for live meetings. This booth is still open — you can leave a message for the recruiters.';
+
+const BOOTH_CLOSED_BANNER_MESSAGE =
+  'This booth is now closed. You can no longer join a meeting or leave a message. You can still view the employer page below.';
 
 /** True when recruiter end time has passed and booth is still within its close window. */
 function shouldShowRecruiterEndBanner(booth, now = new Date()) {
@@ -148,6 +152,7 @@ export default function BoothQueueWaiting() {
   const hasPendingInviteRef = useRef(false); // Skip restore when socket invite is already shown
   const callRestoreBlockedRef = useRef(false); // Stop retrying after a definitive 403
   const recruiterEndBannerAnnouncedRef = useRef(''); // last announced message text (empty = not announced)
+  const boothClosedAnnouncedRef = useRef(false);
   const queueEntryIdRef = useRef(null);
   const boothIdRef = useRef(boothId);
   const showTextMessagingModalRef = useRef(false);
@@ -675,7 +680,8 @@ export default function BoothQueueWaiting() {
     setAnnouncements([{ id: uniqueId, message }]);
   };
 
-  const showRecruiterEndBanner = shouldShowRecruiterEndBanner(booth, availabilityNow);
+  const boothClosed = isBoothClosed(booth, availabilityNow);
+  const showRecruiterEndBanner = !boothClosed && shouldShowRecruiterEndBanner(booth, availabilityNow);
   const recruiterUnavailableMessage = getRecruiterUnavailableMessage(booth);
 
   // Re-evaluate recruiter-end window and refresh booth fields (e.g. custom message)
@@ -745,6 +751,23 @@ export default function BoothQueueWaiting() {
     recruiterEndBannerAnnouncedRef.current = recruiterUnavailableMessage;
     announceToScreenReader(recruiterUnavailableMessage);
   }, [showRecruiterEndBanner, recruiterUnavailableMessage]);
+
+  // Once the booth closes, dismiss any open messaging dialog so the job seeker
+  // can't submit into a booth the server will now reject.
+  useEffect(() => {
+    if (!boothClosed) {
+      boothClosedAnnouncedRef.current = false;
+      return;
+    }
+    setShowLeaveMessageModal(false);
+    setShowTextMessagingModal(false);
+    setShowMessageModal(false);
+    setShowMessagePreview(false);
+    if (!boothClosedAnnouncedRef.current) {
+      boothClosedAnnouncedRef.current = true;
+      announceToScreenReader(BOOTH_CLOSED_BANNER_MESSAGE);
+    }
+  }, [boothClosed]);
 
   // Simple, reliable speech function using native SpeechSynthesis
   const speak = (text) => {
@@ -1263,6 +1286,11 @@ export default function BoothQueueWaiting() {
   }, [mobilePanelOpen]);
 
   const handleSendTextMessage = async () => {
+    if (boothClosed) {
+      setShowTextMessagingModal(false);
+      showError(BOOTH_CLOSED_BANNER_MESSAGE);
+      return;
+    }
     try {
       if (!textMessageContent.trim()) return;
 
@@ -1301,6 +1329,11 @@ export default function BoothQueueWaiting() {
   };
 
   const handleLeaveWithMessage = async () => {
+    if (boothClosed) {
+      setShowLeaveMessageModal(false);
+      showError(BOOTH_CLOSED_BANNER_MESSAGE);
+      return;
+    }
     try {
       let finalContent = messageContent;
 
@@ -1407,11 +1440,20 @@ export default function BoothQueueWaiting() {
   };
 
   const handleViewMessages = async () => {
+    if (boothClosed) {
+      showError(BOOTH_CLOSED_BANNER_MESSAGE);
+      return;
+    }
     setShowTextMessagingModal(true);
     await loadMessages();
   };
 
   const handleSendMessage = async () => {
+    if (boothClosed) {
+      setShowMessageModal(false);
+      showError(BOOTH_CLOSED_BANNER_MESSAGE);
+      return;
+    }
     try {
       setIsUploading(true);
       let finalContent = messageContent;
@@ -1654,68 +1696,74 @@ export default function BoothQueueWaiting() {
             </div>
           </div>
 
-          <div className="queue-numbers queue-numbers-desktop">
-            <div className="queue-number-card">
-              {/* h2 exposes "Meeting Number" in the heading outline for screen-reader
-                  navigation. The sr-only sentence below is read during linear / swipe
-                  navigation. The number and helper text stay aria-hidden to avoid
-                  duplicating that announcement. */}
-              <span className="sr-only">
-                {`Meeting number ${queuePosition || 0}. ${
-                  peopleAhead === 0
-                    ? 'You are next in the queue.'
-                    : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
-                } Status: waiting in queue.`}
-              </span>
-              <h2 className="queue-label" id="total-waiting-label">Meeting Number</h2>
-              <span className="queue-number" aria-hidden="true">
-                {queuePosition || 0}
-              </span>
-              <p className="queue-helper-text" aria-hidden="true">
-                There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
-              </p>
+          {!boothClosed && (
+            <div className="queue-numbers queue-numbers-desktop">
+              <div className="queue-number-card">
+                {/* h2 exposes "Meeting Number" in the heading outline for screen-reader
+                    navigation. The sr-only sentence below is read during linear / swipe
+                    navigation. The number and helper text stay aria-hidden to avoid
+                    duplicating that announcement. */}
+                <span className="sr-only">
+                  {`Meeting number ${queuePosition || 0}. ${
+                    peopleAhead === 0
+                      ? 'You are next in the queue.'
+                      : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
+                  } Status: waiting in queue.`}
+                </span>
+                <h2 className="queue-label" id="total-waiting-label">Meeting Number</h2>
+                <span className="queue-number" aria-hidden="true">
+                  {queuePosition || 0}
+                </span>
+                <p className="queue-helper-text" aria-hidden="true">
+                  There {peopleAhead === 1 ? 'is' : 'are'} {peopleAhead} {peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="queue-status queue-status-desktop" aria-hidden="true">
-            <span className="status-dot waiting" aria-hidden="true"></span>
-            <span className="status-text">Waiting in queue</span>
+          <div className={`queue-status queue-status-desktop${boothClosed ? ' booth-closed-status' : ''}`} aria-hidden="true">
+            <span className={`status-dot ${boothClosed ? 'closed' : 'waiting'}`} aria-hidden="true"></span>
+            <span className="status-text">{boothClosed ? 'Booth closed' : 'Waiting in queue'}</span>
           </div>
 
           {/* Action buttons */}
           <div className="sidebar-actions">
-            <button
-              className="sidebar-action-btn camera-btn"
-              onClick={handleDeviceSelection}
-              aria-label="Select camera and microphone devices"
-              type="button"
-            >
-              <FaVideo aria-hidden="true" /> Select camera & mic
-            </button>
+            {!boothClosed && (
+              <>
+                <button
+                  className="sidebar-action-btn camera-btn"
+                  onClick={handleDeviceSelection}
+                  aria-label="Select camera and microphone devices"
+                  type="button"
+                >
+                  <FaVideo aria-hidden="true" /> Select camera & mic
+                </button>
 
-            <button
-              className="sidebar-action-btn message-btn"
-              onClick={handleViewMessages}
-              aria-label="View and send text messages to the recruiter"
-              type="button"
-            >
-              <FaCommentDots aria-hidden="true" />
-              Send Messages
-              {unreadCount > 0 && (
-                <span className="unread-badge" aria-label={`${unreadCount} unread messages`}>
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+                <button
+                  className="sidebar-action-btn message-btn"
+                  onClick={handleViewMessages}
+                  aria-label="View and send text messages to the recruiter"
+                  type="button"
+                >
+                  <FaCommentDots aria-hidden="true" />
+                  Send Messages
+                  {unreadCount > 0 && (
+                    <span className="unread-badge" aria-label={`${unreadCount} unread messages`}>
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
 
-            <button
-              className="sidebar-action-btn leave-message-btn"
-              onClick={() => { setShowLeaveMessageModal(true); setMessageType('audio'); }}
-              aria-label="Leave a message and exit the queue"
-              type="button"
-            >
-              <FaCommentDots aria-hidden="true" /> Leave Message
-            </button>
+                <button
+                  className="sidebar-action-btn leave-message-btn"
+                  onClick={() => { setShowLeaveMessageModal(true); setMessageType('audio'); }}
+                  aria-label="Leave a message and exit the queue"
+                  type="button"
+                >
+                  <FaCommentDots aria-hidden="true" /> Leave Message
+                </button>
+              </>
+            )}
 
             <button
               className="sidebar-action-btn refresh-btn"
@@ -1757,7 +1805,7 @@ export default function BoothQueueWaiting() {
             aria-label={
               mobilePanelOpen
                 ? 'Close queue options panel'
-                : `Open queue options panel${unreadCount > 0
+                : `Open queue options panel${unreadCount > 0 && !boothClosed
                   ? `, ${unreadCount} unread message${unreadCount === 1 ? '' : 's'}`
                   : ''}`
             }
@@ -1767,7 +1815,7 @@ export default function BoothQueueWaiting() {
             {mobilePanelOpen ? 'Close Queue Options' : 'Queue Options'}
             {/* The Send Messages badge sits inside the collapsed panel, so mirror the
                 count here where it stays visible on small screens. */}
-            {!mobilePanelOpen && unreadCount > 0 && (
+            {!mobilePanelOpen && unreadCount > 0 && !boothClosed && (
               <span className="unread-badge" aria-hidden="true">{unreadCount}</span>
             )}
           </button>
@@ -1798,9 +1846,9 @@ export default function BoothQueueWaiting() {
                     both via the headings rotor. */}
                 <h1 className="mobile-event-title" id="event-title-mobile">{event?.name || 'ABILITY Job Fair - Event'}</h1>
                 <h2 className="mobile-booth-subtitle" id="booth-title-mobile">{booth?.name || 'Company Booth'}</h2>
-                <div className="queue-status queue-status-mobile" aria-hidden="true">
-                  <span className="status-dot waiting" aria-hidden="true"></span>
-                  <span className="status-text">Waiting in queue</span>
+                <div className={`queue-status queue-status-mobile${boothClosed ? ' booth-closed-status' : ''}`} aria-hidden="true">
+                  <span className={`status-dot ${boothClosed ? 'closed' : 'waiting'}`} aria-hidden="true"></span>
+                  <span className="status-text">{boothClosed ? 'Booth closed' : 'Waiting in queue'}</span>
                 </div>
               </div>
             </div>
@@ -1808,24 +1856,26 @@ export default function BoothQueueWaiting() {
             {/* Row 2: Queue status card — h2 exposes the section in the heading
                 outline; sr-only sentence is read during linear/swipe navigation.
                 Number and helper text stay aria-hidden to avoid duplication. */}
-            <div className="queue-numbers queue-numbers-mobile">
-              <div className="queue-number-card queue-number-card-mobile">
-                <span className="sr-only">
-                  {`Queue status. Your meeting number is ${queuePosition || 0}. ${
-                    peopleAhead === 0
-                      ? 'You are next in the queue.'
-                      : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
-                  }`}
-                </span>
-                <div className="mqc-label-group">
-                  <h2 className="queue-label" id="total-waiting-label-mobile">Queue status</h2>
+            {!boothClosed && (
+              <div className="queue-numbers queue-numbers-mobile">
+                <div className="queue-number-card queue-number-card-mobile">
+                  <span className="sr-only">
+                    {`Queue status. Your meeting number is ${queuePosition || 0}. ${
+                      peopleAhead === 0
+                        ? 'You are next in the queue.'
+                        : `There ${peopleAhead === 1 ? 'is' : 'are'} ${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead of you in the queue.`
+                    }`}
+                  </span>
+                  <div className="mqc-label-group">
+                    <h2 className="queue-label" id="total-waiting-label-mobile">Queue status</h2>
+                  </div>
+                  <span className="queue-number" aria-hidden="true">{queuePosition || 0}</span>
+                  <p className="queue-helper-text queue-helper-text-mobile" aria-hidden="true">
+                    {peopleAhead === 0 ? 'You are next' : `${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead`}
+                  </p>
                 </div>
-                <span className="queue-number" aria-hidden="true">{queuePosition || 0}</span>
-                <p className="queue-helper-text queue-helper-text-mobile" aria-hidden="true">
-                  {peopleAhead === 0 ? 'You are next' : `${peopleAhead} ${peopleAhead === 1 ? 'person' : 'people'} ahead`}
-                </p>
               </div>
-            </div>
+            )}
           </div>
 
           {booth && (
@@ -1864,6 +1914,17 @@ export default function BoothQueueWaiting() {
             </section>
           )}
 
+          {boothClosed && (
+            <div
+              className="recruiter-end-banner booth-closed-banner"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <p className="recruiter-end-banner-text">{BOOTH_CLOSED_BANNER_MESSAGE}</p>
+            </div>
+          )}
+
           {/* Waiting message on top of placeholders */}
           {showRecruiterEndBanner && (
             <div
@@ -1884,7 +1945,7 @@ export default function BoothQueueWaiting() {
             </div>
           )}
 
-          {!isEmployerPageMode && (
+          {!isEmployerPageMode && !boothClosed && (
             <div className="waiting-message-header waiting-message-centered" role="status" aria-live="polite">
               <h3>You are now in the queue.</h3>
               <p>An invitation to join will appear when it's your turn.</p>

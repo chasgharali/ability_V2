@@ -11,6 +11,7 @@ import { jobSeekerInterestsAPI } from '../../services/jobSeekerInterests';
 import { useAuth } from '../../contexts/AuthContext';
 import { announceToScreenReader } from '../Accessibility/FocusManager';
 import { hydrateStreamMediaUrls } from '../../utils/videoContentProcessor';
+import { isBoothClosed, isEventEnded } from '../../utils/availability';
 
 export default function RegisteredEventDetail() {
   const { slug } = useParams();
@@ -28,6 +29,7 @@ export default function RegisteredEventDetail() {
     ? { name: event.organizationId.name }
     : null);
   const organizationName = organization?.name || 'Not specified';
+  const eventEnded = isEventEnded(event);
 
   useEffect(() => {
     if (loading) return;
@@ -121,7 +123,7 @@ export default function RegisteredEventDetail() {
   };
 
   const handleJoinQueueClick = (booth) => {
-    if (isPreview) return;
+    if (isPreview || eventEnded || isBoothClosed(booth)) return;
 
     const customLink = booth.joinBoothButtonLink?.trim();
     if (customLink) {
@@ -273,6 +275,7 @@ export default function RegisteredEventDetail() {
                           const boothLink = booth.companyPage || booth.link || booth.website || null;
                           const isInterested = interests[booth._id]?.isInterested || false;
                           const isSaving = savingInterest[booth._id] || false;
+                          const boothClosed = isBoothClosed(booth);
                           
                           return (
                             <div key={booth._id} className="employer-card">
@@ -333,10 +336,10 @@ export default function RegisteredEventDetail() {
                                 
                                 <button
                                   className="join-queue-btn"
-                                  disabled={isPreview}
+                                  disabled={isPreview || eventEnded || boothClosed}
                                   onClick={() => handleJoinQueueClick(booth)}
                                 >
-                                  Join Queue
+                                  {eventEnded ? 'Event Ended' : boothClosed ? 'Booth Closed' : 'Join Queue'}
                                 </button>
                               </div>
                             </div>

@@ -222,6 +222,20 @@
   transform: translateY(-1px);
 }
 
+.join-queue-btn:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  cursor: not-allowed;
+}
+
+.join-queue-btn:disabled:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+  border-color: #d1d5db;
+  transform: none;
+}
+
 .interest-checkbox-label {
   display: flex;
   align-items: center;

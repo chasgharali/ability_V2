@@ -10,6 +10,12 @@ const { endRoom } = require('../config/twilio');
 const { authenticateToken } = require('../middleware/auth');
 const { getIO } = require('../socket/socketHandler');
 const logger = require('../utils/logger');
+const {
+    isBoothLinkExpired,
+    isBoothClosed,
+    isEventEnded,
+    formatAvailabilityDate
+} = require('../utils/availability');
 
 // Emit recruiter→job-seeker queue message to user rooms and booth room
 const emitMessageToJobSeeker = (io, queueEntry, message) => {
@@ -116,8 +122,6 @@ router.post('/join', authenticateToken, async (req, res) => {
             });
         }
 
-        // Check if booth link has expired
-        const Booth = require('../models/Booth');
         const booth = await Booth.findById(boothId);
         if (!booth) {
             return res.status(404).json({
@@ -126,26 +130,44 @@ router.post('/join', authenticateToken, async (req, res) => {
             });
         }
 
-        if (booth.expireLinkTime) {
-            const now = new Date();
-            const expireDate = new Date(booth.expireLinkTime);
-            if (now > expireDate) {
-                // Format the expiry date for display
-                const formattedDate = expireDate.toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                });
-                return res.status(403).json({
-                    success: false,
-                    error: 'BOOTH_EXPIRED',
-                    message: `This booth link expired on ${formattedDate}. You cannot join this queue.`,
-                    expiredAt: booth.expireLinkTime
-                });
-            }
+        const now = new Date();
+
+        // Check if booth link has expired
+        if (isBoothLinkExpired(booth, now)) {
+            return res.status(403).json({
+                success: false,
+                error: 'BOOTH_EXPIRED',
+                message: `This booth link expired on ${formatAvailabilityDate(booth.expireLinkTime)}. You cannot join this queue.`,
+                expiredAt: booth.expireLinkTime
+            });
+        }
+
+        // Check if the event has ended
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({
+                success: false,
+                message: 'Event not found'
+            });
+        }
+
+        if (isEventEnded(event, now)) {
+            return res.status(403).json({
+                success: false,
+                error: 'EVENT_ENDED',
+                message: `This event ended on ${formatAvailabilityDate(event.end)}. You are unable to join this queue.`,
+                endedAt: event.end
+            });
+        }
+
+        // Check if the booth has passed its close time
+        if (isBoothClosed(booth, now)) {
+            return res.status(403).json({
+                success: false,
+                error: 'BOOTH_CLOSED',
+                message: `This booth closed on ${formatAvailabilityDate(booth.closeTime)}. You are unable to join this queue.`,
+                closedAt: booth.closeTime
+            });
         }
 
         // When the booth has published open positions, the job seeker must tell the
@@ -450,6 +472,16 @@ router.post('/leave-with-message', authenticateToken, async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid message type'
+            });
+        }
+
+        const closedBooth = await Booth.findById(boothId).select('closeTime');
+        if (isBoothClosed(closedBooth)) {
+            return res.status(403).json({
+                success: false,
+                error: 'BOOTH_CLOSED',
+                message: `This booth closed on ${formatAvailabilityDate(closedBooth.closeTime)}. You are unable to leave a message.`,
+                closedAt: closedBooth.closeTime
             });
         }
 
@@ -907,6 +939,16 @@ router.post('/message', authenticateToken, async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid message type'
+            });
+        }
+
+        const closedBooth = await Booth.findById(boothId).select('closeTime');
+        if (isBoothClosed(closedBooth)) {
+            return res.status(403).json({
+                success: false,
+                error: 'BOOTH_CLOSED',
+                message: `This booth closed on ${formatAvailabilityDate(closedBooth.closeTime)}. You are unable to send messages.`,
+                closedAt: closedBooth.closeTime
             });
         }
 

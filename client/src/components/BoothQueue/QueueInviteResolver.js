@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { resolveBoothInvite } from '../../services/booths';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatAvailabilityDate } from '../../utils/availability';
 
 export default function QueueInviteResolver() {
   const { inviteSlug } = useParams();
@@ -42,6 +43,8 @@ export default function QueueInviteResolver() {
         const canJoinQueue = data?.canJoinQueue || false;
         const isBoothExpired = data?.isBoothExpired || false;
         const boothExpiredAt = data?.boothExpiredAt;
+        const isBoothClosed = data?.isBoothClosed || false;
+        const boothClosedAt = data?.boothClosedAt;
         
         console.log('Extracted boothId:', boothId);
         console.log('Extracted eventSlug:', eventSlug);
@@ -49,6 +52,7 @@ export default function QueueInviteResolver() {
         console.log('Is event upcoming:', isEventUpcoming);
         console.log('Can join queue:', canJoinQueue);
         console.log('Is booth expired:', isBoothExpired, 'Expired at:', boothExpiredAt);
+        console.log('Is booth closed:', isBoothClosed, 'Closed at:', boothClosedAt);
         
         // Step 3: Check if event is assigned to booth
         if (!event || !eventSlug) {
@@ -59,16 +63,14 @@ export default function QueueInviteResolver() {
 
         // Step 3b: Check if booth link has expired
         if (isBoothExpired && boothExpiredAt) {
-          const expireDate = new Date(boothExpiredAt);
-          const formattedDate = expireDate.toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          });
-          setError(`This booth link expired on ${formattedDate}. You are unable to join this booth.`);
+          setError(`This booth link expired on ${formatAvailabilityDate(boothExpiredAt)}. You are unable to join this booth.`);
+          setLoading(false);
+          return;
+        }
+
+        // Step 3c: Check if the booth has passed its close time
+        if (isBoothClosed && boothClosedAt) {
+          setError(`This booth closed on ${formatAvailabilityDate(boothClosedAt)}. You are unable to join this booth or leave a message.`);
           setLoading(false);
           return;
         }
@@ -98,16 +100,11 @@ export default function QueueInviteResolver() {
           
           if (isBoothExpired) {
             // This shouldn't happen since we check above, but just in case
-            const expireDate = boothExpiredAt ? new Date(boothExpiredAt) : null;
-            const formattedDate = expireDate ? expireDate.toLocaleString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            }) : 'an earlier date';
+            const formattedDate = formatAvailabilityDate(boothExpiredAt) || 'an earlier date';
             setError(`This booth link expired on ${formattedDate}. You are unable to join this booth.`);
+          } else if (isBoothClosed) {
+            const formattedDate = formatAvailabilityDate(boothClosedAt) || 'an earlier date';
+            setError(`This booth closed on ${formattedDate}. You are unable to join this booth or leave a message.`);
           } else if (hasEnded) {
             setError('This event has ended. You are unable to join this booth.');
           } else if (eventStatus !== 'published' && eventStatus !== 'active') {
