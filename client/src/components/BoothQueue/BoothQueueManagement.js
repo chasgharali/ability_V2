@@ -17,6 +17,7 @@ import { meetingRecordsAPI } from '../../services/meetingRecords';
 import AdminHeader from '../Layout/AdminHeader';
 import AdminSidebar from '../Layout/AdminSidebar';
 import { useRecruiterBooth } from '../../hooks/useRecruiterBooth';
+import { isBoothClosed, formatAvailabilityDate } from '../../utils/availability';
 import {
   MILITARY_EXPERIENCE_LIST,
   JOB_CATEGORY_LIST,
@@ -705,6 +706,10 @@ export default function BoothQueueManagement() {
   };
 
   const handleInviteToMeeting = async (queueEntry) => {
+    if (isBoothClosed(booth || recruiterBooth)) {
+      showError('This booth is closed. You can no longer start meetings from this queue.');
+      return;
+    }
     setPendingQueueEntry(queueEntry);
     await enumerateDevicesForRecruiter();
     setShowRecruiterInviteModal(true);
@@ -743,6 +748,12 @@ export default function BoothQueueManagement() {
       }
     } catch (error) {
       console.error('Error creating video call:', error);
+      const data = error.response?.data;
+      if (data?.error === 'BOOTH_CLOSED') {
+        showError(data.message);
+        loadData(); // Pull the new close time so the queue locks itself
+        return;
+      }
       alert('Failed to start video call with job seeker');
     }
   };
@@ -921,6 +932,11 @@ export default function BoothQueueManagement() {
   // from the hook are never displayed.
   const displayBooth = booth || recruiterBooth;
   const displayEvent = event;
+  // nowTs ticks every second, so the queue locks itself the moment close time passes.
+  const boothClosed = isBoothClosed(displayBooth, new Date(nowTs));
+  const boothClosedNotice = boothClosed
+    ? `This booth closed on ${formatAvailabilityDate(displayBooth.closeTime)}. You can no longer start meetings with job seekers in this queue.`
+    : '';
 
   return (
     <div className="dashboard">
@@ -939,6 +955,11 @@ export default function BoothQueueManagement() {
             {infoBannerMessage && (
               <div className="info-banner" style={{ marginBottom: '1.5rem' }}>
                 <span>{infoBannerMessage}</span>
+              </div>
+            )}
+            {boothClosed && (
+              <div className="booth-closed-notice" role="status" aria-live="polite">
+                <span>{boothClosedNotice}</span>
               </div>
             )}
             <div className="management-header">
@@ -1322,7 +1343,9 @@ export default function BoothQueueManagement() {
                             <button
                               onClick={() => handleInviteToMeeting(queueEntry)}
                               className="btn-invite"
-                              style={{ background: theme.success, borderColor: theme.success }}
+                              style={boothClosed ? undefined : { background: theme.success, borderColor: theme.success }}
+                              disabled={boothClosed}
+                              title={boothClosed ? boothClosedNotice : undefined}
                             >
                               Invite
                             </button>

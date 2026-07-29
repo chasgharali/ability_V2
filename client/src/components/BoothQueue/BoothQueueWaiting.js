@@ -55,23 +55,50 @@ function formatEventDate(value) {
   });
 }
 
-function formatBoothTime(value) {
-  if (!value) return '—';
+function toValidDate(value) {
+  if (!value) return null;
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatBoothTime(value) {
+  const date = toValidDate(value);
+  if (!date) return '—';
   return date.toLocaleTimeString(undefined, {
     hour: 'numeric',
     minute: '2-digit',
   });
 }
 
+function formatBoothDateTime(value) {
+  const date = toValidDate(value);
+  if (!date) return '—';
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function isSameCalendarDay(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+}
+
 function formatTimeRange(startValue, endValue) {
-  const start = formatBoothTime(startValue);
-  const end = formatBoothTime(endValue);
-  if (start === '—' && end === '—') return '—';
-  if (start === '—') return end;
-  if (end === '—') return start;
-  return `${start} - ${end}`;
+  const start = toValidDate(startValue);
+  const end = toValidDate(endValue);
+  if (!start && !end) return '—';
+  if (!start) return formatBoothTime(end);
+  if (!end) return formatBoothTime(start);
+  // Clock times alone are misleading once a window spans days: an Aug 27 close
+  // time reads as if it already passed earlier today.
+  if (!isSameCalendarDay(start, end)) {
+    return `${formatBoothDateTime(start)} - ${formatBoothDateTime(end)}`;
+  }
+  return `${formatBoothTime(start)} - ${formatBoothTime(end)}`;
 }
 
 export default function BoothQueueWaiting() {

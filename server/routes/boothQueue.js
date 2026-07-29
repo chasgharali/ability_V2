@@ -1228,6 +1228,17 @@ router.post('/invite/:queueId', authenticateToken, async (req, res) => {
             });
         }
 
+        // No live meetings once the booth has passed its close time
+        const closedBooth = await Booth.findById(boothId).select('closeTime');
+        if (isBoothClosed(closedBooth)) {
+            return res.status(403).json({
+                success: false,
+                error: 'BOOTH_CLOSED',
+                message: `This booth closed on ${formatAvailabilityDate(closedBooth.closeTime)}. You can no longer start meetings from this queue.`,
+                closedAt: closedBooth.closeTime
+            });
+        }
+
         // CRITICAL FIX: Atomic check-and-update to prevent race conditions
         // Only update if queue entry is still in 'waiting' status
         const queueEntry = await BoothQueue.findOneAndUpdate(

@@ -5,6 +5,21 @@
   /* compact container padding */
 }
 
+/* Booth past its close time: meetings are locked, messages and Remove stay usable.
+   #842029 on #ffe8e8 is 7.5:1. */
+.booth-queue-management .booth-closed-notice {
+  margin-bottom: 1.5rem;
+  padding: 0.875rem 1.25rem;
+  background: #ffe8e8;
+  border: 1px solid #f5c2c7;
+  border-left: 4px solid #b91c1c;
+  border-radius: 8px;
+  color: #842029;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 /* Group controls for better mobile layout */
 .booth-queue-management .serving-controls-group {
   display: flex;

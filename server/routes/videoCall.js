@@ -8,6 +8,7 @@ const { generateAccessToken, createOrGetRoom, endRoom, getRoomParticipants } = r
 const { authenticateToken: auth } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const liveStatsStore = require('../utils/liveStatsStore');
+const { isBoothClosed, formatAvailabilityDate } = require('../utils/availability');
 
 const resolveObjectId = (value) => {
   if (!value) return null;
@@ -106,6 +107,20 @@ router.post('/create', auth, async (req, res) => {
       return res.status(404).json({ 
         error: 'Queue entry not available',
         message: 'Queue entry not found or no longer available for meeting'
+      });
+    }
+
+    // No live meetings once the booth has passed its close time. The lock above
+    // already flipped the entry to `invited`, so release it before returning.
+    if (isBoothClosed(queueEntry.booth)) {
+      await BoothQueue.findByIdAndUpdate(queueId, {
+        $set: { status: 'waiting' }
+      });
+
+      return res.status(403).json({
+        error: 'BOOTH_CLOSED',
+        message: `This booth closed on ${formatAvailabilityDate(queueEntry.booth.closeTime)}. You can no longer start meetings from this queue.`,
+        closedAt: queueEntry.booth.closeTime
       });
     }
 
