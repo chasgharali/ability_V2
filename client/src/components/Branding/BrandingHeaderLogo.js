@@ -5,6 +5,12 @@ import PageInstructionBanner from '../common/PageInstructionBanner';
 import '../Dashboard/Dashboard.css';
 import settingsAPI from '../../services/settings';
 import { uploadImageToS3 } from '../../services/uploads';
+import {
+  LOGO_ACCEPT,
+  LOGO_HELP_TEXT,
+  getLogoUploadErrorMessage,
+  validateLogoFile,
+} from '../../utils/logoUpload';
 
 export default function BrandingHeaderLogo() {
   const [brandingLogo, setBrandingLogo] = useState('');
@@ -73,8 +79,10 @@ export default function BrandingHeaderLogo() {
 
   const onPickLogoFile = async (file) => {
     if (!file) return;
-    if (!/^image\//.test(file.type)) {
-      setMessage('Please select an image file');
+    const validation = validateLogoFile(file);
+    if (!validation.ok) {
+      setMessage(validation.message);
+      setTimeout(() => setMessage(''), 3000);
       return;
     }
 
@@ -88,8 +96,8 @@ export default function BrandingHeaderLogo() {
       await saveBrandingLogo(downloadUrl);
     } catch (error) {
       console.error('Failed to upload branding logo:', error);
-      setMessage('Failed to upload logo to storage');
-      setTimeout(() => setMessage(''), 2000);
+      setMessage(getLogoUploadErrorMessage(error, 'Failed to upload logo to storage'));
+      setTimeout(() => setMessage(''), 3000);
     } finally {
       setUploading(false);
     }
@@ -107,7 +115,7 @@ export default function BrandingHeaderLogo() {
             <h1>Branding – Header Logo</h1>
             {message && <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>{message}</div>}
             <div className="alert-box" style={{ background: '#f3f4f6', borderColor: '#e5e7eb', color: '#111827' }}>
-              <p>Upload a PNG, SVG, or JPG. The logo displays in the top-left. Recommended height ~28-36px.</p>
+              <p>Upload a {LOGO_HELP_TEXT}. The logo displays in the top-left. Recommended height ~28-36px.</p>
             </div>
             <div className="upload-card" style={{ maxWidth: 520 }}>
               <h4>Current Logo</h4>
@@ -121,7 +129,7 @@ export default function BrandingHeaderLogo() {
               <div className="upload-actions" style={{ marginTop: '1rem' }}>
                 <label className="dashboard-button" style={{ width: 'auto', cursor: loading || uploading ? 'not-allowed' : 'pointer', opacity: loading || uploading ? 0.7 : 1 }}>
                   {loading ? 'Loading...' : uploading ? 'Uploading...' : 'Choose Image'}
-                  <input type="file" accept="image/*" disabled={loading || uploading} onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
+                  <input type="file" accept={LOGO_ACCEPT} disabled={loading || uploading} onChange={(e) => onPickLogoFile(e.target.files?.[0])} style={{ display: 'none' }} />
                 </label>
               </div>
               

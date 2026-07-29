@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { createOrganization, updateOrganization } from '../../services/organizations';
 import { uploadImageToS3 } from '../../services/uploads';
+import {
+  LOGO_ACCEPT,
+  LOGO_HELP_TEXT,
+  getLogoUploadErrorMessage,
+  validateLogoFile,
+} from '../../utils/logoUpload';
 
 const DEFAULT_LIMITS = { maxEvents: 0, maxRecruiters: 0, maxUsers: 0, maxJobSeekers: 0, maxBooths: 0 };
 
@@ -61,12 +67,9 @@ export default function OrganizationForm({ org, onSave, onCancel }) {
   const handleLogoFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file for organization logo.');
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Logo file size must be 2MB or less.');
+    const validation = validateLogoFile(file);
+    if (!validation.ok) {
+      setError(validation.message);
       return;
     }
     setSelectedLogoFile(file);
@@ -108,7 +111,7 @@ export default function OrganizationForm({ org, onSave, onCancel }) {
 
       onSave();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save organization');
+      setError(getLogoUploadErrorMessage(err, err.response?.data?.error || 'Failed to save organization'));
     } finally {
       setLogoUploading(false);
       setSaving(false);
@@ -186,11 +189,11 @@ export default function OrganizationForm({ org, onSave, onCancel }) {
               <input
                 id="org-logo-upload"
                 type="file"
-                accept="image/*"
+                accept={LOGO_ACCEPT}
                 onChange={handleLogoFileChange}
                 className="form-input"
               />
-              <small>Upload a PNG/JPG/WebP image (max 2MB). The file will be stored in S3.</small>
+              <small>Upload a {LOGO_HELP_TEXT}. The file will be stored in S3.</small>
               {(selectedLogoFile || form.logoUrl) && (
                 <div className="org-logo-upload-preview">
                   <span>{selectedLogoFile ? `Selected: ${selectedLogoFile.name}` : 'Current logo:'}</span>

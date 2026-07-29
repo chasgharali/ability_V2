@@ -31,6 +31,11 @@ import {
 } from '@syncfusion/ej2-react-richtexteditor';
 import { RTE_QUICK_TOOLBAR_SETTINGS, getInsertImageSettings, getInsertVideoSettings, getInsertAudioSettings, handleRteKeyDown } from '../../utils/rteConfig';
 import { uploadImageToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
+import {
+    LOGO_ACCEPT,
+    getLogoUploadErrorMessage,
+    validateLogoFile,
+} from '../../utils/logoUpload';
 import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { closeRteMediaDialog, isVideoFile, isAudioFile, generateVideoHTML, generateAudioHTML } from '../../utils/rteDialogHelper';
 import { listEvents, createEvent, updateEvent, deleteEvent, bulkDeleteEvents } from '../../services/events';
@@ -759,13 +764,18 @@ export default function EventManagement() {
 
     const onPickLogo = async (file) => {
         if (!file) return;
+        const validation = validateLogoFile(file);
+        if (!validation.ok) {
+            alert(validation.message);
+            return;
+        }
         try {
             setSaving(true);
             const { downloadUrl } = await uploadImageToS3(file, { variant: 'public' });
             setField('logoUrl', downloadUrl);
         } catch (e) {
             console.error('Logo upload failed', e);
-            alert('Failed to upload logo. Please try again.');
+            alert(getLogoUploadErrorMessage(e, 'Failed to upload logo. Please try again.'));
         } finally {
             setSaving(false);
         }
@@ -1546,7 +1556,7 @@ export default function EventManagement() {
                                         <input 
                                             id="logo-upload"
                                             type="file" 
-                                            accept="image/*" 
+                                            accept={LOGO_ACCEPT} 
                                             onChange={(e) => onPickLogo(e.target.files?.[0])} 
                                             style={{ display: 'none' }} 
                                         />

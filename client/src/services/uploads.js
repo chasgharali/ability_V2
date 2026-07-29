@@ -1,6 +1,40 @@
 import axios from 'axios';
+import { isSvgLogoFile } from '../utils/logoUpload';
 
 const encodeKeyForPath = (key) => encodeURIComponent(key).replace(/%2F/g, '/');
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return { Authorization: `Bearer ${token}` };
+}
+
+/**
+ * Upload an SVG logo through the server-side sanitizer.
+ * Raster logos continue to use the presigned S3 flow.
+ */
+async function uploadSanitizedSvgLogo(file, fileType) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('fileType', fileType);
+
+  const res = await axios.post('/api/uploads/svg-logo', formData, {
+    headers: getAuthHeaders(),
+  });
+
+  const publicUrl =
+    res?.data?.publicUrl ||
+    res?.data?.file?.publicUrl ||
+    (res?.data?.key ? `/api/uploads/public/${encodeKeyForPath(res.data.key)}` : null);
+
+  if (!publicUrl) {
+    throw new Error('SVG logo upload did not return a public URL');
+  }
+
+  return {
+    key: res?.data?.key,
+    downloadUrl: publicUrl,
+  };
+}
 
 // Helper to request a presigned URL and upload a file to S3
 // Returns: { key, downloadUrl }
@@ -9,8 +43,12 @@ const encodeKeyForPath = (key) => encodeURIComponent(key).replace(/%2F/g, '/');
 // Returns: { key, downloadUrl }
 export async function uploadBoothLogoToS3(file) {
   if (!file) throw new Error('No file provided');
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
+
+  if (isSvgLogoFile(file)) {
+    return uploadSanitizedSvgLogo(file, 'booth-logo');
+  }
+
+  const headers = getAuthHeaders();
 
   // Request presigned URL for booth-logo
   const presignRes = await axios.post(
@@ -58,10 +96,15 @@ export async function uploadBoothLogoToS3(file) {
 }
 export async function uploadImageToS3(file, options = {}) {
   if (!file) throw new Error('No file provided');
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
 
-  // 1) Ask backend for presigned URL
+  if (isSvgLogoFile(file)) {
+    // SVG logos always go through the sanitizer and stable public proxy.
+    return uploadSanitizedSvgLogo(file, 'image');
+  }
+
+  const headers = getAuthHeaders();
+
+  // 1) Ask backend for a presigned URL
   const presignRes = await axios.post(
     '/api/uploads/presign',
     {

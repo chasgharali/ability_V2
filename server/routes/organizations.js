@@ -12,6 +12,11 @@ const RegisteredJobSeeker = require('../models/RegisteredJobSeeker');
 const { authenticateToken, requireRole, requireSuperAdmin, requireOrgAccess } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { toStablePublicImageUrl, encodeKeyForPath } = require('../utils/mediaUrl');
+const {
+    isSvgFileName,
+    isSvgMimeType,
+    sanitizeSvgLogo
+} = require('../utils/svgSanitizer');
 const resumeParserService = require('../services/resumeParserService');
 const aiSearchService = require('../services/aiSearchService');
 
@@ -281,17 +286,39 @@ router.post('/:id/logo-upload', authenticateToken, requireRole(['SuperAdmin', 'A
         if (!org) return res.status(404).json({ error: 'Organization not found' });
 
         const original = req.file.originalname || 'logo.png';
-        const safeName = original.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 200);
+        const isSvg = isSvgMimeType(req.file.mimetype) || isSvgFileName(original);
+
+        let uploadBody = req.file.buffer;
+        let contentType = req.file.mimetype || 'application/octet-stream';
+        let safeName = original.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 200);
+
+        if (isSvg) {
+            try {
+                uploadBody = sanitizeSvgLogo(req.file.buffer, {
+                    mimeType: req.file.mimetype,
+                    fileName: original,
+                    maxBytes: 2 * 1024 * 1024
+                });
+            } catch (sanitizeError) {
+                return res.status(sanitizeError.status || 400).json({
+                    error: sanitizeError.message || 'Invalid SVG logo'
+                });
+            }
+            contentType = 'image/svg+xml';
+            safeName = safeName.replace(/\.svg$/i, '').slice(0, 180) + '.svg';
+        }
+
         const key = `organization-logo/${org._id}/${Date.now()}-${safeName}`;
 
         await s3.putObject({
             Bucket: BUCKET_NAME,
             Key: key,
-            Body: req.file.buffer,
-            ContentType: req.file.mimetype,
+            Body: uploadBody,
+            ContentType: contentType,
             Metadata: {
                 uploadedBy: req.user._id.toString(),
-                organizationId: org._id.toString()
+                organizationId: org._id.toString(),
+                ...(isSvg ? { sanitized: 'true' } : {})
             }
         }).promise();
 

@@ -6,6 +6,12 @@ const multer = require('multer');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { extractS3KeyFromUrl, extractVideoAudioKey, encodeKeyForPath } = require('../utils/mediaUrl');
+const {
+    DEFAULT_MAX_BYTES: SVG_LOGO_MAX_BYTES,
+    isSvgFileName,
+    isSvgMimeType,
+    sanitizeSvgLogo
+} = require('../utils/svgSanitizer');
 
 // Multer configured for memory storage (files buffered in RAM then streamed to S3)
 const upload = multer({
@@ -19,6 +25,21 @@ const upload = multer({
         }
     }
 });
+
+// Dedicated multer for sanitized SVG logo uploads (server-side only; no raw SVG via presign)
+const svgLogoUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: SVG_LOGO_MAX_BYTES },
+    fileFilter: (_req, file, cb) => {
+        if (isSvgMimeType(file.mimetype) || isSvgFileName(file.originalname)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only SVG files are allowed for sanitized logo upload'), false);
+        }
+    }
+});
+
+const SVG_LOGO_FILE_TYPES = ['image', 'booth-logo'];
 
 const router = express.Router();
 
@@ -413,6 +434,116 @@ router.post('/complete', authenticateToken, [
         res.status(500).json({
             error: 'Failed to confirm file upload',
             message: 'An error occurred while confirming the file upload'
+        });
+    }
+});
+
+/**
+ * POST /api/uploads/svg-logo
+ * Authenticated multipart SVG logo upload with server-side sanitization.
+ * Raster logos continue to use /presign → S3 PUT → /complete.
+ * FormData fields: file (required), fileType = image | booth-logo
+ */
+router.post('/svg-logo', authenticateToken, (req, res, next) => {
+    svgLogoUpload.single('file')(req, res, (err) => {
+        if (err) {
+            const status = err.code === 'LIMIT_FILE_SIZE' ? 400 : 400;
+            return res.status(status).json({
+                error: 'Invalid SVG upload',
+                message: err.code === 'LIMIT_FILE_SIZE'
+                    ? `SVG file exceeds the ${Math.round(SVG_LOGO_MAX_BYTES / (1024 * 1024))}MB size limit`
+                    : (err.message || 'Only SVG files are allowed for sanitized logo upload')
+            });
+        }
+        return next();
+    });
+}, async (req, res) => {
+    try {
+        const { user } = req;
+        const fileType = String(req.body?.fileType || 'image').trim();
+
+        if (!SVG_LOGO_FILE_TYPES.includes(fileType)) {
+            return res.status(400).json({
+                error: 'Invalid file type',
+                message: `fileType must be one of: ${SVG_LOGO_FILE_TYPES.join(', ')}`
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                error: 'No file provided',
+                message: 'An SVG logo file is required'
+            });
+        }
+
+        if (!BUCKET_NAME) {
+            return res.status(500).json({
+                error: 'Storage not configured',
+                message: 'S3 bucket is not configured'
+            });
+        }
+
+        let sanitized;
+        try {
+            sanitized = sanitizeSvgLogo(req.file.buffer, {
+                mimeType: req.file.mimetype,
+                fileName: req.file.originalname,
+                maxBytes: SVG_LOGO_MAX_BYTES
+            });
+        } catch (sanitizeError) {
+            return res.status(sanitizeError.status || 400).json({
+                error: 'Invalid SVG',
+                message: sanitizeError.message,
+                code: sanitizeError.code
+            });
+        }
+
+        const originalName = req.file.originalname || 'logo.svg';
+        const baseName = originalName.replace(/^.*[\\/]/, '');
+        const safeFileName = baseName
+            .replace(/[^A-Za-z0-9._-]/g, '_')
+            .replace(/\.svg$/i, '')
+            .slice(0, 180);
+        const key = `${fileType}/${user._id}/${Date.now()}-${safeFileName || 'logo'}.svg`;
+
+        await s3.putObject({
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Body: sanitized,
+            ContentType: 'image/svg+xml',
+            Metadata: {
+                userId: user._id.toString(),
+                fileType,
+                originalName,
+                sanitized: 'true'
+            }
+        }).promise();
+
+        const publicUrl = `/api/uploads/public/${encodeKeyForPath(key)}`;
+
+        logger.info(`Sanitized SVG logo uploaded for user ${user.email}: ${key}`);
+
+        return res.json({
+            message: 'SVG logo uploaded successfully',
+            key,
+            publicUrl,
+            downloadUrl: publicUrl,
+            file: {
+                key,
+                fileName: originalName,
+                fileType,
+                mimeType: 'image/svg+xml',
+                size: sanitized.length,
+                publicUrl,
+                downloadUrl: publicUrl,
+                uploadedAt: new Date()
+            }
+        });
+    } catch (error) {
+        logger.error('SVG logo upload error:', error);
+        return res.status(500).json({
+            error: 'Failed to upload SVG logo',
+            message: 'An error occurred while uploading the sanitized SVG logo'
         });
     }
 });

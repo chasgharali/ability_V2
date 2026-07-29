@@ -19,6 +19,11 @@ import OpenPositionsEditor from './OpenPositionsEditor';
 import { listEvents } from '../../services/events';
 import { listBooths, createBooths, deleteBooth, updateBooth, updateBoothRichSections, updateBoothEmployerPageSections, bulkDeleteBooths } from '../../services/booths';
 import { uploadBoothLogoToS3, uploadVideoToS3, uploadAudioToS3 } from '../../services/uploads';
+import {
+  LOGO_ACCEPT,
+  getLogoUploadErrorMessage,
+  validateLogoFile,
+} from '../../utils/logoUpload';
 import VideoUploadProgress from '../UI/VideoUploadProgress';
 import { 
   RichTextEditorComponent as RTE, 
@@ -676,13 +681,18 @@ export default function BoothManagement() {
 
   const onPickBoothLogo = async (file) => {
     if (!file) return;
+    const validation = validateLogoFile(file);
+    if (!validation.ok) {
+      alert(validation.message);
+      return;
+    }
     try {
       setBoothSaving(true);
       const { downloadUrl } = await uploadBoothLogoToS3(file);
       setBoothField('boothLogo', downloadUrl);
     } catch (e) {
       console.error('Booth logo upload failed', e);
-      alert('Failed to upload booth logo');
+      alert(getLogoUploadErrorMessage(e, 'Failed to upload booth logo'));
     } finally {
       setBoothSaving(false);
     }
@@ -1790,7 +1800,7 @@ export default function BoothManagement() {
                     <input
                       id="booth-logo-upload"
                       type="file"
-                      accept="image/*"
+                      accept={LOGO_ACCEPT}
                       onChange={(e) => onPickBoothLogo(e.target.files?.[0])}
                       style={{ display: 'none' }}
                     />
