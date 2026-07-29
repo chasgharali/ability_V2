@@ -73,10 +73,13 @@ export default function RegisteredJobSeekerManagement() {
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [zipLoading, setZipLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
   const selectionUpdateRef = useRef(false);
 
   const pageSize = 10;
+  // Server caps limit at 200; page through when exporting the full result set.
+  const exportPageSize = 200;
   const gridRef = useRef(null);
   const searchInputRef = useRef(null);
 
@@ -157,8 +160,8 @@ export default function RegisteredJobSeekerManagement() {
     { value: 'asc', text: 'Ascending' }
   ]), []);
 
-  const flatDataSource = useMemo(() => {
-    return (jobSeekers || [])
+  const mapRegistrationsToRows = useCallback((registrations) => {
+    return (registrations || [])
       // Hide orphan/empty rows when job seeker data is missing.
       .filter(reg => reg?.jobSeekerId && (reg.jobSeekerId.name || reg.jobSeekerId.email))
       .map(reg => {
@@ -190,7 +193,46 @@ export default function RegisteredJobSeekerManagement() {
           importMissingFields: Array.isArray(js.importMissingFields) ? js.importMissingFields : []
         };
       });
-  }, [jobSeekers]);
+  }, []);
+
+  const flatDataSource = useMemo(
+    () => mapRegistrationsToRows(jobSeekers),
+    [jobSeekers, mapRegistrationsToRows]
+  );
+
+  // Fetch every registration matching the current filters/search (all pages),
+  // so exports match the Total count instead of only the current page.
+  const fetchAllFilteredRows = useCallback(async () => {
+    if (!orgId) return [];
+
+    const commonParams = {
+      search: search.trim() || undefined,
+      sortBy,
+      sortDir,
+      eventId: eventFilter || undefined,
+      status: statusFilter || undefined
+    };
+
+    const first = await listRegisteredJobSeekers(orgId, {
+      ...commonParams,
+      page: 1,
+      limit: exportPageSize
+    });
+    let registrations = first.jobSeekers || [];
+    const totalCount = first.total || 0;
+    const pages = Math.max(1, Math.ceil(totalCount / exportPageSize));
+
+    for (let p = 2; p <= pages; p++) {
+      const res = await listRegisteredJobSeekers(orgId, {
+        ...commonParams,
+        page: p,
+        limit: exportPageSize
+      });
+      registrations = registrations.concat(res.jobSeekers || []);
+    }
+
+    return mapRegistrationsToRows(registrations);
+  }, [orgId, search, sortBy, sortDir, eventFilter, statusFilter, mapRegistrationsToRows]);
 
   // Syncfusion Grid does not reliably pick up dataSource prop changes. Calling
   // refresh() alone only re-renders the grid's *existing* internal dataSource, so
@@ -245,39 +287,52 @@ export default function RegisteredJobSeekerManagement() {
     [flatDataSource, selectedIds]
   );
 
-  const handleExportSelectedCsv = useCallback(() => {
-    const rows = selectedRows.length > 0 ? selectedRows : flatDataSource;
-    const headers = ['Name', 'Email', 'Phone', 'City', 'State', 'Country', 'Accessibility Needs', 'Status', 'Email Verified', 'Registered Event', 'Registered Date', 'Last Login'];
-    const data = rows.map(row => [
-      row.name || '',
-      row.email || '',
-      row.phoneNumber || '',
-      row.city || '',
-      row.state || '',
-      row.country || '',
-      row.accessibilityNeedsText || 'None',
-      row.isActive ? 'Active' : 'Inactive',
-      row.emailVerified ? 'Yes' : 'No',
-      row.registeredEvent || '',
-      row.registeredAt ? new Date(row.registeredAt).toLocaleDateString() : '',
-      row.lastLogin ? new Date(row.lastLogin).toLocaleDateString() : 'Never'
-    ]);
-    const csv = [headers.join(','), ...data.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `registered-job-seekers-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-  }, [selectedRows, flatDataSource]);
+  // Selected rows if any; otherwise the full filtered set across all pages.
+  const resolveExportRows = useCallback(async () => {
+    if (selectedRows.length > 0) return selectedRows;
+    return fetchAllFilteredRows();
+  }, [selectedRows, fetchAllFilteredRows]);
+
+  const handleExportSelectedCsv = useCallback(async () => {
+    try {
+      setExportLoading(true);
+      const rows = await resolveExportRows();
+      if (rows.length === 0) {
+        alert('No job seekers to export for the current filters.');
+        return;
+      }
+      const headers = ['Name', 'Email', 'Phone', 'City', 'State', 'Country', 'Accessibility Needs', 'Status', 'Email Verified', 'Registered Event', 'Registered Date', 'Last Login'];
+      const data = rows.map(row => [
+        row.name || '',
+        row.email || '',
+        row.phoneNumber || '',
+        row.city || '',
+        row.state || '',
+        row.country || '',
+        row.accessibilityNeedsText || 'None',
+        row.isActive ? 'Active' : 'Inactive',
+        row.emailVerified ? 'Yes' : 'No',
+        row.registeredEvent || '',
+        row.registeredAt ? new Date(row.registeredAt).toLocaleDateString() : '',
+        row.lastLogin ? new Date(row.lastLogin).toLocaleDateString() : 'Never'
+      ]);
+      const csv = [headers.join(','), ...data.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+      // Prepend BOM so Excel renders UTF-8 correctly.
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `registered-job-seekers-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (e) {
+      console.error('Export CSV failed:', e);
+      alert('Failed to export job seekers. Please try again.');
+    } finally {
+      setExportLoading(false);
+    }
+  }, [resolveExportRows]);
 
   const handleExportResumesZip = useCallback(async () => {
-    const rows = selectedRows.length > 0 ? selectedRows : flatDataSource;
-    const withResume = rows.filter(r => r.resumeUrl);
-    if (withResume.length === 0) {
-      alert('No resumes available for the selected job seekers.');
-      return;
-    }
     setZipLoading(true);
     const getExt = (url) => {
       if (!url) return 'pdf';
@@ -285,6 +340,12 @@ export default function RegisteredJobSeekerManagement() {
       return m ? m[1].toLowerCase() : 'pdf';
     };
     try {
+      const rows = await resolveExportRows();
+      const withResume = rows.filter(r => r.resumeUrl);
+      if (withResume.length === 0) {
+        alert('No resumes available for the selected job seekers.');
+        return;
+      }
       const zip = new JSZip();
       const token = localStorage.getItem('token');
       let successCount = 0;
@@ -318,15 +379,27 @@ export default function RegisteredJobSeekerManagement() {
     } finally {
       setZipLoading(false);
     }
-  }, [selectedRows, flatDataSource]);
+  }, [resolveExportRows]);
 
   const gridSelectionSettings = useMemo(() => ({ type: 'Multiple', checkboxOnly: true }), []);
 
-  const handleExcelExport = useCallback(() => {
-    if (gridRef.current) {
-      gridRef.current.excelExport();
+  const handleExcelExport = useCallback(async () => {
+    if (!gridRef.current) return;
+    try {
+      setExportLoading(true);
+      const rows = await resolveExportRows();
+      if (rows.length === 0) {
+        alert('No job seekers to export for the current filters.');
+        return;
+      }
+      await gridRef.current.excelExport({ dataSource: rows });
+    } catch (e) {
+      console.error('Export Excel failed:', e);
+      alert('Failed to export Excel. Please try again.');
+    } finally {
+      setExportLoading(false);
     }
-  }, []);
+  }, [resolveExportRows]);
 
   const gridFilterSettings = useMemo(() => SYNC_GRID_FILTER_SETTINGS, []);
 
@@ -666,16 +739,16 @@ export default function RegisteredJobSeekerManagement() {
           >
             Import
           </ButtonComponent>
-          <ButtonComponent cssClass="e-outline e-primary e-small" onClick={handleExcelExport} disabled={loading || flatDataSource.length === 0} style={{ minWidth: '110px', height: '44px' }}>
-            Export Excel
+          <ButtonComponent cssClass="e-outline e-primary e-small" onClick={handleExcelExport} disabled={loading || exportLoading || flatDataSource.length === 0} style={{ minWidth: '110px', height: '44px' }}>
+            {exportLoading ? 'Exporting...' : 'Export Excel'}
           </ButtonComponent>
-          <ButtonComponent cssClass="e-outline e-primary e-small" onClick={handleExportSelectedCsv} disabled={loading || flatDataSource.length === 0} style={{ minWidth: '100px', height: '44px' }}>
-            Export CSV
+          <ButtonComponent cssClass="e-outline e-primary e-small" onClick={handleExportSelectedCsv} disabled={loading || exportLoading || flatDataSource.length === 0} style={{ minWidth: '100px', height: '44px' }}>
+            {exportLoading ? 'Exporting...' : 'Export CSV'}
           </ButtonComponent>
           <ButtonComponent
             cssClass="e-outline e-primary e-small"
             onClick={handleExportResumesZip}
-            disabled={loading || flatDataSource.length === 0 || zipLoading}
+            disabled={loading || exportLoading || flatDataSource.length === 0 || zipLoading}
             style={{ minWidth: '130px', height: '44px' }}
           >
             {zipLoading ? 'Zipping...' : 'Export Resumes'}
