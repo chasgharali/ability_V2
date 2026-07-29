@@ -44,6 +44,9 @@
 }
 
 .video-call-container-new {
+  /* Self-view geometry; the caption panel mirrors --self-view-left as its own margin */
+  --self-view-left: 20px;
+  --self-view-width: 200px;
   position: fixed;
   top: 0;
   right: 0;
@@ -572,8 +575,8 @@
 .local-video-overlay {
   position: absolute;
   bottom: calc(110px + env(safe-area-inset-bottom, 0px));
-  left: 20px;
-  width: 200px;
+  left: var(--self-view-left);
+  width: var(--self-view-width);
   height: 150px;
   border-radius: 10px;
   overflow: hidden;
@@ -615,6 +618,8 @@
 
 /* Caption Display */
 .caption-container {
+  /* Keeps caption text clear of the settings gear: 28px button + 8px inset + 8px gap */
+  --caption-gear-gutter: 44px;
   position: absolute;
   bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   left: 50%;
@@ -911,7 +916,7 @@
 
 /* Caption Size Variations */
 .caption-size-small .caption-content {
-  padding: 8px 16px;
+  padding: 8px var(--caption-gear-gutter) 8px 16px;
   min-height: 3rem;
   max-height: min(38vh, 240px);
 }
@@ -930,7 +935,7 @@
 }
 
 .caption-size-medium .caption-content {
-  padding: 12px 20px;
+  padding: 12px var(--caption-gear-gutter) 12px 20px;
   min-height: 3.5rem;
   max-height: min(42vh, 300px);
 }
@@ -949,7 +954,7 @@
 }
 
 .caption-size-large .caption-content {
-  padding: 16px 24px;
+  padding: 16px var(--caption-gear-gutter) 16px 24px;
   min-height: 4rem;
   max-height: min(48vh, 380px);
 }
@@ -1074,6 +1079,31 @@
   }
 }
 
+/* Narrow viewports — also what desktop browser zoom at 150-200% produces.
+   A centered 760px panel covers the self-view and most of the remote feed, so shrink
+   the panel to a right-hand column. The 280px floor keeps captions legible. */
+@media (min-width: 601px) and (max-width: 1231px) {
+  .caption-container {
+    left: auto;
+    right: var(--self-view-left);
+    transform: none;
+    width: clamp(280px, 30vw, 380px);
+    max-width: none;
+  }
+
+  .caption-settings-panel {
+    right: 0;
+  }
+}
+
+/* Chat is a 350px right sidebar above the captions here (it goes full-screen at 768px
+   and below, where captions are covered regardless), so step clear of it. */
+@media (min-width: 769px) and (max-width: 1231px) {
+  .caption-container.caption-chat-open {
+    right: calc(350px + var(--self-view-left));
+  }
+}
+
 /* High contrast mode for captions */
 @media (prefers-contrast: high) {
   .caption-content {
@@ -1138,11 +1168,14 @@
 
 /* Additional Mobile Responsive */
 @media (max-width: 768px) {
+  .video-call-container-new {
+    --self-view-left: 10px;
+    --self-view-width: 160px;
+  }
+
   .local-video-overlay {
-    width: 160px;
     height: 120px;
     bottom: calc(110px + env(safe-area-inset-bottom, 0px));
-    left: 10px;
     border-width: 2px;
   }
 
@@ -1161,11 +1194,14 @@
 }
 
 @media (max-width: 480px) {
+  .video-call-container-new {
+    --self-view-left: 8px;
+    --self-view-width: 140px;
+  }
+
   .local-video-overlay {
-    width: 140px;
     height: 105px;
     bottom: calc(95px + env(safe-area-inset-bottom, 0px));
-    left: 8px;
     border-radius: 8px;
     margin-bottom: 12px;
   }
@@ -1181,11 +1217,14 @@
 
 /* Ensure local video overlay doesn't get cut off on small screens */
 @media (max-width: 360px) {
+  .video-call-container-new {
+    --self-view-left: 5px;
+    --self-view-width: 120px;
+  }
+
   .local-video-overlay {
-    width: 120px;
     height: 90px;
     bottom: calc(90px + env(safe-area-inset-bottom, 0px));
-    left: 5px;
   }
 }
 

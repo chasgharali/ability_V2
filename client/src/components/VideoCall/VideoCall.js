@@ -3059,7 +3059,7 @@ const VideoCall = ({ callId: propCallId, callData: propCallData, onCallEnd }) =>
 
       {/* Caption Display */}
       {isCaptionEnabled && (
-        <div className={`caption-container caption-size-${captionSize} caption-lines-${captionLines}`} role="region" aria-live="polite" aria-label="Live captions">
+        <div className={`caption-container caption-size-${captionSize} caption-lines-${captionLines}${isChatOpen ? ' caption-chat-open' : ''}`} role="region" aria-live="polite" aria-label="Live captions">
           {/* Caption Settings Button */}
           <button
             type="button"

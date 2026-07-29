@@ -68,34 +68,18 @@ const setupCaptionSocketServer = (server, io) => {
         });
     });
 
-    wss.on('connection', async (ws, req) => {
-        // --- Authenticate via ?token=<jwt> ---
+    wss.on('connection', (ws, req) => {
+        // CRITICAL: register the message listener BEFORE any await.
+        // The client sends `{ type: 'start' }` immediately on open. If we await
+        // User.findById first, that start frame (and early audio) is dropped and
+        // Deepgram never starts — captions stay stuck on "Listening for speech...".
+        const pendingMessages = [];
+        let authReady = false;
+        let authFailed = false;
         let user = null;
-        try {
-            const requestUrl = new URL(req.url, 'http://localhost');
-            const rawToken = requestUrl.searchParams.get('token');
-            if (!rawToken) {
-                ws.close(4001, 'Authentication token required');
-                return;
-            }
-            const token = rawToken.startsWith('Bearer ') ? rawToken.slice(7) : rawToken;
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            user = await User.findById(decoded.userId).select('-hashedPassword -refreshTokens');
-            if (!user || !user.isActive) {
-                ws.close(4001, 'Invalid or inactive user');
-                return;
-            }
-        } catch (error) {
-            logger.warn(`Caption WS authentication failed: ${error.message}`);
-            try { ws.close(4001, 'Authentication failed'); } catch { /* noop */ }
-            return;
-        }
-
-        ws.isAlive = true;
-        ws.on('pong', () => { ws.isAlive = true; });
-
         let connectionKey = null;
         let service = null;
+        let handlingQueue = Promise.resolve();
 
         const stop = async () => {
             if (connectionKey && service) {
@@ -109,7 +93,11 @@ const setupCaptionSocketServer = (server, io) => {
             service = null;
         };
 
-        ws.on('message', async (data, isBinary) => {
+        const handleMessage = async (data, isBinary) => {
+            if (authFailed || !user) {
+                return;
+            }
+
             // Binary frame => raw PCM audio chunk.
             if (isBinary) {
                 if (connectionKey && service) {
@@ -155,7 +143,7 @@ const setupCaptionSocketServer = (server, io) => {
                 connectionKey = `${callId}_${participantId}`;
 
                 try {
-                    await service.startTranscription(
+                    const started = await service.startTranscription(
                         connectionKey,
                         callId,
                         roomName,
@@ -179,6 +167,10 @@ const setupCaptionSocketServer = (server, io) => {
                         }
                     );
 
+                    if (!started) {
+                        throw new Error('Caption provider failed to start transcription');
+                    }
+
                     ws.send(JSON.stringify({
                         type: 'caption-started',
                         connectionKey,
@@ -198,13 +190,65 @@ const setupCaptionSocketServer = (server, io) => {
                 await stop();
                 ws.send(JSON.stringify({ type: 'caption-stopped' }));
             }
+        };
+
+        const enqueueMessage = (data, isBinary) => {
+            handlingQueue = handlingQueue
+                .then(() => handleMessage(data, isBinary))
+                .catch((error) => {
+                    logger.warn(`Caption WS message handler error: ${error.message}`);
+                });
+        };
+
+        ws.on('message', (data, isBinary) => {
+            if (!authReady) {
+                // Buffer until JWT/user lookup finishes so the client's immediate
+                // `start` frame is not lost during await User.findById(...).
+                pendingMessages.push({ data, isBinary });
+                return;
+            }
+            enqueueMessage(data, isBinary);
         });
+
+        ws.isAlive = true;
+        ws.on('pong', () => { ws.isAlive = true; });
 
         ws.on('close', () => { stop(); });
         ws.on('error', (error) => {
-            logger.warn(`Caption WS error for ${user?.email}: ${error.message}`);
+            logger.warn(`Caption WS error for ${user?.email || 'unauthenticated'}: ${error.message}`);
             stop();
         });
+
+        (async () => {
+            try {
+                const requestUrl = new URL(req.url, 'http://localhost');
+                const rawToken = requestUrl.searchParams.get('token');
+                if (!rawToken) {
+                    authFailed = true;
+                    ws.close(4001, 'Authentication token required');
+                    return;
+                }
+                const token = rawToken.startsWith('Bearer ') ? rawToken.slice(7) : rawToken;
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                user = await User.findById(decoded.userId).select('-hashedPassword -refreshTokens');
+                if (!user || !user.isActive) {
+                    authFailed = true;
+                    ws.close(4001, 'Invalid or inactive user');
+                    return;
+                }
+            } catch (error) {
+                authFailed = true;
+                logger.warn(`Caption WS authentication failed: ${error.message}`);
+                try { ws.close(4001, 'Authentication failed'); } catch { /* noop */ }
+                return;
+            }
+
+            authReady = true;
+            for (const pending of pendingMessages) {
+                enqueueMessage(pending.data, pending.isBinary);
+            }
+            pendingMessages.length = 0;
+        })();
     });
 
     // Keep idle connections alive through proxies (audio pauses during silence).

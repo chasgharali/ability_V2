@@ -216,16 +216,21 @@ export class AudioCapture {
       ws.binaryType = 'arraybuffer';
       this.ws = ws;
 
+      const settle = (fn, arg) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        fn(arg);
+      };
+
+      // Wait for caption-started (not just TCP open) so we don't stream audio
+      // into a socket that never processed the start frame.
       const timeout = setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          reject(new Error('Caption WebSocket connection timeout'));
-          try { ws.close(); } catch (e) { /* noop */ }
-        }
-      }, 10000);
+        settle(reject, new Error('Caption WebSocket start timeout'));
+        try { ws.close(); } catch (e) { /* noop */ }
+      }, 15000);
 
       ws.onopen = () => {
-        this.wsReady = true;
         ws.send(
           JSON.stringify({
             type: 'start',
@@ -235,19 +240,19 @@ export class AudioCapture {
             participantName: this.participantName,
           })
         );
-        if (!settled) {
-          settled = true;
-          clearTimeout(timeout);
-          resolve();
-        }
-        console.log(`🔌 [AudioCapture] Caption WebSocket open for ${this.participantName}`);
+        console.log(`🔌 [AudioCapture] Caption WebSocket open for ${this.participantName} — waiting for caption-started`);
       };
 
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          if (msg.type === 'caption-error') {
+          if (msg.type === 'caption-started') {
+            this.wsReady = true;
+            console.log(`✅ [AudioCapture] Caption session started (${msg.provider || 'unknown'}) for ${this.participantName}`);
+            settle(resolve);
+          } else if (msg.type === 'caption-error') {
             console.error('❌ [AudioCapture] Caption error:', msg);
+            settle(reject, new Error(msg.message || msg.code || 'Caption start failed'));
           }
         } catch (e) {
           // Non-JSON message; ignore.
@@ -256,15 +261,12 @@ export class AudioCapture {
 
       ws.onerror = (event) => {
         console.error(`[AudioCapture] Caption WebSocket error for ${this.participantName}:`, event);
-        if (!settled) {
-          settled = true;
-          clearTimeout(timeout);
-          reject(new Error('Caption WebSocket error'));
-        }
+        settle(reject, new Error('Caption WebSocket error'));
       };
 
       ws.onclose = () => {
         this.wsReady = false;
+        settle(reject, new Error('Caption WebSocket closed before start'));
       };
     });
   }
