@@ -70,7 +70,9 @@ profile = read_values(profile_path)
 if not profile.get("MONGODB_URI"):
     raise SystemExit("Private local profile is missing: MONGODB_URI")
 
-local_api = "http://localhost:5000"
+# Port 5050: macOS AirPlay Receiver occupies 5000 (see client/src/utils/apiConfig.js).
+local_api = "http://localhost:5050"
+local_client = "http://localhost:3000"
 update_file(
     client_path,
     {
@@ -82,14 +84,15 @@ update_file(
     server_path,
     {
         "MONGODB_URI": f"MONGODB_URI={profile['MONGODB_URI']}",
-        "CORS_ORIGIN": "CORS_ORIGIN=http://localhost:3000",
+        "CORS_ORIGIN": f"CORS_ORIGIN={local_client}",
         "API_BASE_URL": f"API_BASE_URL={local_api}",
+        "PORT": "PORT=5050",
     },
 )
 PY
 
 echo "Local env applied:"
-echo "  client: REACT_APP_SOCKET_URL, REACT_APP_API_URL -> http://localhost:5000"
-echo "  server: API_BASE_URL -> http://localhost:5000"
+echo "  client: REACT_APP_SOCKET_URL, REACT_APP_API_URL -> http://localhost:5050"
+echo "  server: API_BASE_URL, PORT -> http://localhost:5050 / 5050"
 echo "  server: CORS_ORIGIN -> http://localhost:3000"
 echo "  server: MONGODB_URI -> (from server/local.env)"
