@@ -75,9 +75,9 @@ export default function RegisteredJobSeekerManagement() {
   const [zipLoading, setZipLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
+  const [pageSize, setPageSize] = useState(50);
   const selectionUpdateRef = useRef(false);
 
-  const pageSize = 10;
   // Server caps limit at 200; page through when exporting the full result set.
   const exportPageSize = 200;
   const gridRef = useRef(null);
@@ -122,7 +122,7 @@ export default function RegisteredJobSeekerManagement() {
     } finally {
       setLoading(false);
     }
-  }, [orgId, page, search, sortBy, sortDir, eventFilter, statusFilter]);
+  }, [orgId, page, pageSize, search, sortBy, sortDir, eventFilter, statusFilter]);
 
   useEffect(() => {
     fetchJobSeekers();
@@ -897,7 +897,34 @@ export default function RegisteredJobSeekerManagement() {
         </div>
 
         <div className="custom-pagination" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: '#f9fafb', borderTop: '1px solid #e5e7eb', flexShrink: 0, minWidth: 0 }}>
-          <div />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+            <label htmlFor="rjs-page-size" style={{ fontSize: '14px', color: '#374151' }}>
+              Rows per page:
+            </label>
+            <select
+              id="rjs-page-size"
+              name="pageSize"
+              value={pageSize}
+              onChange={(e) => {
+                const newSize = parseInt(e.target.value, 10);
+                setPageSize(newSize);
+                setPage(1);
+              }}
+              disabled={loading}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid #d1d5db',
+                fontSize: '14px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                backgroundColor: '#fff'
+              }}
+            >
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+            </select>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <span style={{ fontSize: '14px', color: '#374151' }}>Page {page} of {totalPages} ({total} total)</span>
           </div>
