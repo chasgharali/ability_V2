@@ -117,6 +117,35 @@
   font-weight: 700;
 }
 
+.booth-queue-management .booth-header-availability {
+  margin: 0.65rem 0 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.75rem;
+}
+
+.booth-queue-management .booth-header-availability-item {
+  margin: 0;
+  min-width: 0;
+}
+
+.booth-queue-management .booth-header-availability-item dt {
+  margin: 0 0 0.2rem 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #374151;
+}
+
+.booth-queue-management .booth-header-availability-item dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.35;
+}
+
 /* Real-time status badge */
 .booth-queue-management .rt-badge {
   display: inline-flex;

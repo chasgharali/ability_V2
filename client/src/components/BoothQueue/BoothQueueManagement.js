@@ -987,6 +987,42 @@ export default function BoothQueueManagement() {
                       <span className="stat-value">{queue.filter(q => q.status !== 'in_meeting' && !q.isInCall).length}</span>
                     </div>
                   </div>
+                  {(formatEventDateTime(displayBooth?.openTime)
+                    || formatEventDateTime(displayBooth?.recruiterEndTime)
+                    || formatEventDateTime(displayBooth?.closeTime)) && (
+                    <dl className="booth-header-availability" aria-label="Booth availability">
+                      {formatEventDateTime(displayBooth?.openTime) && (
+                        <div className="booth-header-availability-item">
+                          <dt>Opens</dt>
+                          <dd>
+                            <time dateTime={displayBooth.openTime}>
+                              {formatEventDateTime(displayBooth.openTime)}
+                            </time>
+                          </dd>
+                        </div>
+                      )}
+                      {formatEventDateTime(displayBooth?.recruiterEndTime) && (
+                        <div className="booth-header-availability-item">
+                          <dt>Recruiters unavailable after</dt>
+                          <dd>
+                            <time dateTime={displayBooth.recruiterEndTime}>
+                              {formatEventDateTime(displayBooth.recruiterEndTime)}
+                            </time>
+                          </dd>
+                        </div>
+                      )}
+                      {formatEventDateTime(displayBooth?.closeTime) && (
+                        <div className="booth-header-availability-item">
+                          <dt>Closes</dt>
+                          <dd>
+                            <time dateTime={displayBooth.closeTime}>
+                              {formatEventDateTime(displayBooth.closeTime)}
+                            </time>
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  )}
                 </div>
               </div>
 
