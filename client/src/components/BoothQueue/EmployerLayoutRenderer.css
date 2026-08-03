@@ -342,17 +342,19 @@
 .elr-sec-sm { padding: 2rem 3rem; }
 .elr-divider { border: none; border-top: 1px solid #e0ddd8; margin: 0; }
 
-/* ---------- Dual images ---------- */
+/* ---------- Dual images (stacked full-width heroes — not side-by-side) ---------- */
 .elr-dual-images {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  padding: 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
 }
 .elr-dual-images .elr-img-zone,
 .elr-dual-images .elr-ph {
-  aspect-ratio: 3/2;
+  aspect-ratio: 21 / 9;
   width: 100%;
+  min-height: 260px;
+  max-height: 420px;
 }
 
 /* ---------- Buttons ---------- */
@@ -514,17 +516,38 @@
   width: 240px;
   height: 100px;
 }
+.elr-a-hero-wrap {
+  padding: 0;
+}
 .elr-a-hero-zone {
   width: 100%;
-  max-width: 800px;
-  height: 280px;
+  max-width: none;
+  height: 320px;
   margin: 0 auto;
+}
+/* Shared content column — wider than the old 720px so About/Program RTE fills the page */
+.elr-a-content {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.elr-a-program {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+.elr-a-program-img {
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 16 / 9;
 }
 .elr-a-gallery {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
-  max-width: 860px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 .elr-a-gallery .elr-img-zone,
@@ -536,19 +559,19 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem 3rem;
-  max-width: 860px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 .elr-a-ben-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 3rem;
-  max-width: 860px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 .elr-a-video-zone {
   width: 100%;
-  max-width: 800px;
+  max-width: 1040px;
   aspect-ratio: 16/9;
   position: relative;
   margin: 0 auto;
@@ -797,7 +820,13 @@
   .elr-a-ben-grid,
   .elr-c-jobs-grid,
   .elr-c-ben-grid { grid-template-columns: 1fr; }
-  .elr-dual-images { grid-template-columns: 1fr; }
+  .elr-dual-images .elr-img-zone,
+  .elr-dual-images .elr-ph {
+    aspect-ratio: 16 / 9;
+    min-height: 180px;
+    max-height: 280px;
+  }
+  .elr-a-hero-zone { height: 220px; }
   .elr-sec, .elr-sec-sm { padding: 2rem 1.25rem; }
   .elr-b-about-txt, .elr-b-prog-txt,
   .elr-d-id-txt, .elr-d-prog-txt { padding: 1.75rem; }

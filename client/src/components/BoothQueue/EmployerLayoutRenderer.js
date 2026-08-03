@@ -1187,11 +1187,11 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     if (key === 'about') {
       return (
         <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-about" className="elr-bg-white" aria-label="About section">
-          <div style={{ padding: '2rem 3rem 0.5rem', display: 'flex', justifyContent: 'center' }}>
-            <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Hero banner'} altValue={about.heroImageAlt} label="Hero / Banner Image · 800 × 280" className="elr-a-hero-zone" {...imgProps} />
+          <div className="elr-a-hero-wrap">
+            <ImgZone sectionKey="about" fieldName="heroImageUrl" url={about.heroImageUrl} alt={about.heroImageAlt || 'Hero banner'} altValue={about.heroImageAlt} label="Hero / Banner Image · full width" className="elr-a-hero-zone" {...imgProps} />
           </div>
           <div className="elr-sec" style={{ paddingTop: '2rem', textAlign: 'center' }}>
-            <div style={{ maxWidth: 720, margin: '0 auto' }}>
+            <div className="elr-a-content">
               <TXT sectionKey="about" fieldName="companyName" value={about.companyName} placeholder="Company Name" className="elr-h1" tagName="h1" isEditMode={isEditMode} onUpdateField={onUpdateField} />
               <div style={{ marginTop: '0.75rem' }} />
               <TXT sectionKey="about" fieldName="tagline" value={about.tagline} placeholder="Mission Statement / Tagline" className="elr-h2" style={{ fontSize: '1.2rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
@@ -1205,8 +1205,8 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
     if (key === 'program') {
       return (
         <SecWrap sectionKey="program" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-programs" className="elr-sec elr-bg-blue" aria-label="Programs section">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', maxWidth: 660, margin: '0 auto', textAlign: 'center' }}>
-            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · 600 × 400" style={{ width: '100%', maxWidth: 560, aspectRatio: '3/2' }} {...imgProps} />
+          <div className="elr-a-content elr-a-program">
+            <ImgZone sectionKey="program" fieldName="programImageUrl" url={program.programImageUrl} alt={program.programImageAlt || 'Program image'} altValue={program.programImageAlt} label="Program Image · 960 × 540" className="elr-a-program-img" {...imgProps} />
             <TXT sectionKey="program" fieldName="programTitle" value={program.programTitle} placeholder="Special Program Title" className="elr-h2" tagName="h2" isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <RichBody sectionKey="program" fieldName="programText" value={program.programText} placeholder="Describe your special hiring initiative or program..." className="elr-body" isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
@@ -1249,7 +1249,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       if (!isEditMode && !hasJobsContent) return null;
       return (
         <SecWrap sectionKey="jobs" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-careers" className="elr-sec elr-bg-light" aria-label="Careers section">
-          <div style={{ maxWidth: 860, margin: '0 auto' }}>
+          <div className="elr-a-content">
             <TXT sectionKey="jobs" fieldName="sectionHeading" value={jobs.sectionHeading || 'Open Positions'} placeholder="Open Positions" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <JobsList sectionKey="jobs" jobsList={jobs.jobsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             {!isEditMode && jobs.locationsText && (<div style={{ marginTop: '2.5rem' }}><h3 className="elr-h3" style={{ marginBottom: '0.5rem' }}>Locations</h3><p className="elr-body">{jobs.locationsText}</p></div>)}
@@ -1262,7 +1262,7 @@ function LayoutA({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
       if (!isEditMode && !hasHtmlText(getBenefitsHtml(benefits))) return null;
       return (
         <SecWrap sectionKey="benefits" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="a-benefits" className="elr-sec elr-bg-dark" aria-label="Benefits section">
-          <div style={{ maxWidth: 860, margin: '0 auto' }}>
+          <div className="elr-a-content">
             <TXT sectionKey="benefits" fieldName="sectionHeading" value={benefits.sectionHeading || 'Benefits'} placeholder="Benefits" className="elr-h2" tagName="h2" style={{ marginBottom: '1.5rem' }} isEditMode={isEditMode} onUpdateField={onUpdateField} />
             <BenefitsList sectionKey="benefits" benefitsText={benefits.benefitsText} benefitsList={benefits.benefitsList} isEditMode={isEditMode} onUpdateField={onUpdateField} />
           </div>
@@ -1343,8 +1343,8 @@ function LayoutB({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <React.Fragment>
           {hasAboutDualImages && (
             <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · 600 × 400" {...imgProps} />
-              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · full-width banner" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · full-width banner" {...imgProps} />
             </div>
           )}
           <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="b-about" className="elr-bg-white" aria-label="About section">
@@ -1502,8 +1502,8 @@ function LayoutC({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
         <React.Fragment>
           {hasAboutDualImages && (
             <div className="elr-dual-images elr-bg-white" role="group" aria-label="Company identity images">
-              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · 600 × 400" {...imgProps} />
-              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · 600 × 400" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · full-width banner" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · full-width banner" {...imgProps} />
             </div>
           )}
           <SecWrap sectionKey="about" cd={cd} isEditMode={isEditMode} onUpdateField={onUpdateField} id="c-about" className="elr-sec elr-bg-white" aria-label="About section">
@@ -1681,9 +1681,9 @@ function LayoutD({ cd, getNavItems, isEditMode, onUpdateField, onUploadImage, up
             </div>
           </SecWrap>
           {hasAboutDualImages && (
-            <div className="elr-dual-images elr-bg-white" style={{ paddingTop: '1rem' }} role="group" aria-label="Additional company images">
-              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · 600 × 400" {...imgProps} />
-              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · 600 × 400" {...imgProps} />
+            <div className="elr-dual-images elr-bg-white" role="group" aria-label="Additional company images">
+              <ImgZone sectionKey="about" fieldName="brandImage1Url" url={about.brandImage1Url} alt={about.brandImage1Alt || 'Brand image 1'} altValue={about.brandImage1Alt} label="Brand Image 1 · full-width banner" {...imgProps} />
+              <ImgZone sectionKey="about" fieldName="brandImage2Url" url={about.brandImage2Url} alt={about.brandImage2Alt || 'Brand image 2'} altValue={about.brandImage2Alt} label="Brand Image 2 · full-width banner" {...imgProps} />
             </div>
           )}
         </React.Fragment>
