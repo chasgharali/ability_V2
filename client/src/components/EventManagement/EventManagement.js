@@ -904,7 +904,7 @@ export default function EventManagement() {
                 end: endISO,
                 logoUrl: form.logoUrl || undefined,
                 logoAltText: form.logoAltText || undefined,
-                link: form.link || undefined,
+                link: form.link?.trim() || undefined,
                 sendyId: form.sendyId ? form.sendyId : null,
                 termsId: form.termsId || undefined,
                 termsIds: form.termsIds || [],
@@ -943,7 +943,12 @@ export default function EventManagement() {
             setMode('list');
         } catch (err) {
             console.error('Failed to save event', err);
-            showToast(err?.response?.data?.message || 'Failed to save event', 'Error');
+            const data = err?.response?.data;
+            const details = Array.isArray(data?.details)
+                ? data.details.map((d) => `${d.path || d.param || 'field'}: ${d.msg}`).join('; ')
+                : '';
+            const message = [data?.message || 'Failed to save event', details].filter(Boolean).join(' — ');
+            showToast(message, 'Error');
         } finally {
             setSaving(false);
         }

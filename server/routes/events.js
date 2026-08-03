@@ -320,15 +320,23 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
         .isLength({ max: 50 })
         .withMessage('Timezone cannot exceed 50 characters'),
     body('logoUrl')
-        .optional()
+        .optional({ checkFalsy: true })
         .custom((value) => {
             if (value.startsWith('/api/')) return true;
             const urlRegex = /^https?:\/\/.+/i;
             if (urlRegex.test(value)) return true;
             throw new Error('Logo URL must be a valid URL or internal path');
         }),
-    body('sendyId').optional().isLength({ max: 200 }),
-    body('link').optional().isURL(),
+    body('sendyId').optional({ checkFalsy: true }).isLength({ max: 200 }),
+    body('link')
+        .optional({ checkFalsy: true })
+        .trim()
+        .isURL()
+        .withMessage('Event link must be a valid URL'),
+    body('status')
+        .optional()
+        .isIn(['draft', 'published', 'active', 'completed', 'cancelled'])
+        .withMessage('Invalid status'),
     body('termsId').optional().isLength({ max: 200 }),
     body('limits.maxBooths').optional().isInt({ min: 0 }),
     body('limits.maxRecruitersPerEvent').optional().isInt({ min: 0 }),
@@ -348,7 +356,7 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             });
         }
 
-        const { name, description, start, end, timezone = 'UTC', logoUrl, logoAltText, sendyId, link, limits, theme, termsId, termsIds, isDemo } = req.body;
+        const { name, description, start, end, timezone = 'UTC', logoUrl, logoAltText, sendyId, link, limits, theme, termsId, termsIds, isDemo, status } = req.body;
         const { user } = req;
 
         // Compress video content in description
@@ -407,6 +415,8 @@ router.post('/', authenticateToken, requireRole(['AdminEvent', 'Admin']), [
             theme: theme || undefined,
             termsId: termsId || null,
             termsIds: Array.isArray(termsIds) ? termsIds : [],
+            status: status || undefined,
+            isDemo: !!isDemo,
             organizationId: req.orgId || null,
             createdBy: user._id,
             administrators: [user._id]
@@ -465,16 +475,17 @@ router.put('/:id', authenticateToken, requireResourceAccess('event', 'id'), [
         .isLength({ max: 50 })
         .withMessage('Timezone cannot exceed 50 characters'),
     body('logoUrl')
-        .optional()
+        .optional({ checkFalsy: true })
         .custom((value) => {
             if (value.startsWith('/api/')) return true;
             const urlRegex = /^https?:\/\/.+/i;
             if (urlRegex.test(value)) return true;
             throw new Error('Logo URL must be a valid URL or internal path');
         }),
-    body('sendyId').optional().isLength({ max: 200 }),
+    body('sendyId').optional({ checkFalsy: true }).isLength({ max: 200 }),
     body('link')
         .optional({ checkFalsy: true })
+        .trim()
         .isURL()
         .withMessage('Event link must be a valid URL'),
     body('status')
